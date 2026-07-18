@@ -1,0 +1,34 @@
+/* ═══════════════════════════════════════════════════════════════
+   Layout CRM Shell — Grid Structure
+   Ref: CRM_MANIFESTO.md §3.2
+   ═══════════════════════════════════════════════════════════════ */
+
+:host {
+  display: block;
+}
+
+.layout-grid {
+  display: grid;
+  grid-template-rows: 5rem 1fr;       /* 80px topbar + workspace */
+  grid-template-columns: 17rem 1fr;   /* 272px sidebar + workspace */
+  grid-template-areas:
+    "topbar topbar"
+    "sidebar workspace";
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.topbar    { grid-area: topbar; }
+.sidebar   { grid-area: sidebar; }
+.workspace { grid-area: workspace; }
+
+/* ═══════════════════════════════════════════════════════════════
+   Active Navigation State
+   §3.1: text-primary (#006156) + bg-bg-light (#EAF7F5)
+   ═══════════════════════════════════════════════════════════════ */
+
+.nav-link.nav-active {
+  color: var(--color-primary);
+  background-color: var(--color-bg-light);
+  font-weight: 600;
+}
