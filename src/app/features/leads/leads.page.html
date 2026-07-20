@@ -1,0 +1,81 @@
+<div class="flex flex-col gap-8">
+
+  <app-page-header
+    title="Leads"
+    subtitle="Captación desde Facebook, Instagram, WhatsApp y ventanilla" />
+
+  <!-- ── Filtro por canal de origen (RF-06) ───────────────────────── -->
+  <div class="flex flex-wrap items-center gap-2">
+    @for (opcion of filtros; track opcion.valor) {
+      <app-filter-chip
+        [active]="filtro() === opcion.valor"
+        (clicked)="filtro.set(opcion.valor)">
+        {{ opcion.label }}
+      </app-filter-chip>
+    }
+  </div>
+
+  <!-- ── Tabla de leads (datos reales del backend) ────────────────── -->
+  @if (leads.isLoading()) {
+    <div class="bg-white rounded-2xl shadow-subtle p-6 flex flex-col gap-4">
+      @for (fila of [1, 2, 3, 4, 5]; track fila) {
+        <app-loading-skeleton shape="text" height="2.5rem" />
+      }
+    </div>
+  } @else if (leads.error()) {
+    <div class="bg-white rounded-2xl shadow-subtle">
+      <app-empty-state
+        icon="alert-circle"
+        title="No se pudo cargar los leads"
+        description="Verifica que el servidor del CRM esté encendido e intenta de nuevo." />
+    </div>
+  } @else if (leads.value().length > 0) {
+    <app-table>
+      <thead>
+        <tr>
+          <th>Lead</th>
+          <th>Origen</th>
+          <th>Agente asignado</th>
+          <th>Fecha</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (lead of leads.value(); track lead.id) {
+          <tr>
+            <td>
+              <div class="flex items-center gap-3">
+                <app-avatar [initials]="iniciales(lead.cliente.nombre)" size="sm" />
+                <div>
+                  <p class="font-medium text-text-dark leading-tight">{{ lead.cliente.nombre }}</p>
+                  <p class="text-xs text-text-muted leading-tight mt-0.5">{{ lead.cliente.telefono }}</p>
+                </div>
+              </div>
+            </td>
+            <td>{{ origenLabel[lead.origen] }}</td>
+            <td>
+              @if (lead.agente) {
+                {{ lead.agente.nombre }}
+              } @else {
+                <span class="text-text-muted italic">Sin asignar</span>
+              }
+            </td>
+            <td class="text-text-muted whitespace-nowrap">{{ lead.createdAt | date: 'dd/MM/yy HH:mm' }}</td>
+            <td>
+              <app-badge [variant]="estadoBadge[lead.estado]">
+                {{ estadoLabel[lead.estado] }}
+              </app-badge>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </app-table>
+  } @else {
+    <div class="bg-white rounded-2xl shadow-subtle">
+      <app-empty-state
+        icon="user-plus"
+        title="Sin leads en este canal"
+        description="Cuando lleguen leads por este canal aparecerán aquí automáticamente." />
+    </div>
+  }
+</div>

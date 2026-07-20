@@ -7,6 +7,14 @@
   display: block;
 }
 
+/* Fondo con luz suave derivada de la paleta (bg-light) — sin colores nuevos */
+.login-bg {
+  background:
+    radial-gradient(60rem 30rem at 80% -10%, var(--color-bg-light), transparent 70%),
+    radial-gradient(50rem 25rem at 0% 110%, var(--color-bg-light), transparent 70%),
+    var(--color-bg-workspace);
+}
+
 /* Entrance animation — subtle fadeInUp */
 .login-card {
   animation: fadeInUp 0.4s ease-out;
@@ -21,26 +29,4 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-/* Input fields — §3.2: rounded-xl (12px), focus ring en primary */
-.input-field {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem; /* 12px — manifesto §3.2 */
-  border: 1px solid var(--color-border);
-  background-color: white;
-  font-size: 0.875rem;
-  color: var(--color-text-dark);
-  transition: all 0.2s ease;
-  outline: none;
-}
-
-.input-field::placeholder {
-  color: color-mix(in srgb, var(--color-text-muted), transparent 50%);
-}
-
-.input-field:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary), transparent 80%);
 }

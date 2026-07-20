@@ -1,12 +1,15 @@
-/**
- * Navegación principal del CRM — Clínica Montalvo
- * Ref: CRM_MANIFESTO.md §1.2 (Dominios: dashboard, clientes, leads, conversaciones, ventas, comisiones)
- */
+import { IconName } from '../icon/icon.component';
 
+/**
+ * Navegación principal del CRM
+ * Ref: CRM_MANIFESTO.md §1.2 (Dominios: dashboard, clientes, leads, conversaciones, ventas, comisiones)
+ * `soloAdmin` oculta el ítem a los agentes (el backend además lo bloquea con @Roles).
+ */
 export interface NavItem {
   readonly path: string;
   readonly label: string;
-  readonly icon: string;
+  readonly icon: IconName;
+  readonly soloAdmin?: boolean;
 }
 
 export const NAV_ITEMS: readonly NavItem[] = [
@@ -16,4 +19,5 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { path: '/conversaciones', label: 'WhatsApp', icon: 'message-circle' },
   { path: '/ventas', label: 'Ventas', icon: 'shopping-bag' },
   { path: '/comisiones', label: 'Comisiones', icon: 'wallet' },
+  { path: '/agentes', label: 'Agentes', icon: 'shield', soloAdmin: true },
 ];

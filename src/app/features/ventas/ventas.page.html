@@ -1,0 +1,161 @@
+<div class="flex flex-col gap-8">
+
+  <app-page-header
+    title="Ventas"
+    subtitle="Cierres registrados por agente — el agente responsable es inalterable">
+    <app-button icon="plus" (clicked)="formularioAbierto.set(!formularioAbierto())">
+      Registrar venta
+    </app-button>
+  </app-page-header>
+
+  <!-- ── Formulario de registro (colapsable) ──────────────────────── -->
+  @if (formularioAbierto()) {
+    <app-card padding="lg">
+      <form (submit)="guardar($event)" class="flex flex-col gap-6">
+        <h2 class="text-base font-semibold text-text-dark">Nueva venta</h2>
+
+        @if (errorForm()) {
+          <div class="px-4 py-3 rounded-xl bg-critical-bg text-sm text-text-dark font-medium
+                      flex items-center gap-2">
+            <app-icon name="alert-circle" [size]="16" class="text-critical shrink-0" />
+            {{ errorForm() }}
+          </div>
+        }
+
+        <!-- Selección de cliente por búsqueda -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-sm font-medium text-text-dark">Cliente *</label>
+          @if (clienteElegido(); as elegido) {
+            <div class="flex items-center justify-between gap-3 bg-bg-light rounded-xl px-4 py-3">
+              <div class="flex items-center gap-3">
+                <app-avatar [initials]="iniciales(elegido.nombre)" size="sm" />
+                <div>
+                  <p class="text-sm font-medium text-text-dark leading-tight">{{ elegido.nombre }}</p>
+                  <p class="text-xs text-text-muted leading-tight">{{ elegido.telefono }}</p>
+                </div>
+              </div>
+              <button type="button" (click)="limpiarCliente()"
+                class="text-text-muted hover:text-critical transition-colors cursor-pointer"
+                aria-label="Quitar cliente">
+                <app-icon name="x" [size]="18" />
+              </button>
+            </div>
+          } @else {
+            <app-input type="search" placeholder="Buscar cliente por nombre o teléfono…"
+              [(value)]="busquedaCliente" />
+            @if (resultadosCliente.value().length > 0) {
+              <div class="border border-border rounded-xl divide-y divide-border max-h-56 overflow-y-auto">
+                @for (cliente of resultadosCliente.value(); track cliente.id) {
+                  <button type="button" (click)="elegirCliente(cliente)"
+                    class="w-full flex items-center gap-3 px-4 py-2.5 text-left cursor-pointer
+                           hover:bg-bg-light transition-colors">
+                    <app-avatar [initials]="iniciales(cliente.nombre)" size="sm" />
+                    <div>
+                      <p class="text-sm font-medium text-text-dark leading-tight">{{ cliente.nombre }}</p>
+                      <p class="text-xs text-text-muted leading-tight">{{ cliente.telefono }}</p>
+                    </div>
+                  </button>
+                }
+              </div>
+            }
+          }
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <app-input label="Producto o servicio *" placeholder="Ej. Ortodoncia completa"
+            [(value)]="producto" />
+          <app-input label="Monto (Bs) *" type="text" placeholder="Ej. 4800"
+            [(value)]="monto" />
+        </div>
+
+        <div class="flex items-center gap-3">
+          <app-button type="submit" [loading]="guardando()">
+            {{ guardando() ? 'Guardando…' : 'Guardar venta' }}
+          </app-button>
+          <app-button variant="ghost" (clicked)="formularioAbierto.set(false)">Cancelar</app-button>
+        </div>
+      </form>
+    </app-card>
+  }
+
+  <!-- ── Resumen del periodo ──────────────────────────────────────── -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    @for (item of resumen(); track item.label) {
+      <app-card>
+        <div class="flex items-center gap-4">
+          <div class="w-11 h-11 rounded-xl bg-bg-light flex items-center justify-center shrink-0">
+            <app-icon [name]="item.icon" [size]="20" class="text-primary" />
+          </div>
+          <div>
+            <p class="text-sm text-text-muted font-medium">{{ item.label }}</p>
+            <p class="text-xl font-bold text-text-dark mt-0.5">{{ item.valor }}</p>
+          </div>
+        </div>
+      </app-card>
+    }
+  </div>
+
+  <!-- ── Filtro por estado ────────────────────────────────────────── -->
+  <div class="flex flex-wrap items-center gap-2">
+    @for (opcion of filtros; track opcion) {
+      <app-filter-chip
+        [active]="filtro() === opcion"
+        (clicked)="filtro.set(opcion)">
+        {{ opcion === 'TODAS' ? 'Todas' : estadoLabel[opcion] }}
+      </app-filter-chip>
+    }
+  </div>
+
+  <!-- ── Tabla de ventas (datos reales) ───────────────────────────── -->
+  @if (ventas.isLoading()) {
+    <div class="bg-white rounded-2xl shadow-subtle p-6 flex flex-col gap-4">
+      @for (fila of [1, 2, 3, 4]; track fila) {
+        <app-loading-skeleton shape="text" height="2.5rem" />
+      }
+    </div>
+  } @else if (ventas.error()) {
+    <div class="bg-white rounded-2xl shadow-subtle">
+      <app-empty-state icon="alert-circle" title="No se pudo cargar las ventas"
+        description="Verifica que el servidor del CRM esté encendido e intenta de nuevo." />
+    </div>
+  } @else if (ventas.value().length > 0) {
+    <app-table>
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Producto</th>
+          <th>Monto</th>
+          <th>Agente</th>
+          <th>Fecha</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (venta of ventas.value(); track venta.id) {
+          <tr>
+            <td>
+              <div class="flex items-center gap-3">
+                <app-avatar [initials]="iniciales(venta.cliente.nombre)" size="sm" />
+                <p class="font-medium text-text-dark">{{ venta.cliente.nombre }}</p>
+              </div>
+            </td>
+            <td>{{ venta.producto }}</td>
+            <td class="font-semibold whitespace-nowrap">{{ +venta.monto | moneda }}</td>
+            <td class="text-text-muted">{{ venta.agente.nombre }}</td>
+            <td class="text-text-muted whitespace-nowrap">{{ venta.createdAt | date: 'dd/MM/yy HH:mm' }}</td>
+            <td>
+              <app-badge [variant]="estadoBadge[venta.estado]">
+                {{ estadoLabel[venta.estado] }}
+              </app-badge>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </app-table>
+  } @else {
+    <div class="bg-white rounded-2xl shadow-subtle">
+      <app-empty-state icon="shopping-bag" title="Sin ventas en este estado"
+        description="Registra un cierre con el botón «Registrar venta»." />
+    </div>
+  }
+</div>

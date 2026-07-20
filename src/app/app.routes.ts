@@ -3,17 +3,14 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
 
 /**
- * Rutas del CRM — Clínica Montalvo
+ * Rutas del CRM
  * Ref: CRM_MANIFESTO.md §2.7 — Lazy loading, guards funcionales
  *
  * Arquitectura:
  *   /auth/login  → LoginPage (pantalla completa, sin layout)
  *   /            → LayoutComponent [authGuard] → children por dominio
+ *   **           → NotFoundPage (pantalla completa, sin layout)
  */
-
-/* Loader temporal — se eliminará cuando cada feature tenga su propia page */
-const loadPlaceholder = () =>
-  import('./features/dashboard/dashboard.page').then(m => m.DashboardPage);
 
 export const routes: Routes = [
   /* ── Auth (sin layout, pantalla completa) ──────────────────────── */
@@ -46,12 +43,47 @@ export const routes: Routes = [
             m => m.DashboardPage,
           ),
       },
-      /* Rutas placeholder — serán reemplazadas por feature pages */
-      { path: 'clientes', loadComponent: loadPlaceholder },
-      { path: 'leads', loadComponent: loadPlaceholder },
-      { path: 'conversaciones', loadComponent: loadPlaceholder },
-      { path: 'ventas', loadComponent: loadPlaceholder },
-      { path: 'comisiones', loadComponent: loadPlaceholder },
+      {
+        path: 'clientes',
+        loadComponent: () =>
+          import('./features/clientes/clientes.page').then(m => m.ClientesPage),
+      },
+      {
+        path: 'leads',
+        loadComponent: () =>
+          import('./features/leads/leads.page').then(m => m.LeadsPage),
+      },
+      {
+        path: 'leads/registro-presencial',
+        loadComponent: () =>
+          import('./features/leads/registro-presencial/registro-presencial.page').then(
+            m => m.RegistroPresencialPage,
+          ),
+      },
+      {
+        path: 'conversaciones',
+        loadComponent: () =>
+          import('./features/conversaciones/conversaciones.page').then(
+            m => m.ConversacionesPage,
+          ),
+      },
+      {
+        path: 'ventas',
+        loadComponent: () =>
+          import('./features/ventas/ventas.page').then(m => m.VentasPage),
+      },
+      {
+        path: 'comisiones',
+        loadComponent: () =>
+          import('./features/comisiones/comisiones.page').then(m => m.ComisionesPage),
+      },
     ],
+  },
+
+  /* ── Wildcard — cualquier ruta no reconocida ───────────────────── */
+  {
+    path: '**',
+    loadComponent: () =>
+      import('./features/not-found/not-found.page').then(m => m.NotFoundPage),
   },
 ];

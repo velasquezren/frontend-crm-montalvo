@@ -1,5 +1,5 @@
 /* ==========================================================================
-   CRM Clínica Montalvo — Sistema de Diseño Global (SSOT)
+   CRM — Sistema de Diseño Global (SSOT)
    Fuente de verdad: CRM_MANIFESTO.md §3
    Tailwind CSS v4 — Configuración CSS-first vía @theme
    ========================================================================== */
@@ -26,8 +26,22 @@
   --color-bg-workspace: #F8F9FA;
   --color-border: #E5E7EB;
 
+  /* 🏷️ Tokens de Estado — derivados de la paleta base (§3.1) vía color-mix().
+     Ningún tono nuevo se inventa: éxito/info reutilizan primary/secondary,
+     "critical" reutiliza text-critical (negro) en vez de un rojo de alarma,
+     manteniendo la línea "premium médico" calmada del manifiesto. */
+  --color-success: var(--color-primary);
+  --color-success-bg: color-mix(in srgb, var(--color-primary) 12%, white);
+  --color-info: var(--color-secondary);
+  --color-info-bg: var(--color-bg-light);
+  --color-neutral: var(--color-text-muted);
+  --color-neutral-bg: color-mix(in srgb, var(--color-text-muted) 10%, white);
+  --color-critical: var(--color-text-critical);
+  --color-critical-bg: color-mix(in srgb, var(--color-text-critical) 6%, white);
+
   /* 📐 Sombras del Sistema de Diseño (§3.2) */
   --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-lifted: 0 8px 30px rgba(0, 0, 0, 0.12);
 
   /* 🔤 Tipografía Principal (§3.3) */
   --font-poppins: 'Poppins', ui-sans-serif, system-ui, sans-serif;
@@ -74,4 +88,22 @@
     font-size: 14px;
     font-weight: 400;
   }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
+    color: var(--color-text-dark);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+/* ==========================================================================
+   Animaciones compartidas — usadas por los átomos de shared/components
+   ========================================================================== */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }

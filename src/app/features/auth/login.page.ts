@@ -2,16 +2,22 @@ import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { ButtonComponent } from '../../shared/components/button/button.component';
+import { CardComponent } from '../../shared/components/card/card.component';
+import { IconComponent } from '../../shared/components/icon/icon.component';
+import { InputComponent } from '../../shared/components/input/input.component';
 
 /**
  * Login Page — Pantalla de acceso al CRM
- * Ref: CRM_MANIFESTO.md §3 (tokens visuales), §2.2 (signals para estado)
+ * Ref: CRM_MANIFESTO.md §3 (tokens visuales), §2.2 (signals para estado), §4 (átomos compartidos)
  *
- * Estado del formulario gestionado con signal() puro.
- * Se renderiza sin el LayoutComponent (ruta independiente sin guard).
+ * Estado del formulario gestionado con signal() puro, enlazado a los átomos
+ * Input/Button vía two-way binding de signals. Se renderiza sin el LayoutComponent
+ * (ruta independiente sin guard).
  */
 @Component({
   selector: 'app-login',
+  imports: [CardComponent, InputComponent, ButtonComponent, IconComponent],
   templateUrl: './login.page.html',
   styleUrl: './login.page.css',
 })
@@ -24,14 +30,6 @@ export class LoginPage {
   protected readonly isLoading = signal(false);
   protected readonly errorMessage = signal('');
 
-  onEmailInput(event: Event): void {
-    this.email.set((event.target as HTMLInputElement).value);
-  }
-
-  onPasswordInput(event: Event): void {
-    this.password.set((event.target as HTMLInputElement).value);
-  }
-
   async onSubmit(event: Event): Promise<void> {
     event.preventDefault();
     this.errorMessage.set('');
@@ -43,15 +41,12 @@ export class LoginPage {
 
     this.isLoading.set(true);
 
-    /* Simular latencia de red (800ms) — se reemplazará por llamada HTTP real */
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    const success = this.authService.login(this.email(), this.password());
+    const success = await this.authService.login(this.email(), this.password());
 
     if (success) {
       await this.router.navigate(['/dashboard']);
     } else {
-      this.errorMessage.set('Credenciales inválidas. Intenta de nuevo.');
+      this.errorMessage.set('Credenciales inválidas o servidor no disponible.');
     }
 
     this.isLoading.set(false);

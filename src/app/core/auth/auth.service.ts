@@ -1,69 +1,73 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 
-import { User } from './user.model';
+import { API_URL } from '../api/api.constants';
+import { generarIniciales, User } from './user.model';
+
+interface LoginResponse {
+  access_token: string;
+  usuario: { sub: string; email: string; nombre: string; rol: 'ADMIN' | 'AGENTE' };
+}
+
+const TOKEN_KEY = 'crm_token';
+const USER_KEY = 'crm_usuario';
 
 /**
- * AuthService — Estado de sesión basado en Signals
- * Ref: CRM_MANIFESTO.md §2.2 (signal para estado, computed para derivados)
- *
- * Mock: Acepta cualquier email/password y genera un usuario a partir del email.
- * Se reemplazará por integración real con el backend NestJS (JWT).
+ * AuthService — sesión real contra el backend NestJS (POST /auth/login).
+ * Estado en signals; token + usuario persisten en localStorage para
+ * restaurar la sesión al recargar. El interceptor adjunta el Bearer.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly currentUser = signal<User | null>(null);
+  private readonly http = inject(HttpClient);
 
-  /** Signal de solo lectura del usuario actual */
+  private readonly currentUser = signal<User | null>(this.restaurarSesion());
+
   readonly user = this.currentUser.asReadonly();
-
-  /** Estado derivado — true si hay sesión activa */
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
+  readonly isAdmin = computed(() => this.currentUser()?.rol === 'ADMIN');
 
-  /**
-   * Mock login — genera un usuario a partir del email.
-   * Emails con "admin" asignan rol 'admin', el resto 'agente'.
-   */
-  login(email: string, _password: string): boolean {
-    const nombre = this.extractNameFromEmail(email);
-    const iniciales = this.generateInitials(nombre);
-
-    this.currentUser.set({
-      id: crypto.randomUUID(),
-      nombre,
-      email,
-      rol: email.toLowerCase().includes('admin') ? 'admin' : 'agente',
-      iniciales,
-    });
-
-    return true;
+  get token(): string | null {
+    return localStorage.getItem(TOKEN_KEY);
   }
 
-  /** Cierra la sesión actual */
+  async login(email: string, password: string): Promise<boolean> {
+    try {
+      const respuesta = await firstValueFrom(
+        this.http.post<LoginResponse>(`${API_URL}/auth/login`, { email, password }),
+      );
+
+      const usuario: User = {
+        id: respuesta.usuario.sub,
+        nombre: respuesta.usuario.nombre,
+        email: respuesta.usuario.email,
+        rol: respuesta.usuario.rol,
+        iniciales: generarIniciales(respuesta.usuario.nombre),
+      };
+
+      localStorage.setItem(TOKEN_KEY, respuesta.access_token);
+      localStorage.setItem(USER_KEY, JSON.stringify(usuario));
+      this.currentUser.set(usuario);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   logout(): void {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
     this.currentUser.set(null);
   }
 
-  /**
-   * Extrae un nombre legible del email.
-   * "maria.lopez@clinica.com" → "Maria Lopez"
-   */
-  private extractNameFromEmail(email: string): string {
-    const localPart = email.split('@')[0];
-    return localPart
-      .split(/[._-]/)
-      .map(segment => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
-      .join(' ');
-  }
-
-  /**
-   * Genera iniciales (máximo 2 caracteres).
-   * "Maria Lopez" → "ML"
-   */
-  private generateInitials(nombre: string): string {
-    return nombre
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase())
-      .slice(0, 2)
-      .join('');
+  private restaurarSesion(): User | null {
+    try {
+      const token = localStorage.getItem(TOKEN_KEY);
+      const usuario = localStorage.getItem(USER_KEY);
+      return token && usuario ? (JSON.parse(usuario) as User) : null;
+    } catch {
+      return null;
+    }
   }
 }

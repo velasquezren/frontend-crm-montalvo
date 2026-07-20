@@ -235,7 +235,7 @@ export class LeadService {
 
 ---
 
-## 3. Sistema de Diseño e Identidad Visual (Clínica Montalvo)
+## 3. Sistema de Diseño e Identidad Visual
 
 > Basado estrictamente en el **Tablero de Marca Oficial**. Todos los tokens son **inmutables**.
 
@@ -251,6 +251,21 @@ export class LeadService {
 | `--color-text-critical` | `#000000` | **Restringido** únicamente a elementos de lectura crítica |
 
 > ⚠️ **Regla absoluta:** No se permite inventar colores fuera de esta paleta. Cualquier tono adicional requerido debe derivarse de los primarios usando opacidad (`rgba`) o `color-mix()`.
+
+> ⚠️ **Sin logo de marca:** el proyecto es agnóstico de marca. No inventar iniciales, isotipos ni nombres de clínica en el código — el slot de logo (topbar, login) debe quedar vacío hasta que el cliente entregue su logo definitivo.
+
+### 3.4 Sistema de Badges de Estado (derivado, sin colores nuevos)
+
+La paleta de §3.1 no incluye rojo/ámbar de alerta — es intencional, mantiene la línea "premium médico" calmada en vez de un panel de alarmas tipo semáforo. Los estados se comunican reutilizando los tokens existentes:
+
+| Estado semántico | Token | Derivación |
+|---|---|---|
+| `success` (Ganada/Pagada) | `--color-success` | = `--color-primary` |
+| `info` (En proceso/Pendiente) | `--color-info` | = `--color-secondary` |
+| `neutral` (Prospecto, sin datos) | `--color-neutral` | = `--color-text-muted` |
+| `critical` (Perdida/Cancelada) | `--color-critical` | = `--color-text-critical` (negro, no rojo) |
+
+Cada uno tiene su par `-bg` derivado con `color-mix()` en `styles.css`. Implementados en el átomo `shared/components/badge`. No usar hex sueltos para badges en ninguna vista.
 
 ### 📐 3.2 Geometría y Lenguaje de Formas
 
@@ -299,6 +314,8 @@ src/app/shared/
 │   ├── input/
 │   ├── badge/
 │   ├── icon/
+│   ├── card/
+│   ├── avatar/
 │   ├── loading-skeleton/
 │   └── empty-state/
 ├── pipes/
@@ -469,4 +486,4 @@ La IA debe ser capaz de responder afirmativamente a **todas** estas preguntas an
 
 ---
 
-> **⚡ Este documento es inmutable.** Cualquier modificación requiere la aprobación explícita del Lead Developer del proyecto Clínica Montalvo.
+> **⚡ Este documento es inmutable.** Cualquier modificación requiere la aprobación explícita del Lead Developer del proyecto.

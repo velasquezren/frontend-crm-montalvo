@@ -1,0 +1,99 @@
+<div class="flex flex-col gap-8">
+
+  <app-page-header
+    title="Comisiones"
+    subtitle="Liquidación de comisiones por ventas ganadas" />
+
+  <!-- ── Resumen (RF-18) ──────────────────────────────────────────── -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    @for (item of resumen(); track item.label) {
+      <app-card>
+        <div class="flex items-center gap-4">
+          <div class="w-11 h-11 rounded-xl bg-bg-light flex items-center justify-center shrink-0">
+            <app-icon [name]="item.icon" [size]="20" class="text-primary" />
+          </div>
+          <div>
+            <p class="text-sm text-text-muted font-medium">{{ item.label }}</p>
+            <p class="text-xl font-bold text-text-dark mt-0.5">{{ item.valor }}</p>
+          </div>
+        </div>
+      </app-card>
+    }
+  </div>
+
+  <!-- ── Filtro por estado ────────────────────────────────────────── -->
+  <div class="flex flex-wrap items-center gap-2">
+    @for (opcion of filtros; track opcion) {
+      <app-filter-chip
+        [active]="filtro() === opcion"
+        [count]="contarPor(opcion)"
+        (clicked)="filtro.set(opcion)">
+        {{ opcion === 'TODAS' ? 'Todas' : estadoLabel[opcion] }}
+      </app-filter-chip>
+    }
+  </div>
+
+  <!-- ── Tabla de comisiones ──────────────────────────────────────── -->
+  @if (comisiones.isLoading()) {
+    <app-loading-skeleton shape="card" height="200px" />
+  } @else if (filtradas().length > 0) {
+    <app-table>
+      <thead>
+        <tr>
+          <th>Agente</th>
+          <th>Producto / Venta</th>
+          <th>Fecha Venta</th>
+          <th>Monto Venta</th>
+          <th>Comisión</th>
+          <th>Estado</th>
+          @if (esAdmin()) {
+            <th class="text-right">Acción</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of filtradas(); track item.id) {
+          <tr>
+            <td>
+              <div class="flex items-center gap-3">
+                <app-avatar [initials]="iniciales(item.agente.nombre)" size="sm" />
+                <p class="font-medium text-text-dark">{{ item.agente.nombre }}</p>
+              </div>
+            </td>
+            <td class="font-medium text-text-dark">{{ item.venta.producto }}</td>
+            <td class="text-text-muted whitespace-nowrap">{{ item.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td class="whitespace-nowrap">{{ item.venta.monto | moneda }}</td>
+            <td class="font-semibold text-primary whitespace-nowrap">{{ item.monto | moneda }}</td>
+            <td>
+              <app-badge [variant]="estadoBadge[item.estado]">
+                {{ estadoLabel[item.estado] }}
+              </app-badge>
+            </td>
+            @if (esAdmin()) {
+              <td class="text-right">
+                @if (item.estado === 'PENDIENTE') {
+                  <app-button
+                    variant="secondary"
+                    size="sm"
+                    [loading]="pagandoId() === item.id"
+                    (clicked)="pagar(item.id)">
+                    Marcar Pagada
+                  </app-button>
+                } @else {
+                  <span class="text-xs text-text-muted">Pagada el {{ item.pagadaEn | date: 'dd/MM/yy' }}</span>
+                }
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </app-table>
+  } @else {
+    <div class="bg-white rounded-2xl shadow-subtle">
+      <app-empty-state
+        icon="wallet"
+        title="Sin comisiones en este estado"
+        description="Las comisiones se generan automáticamente al registrar ventas ganadas." />
+    </div>
+  }
+</div>

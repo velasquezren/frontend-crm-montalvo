@@ -1,0 +1,116 @@
+<div class="flex flex-col gap-8">
+
+  <!-- ── Saludo + fecha ───────────────────────────────────────────── -->
+  <div>
+    <h1 class="text-2xl font-bold text-text-dark tracking-tight">
+      @if (firstName()) {
+        Hola, {{ firstName() }}
+      } @else {
+        Dashboard
+      }
+    </h1>
+    <p class="text-text-muted mt-1 text-sm capitalize">{{ fechaHoy }}</p>
+  </div>
+
+  @if (kpiData.isLoading()) {
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      <app-loading-skeleton shape="card" height="120px" />
+      <app-loading-skeleton shape="card" height="120px" />
+      <app-loading-skeleton shape="card" height="120px" />
+      <app-loading-skeleton shape="card" height="120px" />
+    </div>
+  } @else {
+    <!-- ── KPIs (RF-16) ─────────────────────────────────────────────── -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      @for (kpi of kpis(); track kpi.label) {
+        <app-card [hoverable]="true">
+          <div class="flex items-start justify-between">
+            <div class="w-11 h-11 rounded-xl bg-bg-light flex items-center justify-center">
+              <app-icon [name]="kpi.icon" [size]="20" class="text-primary" />
+            </div>
+            <app-badge [variant]="kpi.tendenciaVariant" [icon]="kpi.tendenciaIcon">
+              {{ kpi.tendencia }}
+            </app-badge>
+          </div>
+          <p class="text-sm text-text-muted font-medium mt-5">{{ kpi.label }}</p>
+          <p class="text-3xl font-bold text-text-dark mt-1 tracking-tight">{{ kpi.valor }}</p>
+        </app-card>
+      }
+    </div>
+
+    <!-- ── Conversión por canal (RF-17) + Top agentes ───────────────── -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+      <app-card class="xl:col-span-2">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-base font-semibold text-text-dark">Conversión por canal</h2>
+          <span class="text-xs text-text-muted">Leads → ventas</span>
+        </div>
+
+        @if (canales().length > 0) {
+          <div class="flex flex-col gap-5">
+            @for (canal of canales(); track canal.nombre) {
+              <div>
+                <div class="flex items-center justify-between text-sm mb-2">
+                  <span class="font-medium text-text-dark">{{ canal.nombre }}</span>
+                  <span class="text-text-muted">
+                    {{ canal.leads }} leads ·
+                    <span class="font-semibold text-primary">{{ canal.conversion }}%</span>
+                  </span>
+                </div>
+                <!-- Barra de progreso — pista bg-light, relleno primary (paleta §3.1) -->
+                <div class="h-2.5 rounded-full bg-bg-light overflow-hidden">
+                  <div
+                    class="h-full rounded-full bg-primary transition-all duration-500"
+                    [style.width.%]="canal.conversion"></div>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <app-empty-state
+            icon="trending-up"
+            title="Sin registros de canales"
+            description="Los datos se actualizarán automáticamente al ingresar leads y realizar ventas." />
+        }
+      </app-card>
+
+      <app-card>
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-base font-semibold text-text-dark">Top agentes</h2>
+          <span class="text-xs text-text-muted">Ranking de ventas</span>
+        </div>
+
+        @if (topAgentes().length > 0) {
+          <div class="flex flex-col gap-5">
+            @for (agente of topAgentes(); track agente.nombre; let posicion = $index) {
+              <div class="flex items-center gap-3">
+                <app-avatar
+                  [initials]="agente.iniciales"
+                  size="sm"
+                  [variant]="posicion === 0 ? 'solid' : 'light'" />
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-2">
+                    <p class="text-sm font-medium text-text-dark truncate">{{ agente.nombre }}</p>
+                    <span class="text-xs text-text-muted shrink-0">{{ agente.ventas }} ventas</span>
+                  </div>
+                  <div class="h-1.5 rounded-full bg-bg-light overflow-hidden mt-2">
+                    <div
+                      class="h-full rounded-full bg-secondary transition-all duration-500"
+                      [style.width.%]="agente.porcentaje"></div>
+                  </div>
+                  <p class="text-xs text-text-muted mt-1.5">{{ formatearMonto(agente.monto) }}</p>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <app-empty-state
+            icon="users"
+            title="Sin ventas registradas"
+            description="Aquí aparecerán los agentes con ventas en el sistema." />
+        }
+      </app-card>
+    </div>
+  }
+</div>

@@ -1,0 +1,30 @@
+import { BadgeVariant } from '../components/badge/badge.component';
+import { IconName } from '../components/icon/icon.component';
+
+/**
+ * Categorización de clientes — espejo del enum CategoriaCliente del schema.prisma
+ * del backend (Prospecto/Bronze/Silver/Gold). Ref: CRM_MANIFESTO.md §1.1 (Modelo Único).
+ */
+export type CategoriaCliente = 'GOLD' | 'SILVER' | 'BRONZE' | 'PROSPECTO';
+
+export const CATEGORIA_LABEL: Record<CategoriaCliente, string> = {
+  GOLD: 'Gold',
+  SILVER: 'Silver',
+  BRONZE: 'Bronze',
+  PROSPECTO: 'Prospecto',
+};
+
+/** Mapeo a variantes del átomo Badge — sin colores fuera de paleta (§3.4). */
+export const CATEGORIA_BADGE: Record<CategoriaCliente, BadgeVariant> = {
+  GOLD: 'success',
+  SILVER: 'info',
+  BRONZE: 'neutral',
+  PROSPECTO: 'neutral',
+};
+
+export const CATEGORIA_ICON: Partial<Record<CategoriaCliente, IconName>> = {
+  GOLD: 'star',
+};
+
+/** Canales de origen de un cliente/lead — Ref: RF-06. */
+export type OrigenCanal = 'Facebook' | 'Instagram' | 'WhatsApp' | 'Presencial';

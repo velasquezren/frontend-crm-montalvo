@@ -1,0 +1,125 @@
+<div class="flex flex-col gap-8 max-w-3xl">
+
+  <app-page-header
+    title="Registro Presencial"
+    subtitle="Alta rápida en ventanilla — solo nombre y teléfono son obligatorios">
+    <a routerLink="/leads" class="no-underline">
+      <app-button variant="ghost" icon="x">Volver a Leads</app-button>
+    </a>
+  </app-page-header>
+
+  @if (!registrado()) {
+    <app-card padding="lg">
+      <form (submit)="registrar($event)" class="flex flex-col gap-7">
+
+        <!-- Datos del cliente — dos columnas en escritorio -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <app-input
+            label="Nombre completo *"
+            placeholder="Ej. Juan Pérez"
+            autocomplete="name"
+            [error]="errorNombre()"
+            [(value)]="nombre" />
+
+          <app-input
+            label="Teléfono *"
+            type="tel"
+            placeholder="Ej. 71234567"
+            autocomplete="tel"
+            [error]="errorTelefono()"
+            [(value)]="telefono" />
+        </div>
+
+        <!-- Interés — chips de un toque (RNF-07) + texto libre opcional -->
+        <div class="flex flex-col gap-3">
+          <span class="text-sm font-medium text-text-dark">¿Qué le interesa? (opcional)</span>
+          <div class="flex flex-wrap gap-2">
+            @for (opcion of interesesRapidos; track opcion) {
+              <app-filter-chip
+                [active]="interes() === opcion"
+                (clicked)="alternarInteres(opcion)">
+                {{ opcion }}
+              </app-filter-chip>
+            }
+          </div>
+          <app-input
+            placeholder="U otra consulta… (escribe aquí)"
+            [(value)]="interes" />
+        </div>
+
+        @if (errorGeneral()) {
+          <div class="px-4 py-3 rounded-xl bg-critical-bg text-sm text-text-dark font-medium
+                      flex items-center gap-2">
+            <app-icon name="alert-circle" [size]="16" class="text-critical shrink-0" />
+            {{ errorGeneral() }}
+          </div>
+        }
+
+        <!-- Asignación automática — el agente no llena nada de esto -->
+        @if (agente(); as usuario) {
+          <div class="flex items-center gap-3 bg-bg-workspace rounded-xl px-4 py-3">
+            <app-avatar [initials]="usuario.iniciales" size="sm" />
+            <p class="text-xs text-text-muted">
+              Se asignará a
+              <span class="font-medium text-text-dark">{{ usuario.nombre }}</span>
+              con fecha y hora actuales.
+            </p>
+          </div>
+        }
+
+        <app-button type="submit" [fullWidth]="true" [loading]="enviando()">
+          {{ enviando() ? 'Registrando…' : 'Registrar cliente' }}
+        </app-button>
+      </form>
+    </app-card>
+  } @else {
+    <!-- Confirmación — resumen del alta, lista para el siguiente de la fila -->
+    <app-card padding="lg">
+      <div class="flex flex-col items-center text-center py-4">
+        <div class="w-16 h-16 rounded-full bg-success-bg flex items-center justify-center mb-5">
+          <app-icon name="check" [size]="28" class="text-success" />
+        </div>
+        <h2 class="text-xl font-bold text-text-dark">Cliente registrado</h2>
+        <p class="text-sm text-text-muted mt-1">
+          Guardado en el CRM. Si el teléfono ya existía, se reutilizó el cliente
+          y solo se agregó el nuevo interés.
+        </p>
+
+        <!-- Resumen del registro -->
+        <div class="w-full max-w-sm mt-7 flex flex-col gap-3 bg-bg-workspace rounded-xl p-5 text-sm text-left">
+          <div class="flex items-center justify-between gap-4">
+            <span class="text-text-muted">Nombre</span>
+            <span class="font-medium text-text-dark text-right">{{ nombre() }}</span>
+          </div>
+          <div class="flex items-center justify-between gap-4">
+            <span class="text-text-muted">Teléfono</span>
+            <span class="font-medium text-text-dark text-right">{{ telefono() }}</span>
+          </div>
+          @if (interes()) {
+            <div class="flex items-center justify-between gap-4">
+              <span class="text-text-muted">Interés</span>
+              <span class="font-medium text-text-dark text-right">{{ interes() }}</span>
+            </div>
+          }
+          @if (agente(); as usuario) {
+            <div class="flex items-center justify-between gap-4">
+              <span class="text-text-muted">Agente</span>
+              <span class="font-medium text-text-dark text-right">{{ usuario.nombre }}</span>
+            </div>
+          }
+          <div class="flex items-center justify-between gap-4">
+            <span class="text-text-muted">Hora</span>
+            <span class="font-medium text-text-dark text-right">{{ horaRegistro() }}</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 mt-8">
+          <app-button icon="plus" (clicked)="registrarOtro()">Registrar otro</app-button>
+          <a routerLink="/leads" class="no-underline">
+            <app-button variant="secondary">Ver leads</app-button>
+          </a>
+        </div>
+      </div>
+    </app-card>
+  }
+</div>

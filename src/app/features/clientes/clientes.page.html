@@ -1,0 +1,106 @@
+<div class="flex flex-col gap-8">
+
+  <app-page-header
+    title="Clientes"
+    subtitle="Expediente único por cliente: historial, categoría e intereses" />
+
+  <!-- ── Búsqueda + Filtros por categoría (RF-24) ─────────────────── -->
+  <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+    <div class="w-full lg:max-w-sm">
+      <app-input
+        type="search"
+        placeholder="Buscar por nombre, teléfono o email…"
+        [(value)]="busqueda" />
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      @for (opcion of filtros; track opcion) {
+        <app-filter-chip
+          [active]="filtro() === opcion"
+          (clicked)="filtro.set(opcion)">
+          {{ opcion === 'TODOS' ? 'Todos' : categoriaLabel[opcion] }}
+        </app-filter-chip>
+      }
+    </div>
+  </div>
+
+  <!-- ── Tabla de clientes (datos reales del backend) ─────────────── -->
+  @if (clientes.isLoading()) {
+    <div class="bg-white rounded-2xl shadow-subtle p-6 flex flex-col gap-4">
+      @for (fila of [1, 2, 3, 4, 5]; track fila) {
+        <app-loading-skeleton shape="text" height="2.5rem" />
+      }
+    </div>
+  } @else if (clientes.error()) {
+    <div class="bg-white rounded-2xl shadow-subtle">
+      <app-empty-state
+        icon="alert-circle"
+        title="No se pudo cargar los clientes"
+        description="Verifica que el servidor del CRM esté encendido e intenta de nuevo." />
+    </div>
+  } @else if (clientes.value().length > 0) {
+    <app-table>
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Teléfono</th>
+          <th>Categoría</th>
+          <th>Agente</th>
+          <th>Intereses</th>
+          <th>Última actualización</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (cliente of clientes.value(); track cliente.id) {
+          <tr>
+            <td>
+              <div class="flex items-center gap-3">
+                <app-avatar [initials]="iniciales(cliente.nombre)" size="sm" />
+                <div>
+                  <p class="font-medium text-text-dark leading-tight">{{ cliente.nombre }}</p>
+                  @if (cliente.email) {
+                    <p class="text-xs text-text-muted leading-tight mt-0.5">{{ cliente.email }}</p>
+                  }
+                </div>
+              </div>
+            </td>
+            <td class="whitespace-nowrap">{{ cliente.telefono }}</td>
+            <td>
+              <app-badge
+                [variant]="categoriaBadge[cliente.categoria]"
+                [icon]="categoriaIcon[cliente.categoria]">
+                {{ categoriaLabel[cliente.categoria] }}
+              </app-badge>
+            </td>
+            <td>
+              @if (cliente.agente) {
+                {{ cliente.agente.nombre }}
+              } @else {
+                <span class="text-text-muted italic">Sin asignar</span>
+              }
+            </td>
+            <td>
+              <div class="flex flex-wrap gap-1.5 max-w-56">
+                @for (interes of cliente.intereses; track interes.id) {
+                  <span class="rounded-full bg-bg-light text-primary text-xs px-2.5 py-1 leading-none">
+                    {{ interes.descripcion }}
+                  </span>
+                } @empty {
+                  <span class="text-xs text-text-muted">—</span>
+                }
+              </div>
+            </td>
+            <td class="text-text-muted whitespace-nowrap">{{ cliente.updatedAt | date: 'dd/MM/yy HH:mm' }}</td>
+          </tr>
+        }
+      </tbody>
+    </app-table>
+  } @else {
+    <div class="bg-white rounded-2xl shadow-subtle">
+      <app-empty-state
+        icon="users"
+        title="Sin resultados"
+        description="Ningún cliente coincide con la búsqueda o el filtro seleccionado." />
+    </div>
+  }
+</div>

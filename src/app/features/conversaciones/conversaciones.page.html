@@ -1,0 +1,123 @@
+<!-- ═══════════════════════════════════════════════════════════════
+     WhatsApp Inbox — tres paneles (lista · chat · ficha del cliente)
+     Datos reales del backend; burbujas según guía de diseño.
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="inbox-grid h-[calc(100dvh-9rem)] grid grid-cols-[300px_1fr] xl:grid-cols-[300px_1fr_280px] gap-6">
+
+  <!-- ── Panel izquierdo: lista de chats ──────────────────────────── -->
+  <aside class="bg-white rounded-2xl shadow-subtle flex flex-col overflow-hidden">
+    <div class="p-4 border-b border-border">
+      <h1 class="text-lg font-bold text-text-dark tracking-tight mb-3">WhatsApp</h1>
+      <app-input type="search" placeholder="Buscar conversación…" [(value)]="busqueda" />
+    </div>
+
+    <div class="flex-1 overflow-y-auto">
+      @for (chat of filtradas(); track chat.id) {
+        <button
+          type="button"
+          (click)="seleccionar(chat.id)"
+          class="w-full flex items-center gap-3 px-4 py-3.5 text-left cursor-pointer
+                 border-b border-border transition-colors duration-150 hover:bg-bg-light/50"
+          [class.bg-bg-light]="seleccionadaId() === chat.id">
+          <app-avatar [initials]="iniciales(chat.cliente.nombre)" />
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-2">
+              <p class="font-medium text-text-dark text-sm truncate">{{ chat.cliente.nombre }}</p>
+              <span class="text-xs text-text-muted shrink-0">{{ chat.updatedAt | date: 'HH:mm' }}</span>
+            </div>
+            @if (chat.mensajes[0]; as ultimo) {
+              <p class="text-xs text-text-muted truncate mt-0.5">{{ ultimo.contenido }}</p>
+            }
+          </div>
+        </button>
+      } @empty {
+        <app-empty-state icon="message-circle" title="Sin conversaciones"
+          description="Cuando un cliente escriba por WhatsApp, el chat aparecerá aquí." />
+      }
+    </div>
+  </aside>
+
+  <!-- ── Panel central: conversación activa ───────────────────────── -->
+  <section class="bg-white rounded-2xl shadow-subtle flex flex-col overflow-hidden">
+    @if (detalle.value(); as chat) {
+      <!-- Cabecera del chat -->
+      <header class="flex items-center justify-between px-6 py-4 border-b border-border">
+        <div class="flex items-center gap-3">
+          <app-avatar [initials]="iniciales(chat.cliente.nombre)" />
+          <div>
+            <p class="font-semibold text-text-dark text-sm leading-tight">{{ chat.cliente.nombre }}</p>
+            <p class="text-xs text-text-muted leading-tight mt-0.5">{{ chat.cliente.telefono }}</p>
+          </div>
+        </div>
+        @if (chat.agente) {
+          <p class="text-xs text-text-muted hidden md:block">
+            Agente: <span class="font-medium text-text-dark">{{ chat.agente.nombre }}</span>
+          </p>
+        }
+      </header>
+
+      <!-- Mensajes -->
+      <div class="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-3 bg-bg-workspace/60">
+        @for (mensaje of chat.mensajes; track mensaje.id) {
+          <div class="flex flex-col max-w-[75%]"
+               [class.self-end]="mensaje.direccion === 'SALIENTE'"
+               [class.items-end]="mensaje.direccion === 'SALIENTE'"
+               [class.self-start]="mensaje.direccion === 'ENTRANTE'"
+               [class.items-start]="mensaje.direccion === 'ENTRANTE'">
+            <div class="px-4 py-2.5 text-sm leading-relaxed"
+                 [class]="mensaje.direccion === 'SALIENTE'
+                   ? 'bg-primary text-white rounded-2xl rounded-br-md'
+                   : 'bg-bg-light text-text-dark rounded-2xl rounded-bl-md'">
+              {{ mensaje.contenido }}
+            </div>
+            <span class="text-[10px] text-text-muted mt-1 px-1">
+              {{ mensaje.createdAt | date: 'dd/MM HH:mm' }}
+            </span>
+          </div>
+        } @empty {
+          <app-empty-state icon="message-circle" title="Sin mensajes todavía" />
+        }
+      </div>
+
+      <!-- Caja de texto — borde 12px, botón enviar circular (guía de diseño) -->
+      <form (submit)="enviar($event)" class="flex items-center gap-3 px-4 py-4 border-t border-border">
+        <div class="flex-1">
+          <app-input placeholder="Escribe un mensaje…" [(value)]="mensajeNuevo" />
+        </div>
+        <app-button type="submit" icon="send" [circle]="true" [loading]="enviando()"
+          aria-label="Enviar mensaje" />
+      </form>
+    } @else {
+      <app-empty-state icon="message-circle" title="Selecciona una conversación"
+        description="Elige un chat de la lista para ver los mensajes." />
+    }
+  </section>
+
+  <!-- ── Panel derecho: ficha del cliente (solo pantallas anchas) ─── -->
+  @if (detalle.value(); as chat) {
+    <aside class="hidden xl:flex bg-white rounded-2xl shadow-subtle flex-col items-center px-6 py-8 overflow-y-auto">
+      <app-avatar [initials]="iniciales(chat.cliente.nombre)" size="lg" />
+      <p class="font-semibold text-text-dark mt-4 text-center">{{ chat.cliente.nombre }}</p>
+      <div class="mt-2">
+        <app-badge
+          [variant]="categoriaBadge[chat.cliente.categoria]"
+          [icon]="categoriaIcon[chat.cliente.categoria]">
+          {{ categoriaLabel[chat.cliente.categoria] }}
+        </app-badge>
+      </div>
+
+      <div class="w-full mt-8 flex flex-col gap-4">
+        <div class="flex items-center gap-3 text-sm">
+          <app-icon name="phone" [size]="16" class="text-text-muted shrink-0" />
+          <span class="text-text-dark">{{ chat.cliente.telefono }}</span>
+        </div>
+        @if (chat.agente) {
+          <div class="flex items-center gap-3 text-sm">
+            <app-icon name="users" [size]="16" class="text-text-muted shrink-0" />
+            <span class="text-text-dark">{{ chat.agente.nombre }}</span>
+          </div>
+        }
+      </div>
+    </aside>
+  }
+</div>
