@@ -1,6 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════
-   Layout CRM Shell — Grid Structure
+   Layout CRM Shell — Sidebar colapsable + Grid Structure
    Ref: CRM_MANIFESTO.md §3.2
+
+   Sidebar de 72px (icon-rail) que se expande a 256px al hover.
+   Así las vistas que necesitan espacio (inbox) aprovechan el 100%.
    ═══════════════════════════════════════════════════════════════ */
 
 :host {
@@ -9,8 +12,8 @@
 
 .layout-grid {
   display: grid;
-  grid-template-rows: 5rem 1fr;       /* 80px topbar + workspace */
-  grid-template-columns: 17rem 1fr;   /* 272px sidebar + workspace */
+  grid-template-rows: 4rem 1fr;
+  grid-template-columns: var(--sidebar-width, 72px) 1fr;
   grid-template-areas:
     "topbar topbar"
     "sidebar workspace";
@@ -21,6 +24,95 @@
 .topbar    { grid-area: topbar; }
 .sidebar   { grid-area: sidebar; }
 .workspace { grid-area: workspace; }
+
+/* ═══════════════════════════════════════════════════════════════
+   TOPBAR — Más compacta (64px en lugar de 80px)
+   ═══════════════════════════════════════════════════════════════ */
+.topbar {
+  z-index: 30;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR — Icon Rail colapsable
+   72px (colapsado) → 240px (expandido al hover)
+   ═══════════════════════════════════════════════════════════════ */
+.sidebar {
+  width: 72px;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 20;
+  overflow: visible;
+  position: relative;
+}
+
+.sidebar-expanded {
+  width: 240px;
+}
+
+.sidebar-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 72px;
+  background: white;
+  border-right: 1px solid var(--color-border);
+  overflow: hidden;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+}
+
+.sidebar-inner-expanded {
+  width: 240px;
+  box-shadow: 8px 0 30px rgba(0, 0, 0, 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Navigation Items — centrados en rail, alineados al expandir
+   ═══════════════════════════════════════════════════════════════ */
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: all 0.2s;
+  white-space: nowrap;
+  min-height: 44px;
+}
+
+.nav-link:hover {
+  color: var(--color-primary);
+  background-color: var(--color-bg-light);
+}
+
+.nav-icon-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+/* Label: hidden en rail, visible al expandir mediante clic */
+.nav-label {
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s 0.05s, transform 0.2s 0.05s;
+  overflow: hidden;
+}
+
+.sidebar-inner-expanded .nav-label {
+  opacity: 1;
+  transform: translateX(0);
+}
 
 /* ═══════════════════════════════════════════════════════════════
    Active Navigation State
@@ -38,11 +130,29 @@
 .nav-link.nav-active::before {
   content: '';
   position: absolute;
-  left: -1rem;
+  left: -16px;
   top: 50%;
   transform: translateY(-50%);
-  width: 4px;
-  height: 60%;
+  width: 3px;
+  height: 50%;
   border-radius: 999px;
   background-color: var(--color-primary);
+}
+
+
+
+/* ═══════════════════════════════════════════════════════════════
+   Mobile: sidebar oculto, solo topbar
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .layout-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "topbar"
+      "workspace";
+  }
+
+  .sidebar {
+    display: none;
+  }
 }

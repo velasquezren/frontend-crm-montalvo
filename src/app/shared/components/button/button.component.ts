@@ -45,7 +45,7 @@ export class ButtonComponent {
   protected readonly classes = computed(() => {
     const base =
       'inline-flex items-center justify-center gap-2 rounded-full font-semibold ' +
-      'transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
+      'transition-all duration-200 cubic-bezier(0.16, 1, 0.3, 1) active:scale-[0.97] active:duration-75 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed select-none';
 
     const sizes: Record<ButtonSize, string> = this.circle()
       ? { sm: 'w-9 h-9 p-0', md: 'w-11 h-11 p-0' }

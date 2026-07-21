@@ -7,7 +7,7 @@ import { generarIniciales, User } from './user.model';
 
 interface LoginResponse {
   access_token: string;
-  usuario: { sub: string; email: string; nombre: string; rol: 'ADMIN' | 'AGENTE' };
+  usuario: { sub: string; email: string; nombre: string; rol: 'ADMIN' | 'AGENTE'; foto: string | null };
 }
 
 const TOKEN_KEY = 'crm_token';
@@ -44,6 +44,7 @@ export class AuthService {
         email: respuesta.usuario.email,
         rol: respuesta.usuario.rol,
         iniciales: generarIniciales(respuesta.usuario.nombre),
+        foto: respuesta.usuario.foto,
       };
 
       localStorage.setItem(TOKEN_KEY, respuesta.access_token);
@@ -53,6 +54,11 @@ export class AuthService {
     } catch {
       return false;
     }
+  }
+
+  actualizarUsuarioLocal(nuevoUsuario: User): void {
+    localStorage.setItem(USER_KEY, JSON.stringify(nuevoUsuario));
+    this.currentUser.set(nuevoUsuario);
   }
 
   logout(): void {

@@ -10,6 +10,7 @@ export interface User {
   readonly email: string;
   readonly rol: RolUsuario;
   readonly iniciales: string;
+  readonly foto?: string | null;
 }
 
 /** "Maria Lopez" → "ML" */

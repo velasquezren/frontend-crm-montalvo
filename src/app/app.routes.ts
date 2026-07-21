@@ -77,6 +77,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/comisiones/comisiones.page').then(m => m.ComisionesPage),
       },
+      {
+        path: 'agentes',
+        loadComponent: () =>
+          import('./features/agentes/agentes.page').then(m => m.AgentesPage),
+      },
+      {
+        path: 'perfil',
+        loadComponent: () =>
+          import('./features/perfil/perfil.page').then(m => m.PerfilPage),
+      },
     ],
   },
 

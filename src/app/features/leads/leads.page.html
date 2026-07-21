@@ -1,81 +1,309 @@
-<div class="flex flex-col gap-8">
-
+<div class="space-y-6">
   <app-page-header
-    title="Leads"
-    subtitle="Captación desde Facebook, Instagram, WhatsApp y ventanilla" />
+    title="Leads & Prospectos"
+    subtitle="Gestiona el flujo de captación de pacientes desde redes sociales, WhatsApp y ventanilla.">
+    <!-- Toggle de vistas -->
+    <div class="inline-flex p-1 bg-bg-workspace border border-border rounded-xl shadow-xs">
+      <button
+        type="button"
+        (click)="setVista('PIPELINE')"
+        class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+        [class]="modoVista() === 'PIPELINE' ? 'bg-white text-primary shadow-sm' : 'text-text-muted hover:text-text-dark'">
+        <app-icon name="dashboard" [size]="14" />
+        Pipeline Kanban
+      </button>
+      <button
+        type="button"
+        (click)="setVista('LISTA')"
+        class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+        [class]="modoVista() === 'LISTA' ? 'bg-white text-primary shadow-sm' : 'text-text-muted hover:text-text-dark'">
+        <app-icon name="menu" [size]="14" />
+        Vista Tabla
+      </button>
+    </div>
+  </app-page-header>
 
-  <!-- ── Filtro por canal de origen (RF-06) ───────────────────────── -->
-  <div class="flex flex-wrap items-center gap-2">
-    @for (opcion of filtros; track opcion.valor) {
-      <app-filter-chip
-        [active]="filtro() === opcion.valor"
-        (clicked)="filtro.set(opcion.valor)">
-        {{ opcion.label }}
-      </app-filter-chip>
-    }
+  <!-- Filtros de Canales de Origen -->
+  <div class="flex flex-col gap-2 mt-4 mb-2">
+    <span class="text-[10px] font-bold text-text-muted uppercase tracking-wider">Canal de origen:</span>
+    <div class="flex flex-wrap items-center gap-2">
+      @for (opcion of filtros; track opcion.valor) {
+        <app-filter-chip
+          [active]="filtro() === opcion.valor"
+          (clicked)="filtro.set(opcion.valor)">
+          {{ opcion.label }}
+        </app-filter-chip>
+      }
+    </div>
   </div>
 
-  <!-- ── Tabla de leads (datos reales del backend) ────────────────── -->
   @if (leads.isLoading()) {
-    <div class="bg-white rounded-2xl shadow-subtle p-6 flex flex-col gap-4">
-      @for (fila of [1, 2, 3, 4, 5]; track fila) {
-        <app-loading-skeleton shape="text" height="2.5rem" />
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      @for (col of [1, 2, 3, 4]; track col) {
+        <div class="bg-white rounded-2xl border border-border p-4 flex flex-col gap-3">
+          <app-loading-skeleton shape="text" height="1.5rem" />
+          <app-loading-skeleton shape="card" height="100px" />
+          <app-loading-skeleton shape="card" height="100px" />
+        </div>
       }
     </div>
   } @else if (leads.error()) {
-    <div class="bg-white rounded-2xl shadow-subtle">
+    <div class="bg-white rounded-2xl border border-border p-12">
       <app-empty-state
         icon="alert-circle"
-        title="No se pudo cargar los leads"
-        description="Verifica que el servidor del CRM esté encendido e intenta de nuevo." />
+        title="No se pudieron cargar los prospectos"
+        description="Ocurrió un error al intentar sincronizar los leads con la base de datos." />
     </div>
-  } @else if (leads.value().length > 0) {
-    <app-table>
-      <thead>
-        <tr>
-          <th>Lead</th>
-          <th>Origen</th>
-          <th>Agente asignado</th>
-          <th>Fecha</th>
-          <th>Estado</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (lead of leads.value(); track lead.id) {
-          <tr>
-            <td>
-              <div class="flex items-center gap-3">
-                <app-avatar [initials]="iniciales(lead.cliente.nombre)" size="sm" />
-                <div>
-                  <p class="font-medium text-text-dark leading-tight">{{ lead.cliente.nombre }}</p>
-                  <p class="text-xs text-text-muted leading-tight mt-0.5">{{ lead.cliente.telefono }}</p>
+  } @else {
+
+    <!-- ── VISTA PIPELINE (Drag and Drop Kanban) ────────────────────── -->
+    @if (modoVista() === 'PIPELINE') {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start" cdkDropListGroup>
+        
+        <!-- Columna 1: Nuevos -->
+        <div class="pipeline-column">
+          <div class="pipeline-column-header">
+            <span class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-text-muted">
+              <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+              Nuevos
+            </span>
+            <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700">
+              {{ nuevos().length }}
+            </span>
+          </div>
+          <div
+            id="NUEVO"
+            cdkDropList
+            [cdkDropListData]="nuevos()"
+            (cdkDropListDropped)="drop($event)"
+            class="lead-drag-list">
+            @for (lead of nuevos(); track lead.id) {
+              <div cdkDrag class="lead-card select-none">
+                <div class="flex items-start justify-between gap-2">
+                  <p class="text-xs font-bold text-text-dark leading-tight">{{ lead.cliente.nombre }}</p>
+                  <span class="text-[9px] font-semibold text-text-muted bg-bg-light px-1.5 py-0.5 rounded">
+                    {{ lead.origen === 'WHATSAPP_DIRECTO' ? 'WhatsApp' : lead.origen === 'PRESENCIAL' ? 'Presencial' : 'Meta' }}
+                  </span>
+                </div>
+                <p class="text-[10px] text-text-muted mt-1">{{ lead.cliente.telefono }}</p>
+                <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-border/40">
+                  <span class="text-[9px] text-text-muted">
+                    {{ lead.createdAt | date: 'dd/MM HH:mm' }}
+                  </span>
+                  @if (lead.agente) {
+                    <span class="text-[9px] font-semibold text-primary/80">
+                      👤 {{ lead.agente.nombre.split(' ')[0] }}
+                    </span>
+                  } @else {
+                    <span class="text-[9px] italic text-text-muted">Sin agente</span>
+                  }
                 </div>
               </div>
-            </td>
-            <td>{{ origenLabel[lead.origen] }}</td>
-            <td>
-              @if (lead.agente) {
-                {{ lead.agente.nombre }}
-              } @else {
-                <span class="text-text-muted italic">Sin asignar</span>
-              }
-            </td>
-            <td class="text-text-muted whitespace-nowrap">{{ lead.createdAt | date: 'dd/MM/yy HH:mm' }}</td>
-            <td>
-              <app-badge [variant]="estadoBadge[lead.estado]">
-                {{ estadoLabel[lead.estado] }}
-              </app-badge>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </app-table>
-  } @else {
-    <div class="bg-white rounded-2xl shadow-subtle">
-      <app-empty-state
-        icon="user-plus"
-        title="Sin leads en este canal"
-        description="Cuando lleguen leads por este canal aparecerán aquí automáticamente." />
-    </div>
+            } @empty {
+              <div class="flex flex-col items-center justify-center py-10 border border-dashed border-border/80 rounded-xl bg-white/40">
+                <p class="text-[10px] text-text-muted font-medium">Arrastra leads aquí</p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Columna 2: Contactados -->
+        <div class="pipeline-column">
+          <div class="pipeline-column-header">
+            <span class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-text-muted">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+              Contactados
+            </span>
+            <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+              {{ contactados().length }}
+            </span>
+          </div>
+          <div
+            id="CONTACTADO"
+            cdkDropList
+            [cdkDropListData]="contactados()"
+            (cdkDropListDropped)="drop($event)"
+            class="lead-drag-list">
+            @for (lead of contactados(); track lead.id) {
+              <div cdkDrag class="lead-card select-none">
+                <div class="flex items-start justify-between gap-2">
+                  <p class="text-xs font-bold text-text-dark leading-tight">{{ lead.cliente.nombre }}</p>
+                  <span class="text-[9px] font-semibold text-text-muted bg-bg-light px-1.5 py-0.5 rounded">
+                    {{ lead.origen === 'WHATSAPP_DIRECTO' ? 'WhatsApp' : lead.origen === 'PRESENCIAL' ? 'Presencial' : 'Meta' }}
+                  </span>
+                </div>
+                <p class="text-[10px] text-text-muted mt-1">{{ lead.cliente.telefono }}</p>
+                <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-border/40">
+                  <span class="text-[9px] text-text-muted">
+                    {{ lead.createdAt | date: 'dd/MM HH:mm' }}
+                  </span>
+                  @if (lead.agente) {
+                    <span class="text-[9px] font-semibold text-primary/80">
+                      👤 {{ lead.agente.nombre.split(' ')[0] }}
+                    </span>
+                  } @else {
+                    <span class="text-[9px] italic text-text-muted">Sin agente</span>
+                  }
+                </div>
+              </div>
+            } @empty {
+              <div class="flex flex-col items-center justify-center py-10 border border-dashed border-border/80 rounded-xl bg-white/40">
+                <p class="text-[10px] text-text-muted font-medium">Arrastra leads aquí</p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Columna 3: Convertidos -->
+        <div class="pipeline-column">
+          <div class="pipeline-column-header">
+            <span class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-text-muted">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              Convertidos
+            </span>
+            <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
+              {{ convertidos().length }}
+            </span>
+          </div>
+          <div
+            id="CONVERTIDO"
+            cdkDropList
+            [cdkDropListData]="convertidos()"
+            (cdkDropListDropped)="drop($event)"
+            class="lead-drag-list">
+            @for (lead of convertidos(); track lead.id) {
+              <div cdkDrag class="lead-card select-none">
+                <div class="flex items-start justify-between gap-2">
+                  <p class="text-xs font-bold text-text-dark leading-tight">{{ lead.cliente.nombre }}</p>
+                  <span class="text-[9px] font-semibold text-text-muted bg-bg-light px-1.5 py-0.5 rounded">
+                    {{ lead.origen === 'WHATSAPP_DIRECTO' ? 'WhatsApp' : lead.origen === 'PRESENCIAL' ? 'Presencial' : 'Meta' }}
+                  </span>
+                </div>
+                <p class="text-[10px] text-text-muted mt-1">{{ lead.cliente.telefono }}</p>
+                <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-border/40">
+                  <span class="text-[9px] text-text-muted">
+                    {{ lead.createdAt | date: 'dd/MM HH:mm' }}
+                  </span>
+                  @if (lead.agente) {
+                    <span class="text-[9px] font-semibold text-primary/80">
+                      👤 {{ lead.agente.nombre.split(' ')[0] }}
+                    </span>
+                  } @else {
+                    <span class="text-[9px] italic text-text-muted">Sin agente</span>
+                  }
+                </div>
+              </div>
+            } @empty {
+              <div class="flex flex-col items-center justify-center py-10 border border-dashed border-border/80 rounded-xl bg-white/40">
+                <p class="text-[10px] text-text-muted font-medium">Arrastra leads aquí</p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Columna 4: Perdidos -->
+        <div class="pipeline-column">
+          <div class="pipeline-column-header">
+            <span class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-text-muted">
+              <span class="w-2.5 h-2.5 rounded-full bg-neutral-400"></span>
+              Perdidos
+            </span>
+            <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700">
+              {{ perdidos().length }}
+            </span>
+          </div>
+          <div
+            id="PERDIDO"
+            cdkDropList
+            [cdkDropListData]="perdidos()"
+            (cdkDropListDropped)="drop($event)"
+            class="lead-drag-list">
+            @for (lead of perdidos(); track lead.id) {
+              <div cdkDrag class="lead-card select-none">
+                <div class="flex items-start justify-between gap-2">
+                  <p class="text-xs font-bold text-text-dark leading-tight">{{ lead.cliente.nombre }}</p>
+                  <span class="text-[9px] font-semibold text-text-muted bg-bg-light px-1.5 py-0.5 rounded">
+                    {{ lead.origen === 'WHATSAPP_DIRECTO' ? 'WhatsApp' : lead.origen === 'PRESENCIAL' ? 'Presencial' : 'Meta' }}
+                  </span>
+                </div>
+                <p class="text-[10px] text-text-muted mt-1">{{ lead.cliente.telefono }}</p>
+                <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-border/40">
+                  <span class="text-[9px] text-text-muted">
+                    {{ lead.createdAt | date: 'dd/MM HH:mm' }}
+                  </span>
+                  @if (lead.agente) {
+                    <span class="text-[9px] font-semibold text-primary/80">
+                      👤 {{ lead.agente.nombre.split(' ')[0] }}
+                    </span>
+                  } @else {
+                    <span class="text-[9px] italic text-text-muted">Sin agente</span>
+                  }
+                </div>
+              </div>
+            } @empty {
+              <div class="flex flex-col items-center justify-center py-10 border border-dashed border-border/80 rounded-xl bg-white/40">
+                <p class="text-[10px] text-text-muted font-medium">Arrastra leads aquí</p>
+              </div>
+            }
+          </div>
+        </div>
+
+      </div>
+    }
+
+    <!-- ── VISTA TABLA (Listado Completo) ───────────────────────────── -->
+    @if (modoVista() === 'LISTA') {
+      @if (leads.value().length > 0) {
+        <app-table>
+          <thead>
+            <tr>
+              <th>Lead / Paciente</th>
+              <th>Canal de Origen</th>
+              <th>Agente Asignado</th>
+              <th>Fecha Registro</th>
+              <th>Estado Actual</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (lead of leads.value(); track lead.id) {
+              <tr>
+                <td>
+                  <div class="flex items-center gap-3">
+                    <app-avatar [initials]="iniciales(lead.cliente.nombre)" size="sm" />
+                    <div>
+                      <p class="font-semibold text-text-dark leading-tight">{{ lead.cliente.nombre }}</p>
+                      <p class="text-xs text-text-muted leading-tight mt-0.5">{{ lead.cliente.telefono }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ origenLabel[lead.origen] }}</td>
+                <td>
+                  @if (lead.agente) {
+                    {{ lead.agente.nombre }}
+                  } @else {
+                    <span class="text-text-muted italic">Sin asignar</span>
+                  }
+                </td>
+                <td class="text-text-muted whitespace-nowrap">{{ lead.createdAt | date: 'dd/MM/yy HH:mm' }}</td>
+                <td>
+                  <app-badge [variant]="estadoBadge[lead.estado]">
+                    {{ estadoLabel[lead.estado] }}
+                  </app-badge>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </app-table>
+      } @else {
+        <div class="bg-white rounded-2xl border border-border p-12">
+          <app-empty-state
+            icon="user-plus"
+            title="Sin leads registrados"
+            description="No se encontraron prospectos para este canal." />
+        </div>
+      }
+    }
+
   }
+
 </div>

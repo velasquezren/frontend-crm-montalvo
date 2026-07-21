@@ -1,37 +1,52 @@
 <div class="layout-grid">
 
   <!-- ══════════════════════════════════════════════════════════════════════
-       TOPBAR — Barra superior sticky (80px)
+       TOPBAR — Barra superior compacta (64px)
        Ref: CRM_MANIFESTO.md §3.2
        ══════════════════════════════════════════════════════════════════════ -->
-  <header class="topbar flex items-center justify-between bg-white border-b border-border px-8">
+  <header class="topbar flex items-center justify-between bg-white border-b border-border px-6">
 
-    <!-- Logo — slot vacío, el logo definitivo se agrega aquí más adelante -->
-    <div class="logo-slot flex items-center">
-      <p class="text-xl font-bold text-primary tracking-tight leading-none">CRM</p>
+    <!-- Logo interactivo (único botón para contraer/expandir el menú) -->
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        (click)="toggleSidebar($event)"
+        class="logo-toggle-btn p-1.5 -ml-1.5 rounded-xl hover:bg-bg-light
+               transition-all duration-200 cursor-pointer border border-transparent hover:border-border"
+        title="Hacer clic en el logo para abrir / cerrar el menú"
+        aria-label="Toggle menú de navegación">
+        <img src="/favicon.svg" alt="Montalvo Logo" class="w-10 h-10 object-contain transition-transform duration-200 hover:scale-105" />
+      </button>
+
+      <span class="text-base font-bold text-text-dark tracking-tight flex items-center gap-2">
+        Clínica Montalvo
+        <span class="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md">CRM</span>
+      </span>
     </div>
 
-    <!-- Acciones — el registro rápido vive en el FAB flotante -->
-    <div class="flex items-center gap-4">
-      <!-- Perfil del Agente — AuthService.user signal -->
+    <!-- Acciones — perfil + logout -->
+    <div class="flex items-center gap-3">
       @if (user(); as currentUser) {
         <div class="flex items-center gap-3">
-          <app-avatar [initials]="currentUser.iniciales" />
-          <div class="hidden lg:block">
-            <p class="text-sm font-medium text-text-dark leading-tight">{{ currentUser.nombre }}</p>
-            <p class="text-xs text-text-muted leading-tight">
-              {{ currentUser.rol === 'ADMIN' ? 'Administrador' : 'Agente' }}
-            </p>
-          </div>
-          <!-- Botón Cerrar Sesión -->
+          <a routerLink="/perfil" class="flex items-center gap-3 hover:opacity-90 transition-opacity cursor-pointer group" title="Ver mi perfil">
+            <app-avatar [initials]="currentUser.iniciales" [imageUrl]="currentUser.foto" size="sm" />
+            <div class="hidden lg:block">
+              <p class="text-sm font-medium text-text-dark leading-tight group-hover:text-primary transition-colors">
+                {{ currentUser.nombre }}
+              </p>
+              <p class="text-[11px] text-text-muted leading-tight">
+                {{ currentUser.rol === 'ADMIN' ? 'Administrador' : 'Agente' }}
+              </p>
+            </div>
+          </a>
           <button
             type="button"
             (click)="logout()"
-            class="w-9 h-9 rounded-xl flex items-center justify-center text-text-muted
+            class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted
                    hover:text-primary hover:bg-bg-light transition-all duration-200 cursor-pointer"
             title="Cerrar sesión"
             aria-label="Cerrar sesión">
-            <app-icon name="log-out" [size]="18" />
+            <app-icon name="log-out" [size]="16" />
           </button>
         </div>
       }
@@ -39,32 +54,33 @@
   </header>
 
   <!-- ══════════════════════════════════════════════════════════════════════
-       SIDEBAR — Navegación vertical (272px)
-       Ref: CRM_MANIFESTO.md §3.2 — bg-white, borde derecho sutil
+       SIDEBAR — Icon Rail (72px) → Expandible al hover (240px)
+       Ref: CRM_MANIFESTO.md §3.2
        ══════════════════════════════════════════════════════════════════════ -->
-  <aside class="sidebar bg-white border-r border-border overflow-y-auto">
-    <nav class="flex flex-col gap-1 px-4 py-6" aria-label="Navegación principal">
-
-      @for (item of navItems(); track item.path) {
-        <a [routerLink]="item.path"
-           routerLinkActive="nav-active"
-           class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
-                  text-text-muted transition-all duration-200 hover:text-primary hover:bg-bg-light
-                  no-underline">
-          <app-icon [name]="item.icon" [size]="20" />
-          <span>{{ item.label }}</span>
-        </a>
-      }
-
-    </nav>
+  <aside class="sidebar" [class.sidebar-expanded]="sidebarExpanded()">
+    <div class="sidebar-inner py-4" [class.sidebar-inner-expanded]="sidebarExpanded()">
+      <!-- Navigation -->
+      <nav class="flex flex-col gap-1 px-3 flex-1" aria-label="Navegación principal">
+        @for (item of navItems(); track item.path) {
+          <a [routerLink]="item.path"
+             routerLinkActive="nav-active"
+             class="nav-link">
+            <span class="nav-icon-slot">
+              <app-icon [name]="item.icon" [size]="20" />
+            </span>
+            <span class="nav-label">{{ item.label }}</span>
+          </a>
+        }
+      </nav>
+    </div>
   </aside>
 
   <!-- ══════════════════════════════════════════════════════════════════════
        WORKSPACE — Contenedor principal con <router-outlet>
-       Ref: CRM_MANIFESTO.md §3.2 — bg alternativo, paddings generosos
+       Ref: CRM_MANIFESTO.md §3.2 — bg alternativo
        ══════════════════════════════════════════════════════════════════════ -->
   <main class="workspace bg-bg-workspace overflow-y-auto">
-    <div class="p-8 pb-28">
+    <div class="p-6 pb-28">
       <router-outlet />
     </div>
   </main>
@@ -72,6 +88,7 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════════════
-     FAB — Acciones rápidas flotantes (único punto de entrada al registro)
+     FAB & TOASTS — Acciones rápidas flotantes y notificaciones globales
      ══════════════════════════════════════════════════════════════════════ -->
 <app-fab-menu [items]="fabItems" />
+<app-toast-container />
