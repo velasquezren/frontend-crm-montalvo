@@ -125,14 +125,45 @@
                   </span>
                 }
               </td>
-              <td class="py-4 px-6 text-right">
-                <button
-                  type="button"
-                  (click)="toggleEstado(agente)"
-                  class="text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors cursor-pointer"
-                  [class]="agente.activo ? 'border-border text-text-muted hover:text-critical hover:bg-critical-bg hover:border-critical/20' : 'border-primary/30 text-primary bg-primary/5 hover:bg-primary/10'">
-                  {{ agente.activo ? 'Desactivar' : 'Activar' }}
-                </button>
+              <td class="py-4 px-6">
+                <div class="flex items-center justify-end gap-1.5">
+                  <!-- Editar -->
+                  <button
+                    type="button"
+                    (click)="abrirEdicion(agente)"
+                    class="w-9 h-9 rounded-lg flex items-center justify-center text-text-muted
+                           hover:text-primary hover:bg-bg-light transition-colors cursor-pointer"
+                    [title]="'Editar ' + agente.nombre"
+                    [attr.aria-label]="'Editar ' + agente.nombre">
+                    <app-icon name="edit" [size]="16" />
+                  </button>
+
+                  <!-- Activar / Desactivar -->
+                  @if (agente.activo) {
+                    <button
+                      type="button"
+                      (click)="confirmarBaja(agente)"
+                      [disabled]="agente.id === usuarioActual()?.id"
+                      class="text-xs font-medium px-3 py-1.5 rounded-lg border border-border text-text-muted
+                             transition-colors cursor-pointer
+                             hover:text-critical hover:bg-critical-bg hover:border-critical/20
+                             disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent
+                             disabled:hover:text-text-muted disabled:hover:border-border"
+                      [title]="agente.id === usuarioActual()?.id
+                        ? 'No puedes desactivar tu propia cuenta'
+                        : 'Desactivar cuenta'">
+                      Desactivar
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      (click)="toggleEstado(agente)"
+                      class="text-xs font-medium px-3 py-1.5 rounded-lg border border-primary/30
+                             text-primary bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer">
+                      Activar
+                    </button>
+                  }
+                </div>
               </td>
             </tr>
           } @empty {
@@ -223,6 +254,182 @@
           </app-button>
         </div>
       </form>
+    </div>
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     Modal: Editar agente
+     ══════════════════════════════════════════════════════════════════════ -->
+@if (modalEditarAbierto()) {
+  <div
+    class="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 sm:p-6
+           overflow-y-auto bg-text-dark/40 backdrop-blur-sm"
+    (click)="cerrarEdicion()">
+
+    <div
+      class="bg-white w-full max-w-xl rounded-2xl shadow-lifted my-auto animate-modal-pop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titulo-editar-agente"
+      (click)="$event.stopPropagation()">
+
+      @if (agenteEditando(); as ag) {
+        <!-- Cabecera con identidad del agente -->
+        <header class="flex items-start justify-between gap-4 px-6 sm:px-8 pt-6 pb-5 border-b border-border">
+          <div class="flex items-center gap-3.5 min-w-0">
+            <app-avatar [initials]="iniciales(ag.nombre)" size="lg" />
+            <div class="min-w-0">
+              <h2 id="titulo-editar-agente" class="text-lg font-bold text-text-dark truncate">
+                {{ ag.nombre }}
+              </h2>
+              <div class="flex flex-wrap items-center gap-2 mt-1.5">
+                <app-badge [variant]="ag.rol === 'ADMIN' ? 'success' : 'info'">
+                  {{ ag.rol === 'ADMIN' ? 'Administrador' : 'Agente' }}
+                </app-badge>
+                @if (!ag.activo) {
+                  <app-badge variant="neutral">Inactivo</app-badge>
+                }
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            (click)="cerrarEdicion()"
+            class="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-text-muted
+                   hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
+            aria-label="Cerrar">
+            <app-icon name="x" [size]="18" />
+          </button>
+        </header>
+
+        <form (submit)="guardarEdicion($event)" class="px-6 sm:px-8 py-6 flex flex-col gap-6">
+
+          @if (errorMensaje()) {
+            <div class="px-4 py-3 rounded-xl bg-critical-bg text-sm text-text-dark font-medium
+                        flex items-start gap-2">
+              <app-icon name="alert-circle" [size]="16" class="text-critical shrink-0 mt-px" />
+              {{ errorMensaje() }}
+            </div>
+          }
+
+          <!-- Datos de la cuenta -->
+          <section class="flex flex-col gap-4">
+            <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider">
+              Datos de la cuenta
+            </h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <app-input label="Nombre completo *" placeholder="Ej. Sofía Vargas" [(value)]="editNombre" />
+              <app-input
+                label="Correo electrónico *"
+                type="email"
+                placeholder="agente@clinica.com"
+                [(value)]="editEmail" />
+            </div>
+
+            <!-- Rol -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-medium text-text-dark">Rol</label>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  (click)="editRol.set('AGENTE')"
+                  [disabled]="editandoseASiMismo()"
+                  class="px-4 py-2 rounded-full border text-xs font-medium transition-all cursor-pointer
+                         disabled:opacity-40 disabled:cursor-not-allowed"
+                  [class]="editRol() === 'AGENTE'
+                    ? 'bg-primary text-white border-primary shadow-subtle'
+                    : 'bg-white text-text-muted border-border hover:border-primary/30 hover:bg-bg-light'">
+                  Agente
+                </button>
+                <button
+                  type="button"
+                  (click)="editRol.set('ADMIN')"
+                  [disabled]="editandoseASiMismo()"
+                  class="px-4 py-2 rounded-full border text-xs font-medium transition-all cursor-pointer
+                         disabled:opacity-40 disabled:cursor-not-allowed"
+                  [class]="editRol() === 'ADMIN'
+                    ? 'bg-primary text-white border-primary shadow-subtle'
+                    : 'bg-white text-text-muted border-border hover:border-primary/30 hover:bg-bg-light'">
+                  Administrador
+                </button>
+              </div>
+
+              @if (editandoseASiMismo()) {
+                <p class="flex items-start gap-2 text-xs text-text-muted mt-1">
+                  <app-icon name="shield" [size]="14" class="shrink-0 mt-px" />
+                  Es tu propia cuenta: no puedes cambiarte el rol ni desactivarte,
+                  para no perder el acceso a la administración.
+                </p>
+              }
+            </div>
+          </section>
+
+          <!-- Contraseña -->
+          <section class="flex flex-col gap-4 pt-2 border-t border-border">
+            <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider pt-4">
+              Restablecer contraseña
+            </h3>
+            <app-input
+              label="Nueva contraseña"
+              type="password"
+              placeholder="Dejar vacío para no cambiarla"
+              [(value)]="editPassword" />
+            <p class="text-xs text-text-muted">
+              Mínimo 8 caracteres. Solo se cambia si escribes una nueva.
+            </p>
+          </section>
+
+          <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-5 border-t border-border">
+            <app-button variant="secondary" (clicked)="cerrarEdicion()">Cancelar</app-button>
+            <app-button type="submit" [loading]="guardando()">
+              {{ guardando() ? 'Guardando…' : 'Guardar cambios' }}
+            </app-button>
+          </div>
+        </form>
+      }
+    </div>
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     Modal: Confirmar desactivación
+     ══════════════════════════════════════════════════════════════════════ -->
+@if (agenteABaja(); as ag) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-text-dark/40 backdrop-blur-sm"
+    (click)="cancelarBaja()">
+
+    <div
+      class="bg-white w-full max-w-md rounded-2xl shadow-lifted p-6 sm:p-8 animate-modal-pop"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="titulo-baja"
+      (click)="$event.stopPropagation()">
+
+      <div class="flex flex-col items-center text-center">
+        <div class="w-14 h-14 rounded-2xl bg-critical-bg flex items-center justify-center mb-5">
+          <app-icon name="alert-circle" [size]="24" class="text-critical" />
+        </div>
+
+        <h2 id="titulo-baja" class="text-lg font-bold text-text-dark">
+          ¿Desactivar a {{ ag.nombre }}?
+        </h2>
+        <p class="text-sm text-text-muted mt-2">
+          No podrá volver a iniciar sesión, pero <strong class="text-text-dark">sus ventas y
+          comisiones se conservan</strong>: la cuenta se desactiva, nunca se borra.
+          Puedes reactivarla cuando quieras.
+        </p>
+
+        <div class="flex flex-col-reverse sm:flex-row gap-3 mt-7 w-full sm:justify-center">
+          <app-button variant="secondary" (clicked)="cancelarBaja()">Cancelar</app-button>
+          <app-button [loading]="dandoDeBaja()" (clicked)="ejecutarBaja()">
+            {{ dandoDeBaja() ? 'Desactivando…' : 'Sí, desactivar' }}
+          </app-button>
+        </div>
+      </div>
     </div>
   </div>
 }

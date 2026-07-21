@@ -1,8 +1,9 @@
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, HostListener, inject, signal } from '@angular/core';
 
 import { mensajeDeError } from '../../core/api/http-error';
+import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales } from '../../core/auth/user.model';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
@@ -37,6 +38,10 @@ import { AgentesService } from './agentes.service';
 export class AgentesPage {
   private readonly agentesService = inject(AgentesService);
   private readonly toastService = inject(ToastService);
+  private readonly authService = inject(AuthService);
+
+  /** Usuario autenticado — para no dejar que se bloquee a sí mismo. */
+  protected readonly usuarioActual = this.authService.user;
 
   protected readonly iniciales = generarIniciales;
 
@@ -146,5 +151,128 @@ export class AgentesPage {
           'Error de Red',
         );
       });
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     Edición de agente
+     ══════════════════════════════════════════════════════════════════ */
+
+  protected readonly agenteEditando = signal<Agente | null>(null);
+  protected readonly modalEditarAbierto = signal(false);
+  protected readonly editNombre = signal('');
+  protected readonly editEmail = signal('');
+  protected readonly editRol = signal<'ADMIN' | 'AGENTE'>('AGENTE');
+  protected readonly editPassword = signal('');
+
+  /** True si el admin se está editando a sí mismo: no puede degradarse ni desactivarse. */
+  protected readonly editandoseASiMismo = computed(
+    () => this.agenteEditando()?.id === this.usuarioActual()?.id,
+  );
+
+  abrirEdicion(agente: Agente): void {
+    this.agenteEditando.set(agente);
+    this.editNombre.set(agente.nombre);
+    this.editEmail.set(agente.email);
+    this.editRol.set(agente.rol);
+    this.editPassword.set('');
+    this.errorMensaje.set(null);
+    this.modalEditarAbierto.set(true);
+  }
+
+  cerrarEdicion(): void {
+    this.modalEditarAbierto.set(false);
+    this.agenteEditando.set(null);
+  }
+
+  guardarEdicion(event: Event): void {
+    event.preventDefault();
+    const agente = this.agenteEditando();
+    if (!agente || this.guardando()) return;
+
+    const nombre = this.editNombre().trim();
+    const email = this.editEmail().trim().toLowerCase();
+    const password = this.editPassword();
+
+    if (!nombre || !email) {
+      this.errorMensaje.set('Nombre y correo son requeridos.');
+      return;
+    }
+    if (password && password.length < 8) {
+      this.errorMensaje.set('La nueva contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+
+    this.guardando.set(true);
+    this.errorMensaje.set(null);
+
+    this.agentesService
+      .actualizar(agente.id, {
+        nombre,
+        email,
+        rol: this.editRol(),
+        /* La contraseña solo se envía si el admin escribió una nueva. */
+        ...(password ? { password } : {}),
+      })
+      .then(res => {
+        this.guardando.set(false);
+        this.cerrarEdicion();
+        this.toastService.success(`Datos de ${res.nombre} actualizados`, 'Agente Actualizado');
+        this.agentes.reload();
+      })
+      .catch((err: unknown) => {
+        this.guardando.set(false);
+        const mensaje = mensajeDeError(err, 'No se pudo guardar los cambios del agente.');
+        this.errorMensaje.set(mensaje);
+        this.toastService.error(mensaje, 'Error al Guardar');
+      });
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     Baja de agente (desactivación, nunca borrado)
+     ══════════════════════════════════════════════════════════════════ */
+
+  protected readonly agenteABaja = signal<Agente | null>(null);
+  protected readonly dandoDeBaja = signal(false);
+
+  confirmarBaja(agente: Agente): void {
+    this.agenteABaja.set(agente);
+  }
+
+  cancelarBaja(): void {
+    this.agenteABaja.set(null);
+  }
+
+  ejecutarBaja(): void {
+    const agente = this.agenteABaja();
+    if (!agente || this.dandoDeBaja()) return;
+
+    this.dandoDeBaja.set(true);
+    this.agentesService
+      .desactivar(agente.id)
+      .then(() => {
+        this.dandoDeBaja.set(false);
+        this.agenteABaja.set(null);
+        this.toastService.info(
+          `${agente.nombre} ya no puede iniciar sesión. Su historial se conserva.`,
+          'Cuenta Desactivada',
+        );
+        this.agentes.reload();
+      })
+      .catch((err: unknown) => {
+        this.dandoDeBaja.set(false);
+        this.agenteABaja.set(null);
+        this.toastService.error(
+          mensajeDeError(err, 'No se pudo desactivar la cuenta.'),
+          'Error',
+        );
+      });
+  }
+
+  /** Cierra cualquier modal abierto con Escape. */
+  @HostListener('document:keydown.escape')
+  protected onEscape(): void {
+    if (this.agenteABaja()) return this.cancelarBaja();
+    if (this.modalEditarAbierto()) return this.cerrarEdicion();
+    if (this.modalCrearAbierto()) this.cerrarModal();
   }
 }
