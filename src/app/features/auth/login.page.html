@@ -1,179 +1,99 @@
 <!-- ═══════════════════════════════════════════════════════════════
-     Login Page — CRM Montalvo (Masterpiece Edition)
-     Ref: CRM_MANIFESTO.md §3.1, §3.2, §3.3
+     Login Page — Minimalist Edition
+     Ref: CRM_MANIFESTO.md §3.1, §3.2, §3.3 (Minimalismo Orgánico & Premium)
      ═══════════════════════════════════════════════════════════════ -->
-<div class="login-wrapper min-h-dvh flex items-center justify-center p-4 lg:p-8 bg-bg-workspace relative overflow-hidden">
-  <!-- Ambient Background Orbs -->
-  <div class="absolute -top-32 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
-  <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-secondary/15 rounded-full blur-3xl pointer-events-none"></div>
+<div class="login-wrapper min-h-dvh flex items-center justify-center p-4 bg-bg-workspace relative">
+  <!-- Subtle Ambient Background Light -->
+  <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[32rem] h-[32rem] bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
 
-  <!-- Main Glassmorphic Container -->
-  <div class="login-container w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 rounded-3xl overflow-hidden shadow-lifted border border-border/60 bg-white/80 backdrop-blur-xl z-10">
+  <!-- Minimalist Card -->
+  <div class="login-card w-full max-w-md bg-white rounded-2xl shadow-subtle border border-border/80 p-8 lg:p-10 relative z-10">
 
-    <!-- ── Left Hero Panel (Branding & Features) ── -->
-    <div class="lg:col-span-5 login-hero p-8 lg:p-12 flex flex-col justify-between relative overflow-hidden text-white">
-      <!-- Ambient Glows inside Hero -->
-      <div class="hero-glow-1"></div>
-      <div class="hero-glow-2"></div>
-
-      <!-- Hero Header & Logo Badge -->
-      <div class="relative z-10">
-        <div class="flex items-center gap-3.5 mb-8">
-          <div class="w-13 h-13 rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 p-2.5 flex items-center justify-center shadow-lg group hover:scale-105 transition-transform duration-300">
-            <img src="/favicon.svg" alt="Montalvo Logo" class="w-full h-full object-contain filter drop-shadow" />
-          </div>
-          <div>
-            <h2 class="text-xl font-bold tracking-tight text-white leading-none">Clínica Montalvo</h2>
-            <p class="text-xs text-white/70 font-medium tracking-wide mt-1">CRM System v2.5</p>
-          </div>
-        </div>
-
-        <h1 class="text-2xl lg:text-3xl font-extrabold text-white leading-tight tracking-tight mb-3">
-          Gestión Inteligente de Pacientes
-        </h1>
-        <p class="text-sm text-white/80 leading-relaxed font-normal">
-          Plataforma centralizada para automatización de leads, inbox multiagente de WhatsApp y control de comisiones en tiempo real.
-        </p>
+    <!-- ── Brand Header & Logo ── -->
+    <div class="flex flex-col items-center text-center mb-8">
+      <div class="w-14 h-14 rounded-2xl bg-bg-light border border-primary/15 p-2.5 flex items-center justify-center mb-4 shadow-sm">
+        <img src="/favicon.svg" alt="Montalvo Logo" class="w-full h-full object-contain" />
       </div>
-
-      <!-- Feature Badges -->
-      <div class="relative z-10 my-8 space-y-3">
-        <div class="feature-badge flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 hover:bg-white/15 transition-all">
-          <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <app-icon name="message-circle" [size]="18" class="text-white" />
-          </div>
-          <div>
-            <h4 class="text-xs font-semibold text-white">WhatsApp Inbox Multiagente</h4>
-            <p class="text-[11px] text-white/70">Atención concurrente en tiempo real</p>
-          </div>
-        </div>
-
-        <div class="feature-badge flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 hover:bg-white/15 transition-all">
-          <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <app-icon name="users" [size]="18" class="text-white" />
-          </div>
-          <div>
-            <h4 class="text-xs font-semibold text-white">Captura de Meta Lead Ads</h4>
-            <p class="text-[11px] text-white/70">Sincronización instantánea de campañas</p>
-          </div>
-        </div>
-
-        <div class="feature-badge flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 hover:bg-white/15 transition-all">
-          <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <app-icon name="trending-up" [size]="18" class="text-white" />
-          </div>
-          <div>
-            <h4 class="text-xs font-semibold text-white">Reportes & Comisiones</h4>
-            <p class="text-[11px] text-white/70">Métricas de rendimiento por agente</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Hero Security Trust Badge -->
-      <div class="relative z-10 flex items-center gap-2 text-xs text-white/70 pt-4 border-t border-white/15">
-        <app-icon name="shield" [size]="14" class="text-secondary" />
-        <span>Conexión segura de grado médico SSL 256-bit</span>
-      </div>
+      <h1 class="text-xl font-bold text-text-dark tracking-tight">Acceso al Sistema</h1>
+      <p class="text-xs text-text-muted mt-1 font-normal">CRM Montalvo</p>
     </div>
 
-    <!-- ── Right Form Panel ── -->
-    <div class="lg:col-span-7 p-8 lg:p-12 flex flex-col justify-center bg-white">
+    <!-- ── Error Alert ── -->
+    @if (errorMessage()) {
+      <div class="mb-6 p-3.5 rounded-xl bg-critical-bg border border-critical/20 text-xs text-text-dark font-medium flex items-center gap-2.5 animate-fade-scale">
+        <app-icon name="alert-circle" [size]="16" class="text-critical shrink-0" />
+        <span class="flex-1">{{ errorMessage() }}</span>
+      </div>
+    }
 
-      <!-- Form Header -->
-      <div class="mb-8">
-        <div class="flex items-center gap-2.5 mb-4 lg:hidden">
-          <img src="/favicon.svg" alt="Montalvo Logo" class="w-8 h-8 object-contain" />
-          <span class="text-base font-bold text-primary">CRM Montalvo</span>
-        </div>
+    <!-- ── Form ── -->
+    <form (submit)="onSubmit($event)" class="space-y-4">
+      <app-input
+        label="Correo electrónico"
+        type="email"
+        placeholder="tu.nombre@empresa.com"
+        autocomplete="email"
+        [(value)]="email" />
 
-        <h2 class="text-2xl font-bold text-text-dark tracking-tight">Bienvenido de nuevo</h2>
-        <p class="text-sm text-text-muted mt-1">Ingresa tus credenciales autorizadas para continuar</p>
+      <app-input
+        label="Contraseña"
+        type="password"
+        placeholder="••••••••"
+        autocomplete="current-password"
+        [(value)]="password" />
+
+      <div class="flex items-center justify-between text-xs pt-1">
+        <label class="flex items-center gap-2 text-text-dark cursor-pointer select-none">
+          <input
+            type="checkbox"
+            [checked]="rememberMe()"
+            (change)="rememberMe.set($any($event.target).checked)"
+            class="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 accent-primary cursor-pointer" />
+          <span class="text-text-muted">Recordarme</span>
+        </label>
+        <span class="text-text-muted hover:text-primary transition-colors text-xs cursor-not-allowed" title="Contacta al administrador para restablecer acceso">
+          ¿Olvidaste tu clave?
+        </span>
       </div>
 
-      <!-- Error Alert -->
-      @if (errorMessage()) {
-        <div class="mb-6 p-4 rounded-2xl bg-critical-bg border border-critical/20 text-sm text-text-dark font-medium flex items-center gap-3 animate-fade-scale">
-          <div class="w-8 h-8 rounded-xl bg-critical/10 flex items-center justify-center shrink-0 text-critical">
-            <app-icon name="alert-circle" [size]="18" />
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="font-semibold text-critical">Error de acceso</p>
-            <p class="text-xs text-text-muted mt-0.5">{{ errorMessage() }}</p>
-          </div>
-        </div>
-      }
+      <div class="pt-2">
+        <app-button
+          type="submit"
+          [loading]="isLoading()"
+          [fullWidth]="true"
+          size="md">
+          {{ isLoading() ? 'Ingresando...' : 'Ingresar' }}
+        </app-button>
+      </div>
+    </form>
 
-      <!-- Login Form -->
-      <form (submit)="onSubmit($event)" class="space-y-5">
-        <app-input
-          label="Correo electrónico"
-          type="email"
-          placeholder="tu.nombre@montalvocrm.com"
-          autocomplete="email"
-          [(value)]="email" />
-
-        <app-input
-          label="Contraseña"
-          type="password"
-          placeholder="••••••••"
-          autocomplete="current-password"
-          [(value)]="password" />
-
-        <div class="flex items-center justify-between text-xs pt-1">
-          <label class="flex items-center gap-2 text-text-dark cursor-pointer select-none">
-            <input
-              type="checkbox"
-              [checked]="rememberMe()"
-              (change)="rememberMe.set($any($event.target).checked)"
-              class="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 accent-primary cursor-pointer" />
-            <span>Recordarme en este equipo</span>
-          </label>
-          <span class="text-text-muted hover:text-primary transition-colors text-xs cursor-not-allowed" title="Contacta al administrador para restablecer acceso">
-            ¿Olvidaste tu contraseña?
-          </span>
-        </div>
-
-        <div class="pt-2">
-          <app-button
-            type="submit"
-            [loading]="isLoading()"
-            [fullWidth]="true"
-            size="md">
-            {{ isLoading() ? 'Iniciando sesión...' : 'Ingresar al Sistema' }}
-          </app-button>
-        </div>
-      </form>
-
-      <!-- Quick Demo Shortcuts -->
-      <div class="mt-8 pt-6 border-t border-border/60">
-        <p class="text-xs font-semibold text-text-muted mb-3 flex items-center gap-1.5">
-          <app-icon name="activity" [size]="14" class="text-primary" />
-          Acceso rápido de prueba:
-        </p>
-        <div class="grid grid-cols-2 gap-2.5">
+    <!-- ── Quick Fill Helpers ── -->
+    <div class="mt-8 pt-6 border-t border-border/60">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-[11px] text-text-muted font-medium">Credenciales de prueba:</span>
+        <div class="flex items-center gap-2">
           <button
             type="button"
             (click)="fillDemoCredentials('admin')"
-            class="px-3 py-2 text-xs font-medium rounded-xl border border-border bg-bg-workspace text-text-dark hover:border-primary/40 hover:bg-bg-light transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-            <app-icon name="shield" [size]="14" class="text-primary" />
-            Administrador
+            class="px-2.5 py-1 text-[11px] font-medium rounded-lg border border-border bg-bg-workspace text-text-dark hover:border-primary/40 hover:bg-bg-light transition-all cursor-pointer">
+            Admin
           </button>
           <button
             type="button"
             (click)="fillDemoCredentials('agente')"
-            class="px-3 py-2 text-xs font-medium rounded-xl border border-border bg-bg-workspace text-text-dark hover:border-primary/40 hover:bg-bg-light transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-            <app-icon name="users" [size]="14" class="text-secondary" />
-            Agente CRM
+            class="px-2.5 py-1 text-[11px] font-medium rounded-lg border border-border bg-bg-workspace text-text-dark hover:border-primary/40 hover:bg-bg-light transition-all cursor-pointer">
+            Agente
           </button>
         </div>
       </div>
-
-      <!-- Footer -->
-      <p class="text-center text-xs text-text-muted mt-8">
-        © 2026 Clínica Montalvo — Sistema exclusivo para personal autorizado.
-      </p>
     </div>
+
+    <!-- ── Footer ── -->
+    <p class="text-center text-[11px] text-text-muted mt-6">
+      Sistema exclusivo para personal autorizado
+    </p>
 
   </div>
 </div>
+
 
