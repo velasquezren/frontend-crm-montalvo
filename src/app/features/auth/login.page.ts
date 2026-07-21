@@ -31,15 +31,7 @@ export class LoginPage {
   protected readonly isLoading = signal(false);
   protected readonly errorMessage = signal('');
 
-  protected fillDemoCredentials(role: 'admin' | 'agente'): void {
-    if (role === 'admin') {
-      this.email.set('admin@montalvocrm.com');
-      this.password.set('admin123');
-    } else {
-      this.email.set('agente@montalvocrm.com');
-      this.password.set('agente123');
-    }
-  }
+
 
   async onSubmit(event: Event): Promise<void> {
     event.preventDefault();
