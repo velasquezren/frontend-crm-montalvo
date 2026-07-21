@@ -165,7 +165,6 @@
 /* Transiciones de páginas fluidas y consistentes */
 .workspace > div > *:not(router-outlet) {
   animation: pageFadeInUp 0.45s var(--ease-spring-smooth) forwards;
-  will-change: transform, opacity;
   display: block;
 }
 
@@ -176,7 +175,7 @@
   }
   100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
