@@ -30,11 +30,34 @@
       @for (opcion of filtros; track opcion.valor) {
         <app-filter-chip
           [active]="filtro() === opcion.valor"
-          (clicked)="filtro.set(opcion.valor)">
+          (clicked)="cambiarFiltro(opcion.valor)">
           {{ opcion.label }}
         </app-filter-chip>
       }
     </div>
+
+    <!-- Contexto: qué se está viendo y dónde quedó el histórico -->
+    @if (viendoHistorico()) {
+      <div class="flex items-start gap-2.5 mt-1 px-4 py-3 rounded-xl bg-neutral-bg text-xs text-text-muted">
+        <app-icon name="inbox" [size]="15" class="shrink-0 mt-px" />
+        <p>
+          Estás viendo el <span class="font-medium text-text-dark">archivo histórico</span>
+          importado desde FileMaker ({{ resumen.value().historicoImportado.toLocaleString('es-BO') }} pacientes).
+          No son prospectos activos: para buscarlos uno a uno usa
+          <span class="font-medium text-text-dark">Clientes</span>.
+        </p>
+      </div>
+    } @else if (resumen.value().historicoImportado > 0) {
+      <div class="flex items-start gap-2.5 mt-1 px-4 py-3 rounded-xl bg-bg-light text-xs text-text-muted">
+        <app-icon name="check-circle" [size]="15" class="shrink-0 mt-px text-primary" />
+        <p>
+          Pipeline de <span class="font-medium text-text-dark">captación activa</span>:
+          {{ resumen.value().totalPipeline }} lead{{ resumen.value().totalPipeline === 1 ? '' : 's' }}.
+          Los {{ resumen.value().historicoImportado.toLocaleString('es-BO') }} pacientes históricos
+          quedan fuera para no saturar el tablero.
+        </p>
+      </div>
+    }
   </div>
 
   @if (leads.isLoading()) {
@@ -68,7 +91,7 @@
               Nuevos
             </span>
             <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700">
-              {{ nuevos().length }}
+              {{ resumen.value().porEstado.NUEVO }}
             </span>
           </div>
           <div
@@ -104,6 +127,11 @@
                 <p class="text-[10px] text-text-muted font-medium">Arrastra leads aquí</p>
               </div>
             }
+            @if (ocultasEn('NUEVO', nuevos().length); as ocultas) {
+              <p class="text-[10px] text-text-muted text-center py-2 italic">
+                +{{ ocultas }} sin cargar · usa los filtros o la vista tabla
+              </p>
+            }
           </div>
         </div>
 
@@ -115,7 +143,7 @@
               Contactados
             </span>
             <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
-              {{ contactados().length }}
+              {{ resumen.value().porEstado.CONTACTADO }}
             </span>
           </div>
           <div
@@ -151,6 +179,11 @@
                 <p class="text-[10px] text-text-muted font-medium">Arrastra leads aquí</p>
               </div>
             }
+            @if (ocultasEn('CONTACTADO', contactados().length); as ocultas) {
+              <p class="text-[10px] text-text-muted text-center py-2 italic">
+                +{{ ocultas }} sin cargar · usa los filtros o la vista tabla
+              </p>
+            }
           </div>
         </div>
 
@@ -162,7 +195,7 @@
               Convertidos
             </span>
             <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
-              {{ convertidos().length }}
+              {{ resumen.value().porEstado.CONVERTIDO }}
             </span>
           </div>
           <div
@@ -198,6 +231,11 @@
                 <p class="text-[10px] text-text-muted font-medium">Arrastra leads aquí</p>
               </div>
             }
+            @if (ocultasEn('CONVERTIDO', convertidos().length); as ocultas) {
+              <p class="text-[10px] text-text-muted text-center py-2 italic">
+                +{{ ocultas }} sin cargar · usa los filtros o la vista tabla
+              </p>
+            }
           </div>
         </div>
 
@@ -209,7 +247,7 @@
               Perdidos
             </span>
             <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700">
-              {{ perdidos().length }}
+              {{ resumen.value().porEstado.PERDIDO }}
             </span>
           </div>
           <div
@@ -244,6 +282,11 @@
               <div class="flex flex-col items-center justify-center py-10 border border-dashed border-border/80 rounded-xl bg-white/40">
                 <p class="text-[10px] text-text-muted font-medium">Arrastra leads aquí</p>
               </div>
+            }
+            @if (ocultasEn('PERDIDO', perdidos().length); as ocultas) {
+              <p class="text-[10px] text-text-muted text-center py-2 italic">
+                +{{ ocultas }} sin cargar · usa los filtros o la vista tabla
+              </p>
             }
           </div>
         </div>
@@ -294,6 +337,13 @@
             }
           </tbody>
         </app-table>
+
+        <app-paginator
+          [pagina]="leads.value().pagina"
+          [totalPaginas]="leads.value().totalPaginas"
+          [total]="leads.value().total"
+          [limite]="leads.value().limite"
+          (cambiar)="pagina.set($event)" />
       } @else {
         <div class="bg-white rounded-2xl border border-border p-12">
           <app-empty-state

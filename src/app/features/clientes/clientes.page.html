@@ -113,92 +113,136 @@
 </div>
 
 <!-- Modal para Editar Ficha de Cliente -->
+<!-- ══════════════════════════════════════════════════════════════════════
+     Modal: Ficha Única de Cliente
+     Ref: CRM_MANIFESTO.md §3.2 (rounded-2xl, shadow), §4.1 (átomos)
+     ══════════════════════════════════════════════════════════════════════ -->
 @if (modalEditarAbierto()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs transition-opacity duration-200">
-    <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-border p-6 space-y-5 animate-modal-pop">
-      
-      <!-- Cabecera -->
-      <div class="flex items-center justify-between border-b border-border pb-4">
-        <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-            <app-icon name="edit" [size]="18" />
-          </div>
-          <div>
-            <h2 class="text-base font-bold text-text-dark">Ficha Única de Cliente</h2>
-            <p class="text-[11px] text-text-muted">Visualiza y edita los datos maestros, notas y tags personalizados.</p>
-          </div>
+  <div
+    class="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 sm:p-6
+           overflow-y-auto bg-text-dark/40 backdrop-blur-sm"
+    (click)="cerrarEdicion()">
+
+    <!-- stopPropagation: un clic dentro del panel no debe cerrar el modal -->
+    <div
+      class="bg-white w-full max-w-2xl rounded-2xl shadow-lifted my-auto animate-modal-pop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titulo-ficha"
+      (click)="$event.stopPropagation()">
+
+      <!-- ── Cabecera: identidad del cliente que se edita ─────────── -->
+      <header class="flex items-start justify-between gap-4 px-6 sm:px-8 pt-6 pb-5 border-b border-border">
+        <div class="flex items-center gap-3.5 min-w-0">
+          @if (clienteSeleccionado(); as cli) {
+            <app-avatar [initials]="iniciales(cli.nombre)" size="lg" />
+            <div class="min-w-0">
+              <h2 id="titulo-ficha" class="text-lg font-bold text-text-dark truncate">
+                {{ cli.nombre }}
+              </h2>
+              <div class="flex flex-wrap items-center gap-2 mt-1.5">
+                <app-badge
+                  [variant]="categoriaBadge[cli.categoria]"
+                  [icon]="categoriaIcon[cli.categoria]">
+                  {{ categoriaLabel[cli.categoria] }}
+                </app-badge>
+                <span class="text-xs text-text-muted">{{ cli.telefono }}</span>
+              </div>
+            </div>
+          }
         </div>
-        <button type="button" (click)="cerrarEdicion()" class="text-text-muted hover:text-text-dark cursor-pointer">
+
+        <button
+          type="button"
+          (click)="cerrarEdicion()"
+          class="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-text-muted
+                 hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
+          aria-label="Cerrar">
           <app-icon name="x" [size]="18" />
         </button>
-      </div>
+      </header>
 
-      <!-- Formulario -->
-      <form (submit)="guardarEdicion($event)" class="space-y-4">
-        
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-text-dark mb-1.5">Nombre Completo *</label>
-            <app-input [(value)]="editNombre" placeholder="Ej. Juan Pérez" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-text-dark mb-1.5">Teléfono (Deduplicador) *</label>
-            <app-input [(value)]="editTelefono" placeholder="Ej. +59170000000" />
-          </div>
-        </div>
+      <!-- ── Formulario ───────────────────────────────────────────── -->
+      <form (submit)="guardarEdicion($event)" class="px-6 sm:px-8 py-6 flex flex-col gap-6">
 
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-text-dark mb-1.5">Correo Electrónico</label>
-            <app-input type="email" [(value)]="editEmail" placeholder="correo@ejemplo.com" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-text-dark mb-1.5">Empresa</label>
-            <app-input [(value)]="editEmpresa" placeholder="Ej. Clínica Dental Montalvo" />
-          </div>
-        </div>
+        <!-- Datos de contacto -->
+        <section class="flex flex-col gap-4">
+          <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider">
+            Datos de contacto
+          </h3>
 
-        <div>
-          <label class="block text-xs font-semibold text-text-dark mb-1.5">Notas del Cliente</label>
-          <textarea
-            #txtEditNotas
-            [value]="editNotas()"
-            (input)="editNotas.set(txtEditNotas.value)"
-            placeholder="Añade detalles de contacto, preferencias, etc."
-            class="w-full text-xs p-3 border border-border rounded-xl focus:border-primary focus:outline-none transition-colors min-h-[90px] bg-bg-workspace resize-y"></textarea>
-        </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <app-input label="Nombre completo *" placeholder="Ej. Juan Pérez" [(value)]="editNombre" />
+            <app-input
+              label="Teléfono *"
+              type="tel"
+              placeholder="Ej. +59170000000"
+              [(value)]="editTelefono" />
+          </div>
 
-        <div>
-          <label class="block text-xs font-semibold text-text-dark mb-1.5">Tags / Etiquetas (sep. por comas)</label>
-          <app-input [(value)]="editTags" placeholder="ej. preferente, vip, cirugia-programada" />
-          <div class="flex flex-wrap gap-1 mt-2">
-            @for (tag of editTags().split(','); track tag) {
-              @if (tag.trim()) {
-                <span class="inline-flex items-center px-2 py-0.5 rounded bg-primary/5 text-primary text-[10px] font-semibold border border-primary/10">
-                  {{ tag.trim() }}
-                </span>
-              }
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <app-input
+              label="Correo electrónico"
+              type="email"
+              placeholder="correo@ejemplo.com"
+              [(value)]="editEmail" />
+            <app-input label="Empresa" placeholder="Opcional" [(value)]="editEmpresa" />
+          </div>
+
+          <p class="flex items-start gap-2 text-xs text-text-muted">
+            <app-icon name="alert-circle" [size]="14" class="shrink-0 mt-px" />
+            El teléfono identifica al cliente de forma única: evita duplicados entre canales.
+          </p>
+        </section>
+
+        <!-- Notas y etiquetas -->
+        <section class="flex flex-col gap-4 pt-2 border-t border-border">
+          <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider pt-4">
+            Seguimiento interno
+          </h3>
+
+          <div class="flex flex-col gap-1.5">
+            <label for="ficha-notas" class="text-sm font-medium text-text-dark">Notas</label>
+            <textarea
+              id="ficha-notas"
+              #txtEditNotas
+              [value]="editNotas()"
+              (input)="editNotas.set(txtEditNotas.value)"
+              rows="4"
+              placeholder="Preferencias, antecedentes, acuerdos con el paciente…"
+              class="w-full px-4 py-3 rounded-xl border border-border bg-white text-sm text-text-dark
+                     transition-all duration-200 outline-none resize-y
+                     placeholder:text-text-muted/50
+                     focus:border-primary focus:ring-4 focus:ring-primary/10"></textarea>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <app-input
+              label="Etiquetas"
+              placeholder="preferente, vip, cirugía programada"
+              [(value)]="editTags" />
+            <p class="text-xs text-text-muted">Sepáralas con comas.</p>
+
+            @if (tagsPreview().length > 0) {
+              <div class="flex flex-wrap gap-1.5 mt-1">
+                @for (tag of tagsPreview(); track tag) {
+                  <span class="rounded-full bg-bg-light text-primary text-xs px-2.5 py-1 leading-none">
+                    {{ tag }}
+                  </span>
+                }
+              </div>
             }
           </div>
-        </div>
+        </section>
 
-        <!-- Botones de Acción -->
-        <div class="flex gap-2 border-t border-border pt-4 justify-end">
-          <button
-            type="button"
-            (click)="cerrarEdicion()"
-            class="px-4 py-2 border border-border rounded-xl text-xs font-semibold text-text-muted hover:bg-bg-light cursor-pointer">
-            Cancelar
-          </button>
-          <app-button
-            type="submit"
-            [loading]="guardando()">
-            Guardar Cambios
+        <!-- ── Acciones ───────────────────────────────────────────── -->
+        <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-5 border-t border-border">
+          <app-button variant="secondary" (clicked)="cerrarEdicion()">Cancelar</app-button>
+          <app-button type="submit" [loading]="guardando()">
+            {{ guardando() ? 'Guardando…' : 'Guardar cambios' }}
           </app-button>
         </div>
-
       </form>
-
     </div>
   </div>
 }

@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, HostListener, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 
 import { mensajeDeError } from '../../core/api/http-error';
@@ -115,6 +115,22 @@ export class ClientesPage {
       }, 300);
       onCleanup(() => clearTimeout(timeout));
     });
+  }
+
+  /** Etiquetas ya limpias, para la vista previa bajo el campo. */
+  protected readonly tagsPreview = computed(() =>
+    this.editTags()
+      .split(',')
+      .map(t => t.trim())
+      .filter(Boolean),
+  );
+
+  /** Cerrar con Escape: comportamiento esperado en cualquier modal. */
+  @HostListener('document:keydown.escape')
+  protected onEscape(): void {
+    if (this.modalEditarAbierto()) {
+      this.cerrarEdicion();
+    }
   }
 
   protected abrirEdicion(cliente: Cliente): void {

@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import {
   CdkDragDrop,
   DragDropModule,
@@ -20,6 +20,7 @@ import { FilterChipComponent } from '../../shared/components/filter-chip/filter-
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 import {
   ESTADO_LEAD_BADGE,
@@ -27,7 +28,7 @@ import {
   EstadoLead,
 } from '../../shared/models/estados.model';
 import { Lead, ORIGEN_LABEL, OrigenLeadApi } from './lead.model';
-import { LeadsService } from './leads.service';
+import { FiltroLeads, LeadsService, ResumenLeads } from './leads.service';
 
 type FiltroOrigen = OrigenLeadApi | 'TODOS';
 
@@ -46,6 +47,7 @@ type FiltroOrigen = OrigenLeadApi | 'TODOS';
     EmptyStateComponent,
     LoadingSkeletonComponent,
     IconComponent,
+    PaginatorComponent,
     DatePipe,
     DragDropModule,
   ],
@@ -64,23 +66,54 @@ export class LeadsPage {
   /* Modos de vista: 'PIPELINE' (Kanban) o 'LISTA' (Tabla) */
   protected readonly modoVista = signal<'PIPELINE' | 'LISTA'>('PIPELINE');
   protected readonly filtro = signal<FiltroOrigen>('TODOS');
+  protected readonly pagina = signal(1);
 
+  /**
+   * "Importados" es el histórico de FileMaker: 15.000+ pacientes antiguos que
+   * no son prospectos por trabajar. El backend los excluye salvo que se pidan,
+   * así que el pipeline solo muestra captación real.
+   */
   protected readonly filtros: readonly { valor: FiltroOrigen; label: string }[] = [
-    { valor: 'TODOS', label: 'Todos los canales' },
+    { valor: 'TODOS', label: 'Captación activa' },
     { valor: 'PRESENCIAL', label: 'Presencial' },
     { valor: 'WHATSAPP_DIRECTO', label: 'WhatsApp' },
     { valor: 'FACEBOOK_LEAD_AD', label: 'Facebook' },
     { valor: 'INSTAGRAM_LEAD_AD', label: 'Instagram' },
-    { valor: 'IMPORTACION', label: 'Importados' },
+    { valor: 'IMPORTACION', label: 'Histórico importado' },
   ];
 
+  protected readonly viendoHistorico = computed(() => this.filtro() === 'IMPORTACION');
+
+  private filtroActual(): FiltroLeads {
+    const f = this.filtro();
+    return f === 'TODOS' ? {} : { origen: f };
+  }
+
   /* ── Datos del Servidor ────────────────────────────────────────── */
-  /* El kanban necesita ver el pipeline completo, no una página: se pide el
-     máximo permitido por el backend (100) en vez de el default de 25. */
+
+  /** Conteos reales por columna: la UI no debe contar solo lo que cargó. */
+  protected readonly resumen = httpResource<ResumenLeads>(
+    () => this.leadsService.resumenRequest(this.filtroActual()),
+    {
+      defaultValue: {
+        porEstado: { NUEVO: 0, CONTACTADO: 0, CONVERTIDO: 0, PERDIDO: 0 },
+        totalPipeline: 0,
+        historicoImportado: 0,
+      },
+    },
+  );
+
+  /**
+   * Kanban: se cargan hasta 100 tarjetas para arrastrar. Si una columna tiene
+   * más, la cabecera muestra el total real y se avisa que hay más sin cargar
+   * (arrastrar 15.000 tarjetas no es un flujo de trabajo viable).
+   */
   protected readonly leads = httpResource<RespuestaPaginada<Lead>>(
     () => {
-      const filtro = this.filtro();
-      return this.leadsService.listarRequest(filtro === 'TODOS' ? undefined : filtro, 1, 100);
+      const base = this.filtroActual();
+      return this.modoVista() === 'PIPELINE'
+        ? this.leadsService.listarRequest({ ...base, pagina: 1, limite: 100 })
+        : this.leadsService.listarRequest({ ...base, pagina: this.pagina(), limite: 25 });
     },
     { defaultValue: paginaVacia<Lead>() },
   );
@@ -91,6 +124,11 @@ export class LeadsPage {
   protected readonly convertidos = signal<Lead[]>([]);
   protected readonly perdidos = signal<Lead[]>([]);
 
+  /** Cuántas tarjetas hay sin cargar en cada columna (total real − cargadas). */
+  protected ocultasEn(estado: EstadoLead, cargadas: number): number {
+    return Math.max(0, this.resumen.value().porEstado[estado] - cargadas);
+  }
+
   constructor() {
     effect(() => {
       const data = this.leads.value().datos;
@@ -99,6 +137,11 @@ export class LeadsPage {
       this.convertidos.set(data.filter(l => l.estado === 'CONVERTIDO'));
       this.perdidos.set(data.filter(l => l.estado === 'PERDIDO'));
     });
+  }
+
+  protected cambiarFiltro(valor: FiltroOrigen): void {
+    this.filtro.set(valor);
+    this.pagina.set(1);
   }
 
   protected setVista(modo: 'PIPELINE' | 'LISTA'): void {
