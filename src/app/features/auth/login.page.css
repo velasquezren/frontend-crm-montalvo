@@ -7,26 +7,61 @@
   display: block;
 }
 
-/* Fondo con luz suave derivada de la paleta (bg-light) — sin colores nuevos */
-.login-bg {
+.login-wrapper {
   background:
-    radial-gradient(60rem 30rem at 80% -10%, var(--color-bg-light), transparent 70%),
-    radial-gradient(50rem 25rem at 0% 110%, var(--color-bg-light), transparent 70%),
+    radial-gradient(80rem 40rem at 10% -10%, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 70%),
+    radial-gradient(60rem 30rem at 90% 110%, color-mix(in srgb, var(--color-secondary) 15%, transparent), transparent 70%),
     var(--color-bg-workspace);
 }
 
-/* Entrance animation — subtle fadeInUp */
-.login-card {
-  animation: fadeInUp 0.4s ease-out;
+.login-container {
+  animation: loginContainerEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@keyframes fadeInUp {
+@keyframes loginContainerEntrance {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(16px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
+
+.login-hero {
+  background: linear-gradient(145deg, #003832 0%, #006156 50%, #00463E 100%);
+  position: relative;
+}
+
+.hero-glow-1 {
+  position: absolute;
+  top: -20%;
+  right: -20%;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(57, 173, 163, 0.35) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.hero-glow-2 {
+  position: absolute;
+  bottom: -15%;
+  left: -15%;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(0, 97, 86, 0.5) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.feature-badge {
+  transform: translateY(0);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease;
+}
+
+.feature-badge:hover {
+  transform: translateY(-2px);
+}
+
