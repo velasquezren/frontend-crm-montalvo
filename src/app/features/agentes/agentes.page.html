@@ -130,7 +130,7 @@
                   type="button"
                   (click)="toggleEstado(agente)"
                   class="text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors cursor-pointer"
-                  [class]="agente.activo ? 'border-border text-text-muted hover:text-critical hover:bg-red-50 hover:border-red-200' : 'border-primary/30 text-primary bg-primary/5 hover:bg-primary/10'">
+                  [class]="agente.activo ? 'border-border text-text-muted hover:text-critical hover:bg-critical-bg hover:border-critical/20' : 'border-primary/30 text-primary bg-primary/5 hover:bg-primary/10'">
                   {{ agente.activo ? 'Desactivar' : 'Activar' }}
                 </button>
               </td>
@@ -154,8 +154,12 @@
 
 <!-- Modal para Crear Nuevo Agente -->
 @if (modalCrearAbierto()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs transition-opacity duration-200">
-    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl border border-border p-6 space-y-5 animate-modal-pop">
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-text-dark/40 backdrop-blur-xs transition-opacity duration-200"
+    (click)="cerrarModal()">
+    <div
+      class="bg-white w-full max-w-md rounded-2xl shadow-lifted border border-border p-6 space-y-5 animate-modal-pop"
+      (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between border-b border-border pb-4">
         <div class="flex items-center gap-2.5">
           <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
@@ -169,7 +173,7 @@
       </div>
 
       @if (errorMensaje(); as err) {
-        <div class="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-medium">
+        <div class="p-3 rounded-xl bg-critical-bg border border-critical/20 text-xs text-text-dark font-medium">
           {{ err }}
         </div>
       }

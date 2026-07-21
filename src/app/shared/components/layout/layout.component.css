@@ -142,7 +142,7 @@
 
 
 /* ═══════════════════════════════════════════════════════════════
-   Mobile: sidebar oculto, solo topbar
+   Mobile Layout — Slide-over Drawer Menu
    ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   .layout-grid {
@@ -153,6 +153,28 @@
   }
 
   .sidebar {
-    display: none;
+    position: fixed;
+    top: 4rem;
+    left: 0;
+    bottom: 0;
+    z-index: 40;
+    width: 0;
+    overflow: visible;
+  }
+
+  .sidebar-inner {
+    width: 250px;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  }
+
+  .sidebar-expanded .sidebar-inner {
+    transform: translateX(0);
+    box-shadow: 12px 0 36px rgba(0, 0, 0, 0.15);
+  }
+
+  .sidebar-expanded .nav-label {
+    opacity: 1;
+    transform: translateX(0);
   }
 }

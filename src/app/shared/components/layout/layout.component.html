@@ -57,6 +57,11 @@
        SIDEBAR — Icon Rail (72px) → Expandible al hover (240px)
        Ref: CRM_MANIFESTO.md §3.2
        ══════════════════════════════════════════════════════════════════════ -->
+  <!-- Mobile Backdrop Overlay -->
+  @if (sidebarExpanded()) {
+    <div (click)="toggleSidebar($event)" class="fixed inset-0 bg-text-dark/40 backdrop-blur-xs z-30 md:hidden animate-fade-scale" aria-hidden="true"></div>
+  }
+
   <aside class="sidebar" [class.sidebar-expanded]="sidebarExpanded()">
     <div class="sidebar-inner py-4" [class.sidebar-inner-expanded]="sidebarExpanded()">
       <!-- Navigation -->
@@ -64,7 +69,8 @@
         @for (item of navItems(); track item.path) {
           <a [routerLink]="item.path"
              routerLinkActive="nav-active"
-             class="nav-link">
+             class="nav-link"
+             (click)="sidebarExpanded.set(false)">
             <span class="nav-icon-slot">
               <app-icon [name]="item.icon" [size]="20" />
             </span>
