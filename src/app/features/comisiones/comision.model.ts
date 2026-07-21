@@ -1,4 +1,6 @@
-export type EstadoComision = 'PENDIENTE' | 'PAGADA';
+import { EstadoComision } from '../../shared/models/estados.model';
+
+export type { EstadoComision };
 
 /** Respuesta de GET /comisiones. Prisma serializa Decimal como string. */
 export interface Comision {

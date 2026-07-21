@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { HttpClient, httpResource } from '@angular/common/http';
+import { httpResource } from '@angular/common/http';
 import { Component, effect, inject, signal } from '@angular/core';
 import {
   CdkDragDrop,
@@ -8,11 +8,12 @@ import {
   transferArrayItem,
 } from '@angular/cdk/drag-drop';
 
-import { API_URL } from '../../core/api/api.constants';
+import { mensajeDeError } from '../../core/api/http-error';
+import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { generarIniciales } from '../../core/auth/user.model';
 import { ToastService } from '../../core/toast/toast.service';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
-import { BadgeComponent, BadgeVariant } from '../../shared/components/badge/badge.component';
+import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
@@ -20,23 +21,15 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { TableComponent } from '../../shared/components/table/table.component';
-import { EstadoLead, Lead, ORIGEN_LABEL, OrigenLeadApi } from './lead.model';
+import {
+  ESTADO_LEAD_BADGE,
+  ESTADO_LEAD_LABEL,
+  EstadoLead,
+} from '../../shared/models/estados.model';
+import { Lead, ORIGEN_LABEL, OrigenLeadApi } from './lead.model';
+import { LeadsService } from './leads.service';
 
 type FiltroOrigen = OrigenLeadApi | 'TODOS';
-
-const ESTADO_BADGE: Record<EstadoLead, BadgeVariant> = {
-  NUEVO: 'info',
-  CONTACTADO: 'neutral',
-  CONVERTIDO: 'success',
-  PERDIDO: 'critical',
-};
-
-const ESTADO_LABEL: Record<EstadoLead, string> = {
-  NUEVO: 'Nuevo',
-  CONTACTADO: 'Contactado',
-  CONVERTIDO: 'Convertido',
-  PERDIDO: 'Perdido',
-};
 
 /**
  * Leads — Pipeline Kanban Drag-and-Drop + Vista Tabla.
@@ -44,7 +37,6 @@ const ESTADO_LABEL: Record<EstadoLead, string> = {
  */
 @Component({
   selector: 'app-leads',
-  standalone: true,
   imports: [
     PageHeaderComponent,
     FilterChipComponent,
@@ -61,11 +53,11 @@ const ESTADO_LABEL: Record<EstadoLead, string> = {
   styleUrl: './leads.page.css',
 })
 export class LeadsPage {
-  private readonly http = inject(HttpClient);
+  private readonly leadsService = inject(LeadsService);
   private readonly toastService = inject(ToastService);
 
-  protected readonly estadoBadge = ESTADO_BADGE;
-  protected readonly estadoLabel = ESTADO_LABEL;
+  protected readonly estadoBadge = ESTADO_LEAD_BADGE;
+  protected readonly estadoLabel = ESTADO_LEAD_LABEL;
   protected readonly origenLabel = ORIGEN_LABEL;
   protected readonly iniciales = generarIniciales;
 
@@ -83,15 +75,14 @@ export class LeadsPage {
   ];
 
   /* ── Datos del Servidor ────────────────────────────────────────── */
-  protected readonly leads = httpResource<Lead[]>(
+  /* El kanban necesita ver el pipeline completo, no una página: se pide el
+     máximo permitido por el backend (100) en vez de el default de 25. */
+  protected readonly leads = httpResource<RespuestaPaginada<Lead>>(
     () => {
-      const params: Record<string, string> = {};
-      if (this.filtro() !== 'TODOS') {
-        params['origen'] = this.filtro();
-      }
-      return { url: `${API_URL}/leads`, params };
+      const filtro = this.filtro();
+      return this.leadsService.listarRequest(filtro === 'TODOS' ? undefined : filtro, 1, 100);
     },
-    { defaultValue: [] },
+    { defaultValue: paginaVacia<Lead>() },
   );
 
   /* ── Estados para columnas del Kanban ──────────────────────────── */
@@ -102,7 +93,7 @@ export class LeadsPage {
 
   constructor() {
     effect(() => {
-      const data = this.leads.value() ?? [];
+      const data = this.leads.value().datos;
       this.nuevos.set(data.filter(l => l.estado === 'NUEVO'));
       this.contactados.set(data.filter(l => l.estado === 'CONTACTADO'));
       this.convertidos.set(data.filter(l => l.estado === 'CONVERTIDO'));
@@ -130,21 +121,21 @@ export class LeadsPage {
       );
 
       // 2. Persistir en el Backend
-      this.http.patch(`${API_URL}/leads/${item.id}/estado`, { estado: targetColumnId }).subscribe({
-        next: () => {
+      this.leadsService
+        .cambiarEstado(item.id, targetColumnId)
+        .then(() => {
           this.toastService.success(
             `Lead ${item.cliente.nombre} movido a ${this.estadoLabel[targetColumnId]}`,
             'Pipeline Actualizado',
           );
-        },
-        error: () => {
+        })
+        .catch((err: unknown) => {
           this.toastService.error(
-            'Ocurrió un error al actualizar el estado del lead.',
+            mensajeDeError(err, 'Ocurrió un error al actualizar el estado del lead.'),
             'Error al Mover',
           );
           this.leads.reload(); // Revertir cambios
-        },
-      });
+        });
     }
   }
 }

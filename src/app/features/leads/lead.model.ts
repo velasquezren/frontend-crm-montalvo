@@ -12,7 +12,9 @@ export type OrigenLeadApi =
   | 'PRESENCIAL'
   | 'IMPORTACION';
 
-export type EstadoLead = 'NUEVO' | 'CONTACTADO' | 'CONVERTIDO' | 'PERDIDO';
+import { EstadoLead } from '../../shared/models/estados.model';
+
+export type { EstadoLead };
 
 export const ORIGEN_LABEL: Record<OrigenLeadApi, string> = {
   FACEBOOK_LEAD_AD: 'Facebook · Lead Ad',

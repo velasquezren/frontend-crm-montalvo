@@ -1,9 +1,9 @@
-import { HttpClient, httpResource } from '@angular/common/http';
+import { httpResource } from '@angular/common/http';
 import { Component, effect, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { firstValueFrom } from 'rxjs';
 
-import { API_URL } from '../../core/api/api.constants';
+import { mensajeDeError } from '../../core/api/http-error';
+import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { generarIniciales } from '../../core/auth/user.model';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
@@ -14,6 +14,7 @@ import { FilterChipComponent } from '../../shared/components/filter-chip/filter-
 import { InputComponent } from '../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 import { ToastService } from '../../core/toast/toast.service';
 import {
@@ -23,6 +24,7 @@ import {
   CategoriaCliente,
 } from '../../shared/models/cliente-categoria.model';
 import { Cliente } from './cliente.model';
+import { ClientesService } from './clientes.service';
 
 type FiltroCategoria = CategoriaCliente | 'TODOS';
 
@@ -43,12 +45,13 @@ type FiltroCategoria = CategoriaCliente | 'TODOS';
     IconComponent,
     EmptyStateComponent,
     LoadingSkeletonComponent,
+    PaginatorComponent,
     DatePipe,
   ],
   templateUrl: './clientes.page.html',
 })
 export class ClientesPage {
-  private readonly http = inject(HttpClient);
+  private readonly clientesService = inject(ClientesService);
   private readonly toast = inject(ToastService);
 
   protected readonly categoriaLabel = CATEGORIA_LABEL;
@@ -70,16 +73,25 @@ export class ClientesPage {
     'PROSPECTO',
   ];
 
-  protected readonly clientes = httpResource<Cliente[]>(
-    () => ({
-      url: `${API_URL}/clientes`,
-      params: {
-        ...(this.busquedaAplicada() ? { busqueda: this.busquedaAplicada() } : {}),
-        ...(this.filtro() !== 'TODOS' ? { categoria: this.filtro() } : {}),
-      },
-    }),
-    { defaultValue: [] },
+  protected readonly pagina = signal(1);
+
+  protected readonly clientes = httpResource<RespuestaPaginada<Cliente>>(
+    () => {
+      const filtro = this.filtro();
+      return this.clientesService.listarRequest({
+        busqueda: this.busquedaAplicada(),
+        categoria: filtro === 'TODOS' ? undefined : filtro,
+        pagina: this.pagina(),
+      });
+    },
+    { defaultValue: paginaVacia<Cliente>() },
   );
+
+  /** Al cambiar filtro o búsqueda se vuelve a la primera página. */
+  protected cambiarFiltro(nuevo: FiltroCategoria): void {
+    this.filtro.set(nuevo);
+    this.pagina.set(1);
+  }
 
   /* ── Estado del Modal de Edición Ficha ───────────────────────── */
   protected readonly clienteSeleccionado = signal<Cliente | null>(null);
@@ -93,11 +105,15 @@ export class ClientesPage {
   protected readonly guardando = signal(false);
 
   constructor() {
-    let timeout: ReturnType<typeof setTimeout>;
-    effect(() => {
+    /* Debounce de 300ms. onCleanup cancela el timer tanto al teclear de nuevo
+       como al destruir el componente, evitando un set() sobre un signal huérfano. */
+    effect(onCleanup => {
       const termino = this.busqueda();
-      clearTimeout(timeout);
-      timeout = setTimeout(() => this.busquedaAplicada.set(termino.trim()), 300);
+      const timeout = setTimeout(() => {
+        this.busquedaAplicada.set(termino.trim());
+        this.pagina.set(1);
+      }, 300);
+      onCleanup(() => clearTimeout(timeout));
     });
   }
 
@@ -136,7 +152,7 @@ export class ClientesPage {
         .map(t => t.trim())
         .filter(Boolean);
 
-      const payload = {
+      await this.clientesService.actualizar(cliente.id, {
         nombre,
         telefono,
         email: this.editEmail().trim() || null,
@@ -145,17 +161,15 @@ export class ClientesPage {
           notas: this.editNotas().trim() || null,
           tags: tagsArray,
         },
-      };
-
-      await firstValueFrom(
-        this.http.patch(`${API_URL}/clientes/${cliente.id}`, payload),
-      );
+      });
       this.toast.success('Ficha de cliente actualizada', 'Guardado');
       this.cerrarEdicion();
       this.clientes.reload();
-    } catch (err: any) {
-      const msg = err.error?.message || 'No se pudo guardar la información.';
-      this.toast.error(msg, 'Error al Guardar');
+    } catch (err) {
+      this.toast.error(
+        mensajeDeError(err, 'No se pudo guardar la información.'),
+        'Error al Guardar',
+      );
     } finally {
       this.guardando.set(false);
     }

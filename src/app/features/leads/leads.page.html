@@ -253,7 +253,7 @@
 
     <!-- ── VISTA TABLA (Listado Completo) ───────────────────────────── -->
     @if (modoVista() === 'LISTA') {
-      @if (leads.value().length > 0) {
+      @if (leads.value().datos.length > 0) {
         <app-table>
           <thead>
             <tr>
@@ -265,7 +265,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (lead of leads.value(); track lead.id) {
+            @for (lead of leads.value().datos; track lead.id) {
               <tr>
                 <td>
                   <div class="flex items-center gap-3">

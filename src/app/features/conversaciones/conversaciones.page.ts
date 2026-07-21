@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { HttpClient, httpResource } from '@angular/common/http';
+import { httpResource } from '@angular/common/http';
 import {
   AfterViewInit,
   Component,
@@ -10,9 +10,8 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
 
-import { API_URL } from '../../core/api/api.constants';
+import { mensajeDeError } from '../../core/api/http-error';
 import { AuthService } from '../../core/auth/auth.service';
 import { ToastService } from '../../core/toast/toast.service';
 import { generarIniciales } from '../../core/auth/user.model';
@@ -28,6 +27,7 @@ import {
   CATEGORIA_ICON,
   CATEGORIA_LABEL,
 } from '../../shared/models/cliente-categoria.model';
+import { ClientesService } from '../clientes/clientes.service';
 import {
   AgenteResumen,
   ConversacionDetalle,
@@ -35,6 +35,7 @@ import {
   FiltroInbox,
   MensajeApi,
 } from './conversacion.model';
+import { ConversacionesService } from './conversaciones.service';
 
 /**
  * Conversaciones — WhatsApp Inbox Premium (RF-09/RF-10).
@@ -65,7 +66,8 @@ import {
   styleUrl: './conversaciones.page.css',
 })
 export class ConversacionesPage implements AfterViewInit {
-  private readonly http = inject(HttpClient);
+  private readonly conversacionesService = inject(ConversacionesService);
+  private readonly clientesService = inject(ClientesService);
   private readonly authService = inject(AuthService);
   private readonly toastService = inject(ToastService);
 
@@ -126,18 +128,18 @@ export class ConversacionesPage implements AfterViewInit {
 
   /* ── Datos del servidor ────────────────────────────────────────── */
   protected readonly conversaciones = httpResource<ConversacionResumen[]>(
-    () => `${API_URL}/conversaciones`,
+    () => this.conversacionesService.listarRequest(),
     { defaultValue: [] },
   );
 
   protected readonly detalle = httpResource<ConversacionDetalle | undefined>(() => {
     const id = this.seleccionadaId();
-    return id ? `${API_URL}/conversaciones/${id}` : undefined;
+    return id ? this.conversacionesService.detalleRequest(id) : undefined;
   });
 
   /** Agentes activos — solo se carga si el usuario es ADMIN. */
   protected readonly agentes = httpResource<AgenteResumen[]>(
-    () => (this.isAdmin() ? `${API_URL}/conversaciones/meta/agentes` : undefined),
+    () => (this.isAdmin() ? this.conversacionesService.agentesRequest() : undefined),
     { defaultValue: [] },
   );
 
@@ -304,16 +306,16 @@ export class ConversacionesPage implements AfterViewInit {
         },
       };
 
-      await firstValueFrom(
-        this.http.patch(`${API_URL}/clientes/${chat.cliente.id}`, payload),
-      );
+      await this.clientesService.actualizar(chat.cliente.id, payload);
       this.toastService.success('Ficha de cliente actualizada', 'Ficha Cliente');
       this.editandoFicha.set(false);
       this.detalle.reload();
       this.conversaciones.reload();
-    } catch (err: any) {
-      const msg = err.error?.message || 'No se pudo guardar los cambios.';
-      this.toastService.error(msg, 'Error al Guardar');
+    } catch (err) {
+      this.toastService.error(
+        mensajeDeError(err, 'No se pudo guardar los cambios.'),
+        'Error al Guardar',
+      );
     } finally {
       this.guardandoFicha.set(false);
     }
@@ -345,15 +347,16 @@ export class ConversacionesPage implements AfterViewInit {
 
     this.enviando.set(true);
     try {
-      await firstValueFrom(
-        this.http.post(`${API_URL}/conversaciones/${id}/mensajes`, { contenido: texto }),
-      );
+      await this.conversacionesService.enviarMensaje(id, texto);
       this.mensajeNuevo.set('');
       this.toastService.success('Mensaje enviado al paciente', 'WhatsApp');
       this.detalle.reload();
       this.conversaciones.reload();
-    } catch {
-      this.toastService.error('No se pudo enviar el mensaje', 'Error de Conexión');
+    } catch (err) {
+      this.toastService.error(
+        mensajeDeError(err, 'No se pudo enviar el mensaje'),
+        'Error de Conexión',
+      );
     } finally {
       this.enviando.set(false);
     }
@@ -367,14 +370,15 @@ export class ConversacionesPage implements AfterViewInit {
     this.asignando.set(true);
     this.dropdownAgenteAbierto.set(false);
     try {
-      await firstValueFrom(
-        this.http.patch(`${API_URL}/conversaciones/${id}/agente`, { agenteId }),
-      );
+      await this.conversacionesService.asignarAgente(id, agenteId);
       this.toastService.success('Conversación reasignada', 'Inbox Admin');
       this.detalle.reload();
       this.conversaciones.reload();
-    } catch {
-      this.toastService.error('No se pudo reasignar el agente', 'Error de Permisos');
+    } catch (err) {
+      this.toastService.error(
+        mensajeDeError(err, 'No se pudo reasignar el agente'),
+        'Error de Permisos',
+      );
     } finally {
       this.asignando.set(false);
     }

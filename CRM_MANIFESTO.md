@@ -191,7 +191,21 @@ export const routes: Routes = [
 - Usar `loadChildren` para sub-rutas de un dominio completo.
 - Guards como funciones (`CanActivateFn`) en lugar de clases.
 
-### 2.8 HttpClient y httpResource
+### 2.8 Capa de datos: servicios de dominio (obligatorio)
+
+> **Regla:** una página **nunca** inyecta `HttpClient` ni escribe una URL.
+> Cada dominio expone su `<dominio>.service.ts`, que se apoya en `core/api/api.service.ts`.
+
+- Lecturas: el servicio devuelve la **petición** (`ResourceRequest`); la página la consume
+  con `httpResource()` para que la reactividad siga viviendo en el componente.
+- Comandos (POST/PATCH/DELETE): el servicio devuelve `Promise`; la página hace `await` y
+  luego `recurso.reload()`.
+- Errores: siempre `mensajeDeError(err, respaldo)` de `core/api/http-error.ts`.
+  Prohibido `catch (err: any)` y leer `err.error?.message` a mano.
+
+Ver la skill `crm-feature-page` para el patrón completo con ejemplos.
+
+### 2.9 HttpClient y httpResource
 
 ```typescript
 // ✅ CORRECTO — httpResource para fetching reactivo
@@ -343,9 +357,14 @@ src/app/
 │   ├── auth/
 │   │   ├── auth.service.ts
 │   │   ├── auth.guard.ts
-│   │   └── token.interceptor.ts
-│   └── api/
-│       └── api.service.ts
+│   │   ├── admin.guard.ts
+│   │   ├── token.interceptor.ts
+│   │   └── user.model.ts
+│   ├── api/
+│   │   ├── api.constants.ts       # API_URL
+│   │   ├── api.service.ts         # única puerta de salida HTTP
+│   │   └── http-error.ts          # mensajeDeError() — errores de NestJS
+│   └── toast/
 ├── shared/                        # Átomos, moléculas, pipes, directivas reutilizables
 │   ├── components/
 │   ├── pipes/
@@ -356,7 +375,8 @@ src/app/
 │   │   ├── dashboard.page.ts
 │   │   ├── dashboard.page.html
 │   │   ├── dashboard.page.css
-│   │   ├── dashboard.routes.ts
+│   │   ├── kpis.service.ts        # endpoints del dominio (obligatorio)
+│   │   ├── kpis.model.ts          # espejo de la respuesta del backend
 │   │   └── components/            # Componentes locales del feature
 │   ├── leads/
 │   ├── clientes/

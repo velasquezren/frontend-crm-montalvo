@@ -1,9 +1,7 @@
-import { HttpClient } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
 
-import { API_URL } from '../../../core/api/api.constants';
+import { mensajeDeError } from '../../../core/api/http-error';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AvatarComponent } from '../../../shared/components/avatar/avatar.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
@@ -12,6 +10,7 @@ import { FilterChipComponent } from '../../../shared/components/filter-chip/filt
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { InputComponent } from '../../../shared/components/input/input.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
+import { LeadsService } from '../leads.service';
 
 /**
  * Registro Presencial — POST real a /leads/presencial (RF-07/RF-08, RNF-07).
@@ -34,7 +33,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 })
 export class RegistroPresencialPage {
   private readonly authService = inject(AuthService);
-  private readonly http = inject(HttpClient);
+  private readonly leadsService = inject(LeadsService);
 
   protected readonly nombre = signal('');
   protected readonly telefono = signal('');
@@ -95,20 +94,20 @@ export class RegistroPresencialPage {
 
     this.enviando.set(true);
     try {
-      await firstValueFrom(
-        this.http.post(`${API_URL}/leads/presencial`, {
-          nombre,
-          telefono,
-          ...(this.interes().trim() ? { interes: this.interes().trim() } : {}),
-        }),
-      );
+      await this.leadsService.crearPresencial({
+        nombre,
+        telefono,
+        ...(this.interes().trim() ? { interes: this.interes().trim() } : {}),
+      });
       this.horaRegistro.set(
         new Date().toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' }),
       );
       this.telefono.set(telefono);
       this.registrado.set(true);
-    } catch {
-      this.errorGeneral.set('No se pudo registrar. Verifica el servidor e intenta de nuevo.');
+    } catch (err) {
+      this.errorGeneral.set(
+        mensajeDeError(err, 'No se pudo registrar. Verifica el servidor e intenta de nuevo.'),
+      );
     } finally {
       this.enviando.set(false);
     }

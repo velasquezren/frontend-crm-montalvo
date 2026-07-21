@@ -27,7 +27,7 @@
       <app-filter-chip
         [active]="filtro() === opcion"
         [count]="contarPor(opcion)"
-        (clicked)="filtro.set(opcion)">
+        (clicked)="cambiarFiltro(opcion)">
         {{ opcion === 'TODAS' ? 'Todas' : estadoLabel[opcion] }}
       </app-filter-chip>
     }
@@ -88,6 +88,13 @@
         }
       </tbody>
     </app-table>
+
+    <app-paginator
+      [pagina]="comisiones.value().pagina"
+      [totalPaginas]="comisiones.value().totalPaginas"
+      [total]="comisiones.value().total"
+      [limite]="comisiones.value().limite"
+      (cambiar)="pagina.set($event)" />
   } @else {
     <div class="bg-white rounded-2xl shadow-subtle">
       <app-empty-state

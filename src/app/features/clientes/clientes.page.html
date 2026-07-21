@@ -17,7 +17,7 @@
       @for (opcion of filtros; track opcion) {
         <app-filter-chip
           [active]="filtro() === opcion"
-          (clicked)="filtro.set(opcion)">
+          (clicked)="cambiarFiltro(opcion)">
           {{ opcion === 'TODOS' ? 'Todos' : categoriaLabel[opcion] }}
         </app-filter-chip>
       }
@@ -38,7 +38,7 @@
         title="No se pudo cargar los clientes"
         description="Verifica que el servidor del CRM esté encendido e intenta de nuevo." />
     </div>
-  } @else if (clientes.value().length > 0) {
+  } @else if (clientes.value().datos.length > 0) {
     <app-table>
       <thead>
         <tr>
@@ -51,7 +51,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (cliente of clientes.value(); track cliente.id) {
+        @for (cliente of clientes.value().datos; track cliente.id) {
           <tr class="cursor-pointer hover:bg-bg-light/40 transition-colors" (click)="abrirEdicion(cliente)" title="Haga clic para ver/editar ficha">
             <td>
               <div class="flex items-center gap-3">
@@ -95,6 +95,13 @@
         }
       </tbody>
     </app-table>
+
+    <app-paginator
+      [pagina]="clientes.value().pagina"
+      [totalPaginas]="clientes.value().totalPaginas"
+      [total]="clientes.value().total"
+      [limite]="clientes.value().limite"
+      (cambiar)="pagina.set($event)" />
   } @else {
     <div class="bg-white rounded-2xl shadow-subtle">
       <app-empty-state

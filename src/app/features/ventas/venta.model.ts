@@ -1,4 +1,6 @@
-export type EstadoVenta = 'GANADA' | 'EN_PROCESO' | 'PERDIDA';
+import { EstadoVenta } from '../../shared/models/estados.model';
+
+export type { EstadoVenta };
 
 /** Respuesta de GET /ventas. Prisma serializa Decimal como string. */
 export interface Venta {

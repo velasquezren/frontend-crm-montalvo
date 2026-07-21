@@ -1,19 +1,18 @@
-import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, ViewChild, inject, signal } from '@angular/core';
+import { Component, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { API_URL } from '../../core/api/api.constants';
+import { mensajeDeError } from '../../core/api/http-error';
 import { AuthService } from '../../core/auth/auth.service';
-import { generarIniciales } from '../../core/auth/user.model';
+import { generarIniciales, UsuarioApi } from '../../core/auth/user.model';
 import { ToastService } from '../../core/toast/toast.service';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { PerfilService } from './perfil.service';
 
 @Component({
   selector: 'app-perfil',
-  standalone: true,
   imports: [
     ReactiveFormsModule,
     PageHeaderComponent,
@@ -25,7 +24,7 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
   styleUrl: './perfil.page.css',
 })
 export class PerfilPage {
-  private readonly http = inject(HttpClient);
+  private readonly perfilService = inject(PerfilService);
   private readonly authService = inject(AuthService);
   private readonly toast = inject(ToastService);
 
@@ -102,18 +101,15 @@ export class PerfilPage {
     this.guardando.set(true);
     const formVal = this.perfilForm.getRawValue();
 
-    const payload: Record<string, any> = {
-      nombre: formVal.nombre,
-      email: formVal.email,
-      foto: this.previewFoto(),
-    };
-
-    if (formVal.password) {
-      payload['password'] = formVal.password;
-    }
-
-    this.http.patch<any>(`${API_URL}/auth/perfil`, payload).subscribe({
-      next: (res) => {
+    this.perfilService
+      .actualizar({
+        nombre: formVal.nombre,
+        email: formVal.email,
+        foto: this.previewFoto(),
+        /* La contraseña solo viaja si el usuario escribió una nueva. */
+        ...(formVal.password ? { password: formVal.password } : {}),
+      })
+      .then(res => {
         this.guardando.set(false);
         this.toast.success('Tu perfil ha sido actualizado correctamente.', 'Perfil Actualizado');
 
@@ -131,15 +127,13 @@ export class PerfilPage {
 
         // Limpiar campo password
         this.perfilForm.patchValue({ password: '' });
-      },
-      error: (err) => {
+      })
+      .catch((err: unknown) => {
         this.guardando.set(false);
-        const msg = err.error?.message || 'No se pudo guardar la información.';
-        this.toast.error(msg, 'Error al Guardar');
-      },
-    });
+        this.toast.error(
+          mensajeDeError(err, 'No se pudo guardar la información.'),
+          'Error al Guardar',
+        );
+      });
   }
 }
-
-// Helper inline para iniciales dinámicas
-import { computed } from '@angular/core';

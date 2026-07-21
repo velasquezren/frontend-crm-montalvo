@@ -37,11 +37,11 @@ export class LayoutComponent {
   protected readonly sidebarExpanded = signal(false);
 
   /* PWA Installation state */
-  private deferredPrompt: any = null;
+  private deferredPrompt: BeforeInstallPromptEvent | null = null;
   protected readonly showInstallBanner = signal(false);
 
   @HostListener('window:beforeinstallprompt', ['$event'])
-  onBeforeInstallPrompt(event: any): void {
+  onBeforeInstallPrompt(event: BeforeInstallPromptEvent): void {
     // Prevent the default browser prompt
     event.preventDefault();
     // Save the event so it can be triggered later
@@ -59,13 +59,9 @@ export class LayoutComponent {
   protected installPwa(): void {
     if (!this.deferredPrompt) return;
 
-    this.deferredPrompt.prompt();
-    this.deferredPrompt.userChoice.then((choiceResult: { outcome: string }) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted PWA installation');
-      } else {
-        console.log('User dismissed PWA installation');
-      }
+    void this.deferredPrompt.prompt();
+    void this.deferredPrompt.userChoice.finally(() => {
+      /* El banner se cierra en ambos casos: el evento solo puede consumirse una vez. */
       this.deferredPrompt = null;
       this.showInstallBanner.set(false);
     });

@@ -1,8 +1,7 @@
 import { DatePipe } from '@angular/common';
-import { HttpClient, httpResource } from '@angular/common/http';
+import { httpResource } from '@angular/common/http';
 import { Component, computed, inject } from '@angular/core';
 
-import { API_URL } from '../../core/api/api.constants';
 import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales } from '../../core/auth/user.model';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
@@ -12,20 +11,8 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
 import { IconComponent, IconName } from '../../shared/components/icon/icon.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { formatearBs, MonedaPipe } from '../../shared/pipes/moneda.pipe';
-
-interface KpiResumen {
-  ventas: {
-    total: number;
-    cantidad: number;
-    porAgente: Array<{ agenteId: string; agente: string; cantidad: number; monto: number }>;
-  };
-  leadsPorOrigen: Array<{ origen: string; cantidad: number; convertidos: number; tasaConversion: number }>;
-  clientesPorCategoria: Array<{ categoria: string; cantidad: number }>;
-  comisiones: {
-    pendiente: number;
-    pagada: number;
-  };
-}
+import { KpiResumen } from './kpis.model';
+import { KpisService } from './kpis.service';
 
 interface KpiCard {
   readonly label: string;
@@ -82,6 +69,7 @@ const ORIGEN_NOMBRE: Record<string, string> = {
 })
 export class DashboardPage {
   private readonly authService = inject(AuthService);
+  private readonly kpisService = inject(KpisService);
 
   protected readonly firstName = computed(
     () => this.authService.user()?.nombre.split(' ')[0] ?? '',
@@ -93,8 +81,8 @@ export class DashboardPage {
     month: 'long',
   });
 
-  protected readonly kpiData = httpResource<KpiResumen>(
-    () => `${API_URL}/kpis/resumen`,
+  protected readonly kpiData = httpResource<KpiResumen>(() =>
+    this.kpisService.resumenRequest(),
   );
 
   protected readonly kpis = computed<KpiCard[]>(() => {

@@ -100,7 +100,7 @@
     @for (opcion of filtros; track opcion) {
       <app-filter-chip
         [active]="filtro() === opcion"
-        (clicked)="filtro.set(opcion)">
+        (clicked)="cambiarFiltro(opcion)">
         {{ opcion === 'TODAS' ? 'Todas' : estadoLabel[opcion] }}
       </app-filter-chip>
     }
@@ -118,7 +118,7 @@
       <app-empty-state icon="alert-circle" title="No se pudo cargar las ventas"
         description="Verifica que el servidor del CRM esté encendido e intenta de nuevo." />
     </div>
-  } @else if (ventas.value().length > 0) {
+  } @else if (ventas.value().datos.length > 0) {
     <app-table>
       <thead>
         <tr>
@@ -131,7 +131,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (venta of ventas.value(); track venta.id) {
+        @for (venta of ventas.value().datos; track venta.id) {
           <tr>
             <td>
               <div class="flex items-center gap-3">
@@ -152,6 +152,13 @@
         }
       </tbody>
     </app-table>
+
+    <app-paginator
+      [pagina]="ventas.value().pagina"
+      [totalPaginas]="ventas.value().totalPaginas"
+      [total]="ventas.value().total"
+      [limite]="ventas.value().limite"
+      (cambiar)="pagina.set($event)" />
   } @else {
     <div class="bg-white rounded-2xl shadow-subtle">
       <app-empty-state icon="shopping-bag" title="Sin ventas en este estado"

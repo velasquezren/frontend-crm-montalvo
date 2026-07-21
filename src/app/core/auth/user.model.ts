@@ -13,6 +13,22 @@ export interface User {
   readonly foto?: string | null;
 }
 
+/**
+ * Usuario tal como lo devuelve el backend (GET/PATCH /auth/perfil, /usuarios).
+ * A diferencia de `User`, no incluye `iniciales` — ese campo es derivado
+ * en el frontend con `generarIniciales()`.
+ */
+export interface UsuarioApi {
+  readonly id: string;
+  readonly nombre: string;
+  readonly email: string;
+  readonly rol: RolUsuario;
+  readonly activo: boolean;
+  readonly foto: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
 /** "Maria Lopez" → "ML" */
 export function generarIniciales(nombre: string): string {
   return nombre

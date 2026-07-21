@@ -5,7 +5,6 @@ import { ToastService } from './toast.service';
 
 @Component({
   selector: 'app-toast-container',
-  standalone: true,
   imports: [IconComponent],
   template: `
     <div class="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4">

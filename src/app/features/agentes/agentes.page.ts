@@ -1,8 +1,8 @@
 import { DatePipe } from '@angular/common';
-import { HttpClient, httpResource } from '@angular/common/http';
+import { httpResource } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 
-import { API_URL } from '../../core/api/api.constants';
+import { mensajeDeError } from '../../core/api/http-error';
 import { generarIniciales } from '../../core/auth/user.model';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
@@ -13,6 +13,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InputComponent } from '../../shared/components/input/input.component';
 import { ToastService } from '../../core/toast/toast.service';
 import { Agente, CreateAgentePayload } from './agente.model';
+import { AgentesService } from './agentes.service';
 
 /**
  * Gestión de Agentes y Usuarios — Solo administradores
@@ -20,7 +21,6 @@ import { Agente, CreateAgentePayload } from './agente.model';
  */
 @Component({
   selector: 'app-agentes-page',
-  standalone: true,
   imports: [
     AvatarComponent,
     BadgeComponent,
@@ -35,7 +35,7 @@ import { Agente, CreateAgentePayload } from './agente.model';
   styleUrl: './agentes.page.css',
 })
 export class AgentesPage {
-  private readonly http = inject(HttpClient);
+  private readonly agentesService = inject(AgentesService);
   private readonly toastService = inject(ToastService);
 
   protected readonly iniciales = generarIniciales;
@@ -53,9 +53,10 @@ export class AgentesPage {
   protected readonly formRol = signal<'ADMIN' | 'AGENTE'>('AGENTE');
 
   /* ── Datos del Servidor ────────────────────────────────────────── */
-  protected readonly agentes = httpResource<Agente[]>(() => `${API_URL}/usuarios`, {
-    defaultValue: [],
-  });
+  protected readonly agentes = httpResource<Agente[]>(
+    () => this.agentesService.listarRequest(),
+    { defaultValue: [] },
+  );
 
   /* ── Datos Derivados ───────────────────────────────────────────── */
   protected readonly stats = computed(() => {
@@ -112,39 +113,38 @@ export class AgentesPage {
       rol: this.formRol(),
     };
 
-    this.http.post<Agente>(`${API_URL}/usuarios`, payload).subscribe({
-      next: res => {
+    this.agentesService
+      .crear(payload)
+      .then(res => {
         this.guardando.set(false);
         this.modalCrearAbierto.set(false);
         this.toastService.success(`Agente ${res.nombre} registrado correctamente`, 'Cuenta Creada');
         this.agentes.reload();
-      },
-      error: err => {
+      })
+      .catch((err: unknown) => {
         this.guardando.set(false);
-        this.errorMensaje.set(
-          err.error?.message ?? 'Ocurrió un error al crear la cuenta del agente.',
-        );
-        this.toastService.error(
-          err.error?.message ?? 'No se pudo crear la cuenta',
-          'Error al Registrar',
-        );
-      },
-    });
+        const mensaje = mensajeDeError(err, 'Ocurrió un error al crear la cuenta del agente.');
+        this.errorMensaje.set(mensaje);
+        this.toastService.error(mensaje, 'Error al Registrar');
+      });
   }
 
   toggleEstado(agente: Agente): void {
     const nuevoEstado = !agente.activo;
-    this.http.patch<Agente>(`${API_URL}/usuarios/${agente.id}`, { activo: nuevoEstado }).subscribe({
-      next: () => {
+    this.agentesService
+      .cambiarActivo(agente.id, nuevoEstado)
+      .then(() => {
         this.toastService.info(
           `Cuenta de ${agente.nombre} ${nuevoEstado ? 'activada' : 'desactivada'}`,
           'Estado de Cuenta',
         );
         this.agentes.reload();
-      },
-      error: () => {
-        this.toastService.error('No se pudo actualizar el estado del agente', 'Error de Red');
-      },
-    });
+      })
+      .catch((err: unknown) => {
+        this.toastService.error(
+          mensajeDeError(err, 'No se pudo actualizar el estado del agente'),
+          'Error de Red',
+        );
+      });
   }
 }
