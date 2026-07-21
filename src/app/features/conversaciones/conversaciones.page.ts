@@ -263,6 +263,13 @@ export class ConversacionesPage implements AfterViewInit {
     this.editandoFicha.set(false);
   }
 
+  protected copiarTexto(texto: string, etiqueta: string): void {
+    if (!texto) return;
+    void navigator.clipboard.writeText(texto).then(() => {
+      this.toastService.success(`${etiqueta} copiado al portapapeles.`, 'Copiado');
+    });
+  }
+
   protected iniciarEdicion(): void {
     const chat = this.detalle.value();
     if (!chat) return;

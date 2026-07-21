@@ -156,18 +156,37 @@
             (click)="deseleccionar()"
             class="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-bg-light cursor-pointer shrink-0"
             title="Volver a la lista de chats">
-            <app-icon name="x" [size]="18" />
+            <app-icon name="chevron-left" [size]="20" />
           </button>
           <app-avatar [initials]="iniciales(chat.cliente.nombre)" />
           <div class="min-w-0">
             <p class="font-semibold text-text-dark text-sm leading-tight truncate">
               {{ chat.cliente.nombre }}
             </p>
-            <p class="text-xs text-text-muted leading-tight mt-0.5">{{ chat.cliente.telefono }}</p>
+            <div class="flex items-center gap-1.5 mt-0.5">
+              <span class="text-xs text-text-muted leading-tight">{{ chat.cliente.telefono }}</span>
+              <button
+                type="button"
+                (click)="copiarTexto(chat.cliente.telefono, 'Teléfono')"
+                class="text-text-muted hover:text-primary transition-colors cursor-pointer"
+                title="Copiar número de teléfono">
+                <app-icon name="copy" [size]="12" />
+              </button>
+            </div>
           </div>
         </div>
 
         <div class="flex items-center gap-2">
+          <a
+            [href]="'https://wa.me/' + chat.cliente.telefono.replace('+', '')"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="p-2 rounded-lg border border-border text-text-muted hover:text-primary hover:bg-bg-light transition-all cursor-pointer hidden sm:flex items-center gap-1 text-xs"
+            title="Abrir directamente en WhatsApp Web">
+            <app-icon name="external-link" [size]="14" />
+            <span>WhatsApp Web</span>
+          </a>
+
           <!-- Acciones Rápidas del Agente -->
           <a
             routerLink="/ventas"
@@ -348,14 +367,32 @@
           <!-- Datos de contacto -->
           <div class="client-details">
             <h3 class="detail-section-title">Contacto</h3>
-            <div class="detail-row">
-              <app-icon name="phone" [size]="14" class="text-text-muted shrink-0" />
-              <span class="text-sm text-text-dark">{{ chat.cliente.telefono }}</span>
+            <div class="detail-row justify-between">
+              <div class="flex items-center gap-2 min-w-0">
+                <app-icon name="phone" [size]="14" class="text-text-muted shrink-0" />
+                <span class="text-sm text-text-dark truncate">{{ chat.cliente.telefono }}</span>
+              </div>
+              <button
+                type="button"
+                (click)="copiarTexto(chat.cliente.telefono, 'Teléfono')"
+                class="p-1 text-text-muted hover:text-primary transition-colors cursor-pointer"
+                title="Copiar teléfono">
+                <app-icon name="copy" [size]="12" />
+              </button>
             </div>
             @if (chat.cliente.email) {
-              <div class="detail-row">
-                <app-icon name="mail" [size]="14" class="text-text-muted shrink-0" />
-                <span class="text-sm text-text-dark break-all">{{ chat.cliente.email }}</span>
+              <div class="detail-row justify-between mt-1">
+                <div class="flex items-center gap-2 min-w-0">
+                  <app-icon name="mail" [size]="14" class="text-text-muted shrink-0" />
+                  <span class="text-sm text-text-dark break-all truncate">{{ chat.cliente.email }}</span>
+                </div>
+                <button
+                  type="button"
+                  (click)="copiarTexto(chat.cliente.email!, 'Email')"
+                  class="p-1 text-text-muted hover:text-primary transition-colors cursor-pointer"
+                  title="Copiar email">
+                  <app-icon name="copy" [size]="12" />
+                </button>
               </div>
             }
           </div>
