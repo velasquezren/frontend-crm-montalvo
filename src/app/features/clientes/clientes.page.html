@@ -52,7 +52,7 @@
       </thead>
       <tbody>
         @for (cliente of clientes.value(); track cliente.id) {
-          <tr>
+          <tr class="cursor-pointer hover:bg-bg-light/40 transition-colors" (click)="abrirEdicion(cliente)" title="Haga clic para ver/editar ficha">
             <td>
               <div class="flex items-center gap-3">
                 <app-avatar [initials]="iniciales(cliente.nombre)" size="sm" />
@@ -104,3 +104,94 @@
     </div>
   }
 </div>
+
+<!-- Modal para Editar Ficha de Cliente -->
+@if (modalEditarAbierto()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs transition-opacity duration-200">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-border p-6 space-y-5 animate-modal-pop">
+      
+      <!-- Cabecera -->
+      <div class="flex items-center justify-between border-b border-border pb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+            <app-icon name="edit" [size]="18" />
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-text-dark">Ficha Única de Cliente</h2>
+            <p class="text-[11px] text-text-muted">Visualiza y edita los datos maestros, notas y tags personalizados.</p>
+          </div>
+        </div>
+        <button type="button" (click)="cerrarEdicion()" class="text-text-muted hover:text-text-dark cursor-pointer">
+          <app-icon name="x" [size]="18" />
+        </button>
+      </div>
+
+      <!-- Formulario -->
+      <form (submit)="guardarEdicion($event)" class="space-y-4">
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-text-dark mb-1.5">Nombre Completo *</label>
+            <app-input [(value)]="editNombre" placeholder="Ej. Juan Pérez" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-text-dark mb-1.5">Teléfono (Deduplicador) *</label>
+            <app-input [(value)]="editTelefono" placeholder="Ej. +59170000000" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-text-dark mb-1.5">Correo Electrónico</label>
+            <app-input type="email" [(value)]="editEmail" placeholder="correo@ejemplo.com" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-text-dark mb-1.5">Empresa</label>
+            <app-input [(value)]="editEmpresa" placeholder="Ej. Clínica Dental Montalvo" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-text-dark mb-1.5">Notas del Cliente</label>
+          <textarea
+            #txtEditNotas
+            [value]="editNotas()"
+            (input)="editNotas.set(txtEditNotas.value)"
+            placeholder="Añade detalles de contacto, preferencias, etc."
+            class="w-full text-xs p-3 border border-border rounded-xl focus:border-primary focus:outline-none transition-colors min-h-[90px] bg-bg-workspace resize-y"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-text-dark mb-1.5">Tags / Etiquetas (sep. por comas)</label>
+          <app-input [(value)]="editTags" placeholder="ej. preferente, vip, cirugia-programada" />
+          <div class="flex flex-wrap gap-1 mt-2">
+            @for (tag of editTags().split(','); track tag) {
+              @if (tag.trim()) {
+                <span class="inline-flex items-center px-2 py-0.5 rounded bg-primary/5 text-primary text-[10px] font-semibold border border-primary/10">
+                  {{ tag.trim() }}
+                </span>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="flex gap-2 border-t border-border pt-4 justify-end">
+          <button
+            type="button"
+            (click)="cerrarEdicion()"
+            class="px-4 py-2 border border-border rounded-xl text-xs font-semibold text-text-muted hover:bg-bg-light cursor-pointer">
+            Cancelar
+          </button>
+          <app-button
+            type="submit"
+            [loading]="guardando()">
+            Guardar Cambios
+          </app-button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+}

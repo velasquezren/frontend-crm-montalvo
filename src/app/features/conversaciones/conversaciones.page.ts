@@ -92,6 +92,14 @@ export class ConversacionesPage implements AfterViewInit {
   protected readonly asignando = signal(false);
   protected readonly dropdownAgenteAbierto = signal(false);
 
+  protected readonly editandoFicha = signal(false);
+  protected readonly editNombre = signal('');
+  protected readonly editEmail = signal('');
+  protected readonly editEmpresa = signal('');
+  protected readonly editNotas = signal('');
+  protected readonly editTags = signal('');
+  protected readonly guardandoFicha = signal(false);
+
   /* ── Plantillas de Respuesta Rápida para Agentes ───────────────── */
   protected readonly plantillasRapidas = [
     {
@@ -245,10 +253,70 @@ export class ConversacionesPage implements AfterViewInit {
 
   protected seleccionar(id: string): void {
     this.seleccionadaId.set(id);
+    this.editandoFicha.set(false);
   }
 
   protected deseleccionar(): void {
     this.seleccionadaId.set(null);
+    this.editandoFicha.set(false);
+  }
+
+  protected iniciarEdicion(): void {
+    const chat = this.detalle.value();
+    if (!chat) return;
+
+    this.editNombre.set(chat.cliente.nombre);
+    this.editEmail.set(chat.cliente.email || '');
+    this.editEmpresa.set(chat.cliente.datosExtra?.empresa || '');
+    this.editNotas.set(chat.cliente.datosExtra?.notas || '');
+    this.editTags.set((chat.cliente.datosExtra?.tags || []).join(', '));
+    this.editandoFicha.set(true);
+  }
+
+  protected cancelarEdicion(): void {
+    this.editandoFicha.set(false);
+  }
+
+  protected async guardarFicha(): Promise<void> {
+    const chat = this.detalle.value();
+    if (!chat || this.guardandoFicha()) return;
+
+    const nombre = this.editNombre().trim();
+    if (!nombre) {
+      this.toastService.error('El nombre del cliente es obligatorio', 'Ficha Cliente');
+      return;
+    }
+
+    this.guardandoFicha.set(true);
+    try {
+      const tagsArray = this.editTags()
+        .split(',')
+        .map(t => t.trim())
+        .filter(Boolean);
+
+      const payload = {
+        nombre,
+        email: this.editEmail().trim() || null,
+        datosExtra: {
+          empresa: this.editEmpresa().trim() || null,
+          notas: this.editNotas().trim() || null,
+          tags: tagsArray,
+        },
+      };
+
+      await firstValueFrom(
+        this.http.patch(`${API_URL}/clientes/${chat.cliente.id}`, payload),
+      );
+      this.toastService.success('Ficha de cliente actualizada', 'Ficha Cliente');
+      this.editandoFicha.set(false);
+      this.detalle.reload();
+      this.conversaciones.reload();
+    } catch (err: any) {
+      const msg = err.error?.message || 'No se pudo guardar los cambios.';
+      this.toastService.error(msg, 'Error al Guardar');
+    } finally {
+      this.guardandoFicha.set(false);
+    }
   }
 
   protected setFiltroTab(tab: FiltroInbox): void {

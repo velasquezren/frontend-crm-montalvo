@@ -18,6 +18,11 @@ export interface Cliente {
   readonly agenteId: string | null;
   readonly agente: { id: string; nombre: string } | null;
   readonly intereses: readonly InteresApi[];
+  readonly datosExtra?: {
+    empresa?: string;
+    notas?: string;
+    tags?: string[];
+  } | null;
   readonly createdAt: string;
   readonly updatedAt: string;
 }

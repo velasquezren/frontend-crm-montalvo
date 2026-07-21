@@ -14,7 +14,13 @@ export interface ConversacionResumen {
     id: string;
     nombre: string;
     telefono: string;
+    email: string | null;
     categoria: CategoriaCliente;
+    datosExtra?: {
+      empresa?: string;
+      notas?: string;
+      tags?: string[];
+    } | null;
   };
   readonly agente: { id: string; nombre: string } | null;
   /** El listado incluye solo el último mensaje (take: 1, desc). */
