@@ -108,6 +108,7 @@ export class LayoutComponent {
 
   /* Acciones rápidas del FAB — el ítem más usado va último (más cerca del botón) */
   protected readonly fabItems: readonly FabMenuItem[] = [
+    { icon: 'users', label: 'Gestionar Agentes', path: '/agentes', soloAdmin: true },
     { icon: 'message-circle', label: 'Abrir WhatsApp', path: '/conversaciones' },
     { icon: 'shopping-bag', label: 'Registrar Venta', path: '/ventas' },
     { icon: 'user-plus', label: 'Registro Presencial', path: '/leads/registro-presencial' },

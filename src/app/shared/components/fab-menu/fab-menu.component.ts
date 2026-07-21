@@ -1,59 +1,64 @@
-import { Component, input, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { filter, map } from 'rxjs';
 
+import { AuthService } from '../../../core/auth/auth.service';
 import { IconComponent, IconName } from '../icon/icon.component';
 
 export interface FabMenuItem {
   readonly icon: IconName;
   readonly label: string;
   readonly path: string;
+  readonly soloAdmin?: boolean;
 }
 
 /**
  * Molécula FAB Menu — botón flotante de acciones rápidas (speed dial).
- * Único punto de entrada global para acciones frecuentes (ej. registro presencial),
- * evitando duplicar botones en topbar y páginas. Los ítems se amplían desde
- * el layout sin tocar este componente.
- * Ref: CRM_MANIFESTO.md §3.2 (píldoras/círculos, sombras sutiles, hover secondary).
+ * Único punto de entrada global para acciones frecuentes, ocultándose
+ * en pantallas donde interfiere (como la bandeja de chat) y filtrando
+ * opciones según el rol del usuario actual.
  */
 @Component({
   selector: 'app-fab-menu',
   imports: [RouterLink, IconComponent],
   template: `
-    @if (abierto()) {
-      <div class="fab-overlay" (click)="abierto.set(false)" aria-hidden="true"></div>
-    }
-
-    <div class="fab-container">
+    @if (visible()) {
       @if (abierto()) {
-        <ul class="fab-list" role="menu">
-          @for (item of items(); track item.path; let i = $index) {
-            <li [style.animation-delay.ms]="(items().length - 1 - i) * 45">
-              <a
-                [routerLink]="item.path"
-                role="menuitem"
-                class="fab-item"
-                (click)="abierto.set(false)">
-                <span class="fab-item-label">{{ item.label }}</span>
-                <span class="fab-item-icon">
-                  <app-icon [name]="item.icon" [size]="18" />
-                </span>
-              </a>
-            </li>
-          }
-        </ul>
+        <div class="fab-overlay" (click)="abierto.set(false)" aria-hidden="true"></div>
       }
 
-      <button
-        type="button"
-        class="fab-main"
-        [class.fab-main-open]="abierto()"
-        [attr.aria-expanded]="abierto()"
-        aria-label="Acciones rápidas"
-        (click)="abierto.set(!abierto())">
-        <app-icon name="plus" [size]="24" [strokeWidth]="2.5" />
-      </button>
-    </div>
+      <div class="fab-container">
+        @if (abierto()) {
+          <ul class="fab-list" role="menu">
+            @for (item of filteredItems(); track item.path; let i = $index) {
+              <li [style.animation-delay.ms]="(filteredItems().length - 1 - i) * 45">
+                <a
+                  [routerLink]="item.path"
+                  role="menuitem"
+                  class="fab-item"
+                  (click)="abierto.set(false)">
+                  <span class="fab-item-label">{{ item.label }}</span>
+                  <span class="fab-item-icon">
+                    <app-icon [name]="item.icon" [size]="18" />
+                  </span>
+                </a>
+              </li>
+            }
+          </ul>
+        }
+
+        <button
+          type="button"
+          class="fab-main"
+          [class.fab-main-open]="abierto()"
+          [attr.aria-expanded]="abierto()"
+          aria-label="Acciones rápidas"
+          (click)="abierto.set(!abierto())">
+          <app-icon name="plus" [size]="24" [strokeWidth]="2.5" />
+        </button>
+      </div>
+    }
   `,
   styles: `
     .fab-overlay {
@@ -161,5 +166,29 @@ export interface FabMenuItem {
 export class FabMenuComponent {
   readonly items = input.required<readonly FabMenuItem[]>();
 
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
+
   protected readonly abierto = signal(false);
+
+  // Track active URL route
+  protected readonly currentUrl = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map(e => e.urlAfterRedirects),
+    ),
+    { initialValue: this.router.url },
+  );
+
+  // Hide FAB menu on pages where it overlays important actions (like chat inbox '/conversaciones' or '/login')
+  protected readonly visible = computed(() => {
+    const url = this.currentUrl();
+    return !url.includes('/conversaciones') && !url.includes('/login');
+  });
+
+  // Filter items based on user roles (admins see everything; agents see only allowed ones)
+  protected readonly filteredItems = computed(() => {
+    const isAdmin = this.authService.isAdmin();
+    return this.items().filter(item => !item.soloAdmin || isAdmin);
+  });
 }
