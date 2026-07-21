@@ -36,6 +36,45 @@ export class LayoutComponent {
   protected readonly user = this.authService.user;
   protected readonly sidebarExpanded = signal(false);
 
+  /* PWA Installation state */
+  private deferredPrompt: any = null;
+  protected readonly showInstallBanner = signal(false);
+
+  @HostListener('window:beforeinstallprompt', ['$event'])
+  onBeforeInstallPrompt(event: any): void {
+    // Prevent the default browser prompt
+    event.preventDefault();
+    // Save the event so it can be triggered later
+    this.deferredPrompt = event;
+    // Show our custom banner
+    this.showInstallBanner.set(true);
+  }
+
+  @HostListener('window:appinstalled')
+  onAppInstalled(): void {
+    this.deferredPrompt = null;
+    this.showInstallBanner.set(false);
+  }
+
+  protected installPwa(): void {
+    if (!this.deferredPrompt) return;
+
+    this.deferredPrompt.prompt();
+    this.deferredPrompt.userChoice.then((choiceResult: { outcome: string }) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted PWA installation');
+      } else {
+        console.log('User dismissed PWA installation');
+      }
+      this.deferredPrompt = null;
+      this.showInstallBanner.set(false);
+    });
+  }
+
+  protected dismissInstallBanner(): void {
+    this.showInstallBanner.set(false);
+  }
+
   /* Un agente no ve los módulos solo-admin (el backend además los bloquea con @Roles) */
   protected readonly navItems = computed(() =>
     NAV_ITEMS.filter(item => !item.soloAdmin || this.authService.isAdmin()),
