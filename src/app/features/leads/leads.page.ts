@@ -36,6 +36,8 @@ type FiltroOrigen = OrigenLeadApi | 'TODOS';
  * Leads — Pipeline Kanban Drag-and-Drop + Vista Tabla.
  * Ref: CRM_MANIFESTO.md §1.2, §3
  */
+import { ActivatedRoute } from '@angular/router';
+
 @Component({
   selector: 'app-leads',
   imports: [
@@ -58,6 +60,7 @@ type FiltroOrigen = OrigenLeadApi | 'TODOS';
 export class LeadsPage {
   private readonly leadsService = inject(LeadsService);
   private readonly toastService = inject(ToastService);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly estadoBadge = ESTADO_LEAD_BADGE;
   protected readonly estadoLabel = ESTADO_LEAD_LABEL;
@@ -131,6 +134,17 @@ export class LeadsPage {
   }
 
   constructor() {
+    const origenParam = this.route.snapshot.queryParamMap.get('origen');
+    if (origenParam) {
+      this.filtro.set(origenParam as FiltroOrigen);
+    }
+
+    this.route.queryParams.subscribe(params => {
+      if (params['origen']) {
+        this.filtro.set(params['origen'] as FiltroOrigen);
+      }
+    });
+
     effect(() => {
       const data = this.leads.value().datos;
       this.nuevos.set(data.filter(l => l.estado === 'NUEVO'));

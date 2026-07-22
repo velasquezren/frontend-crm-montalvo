@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales } from '../../core/auth/user.model';
@@ -29,6 +30,7 @@ interface FunnelStage {
   readonly label: string;
   readonly cantidad: number;
   readonly porcentaje: number;
+  readonly porcentajeTexto: string;
   readonly tasaPaso: number;
   readonly color: string;
   readonly icon: IconName;
@@ -68,15 +70,15 @@ const ORIGEN_NOMBRE: Record<string, string> = {
 };
 
 const ORIGEN_COLOR: Record<string, string> = {
-  WHATSAPP_DIRECTO: '#25D366',
-  FACEBOOK_LEAD_AD: '#1877F2',
+  WHATSAPP_DIRECTO: '#0D9488', // Emerald Teal — elegante y ejecutivo
+  FACEBOOK_LEAD_AD: '#2563EB', // Royal Blue
   FACEBOOK_COMENTARIO: '#3B82F6',
   FACEBOOK_MENSAJE: '#60A5FA',
-  INSTAGRAM_LEAD_AD: '#E4405F',
-  INSTAGRAM_COMENTARIO: '#F472B6',
-  INSTAGRAM_MENSAJE: '#FB7185',
-  PRESENCIAL: '#8B5CF6',
-  IMPORTACION: '#39ADA3',
+  INSTAGRAM_LEAD_AD: '#7C3AED', // Deep Violet
+  INSTAGRAM_COMENTARIO: '#8B5CF6',
+  INSTAGRAM_MENSAJE: '#A78BFA',
+  PRESENCIAL: '#D97706', // Warm Amber
+  IMPORTACION: '#64748B', // Slate Grey
 };
 
 /**
@@ -101,6 +103,7 @@ const ORIGEN_COLOR: Record<string, string> = {
 export class DashboardPage {
   private readonly authService = inject(AuthService);
   private readonly kpisService = inject(KpisService);
+  private readonly router = inject(Router);
 
   /* ── Estado de UI del gráfico de canales ────────────────────────── */
   protected readonly vistaGrafico = signal<'DONUT' | 'BARRAS'>('DONUT');
@@ -175,17 +178,42 @@ export class DashboardPage {
     const res = this.kpiData.value();
     if (!res) return [];
 
+    const inclImp = this.incluirImportacion();
+    const leadsDigitales = res.leadsPorOrigen
+      .filter(l => l.origen !== 'IMPORTACION')
+      .reduce((s, l) => s + l.cantidad, 0);
+
     const totalLeads = res.leadsPorOrigen.reduce((s, l) => s + l.cantidad, 0);
+    const baseLeads = inclImp ? totalLeads : (leadsDigitales || totalLeads);
+
     const convertidos = res.ventas.cantidad || res.leadsPorOrigen.reduce((s, l) => s + l.convertidos, 0);
     const enProceso = res.funnel?.conversacionesTotal ?? 0;
     const citas = res.funnel?.leadsContactados ?? 0;
+
+    const calcPct = (num: number, den: number): { numPct: number; texto: string } => {
+      if (!den || den === 0) return { numPct: 0, texto: '0%' };
+      const val = (num / den) * 100;
+      if (val > 0 && val < 1) return { numPct: Math.max(val, 2), texto: `${val.toFixed(1)}%` };
+      const rounded = Math.round(val);
+      return { numPct: rounded, texto: `${rounded}%` };
+    };
+
+    const p1 = calcPct(baseLeads, baseLeads);
+    const p2 = calcPct(enProceso, baseLeads);
+    const p3 = calcPct(citas, baseLeads);
+    const p4 = calcPct(convertidos, baseLeads);
+
+    const t2 = calcPct(enProceso, baseLeads);
+    const t3 = calcPct(citas, enProceso || 1);
+    const t4 = calcPct(convertidos, citas || enProceso || 1);
 
     return [
       {
         id: 'captados',
         label: '1. Leads Captados',
-        cantidad: totalLeads,
-        porcentaje: 100,
+        cantidad: baseLeads,
+        porcentaje: p1.numPct,
+        porcentajeTexto: p1.texto,
         tasaPaso: 100,
         color: '#006156',
         icon: 'users',
@@ -194,26 +222,29 @@ export class DashboardPage {
         id: 'contactados',
         label: '2. En Conversación',
         cantidad: enProceso,
-        porcentaje: totalLeads > 0 ? Math.round((enProceso / totalLeads) * 100) : 0,
-        tasaPaso: totalLeads > 0 ? Math.round((enProceso / totalLeads) * 100) : 0,
-        color: '#39ADA3',
+        porcentaje: p2.numPct,
+        porcentajeTexto: p2.texto,
+        tasaPaso: t2.numPct,
+        color: '#0D9488',
         icon: 'message-circle',
       },
       {
         id: 'citas',
         label: '3. Citas Agendadas',
         cantidad: citas,
-        porcentaje: totalLeads > 0 ? Math.round((citas / totalLeads) * 100) : 0,
-        tasaPaso: enProceso > 0 ? Math.round((citas / enProceso) * 100) : 0,
-        color: '#006156',
+        porcentaje: p3.numPct,
+        porcentajeTexto: p3.texto,
+        tasaPaso: t3.numPct,
+        color: '#2563EB',
         icon: 'calendar',
       },
       {
         id: 'ganados',
         label: '4. Ventas Ganadas',
         cantidad: convertidos,
-        porcentaje: totalLeads > 0 ? Math.round((convertidos / totalLeads) * 100) : 0,
-        tasaPaso: citas > 0 ? Math.round((convertidos / citas) * 100) : 0,
+        porcentaje: p4.numPct,
+        porcentajeTexto: p4.texto,
+        tasaPaso: t4.numPct,
         color: '#10B981',
         icon: 'check-circle',
       },
@@ -297,6 +328,20 @@ export class DashboardPage {
 
   protected toggleIncluirImportacion(): void {
     this.incluirImportacion.update(v => !v);
+  }
+
+  protected navegarACanal(origen: string): void {
+    void this.router.navigate(['/leads'], { queryParams: { origen } });
+  }
+
+  protected navegarAEtapa(etapaId: string): void {
+    if (etapaId === 'contactados') {
+      void this.router.navigate(['/conversaciones']);
+    } else if (etapaId === 'ganados') {
+      void this.router.navigate(['/ventas']);
+    } else {
+      void this.router.navigate(['/leads']);
+    }
   }
 
   protected formatearMonto(valor: number): string {
