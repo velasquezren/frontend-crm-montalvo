@@ -98,6 +98,22 @@
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
+
+  /* Scrollbars refinados para experiencia PWA Web en escritorio */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #D1D5DB;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #9CA3AF;
+  }
 }
 
 /* ==========================================================================

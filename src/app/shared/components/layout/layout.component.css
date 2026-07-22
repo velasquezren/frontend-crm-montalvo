@@ -26,20 +26,20 @@
 .workspace { grid-area: workspace; }
 
 /* ═══════════════════════════════════════════════════════════════
-   TOPBAR — Más compacta (64px en lugar de 80px)
+   TOPBAR — Compacta (64px)
    ═══════════════════════════════════════════════════════════════ */
 .topbar {
   z-index: 30;
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   SIDEBAR — Icon Rail colapsable
-   72px (colapsado) → 240px (expandido al hover)
+   SIDEBAR — Icon Rail colapsable (z-index 40 para deslizar por encima)
+   72px (colapsado) → 240px (expandido al hover/clic)
    ═══════════════════════════════════════════════════════════════ */
 .sidebar {
   width: 72px;
   transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 20;
+  z-index: 40;
   overflow: visible;
   position: relative;
 }
@@ -51,7 +51,7 @@
 .workspace {
   grid-area: workspace;
   position: relative;
-  z-index: 40;
+  z-index: 10;
 }
 
 .sidebar-inner {
@@ -67,12 +67,12 @@
               box-shadow 0.25s ease;
   display: flex;
   flex-direction: column;
-  z-index: 20;
+  z-index: 40;
 }
 
 .sidebar-inner-expanded {
   width: 240px;
-  box-shadow: 8px 0 30px rgba(0, 0, 0, 0.08);
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
 }
 
 /* ═══════════════════════════════════════════════════════════════
