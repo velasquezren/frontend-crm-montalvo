@@ -5,19 +5,22 @@
 
 :host {
   display: block;
+  margin: -1.5rem -1.5rem -7rem -1.5rem;
+  height: calc(100vh - 64px);
+  overflow: hidden;
 }
 
-/* ── Layout de columnas dinámico ──────────────────────────────── */
+/* ── Layout de columnas dinámico (Edge-to-Edge) ───────────────── */
 .inbox-wrapper {
   display: grid;
-  grid-template-columns: 340px 1fr;
+  grid-template-columns: 360px 1fr;
   gap: 0;
-  height: calc(100dvh - 6.5rem);
+  height: 100%;
   width: 100%;
-  border-radius: 16px;
+  border-radius: 0;
   overflow: hidden;
   background: white;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 
 /* ── Sidebar (panel izquierdo) ───────────────────────────────── */
@@ -521,23 +524,28 @@
   }
 
   .inbox-wrapper.has-details {
-    grid-template-columns: 340px 1fr 300px;
+    grid-template-columns: 360px 1fr 340px;
   }
 }
 
 /* Tablet */
 @media (max-width: 1024px) {
   .inbox-wrapper {
-    grid-template-columns: 290px 1fr;
+    grid-template-columns: 300px 1fr;
   }
 }
 
 /* Mobile: vista completa con alternancia entre lista y chat */
 @media (max-width: 768px) {
+  :host {
+    margin: -1.5rem -1.5rem -7rem -1.5rem;
+    height: calc(100vh - 64px);
+  }
+
   .inbox-wrapper {
     grid-template-columns: 1fr;
-    height: calc(100dvh - 7rem);
-    border-radius: 12px;
+    height: 100%;
+    border-radius: 0;
   }
 
   .inbox-wrapper:not(.has-details) .chat-panel {
