@@ -263,8 +263,7 @@
      ══════════════════════════════════════════════════════════════════════ -->
 @if (modalEditarAbierto()) {
   <div
-    class="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 sm:p-6
-           overflow-y-auto bg-text-dark/40 backdrop-blur-sm"
+    class="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 sm:p-6 overflow-y-auto bg-text-dark/60 backdrop-blur-md"
     (click)="cerrarEdicion()">
 
     <div
@@ -399,7 +398,7 @@
      ══════════════════════════════════════════════════════════════════════ -->
 @if (agenteABaja(); as ag) {
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-text-dark/40 backdrop-blur-sm"
+    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-text-dark/60 backdrop-blur-md"
     (click)="cancelarBaja()">
 
     <div

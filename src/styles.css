@@ -164,18 +164,16 @@
 
 /* Transiciones de páginas fluidas y consistentes */
 .workspace > div > *:not(router-outlet) {
-  animation: pageFadeInUp 0.45s var(--ease-spring-smooth) forwards;
+  animation: pageFadeIn 0.35s var(--ease-spring-smooth) forwards;
   display: block;
 }
 
-@keyframes pageFadeInUp {
+@keyframes pageFadeIn {
   0% {
     opacity: 0;
-    transform: translateY(12px);
   }
   100% {
     opacity: 1;
-    transform: none;
   }
 }
 
