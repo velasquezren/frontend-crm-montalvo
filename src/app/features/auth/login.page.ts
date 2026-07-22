@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
@@ -11,6 +11,7 @@ import { InputComponent } from '../../shared/components/input/input.component';
  * Ref: CRM_MANIFESTO.md §3 (tokens visuales), §2.2 (signals para estado), §4 (átomos compartidos)
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-login',
   imports: [InputComponent, ButtonComponent, IconComponent],
   templateUrl: './login.page.html',

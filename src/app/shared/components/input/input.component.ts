@@ -1,4 +1,4 @@
-import { Component, computed, input, model, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, model, signal } from '@angular/core';
 
 import { IconComponent } from '../icon/icon.component';
 
@@ -12,6 +12,7 @@ let nextId = 0;
  * Los campos password incluyen su propio toggle de visibilidad (sin duplicar lógica en cada pantalla).
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-input',
   imports: [IconComponent],
   template: `

@@ -1,4 +1,4 @@
-import { Component, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ViewEncapsulation } from '@angular/core';
 
 /**
  * Organismo Table — tabla estándar del sistema de diseño.
@@ -15,6 +15,7 @@ import { Component, ViewEncapsulation } from '@angular/core';
  * cabeceras 13-14px gris sobre #F8F9FA, filas blancas separadas por bordes sutiles.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-table',
   encapsulation: ViewEncapsulation.None,
   template: `

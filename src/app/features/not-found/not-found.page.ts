@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -9,6 +9,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
  * Pantalla completa, sin LayoutComponent, para cubrir enlaces rotos o sesiones vencidas.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-not-found',
   imports: [EmptyStateComponent, ButtonComponent, RouterLink],
   template: `

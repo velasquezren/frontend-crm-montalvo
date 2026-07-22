@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
 /**
  * Molécula Filter Chip — píldora de filtro con estado activo.
@@ -6,6 +6,7 @@ import { Component, computed, input, output } from '@angular/core';
  * Ref: CRM_MANIFESTO.md §3.2 (píldoras), §4.2.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-filter-chip',
   template: `
     <button

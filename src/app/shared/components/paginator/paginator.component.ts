@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
 import { ButtonComponent } from '../button/button.component';
 
@@ -8,6 +8,7 @@ import { ButtonComponent } from '../button/button.component';
  * Ref: CRM_MANIFESTO.md §4.2.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-paginator',
   imports: [ButtonComponent],
   template: `

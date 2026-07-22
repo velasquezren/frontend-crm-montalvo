@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
 import { IconComponent, IconName } from '../icon/icon.component';
 
@@ -9,6 +9,7 @@ export type BadgeVariant = 'success' | 'info' | 'neutral' | 'critical';
  * "critical" usa negro (text-critical) en vez de rojo: ver CRM_MANIFESTO.md §3.4.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-badge',
   imports: [IconComponent],
   template: `

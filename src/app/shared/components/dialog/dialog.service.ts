@@ -1,6 +1,6 @@
 import { Overlay, OverlayConfig, OverlayRef } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
-import { inject, Injectable, TemplateRef, ViewContainerRef } from '@angular/core';
+import { DestroyRef, inject, Injectable, TemplateRef, ViewContainerRef } from '@angular/core';
 
 export interface DialogOptions {
   panelClass?: string | string[];
@@ -41,6 +41,17 @@ export class DialogService {
     if (!options.disableClose) {
       overlayRef.backdropClick().subscribe(() => overlayRef.dispose());
     }
+
+    /**
+     * Red de seguridad: si el componente que abrió el modal se destruye
+     * (el usuario navega a otra vista) sin haberlo cerrado explícitamente,
+     * el overlay vive en document.body y no lo destruye el router — quedaba
+     * un fondo oscuro huérfano bloqueando los clics de la siguiente página.
+     * `vcr.injector` es el inyector del componente dueño del ViewContainerRef,
+     * así que esto se autolimpia sin que cada página tenga que implementar
+     * OnDestroy y acordarse de llamar dispose().
+     */
+    vcr.injector.get(DestroyRef).onDestroy(() => overlayRef.dispose());
 
     return overlayRef;
   }

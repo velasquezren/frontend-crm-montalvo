@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 /**
  * Catálogo cerrado de íconos — estilo Lucide (outline, stroke-width 2).
@@ -44,6 +44,7 @@ export type IconName =
   | 'external-link';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-icon',
   template: `
     <svg

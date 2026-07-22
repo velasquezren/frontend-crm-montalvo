@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
 export type SkeletonShape = 'text' | 'input' | 'card' | 'pill' | 'circle';
 
@@ -7,6 +7,7 @@ export type SkeletonShape = 'text' | 'input' | 'card' | 'pill' | 'circle';
  * Ref: CRM_MANIFESTO.md §4.1.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-loading-skeleton',
   template: `<div [class]="classes()" [style.width]="width()" [style.height]="height()"></div>`,
 })

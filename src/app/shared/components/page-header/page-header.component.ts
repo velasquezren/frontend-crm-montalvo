@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 /**
  * Molécula Page Header — encabezado estándar de cada vista del workspace.
@@ -6,6 +6,7 @@ import { Component, input } from '@angular/core';
  * Ref: CRM_MANIFESTO.md §4.2.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-page-header',
   template: `
     <div class="flex flex-wrap items-end justify-between gap-4">

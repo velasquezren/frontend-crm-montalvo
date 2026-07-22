@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 import { IconComponent, IconName } from '../icon/icon.component';
 
@@ -7,6 +7,7 @@ import { IconComponent, IconName } from '../icon/icon.component';
  * Ref: CRM_MANIFESTO.md §4.1.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-empty-state',
   imports: [IconComponent],
   template: `

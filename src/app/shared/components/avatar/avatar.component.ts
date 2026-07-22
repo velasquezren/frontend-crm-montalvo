@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
 export type AvatarSize = 'sm' | 'md' | 'lg';
 export type AvatarVariant = 'light' | 'solid';
@@ -8,6 +8,7 @@ export type AvatarVariant = 'light' | 'solid';
  * de conversaciones/clientes. Ref: CRM_MANIFESTO.md §3.1 (bg-light + text-primary).
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-avatar',
   template: `
     @if (imageUrl()) {

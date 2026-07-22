@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
 export type CardPadding = 'sm' | 'md' | 'lg';
 
@@ -6,6 +6,7 @@ export type CardPadding = 'sm' | 'md' | 'lg';
  * Átomo Card — CRM_MANIFESTO.md §3.2: rounded-2xl (16px) + shadow-subtle.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-card',
   template: `
     <div [class]="classes()">

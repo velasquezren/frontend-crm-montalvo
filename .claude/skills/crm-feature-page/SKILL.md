@@ -7,11 +7,16 @@ description: Patrón obligatorio para construir o modificar una vista (página) 
 
 Arquitectura: `CRM_MANIFESTO.md` §1.2 y §4.4. Angular 21 con signals, sin NgModules, sin RxJS para estado de UI.
 
-## Regla de oro
+## Reglas de oro
 
-**Una página NUNCA inyecta `HttpClient` ni construye URLs.**
-Cada dominio tiene su servicio en `features/<dominio>/<dominio>.service.ts`, que se apoya en
-`core/api/api.service.ts`. Si añades un endpoint, va al servicio del dominio, no a la página.
+- **Una página NUNCA inyecta `HttpClient` ni construye URLs.**
+  Cada dominio tiene su servicio en `features/<dominio>/<dominio>.service.ts`, que se apoya en
+  `core/api/api.service.ts`. Si añades un endpoint, va al servicio del dominio, no a la página.
+- **Todo componente lleva `changeDetection: ChangeDetectionStrategy.OnPush`**, sin excepción
+  (páginas y átomos compartidos por igual). Solo es seguro porque todo el estado es `signal()`/
+  `computed()`/`input()` — si alguna vez necesitas mutar un campo de clase a mano fuera de un
+  signal para que se refleje en la plantilla, es una señal de que ese estado debería ser un signal,
+  no una razón para quitar OnPush.
 
 ## Anatomía de un dominio
 
@@ -93,14 +98,60 @@ Toda vista con datos remotos cubre carga, error, vacío y contenido:
 } @else if (clientes.error()) {
   <app-empty-state icon="alert-circle" title="No se pudo cargar…"
     description="Verifica que el servidor esté encendido." />
-} @else if (clientes.value().length > 0) {
+} @else if (clientes.value().datos.length > 0) {
   <app-table>…</app-table>
+  <app-paginator
+    [pagina]="clientes.value().pagina"
+    [totalPaginas]="clientes.value().totalPaginas"
+    [total]="clientes.value().total"
+    [limite]="clientes.value().limite"
+    (cambiar)="pagina.set($event)" />
 } @else {
   <app-empty-state icon="users" title="Sin resultados" description="…" />
 }
 ```
 
+Todo listado paginado llega envuelto en `RespuestaPaginada<T>` (`core/api/pagination.model.ts`):
+usa `.value().datos`, nunca `.value()` a secas — ya no es un array plano. Cambiar de filtro o de
+búsqueda vuelve la página a 1 (si no, el usuario queda "atrapado" en una página que ya no existe
+para el nuevo filtro).
+
 Control de flujo: `@if` / `@for` (siempre con `track`) / `@switch` / `@empty`. Prohibido `*ngIf` y `*ngFor`.
+
+## Modales: `DialogService` (CDK Overlay), nunca `@if` con `position: fixed`
+
+Los modales se proyectan a `document.body` con Angular CDK Overlay, no con un `@if` en la propia
+plantilla — así el backdrop cubre el viewport completo sin pelear con `overflow`/`z-index` de
+contenedores padres.
+
+```ts
+private readonly dialogService = inject(DialogService);
+private readonly vcr = inject(ViewContainerRef);
+private activeOverlayRef?: OverlayRef;
+
+abrirEdicion(cliente: Cliente, template: TemplateRef<unknown>): void {
+  this.clienteSeleccionado.set(cliente);
+  this.activeOverlayRef?.dispose();               // por si había otro modal abierto
+  this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+}
+
+cerrarEdicion(): void {
+  this.activeOverlayRef?.dispose();
+  this.activeOverlayRef = undefined;
+}
+```
+
+```html
+<ng-template #modalEditar>
+  <div class="pointer-events-auto ...">…contenido del modal, usando los mismos signals…</div>
+</ng-template>
+```
+
+**No hace falta implementar `OnDestroy` para evitar fugas**: `DialogService.openTemplate()` ya
+registra la limpieza en el `DestroyRef` del componente dueño del `ViewContainerRef` — si el usuario
+navega a otra vista con el modal abierto sin cerrarlo, el overlay se destruye solo. Antes de esto,
+dos páginas dejaban un fondo oscuro huérfano bloqueando clics en la siguiente vista; ahora es
+imposible que un nuevo modal reintroduzca ese bug, sin importar si la página se acuerda de limpiar.
 
 ## Roles y permisos
 

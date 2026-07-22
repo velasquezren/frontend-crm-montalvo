@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
 import { IconComponent, IconName } from '../icon/icon.component';
 
@@ -10,6 +10,7 @@ export type ButtonSize = 'sm' | 'md';
  * Reemplaza los <button> estilizados a mano que existían en login/layout.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-button',
   imports: [IconComponent],
   template: `
