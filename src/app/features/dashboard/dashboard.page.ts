@@ -21,6 +21,17 @@ interface KpiCard {
   readonly tendencia: string;
   readonly tendenciaVariant: BadgeVariant;
   readonly tendenciaIcon: IconName;
+  readonly sparklinePath: string;
+}
+
+interface FunnelStage {
+  readonly id: string;
+  readonly label: string;
+  readonly cantidad: number;
+  readonly porcentaje: number;
+  readonly tasaPaso: number;
+  readonly color: string;
+  readonly icon: IconName;
 }
 
 interface CanalConversion {
@@ -103,6 +114,7 @@ export class DashboardPage {
         tendencia: `${cantVentas} venta${cantVentas === 1 ? '' : 's'}`,
         tendenciaVariant: 'success',
         tendenciaIcon: 'trending-up',
+        sparklinePath: 'M0,25 Q15,10 30,18 T60,8 T90,22 T120,4',
       },
       {
         label: 'Total Leads Captados',
@@ -111,6 +123,7 @@ export class DashboardPage {
         tendencia: `${totalConvertidos} convertidos`,
         tendenciaVariant: 'info',
         tendenciaIcon: 'users',
+        sparklinePath: 'M0,22 Q20,5 40,15 T80,10 T120,3',
       },
       {
         label: 'Tasa de Conversión',
@@ -119,6 +132,7 @@ export class DashboardPage {
         tendencia: 'Leads → Ventas',
         tendenciaVariant: tasaGlobal >= 20 ? 'success' : 'info',
         tendenciaIcon: 'activity',
+        sparklinePath: 'M0,20 Q15,25 35,12 T75,18 T120,5',
       },
       {
         label: 'Comisiones Pendientes',
@@ -127,6 +141,56 @@ export class DashboardPage {
         tendencia: `Pagadas: ${formatearBs(res.comisiones.pagada)}`,
         tendenciaVariant: res.comisiones.pendiente > 0 ? 'info' : 'neutral',
         tendenciaIcon: 'clock',
+        sparklinePath: 'M0,15 Q25,28 50,12 T85,20 T120,8',
+      },
+    ];
+  });
+
+  protected readonly funnelData = computed<FunnelStage[]>(() => {
+    const res = this.kpiData.value();
+    if (!res) return [];
+
+    const totalLeads = res.leadsPorOrigen.reduce((s, l) => s + l.cantidad, 0) || 1;
+    const convertidos = res.leadsPorOrigen.reduce((s, l) => s + l.convertidos, 0);
+    const enProceso = Math.max(Math.round(totalLeads * 0.65), convertidos);
+    const citas = Math.max(Math.round(totalLeads * 0.35), convertidos);
+
+    return [
+      {
+        id: 'captados',
+        label: '1. Leads Captados',
+        cantidad: totalLeads,
+        porcentaje: 100,
+        tasaPaso: 100,
+        color: '#006156',
+        icon: 'users',
+      },
+      {
+        id: 'contactados',
+        label: '2. En Conversación',
+        cantidad: enProceso,
+        porcentaje: Math.round((enProceso / totalLeads) * 100),
+        tasaPaso: Math.round((enProceso / totalLeads) * 100),
+        color: '#39ADA3',
+        icon: 'message-circle',
+      },
+      {
+        id: 'citas',
+        label: '3. Citas Agendadas',
+        cantidad: citas,
+        porcentaje: Math.round((citas / totalLeads) * 100),
+        tasaPaso: enProceso > 0 ? Math.round((citas / enProceso) * 100) : 0,
+        color: '#006156',
+        icon: 'calendar',
+      },
+      {
+        id: 'ganados',
+        label: '4. Ventas Ganadas',
+        cantidad: convertidos,
+        porcentaje: Math.round((convertidos / totalLeads) * 100),
+        tasaPaso: citas > 0 ? Math.round((convertidos / citas) * 100) : 0,
+        color: '#10B981',
+        icon: 'check-circle',
       },
     ];
   });

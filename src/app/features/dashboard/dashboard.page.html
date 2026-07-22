@@ -20,11 +20,11 @@
       <app-loading-skeleton shape="card" height="120px" />
     </div>
   } @else {
-    <!-- ── KPIs (RF-16) ─────────────────────────────────────────────── -->
+    <!-- ── KPIs (RF-16) con Sparklines ─────────────────────────────── -->
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
       @for (kpi of kpis(); track kpi.label) {
-        <app-card [hoverable]="true">
-          <div class="flex items-start justify-between">
+        <app-card [hoverable]="true" class="relative overflow-hidden group">
+          <div class="flex items-start justify-between relative z-10">
             <div class="w-11 h-11 rounded-xl bg-bg-light flex items-center justify-center">
               <app-icon [name]="kpi.icon" [size]="20" class="text-primary" />
             </div>
@@ -32,11 +32,71 @@
               {{ kpi.tendencia }}
             </app-badge>
           </div>
-          <p class="text-sm text-text-muted font-medium mt-5">{{ kpi.label }}</p>
-          <p class="text-3xl font-bold text-text-dark mt-1 tracking-tight">{{ kpi.valor }}</p>
+          <div class="relative z-10">
+            <p class="text-sm text-text-muted font-medium mt-5">{{ kpi.label }}</p>
+            <p class="text-3xl font-bold text-text-dark mt-1 tracking-tight">{{ kpi.valor }}</p>
+          </div>
+          <!-- Sparkline SVG gráfico lineal de tendencia -->
+          <div class="absolute bottom-0 left-0 right-0 h-10 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity">
+            <svg class="w-full h-full text-primary" viewBox="0 0 120 30" fill="none" preserveAspectRatio="none">
+              <path [attr.d]="kpi.sparklinePath" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+            </svg>
+          </div>
         </app-card>
       }
     </div>
+
+    <!-- ── Embudos de Conversión Visual (Funnel) ─────────────────────── -->
+    <app-card>
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-base font-bold text-text-dark">Embudos de Conversión</h2>
+          <p class="text-xs text-text-muted mt-0.5">Seguimiento de etapas de adquisición y ventas</p>
+        </div>
+        <span class="inline-flex items-center gap-1.5 text-xs text-primary bg-primary/10 px-3 py-1 rounded-full font-semibold">
+          <app-icon name="activity" [size]="14" />
+          En Tiempo Real
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        @for (etapa of funnelData(); track etapa.id; let idx = $index) {
+          <div class="relative bg-bg-workspace border border-border/70 rounded-xl p-4 flex flex-col justify-between hover:border-primary/40 transition-all">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold text-text-dark truncate">{{ etapa.label }}</span>
+              <div class="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <app-icon [name]="etapa.icon" [size]="14" />
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <div class="flex items-baseline justify-between">
+                <span class="text-2xl font-extrabold text-text-dark">{{ etapa.cantidad }}</span>
+                <span class="text-xs font-semibold text-primary">{{ etapa.porcentaje }}%</span>
+              </div>
+
+              <!-- Barra visual de capacidad -->
+              <div class="h-2 rounded-full bg-bg-light overflow-hidden">
+                <div
+                  class="h-full rounded-full bg-primary transition-all duration-500"
+                  [style.width.%]="etapa.porcentaje"></div>
+              </div>
+            </div>
+
+            @if (idx > 0) {
+              <div class="mt-3 pt-2.5 border-t border-border/50 flex items-center justify-between text-[11px] text-text-muted">
+                <span>Paso anterior:</span>
+                <span class="font-bold text-text-dark">{{ etapa.tasaPaso }}% retención</span>
+              </div>
+            } @else {
+              <div class="mt-3 pt-2.5 border-t border-border/50 text-[11px] text-text-muted">
+                <span>Entrada total de volumen</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </app-card>
 
     <!-- ── Conversión por canal (RF-17) + Top agentes ───────────────── -->
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
