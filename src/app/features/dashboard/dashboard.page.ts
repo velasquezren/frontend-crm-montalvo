@@ -276,9 +276,9 @@ export class DashboardPage {
 
     return res.ventas.porAgente.map((a, i) => {
       let rankBadge: { label: string; colorClass: string } | undefined;
-      if (i === 0) rankBadge = { label: '🥇 1º', colorClass: 'bg-amber-100 text-amber-800 border-amber-300' };
-      else if (i === 1) rankBadge = { label: '🥈 2º', colorClass: 'bg-slate-100 text-slate-700 border-slate-300' };
-      else if (i === 2) rankBadge = { label: '🥉 3º', colorClass: 'bg-amber-700/10 text-amber-900 border-amber-400/30' };
+      if (i === 0) rankBadge = { label: '#1', colorClass: 'bg-amber-100 text-amber-800 border-amber-300' };
+      else if (i === 1) rankBadge = { label: '#2', colorClass: 'bg-slate-100 text-slate-700 border-slate-300' };
+      else if (i === 2) rankBadge = { label: '#3', colorClass: 'bg-amber-700/10 text-amber-900 border-amber-400/30' };
 
       return {
         nombre: a.agente,
