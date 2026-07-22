@@ -106,20 +106,20 @@ export class ConversacionesPage implements AfterViewInit {
   /* ── Plantillas de Respuesta Rápida para Agentes ───────────────── */
   protected readonly plantillasRapidas = [
     {
-      titulo: '📋 Citas y Horarios',
-      texto: '¡Hola! Atendemos de lunes a sábado de 8:00 a 19:00 hrs. ¿Para qué fecha y especialidad deseas agendar tu cita?',
+      titulo: 'Agendamiento y Horarios',
+      texto: 'Estimado/a paciente, la atención médica se realiza de lunes a sábado de 08:00 a 19:00 hrs. ¿En qué fecha o especialidad requiere su consulta?',
     },
     {
-      titulo: '💰 Tratamientos y Precios',
-      texto: 'Con gusto te informamos sobre nuestros servicios médicos y estéticos. ¿Qué tratamiento deseas consultar?',
+      titulo: 'Información de Servicios',
+      texto: 'Con gusto le brindamos información detallada sobre nuestras especialidades y tratamientos médicos. ¿Qué consulta o procedimiento necesita coordinar?',
     },
     {
-      titulo: '📍 Ubicación de Clínica',
-      texto: 'Nos encontramos en la sede central de Clínica Montalvo. Contamos con parqueo privado exclusivo para pacientes.',
+      titulo: 'Ubicación y Accesos',
+      texto: 'Nuestras instalaciones principales se encuentran en Clínica Montalvo. Disponemos de estacionamiento privado para la comodidad de nuestros pacientes.',
     },
     {
-      titulo: '🔬 Indicaciones Previas',
-      texto: 'Por favor preséntate 10 minutos antes de tu cita agendada portando tu documento de identidad.',
+      titulo: 'Indicaciones de Cita',
+      texto: 'Le sugerimos acudir con 10 minutos de anticipación a su consulta agendada, portando su documento de identidad.',
     },
   ];
 
