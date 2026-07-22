@@ -150,10 +150,12 @@ export class DashboardPage {
     const res = this.kpiData.value();
     if (!res) return [];
 
-    const totalLeads = res.leadsPorOrigen.reduce((s, l) => s + l.cantidad, 0) || 1;
-    const convertidos = res.leadsPorOrigen.reduce((s, l) => s + l.convertidos, 0);
-    const enProceso = Math.max(Math.round(totalLeads * 0.65), convertidos);
-    const citas = Math.max(Math.round(totalLeads * 0.35), convertidos);
+    const totalLeads = res.leadsPorOrigen.reduce((s, l) => s + l.cantidad, 0);
+    const convertidos = res.ventas.cantidad || res.leadsPorOrigen.reduce((s, l) => s + l.convertidos, 0);
+    const enProceso = res.funnel?.conversacionesTotal ?? 0;
+    const citas = res.funnel?.leadsContactados ?? 0;
+
+    const baseLeads = totalLeads || 1;
 
     return [
       {
@@ -169,8 +171,8 @@ export class DashboardPage {
         id: 'contactados',
         label: '2. En Conversación',
         cantidad: enProceso,
-        porcentaje: Math.round((enProceso / totalLeads) * 100),
-        tasaPaso: Math.round((enProceso / totalLeads) * 100),
+        porcentaje: totalLeads > 0 ? Math.round((enProceso / totalLeads) * 100) : 0,
+        tasaPaso: totalLeads > 0 ? Math.round((enProceso / totalLeads) * 100) : 0,
         color: '#39ADA3',
         icon: 'message-circle',
       },
@@ -178,7 +180,7 @@ export class DashboardPage {
         id: 'citas',
         label: '3. Citas Agendadas',
         cantidad: citas,
-        porcentaje: Math.round((citas / totalLeads) * 100),
+        porcentaje: totalLeads > 0 ? Math.round((citas / totalLeads) * 100) : 0,
         tasaPaso: enProceso > 0 ? Math.round((citas / enProceso) * 100) : 0,
         color: '#006156',
         icon: 'calendar',
@@ -187,7 +189,7 @@ export class DashboardPage {
         id: 'ganados',
         label: '4. Ventas Ganadas',
         cantidad: convertidos,
-        porcentaje: Math.round((convertidos / totalLeads) * 100),
+        porcentaje: totalLeads > 0 ? Math.round((convertidos / totalLeads) * 100) : 0,
         tasaPaso: citas > 0 ? Math.round((convertidos / citas) * 100) : 0,
         color: '#10B981',
         icon: 'check-circle',

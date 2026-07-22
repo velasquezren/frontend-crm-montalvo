@@ -21,4 +21,8 @@ export interface KpiResumen {
     pendiente: number;
     pagada: number;
   };
+  funnel?: {
+    conversacionesTotal: number;
+    leadsContactados: number;
+  };
 }
