@@ -81,14 +81,14 @@
   <!-- ── Resumen del periodo ──────────────────────────────────────── -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     @for (item of resumen(); track item.label) {
-      <app-card>
+      <app-card [hoverable]="true" class="transition-all">
         <div class="flex items-center gap-4">
-          <div class="w-11 h-11 rounded-xl bg-bg-light flex items-center justify-center shrink-0">
-            <app-icon [name]="item.icon" [size]="20" class="text-primary" />
+          <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 text-primary">
+            <app-icon [name]="item.icon" [size]="22" />
           </div>
           <div>
-            <p class="text-sm text-text-muted font-medium">{{ item.label }}</p>
-            <p class="text-xl font-bold text-text-dark mt-0.5">{{ item.valor }}</p>
+            <p class="text-xs text-text-muted font-bold uppercase tracking-wider">{{ item.label }}</p>
+            <p class="text-2xl font-extrabold text-text-dark mt-0.5 tracking-tight">{{ item.valor }}</p>
           </div>
         </div>
       </app-card>
