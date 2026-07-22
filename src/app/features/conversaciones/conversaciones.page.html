@@ -26,48 +26,48 @@
       </div>
     </div>
 
-    <!-- Filtro tabs: Minimalista sin caja con línea indicadora verde -->
+    <!-- Filtro tabs: Taller vertical stack (Texto arriba, contador abajo) -->
     <div class="sidebar-filters">
-      <div class="flex items-center justify-between px-1">
+      <div class="flex items-center justify-around py-1.5">
         <button
           type="button"
           (click)="setFiltroTab('TODAS'); filtrarPorAgente(null)"
-          [class]="filtroTab() === 'TODAS' && !filtroAgenteId() ? 'text-primary font-bold border-b-2 border-primary pb-1.5' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent pb-1.5'"
-          class="flex items-center gap-1.5 text-xs transition-all cursor-pointer">
-          <span>Todas</span>
+          [class]="filtroTab() === 'TODAS' && !filtroAgenteId() ? 'text-primary font-bold border-b-2 border-primary -mb-[11px] pb-2' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent -mb-[11px] pb-2'"
+          class="flex flex-col items-center gap-1 px-3 transition-all cursor-pointer">
+          <span class="text-xs leading-tight">Todas</span>
           <span
             [class]="filtroTab() === 'TODAS' && !filtroAgenteId() ? 'text-primary bg-primary/10 font-bold' : 'text-text-muted bg-text-muted/10 font-semibold'"
-            class="text-[10px] px-1.5 py-0.5 rounded-full leading-none">
+            class="text-[10px] px-2 py-0.5 rounded-full leading-none">
             {{ stats().total }}
           </span>
         </button>
 
-        <div class="w-px h-3.5 bg-border/50 shrink-0"></div>
+        <div class="w-px h-6 bg-border/50 shrink-0"></div>
 
         <button
           type="button"
           (click)="setFiltroTab('SIN_ASIGNAR')"
-          [class]="filtroTab() === 'SIN_ASIGNAR' ? 'text-primary font-bold border-b-2 border-primary pb-1.5' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent pb-1.5'"
-          class="flex items-center gap-1.5 text-xs transition-all cursor-pointer">
-          <span>Sin asignar</span>
+          [class]="filtroTab() === 'SIN_ASIGNAR' ? 'text-primary font-bold border-b-2 border-primary -mb-[11px] pb-2' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent -mb-[11px] pb-2'"
+          class="flex flex-col items-center gap-1 px-3 transition-all cursor-pointer">
+          <span class="text-xs leading-tight">Sin asignar</span>
           <span
             [class]="filtroTab() === 'SIN_ASIGNAR' ? 'text-primary bg-primary/10 font-bold' : 'text-text-muted bg-text-muted/10 font-semibold'"
-            class="text-[10px] px-1.5 py-0.5 rounded-full leading-none">
+            class="text-[10px] px-2 py-0.5 rounded-full leading-none">
             {{ stats().sinAsignar }}
           </span>
         </button>
 
-        <div class="w-px h-3.5 bg-border/50 shrink-0"></div>
+        <div class="w-px h-6 bg-border/50 shrink-0"></div>
 
         <button
           type="button"
           (click)="setFiltroTab('MIS_CHATS')"
-          [class]="filtroTab() === 'MIS_CHATS' ? 'text-primary font-bold border-b-2 border-primary pb-1.5' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent pb-1.5'"
-          class="flex items-center gap-1.5 text-xs transition-all cursor-pointer">
-          <span>Mis chats</span>
+          [class]="filtroTab() === 'MIS_CHATS' ? 'text-primary font-bold border-b-2 border-primary -mb-[11px] pb-2' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent -mb-[11px] pb-2'"
+          class="flex flex-col items-center gap-1 px-3 transition-all cursor-pointer">
+          <span class="text-xs leading-tight">Mis chats</span>
           <span
             [class]="filtroTab() === 'MIS_CHATS' ? 'text-primary bg-primary/10 font-bold' : 'text-text-muted bg-text-muted/10 font-semibold'"
-            class="text-[10px] px-1.5 py-0.5 rounded-full leading-none">
+            class="text-[10px] px-2 py-0.5 rounded-full leading-none">
             {{ stats().misChats }}
           </span>
         </button>
