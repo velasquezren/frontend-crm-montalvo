@@ -25,6 +25,9 @@ import {
 } from '../../shared/models/cliente-categoria.model';
 import { Cliente } from './cliente.model';
 import { ClientesService } from './clientes.service';
+import { DialogService } from '../../shared/components/dialog/dialog.service';
+import { OverlayRef } from '@angular/cdk/overlay';
+import { TemplateRef, ViewContainerRef } from '@angular/core';
 
 type FiltroCategoria = CategoriaCliente | 'TODOS';
 
@@ -54,6 +57,10 @@ type FiltroCategoria = CategoriaCliente | 'TODOS';
 export class ClientesPage {
   private readonly clientesService = inject(ClientesService);
   private readonly toast = inject(ToastService);
+  private readonly dialogService = inject(DialogService);
+  private readonly vcr = inject(ViewContainerRef);
+
+  private activeOverlayRef?: OverlayRef;
 
   protected readonly categoriaLabel = CATEGORIA_LABEL;
   protected readonly categoriaBadge = CATEGORIA_BADGE;
@@ -134,7 +141,7 @@ export class ClientesPage {
     }
   }
 
-  protected abrirEdicion(cliente: Cliente): void {
+  protected abrirEdicion(cliente: Cliente, template?: TemplateRef<unknown>): void {
     this.clienteSeleccionado.set(cliente);
     this.editNombre.set(cliente.nombre);
     this.editEmail.set(cliente.email || '');
@@ -143,11 +150,17 @@ export class ClientesPage {
     this.editNotas.set(cliente.datosExtra?.notas || '');
     this.editTags.set((cliente.datosExtra?.tags || []).join(', '));
     this.modalEditarAbierto.set(true);
+    if (template) {
+      this.activeOverlayRef?.dispose();
+      this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+    }
   }
 
   protected cerrarEdicion(): void {
     this.modalEditarAbierto.set(false);
     this.clienteSeleccionado.set(null);
+    this.activeOverlayRef?.dispose();
+    this.activeOverlayRef = undefined;
   }
 
   protected async guardarEdicion(event: Event): Promise<void> {
