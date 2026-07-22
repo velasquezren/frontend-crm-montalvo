@@ -39,6 +39,7 @@ interface FunnelStage {
 export interface CanalConversion {
   readonly origen: string;
   readonly nombre: string;
+  readonly nombreCorto: string;
   readonly leads: number;
   readonly convertidos: number;
   readonly conversion: number;
@@ -67,6 +68,18 @@ const ORIGEN_NOMBRE: Record<string, string> = {
   INSTAGRAM_MENSAJE: 'Instagram Mensajes',
   PRESENCIAL: 'Ventanilla Presencial',
   IMPORTACION: 'Importación Histórica',
+};
+
+const ORIGEN_CORTO: Record<string, string> = {
+  WHATSAPP_DIRECTO: 'WhatsApp',
+  FACEBOOK_LEAD_AD: 'Facebook',
+  FACEBOOK_COMENTARIO: 'FB Coment.',
+  FACEBOOK_MENSAJE: 'FB Mensajes',
+  INSTAGRAM_LEAD_AD: 'Instagram',
+  INSTAGRAM_COMENTARIO: 'IG Coment.',
+  INSTAGRAM_MENSAJE: 'IG Mensajes',
+  PRESENCIAL: 'Presencial',
+  IMPORTACION: 'Histórico',
 };
 
 const ORIGEN_COLOR: Record<string, string> = {
@@ -278,6 +291,7 @@ export class DashboardPage {
       return {
         origen: l.origen,
         nombre: ORIGEN_NOMBRE[l.origen] || l.origen,
+        nombreCorto: ORIGEN_CORTO[l.origen] || l.origen,
         leads: l.cantidad,
         convertidos: l.convertidos,
         conversion: l.tasaConversion,

@@ -187,26 +187,26 @@
                 </svg>
 
                 <!-- Centro dinámico del Donut -->
-                <div class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none p-4">
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none p-2">
                   @if (canalActivoInfo(); as activo) {
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-text-muted truncate max-w-[130px]">
-                      {{ activo.nombre }}
+                    <span class="text-[11px] font-bold text-text-muted uppercase tracking-wider truncate max-w-[110px]">
+                      {{ activo.nombreCorto }}
                     </span>
-                    <span class="text-2xl font-extrabold text-text-dark leading-tight mt-0.5">
+                    <span class="text-3xl font-black text-text-dark leading-none my-1" [style.color]="activo.color">
                       {{ activo.leads }}
                     </span>
-                    <span class="text-[11px] font-semibold text-primary">
-                      {{ activo.porcentajeTotal }}% del total ({{ activo.conversion }}% conv.)
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-bg-light text-text-dark border border-border/60">
+                      {{ activo.porcentajeTotal }}% del total
                     </span>
                   } @else {
                     <span class="text-[10px] font-bold uppercase tracking-wider text-text-muted">
                       Total Leads
                     </span>
-                    <span class="text-3xl font-extrabold text-text-dark leading-tight mt-0.5">
+                    <span class="text-3xl font-extrabold text-text-dark leading-none my-1">
                       {{ totalLeadsCanales() }}
                     </span>
-                    <span class="text-[11px] font-semibold text-primary">
-                      {{ canales().length }} canal{{ canales().length === 1 ? '' : 'es' }} activo{{ canales().length === 1 ? '' : 's' }}
+                    <span class="text-[10px] font-medium text-text-muted">
+                      {{ canales().length }} canal{{ canales().length === 1 ? '' : 'es' }}
                     </span>
                   }
                 </div>
