@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -61,6 +62,7 @@ import { ConversacionesService } from './conversaciones.service';
     EmptyStateComponent,
     DatePipe,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './conversaciones.page.html',
   styleUrl: './conversaciones.page.css',
 })

@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import {
   CdkDragDrop,
   DragDropModule,
@@ -51,6 +51,7 @@ type FiltroOrigen = OrigenLeadApi | 'TODOS';
     DatePipe,
     DragDropModule,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './leads.page.html',
   styleUrl: './leads.page.css',
 })

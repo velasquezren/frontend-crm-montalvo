@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { Component, computed, HostListener, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, HostListener, inject, signal } from '@angular/core';
 
 import { mensajeDeError } from '../../core/api/http-error';
 import { AuthService } from '../../core/auth/auth.service';
@@ -36,6 +36,7 @@ import { TemplateRef, ViewContainerRef } from '@angular/core';
     InputComponent,
     DatePipe,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agentes.page.html',
   styleUrl: './agentes.page.css',
 })

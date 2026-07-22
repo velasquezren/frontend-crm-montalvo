@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
 import { mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
@@ -52,6 +52,7 @@ type FiltroComision = EstadoComision | 'TODAS';
     MonedaPipe,
     DatePipe,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './comisiones.page.html',
 })
 export class ComisionesPage {

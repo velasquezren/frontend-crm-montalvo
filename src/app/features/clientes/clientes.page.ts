@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { Component, computed, effect, HostListener, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, HostListener, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 
 import { mensajeDeError } from '../../core/api/http-error';
@@ -48,6 +48,7 @@ type FiltroCategoria = CategoriaCliente | 'TODOS';
     PaginatorComponent,
     DatePipe,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './clientes.page.html',
 })
 export class ClientesPage {

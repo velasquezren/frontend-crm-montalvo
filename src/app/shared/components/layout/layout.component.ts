@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { AuthService } from '../../../core/auth/auth.service';
@@ -25,6 +25,7 @@ import { NAV_ITEMS } from './nav-items';
     FabMenuComponent,
     ToastContainerComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css',
 })

@@ -1,6 +1,6 @@
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
 
 import { mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
@@ -53,6 +53,7 @@ type FiltroVenta = EstadoVenta | 'TODAS';
     MonedaPipe,
     DatePipe,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './ventas.page.html',
 })
 export class VentasPage {
