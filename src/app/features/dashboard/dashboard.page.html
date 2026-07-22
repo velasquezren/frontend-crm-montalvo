@@ -102,31 +102,156 @@
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
       <app-card class="xl:col-span-2">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-base font-semibold text-text-dark">Conversión por canal</h2>
-          <span class="text-xs text-text-muted">Leads → ventas</span>
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div>
+            <h2 class="text-base font-bold text-text-dark">Conversión por Canal</h2>
+            <p class="text-xs text-text-muted mt-0.5">Distribución de origen de prospectos y conversión</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <!-- Selector de Importación Histórica -->
+            <button
+              type="button"
+              (click)="toggleIncluirImportacion()"
+              class="px-2.5 py-1 text-[11px] font-semibold rounded-lg border transition-all cursor-pointer flex items-center gap-1.5"
+              [class]="incluirImportacion() ? 'bg-primary/10 text-primary border-primary/30' : 'bg-bg-workspace text-text-muted border-border hover:border-primary/30'">
+              <app-icon name="database" [size]="12" />
+              <span>{{ incluirImportacion() ? 'Mostrando Histórico' : 'Solo Canales Activos' }}</span>
+            </button>
+
+            <!-- Selector de Vista: Donut / Barras -->
+            <div class="inline-flex rounded-lg bg-bg-light p-0.5 border border-border">
+              <button
+                type="button"
+                (click)="setVistaGrafico('DONUT')"
+                class="px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer flex items-center gap-1"
+                [class]="vistaGrafico() === 'DONUT' ? 'bg-white text-primary shadow-xs' : 'text-text-muted hover:text-text-dark'">
+                <app-icon name="pie-chart" [size]="14" />
+                <span>Torta</span>
+              </button>
+              <button
+                type="button"
+                (click)="setVistaGrafico('BARRAS')"
+                class="px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer flex items-center gap-1"
+                [class]="vistaGrafico() === 'BARRAS' ? 'bg-white text-primary shadow-xs' : 'text-text-muted hover:text-text-dark'">
+                <app-icon name="bar-chart" [size]="14" />
+                <span>Barras</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         @if (canales().length > 0) {
-          <div class="flex flex-col gap-5">
-            @for (canal of canales(); track canal.nombre) {
-              <div>
-                <div class="flex items-center justify-between text-sm mb-2">
-                  <span class="font-medium text-text-dark">{{ canal.nombre }}</span>
-                  <span class="text-text-muted">
-                    {{ canal.leads }} leads ·
-                    <span class="font-semibold text-primary">{{ canal.conversion }}%</span>
-                  </span>
-                </div>
-                <!-- Barra de progreso — pista bg-light, relleno primary (paleta §3.1) -->
-                <div class="h-2.5 rounded-full bg-bg-light overflow-hidden">
-                  <div
-                    class="h-full rounded-full bg-primary transition-all duration-500"
-                    [style.width.%]="canal.conversion"></div>
+          @if (vistaGrafico() === 'DONUT') {
+            <!-- Vista de Torta / Donut Chart interactiva -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+              <!-- SVG Donut Vectorial -->
+              <div class="relative flex items-center justify-center p-2">
+                <svg class="w-56 h-56 transform -rotate-90 drop-shadow-sm" viewBox="0 0 100 100">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="38"
+                    fill="none"
+                    stroke="#F1F5F9"
+                    stroke-width="14" />
+
+                  @for (canal of canales(); track canal.origen) {
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="38"
+                      fill="none"
+                      [attr.stroke]="canal.color"
+                      stroke-width="14"
+                      [attr.stroke-dasharray]="canal.dashArray"
+                      [attr.stroke-dashoffset]="canal.dashOffset"
+                      stroke-linecap="butt"
+                      class="transition-all duration-300 cursor-pointer hover:opacity-85"
+                      [class.opacity-40]="hoveredCanal() && hoveredCanal() !== canal.origen"
+                      (mouseenter)="hoveredCanal.set(canal.origen)"
+                      (mouseleave)="hoveredCanal.set(null)" />
+                  }
+                </svg>
+
+                <!-- Centro dinámico del Donut -->
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none p-4">
+                  @if (canalActivoInfo(); as activo) {
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-text-muted truncate max-w-[130px]">
+                      {{ activo.nombre }}
+                    </span>
+                    <span class="text-2xl font-extrabold text-text-dark leading-tight mt-0.5">
+                      {{ activo.leads }}
+                    </span>
+                    <span class="text-[11px] font-semibold text-primary">
+                      {{ activo.porcentajeTotal }}% del total ({{ activo.conversion }}% conv.)
+                    </span>
+                  } @else {
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                      Total Leads
+                    </span>
+                    <span class="text-3xl font-extrabold text-text-dark leading-tight mt-0.5">
+                      {{ totalLeadsCanales() }}
+                    </span>
+                    <span class="text-[11px] font-semibold text-primary">
+                      {{ canales().length }} canal{{ canales().length === 1 ? '' : 'es' }} activo{{ canales().length === 1 ? '' : 's' }}
+                    </span>
+                  }
                 </div>
               </div>
-            }
-          </div>
+
+              <!-- Leyenda Lateral Interactiva -->
+              <div class="flex flex-col gap-2.5">
+                @for (canal of canales(); track canal.origen) {
+                  <div
+                    class="flex items-center justify-between p-2.5 rounded-xl border border-border/60 hover:border-primary/30 bg-bg-workspace/50 hover:bg-bg-workspace transition-all cursor-pointer"
+                    [class.ring-1]="hoveredCanal() === canal.origen"
+                    [class.ring-primary]="hoveredCanal() === canal.origen"
+                    (mouseenter)="hoveredCanal.set(canal.origen)"
+                    (mouseleave)="hoveredCanal.set(null)">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      <span class="w-3.5 h-3.5 rounded-full shrink-0 shadow-xs" [style.background-color]="canal.color"></span>
+                      <div class="min-w-0">
+                        <p class="text-xs font-bold text-text-dark truncate">{{ canal.nombre }}</p>
+                        <p class="text-[10px] text-text-muted">
+                          {{ canal.leads }} leads ({{ canal.porcentajeTotal }}%)
+                        </p>
+                      </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary/10 text-primary">
+                        {{ canal.conversion }}% conv.
+                      </span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          } @else {
+            <!-- Vista en Barras Tradicional -->
+            <div class="flex flex-col gap-4">
+              @for (canal of canales(); track canal.origen) {
+                <div class="p-3 rounded-xl border border-border/60 bg-bg-workspace/40 hover:bg-bg-workspace transition-all">
+                  <div class="flex items-center justify-between text-sm mb-1.5">
+                    <div class="flex items-center gap-2">
+                      <span class="w-3 h-3 rounded-full" [style.background-color]="canal.color"></span>
+                      <span class="font-bold text-text-dark text-xs">{{ canal.nombre }}</span>
+                    </div>
+                    <span class="text-xs text-text-muted">
+                      <strong class="text-text-dark">{{ canal.leads }}</strong> leads ·
+                      <span class="font-bold text-primary">{{ canal.conversion }}% conversión</span>
+                    </span>
+                  </div>
+                  <div class="h-2.5 rounded-full bg-bg-light overflow-hidden">
+                    <div
+                      class="h-full rounded-full transition-all duration-500"
+                      [style.background-color]="canal.color"
+                      [style.width.%]="canal.conversion > 0 ? canal.conversion : (canal.leads > 0 ? 5 : 0)"></div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
         } @else {
           <app-empty-state
             icon="trending-up"
@@ -135,31 +260,44 @@
         }
       </app-card>
 
+      <!-- Top Agentes Ranking -->
       <app-card>
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-base font-semibold text-text-dark">Top agentes</h2>
-          <span class="text-xs text-text-muted">Ranking de ventas</span>
+          <div>
+            <h2 class="text-base font-bold text-text-dark">Top Agentes</h2>
+            <p class="text-xs text-text-muted mt-0.5">Ranking por volumen de ventas</p>
+          </div>
+          <span class="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+            🏆 Líderes
+          </span>
         </div>
 
         @if (topAgentes().length > 0) {
-          <div class="flex flex-col gap-5">
+          <div class="flex flex-col gap-4">
             @for (agente of topAgentes(); track agente.nombre; let posicion = $index) {
-              <div class="flex items-center gap-3">
-                <app-avatar
-                  [initials]="agente.iniciales"
-                  size="sm"
-                  [variant]="posicion === 0 ? 'solid' : 'light'" />
+              <div class="flex items-center gap-3 p-2.5 rounded-xl border border-border/50 bg-bg-workspace/50 hover:border-primary/30 transition-all">
+                <div class="relative">
+                  <app-avatar
+                    [initials]="agente.iniciales"
+                    size="sm"
+                    [variant]="posicion === 0 ? 'solid' : 'light'" />
+                  @if (agente.rankBadge; as badge) {
+                    <span class="absolute -top-1.5 -right-1.5 text-[9px] px-1 rounded-full border shadow-2xs font-extrabold" [class]="badge.colorClass">
+                      {{ badge.label }}
+                    </span>
+                  }
+                </div>
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center justify-between gap-2">
-                    <p class="text-sm font-medium text-text-dark truncate">{{ agente.nombre }}</p>
-                    <span class="text-xs text-text-muted shrink-0">{{ agente.ventas }} ventas</span>
+                    <p class="text-xs font-bold text-text-dark truncate">{{ agente.nombre }}</p>
+                    <span class="text-[11px] font-semibold text-primary shrink-0">{{ agente.ventas }} ventas</span>
                   </div>
-                  <div class="h-1.5 rounded-full bg-bg-light overflow-hidden mt-2">
+                  <div class="h-1.5 rounded-full bg-bg-light overflow-hidden mt-1.5">
                     <div
-                      class="h-full rounded-full bg-secondary transition-all duration-500"
+                      class="h-full rounded-full bg-primary transition-all duration-500"
                       [style.width.%]="agente.porcentaje"></div>
                   </div>
-                  <p class="text-xs text-text-muted mt-1.5">{{ formatearMonto(agente.monto) }}</p>
+                  <p class="text-xs font-extrabold text-text-dark mt-1">{{ formatearMonto(agente.monto) }}</p>
                 </div>
               </div>
             }

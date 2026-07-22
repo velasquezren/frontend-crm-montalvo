@@ -42,7 +42,10 @@ export type IconName =
   | 'edit'
   | 'chevron-left'
   | 'copy'
-  | 'external-link';
+  | 'external-link'
+  | 'database'
+  | 'pie-chart'
+  | 'bar-chart';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -224,6 +227,20 @@ export type IconName =
         @case ('edit') {
           <path d="M12 20h9" />
           <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+        }
+        @case ('database') {
+          <ellipse cx="12" cy="5" rx="9" ry="3" />
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+        }
+        @case ('pie-chart') {
+          <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+          <path d="M22 12A10 10 0 0 0 12 2v10z" />
+        }
+        @case ('bar-chart') {
+          <line x1="12" x2="12" y1="20" y2="10" />
+          <line x1="18" x2="18" y1="20" y2="4" />
+          <line x1="6" x2="6" y1="20" y2="14" />
         }
       }
     </svg>

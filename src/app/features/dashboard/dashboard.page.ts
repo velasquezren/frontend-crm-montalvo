@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales } from '../../core/auth/user.model';
@@ -34,10 +34,16 @@ interface FunnelStage {
   readonly icon: IconName;
 }
 
-interface CanalConversion {
+export interface CanalConversion {
+  readonly origen: string;
   readonly nombre: string;
   readonly leads: number;
+  readonly convertidos: number;
   readonly conversion: number;
+  readonly color: string;
+  readonly porcentajeTotal: number;
+  readonly dashArray: string;
+  readonly dashOffset: number;
 }
 
 interface AgenteRanking {
@@ -46,18 +52,31 @@ interface AgenteRanking {
   readonly ventas: number;
   readonly monto: number;
   readonly porcentaje: number;
+  readonly rankBadge?: { label: string; colorClass: string };
 }
 
 const ORIGEN_NOMBRE: Record<string, string> = {
   WHATSAPP_DIRECTO: 'WhatsApp Directo',
-  FACEBOOK_LEAD_AD: 'Facebook Ads',
+  FACEBOOK_LEAD_AD: 'Facebook Lead Ads',
   FACEBOOK_COMENTARIO: 'Facebook Comentarios',
   FACEBOOK_MENSAJE: 'Facebook Mensajes',
-  INSTAGRAM_LEAD_AD: 'Instagram Ads',
+  INSTAGRAM_LEAD_AD: 'Instagram Lead Ads',
   INSTAGRAM_COMENTARIO: 'Instagram Comentarios',
   INSTAGRAM_MENSAJE: 'Instagram Mensajes',
   PRESENCIAL: 'Ventanilla Presencial',
-  IMPORTACION: 'Importación',
+  IMPORTACION: 'Importación Histórica',
+};
+
+const ORIGEN_COLOR: Record<string, string> = {
+  WHATSAPP_DIRECTO: '#25D366',
+  FACEBOOK_LEAD_AD: '#1877F2',
+  FACEBOOK_COMENTARIO: '#3B82F6',
+  FACEBOOK_MENSAJE: '#60A5FA',
+  INSTAGRAM_LEAD_AD: '#E4405F',
+  INSTAGRAM_COMENTARIO: '#F472B6',
+  INSTAGRAM_MENSAJE: '#FB7185',
+  PRESENCIAL: '#8B5CF6',
+  IMPORTACION: '#39ADA3',
 };
 
 /**
@@ -82,6 +101,11 @@ const ORIGEN_NOMBRE: Record<string, string> = {
 export class DashboardPage {
   private readonly authService = inject(AuthService);
   private readonly kpisService = inject(KpisService);
+
+  /* ── Estado de UI del gráfico de canales ────────────────────────── */
+  protected readonly vistaGrafico = signal<'DONUT' | 'BARRAS'>('DONUT');
+  protected readonly incluirImportacion = signal<boolean>(false);
+  protected readonly hoveredCanal = signal<string | null>(null);
 
   protected readonly firstName = computed(
     () => this.authService.user()?.nombre.split(' ')[0] ?? '',
@@ -156,8 +180,6 @@ export class DashboardPage {
     const enProceso = res.funnel?.conversacionesTotal ?? 0;
     const citas = res.funnel?.leadsContactados ?? 0;
 
-    const baseLeads = totalLeads || 1;
-
     return [
       {
         id: 'captados',
@@ -198,15 +220,52 @@ export class DashboardPage {
     ];
   });
 
+  /* ── Datos de canales con cálculos Donut SVG ─────────────────────── */
   protected readonly canales = computed<CanalConversion[]>(() => {
     const res = this.kpiData.value();
     if (!res) return [];
 
-    return res.leadsPorOrigen.map(l => ({
-      nombre: ORIGEN_NOMBRE[l.origen] || l.origen,
-      leads: l.cantidad,
-      conversion: l.tasaConversion,
-    }));
+    const inclImp = this.incluirImportacion();
+    let lista = res.leadsPorOrigen;
+    if (!inclImp) {
+      lista = lista.filter(l => l.origen !== 'IMPORTACION');
+    }
+
+    const totalLeads = lista.reduce((s, l) => s + l.cantidad, 0);
+    const C = 2 * Math.PI * 38; // ~238.761 (Radio = 38)
+    let accFrac = 0;
+
+    return lista.map(l => {
+      const frac = totalLeads > 0 ? l.cantidad / totalLeads : 0;
+      const porcentajeTotal = totalLeads > 0 ? Math.round(frac * 100) : 0;
+      const strokeLen = (frac * C).toFixed(2);
+      const dashArray = `${strokeLen} ${C.toFixed(2)}`;
+      const dashOffset = -(accFrac * C);
+
+      accFrac += frac;
+
+      return {
+        origen: l.origen,
+        nombre: ORIGEN_NOMBRE[l.origen] || l.origen,
+        leads: l.cantidad,
+        convertidos: l.convertidos,
+        conversion: l.tasaConversion,
+        color: ORIGEN_COLOR[l.origen] || '#006156',
+        porcentajeTotal,
+        dashArray,
+        dashOffset,
+      };
+    });
+  });
+
+  protected readonly totalLeadsCanales = computed(() =>
+    this.canales().reduce((s, c) => s + c.leads, 0),
+  );
+
+  protected readonly canalActivoInfo = computed(() => {
+    const h = this.hoveredCanal();
+    if (!h) return null;
+    return this.canales().find(c => c.origen === h) ?? null;
   });
 
   protected readonly topAgentes = computed<AgenteRanking[]>(() => {
@@ -215,14 +274,30 @@ export class DashboardPage {
 
     const maxMonto = Math.max(...res.ventas.porAgente.map(a => a.monto), 1);
 
-    return res.ventas.porAgente.map(a => ({
-      nombre: a.agente,
-      iniciales: generarIniciales(a.agente),
-      ventas: a.cantidad,
-      monto: a.monto,
-      porcentaje: Math.round((a.monto / maxMonto) * 100),
-    }));
+    return res.ventas.porAgente.map((a, i) => {
+      let rankBadge: { label: string; colorClass: string } | undefined;
+      if (i === 0) rankBadge = { label: '🥇 1º', colorClass: 'bg-amber-100 text-amber-800 border-amber-300' };
+      else if (i === 1) rankBadge = { label: '🥈 2º', colorClass: 'bg-slate-100 text-slate-700 border-slate-300' };
+      else if (i === 2) rankBadge = { label: '🥉 3º', colorClass: 'bg-amber-700/10 text-amber-900 border-amber-400/30' };
+
+      return {
+        nombre: a.agente,
+        iniciales: generarIniciales(a.agente),
+        ventas: a.cantidad,
+        monto: a.monto,
+        porcentaje: Math.round((a.monto / maxMonto) * 100),
+        rankBadge,
+      };
+    });
   });
+
+  protected setVistaGrafico(modo: 'DONUT' | 'BARRAS'): void {
+    this.vistaGrafico.set(modo);
+  }
+
+  protected toggleIncluirImportacion(): void {
+    this.incluirImportacion.update(v => !v);
+  }
 
   protected formatearMonto(valor: number): string {
     return formatearBs(valor);
