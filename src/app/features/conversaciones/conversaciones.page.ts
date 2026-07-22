@@ -56,7 +56,6 @@ import { ConversacionesService } from './conversaciones.service';
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,
-    FilterChipComponent,
     IconComponent,
     InputComponent,
     EmptyStateComponent,

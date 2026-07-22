@@ -26,30 +26,47 @@
       </div>
     </div>
 
-    <!-- Filtro tabs: Todas / Sin asignar / Mis chats -->
+    <!-- Filtro tabs: Segmented Control ultrafino (Todas / Sin asignar / Mis chats) -->
     <div class="sidebar-filters">
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
-        <app-filter-chip
-          size="sm"
-          [active]="filtroTab() === 'TODAS' && !filtroAgenteId()"
-          [count]="stats().total"
-          (clicked)="setFiltroTab('TODAS'); filtrarPorAgente(null)">
-          Todas
-        </app-filter-chip>
-        <app-filter-chip
-          size="sm"
-          [active]="filtroTab() === 'SIN_ASIGNAR'"
-          [count]="stats().sinAsignar"
-          (clicked)="setFiltroTab('SIN_ASIGNAR')">
-          Sin asignar
-        </app-filter-chip>
-        <app-filter-chip
-          size="sm"
-          [active]="filtroTab() === 'MIS_CHATS'"
-          [count]="stats().misChats"
-          (clicked)="setFiltroTab('MIS_CHATS')">
-          Mis chats
-        </app-filter-chip>
+      <div class="bg-bg-workspace p-1 rounded-xl flex items-center gap-1 border border-border/70 shadow-2xs">
+        <button
+          type="button"
+          (click)="setFiltroTab('TODAS'); filtrarPorAgente(null)"
+          [class]="filtroTab() === 'TODAS' && !filtroAgenteId() ? 'bg-white text-primary shadow-2xs font-bold' : 'text-text-muted hover:text-text-dark font-medium'"
+          class="flex-1 py-1.5 px-2 rounded-lg text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer border-transparent">
+          <span>Todas</span>
+          <span
+            [class]="filtroTab() === 'TODAS' && !filtroAgenteId() ? 'bg-primary/10 text-primary font-bold' : 'bg-text-muted/10 text-text-muted font-semibold'"
+            class="text-[10px] px-1.5 py-0.5 rounded-md leading-none">
+            {{ stats().total }}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          (click)="setFiltroTab('SIN_ASIGNAR')"
+          [class]="filtroTab() === 'SIN_ASIGNAR' ? 'bg-white text-primary shadow-2xs font-bold' : 'text-text-muted hover:text-text-dark font-medium'"
+          class="flex-1 py-1.5 px-2 rounded-lg text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer border-transparent">
+          <span>Sin asignar</span>
+          <span
+            [class]="filtroTab() === 'SIN_ASIGNAR' ? 'bg-primary/10 text-primary font-bold' : 'bg-text-muted/10 text-text-muted font-semibold'"
+            class="text-[10px] px-1.5 py-0.5 rounded-md leading-none">
+            {{ stats().sinAsignar }}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          (click)="setFiltroTab('MIS_CHATS')"
+          [class]="filtroTab() === 'MIS_CHATS' ? 'bg-white text-primary shadow-2xs font-bold' : 'text-text-muted hover:text-text-dark font-medium'"
+          class="flex-1 py-1.5 px-2 rounded-lg text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer border-transparent">
+          <span>Mis chats</span>
+          <span
+            [class]="filtroTab() === 'MIS_CHATS' ? 'bg-primary/10 text-primary font-bold' : 'bg-text-muted/10 text-text-muted font-semibold'"
+            class="text-[10px] px-1.5 py-0.5 rounded-md leading-none">
+            {{ stats().misChats }}
+          </span>
+        </button>
       </div>
 
       <!-- Filtro por agente (solo admin con chats activos) -->
