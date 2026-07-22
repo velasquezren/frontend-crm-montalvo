@@ -59,7 +59,7 @@
        ══════════════════════════════════════════════════════════════════════ -->
   <!-- Mobile Backdrop Overlay -->
   @if (sidebarExpanded()) {
-    <div (click)="toggleSidebar($event)" class="fixed inset-0 bg-text-dark/40 backdrop-blur-xs z-30 md:hidden animate-fade-scale" aria-hidden="true"></div>
+    <div (click)="toggleSidebar($event)" class="fixed inset-0 bg-text-dark/40 z-30 md:hidden animate-fade-scale" aria-hidden="true"></div>
   }
 
   <aside class="sidebar" [class.sidebar-expanded]="sidebarExpanded()">
@@ -102,7 +102,7 @@
 <!-- Banner de Instalación PWA (Estilo Nativo) -->
 @if (showInstallBanner()) {
   <div class="fixed bottom-6 left-6 right-6 md:right-auto md:max-w-md z-50 animate-modal-pop">
-    <div class="bg-white/80 backdrop-blur-md border border-border shadow-2xl rounded-2xl p-4 flex gap-4 items-center">
+    <div class="bg-white border border-border shadow-2xl rounded-2xl p-4 flex gap-4 items-center">
       <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0 border border-primary/20">
         <img src="/favicon-96x96.png" alt="CRM Logo" class="w-9 h-9 object-contain rounded-lg" />
       </div>

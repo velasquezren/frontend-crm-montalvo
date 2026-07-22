@@ -10,7 +10,7 @@ import { ToastService } from './toast.service';
     <div class="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4">
       @for (toast of toasts(); track toast.id) {
         <div
-          class="pointer-events-auto flex items-start gap-3 p-4 rounded-2xl shadow-xl border backdrop-blur-md transition-all duration-300 animate-toast-slide"
+          class="pointer-events-auto flex items-start gap-3 p-4 rounded-2xl shadow-xl border transition-all duration-300 animate-toast-slide"
           [class]="getClasses(toast.type)">
 
           <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" [class]="getIconBg(toast.type)">
@@ -50,13 +50,13 @@ export class ToastContainerComponent {
   getClasses(type: string): string {
     switch (type) {
       case 'success':
-        return 'bg-emerald-900/90 text-white border-emerald-700/50 shadow-emerald-950/20';
+        return 'bg-emerald-900 text-white border-emerald-700/50 shadow-emerald-950/20';
       case 'error':
-        return 'bg-rose-900/90 text-white border-rose-700/50 shadow-rose-950/20';
+        return 'bg-rose-900 text-white border-rose-700/50 shadow-rose-950/20';
       case 'warning':
-        return 'bg-amber-900/90 text-white border-amber-700/50 shadow-amber-950/20';
+        return 'bg-amber-900 text-white border-amber-700/50 shadow-amber-950/20';
       default:
-        return 'bg-slate-900/90 text-white border-slate-700/50 shadow-slate-950/20';
+        return 'bg-slate-900 text-white border-slate-700/50 shadow-slate-950/20';
     }
   }
 
