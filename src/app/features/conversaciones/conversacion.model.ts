@@ -1,11 +1,15 @@
 import { CategoriaCliente } from '../../shared/models/cliente-categoria.model';
 
+/** Ticks estilo WhatsApp — solo tiene sentido en mensajes SALIENTE. */
+export type EstadoEnvioMensaje = 'ENVIADO' | 'ENTREGADO' | 'LEIDO' | 'FALLIDO';
+
 /** Respuestas de GET /conversaciones y GET /conversaciones/:id. */
 export interface MensajeApi {
   readonly id: string;
   readonly direccion: 'ENTRANTE' | 'SALIENTE';
   readonly contenido: string;
   readonly createdAt: string;
+  readonly estadoEnvio?: EstadoEnvioMensaje | null;
 }
 
 export interface ConversacionResumen {

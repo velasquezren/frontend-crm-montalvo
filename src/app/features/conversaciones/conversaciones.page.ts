@@ -268,6 +268,20 @@ export class ConversacionesPage implements AfterViewInit {
         this.detalle.reload();
       }
     });
+
+    /* Si el socket se cayó y volvió (wifi, laptop suspendida), cualquier
+       aviso emitido mientras estuvo desconectado se perdió para siempre —
+       un reload completo al reconectar es la única forma de recuperarlo,
+       en vez de confiar en que el polling de respaldo (60s) lo alcance. */
+    effect(() => {
+      const n = this.realtimeService.reconectado();
+      if (n === 0) return;
+
+      this.conversaciones.reload();
+      if (this.seleccionadaId()) {
+        this.detalle.reload();
+      }
+    });
   }
 
   ngAfterViewInit(): void {
@@ -374,7 +388,21 @@ export class ConversacionesPage implements AfterViewInit {
     if (!texto || !id || this.enviando()) {
       return;
     }
+    this.mensajeNuevo.set('');
+    await this.enviarTexto(id, texto);
+  }
 
+  /** Reenvía el mismo texto de un mensaje que quedó FALLIDO (ticks del chat).
+   *  El mensaje fallido original se queda tal cual en el historial —no se
+   *  borra, es la constancia de que ese intento no llegó— y este crea uno
+   *  nuevo, igual que el botón "reintentar" de WhatsApp Web. */
+  protected async reintentarEnvio(mensaje: MensajeApi): Promise<void> {
+    const id = this.seleccionadaId();
+    if (!id || this.enviando()) return;
+    await this.enviarTexto(id, mensaje.contenido);
+  }
+
+  private async enviarTexto(id: string, texto: string): Promise<void> {
     /* Envío optimista: la burbuja aparece de inmediato en vez de esperar el
        round-trip al backend (que a su vez ya no espera a Meta, pero sigue
        habiendo latencia de red). Si falla, se revierte y el texto vuelve
@@ -387,10 +415,10 @@ export class ConversacionesPage implements AfterViewInit {
         direccion: 'SALIENTE',
         contenido: texto,
         createdAt: new Date().toISOString(),
+        estadoEnvio: 'ENVIADO',
       };
       this.detalle.set({ ...chatPrevio, mensajes: [...chatPrevio.mensajes, mensajeOptimista] });
     }
-    this.mensajeNuevo.set('');
 
     this.enviando.set(true);
     try {

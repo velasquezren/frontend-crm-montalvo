@@ -236,7 +236,27 @@
                 <span class="bubble-time">
                   {{ item.mensaje.createdAt | date: 'HH:mm' }}
                   @if (item.mensaje.direccion === 'SALIENTE') {
-                    <app-icon name="check" [size]="10" class="inline-block ml-0.5 -mt-px" />
+                    @switch (item.mensaje.estadoEnvio) {
+                      @case ('LEIDO') {
+                        <app-icon name="check-check" [size]="12" class="inline-block ml-0.5 -mt-px text-secondary" title="Leído" />
+                      }
+                      @case ('ENTREGADO') {
+                        <app-icon name="check-check" [size]="12" class="inline-block ml-0.5 -mt-px" title="Entregado" />
+                      }
+                      @case ('FALLIDO') {
+                        <button
+                          type="button"
+                          (click)="reintentarEnvio(item.mensaje)"
+                          class="inline-flex items-center gap-0.5 ml-1 text-critical hover:underline cursor-pointer"
+                          title="No se pudo enviar — reintentar">
+                          <app-icon name="alert-circle" [size]="12" />
+                          <span class="text-[10px] font-semibold">Reintentar</span>
+                        </button>
+                      }
+                      @default {
+                        <app-icon name="check" [size]="12" class="inline-block ml-0.5 -mt-px" title="Enviado" />
+                      }
+                    }
                   }
                 </span>
               </div>

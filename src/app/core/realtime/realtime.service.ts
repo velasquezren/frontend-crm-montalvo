@@ -34,6 +34,15 @@ export class RealtimeService {
   /** Último aviso recibido; un `effect()` en la página lo consume y decide qué recargar. */
   readonly actividad = signal<ActividadConversacion | null>(null);
 
+  /** Contador de reconexiones (0 = todavía ninguna). Sube cada vez que el socket
+   *  vuelve a conectar tras una caída — un wifi que parpadea, la laptop que se
+   *  suspende — para que la página haga un reload completo y recupere lo que
+   *  se perdió mientras estuvo desconectada, en vez de confiar solo en el
+   *  polling de respaldo de 60s. */
+  readonly reconectado = signal(0);
+
+  private yaConectoUnaVez = false;
+
   /** Se conecta si hace falta y se desconecta solo cuando `destroyRef` se dispara. */
   conectar(destroyRef: DestroyRef): void {
     this.refCount++;
@@ -45,6 +54,12 @@ export class RealtimeService {
       this.socket.on('conversacion:actividad', (payload: { conversacionId: string }) => {
         this.actividad.set({ conversacionId: payload.conversacionId, ts: Date.now() });
       });
+      this.socket.on('connect', () => {
+        if (this.yaConectoUnaVez) {
+          this.reconectado.update(n => n + 1);
+        }
+        this.yaConectoUnaVez = true;
+      });
     }
     destroyRef.onDestroy(() => this.desconectar());
   }
@@ -54,6 +69,7 @@ export class RealtimeService {
     if (this.refCount === 0 && this.socket) {
       this.socket.disconnect();
       this.socket = null;
+      this.yaConectoUnaVez = false;
     }
   }
 }
