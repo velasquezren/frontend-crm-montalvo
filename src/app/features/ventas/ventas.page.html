@@ -106,63 +106,67 @@
     }
   </div>
 
-  <!-- ── Tabla de ventas (datos reales) ───────────────────────────── -->
-  @if (ventas.isLoading()) {
-    <div class="bg-white rounded-2xl shadow-subtle p-6 flex flex-col gap-4">
-      @for (fila of [1, 2, 3, 4]; track fila) {
-        <app-loading-skeleton shape="text" height="2.5rem" />
-      }
-    </div>
-  } @else if (ventas.error()) {
-    <div class="bg-white rounded-2xl shadow-subtle">
-      <app-empty-state icon="alert-circle" title="No se pudo cargar las ventas"
-        description="Verifica que el servidor del CRM esté encendido e intenta de nuevo." />
-    </div>
-  } @else if (ventas.value().datos.length > 0) {
-    <app-table>
-      <thead>
-        <tr>
-          <th>Cliente</th>
-          <th>Producto</th>
-          <th>Monto</th>
-          <th>Agente</th>
-          <th>Fecha</th>
-          <th>Estado</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (venta of ventas.value().datos; track venta.id) {
-          <tr>
-            <td>
-              <div class="flex items-center gap-3">
-                <app-avatar [initials]="iniciales(venta.cliente.nombre)" size="sm" />
-                <p class="font-medium text-text-dark">{{ venta.cliente.nombre }}</p>
-              </div>
-            </td>
-            <td>{{ venta.producto }}</td>
-            <td class="font-semibold whitespace-nowrap">{{ +venta.monto | moneda }}</td>
-            <td class="text-text-muted">{{ venta.agente.nombre }}</td>
-            <td class="text-text-muted whitespace-nowrap">{{ venta.createdAt | date: 'dd/MM/yy HH:mm' }}</td>
-            <td>
-              <app-badge [variant]="estadoBadge[venta.estado]">
-                {{ estadoLabel[venta.estado] }}
-              </app-badge>
-            </td>
-          </tr>
+  <!-- ── Tabla de ventas (carga diferida reactiva) ────────────────── -->
+  @defer (on viewport) {
+    @if (ventas.isLoading()) {
+      <div class="bg-white rounded-2xl shadow-subtle p-6 flex flex-col gap-4">
+        @for (fila of [1, 2, 3, 4]; track fila) {
+          <app-loading-skeleton shape="text" height="2.5rem" />
         }
-      </tbody>
-    </app-table>
+      </div>
+    } @else if (ventas.error()) {
+      <div class="bg-white rounded-2xl shadow-subtle">
+        <app-empty-state icon="alert-circle" title="No se pudo cargar las ventas"
+          description="Verifica que el servidor del CRM esté encendido e intenta de nuevo." />
+      </div>
+    } @else if (ventas.value().datos.length > 0) {
+      <app-table>
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Producto</th>
+            <th>Monto</th>
+            <th>Agente</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (venta of ventas.value().datos; track venta.id) {
+            <tr>
+              <td>
+                <div class="flex items-center gap-3">
+                  <app-avatar [initials]="iniciales(venta.cliente.nombre)" size="sm" />
+                  <p class="font-medium text-text-dark">{{ venta.cliente.nombre }}</p>
+                </div>
+              </td>
+              <td>{{ venta.producto }}</td>
+              <td class="font-semibold whitespace-nowrap">{{ +venta.monto | moneda }}</td>
+              <td class="text-text-muted">{{ venta.agente.nombre }}</td>
+              <td class="text-text-muted whitespace-nowrap">{{ venta.createdAt | date: 'dd/MM/yy HH:mm' }}</td>
+              <td>
+                <app-badge [variant]="estadoBadge[venta.estado]">
+                  {{ estadoLabel[venta.estado] }}
+                </app-badge>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
 
-    <app-paginator
-      [pagina]="ventas.value().pagina"
-      [totalPaginas]="ventas.value().totalPaginas"
-      [total]="ventas.value().total"
-      [limite]="ventas.value().limite"
-      (cambiar)="pagina.set($event)" />
-  } @else {
-    <div class="bg-white rounded-2xl shadow-subtle">
-      <app-empty-state icon="shopping-bag" title="Sin ventas en este estado"
-        description="Registra un cierre con el botón «Registrar venta»." />
-    </div>
+      <app-paginator
+        [pagina]="ventas.value().pagina"
+        [totalPaginas]="ventas.value().totalPaginas"
+        [total]="ventas.value().total"
+        [limite]="ventas.value().limite"
+        (cambiar)="pagina.set($event)" />
+    } @else {
+      <div class="bg-white rounded-2xl shadow-subtle">
+        <app-empty-state icon="shopping-bag" title="Sin ventas en este estado"
+          description="Registra un cierre con el botón «Registrar venta»." />
+      </div>
+    }
+  } @placeholder {
+    <app-loading-skeleton shape="card" height="240px" />
   }
 </div>

@@ -33,74 +33,78 @@
     }
   </div>
 
-  <!-- ── Tabla de comisiones ──────────────────────────────────────── -->
-  @if (comisiones.isLoading()) {
-    <app-loading-skeleton shape="card" height="200px" />
-  } @else if (filtradas().length > 0) {
-    <app-table>
-      <thead>
-        <tr>
-          <th>Agente</th>
-          <th>Producto / Venta</th>
-          <th>Fecha Venta</th>
-          <th>Monto Venta</th>
-          <th>Comisión</th>
-          <th>Estado</th>
-          @if (esAdmin()) {
-            <th class="text-right">Acción</th>
-          }
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of filtradas(); track item.id) {
+  <!-- ── Tabla de comisiones (Carga diferida reactiva) ───────────── -->
+  @defer (on viewport) {
+    @if (comisiones.isLoading()) {
+      <app-loading-skeleton shape="card" height="200px" />
+    } @else if (filtradas().length > 0) {
+      <app-table>
+        <thead>
           <tr>
-            <td>
-              <div class="flex items-center gap-3">
-                <app-avatar [initials]="iniciales(item.agente.nombre)" size="sm" />
-                <p class="font-medium text-text-dark">{{ item.agente.nombre }}</p>
-              </div>
-            </td>
-            <td class="font-medium text-text-dark">{{ item.venta.producto }}</td>
-            <td class="text-text-muted whitespace-nowrap">{{ item.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
-            <td class="whitespace-nowrap">{{ item.venta.monto | moneda }}</td>
-            <td class="font-semibold text-primary whitespace-nowrap">{{ item.monto | moneda }}</td>
-            <td>
-              <app-badge [variant]="estadoBadge[item.estado]">
-                {{ estadoLabel[item.estado] }}
-              </app-badge>
-            </td>
+            <th>Agente</th>
+            <th>Producto / Venta</th>
+            <th>Fecha Venta</th>
+            <th>Monto Venta</th>
+            <th>Comisión</th>
+            <th>Estado</th>
             @if (esAdmin()) {
-              <td class="text-right">
-                @if (item.estado === 'PENDIENTE') {
-                  <app-button
-                    variant="secondary"
-                    size="sm"
-                    [loading]="pagandoId() === item.id"
-                    (clicked)="pagar(item.id)">
-                    Marcar Pagada
-                  </app-button>
-                } @else {
-                  <span class="text-xs text-text-muted">Pagada el {{ item.pagadaEn | date: 'dd/MM/yy' }}</span>
-                }
-              </td>
+              <th class="text-right">Acción</th>
             }
           </tr>
-        }
-      </tbody>
-    </app-table>
+        </thead>
+        <tbody>
+          @for (item of filtradas(); track item.id) {
+            <tr>
+              <td>
+                <div class="flex items-center gap-3">
+                  <app-avatar [initials]="iniciales(item.agente.nombre)" size="sm" />
+                  <p class="font-medium text-text-dark">{{ item.agente.nombre }}</p>
+                </div>
+              </td>
+              <td class="font-medium text-text-dark">{{ item.venta.producto }}</td>
+              <td class="text-text-muted whitespace-nowrap">{{ item.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td class="whitespace-nowrap">{{ item.venta.monto | moneda }}</td>
+              <td class="font-semibold text-primary whitespace-nowrap">{{ item.monto | moneda }}</td>
+              <td>
+                <app-badge [variant]="estadoBadge[item.estado]">
+                  {{ estadoLabel[item.estado] }}
+                </app-badge>
+              </td>
+              @if (esAdmin()) {
+                <td class="text-right">
+                  @if (item.estado === 'PENDIENTE') {
+                    <app-button
+                      variant="secondary"
+                      size="sm"
+                      [loading]="pagandoId() === item.id"
+                      (clicked)="pagar(item.id)">
+                      Marcar Pagada
+                    </app-button>
+                  } @else {
+                    <span class="text-xs text-text-muted">Pagada el {{ item.pagadaEn | date: 'dd/MM/yy' }}</span>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </app-table>
 
-    <app-paginator
-      [pagina]="comisiones.value().pagina"
-      [totalPaginas]="comisiones.value().totalPaginas"
-      [total]="comisiones.value().total"
-      [limite]="comisiones.value().limite"
-      (cambiar)="pagina.set($event)" />
-  } @else {
-    <div class="bg-white rounded-2xl shadow-subtle">
-      <app-empty-state
-        icon="wallet"
-        title="Sin comisiones en este estado"
-        description="Las comisiones se generan automáticamente al registrar ventas ganadas." />
-    </div>
+      <app-paginator
+        [pagina]="comisiones.value().pagina"
+        [totalPaginas]="comisiones.value().totalPaginas"
+        [total]="comisiones.value().total"
+        [limite]="comisiones.value().limite"
+        (cambiar)="pagina.set($event)" />
+    } @else {
+      <div class="bg-white rounded-2xl shadow-subtle">
+        <app-empty-state
+          icon="wallet"
+          title="Sin comisiones en este estado"
+          description="Las comisiones se generan automáticamente al registrar ventas ganadas." />
+      </div>
+    }
+  } @placeholder {
+    <app-loading-skeleton shape="card" height="240px" />
   }
 </div>

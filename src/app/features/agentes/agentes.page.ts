@@ -16,9 +16,13 @@ import { ToastService } from '../../core/toast/toast.service';
 import { Agente, CreateAgentePayload } from './agente.model';
 import { AgentesService } from './agentes.service';
 
+import { DialogService } from '../../shared/components/dialog/dialog.service';
+import { OverlayRef } from '@angular/cdk/overlay';
+import { TemplateRef, ViewContainerRef } from '@angular/core';
+
 /**
  * Gestión de Agentes y Usuarios — Solo administradores
- * Ref: CRM_MANIFESTO.md §1.2, §3
+ * Ref: CRM_MANIFESTO.md §1.2, §3, §2.11 (CDK Overlay Portals)
  */
 @Component({
   selector: 'app-agentes-page',
@@ -39,6 +43,10 @@ export class AgentesPage {
   private readonly agentesService = inject(AgentesService);
   private readonly toastService = inject(ToastService);
   private readonly authService = inject(AuthService);
+  private readonly dialogService = inject(DialogService);
+  private readonly vcr = inject(ViewContainerRef);
+
+  private activeOverlayRef?: OverlayRef;
 
   /** Usuario autenticado — para no dejar que se bloquee a sí mismo. */
   protected readonly usuarioActual = this.authService.user;
@@ -83,17 +91,23 @@ export class AgentesPage {
     );
   });
 
-  abrirModal(): void {
+  abrirModal(template?: TemplateRef<unknown>): void {
     this.formNombre.set('');
     this.formEmail.set('');
     this.formPassword.set('');
     this.formRol.set('AGENTE');
     this.errorMensaje.set(null);
     this.modalCrearAbierto.set(true);
+    if (template) {
+      this.activeOverlayRef?.dispose();
+      this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+    }
   }
 
   cerrarModal(): void {
     this.modalCrearAbierto.set(false);
+    this.activeOverlayRef?.dispose();
+    this.activeOverlayRef = undefined;
   }
 
   crearAgente(event: Event): void {
@@ -169,7 +183,7 @@ export class AgentesPage {
     () => this.agenteEditando()?.id === this.usuarioActual()?.id,
   );
 
-  abrirEdicion(agente: Agente): void {
+  abrirEdicion(agente: Agente, template?: TemplateRef<unknown>): void {
     this.agenteEditando.set(agente);
     this.editNombre.set(agente.nombre);
     this.editEmail.set(agente.email);
@@ -177,11 +191,17 @@ export class AgentesPage {
     this.editPassword.set('');
     this.errorMensaje.set(null);
     this.modalEditarAbierto.set(true);
+    if (template) {
+      this.activeOverlayRef?.dispose();
+      this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+    }
   }
 
   cerrarEdicion(): void {
     this.modalEditarAbierto.set(false);
     this.agenteEditando.set(null);
+    this.activeOverlayRef?.dispose();
+    this.activeOverlayRef = undefined;
   }
 
   guardarEdicion(event: Event): void {
@@ -234,12 +254,18 @@ export class AgentesPage {
   protected readonly agenteABaja = signal<Agente | null>(null);
   protected readonly dandoDeBaja = signal(false);
 
-  confirmarBaja(agente: Agente): void {
+  confirmarBaja(agente: Agente, template?: TemplateRef<unknown>): void {
     this.agenteABaja.set(agente);
+    if (template) {
+      this.activeOverlayRef?.dispose();
+      this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+    }
   }
 
   cancelarBaja(): void {
     this.agenteABaja.set(null);
+    this.activeOverlayRef?.dispose();
+    this.activeOverlayRef = undefined;
   }
 
   ejecutarBaja(): void {
