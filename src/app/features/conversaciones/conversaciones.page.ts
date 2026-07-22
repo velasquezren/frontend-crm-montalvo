@@ -5,6 +5,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   ElementRef,
   inject,
@@ -14,6 +15,7 @@ import {
 
 import { mensajeDeError } from '../../core/api/http-error';
 import { AuthService } from '../../core/auth/auth.service';
+import { RealtimeService } from '../../core/realtime/realtime.service';
 import { ToastService } from '../../core/toast/toast.service';
 import { generarIniciales } from '../../core/auth/user.model';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
@@ -47,7 +49,7 @@ import { ConversacionesService } from './conversaciones.service';
  *  • Auto-scroll al último mensaje
  *  • Separadores de fecha en el hilo
  *  • Panel de ficha del cliente con asignación de agente (admin)
- *  • Polling cada 15s para simular tiempo real
+ *  • Tiempo real por WebSocket (RealtimeService), con polling de 60s de respaldo
  *
  * Visibilidad por rol resuelta en el servidor.
  */
@@ -71,6 +73,7 @@ export class ConversacionesPage implements AfterViewInit {
   private readonly clientesService = inject(ClientesService);
   private readonly authService = inject(AuthService);
   private readonly toastService = inject(ToastService);
+  private readonly realtimeService = inject(RealtimeService);
 
   /* ── Refs de template ──────────────────────────────────────────── */
   private readonly messagesContainer = viewChild<ElementRef<HTMLElement>>('messagesScroll');
@@ -235,7 +238,10 @@ export class ConversacionesPage implements AfterViewInit {
     return result;
   });
 
-  /* ── Polling para simular tiempo real (cada 15s) ───────────────── */
+  /* ── Respaldo por polling (solo si el WebSocket no está disponible) ──
+     El push en tiempo real (`RealtimeService`) es el camino normal; este
+     intervalo es una red de seguridad mucho más espaciada, no el mecanismo
+     principal de refresco. */
   private pollingInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
@@ -245,6 +251,22 @@ export class ConversacionesPage implements AfterViewInit {
       this.detalle.value();
       // Programar el scroll al siguiente tick de renderizado
       setTimeout(() => this.scrollToBottom(), 50);
+    });
+
+    // Conecta el socket del inbox; se desconecta solo al destruir la página.
+    this.realtimeService.conectar(inject(DestroyRef));
+
+    /* Reload dirigido: solo la lista, y el detalle si es la conversación
+       que el agente tiene abierta — así un mensaje nuevo aparece en
+       segundos en vez de esperar el próximo tick del polling. */
+    effect(() => {
+      const aviso = this.realtimeService.actividad();
+      if (!aviso) return;
+
+      this.conversaciones.reload();
+      if (this.seleccionadaId() === aviso.conversacionId) {
+        this.detalle.reload();
+      }
     });
   }
 
@@ -353,14 +375,35 @@ export class ConversacionesPage implements AfterViewInit {
       return;
     }
 
+    /* Envío optimista: la burbuja aparece de inmediato en vez de esperar el
+       round-trip al backend (que a su vez ya no espera a Meta, pero sigue
+       habiendo latencia de red). Si falla, se revierte y el texto vuelve
+       al campo para que el agente no pierda lo que escribió. */
+    const chatPrevio = this.detalle.value();
+    const idOptimista = `optimista-${Date.now()}`;
+    if (chatPrevio && chatPrevio.id === id) {
+      const mensajeOptimista: MensajeApi = {
+        id: idOptimista,
+        direccion: 'SALIENTE',
+        contenido: texto,
+        createdAt: new Date().toISOString(),
+      };
+      this.detalle.set({ ...chatPrevio, mensajes: [...chatPrevio.mensajes, mensajeOptimista] });
+    }
+    this.mensajeNuevo.set('');
+
     this.enviando.set(true);
     try {
       await this.conversacionesService.enviarMensaje(id, texto);
-      this.mensajeNuevo.set('');
       this.toastService.success('Mensaje enviado al paciente', 'WhatsApp');
       this.detalle.reload();
       this.conversaciones.reload();
     } catch (err) {
+      // Revierte la burbuja optimista y devuelve el texto al campo.
+      if (chatPrevio && chatPrevio.id === id) {
+        this.detalle.set(chatPrevio);
+      }
+      this.mensajeNuevo.set(texto);
       this.toastService.error(
         mensajeDeError(err, 'No se pudo enviar el mensaje'),
         'Error de Conexión',
@@ -448,7 +491,7 @@ export class ConversacionesPage implements AfterViewInit {
       if (this.seleccionadaId()) {
         this.detalle.reload();
       }
-    }, 15000);
+    }, 60000);
   }
 
   /** @internal */

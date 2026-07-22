@@ -153,6 +153,59 @@ navega a otra vista con el modal abierto sin cerrarlo, el overlay se destruye so
 dos páginas dejaban un fondo oscuro huérfano bloqueando clics en la siguiente vista; ahora es
 imposible que un nuevo modal reintroduzca ese bug, sin importar si la página se acuerda de limpiar.
 
+## Tiempo real: `RealtimeService` en vez de polling ciego
+
+Un `setInterval` que recarga todo cada N segundos, siempre, haya o no algo
+nuevo, es el último recurso — no el primero. Para vistas que reciben cambios
+de otro actor (el inbox de Conversaciones recibiendo mensajes de WhatsApp),
+usa `RealtimeService` (`core/realtime/realtime.service.ts`): un socket
+compartido por sesión que expone `actividad` como signal, y que se conecta
+igual que `DialogService` se abre — con auto-limpieza por `DestroyRef`, sin
+`OnDestroy` manual.
+
+```ts
+constructor() {
+  this.realtimeService.conectar(inject(DestroyRef));
+
+  effect(() => {
+    const aviso = this.realtimeService.actividad();
+    if (!aviso) return;
+    this.conversaciones.reload();               // solo lo que puede haber cambiado
+    if (this.seleccionadaId() === aviso.conversacionId) {
+      this.detalle.reload();
+    }
+  });
+}
+```
+
+El aviso del socket **nunca lleva datos del paciente** — solo un id. El dato
+real siempre se trae por el `httpResource` normal, que es el que respeta el
+escopado por rol del backend. Deja un polling de respaldo mucho más largo
+(60s, no 15s) como red de seguridad si el socket se cae, no como mecanismo principal.
+
+## Envío optimista: no esperes el round-trip para mostrar el resultado
+
+Si una acción del usuario tiene un resultado predecible (mandar un mensaje de
+chat), actualiza el `httpResource` local con `.set(...)` **antes** de que
+resuelva la petición, y revierte con el valor previo si falla:
+
+```ts
+const chatPrevio = this.detalle.value();
+this.detalle.set({ ...chatPrevio, mensajes: [...chatPrevio.mensajes, mensajeOptimista] });
+
+try {
+  await this.conversacionesService.enviarMensaje(id, texto);
+  this.detalle.reload(); // reconcilia con el id/timestamp real del servidor
+} catch (err) {
+  this.detalle.set(chatPrevio); // rollback: la burbuja optimista desaparece
+  this.mensajeNuevo.set(texto); // el agente no pierde lo que escribió
+}
+```
+
+Nunca lo uses para acciones cuyo resultado el servidor pueda rechazar de forma
+no obvia para el usuario (crear con validación de negocio compleja, montos,
+etc.) — ahí sí conviene esperar la respuesta antes de reflejar el cambio.
+
 ## Roles y permisos
 
 El **backend** es la autoridad: acota por rol según el JWT y bloquea con `@Roles`.
