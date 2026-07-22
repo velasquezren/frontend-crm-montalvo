@@ -220,7 +220,7 @@
 
       <!-- Mensajes con separadores de fecha -->
       <div class="chat-messages" #messagesScroll>
-        @for (item of mensajesAgrupados(); track $index) {
+        @for (item of mensajesAgrupados(); track (item.tipo === 'fecha' ? item.label : item.mensaje.id)) {
           @if (item.tipo === 'fecha') {
             <div class="date-separator">
               <span class="date-separator-label">{{ item.label }}</span>
