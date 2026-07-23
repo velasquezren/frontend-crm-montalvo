@@ -65,14 +65,75 @@
     </app-card>
   </div>
 
-  <!-- Barra de búsqueda -->
-  <div class="bg-white p-4 rounded-2xl border border-border flex items-center justify-between gap-4 shadow-subtle">
-    <div class="flex-1 max-w-md">
+  <!-- Barra de Filtros: Switcher por Rol + Búsqueda -->
+  <div class="bg-white p-4 rounded-2xl border border-border flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-subtle">
+    <!-- Switcher de Roles (Tabs) -->
+    <div class="inline-flex p-1 bg-bg-workspace rounded-xl border border-border/80 gap-1 self-start md:self-auto">
+      <button
+        type="button"
+        (click)="filtroRol.set('TODOS')"
+        class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center gap-2"
+        [class.bg-white]="filtroRol() === 'TODOS'"
+        [class.text-primary]="filtroRol() === 'TODOS'"
+        [class.shadow-subtle]="filtroRol() === 'TODOS'"
+        [class.text-text-muted]="filtroRol() !== 'TODOS'"
+        [class.hover:text-text-dark]="filtroRol() !== 'TODOS'">
+        <app-icon name="users" [size]="14" />
+        <span>Todos</span>
+        <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold"
+              [class.bg-primary/10]="filtroRol() === 'TODOS'"
+              [class.text-primary]="filtroRol() === 'TODOS'"
+              [class.bg-border/50]="filtroRol() !== 'TODOS'"
+              [class.text-text-muted]="filtroRol() !== 'TODOS'">
+          {{ stats().total }}
+        </span>
+      </button>
+
+      <button
+        type="button"
+        (click)="filtroRol.set('ADMIN')"
+        class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center gap-2"
+        [class.bg-white]="filtroRol() === 'ADMIN'"
+        [class.text-primary]="filtroRol() === 'ADMIN'"
+        [class.shadow-subtle]="filtroRol() === 'ADMIN'"
+        [class.text-text-muted]="filtroRol() !== 'ADMIN'"
+        [class.hover:text-text-dark]="filtroRol() !== 'ADMIN'">
+        <app-icon name="shield" [size]="14" />
+        <span>Administradores</span>
+        <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold"
+              [class.bg-primary/10]="filtroRol() === 'ADMIN'"
+              [class.text-primary]="filtroRol() === 'ADMIN'"
+              [class.bg-border/50]="filtroRol() !== 'ADMIN'"
+              [class.text-text-muted]="filtroRol() !== 'ADMIN'">
+          {{ stats().admins }}
+        </span>
+      </button>
+
+      <button
+        type="button"
+        (click)="filtroRol.set('AGENTE')"
+        class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center gap-2"
+        [class.bg-white]="filtroRol() === 'AGENTE'"
+        [class.text-primary]="filtroRol() === 'AGENTE'"
+        [class.shadow-subtle]="filtroRol() === 'AGENTE'"
+        [class.text-text-muted]="filtroRol() !== 'AGENTE'"
+        [class.hover:text-text-dark]="filtroRol() !== 'AGENTE'">
+        <app-icon name="message-circle" [size]="14" />
+        <span>Agentes Comerciales</span>
+        <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold"
+              [class.bg-primary/10]="filtroRol() === 'AGENTE'"
+              [class.text-primary]="filtroRol() === 'AGENTE'"
+              [class.bg-border/50]="filtroRol() !== 'AGENTE'"
+              [class.text-text-muted]="filtroRol() !== 'AGENTE'">
+          {{ stats().agentes }}
+        </span>
+      </button>
+    </div>
+
+    <!-- Buscador -->
+    <div class="w-full md:w-72">
       <app-input type="search" placeholder="Buscar por nombre o email…" [(value)]="busqueda" />
     </div>
-    <span class="text-xs text-text-muted">
-      Mostrando {{ filtrados().length }} de {{ stats().total }} usuario{{ stats().total === 1 ? '' : 's' }}
-    </span>
   </div>
 
   <!-- Tabla de Agentes -->
@@ -89,215 +150,105 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-border">
-          <!-- Grupo: Administradores -->
-          @if (adminsFiltrados().length > 0) {
-            <tr class="bg-bg-workspace border-y border-border/80">
-              <td colspan="5" class="py-2.5 px-6 font-bold text-xs text-text-dark tracking-wider uppercase">
-                <div class="flex items-center gap-2">
-                  <app-icon name="shield" [size]="15" class="text-primary" />
-                  <span>Administradores ({{ adminsFiltrados().length }})</span>
+          @for (agente of filtrados(); track agente.id) {
+            <tr class="hover:bg-bg-light/40 transition-colors">
+              <td class="py-4 px-6">
+                <div class="flex items-center gap-3">
+                  <app-avatar [initials]="iniciales(agente.nombre)" [imageUrl]="agente.foto" size="md" />
+                  <div>
+                    <p class="font-semibold text-text-dark leading-tight">{{ agente.nombre }}</p>
+                    <p class="text-xs text-text-muted leading-tight mt-0.5">
+                      Creado el {{ agente.createdAt | date: 'dd/MM/yyyy' }}
+                    </p>
+                  </div>
                 </div>
               </td>
-            </tr>
-            @for (agente of adminsFiltrados(); track agente.id) {
-              <tr class="hover:bg-bg-light/40 transition-colors">
-                <td class="py-4 px-6">
-                  <div class="flex items-center gap-3">
-                    <app-avatar [initials]="iniciales(agente.nombre)" [imageUrl]="agente.foto" size="md" />
-                    <div>
-                      <p class="font-semibold text-text-dark leading-tight">{{ agente.nombre }}</p>
-                      <p class="text-xs text-text-muted leading-tight mt-0.5">
-                        Creado el {{ agente.createdAt | date: 'dd/MM/yyyy' }}
-                      </p>
-                    </div>
-                  </div>
-                </td>
-                <td class="py-4 px-6 text-text-muted">
-                  {{ agente.email }}
-                </td>
-                <td class="py-4 px-6">
+              <td class="py-4 px-6 text-text-muted">
+                {{ agente.email }}
+              </td>
+              <td class="py-4 px-6">
+                @if (agente.rol === 'ADMIN') {
                   <app-badge variant="info" icon="shield">Administrador</app-badge>
-                </td>
-                <td class="py-4 px-6">
+                } @else {
+                  <app-badge variant="neutral" icon="users">Agente</app-badge>
+                }
+              </td>
+              <td class="py-4 px-6">
+                @if (agente.activo) {
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    Activo
+                  </span>
+                } @else {
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-100 text-neutral-500 text-xs font-medium border border-neutral-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-neutral-400"></span>
+                    Inactivo
+                  </span>
+                }
+              </td>
+              <td class="py-4 px-6">
+                <div class="flex items-center justify-end gap-2">
+                  <!-- Editar -->
+                  <button
+                    type="button"
+                    (click)="abrirEdicion(agente, modalEditar)"
+                    class="w-9 h-9 rounded-lg flex items-center justify-center text-text-muted shrink-0
+                           hover:text-primary hover:bg-bg-light transition-colors cursor-pointer"
+                    [title]="'Editar ' + agente.nombre"
+                    [attr.aria-label]="'Editar ' + agente.nombre">
+                    <app-icon name="edit" [size]="16" />
+                  </button>
+
+                  <!-- Activar / Desactivar con ancho fijo de 96px (w-24) -->
                   @if (agente.activo) {
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
-                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      Activo
-                    </span>
-                  } @else {
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-100 text-neutral-500 text-xs font-medium border border-neutral-200">
-                      <span class="w-1.5 h-1.5 rounded-full bg-neutral-400"></span>
-                      Inactivo
-                    </span>
-                  }
-                </td>
-                <td class="py-4 px-6">
-                  <div class="flex items-center justify-end gap-2">
-                    <!-- Editar -->
                     <button
                       type="button"
-                      (click)="abrirEdicion(agente, modalEditar)"
-                      class="w-9 h-9 rounded-lg flex items-center justify-center text-text-muted shrink-0
-                             hover:text-primary hover:bg-bg-light transition-colors cursor-pointer"
-                      [title]="'Editar ' + agente.nombre"
-                      [attr.aria-label]="'Editar ' + agente.nombre">
-                      <app-icon name="edit" [size]="16" />
-                    </button>
-
-                    <!-- Activar / Desactivar con ancho fijo de 96px (w-24) -->
-                    @if (agente.activo) {
-                      <button
-                        type="button"
-                        (click)="confirmarBaja(agente, modalBaja)"
-                        [disabled]="agente.id === usuarioActual()?.id"
-                        class="w-24 h-9 shrink-0 inline-flex items-center justify-center text-xs font-medium rounded-lg border border-border text-text-muted
-                               transition-colors cursor-pointer
-                               hover:text-critical hover:bg-critical-bg hover:border-critical/20
-                               disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent
-                               disabled:hover:text-text-muted disabled:hover:border-border"
-                        [title]="agente.id === usuarioActual()?.id
-                          ? 'No puedes desactivar tu propia cuenta'
-                          : 'Desactivar cuenta'">
-                        Desactivar
-                      </button>
-                    } @else {
-                      <button
-                        type="button"
-                        (click)="toggleEstado(agente)"
-                        class="w-24 h-9 shrink-0 inline-flex items-center justify-center text-xs font-medium rounded-lg border border-primary/30
-                               text-primary bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer">
-                        Activar
-                      </button>
-                    }
-
-                    <!-- Eliminar Definitivamente (BD) -->
-                    <button
-                      type="button"
-                      (click)="confirmarEliminacion(agente, modalEliminarDefinitivo)"
+                      (click)="confirmarBaja(agente, modalBaja)"
                       [disabled]="agente.id === usuarioActual()?.id"
-                      class="w-9 h-9 rounded-lg flex items-center justify-center text-text-muted shrink-0
-                             hover:text-critical hover:bg-critical-bg transition-colors cursor-pointer
-                             disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-muted"
+                      class="w-24 h-9 shrink-0 inline-flex items-center justify-center text-xs font-medium rounded-lg border border-border text-text-muted
+                             transition-colors cursor-pointer
+                             hover:text-critical hover:bg-critical-bg hover:border-critical/20
+                             disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent
+                             disabled:hover:text-text-muted disabled:hover:border-border"
                       [title]="agente.id === usuarioActual()?.id
-                        ? 'No puedes eliminar tu propia cuenta'
-                        : 'Eliminar usuario de la base de datos'"
-                      [attr.aria-label]="'Eliminar ' + agente.nombre">
-                      <app-icon name="trash" [size]="16" />
+                        ? 'No puedes desactivar tu propia cuenta'
+                        : 'Desactivar cuenta'">
+                      Desactivar
                     </button>
-                  </div>
-                </td>
-              </tr>
-            }
-          }
+                  } @else {
+                    <button
+                      type="button"
+                      (click)="toggleEstado(agente)"
+                      class="w-24 h-9 shrink-0 inline-flex items-center justify-center text-xs font-medium rounded-lg border border-primary/30
+                             text-primary bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer">
+                      Activar
+                    </button>
+                  }
 
-          <!-- Grupo: Agentes Comerciales -->
-          @if (agentesComercialesFiltrados().length > 0) {
-            <tr class="bg-bg-workspace border-y border-border/80">
-              <td colspan="5" class="py-2.5 px-6 font-bold text-xs text-text-dark tracking-wider uppercase">
-                <div class="flex items-center gap-2">
-                  <app-icon name="users" [size]="15" class="text-primary" />
-                  <span>Agentes Comerciales ({{ agentesComercialesFiltrados().length }})</span>
+                  <!-- Eliminar Definitivamente (BD) -->
+                  <button
+                    type="button"
+                    (click)="confirmarEliminacion(agente, modalEliminarDefinitivo)"
+                    [disabled]="agente.id === usuarioActual()?.id"
+                    class="w-9 h-9 rounded-lg flex items-center justify-center text-text-muted shrink-0
+                           hover:text-critical hover:bg-critical-bg transition-colors cursor-pointer
+                           disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-muted"
+                    [title]="agente.id === usuarioActual()?.id
+                      ? 'No puedes eliminar tu propia cuenta'
+                      : 'Eliminar usuario de la base de datos'"
+                    [attr.aria-label]="'Eliminar ' + agente.nombre">
+                    <app-icon name="trash" [size]="16" />
+                  </button>
                 </div>
               </td>
             </tr>
-            @for (agente of agentesComercialesFiltrados(); track agente.id) {
-              <tr class="hover:bg-bg-light/40 transition-colors">
-                <td class="py-4 px-6">
-                  <div class="flex items-center gap-3">
-                    <app-avatar [initials]="iniciales(agente.nombre)" [imageUrl]="agente.foto" size="md" />
-                    <div>
-                      <p class="font-semibold text-text-dark leading-tight">{{ agente.nombre }}</p>
-                      <p class="text-xs text-text-muted leading-tight mt-0.5">
-                        Creado el {{ agente.createdAt | date: 'dd/MM/yyyy' }}
-                      </p>
-                    </div>
-                  </div>
-                </td>
-                <td class="py-4 px-6 text-text-muted">
-                  {{ agente.email }}
-                </td>
-                <td class="py-4 px-6">
-                  <app-badge variant="neutral" icon="users">Agente</app-badge>
-                </td>
-                <td class="py-4 px-6">
-                  @if (agente.activo) {
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
-                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      Activo
-                    </span>
-                  } @else {
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-100 text-neutral-500 text-xs font-medium border border-neutral-200">
-                      <span class="w-1.5 h-1.5 rounded-full bg-neutral-400"></span>
-                      Inactivo
-                    </span>
-                  }
-                </td>
-                <td class="py-4 px-6">
-                  <div class="flex items-center justify-end gap-2">
-                    <!-- Editar -->
-                    <button
-                      type="button"
-                      (click)="abrirEdicion(agente, modalEditar)"
-                      class="w-9 h-9 rounded-lg flex items-center justify-center text-text-muted shrink-0
-                             hover:text-primary hover:bg-bg-light transition-colors cursor-pointer"
-                      [title]="'Editar ' + agente.nombre"
-                      [attr.aria-label]="'Editar ' + agente.nombre">
-                      <app-icon name="edit" [size]="16" />
-                    </button>
-
-                    <!-- Activar / Desactivar con ancho fijo de 96px (w-24) -->
-                    @if (agente.activo) {
-                      <button
-                        type="button"
-                        (click)="confirmarBaja(agente, modalBaja)"
-                        [disabled]="agente.id === usuarioActual()?.id"
-                        class="w-24 h-9 shrink-0 inline-flex items-center justify-center text-xs font-medium rounded-lg border border-border text-text-muted
-                               transition-colors cursor-pointer
-                               hover:text-critical hover:bg-critical-bg hover:border-critical/20
-                               disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent
-                               disabled:hover:text-text-muted disabled:hover:border-border"
-                        [title]="agente.id === usuarioActual()?.id
-                          ? 'No puedes desactivar tu propia cuenta'
-                          : 'Desactivar cuenta'">
-                        Desactivar
-                      </button>
-                    } @else {
-                      <button
-                        type="button"
-                        (click)="toggleEstado(agente)"
-                        class="w-24 h-9 shrink-0 inline-flex items-center justify-center text-xs font-medium rounded-lg border border-primary/30
-                               text-primary bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer">
-                        Activar
-                      </button>
-                    }
-
-                    <!-- Eliminar Definitivamente (BD) -->
-                    <button
-                      type="button"
-                      (click)="confirmarEliminacion(agente, modalEliminarDefinitivo)"
-                      [disabled]="agente.id === usuarioActual()?.id"
-                      class="w-9 h-9 rounded-lg flex items-center justify-center text-text-muted shrink-0
-                             hover:text-critical hover:bg-critical-bg transition-colors cursor-pointer
-                             disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-muted"
-                      [title]="agente.id === usuarioActual()?.id
-                        ? 'No puedes eliminar tu propia cuenta'
-                        : 'Eliminar usuario de la base de datos'"
-                      [attr.aria-label]="'Eliminar ' + agente.nombre">
-                      <app-icon name="trash" [size]="16" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            }
-          }
-
-          @if (filtrados().length === 0) {
+          } @empty {
             <tr>
               <td colspan="5" class="py-12">
                 <app-empty-state
                   icon="users"
                   title="Sin agentes registrados"
-                  description="No se encontraron cuentas que coincidan con la búsqueda." />
+                  description="No se encontraron cuentas que coincidan con los criterios." />
               </td>
             </tr>
           }

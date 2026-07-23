@@ -20,6 +20,8 @@ import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { OverlayRef } from '@angular/cdk/overlay';
 import { TemplateRef, ViewContainerRef } from '@angular/core';
 
+export type FiltroRolAgentes = 'TODOS' | 'ADMIN' | 'AGENTE';
+
 /**
  * Gestión de Agentes y Usuarios — Solo administradores
  * Ref: CRM_MANIFESTO.md §1.2, §3, §2.11 (CDK Overlay Portals)
@@ -56,6 +58,7 @@ export class AgentesPage {
 
   /* ── Estado de UI ──────────────────────────────────────────────── */
   protected readonly busqueda = signal('');
+  protected readonly filtroRol = signal<FiltroRolAgentes>('TODOS');
   protected readonly modalCrearAbierto = signal(false);
   protected readonly guardando = signal(false);
   protected readonly errorMensaje = signal<string | null>(null);
@@ -85,20 +88,20 @@ export class AgentesPage {
 
   protected readonly filtrados = computed(() => {
     const q = this.busqueda().trim().toLowerCase();
+    const rol = this.filtroRol();
     const lista: Agente[] = this.agentes.value() ?? [];
-    if (!q) return lista;
-    return lista.filter(
-      (a: Agente) => a.nombre.toLowerCase().includes(q) || a.email.toLowerCase().includes(q),
-    );
+
+    let res = lista;
+    if (rol !== 'TODOS') {
+      res = res.filter((a: Agente) => a.rol === rol);
+    }
+    if (q) {
+      res = res.filter(
+        (a: Agente) => a.nombre.toLowerCase().includes(q) || a.email.toLowerCase().includes(q),
+      );
+    }
+    return res;
   });
-
-  protected readonly adminsFiltrados = computed(() =>
-    this.filtrados().filter((a: Agente) => a.rol === 'ADMIN'),
-  );
-
-  protected readonly agentesComercialesFiltrados = computed(() =>
-    this.filtrados().filter((a: Agente) => a.rol === 'AGENTE'),
-  );
 
   abrirModal(template?: TemplateRef<unknown>): void {
     this.formNombre.set('');
@@ -145,7 +148,7 @@ export class AgentesPage {
       .crear(payload)
       .then(res => {
         this.guardando.set(false);
-        this.modalCrearAbierto.set(false);
+        this.cerrarModal();
         this.toastService.success(`Agente ${res.nombre} registrado correctamente`, 'Cuenta Creada');
         this.agentes.reload();
       })
@@ -286,7 +289,7 @@ export class AgentesPage {
       .desactivar(agente.id)
       .then(() => {
         this.dandoDeBaja.set(false);
-        this.agenteABaja.set(null);
+        this.cancelarBaja();
         this.toastService.info(
           `${agente.nombre} ya no puede iniciar sesión. Su historial se conserva.`,
           'Cuenta Desactivada',
@@ -295,7 +298,7 @@ export class AgentesPage {
       })
       .catch((err: unknown) => {
         this.dandoDeBaja.set(false);
-        this.agenteABaja.set(null);
+        this.cancelarBaja();
         this.toastService.error(
           mensajeDeError(err, 'No se pudo desactivar la cuenta.'),
           'Error',
@@ -342,7 +345,7 @@ export class AgentesPage {
       .eliminarDefinitivamente(agente.id)
       .then(res => {
         this.eliminando.set(false);
-        this.agenteAEliminar.set(null);
+        this.cancelarEliminacion();
         this.toastService.success(
           res.message || `El usuario ${agente.nombre} fue eliminado permanentemente.`,
           'Usuario Eliminado',
@@ -351,7 +354,7 @@ export class AgentesPage {
       })
       .catch((err: unknown) => {
         this.eliminando.set(false);
-        this.agenteAEliminar.set(null);
+        this.cancelarEliminacion();
         this.toastService.error(
           mensajeDeError(err, 'No se pudo eliminar el usuario de la base de datos.'),
           'Error al Eliminar',
