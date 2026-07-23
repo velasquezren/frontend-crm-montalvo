@@ -48,4 +48,9 @@ export class ConversacionesService {
   ): Promise<MensajeApi> {
     return this.api.post<MensajeApi>(`/conversaciones/${conversacionId}/plantilla`, payload);
   }
+
+  /** Marca como leído (tildes azules) el último entrante; `typing` muestra "escribiendo…". */
+  marcarLeido(conversacionId: string, typing = false): Promise<{ ok: boolean }> {
+    return this.api.post<{ ok: boolean }>(`/conversaciones/${conversacionId}/leido`, { typing });
+  }
 }

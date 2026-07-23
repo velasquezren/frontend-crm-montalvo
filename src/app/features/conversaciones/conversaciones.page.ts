@@ -305,6 +305,8 @@ export class ConversacionesPage implements AfterViewInit {
         this.conversaciones.reload();
         if (this.seleccionadaId() === aviso.conversacionId) {
           this.detalle.reload();
+          /* El chat está abierto y llegó algo nuevo: marcarlo leído al instante. */
+          void this.conversacionesService.marcarLeido(aviso.conversacionId, false).catch(() => {});
         }
       }, 100);
     });
@@ -322,6 +324,19 @@ export class ConversacionesPage implements AfterViewInit {
         this.detalle.reload();
       }
     });
+
+    /* Indicador "escribiendo…" para el paciente mientras el agente redacta.
+       Debounce ~1s tras la última tecla; WhatsApp lo mantiene 25s o hasta que
+       se envía, así que refrescarlo al pausar alcanza. Se autolimpia el timer. */
+    effect(onCleanup => {
+      const texto = this.mensajeNuevo().trim();
+      const id = this.seleccionadaId();
+      if (!texto || !id) return;
+      const t = setTimeout(() => {
+        void this.conversacionesService.marcarLeido(id, true).catch(() => {});
+      }, 1000);
+      onCleanup(() => clearTimeout(t));
+    });
   }
 
   ngAfterViewInit(): void {
@@ -333,6 +348,8 @@ export class ConversacionesPage implements AfterViewInit {
   protected seleccionar(id: string): void {
     this.seleccionadaId.set(id);
     this.editandoFicha.set(false);
+    /* Tildes azules: al abrir el chat, el paciente ve que leímos su mensaje. */
+    void this.conversacionesService.marcarLeido(id, false).catch(() => {});
   }
 
   protected deseleccionar(): void {
