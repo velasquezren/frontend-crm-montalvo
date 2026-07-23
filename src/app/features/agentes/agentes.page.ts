@@ -92,6 +92,14 @@ export class AgentesPage {
     );
   });
 
+  protected readonly adminsFiltrados = computed(() =>
+    this.filtrados().filter((a: Agente) => a.rol === 'ADMIN'),
+  );
+
+  protected readonly agentesComercialesFiltrados = computed(() =>
+    this.filtrados().filter((a: Agente) => a.rol === 'AGENTE'),
+  );
+
   abrirModal(template?: TemplateRef<unknown>): void {
     this.formNombre.set('');
     this.formEmail.set('');
