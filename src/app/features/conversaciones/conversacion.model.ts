@@ -45,5 +45,15 @@ export interface AgenteResumen {
   readonly rol: 'ADMIN' | 'AGENTE';
 }
 
+/** Plantilla de WhatsApp aprobada (GET /conversaciones/meta/plantillas). */
+export interface PlantillaResumen {
+  readonly nombre: string;
+  readonly idioma: string;
+  readonly categoria: string;
+  /** Cuerpo con placeholders `{{1}}`, `{{2}}`… para previsualizar y contar variables. */
+  readonly cuerpo: string;
+  readonly variables: number;
+}
+
 /** Filtros de la vista del inbox. */
 export type FiltroInbox = 'TODAS' | 'SIN_ASIGNAR' | 'MIS_CHATS';

@@ -35,4 +35,17 @@ export class ConversacionesService {
       agenteId,
     });
   }
+
+  /** Plantillas aprobadas de la WABA — para escribirle a un paciente fuera de la ventana de 24h. */
+  plantillasRequest(): ResourceRequest {
+    return this.api.request('/conversaciones/meta/plantillas');
+  }
+
+  /** Envía una plantilla al paciente. `contenido` es el texto ya renderizado que se guarda. */
+  enviarPlantilla(
+    conversacionId: string,
+    payload: { plantilla: string; idioma: string; parametros: string[]; contenido: string },
+  ): Promise<MensajeApi> {
+    return this.api.post<MensajeApi>(`/conversaciones/${conversacionId}/plantilla`, payload);
+  }
 }

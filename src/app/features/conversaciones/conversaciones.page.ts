@@ -1,5 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
+import { OverlayRef } from '@angular/cdk/overlay';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -10,6 +11,8 @@ import {
   ElementRef,
   inject,
   signal,
+  TemplateRef,
+  ViewContainerRef,
   viewChild,
 } from '@angular/core';
 
@@ -17,6 +20,7 @@ import { mensajeDeError } from '../../core/api/http-error';
 import { AuthService } from '../../core/auth/auth.service';
 import { RealtimeService } from '../../core/realtime/realtime.service';
 import { ToastService } from '../../core/toast/toast.service';
+import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { generarIniciales } from '../../core/auth/user.model';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
@@ -25,6 +29,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InputComponent } from '../../shared/components/input/input.component';
+import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import {
   CATEGORIA_BADGE,
   CATEGORIA_ICON,
@@ -37,6 +42,7 @@ import {
   ConversacionResumen,
   FiltroInbox,
   MensajeApi,
+  PlantillaResumen,
 } from './conversacion.model';
 import { ConversacionesService } from './conversaciones.service';
 
@@ -62,6 +68,7 @@ import { ConversacionesService } from './conversaciones.service';
     IconComponent,
     InputComponent,
     EmptyStateComponent,
+    LoadingSkeletonComponent,
     DatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -74,9 +81,12 @@ export class ConversacionesPage implements AfterViewInit {
   private readonly authService = inject(AuthService);
   private readonly toastService = inject(ToastService);
   private readonly realtimeService = inject(RealtimeService);
+  private readonly dialogService = inject(DialogService);
+  private readonly vcr = inject(ViewContainerRef);
 
   /* ── Refs de template ──────────────────────────────────────────── */
   private readonly messagesContainer = viewChild<ElementRef<HTMLElement>>('messagesScroll');
+  private readonly modalPlantillas = viewChild<TemplateRef<unknown>>('modalPlantillas');
 
   /* ── Helpers reutilizados ──────────────────────────────────────── */
   protected readonly categoriaLabel = CATEGORIA_LABEL;
@@ -146,6 +156,34 @@ export class ConversacionesPage implements AfterViewInit {
     () => (this.isAdmin() ? this.conversacionesService.agentesRequest() : undefined),
     { defaultValue: [] },
   );
+
+  /* ── Plantillas de WhatsApp (fuera de la ventana de 24h) ───────── */
+  /** Plantillas aprobadas de la WABA; se cargan al abrir el selector. */
+  protected readonly plantillas = httpResource<PlantillaResumen[]>(
+    () => (this.mostrarPlantillas() ? this.conversacionesService.plantillasRequest() : undefined),
+    { defaultValue: [] },
+  );
+  private readonly mostrarPlantillas = signal(false);
+  protected readonly plantillaSeleccionada = signal<PlantillaResumen | null>(null);
+  protected readonly variablesPlantilla = signal<string[]>([]);
+  protected readonly enviandoPlantilla = signal(false);
+  private plantillasOverlay?: OverlayRef;
+
+  /** Vista previa: reemplaza `{{n}}` por lo que el agente escribió (o deja el marcador). */
+  protected readonly previewPlantilla = computed(() => {
+    const p = this.plantillaSeleccionada();
+    if (!p) return '';
+    const vars = this.variablesPlantilla();
+    return p.cuerpo.replace(/\{\{(\d+)\}\}/g, (_, n) => vars[Number(n) - 1]?.trim() || `{{${n}}}`);
+  });
+
+  /** Faltan variables por completar → no deja enviar. */
+  protected readonly plantillaIncompleta = computed(() => {
+    const p = this.plantillaSeleccionada();
+    if (!p) return true;
+    const vars = this.variablesPlantilla();
+    return Array.from({ length: p.variables }, (_, i) => vars[i]?.trim()).some(v => !v);
+  });
 
   /* ── Datos derivados ───────────────────────────────────────────── */
 
@@ -392,6 +430,70 @@ export class ConversacionesPage implements AfterViewInit {
     }
     this.mensajeNuevo.set('');
     await this.enviarTexto(id, texto);
+  }
+
+  /* ── Plantillas ────────────────────────────────────────────────── */
+
+  /** Abre el selector de plantillas (CDK Overlay, se autolimpia al navegar). */
+  protected abrirPlantillas(): void {
+    const tpl = this.modalPlantillas();
+    if (!tpl) return;
+    this.plantillaSeleccionada.set(null);
+    this.variablesPlantilla.set([]);
+    this.mostrarPlantillas.set(true); // dispara la carga del httpResource
+    this.plantillasOverlay?.dispose();
+    this.plantillasOverlay = this.dialogService.openTemplate(tpl, this.vcr);
+  }
+
+  protected seleccionarPlantilla(p: PlantillaResumen): void {
+    this.plantillaSeleccionada.set(p);
+    this.variablesPlantilla.set(Array.from({ length: p.variables }, () => ''));
+  }
+
+  protected volverAListaPlantillas(): void {
+    this.plantillaSeleccionada.set(null);
+  }
+
+  protected setVariablePlantilla(indice: number, valor: string): void {
+    this.variablesPlantilla.update(vars => {
+      const copia = [...vars];
+      copia[indice] = valor;
+      return copia;
+    });
+  }
+
+  protected cerrarPlantillas(): void {
+    this.plantillasOverlay?.dispose();
+    this.plantillasOverlay = undefined;
+    this.mostrarPlantillas.set(false);
+    this.plantillaSeleccionada.set(null);
+  }
+
+  protected async enviarPlantillaSeleccionada(): Promise<void> {
+    const id = this.seleccionadaId();
+    const p = this.plantillaSeleccionada();
+    if (!id || !p || this.enviandoPlantilla() || this.plantillaIncompleta()) return;
+
+    const contenido = this.previewPlantilla();
+    const parametros = this.variablesPlantilla().slice(0, p.variables).map(v => v.trim());
+
+    this.enviandoPlantilla.set(true);
+    try {
+      await this.conversacionesService.enviarPlantilla(id, {
+        plantilla: p.nombre,
+        idioma: p.idioma,
+        parametros,
+        contenido,
+      });
+      this.toastService.success('Plantilla enviada al paciente', 'WhatsApp');
+      this.cerrarPlantillas();
+      this.detalle.reload();
+      this.conversaciones.reload();
+    } catch (err) {
+      this.toastService.error(mensajeDeError(err, 'No se pudo enviar la plantilla'), 'Error');
+    } finally {
+      this.enviandoPlantilla.set(false);
+    }
   }
 
   /** Reenvía el mismo texto de un mensaje que quedó FALLIDO (ticks del chat).

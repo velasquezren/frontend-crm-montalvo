@@ -285,6 +285,9 @@
 
       <!-- Caja de texto -->
       <form (submit)="enviar($event)" class="chat-input-bar">
+        <app-button type="button" variant="secondary" icon="file-text" [circle]="true"
+          (clicked)="abrirPlantillas()" aria-label="Enviar plantilla"
+          title="Enviar plantilla de WhatsApp (para escribir fuera de las 24h)" />
         <div class="flex-1">
           <app-input placeholder="Escribe un mensaje…" [(value)]="mensajeNuevo" />
         </div>
@@ -571,3 +574,102 @@
   }
 
 </div>
+
+<!-- ── Modal: selector de plantillas de WhatsApp ────────────────────── -->
+<ng-template #modalPlantillas>
+  <div class="pointer-events-auto w-full max-w-lg max-h-[85vh] flex flex-col bg-white rounded-2xl shadow-lifted overflow-hidden">
+    <!-- Cabecera -->
+    <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+          <app-icon name="file-text" [size]="18" class="text-primary" />
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-text-dark leading-tight">Enviar plantilla</h2>
+          <p class="text-[11px] text-text-muted leading-tight">Para escribir fuera de la ventana de 24h</p>
+        </div>
+      </div>
+      <button type="button" (click)="cerrarPlantillas()"
+        class="text-text-muted hover:text-text-dark cursor-pointer" aria-label="Cerrar">
+        <app-icon name="x" [size]="18" />
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-5">
+      @if (plantillaSeleccionada(); as p) {
+        <!-- Paso 2: completar variables + previsualizar -->
+        <button type="button" (click)="volverAListaPlantillas()"
+          class="inline-flex items-center gap-1 text-xs text-text-muted hover:text-primary cursor-pointer mb-3">
+          <app-icon name="chevron-left" [size]="14" /> Volver a la lista
+        </button>
+
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-sm font-semibold text-text-dark">{{ p.nombre }}</span>
+          <app-badge [variant]="p.categoria === 'MARKETING' ? 'info' : 'success'">
+            {{ p.categoria === 'MARKETING' ? 'Marketing' : 'Utilidad' }}
+          </app-badge>
+        </div>
+
+        @if (p.variables > 0) {
+          <div class="space-y-3 mb-4">
+            @for (valor of variablesPlantilla(); track $index) {
+              <app-input
+                [label]="'Variable ' + ($index + 1)"
+                placeholder="Escribe el valor…"
+                [value]="valor"
+                (valueChange)="setVariablePlantilla($index, $event)" />
+            }
+          </div>
+        }
+
+        <!-- Previsualización -->
+        <p class="text-[11px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Vista previa</p>
+        <div class="p-3 rounded-xl bg-bg-light border border-border text-sm text-text-dark whitespace-pre-wrap leading-relaxed">
+          {{ previewPlantilla() }}
+        </div>
+      } @else {
+        <!-- Paso 1: elegir plantilla -->
+        @if (plantillas.isLoading()) {
+          <app-loading-skeleton shape="text" height="3rem" />
+          <app-loading-skeleton shape="text" height="3rem" />
+        } @else if (plantillas.error()) {
+          <app-empty-state icon="alert-circle" title="No se pudieron cargar las plantillas"
+            description="Verifica la conexión con WhatsApp e intenta de nuevo." />
+        } @else if (plantillas.value().length > 0) {
+          <div class="space-y-2">
+            @for (p of plantillas.value(); track p.nombre) {
+              <button type="button" (click)="seleccionarPlantilla(p)"
+                class="w-full text-left p-3 rounded-xl border border-border hover:border-primary/40 hover:bg-bg-light transition-colors cursor-pointer">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-sm font-semibold text-text-dark">{{ p.nombre }}</span>
+                  <app-badge [variant]="p.categoria === 'MARKETING' ? 'info' : 'success'">
+                    {{ p.categoria === 'MARKETING' ? 'Marketing' : 'Utilidad' }}
+                  </app-badge>
+                </div>
+                <p class="text-xs text-text-muted line-clamp-2 leading-snug">{{ p.cuerpo }}</p>
+              </button>
+            }
+          </div>
+        } @else {
+          <app-empty-state icon="file-text" title="Sin plantillas aprobadas"
+            description="Tus plantillas están en revisión de Meta (hasta 24h). Aparecerán aquí al aprobarse." />
+        }
+      }
+    </div>
+
+    <!-- Pie: acciones (solo con plantilla elegida) -->
+    @if (plantillaSeleccionada()) {
+      <div class="flex gap-2 px-5 py-4 border-t border-border">
+        <button type="button" (click)="cerrarPlantillas()"
+          class="flex-1 px-3 py-2 border border-border rounded-full text-xs font-semibold text-text-muted hover:bg-bg-light cursor-pointer">
+          Cancelar
+        </button>
+        <app-button class="flex-1" type="button" icon="send"
+          [loading]="enviandoPlantilla()" [disabled]="plantillaIncompleta()"
+          (clicked)="enviarPlantillaSeleccionada()">
+          Enviar al paciente
+        </app-button>
+      </div>
+    }
+  </div>
+</ng-template>

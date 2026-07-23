@@ -46,7 +46,8 @@ export type IconName =
   | 'database'
   | 'pie-chart'
   | 'bar-chart'
-  | 'trash';
+  | 'trash'
+  | 'file-text';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -208,6 +209,13 @@ export type IconName =
         @case ('check-check') {
           <path d="M18 6 7 17l-5-5" />
           <path d="m22 10-7.5 7.5L13 16" />
+        }
+        @case ('file-text') {
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <path d="M14 2v6h6" />
+          <path d="M16 13H8" />
+          <path d="M16 17H8" />
+          <path d="M10 9H8" />
         }
         @case ('shield') {
           <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
