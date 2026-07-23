@@ -256,17 +256,19 @@ export class ConversacionesPage implements AfterViewInit {
     // Conecta el socket del inbox; se desconecta solo al destruir la página.
     this.realtimeService.conectar(inject(DestroyRef));
 
-    /* Reload dirigido: solo la lista, y el detalle si es la conversación
-       que el agente tiene abierta — así un mensaje nuevo aparece en
-       segundos en vez de esperar el próximo tick del polling. */
+    /* Reload dirigido debounced: evita múltiples reloads seguidos si llegan varios eventos de socket */
+    let timerReload: ReturnType<typeof setTimeout> | null = null;
     effect(() => {
       const aviso = this.realtimeService.actividad();
       if (!aviso) return;
 
-      this.conversaciones.reload();
-      if (this.seleccionadaId() === aviso.conversacionId) {
-        this.detalle.reload();
-      }
+      if (timerReload) clearTimeout(timerReload);
+      timerReload = setTimeout(() => {
+        this.conversaciones.reload();
+        if (this.seleccionadaId() === aviso.conversacionId) {
+          this.detalle.reload();
+        }
+      }, 100);
     });
 
     /* Si el socket se cayó y volvió (wifi, laptop suspendida), cualquier
