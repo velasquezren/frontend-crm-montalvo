@@ -298,8 +298,56 @@ export class AgentesPage {
   /** Cierra cualquier modal abierto con Escape. */
   @HostListener('document:keydown.escape')
   protected onEscape(): void {
+    if (this.agenteAEliminar()) return this.cancelarEliminacion();
     if (this.agenteABaja()) return this.cancelarBaja();
     if (this.modalEditarAbierto()) return this.cerrarEdicion();
     if (this.modalCrearAbierto()) this.cerrarModal();
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     Eliminación permanente de usuario (Base de Datos)
+     ══════════════════════════════════════════════════════════════════ */
+
+  protected readonly agenteAEliminar = signal<Agente | null>(null);
+  protected readonly eliminando = signal(false);
+
+  confirmarEliminacion(agente: Agente, template?: TemplateRef<unknown>): void {
+    this.agenteAEliminar.set(agente);
+    if (template) {
+      this.activeOverlayRef?.dispose();
+      this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+    }
+  }
+
+  cancelarEliminacion(): void {
+    this.agenteAEliminar.set(null);
+    this.activeOverlayRef?.dispose();
+    this.activeOverlayRef = undefined;
+  }
+
+  ejecutarEliminacion(): void {
+    const agente = this.agenteAEliminar();
+    if (!agente || this.eliminando()) return;
+
+    this.eliminando.set(true);
+    this.agentesService
+      .eliminarDefinitivamente(agente.id)
+      .then(res => {
+        this.eliminando.set(false);
+        this.agenteAEliminar.set(null);
+        this.toastService.success(
+          res.message || `El usuario ${agente.nombre} fue eliminado permanentemente.`,
+          'Usuario Eliminado',
+        );
+        this.agentes.reload();
+      })
+      .catch((err: unknown) => {
+        this.eliminando.set(false);
+        this.agenteAEliminar.set(null);
+        this.toastService.error(
+          mensajeDeError(err, 'No se pudo eliminar el usuario de la base de datos.'),
+          'Error al Eliminar',
+        );
+      });
   }
 }
