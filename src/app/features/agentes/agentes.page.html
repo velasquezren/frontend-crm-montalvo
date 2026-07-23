@@ -224,21 +224,6 @@
                       Activar
                     </button>
                   }
-
-                  <!-- Eliminar Definitivamente (BD) -->
-                  <button
-                    type="button"
-                    (click)="confirmarEliminacion(agente, modalEliminarDefinitivo)"
-                    [disabled]="agente.id === usuarioActual()?.id"
-                    class="w-9 h-9 rounded-lg flex items-center justify-center text-text-muted shrink-0
-                           hover:text-critical hover:bg-critical-bg transition-colors cursor-pointer
-                           disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-muted"
-                    [title]="agente.id === usuarioActual()?.id
-                      ? 'No puedes eliminar tu propia cuenta'
-                      : 'Eliminar usuario de la base de datos'"
-                    [attr.aria-label]="'Eliminar ' + agente.nombre">
-                    <app-icon name="trash" [size]="16" />
-                  </button>
                 </div>
               </td>
             </tr>
@@ -300,7 +285,7 @@
 
       <div>
         <label class="block text-xs font-semibold text-text-dark mb-1.5">Contraseña (Mín. 8 caracteres) *</label>
-        <app-input type="password" placeholder="••••••••" [(value)]="formPassword" />
+        <app-input type="password" placeholder="••••••••" autocomplete="new-password" [(value)]="formPassword" />
       </div>
 
       <div>
@@ -446,6 +431,7 @@
             label="Nueva contraseña"
             type="password"
             placeholder="Dejar vacío para no cambiarla"
+            autocomplete="new-password"
             [(value)]="editPassword" />
           <p class="text-xs text-text-muted">
             Mínimo 8 caracteres. Solo se cambia si escribes una nueva.
@@ -498,38 +484,4 @@
   }
 </ng-template>
 
-<!-- Modal: Confirmar Eliminación Definitiva -->
-<ng-template #modalEliminarDefinitivo>
-  @if (agenteAEliminar(); as ag) {
-    <div
-      class="bg-white w-full max-w-md rounded-2xl shadow-lifted p-6 sm:p-8 animate-modal-pop pointer-events-auto"
-      role="alertdialog"
-      aria-modal="true"
-      aria-labelledby="titulo-eliminar-definitivo"
-      (click)="$event.stopPropagation()">
-
-      <div class="flex flex-col items-center text-center">
-        <div class="w-14 h-14 rounded-2xl bg-critical-bg flex items-center justify-center mb-5">
-          <app-icon name="trash" [size]="24" class="text-critical" />
-        </div>
-
-        <h2 id="titulo-eliminar-definitivo" class="text-lg font-bold text-text-dark">
-          ¿Eliminar permanentemente a {{ ag.nombre }}?
-        </h2>
-        <div class="text-xs text-text-muted mt-3 p-3 rounded-xl bg-bg-workspace border border-border text-left space-y-1.5">
-          <p class="font-semibold text-text-dark">🛡️ Protección de Datos CRM:</p>
-          <p>• La cuenta del usuario será <strong class="text-critical">eliminada de la BD</strong>.</p>
-          <p>• Los <strong class="text-emerald-700 font-semibold">15,000+ Leads y Clientes NO se borrarán</strong>: quedarán intactos en la base de datos y pasarán a estado <em>Sin Asignar</em> para tus nuevos agentes.</p>
-        </div>
-
-        <div class="flex flex-col-reverse sm:flex-row gap-3 mt-7 w-full sm:justify-center">
-          <app-button variant="secondary" (clicked)="cancelarEliminacion()">Cancelar</app-button>
-          <app-button variant="primary" [loading]="eliminando()" (clicked)="ejecutarEliminacion()">
-            {{ eliminando() ? 'Eliminando…' : 'Sí, eliminar usuario' }}
-          </app-button>
-        </div>
-      </div>
-    </div>
-  }
-</ng-template>
 

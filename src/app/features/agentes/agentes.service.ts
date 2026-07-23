@@ -48,12 +48,4 @@ export class AgentesService {
   desactivar(id: string): Promise<Agente> {
     return this.api.delete<Agente>(`/usuarios/${id}`);
   }
-
-  /**
-   * Elimina permanentemente la cuenta de la base de datos.
-   * Los clientes y leads asociados NO se borran, se mantienen intactos y pasan a sin asignar.
-   */
-  eliminarDefinitivamente(id: string): Promise<{ message: string }> {
-    return this.api.delete<{ message: string }>(`/usuarios/${id}/hard`);
-  }
 }
