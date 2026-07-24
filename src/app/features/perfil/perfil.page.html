@@ -9,7 +9,7 @@
   <div class="flex items-center gap-2 border-b border-border/80 pb-2">
     <button
       type="button"
-      (click)="tabActiva.set('perfil')"
+      (click)="cambiarTab('perfil')"
       class="px-5 py-2.5 text-xs font-bold rounded-xl transition-all duration-200 flex items-center gap-2 cursor-pointer select-none"
       [class.bg-primary]="tabActiva() === 'perfil'"
       [class.text-white]="tabActiva() === 'perfil'"
@@ -22,7 +22,7 @@
 
     <button
       type="button"
-      (click)="tabActiva.set('memoria')"
+      (click)="cambiarTab('memoria')"
       class="px-5 py-2.5 text-xs font-bold rounded-xl transition-all duration-200 flex items-center gap-2 cursor-pointer select-none"
       [class.bg-primary]="tabActiva() === 'memoria'"
       [class.text-white]="tabActiva() === 'memoria'"

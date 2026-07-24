@@ -483,6 +483,15 @@
 
       <!-- Caja de texto -->
       <form (submit)="enviar($event)" class="chat-input-bar">
+        <!-- Botón Adjuntar Imagen / Documento -->
+        <label class="p-2.5 rounded-full text-text-muted hover:text-primary hover:bg-bg-light cursor-pointer transition-colors shrink-0 flex items-center justify-center border border-border/80" title="Adjuntar imagen o documento">
+          <app-icon name="image" [size]="18" />
+          <input type="file" (change)="adjuntarMediaChat($event)" accept="image/*,application/pdf" class="hidden" />
+        </label>
+
+        <app-button type="button" variant="secondary" icon="database" [circle]="true"
+          (clicked)="togglePopoverMemoria()" aria-label="Mi Memoria Personal"
+          title="Insertar desde Mi Memoria Personal (Biblioteca Privada)" />
         <app-button type="button" variant="secondary" icon="file-text" [circle]="true"
           (clicked)="abrirPlantillas()" aria-label="Enviar plantilla"
           title="Enviar plantilla de WhatsApp (para escribir fuera de las 24h)" />

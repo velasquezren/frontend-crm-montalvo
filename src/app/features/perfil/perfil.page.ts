@@ -84,6 +84,8 @@ export class PerfilPage {
     const tabParam = this.route.snapshot.queryParamMap.get('tab');
     if (tabParam === 'memoria') {
       this.tabActiva.set('memoria');
+      this.cuotaMemoria.reload();
+      this.recursosMemoria.reload();
     }
 
     const u = this.user();
@@ -95,6 +97,14 @@ export class PerfilPage {
       if (u.foto) {
         this.previewFoto.set(u.foto);
       }
+    }
+  }
+
+  protected cambiarTab(tab: 'perfil' | 'memoria'): void {
+    this.tabActiva.set(tab);
+    if (tab === 'memoria') {
+      this.cuotaMemoria.reload();
+      this.recursosMemoria.reload();
     }
   }
 

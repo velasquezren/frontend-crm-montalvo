@@ -241,6 +241,25 @@ export class ConversacionesPage implements AfterViewInit {
     this.mostrarPopoverMemoria.set(!estadoActual);
   }
 
+  protected async adjuntarMediaChat(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    try {
+      this.toastService.info(`Subiendo "${file.name}"...`, 'Procesando archivo');
+      const recurso = await this.memoriaService.subirBinario(file, { titulo: file.name });
+      if (recurso.mediaUrl) {
+        const previo = this.mensajeNuevo();
+        this.mensajeNuevo.set(previo ? `${previo}\n${recurso.mediaUrl}` : recurso.mediaUrl);
+        this.toastService.success('Archivo adjuntado al mensaje', 'Éxito');
+      }
+      input.value = '';
+    } catch (err) {
+      this.toastService.error(mensajeDeError(err, 'No se pudo adjuntar el archivo'), 'Error');
+    }
+  }
+
   protected insertarRecursoEnChat(recurso: RecursoMemoria): void {
     const texto = recurso.mediaUrl || recurso.contenido || recurso.titulo;
     const previo = this.mensajeNuevo();
