@@ -182,10 +182,11 @@
 
 /* ── Chat panel (centro) ─────────────────────────────────────── */
 .chat-panel {
-  position: relative; /* ancla del botón flotante "↓ nuevos" */
+  position: relative;
   display: flex;
   flex-direction: column;
-  overflow: visible;
+  height: 100%;
+  overflow: hidden;
   background: white;
 }
 

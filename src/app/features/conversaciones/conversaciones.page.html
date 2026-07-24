@@ -427,65 +427,62 @@
         </button>
       </div>
 
-      <!-- Caja de texto -->
-      <form (submit)="enviar($event)" class="chat-input-bar relative">
-        <!-- Popover Flotante de Memoria Personal del Agente (Instantáneo) -->
-        @if (mostrarPopoverMemoria()) {
-          <div class="absolute bottom-full mb-3 left-0 w-84 bg-white rounded-2xl shadow-2xl border border-border p-3.5 z-[90] animate-modal-pop space-y-2.5">
-            <div class="flex items-center justify-between border-b border-border pb-2">
-              <span class="text-xs font-bold text-text-dark flex items-center gap-1.5">
-                <app-icon name="database" [size]="14" class="text-primary" />
-                Mi Memoria Personal
-              </span>
-              <div class="flex items-center gap-2">
-                <a routerLink="/perfil" [queryParams]="{ tab: 'memoria' }" class="text-[10px] text-primary font-extrabold hover:underline flex items-center gap-0.5 cursor-pointer">
-                  <span>Gestionar (30 MB)</span>
-                  <app-icon name="external-link" [size]="10" />
-                </a>
-                <button type="button" (click)="togglePopoverMemoria()" class="p-1 text-text-muted hover:text-text-dark cursor-pointer rounded-lg hover:bg-black/5">
-                  <app-icon name="x" [size]="14" />
-                </button>
-              </div>
-            </div>
-
-            <!-- Buscador en el popover -->
-            <app-input type="search" placeholder="Buscar nota, precio o banner..." [(value)]="busquedaMemoria" />
-
-            <!-- Lista de recursos en popover -->
-            <div class="max-h-64 overflow-y-auto space-y-1.5">
-              @for (item of recursosMemoria.value(); track item.id) {
-                <button
-                  type="button"
-                  (click)="insertarRecursoEnChat(item)"
-                  class="w-full text-left p-2.5 rounded-xl border border-border/60 hover:border-primary/40 hover:bg-bg-light transition-all cursor-pointer block group">
-                  <div class="flex items-center justify-between gap-1">
-                    <span class="text-xs font-bold text-text-dark group-hover:text-primary transition-colors truncate">{{ item.titulo }}</span>
-                    @if (item.atajo) {
-                      <span class="text-[9px] font-extrabold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full shrink-0">{{ item.atajo }}</span>
-                    }
-                  </div>
-                  @if (item.contenido) {
-                    <p class="text-[11px] text-text-muted truncate mt-0.5 leading-tight">{{ item.contenido }}</p>
-                  }
-                  @if (item.mediaUrl) {
-                    <span class="text-[10px] text-primary font-bold flex items-center gap-1 mt-1">
-                      <app-icon name="image" [size]="10" /> {{ item.mediaNombre || 'Archivo Adjunto' }}
-                    </span>
-                  }
-                </button>
-              } @empty {
-                <div class="text-center py-5 space-y-1">
-                  <p class="text-xs text-text-muted">Sin recursos guardados.</p>
-                  <a routerLink="/perfil" class="text-[11px] text-primary font-bold hover:underline inline-block">Gestionar en Mi Perfil (30 MB) ↗</a>
-                </div>
-              }
+      <!-- Popover Flotante de Memoria Personal del Agente (Anclado a bottom-20) -->
+      @if (mostrarPopoverMemoria()) {
+        <div class="absolute bottom-20 left-4 w-84 max-w-[calc(100%-2rem)] bg-white rounded-2xl shadow-2xl border border-border p-3.5 z-50 animate-modal-pop space-y-2.5">
+          <div class="flex items-center justify-between border-b border-border pb-2">
+            <span class="text-xs font-bold text-text-dark flex items-center gap-1.5">
+              <app-icon name="database" [size]="14" class="text-primary" />
+              Mi Memoria Personal
+            </span>
+            <div class="flex items-center gap-2">
+              <a routerLink="/perfil" [queryParams]="{ tab: 'memoria' }" class="text-[10px] text-primary font-extrabold hover:underline flex items-center gap-0.5 cursor-pointer">
+                <span>Gestionar (30 MB)</span>
+                <app-icon name="external-link" [size]="10" />
+              </a>
+              <button type="button" (click)="togglePopoverMemoria()" class="p-1 text-text-muted hover:text-text-dark cursor-pointer rounded-lg hover:bg-black/5">
+                <app-icon name="x" [size]="14" />
+              </button>
             </div>
           </div>
-        }
 
-        <app-button type="button" variant="secondary" icon="database" [circle]="true"
-          (clicked)="togglePopoverMemoria()" aria-label="Mi Memoria Personal"
-          title="Insertar desde Mi Memoria Personal (Biblioteca Privada)" />
+          <!-- Buscador en el popover -->
+          <app-input type="search" placeholder="Buscar nota, precio o banner..." [(value)]="busquedaMemoria" />
+
+          <!-- Lista de recursos en popover -->
+          <div class="max-h-60 overflow-y-auto space-y-1.5">
+            @for (item of recursosMemoria.value(); track item.id) {
+              <button
+                type="button"
+                (click)="insertarRecursoEnChat(item)"
+                class="w-full text-left p-2.5 rounded-xl border border-border/60 hover:border-primary/40 hover:bg-bg-light transition-all cursor-pointer block group">
+                <div class="flex items-center justify-between gap-1">
+                  <span class="text-xs font-bold text-text-dark group-hover:text-primary transition-colors truncate">{{ item.titulo }}</span>
+                  @if (item.atajo) {
+                    <span class="text-[9px] font-extrabold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full shrink-0">{{ item.atajo }}</span>
+                  }
+                </div>
+                @if (item.contenido) {
+                  <p class="text-[11px] text-text-muted truncate mt-0.5 leading-tight">{{ item.contenido }}</p>
+                }
+                @if (item.mediaUrl) {
+                  <span class="text-[10px] text-primary font-bold flex items-center gap-1 mt-1">
+                    <app-icon name="image" [size]="10" /> {{ item.mediaNombre || 'Archivo Adjunto' }}
+                  </span>
+                }
+              </button>
+            } @empty {
+              <div class="text-center py-5 space-y-1">
+                <p class="text-xs text-text-muted">Sin recursos guardados.</p>
+                <a routerLink="/perfil" [queryParams]="{ tab: 'memoria' }" class="text-[11px] text-primary font-bold hover:underline inline-block cursor-pointer">Gestionar en Mi Perfil (30 MB) ↗</a>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Caja de texto -->
+      <form (submit)="enviar($event)" class="chat-input-bar">
         <app-button type="button" variant="secondary" icon="file-text" [circle]="true"
           (clicked)="abrirPlantillas()" aria-label="Enviar plantilla"
           title="Enviar plantilla de WhatsApp (para escribir fuera de las 24h)" />
