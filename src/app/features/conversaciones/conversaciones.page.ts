@@ -34,6 +34,7 @@ import {
   CATEGORIA_BADGE,
   CATEGORIA_ICON,
   CATEGORIA_LABEL,
+  CategoriaCliente,
 } from '../../shared/models/cliente-categoria.model';
 import { ClientesService } from '../clientes/clientes.service';
 import { MemoriaAgenteService } from '../memoria-agente/memoria-agente.service';
@@ -121,6 +122,9 @@ export class ConversacionesPage implements AfterViewInit {
   protected readonly editNombre = signal('');
   protected readonly editEmail = signal('');
   protected readonly editEmpresa = signal('');
+  protected readonly editEdad = signal('');
+  protected readonly editLugarNacimiento = signal('');
+  protected readonly editCategoria = signal<CategoriaCliente>('PROSPECTO');
   protected readonly editNotas = signal('');
   protected readonly editTags = signal('');
   protected readonly guardandoFicha = signal(false);
@@ -572,6 +576,9 @@ export class ConversacionesPage implements AfterViewInit {
     this.editNombre.set(chat.cliente.nombre);
     this.editEmail.set(chat.cliente.email || '');
     this.editEmpresa.set(chat.cliente.datosExtra?.empresa || '');
+    this.editEdad.set(chat.cliente.datosExtra?.edad != null ? String(chat.cliente.datosExtra.edad) : '');
+    this.editLugarNacimiento.set(chat.cliente.datosExtra?.lugarNacimiento || '');
+    this.editCategoria.set(chat.cliente.categoria || 'PROSPECTO');
     this.editNotas.set(chat.cliente.datosExtra?.notas || '');
     this.editTags.set((chat.cliente.datosExtra?.tags || []).join(', '));
     this.editandoFicha.set(true);
@@ -601,8 +608,11 @@ export class ConversacionesPage implements AfterViewInit {
       const payload = {
         nombre,
         email: this.editEmail().trim() || null,
+        categoria: this.editCategoria(),
         datosExtra: {
           empresa: this.editEmpresa().trim() || null,
+          edad: this.editEdad().trim() || null,
+          lugarNacimiento: this.editLugarNacimiento().trim() || null,
           notas: this.editNotas().trim() || null,
           tags: tagsArray,
         },

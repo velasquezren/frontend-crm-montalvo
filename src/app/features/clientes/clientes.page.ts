@@ -128,13 +128,17 @@ export class ClientesPage {
     this.pagina.set(1);
   }
 
-  /* ── Estado del Modal de Edición Ficha ───────────────────────── */
+  /* ── Estado del Modal de Creación / Edición ────────────────────── */
   protected readonly clienteSeleccionado = signal<Cliente | null>(null);
   protected readonly modalEditarAbierto = signal(false);
+  protected readonly esCreacion = signal(false);
   protected readonly editNombre = signal('');
   protected readonly editEmail = signal('');
   protected readonly editTelefono = signal('');
   protected readonly editEmpresa = signal('');
+  protected readonly editEdad = signal('');
+  protected readonly editLugarNacimiento = signal('');
+  protected readonly editCategoria = signal<CategoriaCliente>('PROSPECTO');
   protected readonly editNotas = signal('');
   protected readonly editTags = signal('');
   protected readonly guardando = signal(false);
@@ -181,12 +185,35 @@ export class ClientesPage {
     }
   }
 
+  protected abrirCreacion(template: TemplateRef<unknown>): void {
+    this.esCreacion.set(true);
+    this.clienteSeleccionado.set(null);
+    this.editNombre.set('');
+    this.editEmail.set('');
+    this.editTelefono.set('');
+    this.editEmpresa.set('');
+    this.editEdad.set('');
+    this.editLugarNacimiento.set('');
+    this.editCategoria.set('PROSPECTO');
+    this.editNotas.set('');
+    this.editTags.set('');
+    this.modalEditarAbierto.set(true);
+    if (template) {
+      this.activeOverlayRef?.dispose();
+      this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+    }
+  }
+
   protected abrirEdicion(cliente: Cliente, template?: TemplateRef<unknown>): void {
+    this.esCreacion.set(false);
     this.clienteSeleccionado.set(cliente);
     this.editNombre.set(cliente.nombre);
     this.editEmail.set(cliente.email || '');
     this.editTelefono.set(cliente.telefono);
     this.editEmpresa.set(cliente.datosExtra?.empresa || '');
+    this.editEdad.set(cliente.datosExtra?.edad != null ? String(cliente.datosExtra.edad) : '');
+    this.editLugarNacimiento.set(cliente.datosExtra?.lugarNacimiento || '');
+    this.editCategoria.set(cliente.categoria || 'PROSPECTO');
     this.editNotas.set(cliente.datosExtra?.notas || '');
     this.editTags.set((cliente.datosExtra?.tags || []).join(', '));
     this.modalEditarAbierto.set(true);
@@ -205,8 +232,7 @@ export class ClientesPage {
 
   protected async guardarEdicion(event: Event): Promise<void> {
     event.preventDefault();
-    const cliente = this.clienteSeleccionado();
-    if (!cliente || this.guardando()) return;
+    if (this.guardando()) return;
 
     const nombre = this.editNombre().trim();
     const telefono = this.editTelefono().trim();
@@ -222,17 +248,30 @@ export class ClientesPage {
         .map(t => t.trim())
         .filter(Boolean);
 
-      await this.clientesService.actualizar(cliente.id, {
+      const payload = {
         nombre,
         telefono,
         email: this.editEmail().trim() || null,
+        categoria: this.editCategoria(),
         datosExtra: {
           empresa: this.editEmpresa().trim() || null,
+          edad: this.editEdad().trim() || null,
+          lugarNacimiento: this.editLugarNacimiento().trim() || null,
           notas: this.editNotas().trim() || null,
           tags: tagsArray,
         },
-      });
-      this.toast.success('Ficha de cliente actualizada', 'Guardado');
+      };
+
+      if (this.esCreacion()) {
+        await this.clientesService.crear(payload);
+        this.toast.success('Cliente o prospecto creado exitosamente', 'Guardado');
+      } else {
+        const cliente = this.clienteSeleccionado();
+        if (!cliente) return;
+        await this.clientesService.actualizar(cliente.id, payload);
+        this.toast.success('Ficha de cliente actualizada', 'Guardado');
+      }
+
       this.cerrarEdicion();
       this.clientesRaw.reload();
     } catch (err) {

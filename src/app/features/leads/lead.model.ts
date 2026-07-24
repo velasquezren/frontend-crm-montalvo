@@ -39,6 +39,12 @@ export interface Lead {
     telefono: string;
     categoria: CategoriaCliente;
     agente?: { id: string; nombre: string } | null;
+    datosExtra?: {
+      empresa?: string;
+      edad?: number | string;
+      lugarNacimiento?: string;
+      [key: string]: any;
+    } | null;
   };
   readonly agente: { id: string; nombre: string } | null;
   readonly createdAt: string;

@@ -20,11 +20,24 @@ export interface ActualizarClienteDto {
   nombre?: string;
   telefono?: string;
   email?: string | null;
+  categoria?: CategoriaCliente;
   datosExtra?: {
     empresa?: string | null;
+    edad?: string | number | null;
+    lugarNacimiento?: string | null;
     notas?: string | null;
     tags?: string[];
+    [key: string]: any;
   };
+}
+
+export interface CrearClienteDto {
+  nombre: string;
+  telefono: string;
+  email?: string | null;
+  categoria?: CategoriaCliente;
+  agenteId?: string;
+  datosExtra?: Record<string, any>;
 }
 
 /**
@@ -47,6 +60,10 @@ export class ClientesService {
 
   buscarRequest(termino: string): ResourceRequest {
     return this.api.request('/clientes', { busqueda: termino });
+  }
+
+  crear(dto: CrearClienteDto): Promise<Cliente> {
+    return this.api.post<Cliente>('/clientes', dto);
   }
 
   actualizar(id: string, cambios: ActualizarClienteDto): Promise<Cliente> {

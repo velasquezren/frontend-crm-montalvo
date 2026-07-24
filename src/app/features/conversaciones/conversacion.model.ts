@@ -30,8 +30,11 @@ export interface ConversacionResumen {
     categoria: CategoriaCliente;
     datosExtra?: {
       empresa?: string;
+      edad?: number | string;
+      lugarNacimiento?: string;
       notas?: string;
       tags?: string[];
+      [key: string]: any;
     } | null;
   };
   readonly agente: { id: string; nombre: string } | null;

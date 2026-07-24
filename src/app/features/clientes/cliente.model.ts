@@ -20,8 +20,11 @@ export interface Cliente {
   readonly intereses: readonly InteresApi[];
   readonly datosExtra?: {
     empresa?: string;
+    edad?: number | string;
+    lugarNacimiento?: string;
     notas?: string;
     tags?: string[];
+    [key: string]: any;
   } | null;
   readonly createdAt: string;
   readonly updatedAt: string;

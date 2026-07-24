@@ -1,15 +1,24 @@
 <div class="flex flex-col gap-8">
 
   <app-page-header
-    title="Clientes"
-    subtitle="Expediente único por cliente: historial, categoría e intereses" />
+    title="Clientes y Prospectos"
+    subtitle="Expediente único por cliente: historial, categoría (Gold/Silver/Bronze/Prospecto), edad y empresa">
+    <div actions>
+      <app-button
+        variant="primary"
+        icon="user-plus"
+        (clicked)="abrirCreacion(modalFicha)">
+        Nuevo Cliente
+      </app-button>
+    </div>
+  </app-page-header>
 
   <!-- ── Búsqueda + Filtros por categoría (RF-24) ─────────────────── -->
-  <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
     <div class="w-full lg:max-w-sm">
       <app-input
         type="search"
-        placeholder="Buscar por nombre, teléfono o email…"
+        placeholder="Buscar por nombre, teléfono, email o empresa…"
         [(value)]="busqueda" />
     </div>
 
@@ -42,9 +51,10 @@
     <app-table>
       <thead>
         <tr>
-          <th>Cliente</th>
+          <th>Cliente / Empresa</th>
           <th>Teléfono</th>
           <th>Categoría</th>
+          <th>Edad / Origen</th>
           <th>Agente</th>
           <th>Intereses</th>
           <th>Última actualización</th>
@@ -58,13 +68,21 @@
                 <app-avatar [initials]="iniciales(cliente.nombre)" size="sm" />
                 <div>
                   <p class="font-medium text-text-dark leading-tight">{{ cliente.nombre }}</p>
-                  @if (cliente.email) {
-                    <p class="text-xs text-text-muted leading-tight mt-0.5">{{ cliente.email }}</p>
-                  }
+                  <div class="flex items-center gap-2 text-xs text-text-muted mt-0.5">
+                    @if (cliente.email) {
+                      <span>{{ cliente.email }}</span>
+                    }
+                    @if (cliente.datosExtra?.empresa) {
+                      <span class="inline-flex items-center gap-1 font-semibold text-primary/80">
+                        <app-icon name="briefcase" [size]="11" />
+                        {{ cliente.datosExtra?.empresa }}
+                      </span>
+                    }
+                  </div>
                 </div>
               </div>
             </td>
-            <td class="whitespace-nowrap">{{ cliente.telefono }}</td>
+            <td class="whitespace-nowrap font-mono text-xs">{{ cliente.telefono }}</td>
             <td>
               <app-badge
                 [variant]="categoriaBadge[cliente.categoria]"
@@ -73,10 +91,22 @@
               </app-badge>
             </td>
             <td>
+              <div class="text-xs text-text-dark">
+                @if (cliente.datosExtra?.edad) {
+                  <span class="font-semibold">{{ cliente.datosExtra?.edad }} años</span>
+                } @else {
+                  <span class="text-text-muted italic">Sin edad</span>
+                }
+                @if (cliente.datosExtra?.lugarNacimiento) {
+                  <span class="text-text-muted block text-[11px] mt-0.5">📍 {{ cliente.datosExtra?.lugarNacimiento }}</span>
+                }
+              </div>
+            </td>
+            <td>
               @if (cliente.agente) {
-                {{ cliente.agente.nombre }}
+                <span class="text-xs font-medium text-text-dark">{{ cliente.agente.nombre }}</span>
               } @else {
-                <span class="text-text-muted italic">Sin asignar</span>
+                <span class="text-xs text-text-muted italic">Sin asignar</span>
               }
             </td>
             <td>
@@ -90,7 +120,7 @@
                 }
               </div>
             </td>
-            <td class="text-text-muted whitespace-nowrap">{{ cliente.updatedAt | date: 'dd/MM/yy HH:mm' }}</td>
+            <td class="text-text-muted text-xs whitespace-nowrap">{{ cliente.updatedAt | date: 'dd/MM/yy HH:mm' }}</td>
           </tr>
         }
       </tbody>
@@ -118,16 +148,26 @@
      ══════════════════════════════════════════════════════════════════════ -->
 <ng-template #modalFicha>
   <div
-    class="bg-white w-full max-w-2xl rounded-2xl shadow-lifted animate-modal-pop pointer-events-auto"
+    class="bg-white w-full max-w-2xl rounded-2xl shadow-lifted animate-modal-pop pointer-events-auto max-h-[90vh] flex flex-col overflow-hidden"
     role="dialog"
     aria-modal="true"
     aria-labelledby="titulo-ficha"
     (click)="$event.stopPropagation()">
 
-    <!-- ── Cabecera: identidad del cliente que se edita ─────────── -->
-    <header class="flex items-start justify-between gap-4 px-6 sm:px-8 pt-6 pb-5 border-b border-border">
+    <!-- ── Cabecera: identidad del cliente ─────────── -->
+    <header class="flex items-start justify-between gap-4 px-6 sm:px-8 pt-6 pb-5 border-b border-border bg-white shrink-0">
       <div class="flex items-center gap-3.5 min-w-0">
-        @if (clienteSeleccionado(); as cli) {
+        @if (esCreacion()) {
+          <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+            <app-icon name="user-plus" [size]="24" />
+          </div>
+          <div>
+            <h2 id="titulo-ficha" class="text-lg font-bold text-text-dark">
+              Nuevo Cliente o Prospecto
+            </h2>
+            <p class="text-xs text-text-muted mt-0.5">Ingresa los datos del nuevo contacto en el expediente del CRM.</p>
+          </div>
+        } @else if (clienteSeleccionado(); as cli) {
           <app-avatar [initials]="iniciales(cli.nombre)" size="lg" />
           <div class="min-w-0">
             <h2 id="titulo-ficha" class="text-lg font-bold text-text-dark truncate">
@@ -139,7 +179,7 @@
                 [icon]="categoriaIcon[cli.categoria]">
                 {{ categoriaLabel[cli.categoria] }}
               </app-badge>
-              <span class="text-xs text-text-muted font-medium">{{ cli.telefono }}</span>
+              <span class="text-xs text-text-muted font-medium font-mono">{{ cli.telefono }}</span>
               <a [routerLink]="['/conversaciones']" [queryParams]="{ clienteId: cli.id }" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer ml-1" (click)="cerrarEdicion()" title="Ir al chat del cliente">
                 <app-icon name="message-circle" [size]="13" />
                 <span>Chat</span>
@@ -160,18 +200,18 @@
     </header>
 
     <!-- ── Formulario ───────────────────────────────────────────── -->
-    <form (submit)="guardarEdicion($event)" class="px-6 sm:px-8 py-6 flex flex-col gap-6">
+    <form (submit)="guardarEdicion($event)" class="px-6 sm:px-8 py-6 flex flex-col gap-6 overflow-y-auto flex-1">
 
-      <!-- Datos de contacto -->
+      <!-- Datos de contacto e identidad -->
       <section class="flex flex-col gap-4">
         <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider">
-          Datos de contacto
+          Identidad y Contacto
         </h3>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <app-input label="Nombre completo *" placeholder="Ej. Juan Pérez" [(value)]="editNombre" />
           <app-input
-            label="Teléfono *"
+            label="Teléfono / WhatsApp *"
             type="tel"
             placeholder="Ej. +59170000000"
             [(value)]="editTelefono" />
@@ -183,30 +223,55 @@
             type="email"
             placeholder="correo@ejemplo.com"
             [(value)]="editEmail" />
-          <app-input label="Empresa" placeholder="Opcional" [(value)]="editEmpresa" />
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-medium text-text-dark">Categoría / Nivel</label>
+            <select
+              [value]="editCategoria()"
+              (change)="editCategoria.set($any($event.target).value)"
+              class="w-full h-11 px-4 rounded-xl border border-border bg-white text-sm text-text-dark font-medium transition-all duration-200 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10">
+              <option value="GOLD">🥇 Gold (VIP)</option>
+              <option value="SILVER">🥈 Silver (Plata)</option>
+              <option value="BRONZE">🥉 Bronze (Bronce)</option>
+              <option value="PROSPECTO">👤 Prospecto</option>
+            </select>
+          </div>
         </div>
 
         <p class="flex items-start gap-2 text-xs text-text-muted">
           <app-icon name="alert-circle" [size]="14" class="shrink-0 mt-px" />
-          El teléfono identifica al cliente de forma única: evita duplicados entre canales.
+          El teléfono identifica al cliente de forma única para asociar sus chats y ventas.
         </p>
       </section>
 
+      <!-- Perfil Extendido (Edad, Origen, Empresa) -->
+      <section class="flex flex-col gap-4 pt-4 border-t border-border">
+        <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider">
+          Perfil Extendido
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <app-input label="Edad (años)" placeholder="Ej. 35" [(value)]="editEdad" />
+          <app-input label="Lugar de Nacimiento" placeholder="Ej. Santa Cruz" [(value)]="editLugarNacimiento" />
+          <app-input label="Empresa / Ocupación" placeholder="Ej. YPFB / Abogado" [(value)]="editEmpresa" />
+        </div>
+      </section>
+
       <!-- Notas y etiquetas -->
-      <section class="flex flex-col gap-4 pt-2 border-t border-border">
-        <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider pt-4">
+      <section class="flex flex-col gap-4 pt-4 border-t border-border">
+        <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider">
           Seguimiento interno
         </h3>
 
         <div class="flex flex-col gap-1.5">
-          <label for="ficha-notas" class="text-sm font-medium text-text-dark">Notas</label>
+          <label for="ficha-notas" class="text-sm font-medium text-text-dark">Notas internas</label>
           <textarea
             id="ficha-notas"
             #txtEditNotas
             [value]="editNotas()"
             (input)="editNotas.set(txtEditNotas.value)"
-            rows="4"
-            placeholder="Preferencias, antecedentes, acuerdos con el paciente…"
+            rows="3"
+            placeholder="Preferencias, tratamiento consultado, acuerdos acordados…"
             class="w-full px-4 py-3 rounded-xl border border-border bg-white text-sm text-text-dark
                    transition-all duration-200 outline-none resize-y
                    placeholder:text-text-muted/50
@@ -215,15 +280,15 @@
 
         <div class="flex flex-col gap-2">
           <app-input
-            label="Etiquetas"
-            placeholder="preferente, vip, cirugía programada"
+            label="Etiquetas / Intereses"
+            placeholder="cirugía, botox, preferente, vip"
             [(value)]="editTags" />
           <p class="text-xs text-text-muted">Sepáralas con comas.</p>
 
           @if (tagsPreview().length > 0) {
             <div class="flex flex-wrap gap-1.5 mt-1">
               @for (tag of tagsPreview(); track tag) {
-                <span class="rounded-full bg-bg-light text-primary text-xs px-2.5 py-1 leading-none">
+                <span class="rounded-full bg-primary/10 text-primary font-bold text-xs px-2.5 py-1 leading-none border border-primary/20">
                   {{ tag }}
                 </span>
               }
@@ -233,10 +298,10 @@
       </section>
 
       <!-- ── Acciones ───────────────────────────────────────────── -->
-      <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-5 border-t border-border">
+      <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-5 border-t border-border mt-auto">
         <app-button variant="secondary" (clicked)="cerrarEdicion()">Cancelar</app-button>
         <app-button type="submit" [loading]="guardando()">
-          {{ guardando() ? 'Guardando…' : 'Guardar cambios' }}
+          {{ guardando() ? 'Guardando…' : (esCreacion() ? 'Crear Cliente' : 'Guardar cambios') }}
         </app-button>
       </div>
     </form>

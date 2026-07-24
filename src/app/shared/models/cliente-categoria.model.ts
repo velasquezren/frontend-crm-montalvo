@@ -8,13 +8,13 @@ import { IconName } from '../components/icon/icon.component';
 export type CategoriaCliente = 'GOLD' | 'SILVER' | 'BRONZE' | 'PROSPECTO';
 
 export const CATEGORIA_LABEL: Record<CategoriaCliente, string> = {
-  GOLD: 'Gold',
-  SILVER: 'Silver',
-  BRONZE: 'Bronze',
-  PROSPECTO: 'Prospecto',
+  GOLD: '🥇 Gold (VIP)',
+  SILVER: '🥈 Silver (Plata)',
+  BRONZE: '🥉 Bronze (Bronce)',
+  PROSPECTO: '👤 Prospecto',
 };
 
-/** Mapeo a variantes del átomo Badge — sin colores fuera de paleta (§3.4). */
+/** Mapeo a variantes del átomo Badge. */
 export const CATEGORIA_BADGE: Record<CategoriaCliente, BadgeVariant> = {
   GOLD: 'success',
   SILVER: 'info',
@@ -24,6 +24,9 @@ export const CATEGORIA_BADGE: Record<CategoriaCliente, BadgeVariant> = {
 
 export const CATEGORIA_ICON: Partial<Record<CategoriaCliente, IconName>> = {
   GOLD: 'star',
+  SILVER: 'check-circle',
+  BRONZE: 'users',
+  PROSPECTO: 'users',
 };
 
 /** Canales de origen de un cliente/lead — Ref: RF-06. */
