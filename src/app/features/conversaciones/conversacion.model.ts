@@ -3,6 +3,9 @@ import { CategoriaCliente } from '../../shared/models/cliente-categoria.model';
 /** Ticks estilo WhatsApp — solo tiene sentido en mensajes SALIENTE. */
 export type EstadoEnvioMensaje = 'ENVIADO' | 'ENTREGADO' | 'LEIDO' | 'FALLIDO';
 
+/** Tipo de contenido del mensaje. */
+export type TipoMensaje = 'TEXTO' | 'IMAGEN' | 'DOCUMENTO' | 'AUDIO' | 'VIDEO' | 'STICKER';
+
 /** Respuestas de GET /conversaciones y GET /conversaciones/:id. */
 export interface MensajeApi {
   readonly id: string;
@@ -10,6 +13,11 @@ export interface MensajeApi {
   readonly contenido: string;
   readonly createdAt: string;
   readonly estadoEnvio?: EstadoEnvioMensaje | null;
+  readonly tipo?: TipoMensaje;
+  /** URL firmada (15 min) del archivo en R2; null mientras se descarga o si es solo texto. */
+  readonly mediaUrl?: string | null;
+  readonly mediaMime?: string | null;
+  readonly mediaNombre?: string | null;
 }
 
 export interface ConversacionResumen {

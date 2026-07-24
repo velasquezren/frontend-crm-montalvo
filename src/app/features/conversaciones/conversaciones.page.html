@@ -135,7 +135,14 @@
                     @if (ultimo.direccion === 'SALIENTE') {
                       <span class="text-primary font-medium">Tú: </span>
                     }
-                    {{ ultimo.contenido }}
+                    @switch (ultimo.tipo) {
+                      @case ('IMAGEN') { 📷 {{ ultimo.contenido || 'Foto' }} }
+                      @case ('STICKER') { 💟 Sticker }
+                      @case ('VIDEO') { 🎬 {{ ultimo.contenido || 'Video' }} }
+                      @case ('AUDIO') { 🎤 Audio }
+                      @case ('DOCUMENTO') { 📄 {{ ultimo.mediaNombre || ultimo.contenido || 'Documento' }} }
+                      @default { {{ ultimo.contenido }} }
+                    }
                   </p>
                 } @else {
                   <p class="text-xs text-text-muted/50 italic truncate">Sin mensajes</p>
@@ -232,7 +239,58 @@
               <div class="bubble"
                    [class.bubble-out]="item.mensaje.direccion === 'SALIENTE'"
                    [class.bubble-in]="item.mensaje.direccion === 'ENTRANTE'">
-                <p class="bubble-text">{{ item.mensaje.contenido }}</p>
+
+                <!-- Media (foto / video / audio / documento). Texto = @default -->
+                @switch (item.mensaje.tipo) {
+                  @case ('IMAGEN') {
+                    @if (item.mensaje.mediaUrl) {
+                      <a [href]="item.mensaje.mediaUrl" target="_blank" rel="noopener">
+                        <img [src]="item.mensaje.mediaUrl" alt="Imagen"
+                          class="rounded-lg max-w-full max-h-72 object-cover mb-1 cursor-zoom-in" />
+                      </a>
+                    } @else {
+                      <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando imagen…</div>
+                    }
+                  }
+                  @case ('STICKER') {
+                    @if (item.mensaje.mediaUrl) {
+                      <img [src]="item.mensaje.mediaUrl" alt="Sticker" class="w-28 h-28 object-contain mb-1" />
+                    } @else {
+                      <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando…</div>
+                    }
+                  }
+                  @case ('VIDEO') {
+                    @if (item.mensaje.mediaUrl) {
+                      <video [src]="item.mensaje.mediaUrl" controls class="rounded-lg max-w-full max-h-72 mb-1"></video>
+                    } @else {
+                      <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando video…</div>
+                    }
+                  }
+                  @case ('AUDIO') {
+                    @if (item.mensaje.mediaUrl) {
+                      <audio [src]="item.mensaje.mediaUrl" controls class="max-w-full mb-1"></audio>
+                    } @else {
+                      <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando audio…</div>
+                    }
+                  }
+                  @case ('DOCUMENTO') {
+                    @if (item.mensaje.mediaUrl) {
+                      <a [href]="item.mensaje.mediaUrl" target="_blank" rel="noopener"
+                        class="flex items-center gap-2 p-2 rounded-lg bg-black/5 hover:bg-black/10 transition-colors mb-1">
+                        <app-icon name="file-text" [size]="20" class="shrink-0 text-primary" />
+                        <span class="text-xs font-medium truncate">{{ item.mensaje.mediaNombre || 'Documento' }}</span>
+                      </a>
+                    } @else {
+                      <div class="media-cargando"><app-icon name="file-text" [size]="16" /> Descargando documento…</div>
+                    }
+                  }
+                }
+
+                <!-- Texto / pie de foto -->
+                @if (item.mensaje.contenido) {
+                  <p class="bubble-text">{{ item.mensaje.contenido }}</p>
+                }
+
                 <span class="bubble-time">
                   {{ item.mensaje.createdAt | date: 'HH:mm' }}
                   @if (item.mensaje.direccion === 'SALIENTE') {
