@@ -63,5 +63,17 @@ export interface PlantillaResumen {
   readonly variables: number;
 }
 
+/** Respuesta Rápida / Plantilla Personalizada del Agente (GET/POST /plantillas-agente). */
+export interface PlantillaAgente {
+  readonly id: string;
+  readonly usuarioId: string;
+  readonly titulo: string;
+  readonly atajo: string | null;
+  readonly contenido: string;
+  readonly tags: readonly string[];
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
 /** Filtros de la vista del inbox. */
 export type FiltroInbox = 'TODAS' | 'SIN_ASIGNAR' | 'MIS_CHATS';

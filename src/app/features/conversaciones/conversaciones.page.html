@@ -131,17 +131,63 @@
             <div class="flex items-center justify-between gap-2 mt-1">
               <div class="flex-1 min-w-0">
                 @if (chat.mensajes[0]; as ultimo) {
-                  <p class="text-xs text-text-muted truncate leading-snug">
+                  <p class="text-xs text-text-muted truncate leading-snug flex items-center gap-1">
                     @if (ultimo.direccion === 'SALIENTE') {
-                      <span class="text-primary font-medium">Tú: </span>
+                      @switch (ultimo.estadoEnvio) {
+                        @case ('LEIDO') {
+                          <span class="text-blue-500 font-bold text-[12px] shrink-0 leading-none" title="Leído">✓✓</span>
+                        }
+                        @case ('ENTREGADO') {
+                          <span class="text-text-muted/80 font-bold text-[12px] shrink-0 leading-none" title="Entregado">✓✓</span>
+                        }
+                        @case ('FALLIDO') {
+                          <span class="text-critical font-bold text-[11px] shrink-0 leading-none" title="Falló el envío">⚠️</span>
+                        }
+                        @default {
+                          <span class="text-text-muted/70 font-bold text-[12px] shrink-0 leading-none" title="Enviado">✓</span>
+                        }
+                      }
                     }
                     @switch (ultimo.tipo) {
-                      @case ('IMAGEN') { 📷 {{ ultimo.contenido || 'Foto' }} }
-                      @case ('STICKER') { 💟 Sticker }
-                      @case ('VIDEO') { 🎬 {{ ultimo.contenido || 'Video' }} }
-                      @case ('AUDIO') { 🎤 Audio }
-                      @case ('DOCUMENTO') { 📄 {{ ultimo.mediaNombre || ultimo.contenido || 'Documento' }} }
-                      @default { {{ ultimo.contenido }} }
+                      @case ('IMAGEN') {
+                        <span class="inline-flex items-center gap-1 font-medium text-text-dark truncate">
+                          <span>📷</span>
+                          <span>Foto</span>
+                          @if (ultimo.contenido) {
+                            <span class="text-text-muted font-normal truncate">· {{ ultimo.contenido }}</span>
+                          }
+                        </span>
+                      }
+                      @case ('STICKER') {
+                        <span class="inline-flex items-center gap-1 font-medium text-text-dark truncate">
+                          <span>🎨</span>
+                          <span>Sticker</span>
+                        </span>
+                      }
+                      @case ('VIDEO') {
+                        <span class="inline-flex items-center gap-1 font-medium text-text-dark truncate">
+                          <span>🎥</span>
+                          <span>Video</span>
+                          @if (ultimo.contenido) {
+                            <span class="text-text-muted font-normal truncate">· {{ ultimo.contenido }}</span>
+                          }
+                        </span>
+                      }
+                      @case ('AUDIO') {
+                        <span class="inline-flex items-center gap-1 font-medium text-text-dark truncate">
+                          <span>🎤</span>
+                          <span>Mensaje de voz</span>
+                        </span>
+                      }
+                      @case ('DOCUMENTO') {
+                        <span class="inline-flex items-center gap-1 font-medium text-text-dark truncate">
+                          <span>📄</span>
+                          <span class="truncate">{{ ultimo.mediaNombre || ultimo.contenido || 'Documento' }}</span>
+                        </span>
+                      }
+                      @default {
+                        <span class="truncate">{{ ultimo.contenido }}</span>
+                      }
                     }
                   </p>
                 } @else {
@@ -334,19 +380,51 @@
         </button>
       }
 
-      <!-- Barra de Plantillas de Respuestas Rápidas para Agentes -->
-      <div class="quick-replies-bar">
-        <span class="quick-reply-label">Plantillas:</span>
-        <div class="quick-reply-chips scrollbar-hide">
-          @for (plantilla of plantillasRapidas; track plantilla.titulo) {
+      <!-- Sugerencias de atajo por comando '/' -->
+      @if (sugerenciasAtajo().length > 0) {
+        <div class="bg-white border border-border shadow-lg rounded-xl p-2 mb-2 max-h-48 overflow-y-auto space-y-1">
+          <p class="text-[10px] font-bold text-text-muted uppercase px-2 py-0.5">Respuestas rápidas disponibles (haz clic para insertar):</p>
+          @for (sug of sugerenciasAtajo(); track sug.id) {
             <button
               type="button"
-              (click)="insertarPlantilla(plantilla.texto)"
-              class="quick-reply-chip cursor-pointer">
-              {{ plantilla.titulo }}
+              (click)="insertarPlantillaAgente(sug.contenido)"
+              class="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-primary/10 transition-colors flex items-center justify-between text-xs cursor-pointer">
+              <span class="font-semibold text-primary">{{ sug.atajo || sug.titulo }}</span>
+              <span class="text-text-muted truncate max-w-[240px] ml-2">{{ sug.contenido }}</span>
             </button>
           }
         </div>
+      }
+
+      <!-- Barra de Plantillas de Respuestas Rápidas para Agentes -->
+      <div class="quick-replies-bar flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <span class="quick-reply-label shrink-0">Mis respuestas:</span>
+          <div class="quick-reply-chips scrollbar-hide flex-1">
+            @for (plantilla of plantillasAgente.value(); track plantilla.id) {
+              <button
+                type="button"
+                (click)="insertarPlantillaAgente(plantilla.contenido)"
+                class="quick-reply-chip cursor-pointer"
+                [title]="plantilla.contenido">
+                @if (plantilla.atajo) {
+                  <span class="font-bold text-primary mr-1">{{ plantilla.atajo }}</span>
+                }
+                {{ plantilla.titulo }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Botón para gestionar / personalizar respuestas rápidas -->
+        <button
+          type="button"
+          (click)="abrirGestionPlantillas()"
+          class="px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
+          title="Personalizar mis respuestas rápidas">
+          <app-icon name="plus" [size]="12" />
+          <span>Personalizar</span>
+        </button>
       </div>
 
       <!-- Caja de texto -->
@@ -359,7 +437,7 @@
             #composer
             rows="1"
             class="chat-composer"
-            placeholder="Escribe un mensaje…  (Enter envía, Shift+Enter salto de línea)"
+            placeholder="Escribe un mensaje o '/' para usar tus respuestas rápidas…"
             [value]="mensajeNuevo()"
             (input)="mensajeNuevo.set(composer.value)"
             (keydown)="onComposerKeydown($event)"></textarea>
@@ -744,5 +822,98 @@
         </app-button>
       </div>
     }
+  </div>
+</ng-template>
+
+<!-- Modal para personalizar/gestionar Respuestas Rápidas del Agente -->
+<ng-template #modalGestionPlantillas>
+  <div class="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-border overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-border bg-bg-light">
+      <div>
+        <h2 class="text-sm font-bold text-text-dark">Mis Respuestas Rápidas</h2>
+        <p class="text-xs text-text-muted">Crea respuestas personalizadas para enviar en 1 clic o con /comando</p>
+      </div>
+      <button type="button" (click)="cerrarGestionPlantillas()" class="p-1 rounded-lg text-text-muted hover:text-text-dark cursor-pointer">
+        <app-icon name="x" [size]="18" />
+      </button>
+    </div>
+
+    <div class="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+      <!-- Formulario para crear / editar -->
+      <div class="p-4 rounded-xl bg-bg-light border border-border space-y-3">
+        <h3 class="text-xs font-bold text-text-dark uppercase tracking-wider">
+          {{ editandoPlantillaId() ? 'Editar Respuesta Rápida' : 'Nueva Respuesta Rápida' }}
+        </h3>
+        <div>
+          <label class="block text-[11px] font-bold text-text-dark mb-1">Título corto *</label>
+          <app-input placeholder="ej. Horarios de Atención" [(value)]="tituloNuevaPlantilla" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-text-dark mb-1">Atajo /comando (opcional)</label>
+          <app-input placeholder="ej. /horarios" [(value)]="atajoNuevaPlantilla" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-text-dark mb-1">Contenido del mensaje *</label>
+          <textarea
+            #txtContenido
+            [value]="contenidoNuevaPlantilla()"
+            (input)="contenidoNuevaPlantilla.set(txtContenido.value)"
+            placeholder="Escribe el texto completo de tu respuesta rápida…"
+            class="w-full text-xs p-2.5 border border-border rounded-xl focus:border-primary focus:outline-none min-h-[80px] bg-white"></textarea>
+        </div>
+        <div class="flex justify-end gap-2 pt-1">
+          @if (editandoPlantillaId()) {
+            <button
+              type="button"
+              (click)="resetFormPlantillaAgente()"
+              class="px-3 py-1.5 text-xs font-semibold text-text-muted hover:bg-border/30 rounded-lg cursor-pointer">
+              Cancelar edición
+            </button>
+          }
+          <app-button
+            type="button"
+            [loading]="guardandoPlantillaAgente()"
+            (clicked)="guardarPlantillaAgente()">
+            {{ editandoPlantillaId() ? 'Guardar Cambios' : 'Guardar Respuesta' }}
+          </app-button>
+        </div>
+      </div>
+
+      <!-- Lista de respuestas rápidas creadas -->
+      <div class="space-y-2">
+        <h3 class="text-xs font-bold text-text-muted uppercase tracking-wider">Tus plantillas actuales:</h3>
+        @for (p of plantillasAgente.value(); track p.id) {
+          <div class="p-3 rounded-xl border border-border flex items-start justify-between gap-3 bg-white hover:border-primary/30 transition-colors">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-text-dark">{{ p.titulo }}</span>
+                @if (p.atajo) {
+                  <span class="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">{{ p.atajo }}</span>
+                }
+              </div>
+              <p class="text-xs text-text-muted mt-1 line-clamp-2 leading-relaxed">{{ p.contenido }}</p>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                (click)="editarPlantillaAgente(p)"
+                class="p-1 text-text-muted hover:text-primary transition-colors cursor-pointer"
+                title="Editar">
+                <app-icon name="edit" [size]="14" />
+              </button>
+              <button
+                type="button"
+                (click)="eliminarPlantillaAgente(p.id)"
+                class="p-1 text-text-muted hover:text-critical transition-colors cursor-pointer"
+                title="Eliminar">
+                <app-icon name="trash" [size]="14" />
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <p class="text-xs text-text-muted italic text-center py-4">No tienes respuestas rápidas aún.</p>
+        }
+      </div>
+    </div>
   </div>
 </ng-template>

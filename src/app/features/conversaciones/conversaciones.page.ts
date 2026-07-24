@@ -42,6 +42,7 @@ import {
   ConversacionResumen,
   FiltroInbox,
   MensajeApi,
+  PlantillaAgente,
   PlantillaResumen,
 } from './conversacion.model';
 import { ConversacionesService } from './conversaciones.service';
@@ -87,6 +88,7 @@ export class ConversacionesPage implements AfterViewInit {
   /* ── Refs de template ──────────────────────────────────────────── */
   private readonly messagesContainer = viewChild<ElementRef<HTMLElement>>('messagesScroll');
   private readonly modalPlantillas = viewChild<TemplateRef<unknown>>('modalPlantillas');
+  private readonly modalGestionPlantillas = viewChild<TemplateRef<unknown>>('modalGestionPlantillas');
 
   /* ── Helpers reutilizados ──────────────────────────────────────── */
   protected readonly categoriaLabel = CATEGORIA_LABEL;
@@ -116,28 +118,100 @@ export class ConversacionesPage implements AfterViewInit {
   protected readonly editTags = signal('');
   protected readonly guardandoFicha = signal(false);
 
-  /* ── Plantillas de Respuesta Rápida para Agentes ───────────────── */
-  protected readonly plantillasRapidas = [
-    {
-      titulo: 'Agendamiento y Horarios',
-      texto: 'Estimado/a paciente, la atención médica se realiza de lunes a sábado de 08:00 a 19:00 hrs. ¿En qué fecha o especialidad requiere su consulta?',
-    },
-    {
-      titulo: 'Información de Servicios',
-      texto: 'Con gusto le brindamos información detallada sobre nuestras especialidades y tratamientos médicos. ¿Qué consulta o procedimiento necesita coordinar?',
-    },
-    {
-      titulo: 'Ubicación y Accesos',
-      texto: 'Nuestras instalaciones principales se encuentran en Clínica Montalvo. Disponemos de estacionamiento privado para la comodidad de nuestros pacientes.',
-    },
-    {
-      titulo: 'Indicaciones de Cita',
-      texto: 'Le sugerimos acudir con 10 minutos de anticipación a su consulta agendada, portando su documento de identidad.',
-    },
-  ];
+  /* ── Respuestas Rápidas Personalizadas del Agente ────────────────── */
+  protected readonly plantillasAgente = httpResource<PlantillaAgente[]>(
+    () => this.conversacionesService.plantillasAgenteRequest(),
+    { defaultValue: [] },
+  );
 
-  protected insertarPlantilla(texto: string): void {
+  protected readonly sugerenciasAtajo = computed(() => {
+    const texto = this.mensajeNuevo().trim();
+    if (!texto.startsWith('/')) return [];
+    const busquedaAtajo = texto.toLowerCase();
+    const lista = this.plantillasAgente.value();
+    return lista.filter(
+      p =>
+        (p.atajo && p.atajo.toLowerCase().includes(busquedaAtajo)) ||
+        p.titulo.toLowerCase().includes(busquedaAtajo.substring(1)),
+    );
+  });
+
+  private gestionOverlay?: OverlayRef;
+  protected readonly tituloNuevaPlantilla = signal('');
+  protected readonly atajoNuevaPlantilla = signal('');
+  protected readonly contenidoNuevaPlantilla = signal('');
+  protected readonly editandoPlantillaId = signal<string | null>(null);
+  protected readonly guardandoPlantillaAgente = signal(false);
+
+  protected insertarPlantillaAgente(texto: string): void {
     this.mensajeNuevo.set(texto);
+  }
+
+  protected abrirGestionPlantillas(): void {
+    const tpl = this.modalGestionPlantillas();
+    if (!tpl) return;
+    this.resetFormPlantillaAgente();
+    this.gestionOverlay?.dispose();
+    this.gestionOverlay = this.dialogService.openTemplate(tpl, this.vcr);
+  }
+
+  protected cerrarGestionPlantillas(): void {
+    this.gestionOverlay?.dispose();
+    this.gestionOverlay = undefined;
+    this.resetFormPlantillaAgente();
+  }
+
+  protected resetFormPlantillaAgente(): void {
+    this.tituloNuevaPlantilla.set('');
+    this.atajoNuevaPlantilla.set('');
+    this.contenidoNuevaPlantilla.set('');
+    this.editandoPlantillaId.set(null);
+  }
+
+  protected editarPlantillaAgente(p: PlantillaAgente): void {
+    this.editandoPlantillaId.set(p.id);
+    this.tituloNuevaPlantilla.set(p.titulo);
+    this.atajoNuevaPlantilla.set(p.atajo ?? '');
+    this.contenidoNuevaPlantilla.set(p.contenido);
+  }
+
+  protected async guardarPlantillaAgente(): Promise<void> {
+    const titulo = this.tituloNuevaPlantilla().trim();
+    const contenido = this.contenidoNuevaPlantilla().trim();
+    const atajo = this.atajoNuevaPlantilla().trim();
+    const id = this.editandoPlantillaId();
+
+    if (!titulo || !contenido) {
+      this.toastService.error('Ingresa título y contenido para la plantilla', 'Campos incompletos');
+      return;
+    }
+
+    this.guardandoPlantillaAgente.set(true);
+    try {
+      if (id) {
+        await this.conversacionesService.actualizarPlantillaAgente(id, { titulo, atajo, contenido });
+        this.toastService.success('Respuesta rápida actualizada', 'Éxito');
+      } else {
+        await this.conversacionesService.crearPlantillaAgente({ titulo, atajo, contenido });
+        this.toastService.success('Respuesta rápida creada', 'Éxito');
+      }
+      this.resetFormPlantillaAgente();
+      this.plantillasAgente.reload();
+    } catch (err) {
+      this.toastService.error(mensajeDeError(err, 'No se pudo guardar la respuesta rápida'), 'Error');
+    } finally {
+      this.guardandoPlantillaAgente.set(false);
+    }
+  }
+
+  protected async eliminarPlantillaAgente(id: string): Promise<void> {
+    try {
+      await this.conversacionesService.eliminarPlantillaAgente(id);
+      this.toastService.success('Respuesta rápida eliminada', 'Éxito');
+      this.plantillasAgente.reload();
+    } catch (err) {
+      this.toastService.error(mensajeDeError(err, 'No se pudo eliminar'), 'Error');
+    }
   }
 
   /* ── Datos del servidor ────────────────────────────────────────── */

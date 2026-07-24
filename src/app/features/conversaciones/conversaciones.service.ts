@@ -53,4 +53,21 @@ export class ConversacionesService {
   marcarLeido(conversacionId: string, typing = false): Promise<{ ok: boolean }> {
     return this.api.post<{ ok: boolean }>(`/conversaciones/${conversacionId}/leido`, { typing });
   }
+
+  /** Respuestas Rápidas / Plantillas Personalizadas del Agente. */
+  plantillasAgenteRequest(): ResourceRequest {
+    return this.api.request('/plantillas-agente');
+  }
+
+  crearPlantillaAgente(payload: { titulo: string; atajo?: string; contenido: string; tags?: string[] }) {
+    return this.api.post('/plantillas-agente', payload);
+  }
+
+  actualizarPlantillaAgente(id: string, payload: Partial<{ titulo: string; atajo?: string; contenido: string; tags?: string[] }>) {
+    return this.api.patch(`/plantillas-agente/${id}`, payload);
+  }
+
+  eliminarPlantillaAgente(id: string) {
+    return this.api.delete(`/plantillas-agente/${id}`);
+  }
 }
