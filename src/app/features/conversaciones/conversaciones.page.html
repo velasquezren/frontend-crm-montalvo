@@ -332,9 +332,20 @@
                   }
                 }
 
-                <!-- Texto / pie de foto -->
+                <!-- Texto / pie de foto / URL de media -->
                 @if (item.mensaje.contenido) {
-                  <p class="bubble-text">{{ item.mensaje.contenido }}</p>
+                  @if (esUrlImagen(item.mensaje.contenido)) {
+                    <a [href]="item.mensaje.contenido" target="_blank" rel="noopener" class="block my-1">
+                      <img [src]="item.mensaje.contenido" alt="Imagen adjunta" class="max-w-xs max-h-72 rounded-xl object-cover border border-border shadow-xs hover:opacity-95 transition-opacity" />
+                    </a>
+                  } @else if (esUrlPdf(item.mensaje.contenido)) {
+                    <a [href]="item.mensaje.contenido" target="_blank" rel="noopener" class="flex items-center gap-2 p-2.5 rounded-xl bg-black/5 hover:bg-black/10 transition-colors my-1 border border-border/50">
+                      <app-icon name="file-text" [size]="20" class="shrink-0 text-primary" />
+                      <span class="text-xs font-bold truncate">Ver Documento PDF ↗</span>
+                    </a>
+                  } @else {
+                    <p class="bubble-text">{{ item.mensaje.contenido }}</p>
+                  }
                 }
 
                 <span class="bubble-time">

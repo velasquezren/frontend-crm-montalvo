@@ -268,6 +268,18 @@ export class ConversacionesPage implements AfterViewInit {
     }
   }
 
+  protected esUrlImagen(texto?: string | null): boolean {
+    if (!texto) return false;
+    const t = texto.trim();
+    return (t.startsWith('http://') || t.startsWith('https://')) && /\.(png|jpe?g|webp|gif)(\?.*)?$/i.test(t);
+  }
+
+  protected esUrlPdf(texto?: string | null): boolean {
+    if (!texto) return false;
+    const t = texto.trim();
+    return (t.startsWith('http://') || t.startsWith('https://')) && /\.pdf(\?.*)?$/i.test(t);
+  }
+
   protected insertarRecursoEnChat(recurso: RecursoMemoria): void {
     const texto = recurso.mediaUrl || recurso.contenido || recurso.titulo;
     const previo = this.mensajeNuevo();
