@@ -257,12 +257,12 @@
         <div class="lg:col-span-2 space-y-4">
 
           <!-- Barra de Filtros y Buscador -->
-          <div class="bg-white rounded-2xl border border-border p-4 shadow-subtle flex items-center justify-between gap-3 flex-wrap">
-            <div class="flex items-center gap-1 bg-bg-light p-1 rounded-xl border border-border text-xs">
+          <div class="bg-white rounded-2xl border border-border p-4 shadow-subtle flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="flex items-center gap-1 bg-bg-light p-1 rounded-xl border border-border text-xs overflow-x-auto scrollbar-hide max-w-full">
               <button
                 type="button"
                 (click)="filtroTipoMemoria.set('')"
-                class="px-3.5 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer select-none"
+                class="px-3.5 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer select-none shrink-0 whitespace-nowrap"
                 [class.bg-primary]="filtroTipoMemoria() === ''"
                 [class.text-white]="filtroTipoMemoria() === ''"
                 [class.shadow-xs]="filtroTipoMemoria() === ''"
@@ -272,7 +272,7 @@
               <button
                 type="button"
                 (click)="filtroTipoMemoria.set('TEXTO')"
-                class="px-3.5 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer select-none"
+                class="px-3.5 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer select-none shrink-0 whitespace-nowrap"
                 [class.bg-primary]="filtroTipoMemoria() === 'TEXTO'"
                 [class.text-white]="filtroTipoMemoria() === 'TEXTO'"
                 [class.shadow-xs]="filtroTipoMemoria() === 'TEXTO'"
@@ -282,7 +282,7 @@
               <button
                 type="button"
                 (click)="filtroTipoMemoria.set('IMAGEN')"
-                class="px-3.5 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer select-none"
+                class="px-3.5 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer select-none shrink-0 whitespace-nowrap"
                 [class.bg-primary]="filtroTipoMemoria() === 'IMAGEN'"
                 [class.text-white]="filtroTipoMemoria() === 'IMAGEN'"
                 [class.shadow-xs]="filtroTipoMemoria() === 'IMAGEN'"
@@ -292,7 +292,7 @@
               <button
                 type="button"
                 (click)="filtroTipoMemoria.set('DOCUMENTO')"
-                class="px-3.5 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer select-none"
+                class="px-3.5 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer select-none shrink-0 whitespace-nowrap"
                 [class.bg-primary]="filtroTipoMemoria() === 'DOCUMENTO'"
                 [class.text-white]="filtroTipoMemoria() === 'DOCUMENTO'"
                 [class.shadow-xs]="filtroTipoMemoria() === 'DOCUMENTO'"
@@ -301,7 +301,7 @@
               </button>
             </div>
 
-            <app-input type="search" placeholder="Buscar en mi memoria..." [(value)]="busquedaMemoria" class="max-w-xs flex-1" />
+            <app-input type="search" placeholder="Buscar en mi memoria..." [(value)]="busquedaMemoria" class="w-full sm:max-w-xs sm:flex-1" />
           </div>
 
           <!-- Grid de Tarjetas de Recursos -->

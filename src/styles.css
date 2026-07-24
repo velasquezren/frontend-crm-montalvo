@@ -57,6 +57,23 @@
     background-color: var(--color-background);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Red de seguridad global: ningún componente puede provocar scroll
+       horizontal de la página entera en móvil (el desborde se recorta). */
+    overflow-x: hidden;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Utilidad global: oculta la barra de scroll pero mantiene el scroll
+     (para filtros/chips que se deslizan horizontal en móvil sin barra fea). */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 
   /* Jerarquía tipográfica — CRM_MANIFESTO.md §3.3 */

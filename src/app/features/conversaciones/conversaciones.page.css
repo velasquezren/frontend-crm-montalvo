@@ -278,7 +278,7 @@
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  shrink: 0;
+  flex-shrink: 0;
 }
 
 .quick-reply-chips {
@@ -286,6 +286,8 @@
   align-items: center;
   gap: 6px;
   overflow-x: auto;
+  flex: 1;
+  min-width: 0; /* permite que el contenedor scrollee en vez de empujar el ancho */
 }
 
 .quick-reply-chip {

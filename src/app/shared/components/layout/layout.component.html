@@ -121,26 +121,29 @@
 
 <!-- Banner de Instalación PWA (Estilo Nativo) -->
 @if (showInstallBanner()) {
-  <div class="fixed bottom-6 left-6 right-6 md:right-auto md:max-w-md z-50 animate-modal-pop">
-    <div class="bg-white border border-border shadow-2xl rounded-2xl p-4 flex gap-4 items-center">
-      <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0 border border-primary/20">
-        <img src="/favicon-96x96.png" alt="CRM Logo" class="w-9 h-9 object-contain rounded-lg" />
+  <!-- En móvil se levanta por encima de la barra inferior; en desktop va abajo-izquierda. -->
+  <div class="fixed bottom-[4.8rem] left-4 right-4 sm:bottom-6 sm:left-6 sm:right-auto sm:max-w-sm z-50 animate-modal-pop">
+    <div class="bg-white border border-border shadow-2xl rounded-2xl p-4">
+      <div class="flex gap-3 items-center">
+        <div class="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0 border border-primary/20">
+          <img src="/favicon-96x96.png" alt="CRM" class="w-8 h-8 object-contain rounded-lg" />
+        </div>
+        <div class="flex-1 min-w-0">
+          <h4 class="text-sm font-bold text-text-dark leading-snug">Instalar App Móvil</h4>
+          <p class="text-xs text-text-muted leading-tight mt-0.5">Accedé al CRM al instante, como una app nativa.</p>
+        </div>
       </div>
-      <div class="flex-1 min-w-0">
-        <h4 class="text-sm font-bold text-text-dark leading-snug">Instalar App Móvil</h4>
-        <p class="text-xs text-text-muted leading-tight mt-0.5">Accede al CRM al instante y conéctate como una app nativa.</p>
-      </div>
-      <div class="flex flex-col gap-1.5 shrink-0">
+      <div class="flex gap-2 mt-3">
         <button
           type="button"
           (click)="installPwa()"
-          class="px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary-dark transition-all cursor-pointer shadow-sm">
+          class="flex-1 px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:opacity-90 transition-all cursor-pointer shadow-sm">
           Instalar
         </button>
         <button
           type="button"
           (click)="dismissInstallBanner()"
-          class="px-3.5 py-1.5 text-text-muted text-[11px] font-semibold rounded-xl hover:bg-bg-light transition-all cursor-pointer text-center">
+          class="px-4 py-2 text-text-muted text-xs font-semibold rounded-xl hover:bg-bg-light transition-all cursor-pointer whitespace-nowrap">
           Ahora no
         </button>
       </div>
