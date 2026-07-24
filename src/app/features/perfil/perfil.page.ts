@@ -17,6 +17,8 @@ import { InputComponent } from '../../shared/components/input/input.component';
 import { CuotaMemoria, RecursoMemoria } from '../memoria-agente/memoria-agente.model';
 import { MemoriaAgenteService } from '../memoria-agente/memoria-agente.service';
 
+import { ActivatedRoute } from '@angular/router';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-perfil',
@@ -37,6 +39,7 @@ export class PerfilPage {
   private readonly authService = inject(AuthService);
   private readonly memoriaService = inject(MemoriaAgenteService);
   private readonly toast = inject(ToastService);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly tabActiva = signal<'perfil' | 'memoria'>('perfil');
   protected readonly user = this.authService.user;
@@ -78,6 +81,11 @@ export class PerfilPage {
   });
 
   constructor() {
+    const tabParam = this.route.snapshot.queryParamMap.get('tab');
+    if (tabParam === 'memoria') {
+      this.tabActiva.set('memoria');
+    }
+
     const u = this.user();
     if (u) {
       this.perfilForm.patchValue({

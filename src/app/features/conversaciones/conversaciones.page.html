@@ -438,7 +438,7 @@
                 Mi Memoria Personal
               </span>
               <div class="flex items-center gap-2">
-                <a routerLink="/perfil" class="text-[10px] text-primary font-bold hover:underline flex items-center gap-0.5">
+                <a routerLink="/perfil" [queryParams]="{ tab: 'memoria' }" class="text-[10px] text-primary font-extrabold hover:underline flex items-center gap-0.5 cursor-pointer">
                   <span>Gestionar (30 MB)</span>
                   <app-icon name="external-link" [size]="10" />
                 </a>
