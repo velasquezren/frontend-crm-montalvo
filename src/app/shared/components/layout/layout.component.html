@@ -86,12 +86,32 @@
        Ref: CRM_MANIFESTO.md §3.2 — bg alternativo
        ══════════════════════════════════════════════════════════════════════ -->
   <main class="workspace bg-bg-workspace overflow-y-auto">
-    <div class="p-6 pb-28">
+    <div class="p-6 pb-28 md:pb-6">
       <router-outlet />
     </div>
   </main>
 
 </div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     MOBILE BOTTOM BAR — Navegación nativa PWA para iOS / Android
+     ══════════════════════════════════════════════════════════════════════ -->
+<nav class="mobile-bottom-bar md:hidden" aria-label="Navegación móvil">
+  <a routerLink="/conversaciones" routerLinkActive="mobile-nav-active" class="mobile-nav-item">
+    <app-icon name="message-circle" [size]="22" />
+    <span>Chats</span>
+  </a>
+
+  <a routerLink="/dashboard" routerLinkActive="mobile-nav-active" class="mobile-nav-item">
+    <app-icon name="activity" [size]="22" />
+    <span>Resumen</span>
+  </a>
+
+  <a routerLink="/perfil" routerLinkActive="mobile-nav-active" class="mobile-nav-item">
+    <app-icon name="users" [size]="22" />
+    <span>Perfil</span>
+  </a>
+</nav>
 
 <!-- ══════════════════════════════════════════════════════════════════════
      FAB & TOASTS — Acciones rápidas flotantes y notificaciones globales
