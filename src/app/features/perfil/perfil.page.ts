@@ -75,6 +75,7 @@ export class PerfilPage {
     const raw = this.recursosMemoriaRaw.value();
     if (!raw) return [];
     if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw.datos)) return raw.datos;
     if (Array.isArray(raw.data)) return raw.data;
     return [];
   });
