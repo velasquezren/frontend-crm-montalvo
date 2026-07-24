@@ -62,9 +62,12 @@ import { ConversacionesService } from './conversaciones.service';
  *
  * Visibilidad por rol resuelta en el servidor.
  */
+import { RouterLink } from '@angular/router';
+
 @Component({
   selector: 'app-conversaciones',
   imports: [
+    RouterLink,
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,
