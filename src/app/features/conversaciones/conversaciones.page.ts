@@ -731,6 +731,7 @@ export class ConversacionesPage implements AfterViewInit {
   protected async reintentarEnvio(mensaje: MensajeApi): Promise<void> {
     const id = this.seleccionadaId();
     if (!id || this.enviando()) return;
+    this.toastService.info('Reintentando envío... Si pasaron más de 24h del último mensaje del cliente, usa una Plantilla de WhatsApp.', 'WhatsApp API');
     await this.enviarTexto(id, mensaje.contenido);
   }
 
