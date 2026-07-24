@@ -3,7 +3,7 @@
   "outputDirectory": "dist/montalvo-crm-frontend/browser",
   "rewrites": [
     {
-      "source": "/((?!.*\\.).*)",
+      "source": "/((?!.*\\.[\\w]+$).*)",
       "destination": "/index.html"
     }
   ],
