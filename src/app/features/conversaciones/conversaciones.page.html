@@ -226,7 +226,7 @@
       </header>
 
       <!-- Mensajes con separadores de fecha -->
-      <div class="chat-messages" #messagesScroll>
+      <div class="chat-messages" #messagesScroll (scroll)="onMessagesScroll()">
         @for (item of mensajesAgrupados(); track (item.tipo === 'fecha' ? item.label : item.mensaje.id)) {
           @if (item.tipo === 'fecha') {
             <div class="date-separator">
@@ -326,6 +326,14 @@
         }
       </div>
 
+      <!-- Botón flotante: bajar al último mensaje (aparece si llegó algo mientras leías arriba) -->
+      @if (mostrarBotonBajar()) {
+        <button type="button" (click)="bajarAlFondo()" class="scroll-bottom-btn" aria-label="Ir al último mensaje">
+          <app-icon name="chevron-down" [size]="18" />
+          <span class="text-xs font-semibold">Nuevos mensajes</span>
+        </button>
+      }
+
       <!-- Barra de Plantillas de Respuestas Rápidas para Agentes -->
       <div class="quick-replies-bar">
         <span class="quick-reply-label">Plantillas:</span>
@@ -347,7 +355,14 @@
           (clicked)="abrirPlantillas()" aria-label="Enviar plantilla"
           title="Enviar plantilla de WhatsApp (para escribir fuera de las 24h)" />
         <div class="flex-1">
-          <app-input placeholder="Escribe un mensaje…" [(value)]="mensajeNuevo" />
+          <textarea
+            #composer
+            rows="1"
+            class="chat-composer"
+            placeholder="Escribe un mensaje…  (Enter envía, Shift+Enter salto de línea)"
+            [value]="mensajeNuevo()"
+            (input)="mensajeNuevo.set(composer.value)"
+            (keydown)="onComposerKeydown($event)"></textarea>
         </div>
         <app-button type="submit" icon="send" [circle]="true" [loading]="enviando()"
           aria-label="Enviar mensaje" />

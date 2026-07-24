@@ -282,13 +282,28 @@ export class ConversacionesPage implements AfterViewInit {
      principal de refresco. */
   private pollingInterval: ReturnType<typeof setInterval> | null = null;
 
+  /** true cuando el usuario tiene la vista cerca del fondo del hilo. */
+  private estaCercaDelFondo = true;
+  /** Muestra el botón flotante "↓ nuevos" cuando llegó algo y el agente está leyendo arriba. */
+  protected readonly mostrarBotonBajar = signal(false);
+
   constructor() {
-    // Auto-scroll al cambiar de conversación o al recibir mensajes nuevos
+    /* Auto-scroll INTELIGENTE: solo baja si el agente ya estaba cerca del
+       fondo, o si el último mensaje es suyo (lo acaba de enviar). Si está
+       leyendo historial más arriba, no lo interrumpe: muestra el botón "↓". */
     effect(() => {
-      // Leer el signal para suscribirse a cambios
-      this.detalle.value();
-      // Programar el scroll al siguiente tick de renderizado
-      setTimeout(() => this.scrollToBottom(), 50);
+      const chat = this.detalle.value();
+      if (!chat) return;
+      const ultimo = chat.mensajes[chat.mensajes.length - 1];
+      const esMio = ultimo?.direccion === 'SALIENTE';
+      setTimeout(() => {
+        if (this.estaCercaDelFondo || esMio) {
+          this.scrollToBottom();
+          this.mostrarBotonBajar.set(false);
+        } else {
+          this.mostrarBotonBajar.set(true);
+        }
+      }, 50);
     });
 
     // Conecta el socket del inbox; se desconecta solo al destruir la página.
@@ -348,8 +363,37 @@ export class ConversacionesPage implements AfterViewInit {
   protected seleccionar(id: string): void {
     this.seleccionadaId.set(id);
     this.editandoFicha.set(false);
+    /* Al abrir un chat siempre queremos ver lo último: forzar que el próximo
+       render baje al fondo, sin importar dónde estaba el scroll del chat previo. */
+    this.estaCercaDelFondo = true;
+    this.mostrarBotonBajar.set(false);
     /* Tildes azules: al abrir el chat, el paciente ve que leímos su mensaje. */
     void this.conversacionesService.marcarLeido(id, false).catch(() => {});
+  }
+
+  /** Detecta si el agente está cerca del fondo del hilo (para el auto-scroll inteligente). */
+  protected onMessagesScroll(): void {
+    const c = this.messagesContainer()?.nativeElement;
+    if (!c) return;
+    this.estaCercaDelFondo = c.scrollHeight - c.scrollTop - c.clientHeight < 150;
+    if (this.estaCercaDelFondo) {
+      this.mostrarBotonBajar.set(false);
+    }
+  }
+
+  /** Botón flotante "↓ nuevos": baja al fondo y limpia el aviso. */
+  protected bajarAlFondo(): void {
+    this.scrollToBottom();
+    this.estaCercaDelFondo = true;
+    this.mostrarBotonBajar.set(false);
+  }
+
+  /** Enter envía; Shift+Enter inserta salto de línea (como WhatsApp/Slack). */
+  protected onComposerKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      void this.enviar(event);
+    }
   }
 
   protected deseleccionar(): void {
