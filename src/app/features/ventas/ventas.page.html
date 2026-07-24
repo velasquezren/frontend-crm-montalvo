@@ -43,9 +43,9 @@
           } @else {
             <app-input type="search" placeholder="Buscar cliente por nombre o teléfono…"
               [(value)]="busquedaCliente" />
-            @if (resultadosCliente.value().length > 0) {
+            @if (resultadosCliente().length > 0) {
               <div class="border border-border rounded-xl divide-y divide-border max-h-56 overflow-y-auto">
-                @for (cliente of resultadosCliente.value(); track cliente.id) {
+                @for (cliente of resultadosCliente(); track cliente.id) {
                   <button type="button" (click)="elegirCliente(cliente)"
                     class="w-full flex items-center gap-3 px-4 py-2.5 text-left cursor-pointer
                            hover:bg-bg-light transition-colors">
@@ -108,18 +108,18 @@
 
   <!-- ── Tabla de ventas (carga diferida reactiva) ────────────────── -->
   @defer (on viewport) {
-    @if (ventas.isLoading()) {
+    @if (ventasRaw.isLoading()) {
       <div class="bg-white rounded-2xl shadow-subtle p-6 flex flex-col gap-4">
         @for (fila of [1, 2, 3, 4]; track fila) {
           <app-loading-skeleton shape="text" height="2.5rem" />
         }
       </div>
-    } @else if (ventas.error()) {
+    } @else if (ventasRaw.error()) {
       <div class="bg-white rounded-2xl shadow-subtle">
         <app-empty-state icon="alert-circle" title="No se pudo cargar las ventas"
           description="Verifica que el servidor del CRM esté encendido e intenta de nuevo." />
       </div>
-    } @else if (ventas.value().datos.length > 0) {
+    } @else if (ventas().datos.length > 0) {
       <app-table>
         <thead>
           <tr>
@@ -132,7 +132,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (venta of ventas.value().datos; track venta.id) {
+          @for (venta of ventas().datos; track venta.id) {
             <tr>
               <td>
                 <div class="flex items-center gap-3">
@@ -155,10 +155,10 @@
       </app-table>
 
       <app-paginator
-        [pagina]="ventas.value().pagina"
-        [totalPaginas]="ventas.value().totalPaginas"
-        [total]="ventas.value().total"
-        [limite]="ventas.value().limite"
+        [pagina]="ventas().pagina"
+        [totalPaginas]="ventas().totalPaginas"
+        [total]="ventas().total"
+        [limite]="ventas().limite"
         (cambiar)="pagina.set($event)" />
     } @else {
       <div class="bg-white rounded-2xl shadow-subtle">

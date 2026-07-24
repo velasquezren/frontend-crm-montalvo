@@ -69,7 +69,7 @@ export class VentasPage {
 
   protected readonly pagina = signal(1);
 
-  protected readonly ventas = httpResource<RespuestaPaginada<Venta>>(
+  protected readonly ventasRaw = httpResource<any>(
     () => {
       const filtro = this.filtro();
       return this.ventasService.listarRequest(
@@ -79,6 +79,29 @@ export class VentasPage {
     },
     { defaultValue: paginaVacia<Venta>() },
   );
+
+  protected readonly ventas = computed<RespuestaPaginada<Venta>>(() => {
+    const raw = this.ventasRaw.value();
+    if (!raw) return paginaVacia<Venta>();
+    if (Array.isArray(raw.datos)) {
+      return {
+        datos: raw.datos,
+        total: raw.total ?? raw.datos.length,
+        pagina: raw.pagina ?? 1,
+        limite: raw.limite ?? 25,
+        totalPaginas: raw.totalPaginas ?? 1,
+      };
+    }
+    if (Array.isArray(raw.data)) {
+      return {
+        datos: raw.data,
+        total: raw.meta?.total ?? raw.total ?? raw.data.length,
+        pagina: raw.meta?.page ?? raw.pagina ?? 1,
+        limite: raw.meta?.lastPage ?? raw.totalPaginas ?? 1,
+      };
+    }
+    return raw;
+  });
 
   protected cambiarFiltro(nuevo: FiltroVenta): void {
     this.filtro.set(nuevo);
@@ -95,7 +118,7 @@ export class VentasPage {
   protected readonly errorForm = signal('');
 
   /* Búsqueda de cliente: solo consulta con 2+ caracteres */
-  protected readonly resultadosCliente = httpResource<Cliente[]>(
+  protected readonly resultadosClienteRaw = httpResource<any>(
     () => {
       const termino = this.busquedaCliente().trim();
       return termino.length >= 2 && !this.clienteElegido()
@@ -105,8 +128,17 @@ export class VentasPage {
     { defaultValue: [] },
   );
 
+  protected readonly resultadosCliente = computed<Cliente[]>(() => {
+    const raw = this.resultadosClienteRaw.value();
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw.datos)) return raw.datos;
+    if (Array.isArray(raw.data)) return raw.data;
+    return [];
+  });
+
   protected readonly resumen = computed(() => {
-    const ganadas = this.ventas.value().datos.filter(v => v.estado === 'GANADA');
+    const ganadas = this.ventas().datos.filter(v => v.estado === 'GANADA');
     const total = ganadas.reduce((suma, v) => suma + Number(v.monto), 0);
     const ticket = ganadas.length > 0 ? Math.round(total / ganadas.length) : 0;
 
@@ -157,7 +189,7 @@ export class VentasPage {
       this.limpiarCliente();
       this.producto.set('');
       this.monto.set('');
-      this.ventas.reload();
+      this.ventasRaw.reload();
     } catch (err) {
       this.errorForm.set(mensajeDeError(err, 'No se pudo registrar la venta. Intenta de nuevo.'));
     } finally {
