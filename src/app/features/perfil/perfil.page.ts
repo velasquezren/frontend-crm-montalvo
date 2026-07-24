@@ -120,30 +120,54 @@ export class PerfilPage {
     this.fileInput.nativeElement.click();
   }
 
-  protected onFileSelected(event: Event): void {
+  protected async onFileSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
+    const file = input.files?.[0];
+    if (!file) return;
 
-      // Validar tipo de archivo
-      if (!file.type.startsWith('image/')) {
-        this.toast.error('Por favor, selecciona una imagen válida.', 'Formato no soportado');
-        return;
-      }
+    if (!file.type.startsWith('image/')) {
+      this.toast.error('Por favor, selecciona una imagen válida.', 'Formato no soportado');
+      return;
+    }
 
-      // Validar tamaño de archivo (máximo 2MB para Base64)
-      if (file.size > 2 * 1024 * 1024) {
-        this.toast.error('La imagen no debe superar los 2MB.', 'Imagen muy pesada');
-        return;
-      }
+    try {
+      /* Se comprime SIEMPRE antes de guardar: la foto viaja en el perfil y se
+         renderiza en avatares; una imagen de 2 MB sería un lastre en todo el
+         sistema. Se redimensiona a máx. 256px y se re-codifica a JPEG → ~20-60 KB. */
+      const comprimida = await this.comprimirImagen(file);
+      this.previewFoto.set(comprimida);
+    } catch {
+      this.toast.error('No se pudo procesar la imagen. Probá con otra.', 'Formato no soportado');
+    }
+  }
 
+  /** Redimensiona y comprime una imagen a un data URL JPEG pequeño (client-side, con canvas). */
+  private comprimirImagen(file: File, maxLado = 256, calidad = 0.82): Promise<string> {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
+      reader.onerror = () => reject(new Error('No se pudo leer el archivo'));
       reader.onload = () => {
-        const base64String = reader.result as string;
-        this.previewFoto.set(base64String);
+        const img = new Image();
+        img.onerror = () => reject(new Error('No se pudo cargar la imagen'));
+        img.onload = () => {
+          const escala = Math.min(1, maxLado / Math.max(img.width, img.height));
+          const ancho = Math.max(1, Math.round(img.width * escala));
+          const alto = Math.max(1, Math.round(img.height * escala));
+          const canvas = document.createElement('canvas');
+          canvas.width = ancho;
+          canvas.height = alto;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Sin contexto de canvas'));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, ancho, alto);
+          resolve(canvas.toDataURL('image/jpeg', calidad));
+        };
+        img.src = reader.result as string;
       };
       reader.readAsDataURL(file);
-    }
+    });
   }
 
   protected removeFoto(): void {
