@@ -38,6 +38,7 @@ export interface Lead {
     nombre: string;
     telefono: string;
     categoria: CategoriaCliente;
+    agente?: { id: string; nombre: string } | null;
   };
   readonly agente: { id: string; nombre: string } | null;
   readonly createdAt: string;

@@ -38,6 +38,7 @@ export interface ConversacionResumen {
   /** El listado incluye solo el último mensaje (take: 1, desc). */
   readonly mensajes: readonly MensajeApi[];
   readonly _count: { mensajes: number };
+  readonly noLeidosCount?: number;
   readonly updatedAt: string;
 }
 

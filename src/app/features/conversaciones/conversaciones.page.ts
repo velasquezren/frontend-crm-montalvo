@@ -555,6 +555,15 @@ export class ConversacionesPage implements AfterViewInit {
     this.mostrarBotonBajar.set(false);
     /* Tildes azules: al abrir el chat, el paciente ve que leímos su mensaje. */
     void this.conversacionesService.marcarLeido(id, false).catch(() => {});
+
+    /* Inmediatamente limpia el contador de no leídos en la lista local */
+    const lista = this.conversaciones.value();
+    if (lista) {
+      const conv = lista.find(c => c.id === id);
+      if (conv && (conv as any).noLeidosCount > 0) {
+        (conv as any).noLeidosCount = 0;
+      }
+    }
   }
 
   /** Detecta si el agente está cerca del fondo del hilo (para el auto-scroll inteligente). */

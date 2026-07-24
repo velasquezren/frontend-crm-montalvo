@@ -151,7 +151,7 @@
                     @switch (ultimo.tipo) {
                       @case ('IMAGEN') {
                         <span class="inline-flex items-center gap-1 font-medium text-text-dark truncate">
-                          <span>📷</span>
+                          <app-icon name="image" [size]="12" class="text-primary shrink-0" />
                           <span>Foto</span>
                           @if (ultimo.contenido) {
                             <span class="text-text-muted font-normal truncate">· {{ ultimo.contenido }}</span>
@@ -160,13 +160,13 @@
                       }
                       @case ('STICKER') {
                         <span class="inline-flex items-center gap-1 font-medium text-text-dark truncate">
-                          <span>🎨</span>
+                          <app-icon name="image" [size]="12" class="text-primary shrink-0" />
                           <span>Sticker</span>
                         </span>
                       }
                       @case ('VIDEO') {
                         <span class="inline-flex items-center gap-1 font-medium text-text-dark truncate">
-                          <span>🎥</span>
+                          <app-icon name="file-text" [size]="12" class="text-primary shrink-0" />
                           <span>Video</span>
                           @if (ultimo.contenido) {
                             <span class="text-text-muted font-normal truncate">· {{ ultimo.contenido }}</span>
@@ -175,13 +175,13 @@
                       }
                       @case ('AUDIO') {
                         <span class="inline-flex items-center gap-1 font-medium text-text-dark truncate">
-                          <span>🎤</span>
+                          <app-icon name="file-text" [size]="12" class="text-primary shrink-0" />
                           <span>Mensaje de voz</span>
                         </span>
                       }
                       @case ('DOCUMENTO') {
                         <span class="inline-flex items-center gap-1 font-medium text-text-dark truncate">
-                          <span>📄</span>
+                          <app-icon name="file-text" [size]="12" class="text-primary shrink-0" />
                           <span class="truncate">{{ ultimo.mediaNombre || ultimo.contenido || 'Documento' }}</span>
                         </span>
                       }
@@ -195,10 +195,10 @@
                 }
               </div>
 
-              <!-- Conteo de mensajes -->
+              <!-- Conteo de mensajes NO LEÍDOS -->
               <div class="flex items-center gap-1.5 shrink-0">
-                @if (chat._count.mensajes > 0) {
-                  <span class="msg-count-badge">{{ chat._count.mensajes }}</span>
+                @if ((chat.noLeidosCount ?? 0) > 0) {
+                  <span class="msg-count-badge">{{ chat.noLeidosCount }}</span>
                 }
               </div>
             </div>

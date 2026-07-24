@@ -113,9 +113,10 @@
                   <span class="text-[9px] text-text-muted">
                     {{ lead.createdAt | date: 'dd/MM HH:mm' }}
                   </span>
-                  @if (lead.agente) {
-                    <span class="text-[9px] font-semibold text-primary/80">
-                      👤 {{ lead.agente.nombre.split(' ')[0] }}
+                  @if (lead.agente || lead.cliente?.agente) {
+                    <span class="text-[9px] font-semibold text-primary/80 flex items-center gap-1">
+                      <app-icon name="users" [size]="10" />
+                      <span>{{ (lead.agente?.nombre || lead.cliente?.agente?.nombre || '').split(' ')[0] }}</span>
                     </span>
                   } @else {
                     <span class="text-[9px] italic text-text-muted">Sin agente</span>
@@ -165,9 +166,10 @@
                   <span class="text-[9px] text-text-muted">
                     {{ lead.createdAt | date: 'dd/MM HH:mm' }}
                   </span>
-                  @if (lead.agente) {
-                    <span class="text-[9px] font-semibold text-primary/80">
-                      👤 {{ lead.agente.nombre.split(' ')[0] }}
+                  @if (lead.agente || lead.cliente?.agente) {
+                    <span class="text-[9px] font-semibold text-primary/80 flex items-center gap-1">
+                      <app-icon name="users" [size]="10" />
+                      <span>{{ (lead.agente?.nombre || lead.cliente?.agente?.nombre || '').split(' ')[0] }}</span>
                     </span>
                   } @else {
                     <span class="text-[9px] italic text-text-muted">Sin agente</span>
@@ -217,9 +219,10 @@
                   <span class="text-[9px] text-text-muted">
                     {{ lead.createdAt | date: 'dd/MM HH:mm' }}
                   </span>
-                  @if (lead.agente) {
-                    <span class="text-[9px] font-semibold text-primary/80">
-                      👤 {{ lead.agente.nombre.split(' ')[0] }}
+                  @if (lead.agente || lead.cliente?.agente) {
+                    <span class="text-[9px] font-semibold text-primary/80 flex items-center gap-1">
+                      <app-icon name="users" [size]="10" />
+                      <span>{{ (lead.agente?.nombre || lead.cliente?.agente?.nombre || '').split(' ')[0] }}</span>
                     </span>
                   } @else {
                     <span class="text-[9px] italic text-text-muted">Sin agente</span>
@@ -269,9 +272,10 @@
                   <span class="text-[9px] text-text-muted">
                     {{ lead.createdAt | date: 'dd/MM HH:mm' }}
                   </span>
-                  @if (lead.agente) {
-                    <span class="text-[9px] font-semibold text-primary/80">
-                      👤 {{ lead.agente.nombre.split(' ')[0] }}
+                  @if (lead.agente || lead.cliente?.agente) {
+                    <span class="text-[9px] font-semibold text-primary/80 flex items-center gap-1">
+                      <app-icon name="users" [size]="10" />
+                      <span>{{ (lead.agente?.nombre || lead.cliente?.agente?.nombre || '').split(' ')[0] }}</span>
                     </span>
                   } @else {
                     <span class="text-[9px] italic text-text-muted">Sin agente</span>
@@ -321,8 +325,8 @@
                 </td>
                 <td>{{ origenLabel[lead.origen] }}</td>
                 <td>
-                  @if (lead.agente) {
-                    {{ lead.agente.nombre }}
+                  @if (lead.agente || lead.cliente?.agente) {
+                    {{ lead.agente?.nombre || lead.cliente?.agente?.nombre }}
                   } @else {
                     <span class="text-text-muted italic">Sin asignar</span>
                   }
