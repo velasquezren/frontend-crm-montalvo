@@ -492,6 +492,25 @@
         </div>
       }
 
+      <!-- Banner Informativo 24h Meta -->
+      @if (!ventana24hActiva()) {
+        <div class="px-4 py-2 bg-amber-50 border-t border-amber-200/70 flex items-center justify-between gap-3 text-xs text-amber-900 shrink-0">
+          <div class="flex items-center gap-2 min-w-0">
+            <app-icon name="alert-circle" [size]="15" class="text-amber-600 shrink-0" />
+            <span class="truncate">
+              <strong>Ventana 24h expirada:</strong> El cliente no ha escrito en 24h. Meta requiere enviar una Plantilla Aprobada.
+            </span>
+          </div>
+          <button
+            type="button"
+            (click)="abrirPlantillas()"
+            class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg text-[11px] transition-colors cursor-pointer shrink-0 shadow-2xs flex items-center gap-1">
+            <app-icon name="file-text" [size]="12" />
+            <span>Enviar Plantilla</span>
+          </button>
+        </div>
+      }
+
       <!-- Caja de texto -->
       <form (submit)="enviar($event)" class="chat-input-bar">
         <!-- Botón Adjuntar Imagen / Documento -->

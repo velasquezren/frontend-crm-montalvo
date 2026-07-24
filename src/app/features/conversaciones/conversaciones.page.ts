@@ -649,6 +649,28 @@ export class ConversacionesPage implements AfterViewInit {
     }
   }
 
+  /**
+   * Verifica si la ventana de 24h de atención de WhatsApp (Meta Cloud API) está activa.
+   * Meta prohíbe el envío de mensajes libres cuando han transcurrido más de 24 horas
+   * desde el último mensaje ENTRANTE del cliente.
+   */
+  protected readonly ventana24hActiva = computed(() => {
+    const d = this.detalle.value();
+    if (!d || !d.mensajes || d.mensajes.length === 0) return true;
+
+    const mensajesEntrantes = d.mensajes.filter(m => m.direccion === 'ENTRANTE');
+    if (mensajesEntrantes.length === 0) {
+      return false;
+    }
+
+    const ultimoEntrante = mensajesEntrantes[mensajesEntrantes.length - 1];
+    const fechaMs = new Date(ultimoEntrante.createdAt).getTime();
+    const transcurridoMs = Date.now() - fechaMs;
+    const horas = transcurridoMs / (1000 * 60 * 60);
+
+    return horas <= 24;
+  });
+
   protected async enviar(event: Event): Promise<void> {
     event.preventDefault();
     const texto = this.mensajeNuevo().trim();
@@ -656,6 +678,17 @@ export class ConversacionesPage implements AfterViewInit {
     if (!texto || !id || this.enviando()) {
       return;
     }
+
+    /* Bloqueo proactivo: Meta rechaza textos planos fuera de la ventana de 24h */
+    if (!this.ventana24hActiva()) {
+      this.toastService.error(
+        'La ventana de 24h de WhatsApp expiró. Debes enviar una Plantilla Aprobada de WhatsApp.',
+        'Ventana Expirada',
+      );
+      this.abrirPlantillas();
+      return;
+    }
+
     this.mensajeNuevo.set('');
     await this.enviarTexto(id, texto);
   }
