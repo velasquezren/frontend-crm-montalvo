@@ -98,7 +98,7 @@
                   <span class="text-text-muted italic">Sin edad</span>
                 }
                 @if (cliente.datosExtra?.lugarNacimiento) {
-                  <span class="text-text-muted block text-[11px] mt-0.5">📍 {{ cliente.datosExtra?.lugarNacimiento }}</span>
+                  <span class="text-text-muted block text-[11px] mt-0.5">Nac: {{ cliente.datosExtra?.lugarNacimiento }}</span>
                 }
               </div>
             </td>
@@ -112,7 +112,7 @@
             <td>
               <div class="flex flex-wrap gap-1.5 max-w-56">
                 @for (tag of obtenerEtiquetas(cliente); track tag) {
-                  <span class="rounded-full bg-primary/10 text-primary font-bold text-xs px-2.5 py-1 leading-none border border-primary/20">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-[11px] leading-tight border border-primary/20">
                     {{ tag }}
                   </span>
                 } @empty {
@@ -230,10 +230,10 @@
               [value]="editCategoria()"
               (change)="editCategoria.set($any($event.target).value)"
               class="w-full h-11 px-4 rounded-xl border border-border bg-white text-sm text-text-dark font-medium transition-all duration-200 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10">
-              <option value="GOLD">🥇 Gold (VIP)</option>
-              <option value="SILVER">🥈 Silver (Plata)</option>
-              <option value="BRONZE">🥉 Bronze (Bronce)</option>
-              <option value="PROSPECTO">👤 Prospecto</option>
+              <option value="GOLD">Gold (VIP)</option>
+              <option value="SILVER">Silver</option>
+              <option value="BRONZE">Bronze</option>
+              <option value="PROSPECTO">Prospecto</option>
             </select>
           </div>
         </div>
@@ -288,7 +288,7 @@
           @if (tagsPreview().length > 0) {
             <div class="flex flex-wrap gap-1.5 mt-1">
               @for (tag of tagsPreview(); track tag) {
-                <span class="rounded-full bg-primary/10 text-primary font-bold text-xs px-2.5 py-1 leading-none border border-primary/20">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-[11px] leading-tight border border-primary/20">
                   {{ tag }}
                 </span>
               }

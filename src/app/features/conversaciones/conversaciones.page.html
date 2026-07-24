@@ -559,10 +559,10 @@
                   [value]="editCategoria()"
                   (change)="editCategoria.set($any($event.target).value)"
                   class="w-full text-xs p-2.5 border border-border rounded-xl focus:border-primary focus:outline-none bg-white text-text-dark font-medium">
-                  <option value="GOLD">🥇 Gold (VIP)</option>
-                  <option value="SILVER">🥈 Silver (Plata)</option>
-                  <option value="BRONZE">🥉 Bronze (Bronce)</option>
-                  <option value="PROSPECTO">👤 Prospecto</option>
+                  <option value="GOLD">Gold (VIP)</option>
+                  <option value="SILVER">Silver</option>
+                  <option value="BRONZE">Bronze</option>
+                  <option value="PROSPECTO">Prospecto</option>
                 </select>
               </div>
 
@@ -722,7 +722,7 @@
                 <h3 class="detail-section-title">Tags</h3>
                 <div class="flex flex-wrap gap-1.5">
                   @for (tag of tags; track tag) {
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/5 text-primary text-[10px] font-semibold border border-primary/10 uppercase tracking-wider">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-[11px] leading-tight border border-primary/20">
                       {{ tag }}
                     </span>
                   }

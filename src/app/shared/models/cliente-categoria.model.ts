@@ -8,10 +8,10 @@ import { IconName } from '../components/icon/icon.component';
 export type CategoriaCliente = 'GOLD' | 'SILVER' | 'BRONZE' | 'PROSPECTO';
 
 export const CATEGORIA_LABEL: Record<CategoriaCliente, string> = {
-  GOLD: '🥇 Gold (VIP)',
-  SILVER: '🥈 Silver (Plata)',
-  BRONZE: '🥉 Bronze (Bronce)',
-  PROSPECTO: '👤 Prospecto',
+  GOLD: 'Gold (VIP)',
+  SILVER: 'Silver',
+  BRONZE: 'Bronze',
+  PROSPECTO: 'Prospecto',
 };
 
 /** Mapeo a variantes del átomo Badge. */
