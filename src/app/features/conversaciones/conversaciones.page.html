@@ -830,68 +830,111 @@
 
 <!-- Modal Memoria Personal del Agente (Biblioteca Privada 30 MB) -->
 <ng-template #modalMemoria>
-  <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-border overflow-hidden">
+  <div class="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-border overflow-hidden pointer-events-auto animate-modal-pop">
     <!-- Cabecera con barra de cuota (0 a 30 MB) -->
     <div class="p-5 border-b border-border bg-bg-light space-y-3">
       <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <app-icon name="database" [size]="20" class="text-primary" />
+        <div class="flex items-center gap-2.5">
+          <div class="p-2 rounded-xl bg-primary/10 text-primary">
+            <app-icon name="database" [size]="20" />
+          </div>
           <div>
             <h2 class="text-sm font-bold text-text-dark">Mi Memoria Personal</h2>
-            <p class="text-xs text-text-muted">Espacio privado de recursos, banners y listas de precios (Límite: 30 MB)</p>
+            <p class="text-xs text-text-muted">Biblioteca privada de respuestas, banners, precios y documentos (30 MB)</p>
           </div>
         </div>
-        <button type="button" (click)="cerrarMemoria()" class="p-1 rounded-lg text-text-muted hover:text-text-dark cursor-pointer">
+        <button type="button" (click)="cerrarMemoria()" class="p-1.5 rounded-lg text-text-muted hover:text-text-dark hover:bg-black/5 transition-colors cursor-pointer">
           <app-icon name="x" [size]="18" />
         </button>
       </div>
 
       <!-- Barra de cuota / progreso -->
       @if (cuotaMemoria.value(); as cuota) {
-        <div class="p-3 rounded-xl bg-white border border-border space-y-1.5">
+        <div class="p-3 rounded-xl bg-white border border-border space-y-1.5 shadow-sm">
           <div class="flex items-center justify-between text-xs">
-            <span class="font-semibold text-text-dark">Almacenamiento usado:</span>
-            <span class="font-bold text-primary">{{ cuota.megabytesUsados }} MB / {{ cuota.megabytesMaximos }} MB ({{ cuota.porcentajeUsado }}%)</span>
+            <span class="font-semibold text-text-dark flex items-center gap-1">
+              <app-icon name="hard-drive" [size]="14" class="text-primary" />
+              Almacenamiento ocupado:
+            </span>
+            <span class="font-bold text-primary">{{ cuota.megabytesUsados }} MB de {{ cuota.megabytesMaximos }} MB ({{ cuota.porcentajeUsado }}%)</span>
           </div>
-          <div class="w-full h-2 bg-bg-light rounded-full overflow-hidden border border-border/40">
+          <div class="w-full h-2.5 bg-bg-light rounded-full overflow-hidden border border-border/40">
             <div
               class="h-full transition-all duration-300 rounded-full"
               [class.bg-primary]="cuota.porcentajeUsado < 75"
-              [class.bg-warning]="cuota.porcentajeUsado >= 75 && cuota.porcentajeUsado < 90"
-              [class.bg-critical]="cuota.porcentajeUsado >= 90"
+              [class.bg-amber-500]="cuota.porcentajeUsado >= 75 && cuota.porcentajeUsado < 90"
+              [class.bg-rose-500]="cuota.porcentajeUsado >= 90"
               [style.width.%]="cuota.porcentajeUsado"></div>
           </div>
         </div>
       }
     </div>
 
-    <div class="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
-      <!-- Acciones de carga / creación -->
-      <div class="flex items-center justify-between gap-3 p-3 bg-bg-light rounded-xl border border-border">
+    <div class="p-5 space-y-4 max-h-[68vh] overflow-y-auto">
+      <!-- Acciones de carga y búsqueda -->
+      <div class="flex items-center justify-between gap-3 p-3 bg-bg-light rounded-xl border border-border flex-wrap">
         <!-- Subir archivo binario (imagen / PDF <= 5MB) -->
-        <label class="px-3 py-2 bg-primary text-white font-semibold text-xs rounded-xl hover:bg-primary/90 transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm">
+        <label class="px-3.5 py-2 bg-primary text-white font-semibold text-xs rounded-xl hover:bg-primary/90 transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm">
           <app-icon name="plus" [size]="14" />
           <span>Subir Imagen / PDF</span>
           <input type="file" (change)="subirArchivoMemoria($event)" accept="image/*,application/pdf" class="hidden" />
         </label>
 
-        <!-- Filtros de búsqueda -->
-        <div class="flex items-center gap-2 flex-1 justify-end">
-          <app-input type="search" placeholder="Buscar en mi memoria…" [(value)]="busquedaMemoria" class="max-w-xs" />
+        <!-- Filtros por tipo -->
+        <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-border text-xs">
+          <button
+            type="button"
+            (click)="filtroTipoMemoria.set('')"
+            class="px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer"
+            [class.bg-primary]="filtroTipoMemoria() === ''"
+            [class.text-white]="filtroTipoMemoria() === ''"
+            [class.text-text-muted]="filtroTipoMemoria() !== ''">
+            Todos
+          </button>
+          <button
+            type="button"
+            (click)="filtroTipoMemoria.set('TEXTO')"
+            class="px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer"
+            [class.bg-primary]="filtroTipoMemoria() === 'TEXTO'"
+            [class.text-white]="filtroTipoMemoria() === 'TEXTO'"
+            [class.text-text-muted]="filtroTipoMemoria() !== 'TEXTO'">
+            Notas
+          </button>
+          <button
+            type="button"
+            (click)="filtroTipoMemoria.set('IMAGEN')"
+            class="px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer"
+            [class.bg-primary]="filtroTipoMemoria() === 'IMAGEN'"
+            [class.text-white]="filtroTipoMemoria() === 'IMAGEN'"
+            [class.text-text-muted]="filtroTipoMemoria() !== 'IMAGEN'">
+            Imágenes
+          </button>
+          <button
+            type="button"
+            (click)="filtroTipoMemoria.set('DOCUMENTO')"
+            class="px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer"
+            [class.bg-primary]="filtroTipoMemoria() === 'DOCUMENTO'"
+            [class.text-white]="filtroTipoMemoria() === 'DOCUMENTO'"
+            [class.text-text-muted]="filtroTipoMemoria() !== 'DOCUMENTO'">
+            Documentos
+          </button>
         </div>
+
+        <!-- Buscador -->
+        <app-input type="search" placeholder="Buscar en mi memoria…" [(value)]="busquedaMemoria" class="max-w-xs flex-1" />
       </div>
 
-      <!-- Formulario rápido para nota de texto / enlace -->
+      <!-- Formulario rápido para nota de texto / enlace / comando -->
       <div class="p-4 rounded-xl bg-bg-light border border-border space-y-3">
-        <h3 class="text-xs font-bold text-text-dark uppercase tracking-wider">Agregar Nota o Enlace Rápido</h3>
+        <h3 class="text-xs font-bold text-text-dark uppercase tracking-wider">Guardar Nota o Respuesta Rápida</h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-[11px] font-bold text-text-dark mb-1">Título *</label>
-            <app-input placeholder="ej. Promoción Implante Dental" [(value)]="tituloNuevoMemoria" />
+            <app-input placeholder="ej. Lista Precios Implantes" [(value)]="tituloNuevoMemoria" />
           </div>
           <div>
             <label class="block text-[11px] font-bold text-text-dark mb-1">Atajo /comando (opcional)</label>
-            <app-input placeholder="ej. /implantes" [(value)]="atajoNuevoMemoria" />
+            <app-input placeholder="ej. /precios" [(value)]="atajoNuevoMemoria" />
           </div>
         </div>
         <div>
@@ -900,12 +943,12 @@
             #txtContenidoMemoria
             [value]="contenidoNuevoMemoria()"
             (input)="contenidoNuevoMemoria.set(txtContenidoMemoria.value)"
-            placeholder="Escribe la información detallada, precio o link..."
+            placeholder="Escribe la información detallada, precio, promociones o link..."
             class="w-full text-xs p-2.5 border border-border rounded-xl focus:border-primary focus:outline-none min-h-[60px] bg-white"></textarea>
         </div>
         <div class="flex justify-end">
           <app-button type="button" [loading]="subiendoMemoria()" (clicked)="guardarRecursoMemoria()">
-            Guardar Nota
+            Guardar en Mi Memoria
           </app-button>
         </div>
       </div>
@@ -914,47 +957,52 @@
       <div class="space-y-2">
         <h3 class="text-xs font-bold text-text-muted uppercase tracking-wider">Tus Recursos Guardados:</h3>
         @for (item of recursosMemoria.value(); track item.id) {
-          <div class="p-3 rounded-xl border border-border flex items-center justify-between gap-3 bg-white hover:border-primary/30 transition-colors">
+          <div class="p-3.5 rounded-xl border border-border flex items-center justify-between gap-3 bg-white hover:border-primary/40 transition-all shadow-sm">
             <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2 flex-wrap">
                 <span class="text-xs font-bold text-text-dark">{{ item.titulo }}</span>
                 <app-badge [variant]="item.tipo === 'IMAGEN' ? 'info' : item.tipo === 'DOCUMENTO' ? 'success' : 'neutral'">
                   {{ item.tipo }}
                 </app-badge>
                 @if (item.atajo) {
-                  <span class="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">{{ item.atajo }}</span>
+                  <span class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{{ item.atajo }}</span>
                 }
               </div>
               @if (item.contenido) {
-                <p class="text-xs text-text-muted mt-1 line-clamp-2 leading-relaxed">{{ item.contenido }}</p>
+                <p class="text-xs text-text-muted mt-1.5 line-clamp-2 leading-relaxed whitespace-pre-wrap">{{ item.contenido }}</p>
               }
               @if (item.mediaUrl) {
-                <div class="mt-2 flex items-center gap-2">
+                <div class="mt-2.5 flex items-center gap-2">
                   @if (item.tipo === 'IMAGEN') {
-                    <img [src]="item.mediaUrl" alt="Vista previa" class="w-12 h-12 rounded-lg object-cover border border-border" />
+                    <img [src]="item.mediaUrl" alt="Vista previa" class="w-14 h-14 rounded-lg object-cover border border-border" />
                   }
-                  <a [href]="item.mediaUrl" target="_blank" rel="noopener" class="text-xs text-primary font-medium hover:underline truncate">
-                    📄 Ver / Abrir {{ item.mediaNombre || 'Archivo' }}
+                  <a [href]="item.mediaUrl" target="_blank" rel="noopener" class="text-xs text-primary font-medium hover:underline truncate flex items-center gap-1">
+                    <app-icon name="external-link" [size]="12" />
+                    <span>{{ item.mediaNombre || 'Ver Archivo' }}</span>
                   </a>
                 </div>
               }
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
-              <app-button type="button" variant="secondary" (clicked)="insertarRecursoEnChat(item)" title="Usar en el chat actual">
+              <app-button type="button" variant="secondary" (clicked)="insertarRecursoEnChat(item)" title="Insertar en el composer de chat">
                 Usar en Chat
               </app-button>
               <button
                 type="button"
                 (click)="eliminarRecursoMemoria(item.id)"
-                class="p-1.5 text-text-muted hover:text-critical transition-colors cursor-pointer"
+                class="p-1.5 text-text-muted hover:text-rose-600 transition-colors cursor-pointer"
                 title="Eliminar recurso y liberar espacio">
                 <app-icon name="trash" [size]="16" />
               </button>
             </div>
           </div>
         } @empty {
-          <p class="text-xs text-text-muted italic text-center py-6">Tu biblioteca personal está vacía. Guarda notas, links o sube imágenes/PDFs.</p>
+          <div class="text-center py-8 px-4 bg-bg-light/60 rounded-xl border border-dashed border-border">
+            <app-icon name="database" [size]="24" class="mx-auto text-text-muted mb-2" />
+            <p class="text-xs text-text-muted font-medium">Tu memoria personal está vacía.</p>
+            <p class="text-[11px] text-text-muted/70 mt-0.5">Agrega respuestas rápidas, notas de precios o sube imágenes/PDFs.</p>
+          </div>
         }
       </div>
     </div>
