@@ -11,6 +11,12 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PerfilService } from './perfil.service';
 
+import { httpResource } from '@angular/common/http';
+import { BadgeComponent } from '../../shared/components/badge/badge.component';
+import { InputComponent } from '../../shared/components/input/input.component';
+import { CuotaMemoria, RecursoMemoria } from '../memoria-agente/memoria-agente.model';
+import { MemoriaAgenteService } from '../memoria-agente/memoria-agente.service';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-perfil',
@@ -20,6 +26,8 @@ import { PerfilService } from './perfil.service';
     AvatarComponent,
     ButtonComponent,
     IconComponent,
+    BadgeComponent,
+    InputComponent,
   ],
   templateUrl: './perfil.page.html',
   styleUrl: './perfil.page.css',
@@ -27,8 +35,10 @@ import { PerfilService } from './perfil.service';
 export class PerfilPage {
   private readonly perfilService = inject(PerfilService);
   private readonly authService = inject(AuthService);
+  private readonly memoriaService = inject(MemoriaAgenteService);
   private readonly toast = inject(ToastService);
 
+  protected readonly tabActiva = signal<'perfil' | 'memoria'>('perfil');
   protected readonly user = this.authService.user;
   protected readonly iniciales = computed(() => {
     const u = this.user();
@@ -37,6 +47,27 @@ export class PerfilPage {
 
   protected readonly previewFoto = signal<string | null>(null);
   protected readonly guardando = signal(false);
+
+  /* ── Memoria Personal (Biblioteca Privada 30 MB) ──────────────── */
+  protected readonly busquedaMemoria = signal('');
+  protected readonly filtroTipoMemoria = signal('');
+  protected readonly tituloNuevoMemoria = signal('');
+  protected readonly contenidoNuevoMemoria = signal('');
+  protected readonly atajoNuevoMemoria = signal('');
+  protected readonly subiendoMemoria = signal(false);
+
+  protected readonly cuotaMemoria = httpResource<CuotaMemoria>(
+    () => this.memoriaService.cuotaRequest(),
+  );
+
+  protected readonly recursosMemoria = httpResource<RecursoMemoria[]>(
+    () =>
+      this.memoriaService.listarRequest({
+        busqueda: this.busquedaMemoria(),
+        tipo: this.filtroTipoMemoria(),
+      }),
+    { defaultValue: [] },
+  );
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
@@ -136,5 +167,72 @@ export class PerfilPage {
           'Error al Guardar',
         );
       });
+  }
+
+  /* ── Métodos de Memoria Personal del Agente ───────────────────── */
+  protected async guardarRecursoMemoria(): Promise<void> {
+    const titulo = this.tituloNuevoMemoria().trim();
+    const contenido = this.contenidoNuevoMemoria().trim();
+    const atajo = this.atajoNuevoMemoria().trim();
+
+    if (!titulo) {
+      this.toast.error('Ingresa un título para la nota o recurso', 'Campo requerido');
+      return;
+    }
+
+    this.subiendoMemoria.set(true);
+    try {
+      await this.memoriaService.crear({
+        titulo,
+        contenido: contenido || undefined,
+        atajo: atajo || undefined,
+      });
+
+      this.toast.success('Nota guardada en tu Memoria Personal', 'Éxito');
+      this.tituloNuevoMemoria.set('');
+      this.contenidoNuevoMemoria.set('');
+      this.atajoNuevoMemoria.set('');
+      this.recursosMemoria.reload();
+      this.cuotaMemoria.reload();
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo guardar'), 'Error');
+    } finally {
+      this.subiendoMemoria.set(false);
+    }
+  }
+
+  protected async subirArchivoMemoria(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+    this.subiendoMemoria.set(true);
+    try {
+      await this.memoriaService.subirBinario(file, { titulo: file.name });
+      this.toast.success(`Archivo "${file.name}" subido a tu Memoria`, 'Éxito');
+      input.value = '';
+      this.recursosMemoria.reload();
+      this.cuotaMemoria.reload();
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'Error al subir archivo'), 'Error');
+    } finally {
+      this.subiendoMemoria.set(false);
+    }
+  }
+
+  protected async eliminarRecursoMemoria(id: string): Promise<void> {
+    try {
+      await this.memoriaService.eliminar(id);
+      this.toast.success('Recurso eliminado. Espacio liberado.', 'Éxito');
+      this.recursosMemoria.reload();
+      this.cuotaMemoria.reload();
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo eliminar'), 'Error');
+    }
+  }
+
+  protected copiarTexto(texto: string): void {
+    void navigator.clipboard.writeText(texto);
+    this.toast.success('Copiado al portapapeles', 'Memoria Personal');
   }
 }

@@ -218,112 +218,32 @@ export class ConversacionesPage implements AfterViewInit {
     }
   }
 
-  /* ── Memoria Personal del Agente (Biblioteca Privada 30 MB) ──────── */
-  private memoriaOverlay?: OverlayRef;
+  /* ── Memoria Personal del Agente (Popover Flotante en Chat) ────── */
+  protected readonly mostrarPopoverMemoria = signal(false);
   protected readonly busquedaMemoria = signal('');
-  protected readonly filtroTipoMemoria = signal('');
-  protected readonly tituloNuevoMemoria = signal('');
-  protected readonly contenidoNuevoMemoria = signal('');
-  protected readonly atajoNuevoMemoria = signal('');
-  protected readonly subiendoMemoria = signal(false);
-
-  protected readonly cuotaMemoria = httpResource<CuotaMemoria>(
-    () => this.memoriaService.cuotaRequest(),
-  );
 
   protected readonly recursosMemoria = httpResource<RecursoMemoria[]>(
     () =>
       this.memoriaService.listarRequest({
         busqueda: this.busquedaMemoria(),
-        tipo: this.filtroTipoMemoria(),
       }),
     { defaultValue: [] },
   );
 
-  protected abrirMemoria(): void {
-    const tpl = this.modalMemoria();
-    if (!tpl) return;
-    this.cuotaMemoria.reload();
-    this.recursosMemoria.reload();
-    this.memoriaOverlay?.dispose();
-    this.memoriaOverlay = this.dialogService.openTemplate(tpl, this.vcr);
-  }
-
-  protected cerrarMemoria(): void {
-    this.memoriaOverlay?.dispose();
-    this.memoriaOverlay = undefined;
-    this.tituloNuevoMemoria.set('');
-    this.contenidoNuevoMemoria.set('');
-    this.atajoNuevoMemoria.set('');
-  }
-
-  protected async guardarRecursoMemoria(): Promise<void> {
-    const titulo = this.tituloNuevoMemoria().trim();
-    const contenido = this.contenidoNuevoMemoria().trim();
-    const atajo = this.atajoNuevoMemoria().trim();
-
-    if (!titulo) {
-      this.toastService.error('Ingresa un título para el recurso', 'Campo requerido');
-      return;
-    }
-
-    this.subiendoMemoria.set(true);
-    try {
-      await this.memoriaService.crear({ titulo, contenido, atajo });
-      this.toastService.success('Recurso guardado en tu memoria', 'Éxito');
-      this.tituloNuevoMemoria.set('');
-      this.contenidoNuevoMemoria.set('');
-      this.atajoNuevoMemoria.set('');
+  protected togglePopoverMemoria(): void {
+    const estadoActual = this.mostrarPopoverMemoria();
+    if (!estadoActual) {
       this.recursosMemoria.reload();
-      this.cuotaMemoria.reload();
-    } catch (err) {
-      this.toastService.error(mensajeDeError(err, 'No se pudo guardar'), 'Error');
-    } finally {
-      this.subiendoMemoria.set(false);
     }
-  }
-
-  protected async subirArchivoMemoria(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-
-    this.subiendoMemoria.set(true);
-    try {
-      await this.memoriaService.subirBinario(file, {
-        titulo: file.name,
-      });
-      this.toastService.success('Archivo guardado en tu memoria personal', 'Éxito');
-      input.value = '';
-      this.recursosMemoria.reload();
-      this.cuotaMemoria.reload();
-    } catch (err) {
-      this.toastService.error(mensajeDeError(err, 'Error al subir archivo'), 'Error');
-    } finally {
-      this.subiendoMemoria.set(false);
-    }
-  }
-
-  protected async eliminarRecursoMemoria(id: string): Promise<void> {
-    try {
-      await this.memoriaService.eliminar(id);
-      this.toastService.success('Recurso eliminado. Espacio liberado', 'Éxito');
-      this.recursosMemoria.reload();
-      this.cuotaMemoria.reload();
-    } catch (err) {
-      this.toastService.error(mensajeDeError(err, 'No se pudo eliminar'), 'Error');
-    }
+    this.mostrarPopoverMemoria.set(!estadoActual);
   }
 
   protected insertarRecursoEnChat(recurso: RecursoMemoria): void {
-    if (recurso.mediaUrl) {
-      this.mensajeNuevo.set(recurso.mediaUrl);
-    } else if (recurso.contenido) {
-      this.mensajeNuevo.set(recurso.contenido);
-    } else {
-      this.mensajeNuevo.set(recurso.titulo);
-    }
-    this.cerrarMemoria();
+    const texto = recurso.mediaUrl || recurso.contenido || recurso.titulo;
+    const previo = this.mensajeNuevo();
+    this.mensajeNuevo.set(previo ? `${previo}\n${texto}` : texto);
+    this.mostrarPopoverMemoria.set(false);
+    this.toastService.success('Recurso insertado en el chat', 'Memoria Personal');
   }
 
   /* ── Datos del servidor ────────────────────────────────────────── */

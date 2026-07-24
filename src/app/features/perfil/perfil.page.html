@@ -1,111 +1,361 @@
-<div class="max-w-3xl mx-auto space-y-6">
+<div class="max-w-5xl mx-auto space-y-6">
 
   <app-page-header
-    title="Mi Perfil"
-    subtitle="Personaliza tus datos de agente y foto de presentación para el panel de administración." />
+    title="Mi Perfil & Memoria Personal"
+    subtitle="Gestiona tus datos de agente y tu biblioteca privada de almacenamiento (30 MB) para respuestas rápidas y multimedia." />
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <!-- Navegación por pestañas superiores -->
+  <div class="flex items-center gap-2 border-b border-border pb-1">
+    <button
+      type="button"
+      (click)="tabActiva.set('perfil')"
+      class="px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+      [class.bg-primary]="tabActiva() === 'perfil'"
+      [class.text-white]="tabActiva() === 'perfil'"
+      [class.shadow-sm]="tabActiva() === 'perfil'"
+      [class.text-text-muted]="tabActiva() !== 'perfil'"
+      [class.hover:bg-bg-light]="tabActiva() !== 'perfil'">
+      <app-icon name="users" [size]="16" />
+      <span>Datos Personales & Seguridad</span>
+    </button>
 
-    <!-- ── Panel de Avatar / Foto ───────────────────────────────────── -->
-    <div class="bg-white rounded-2xl border border-border p-6 flex flex-col items-center text-center space-y-4 shadow-xs">
-      <h3 class="text-xs font-bold text-text-muted uppercase tracking-wider">Foto de Perfil</h3>
+    <button
+      type="button"
+      (click)="tabActiva.set('memoria')"
+      class="px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+      [class.bg-primary]="tabActiva() === 'memoria'"
+      [class.text-white]="tabActiva() === 'memoria'"
+      [class.shadow-sm]="tabActiva() === 'memoria'"
+      [class.text-text-muted]="tabActiva() !== 'memoria'"
+      [class.hover:bg-bg-light]="tabActiva() !== 'memoria'">
+      <app-icon name="database" [size]="16" />
+      <span>Mi Memoria Personal (30 MB)</span>
+      @if (cuotaMemoria.value(); as cuota) {
+        <span class="text-[10px] px-2 py-0.5 rounded-full bg-white/20 font-extrabold">
+          {{ cuota.megabytesUsados }} MB
+        </span>
+      }
+    </button>
+  </div>
 
-      <div class="relative group cursor-pointer" (click)="triggerFileInput()">
-        <app-avatar
-          [initials]="iniciales()"
-          [imageUrl]="previewFoto()"
-          size="lg" />
+  <!-- PESTAÑA 1: Perfil de Agente -->
+  @if (tabActiva() === 'perfil') {
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-scale">
+      <!-- Panel de Avatar / Foto -->
+      <div class="bg-white rounded-2xl border border-border p-6 flex flex-col items-center text-center space-y-4 shadow-xs">
+        <h3 class="text-xs font-bold text-text-muted uppercase tracking-wider">Foto de Perfil</h3>
 
-        <div class="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
-          <app-icon name="image" class="text-white" [size]="20" />
+        <div class="relative group cursor-pointer" (click)="triggerFileInput()">
+          <app-avatar
+            [initials]="iniciales()"
+            [imageUrl]="previewFoto()"
+            size="lg" />
+
+          <div class="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
+            <app-icon name="image" class="text-white" [size]="20" />
+          </div>
         </div>
-      </div>
 
-      <input
-        #fileInput
-        type="file"
-        class="hidden"
-        accept="image/*"
-        (change)="onFileSelected($event)" />
+        <input
+          #fileInput
+          type="file"
+          class="hidden"
+          accept="image/*"
+          (change)="onFileSelected($event)" />
 
-      <div class="space-y-1">
-        <p class="text-xs text-text-muted">Formatos: JPG, PNG o WEBP.</p>
-        <p class="text-[10px] text-text-muted/80">Tamaño máximo de archivo: 2MB.</p>
-      </div>
+        <div class="space-y-1">
+          <p class="text-xs text-text-muted">Formatos: JPG, PNG o WEBP.</p>
+          <p class="text-[10px] text-text-muted/80">Tamaño máximo de archivo: 2MB.</p>
+        </div>
 
-      <div class="flex items-center justify-center gap-2 w-full pt-2">
-        <app-button
-          type="button"
-          variant="secondary"
-          size="sm"
-          [fullWidth]="true"
-          (clicked)="triggerFileInput()">
-          Subir Foto
-        </app-button>
-        @if (previewFoto()) {
+        <div class="flex items-center justify-center gap-2 w-full pt-2">
           <app-button
             type="button"
-            variant="ghost"
+            variant="secondary"
             size="sm"
-            (clicked)="removeFoto()">
-            Quitar
+            [fullWidth]="true"
+            (clicked)="triggerFileInput()">
+            Subir Foto
           </app-button>
-        }
+          @if (previewFoto()) {
+            <app-button
+              type="button"
+              variant="ghost"
+              size="sm"
+              (clicked)="removeFoto()">
+              Quitar
+            </app-button>
+          }
+        </div>
+      </div>
+
+      <!-- Formulario de Detalles -->
+      <div class="md:col-span-2 bg-white rounded-2xl border border-border p-6 shadow-xs">
+        <form [formGroup]="perfilForm" (ngSubmit)="onSubmit()" class="space-y-5">
+          <h3 class="text-xs font-bold text-text-muted uppercase tracking-wider pb-1 border-b border-border">Datos Personales</h3>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label for="nombre" class="text-xs font-bold text-text-dark">Nombre Completo</label>
+              <input
+                id="nombre"
+                type="text"
+                formControlName="nombre"
+                placeholder="Ej. Dr. Mario Lopez"
+                class="w-full px-3 py-2 text-sm border border-border rounded-xl focus:border-primary focus:outline-none transition-colors" />
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label for="email" class="text-xs font-bold text-text-dark">Correo Electrónico</label>
+              <input
+                id="email"
+                type="email"
+                formControlName="email"
+                placeholder="correo@ejemplo.com"
+                class="w-full px-3 py-2 text-sm border border-border rounded-xl focus:border-primary focus:outline-none transition-colors" />
+            </div>
+          </div>
+
+          <h3 class="text-xs font-bold text-text-muted uppercase tracking-wider pt-2 pb-1 border-b border-border">Seguridad</h3>
+
+          <div class="flex flex-col gap-1.5">
+            <label for="password" class="text-xs font-bold text-text-dark">Nueva Contraseña (Opcional)</label>
+            <input
+              id="password"
+              type="password"
+              formControlName="password"
+              placeholder="Dejar en blanco para mantener la contraseña actual"
+              class="w-full px-3 py-2 text-sm border border-border rounded-xl focus:border-primary focus:outline-none transition-colors" />
+          </div>
+
+          <div class="pt-4 border-t border-border flex justify-end">
+            <app-button
+              type="submit"
+              [disabled]="perfilForm.invalid"
+              [loading]="guardando()">
+              Guardar Cambios
+            </app-button>
+          </div>
+        </form>
       </div>
     </div>
+  }
 
-    <!-- ── Formulario de Detalles ────────────────────────────────────── -->
-    <div class="md:col-span-2 bg-white rounded-2xl border border-border p-6 shadow-xs">
-      <form [formGroup]="perfilForm" (ngSubmit)="onSubmit()" class="space-y-5">
-        
-        <h3 class="text-xs font-bold text-text-muted uppercase tracking-wider pb-1 border-b border-border">Datos Personales</h3>
+  <!-- PESTAÑA 2: Dashboard de Memoria Personal (30 MB) -->
+  @if (tabActiva() === 'memoria') {
+    <div class="space-y-6 animate-fade-scale">
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="flex flex-col gap-1.5">
-            <label for="nombre" class="text-xs font-bold text-text-dark">Nombre Completo</label>
-            <input
-              id="nombre"
-              type="text"
-              formControlName="nombre"
-              placeholder="Ej. Dr. Mario Lopez"
-              class="w-full px-3 py-2 text-sm border border-border rounded-xl focus:border-primary focus:outline-none transition-colors" />
+      <!-- Dashboard de Almacenamiento -->
+      @if (cuotaMemoria.value(); as cuota) {
+        <div class="bg-white rounded-2xl border border-border p-6 shadow-xs space-y-4">
+          <div class="flex items-center justify-between flex-wrap gap-4">
+            <div class="flex items-center gap-3">
+              <div class="p-3 rounded-2xl bg-primary/10 text-primary">
+                <app-icon name="hard-drive" [size]="24" />
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-text-dark">Almacenamiento Privado del Agente</h3>
+                <p class="text-xs text-text-muted">Espacio exclusivo para guardar banners, listas de precios, respuestas frecuentes y documentos.</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-lg font-black text-primary">{{ cuota.megabytesUsados }} MB</span>
+              <span class="text-xs font-semibold text-text-muted"> / {{ cuota.megabytesMaximos }} MB</span>
+              <p class="text-[11px] font-bold text-text-muted">{{ cuota.porcentajeUsado }}% espacio utilizado</p>
+            </div>
           </div>
 
-          <div class="flex flex-col gap-1.5">
-            <label for="email" class="text-xs font-bold text-text-dark">Correo Electrónico</label>
-            <input
-              id="email"
-              type="email"
-              formControlName="email"
-              placeholder="correo@ejemplo.com"
-              class="w-full px-3 py-2 text-sm border border-border rounded-xl focus:border-primary focus:outline-none transition-colors" />
+          <!-- Barra de progreso -->
+          <div class="w-full h-3 bg-bg-light rounded-full overflow-hidden border border-border/50">
+            <div
+              class="h-full transition-all duration-300 rounded-full"
+              [class.bg-primary]="cuota.porcentajeUsado < 75"
+              [class.bg-amber-500]="cuota.porcentajeUsado >= 75 && cuota.porcentajeUsado < 90"
+              [class.bg-rose-500]="cuota.porcentajeUsado >= 90"
+              [style.width.%]="cuota.porcentajeUsado"></div>
           </div>
         </div>
+      }
 
-        <h3 class="text-xs font-bold text-text-muted uppercase tracking-wider pt-2 pb-1 border-b border-border">Seguridad</h3>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <div class="flex flex-col gap-1.5">
-          <label for="password" class="text-xs font-bold text-text-dark">Nueva Contraseña (Opcional)</label>
-          <input
-            id="password"
-            type="password"
-            formControlName="password"
-            placeholder="Dejar en blanco para mantener la contraseña actual"
-            class="w-full px-3 py-2 text-sm border border-border rounded-xl focus:border-primary focus:outline-none transition-colors" />
+        <!-- Columna Izquierda: Cargar nuevo recurso / nota -->
+        <div class="space-y-4">
+
+          <!-- Subir Archivos Media (Imágenes / PDFs) -->
+          <div class="bg-white rounded-2xl border border-border p-5 shadow-xs space-y-3">
+            <h4 class="text-xs font-bold text-text-dark uppercase tracking-wider flex items-center gap-2">
+              <app-icon name="plus" [size]="14" class="text-primary" />
+              Subir Imagen o Documento
+            </h4>
+            <p class="text-[11px] text-text-muted">Guarda banners publicitarios, volantes de promociones o brochures PDF (máx. 5 MB por archivo).</p>
+
+            <label class="border-2 border-dashed border-border hover:border-primary/50 bg-bg-light/60 hover:bg-bg-light rounded-xl p-5 text-center block cursor-pointer transition-all">
+              <app-icon name="image" [size]="28" class="mx-auto text-primary mb-1" />
+              <span class="text-xs font-bold text-primary block">Haz clic para seleccionar archivo</span>
+              <span class="text-[10px] text-text-muted block mt-0.5">Soporta JPG, PNG, WEBP o PDF</span>
+              <input type="file" (change)="subirArchivoMemoria($event)" accept="image/*,application/pdf" class="hidden" />
+            </label>
+          </div>
+
+          <!-- Crear Nota de Texto / Atajo -->
+          <div class="bg-white rounded-2xl border border-border p-5 shadow-xs space-y-3">
+            <h4 class="text-xs font-bold text-text-dark uppercase tracking-wider flex items-center gap-2">
+              <app-icon name="edit" [size]="14" class="text-primary" />
+              Guardar Nota o Respuesta Rápida
+            </h4>
+
+            <div class="space-y-3">
+              <div>
+                <label class="block text-[11px] font-bold text-text-dark mb-1">Título del Recurso *</label>
+                <app-input placeholder="ej. Promoción Implante Ortodoncia" [(value)]="tituloNuevoMemoria" />
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-bold text-text-dark mb-1">Atajo /comando (opcional)</label>
+                <app-input placeholder="ej. /promos" [(value)]="atajoNuevoMemoria" />
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-bold text-text-dark mb-1">Contenido o Enlace</label>
+                <textarea
+                  #txtMemoriaPerfil
+                  [value]="contenidoNuevoMemoria()"
+                  (input)="contenidoNuevoMemoria.set(txtMemoriaPerfil.value)"
+                  placeholder="Escribe la respuesta, precios o enlace rápido..."
+                  class="w-full text-xs p-3 border border-border rounded-xl focus:border-primary focus:outline-none min-h-[90px] bg-white"></textarea>
+              </div>
+
+              <app-button
+                type="button"
+                [fullWidth]="true"
+                [loading]="subiendoMemoria()"
+                (clicked)="guardarRecursoMemoria()">
+                Guardar en Mi Memoria
+              </app-button>
+            </div>
+          </div>
+
         </div>
 
-        <div class="pt-4 border-t border-border flex justify-end">
-          <app-button
-            type="submit"
-            [disabled]="perfilForm.invalid"
-            [loading]="guardando()">
-            Guardar Cambios
-          </app-button>
+        <!-- Columna Derecha: Biblioteca de Recursos Guardados -->
+        <div class="lg:col-span-2 space-y-4">
+
+          <!-- Barra de Filtros y Búsqueda -->
+          <div class="bg-white rounded-2xl border border-border p-4 shadow-xs flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-1.5 bg-bg-light p-1 rounded-xl border border-border text-xs">
+              <button
+                type="button"
+                (click)="filtroTipoMemoria.set('')"
+                class="px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer"
+                [class.bg-primary]="filtroTipoMemoria() === ''"
+                [class.text-white]="filtroTipoMemoria() === ''"
+                [class.text-text-muted]="filtroTipoMemoria() !== ''">
+                Todos
+              </button>
+              <button
+                type="button"
+                (click)="filtroTipoMemoria.set('TEXTO')"
+                class="px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer"
+                [class.bg-primary]="filtroTipoMemoria() === 'TEXTO'"
+                [class.text-white]="filtroTipoMemoria() === 'TEXTO'"
+                [class.text-text-muted]="filtroTipoMemoria() !== 'TEXTO'">
+                Notas
+              </button>
+              <button
+                type="button"
+                (click)="filtroTipoMemoria.set('IMAGEN')"
+                class="px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer"
+                [class.bg-primary]="filtroTipoMemoria() === 'IMAGEN'"
+                [class.text-white]="filtroTipoMemoria() === 'IMAGEN'"
+                [class.text-text-muted]="filtroTipoMemoria() !== 'IMAGEN'">
+                Imágenes
+              </button>
+              <button
+                type="button"
+                (click)="filtroTipoMemoria.set('DOCUMENTO')"
+                class="px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer"
+                [class.bg-primary]="filtroTipoMemoria() === 'DOCUMENTO'"
+                [class.text-white]="filtroTipoMemoria() === 'DOCUMENTO'"
+                [class.text-text-muted]="filtroTipoMemoria() !== 'DOCUMENTO'">
+                Documentos
+              </button>
+            </div>
+
+            <app-input type="search" placeholder="Buscar en mi memoria..." [(value)]="busquedaMemoria" class="max-w-xs flex-1" />
+          </div>
+
+          <!-- Grid de Tarjetas de Recursos -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            @for (item of recursosMemoria.value(); track item.id) {
+              <div class="bg-white rounded-2xl border border-border p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-3">
+                <div class="space-y-2">
+                  <div class="flex items-start justify-between gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class="text-xs font-bold text-text-dark leading-tight">{{ item.titulo }}</span>
+                      <app-badge [variant]="item.tipo === 'IMAGEN' ? 'info' : item.tipo === 'DOCUMENTO' ? 'success' : 'neutral'">
+                        {{ item.tipo }}
+                      </app-badge>
+                    </div>
+                    @if (item.atajo) {
+                      <span class="text-[10px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full shrink-0">
+                        {{ item.atajo }}
+                      </span>
+                    }
+                  </div>
+
+                  @if (item.contenido) {
+                    <p class="text-xs text-text-muted leading-relaxed whitespace-pre-wrap bg-bg-light/50 p-2.5 rounded-xl border border-border/40">
+                      {{ item.contenido }}
+                    </p>
+                  }
+
+                  @if (item.mediaUrl) {
+                    <div class="mt-2">
+                      @if (item.tipo === 'IMAGEN') {
+                        <img [src]="item.mediaUrl" alt="Banner" class="w-full h-32 rounded-xl object-cover border border-border" />
+                      }
+                      <a [href]="item.mediaUrl" target="_blank" rel="noopener" class="mt-2 text-xs text-primary font-bold hover:underline flex items-center gap-1.5 truncate">
+                        <app-icon name="external-link" [size]="14" />
+                        <span class="truncate">{{ item.mediaNombre || 'Ver Archivo' }}</span>
+                      </a>
+                    </div>
+                  }
+                </div>
+
+                <div class="pt-3 border-t border-border flex items-center justify-between gap-2">
+                  <app-button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    (clicked)="copiarTexto(item.mediaUrl || item.contenido || item.titulo)">
+                    <app-icon name="copy" [size]="14" />
+                    <span>Copiar</span>
+                  </app-button>
+
+                  <button
+                    type="button"
+                    (click)="eliminarRecursoMemoria(item.id)"
+                    class="p-2 rounded-xl text-text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                    title="Eliminar recurso">
+                    <app-icon name="trash" [size]="16" />
+                  </button>
+                </div>
+              </div>
+            } @empty {
+              <div class="sm:col-span-2 text-center py-12 px-4 bg-white rounded-2xl border border-dashed border-border space-y-2">
+                <app-icon name="database" [size]="32" class="mx-auto text-text-muted/60" />
+                <p class="text-xs font-bold text-text-dark">No se encontraron recursos en tu memoria.</p>
+                <p class="text-[11px] text-text-muted">Agrega notas, banners o documentos desde la columna izquierda.</p>
+              </div>
+            }
+          </div>
+
         </div>
 
-      </form>
+      </div>
+
     </div>
-
-  </div>
+  }
 
 </div>
