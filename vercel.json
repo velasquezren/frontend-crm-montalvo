@@ -1,13 +1,10 @@
 {
   "version": 2,
   "outputDirectory": "dist/montalvo-crm-frontend/browser",
-  "routes": [
+  "rewrites": [
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/.*",
-      "dest": "/index.html"
+      "source": "/((?!.*\\.).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
