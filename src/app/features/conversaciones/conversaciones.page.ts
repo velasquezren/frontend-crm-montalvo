@@ -225,18 +225,25 @@ export class ConversacionesPage implements AfterViewInit {
   protected readonly mostrarPopoverMemoria = signal(false);
   protected readonly busquedaMemoria = signal('');
 
-  protected readonly recursosMemoria = httpResource<RecursoMemoria[]>(
+  protected readonly recursosMemoriaRaw = httpResource<any>(
     () =>
       this.memoriaService.listarRequest({
         busqueda: this.busquedaMemoria(),
       }),
-    { defaultValue: [] },
   );
+
+  protected readonly recursosMemoria = computed<RecursoMemoria[]>(() => {
+    const raw = this.recursosMemoriaRaw.value();
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw.data)) return raw.data;
+    return [];
+  });
 
   protected togglePopoverMemoria(): void {
     const estadoActual = this.mostrarPopoverMemoria();
     if (!estadoActual) {
-      this.recursosMemoria.reload();
+      this.recursosMemoriaRaw.reload();
     }
     this.mostrarPopoverMemoria.set(!estadoActual);
   }

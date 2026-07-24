@@ -63,14 +63,21 @@ export class PerfilPage {
     () => this.memoriaService.cuotaRequest(),
   );
 
-  protected readonly recursosMemoria = httpResource<RecursoMemoria[]>(
+  protected readonly recursosMemoriaRaw = httpResource<any>(
     () =>
       this.memoriaService.listarRequest({
         busqueda: this.busquedaMemoria(),
         tipo: this.filtroTipoMemoria(),
       }),
-    { defaultValue: [] },
   );
+
+  protected readonly recursosMemoria = computed<RecursoMemoria[]>(() => {
+    const raw = this.recursosMemoriaRaw.value();
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw.data)) return raw.data;
+    return [];
+  });
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
@@ -85,7 +92,7 @@ export class PerfilPage {
     if (tabParam === 'memoria') {
       this.tabActiva.set('memoria');
       this.cuotaMemoria.reload();
-      this.recursosMemoria.reload();
+      this.recursosMemoriaRaw.reload();
     }
 
     const u = this.user();
@@ -104,7 +111,7 @@ export class PerfilPage {
     this.tabActiva.set(tab);
     if (tab === 'memoria') {
       this.cuotaMemoria.reload();
-      this.recursosMemoria.reload();
+      this.recursosMemoriaRaw.reload();
     }
   }
 
@@ -210,7 +217,7 @@ export class PerfilPage {
       this.tituloNuevoMemoria.set('');
       this.contenidoNuevoMemoria.set('');
       this.atajoNuevoMemoria.set('');
-      this.recursosMemoria.reload();
+      this.recursosMemoriaRaw.reload();
       this.cuotaMemoria.reload();
     } catch (err) {
       this.toast.error(mensajeDeError(err, 'No se pudo guardar'), 'Error');
@@ -229,7 +236,7 @@ export class PerfilPage {
       await this.memoriaService.subirBinario(file, { titulo: file.name });
       this.toast.success(`Archivo "${file.name}" subido a tu Memoria`, 'Éxito');
       input.value = '';
-      this.recursosMemoria.reload();
+      this.recursosMemoriaRaw.reload();
       this.cuotaMemoria.reload();
     } catch (err) {
       this.toast.error(mensajeDeError(err, 'Error al subir archivo'), 'Error');
@@ -242,7 +249,7 @@ export class PerfilPage {
     try {
       await this.memoriaService.eliminar(id);
       this.toast.success('Recurso eliminado. Espacio liberado.', 'Éxito');
-      this.recursosMemoria.reload();
+      this.recursosMemoriaRaw.reload();
       this.cuotaMemoria.reload();
     } catch (err) {
       this.toast.error(mensajeDeError(err, 'No se pudo eliminar'), 'Error');

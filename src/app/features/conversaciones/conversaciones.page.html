@@ -451,7 +451,7 @@
 
           <!-- Lista de recursos en popover -->
           <div class="max-h-60 overflow-y-auto space-y-1.5">
-            @for (item of recursosMemoria.value(); track item.id) {
+            @for (item of recursosMemoria(); track item.id) {
               <button
                 type="button"
                 (click)="insertarRecursoEnChat(item)"
