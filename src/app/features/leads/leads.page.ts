@@ -186,6 +186,7 @@ export class LeadsPage {
             `Lead ${item.cliente.nombre} movido a ${this.estadoLabel[targetColumnId]}`,
             'Pipeline Actualizado',
           );
+          this.resumen.reload();
         })
         .catch((err: unknown) => {
           this.toastService.error(
