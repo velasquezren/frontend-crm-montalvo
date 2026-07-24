@@ -81,12 +81,12 @@
             </td>
             <td>
               <div class="flex flex-wrap gap-1.5 max-w-56">
-                @for (interes of cliente.intereses; track interes.id) {
-                  <span class="rounded-full bg-bg-light text-primary text-xs px-2.5 py-1 leading-none">
-                    {{ interes.descripcion }}
+                @for (tag of obtenerEtiquetas(cliente); track tag) {
+                  <span class="rounded-full bg-primary/10 text-primary font-bold text-xs px-2.5 py-1 leading-none border border-primary/20">
+                    {{ tag }}
                   </span>
                 } @empty {
-                  <span class="text-xs text-text-muted">—</span>
+                  <span class="text-xs text-text-muted italic">Sin intereses</span>
                 }
               </div>
             </td>
@@ -139,7 +139,11 @@
                 [icon]="categoriaIcon[cli.categoria]">
                 {{ categoriaLabel[cli.categoria] }}
               </app-badge>
-              <span class="text-xs text-text-muted">{{ cli.telefono }}</span>
+              <span class="text-xs text-text-muted font-medium">{{ cli.telefono }}</span>
+              <a [routerLink]="['/conversaciones']" [queryParams]="{ clienteId: cli.id }" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer ml-1" (click)="cerrarEdicion()" title="Ir al chat del cliente">
+                <app-icon name="message-circle" [size]="13" />
+                <span>Chat</span>
+              </a>
             </div>
           </div>
         }

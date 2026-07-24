@@ -35,6 +35,8 @@ type FiltroCategoria = CategoriaCliente | 'TODOS';
  * Clientes — listado real desde GET /clientes (RF-01/RF-03/RF-24).
  * El backend ya aplica visibilidad por rol: un agente ve sus clientes + pool sin asignar.
  */
+import { RouterLink } from '@angular/router';
+
 @Component({
   selector: 'app-clientes',
   imports: [
@@ -50,6 +52,7 @@ type FiltroCategoria = CategoriaCliente | 'TODOS';
     LoadingSkeletonComponent,
     PaginatorComponent,
     DatePipe,
+    RouterLink,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './clientes.page.html',
@@ -156,6 +159,19 @@ export class ClientesPage {
       .map(t => t.trim())
       .filter(Boolean),
   );
+
+  /** Etiquetas/intereses combinados para la columna de la tabla */
+  protected obtenerEtiquetas(cliente: Cliente): string[] {
+    if (cliente.intereses && cliente.intereses.length > 0) {
+      return cliente.intereses.map(i => i.descripcion);
+    }
+    const datosExtra = cliente.datosExtra as Record<string, any> | null;
+    const tags = datosExtra?.['tags'];
+    if (Array.isArray(tags)) {
+      return tags.map(t => String(t));
+    }
+    return [];
+  }
 
   /** Cerrar con Escape: comportamiento esperado en cualquier modal. */
   @HostListener('document:keydown.escape')
