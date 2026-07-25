@@ -436,40 +436,37 @@
               opacity 0.25s ease;
 }
 
-/* Panel colapsado — se oculta con animación */
+/* Panel colapsado — oculta el elemento para no crear filas extras en CSS Grid */
 .panel-collapsed .client-panel {
-  width: 0;
-  opacity: 0;
-  border-left: none;
-  overflow: hidden;
-  pointer-events: none;
+  display: none !important;
 }
 
-/* Botón toggle del panel derecho en el header del chat */
+/* Botón toggle del panel derecho en el header del chat — Minimalista */
 .panel-toggle-btn {
   display: none; /* solo visible en XL */
   align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
+  gap: 5px;
+  padding: 5px 10px;
   border-radius: 8px;
   border: 1px solid var(--color-border);
   background: white;
   color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   flex-shrink: 0;
 }
 
 .panel-toggle-btn:hover {
-  border-color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
   color: var(--color-primary);
   background: var(--color-bg-light);
 }
 
 .panel-toggle-btn.panel-active {
   background: var(--color-bg-light);
-  border-color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
   color: var(--color-primary);
 }
 

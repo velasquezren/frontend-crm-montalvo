@@ -272,14 +272,15 @@
             <app-badge variant="neutral" icon="alert-circle">Sin asignar</app-badge>
           }
 
-          <!-- Toggle panel derecho -->
+          <!-- Toggle panel derecho minimalista -->
           <button
             type="button"
             (click)="togglePanel()"
             class="panel-toggle-btn cursor-pointer"
             [class.panel-active]="panelAbierto()"
-            [title]="panelAbierto() ? 'Ocultar ficha del cliente' : 'Mostrar ficha del cliente'">
-            <app-icon [name]="panelAbierto() ? 'panel-right-close' : 'panel-right-open'" [size]="16" />
+            [title]="panelAbierto() ? 'Ocultar ficha del paciente' : 'Mostrar ficha del paciente'">
+            <app-icon name="user" [size]="13" />
+            <span>Ficha</span>
           </button>
         </div>
       </header>
