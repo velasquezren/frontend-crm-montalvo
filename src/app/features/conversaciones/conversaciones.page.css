@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   Conversaciones Inbox — Estilos Premium
+   Conversaciones Inbox — Estilos Premium v2
    Ref: CRM_MANIFESTO.md §3 — Minimalismo Médico Orgánico
    ═══════════════════════════════════════════════════════════════ */
 
@@ -13,7 +13,7 @@
 /* ── Layout de columnas dinámico (Edge-to-Edge) ───────────────── */
 .inbox-wrapper {
   display: grid;
-  grid-template-columns: 360px 1fr;
+  grid-template-columns: 320px 1fr;
   gap: 0;
   height: 100%;
   width: 100%;
@@ -21,6 +21,16 @@
   overflow: hidden;
   background: white;
   box-shadow: none;
+  transition: grid-template-columns 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Panel derecho visible en XL — se controla con .panel-open / .panel-collapsed */
+.inbox-wrapper.has-details.panel-open {
+  grid-template-columns: 320px 1fr 340px;
+}
+
+.inbox-wrapper.has-details.panel-collapsed {
+  grid-template-columns: 320px 1fr;
 }
 
 /* ── Sidebar (panel izquierdo) ───────────────────────────────── */
@@ -242,9 +252,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
+  padding: 12px 20px;
   border-bottom: 1px solid var(--color-border);
-  min-height: 72px;
+  min-height: 64px;
 }
 
 .chat-messages {
@@ -315,8 +325,8 @@
   z-index: 30;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
+  gap: 10px;
+  padding: 10px 16px;
   border-top: 1px solid var(--color-border);
   background: white;
 }
@@ -415,25 +425,72 @@
   opacity: 0.6;
 }
 
-/* ── Client panel (derecho) ──────────────────────────────────── */
+/* ── Client panel (derecho) — Premium Redesign ───────────────── */
 .client-panel {
   display: none;
   flex-direction: column;
   border-left: 1px solid var(--color-border);
-  overflow-y: auto;
+  overflow: hidden;
   background: white;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s ease;
 }
 
+/* Panel colapsado — se oculta con animación */
+.panel-collapsed .client-panel {
+  width: 0;
+  opacity: 0;
+  border-left: none;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Botón toggle del panel derecho en el header del chat */
+.panel-toggle-btn {
+  display: none; /* solo visible en XL */
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: white;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.panel-toggle-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-bg-light);
+}
+
+.panel-toggle-btn.panel-active {
+  background: var(--color-bg-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ── Client Profile Header — Premium gradient ────────────────── */
 .client-profile {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 28px 20px 20px;
+  padding: 24px 20px 20px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary) 4%, white) 0%,
+    white 100%
+  );
   border-bottom: 1px solid var(--color-border);
+  position: relative;
 }
 
+/* ── Detail sections — Premium cards ─────────────────────────── */
 .client-details {
-  padding: 16px 20px;
+  padding: 14px 20px;
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
 }
 
@@ -453,6 +510,34 @@
   padding: 4px 0;
 }
 
+/* ── Detail card for extended profile items ───────────────────── */
+.detail-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--color-bg-workspace);
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  transition: all 0.2s;
+}
+
+.detail-card:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+  background: var(--color-bg-light);
+}
+
+.detail-card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Agent card ──────────────────────────────────────────────── */
 .assigned-agent-card {
   display: flex;
   align-items: center;
@@ -460,6 +545,7 @@
   padding: 10px 12px;
   border-radius: 12px;
   background: var(--color-bg-light);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
 .no-agent-banner {
@@ -470,6 +556,206 @@
   border-radius: 12px;
   background: color-mix(in srgb, var(--color-text-muted) 6%, white);
   border: 1px dashed var(--color-border);
+}
+
+/* ── Edit form — Premium redesign ────────────────────────────── */
+.edit-form-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.edit-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 6%, white) 0%,
+    white 100%
+  );
+  border-bottom: 1px solid var(--color-border);
+}
+
+.edit-form-header-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.edit-form-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.edit-form-section {
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--color-bg-workspace);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+
+.edit-form-section + .edit-form-section {
+  margin-top: 12px;
+}
+
+.edit-form-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-primary);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-form-footer {
+  display: flex;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--color-border);
+  background: white;
+}
+
+/* Custom select for the edit form */
+.edit-select {
+  width: 100%;
+  font-size: 13px;
+  padding: 9px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  outline: none;
+  background: white;
+  color: var(--color-text-dark);
+  font-weight: 500;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 4 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+.edit-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+/* Custom textarea for the edit form */
+.edit-textarea {
+  width: 100%;
+  font-size: 13px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  outline: none;
+  background: white;
+  color: var(--color-text-dark);
+  font-family: inherit;
+  min-height: 70px;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  line-height: 1.5;
+}
+
+.edit-textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+/* Label for edit form fields */
+.edit-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  margin-bottom: 4px;
+}
+
+.edit-label-required::after {
+  content: ' *';
+  color: #ef4444;
+  font-weight: 700;
+}
+
+/* ── Notes display card ──────────────────────────────────────── */
+.notes-card {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-secondary) 6%, white) 0%,
+    var(--color-bg-workspace) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--color-secondary) 15%, transparent);
+  font-size: 12px;
+  color: var(--color-text-dark);
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+/* ── Tags display ────────────────────────────────────────────── */
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-primary) 8%, white);
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 1.3;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  transition: all 0.15s;
+}
+
+.tag-pill:hover {
+  background: color-mix(in srgb, var(--color-primary) 14%, white);
+}
+
+/* ── Conversation stats footer ───────────────────────────────── */
+.conv-stats-footer {
+  margin-top: auto;
+  padding: 14px 20px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-workspace);
+}
+
+.conv-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: white;
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+}
+
+.conv-stat-item + .conv-stat-item {
+  margin-top: 6px;
 }
 
 /* ── Agent dropdown ──────────────────────────────────────────── */
@@ -541,21 +827,24 @@
 .sidebar-list::-webkit-scrollbar,
 .chat-messages::-webkit-scrollbar,
 .client-panel::-webkit-scrollbar,
-.agent-dropdown-list::-webkit-scrollbar {
+.agent-dropdown-list::-webkit-scrollbar,
+.edit-form-body::-webkit-scrollbar {
   width: 4px;
 }
 
 .sidebar-list::-webkit-scrollbar-track,
 .chat-messages::-webkit-scrollbar-track,
 .client-panel::-webkit-scrollbar-track,
-.agent-dropdown-list::-webkit-scrollbar-track {
+.agent-dropdown-list::-webkit-scrollbar-track,
+.edit-form-body::-webkit-scrollbar-track {
   background: transparent;
 }
 
 .sidebar-list::-webkit-scrollbar-thumb,
 .chat-messages::-webkit-scrollbar-thumb,
 .client-panel::-webkit-scrollbar-thumb,
-.agent-dropdown-list::-webkit-scrollbar-thumb {
+.agent-dropdown-list::-webkit-scrollbar-thumb,
+.edit-form-body::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--color-text-muted) 20%, transparent);
   border-radius: 999px;
 }
@@ -571,21 +860,21 @@
 
 /* ── Responsive ──────────────────────────────────────────────── */
 
-/* XL screens: show client panel if a chat is selected */
+/* XL screens: show client panel and toggle button */
 @media (min-width: 1280px) {
   .client-panel {
     display: flex;
   }
 
-  .inbox-wrapper.has-details {
-    grid-template-columns: 360px 1fr 340px;
+  .panel-toggle-btn {
+    display: flex;
   }
 }
 
 /* Tablet */
 @media (max-width: 1024px) {
   .inbox-wrapper {
-    grid-template-columns: 300px 1fr;
+    grid-template-columns: 280px 1fr;
   }
 }
 

@@ -117,6 +117,7 @@ export class ConversacionesPage implements AfterViewInit {
   protected readonly filtroAgenteId = signal<string | null>(null);
   protected readonly asignando = signal(false);
   protected readonly dropdownAgenteAbierto = signal(false);
+  protected readonly panelAbierto = signal(true);
 
   protected readonly editandoFicha = signal(false);
   protected readonly editNombre = signal('');
@@ -831,6 +832,10 @@ export class ConversacionesPage implements AfterViewInit {
 
   protected toggleDropdownAgente(): void {
     this.dropdownAgenteAbierto.update(v => !v);
+  }
+
+  protected togglePanel(): void {
+    this.panelAbierto.update(v => !v);
   }
 
   protected tiempoRelativo(fecha: string): string {

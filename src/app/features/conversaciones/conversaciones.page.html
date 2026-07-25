@@ -2,7 +2,7 @@
      WhatsApp Inbox Premium — Vista rediseñada para CRM
      Tres paneles: lista filtrable · chat con separadores · ficha + asignación
      ═══════════════════════════════════════════════════════════════ -->
-<div class="inbox-wrapper" [class.has-details]="!!detalle.value()">
+<div class="inbox-wrapper" [class.has-details]="!!detalle.value()" [class.panel-open]="!!detalle.value() && panelAbierto()" [class.panel-collapsed]="!!detalle.value() && !panelAbierto()">
 
   <!-- ── Panel izquierdo: lista de chats ──────────────────────────── -->
   <aside class="inbox-sidebar">
@@ -268,6 +268,16 @@
           } @else {
             <app-badge variant="neutral" icon="alert-circle">Sin asignar</app-badge>
           }
+
+          <!-- Toggle panel derecho -->
+          <button
+            type="button"
+            (click)="togglePanel()"
+            class="panel-toggle-btn cursor-pointer"
+            [class.panel-active]="panelAbierto()"
+            [title]="panelAbierto() ? 'Ocultar ficha del cliente' : 'Mostrar ficha del cliente'">
+            <app-icon [name]="panelAbierto() ? 'panel-right-close' : 'panel-right-open'" [size]="16" />
+          </button>
         </div>
       </header>
 
@@ -556,78 +566,111 @@
   @if (detalle.value(); as chat) {
     <aside class="client-panel">
       @if (editandoFicha()) {
-        <!-- Modo Edición Ficha de Cliente -->
-        <div class="h-full flex flex-col justify-between p-4 space-y-4 overflow-y-auto">
-          <div class="space-y-4">
-            <div class="flex items-center justify-between border-b border-border pb-2">
-              <h3 class="text-xs font-bold text-text-dark uppercase tracking-wider">Editar Ficha</h3>
-              <button type="button" (click)="cancelarEdicion()" class="text-text-muted hover:text-text-dark cursor-pointer">
-                <app-icon name="x" [size]="16" />
-              </button>
+        <!-- ═══ Modo Edición — Rediseño Premium ═══ -->
+        <div class="edit-form-container">
+          <!-- Header con gradiente -->
+          <div class="edit-form-header">
+            <div class="flex items-center gap-2.5">
+              <div class="edit-form-header-icon">
+                <app-icon name="edit" [size]="16" class="text-primary" />
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-text-dark leading-tight">Editar Ficha</h3>
+                <p class="text-[10px] text-text-muted leading-tight">{{ chat.cliente.nombre }}</p>
+              </div>
+            </div>
+            <button type="button" (click)="cancelarEdicion()"
+              class="p-1.5 rounded-lg hover:bg-black/5 text-text-muted hover:text-text-dark cursor-pointer transition-colors">
+              <app-icon name="x" [size]="16" />
+            </button>
+          </div>
+
+          <!-- Body scrollable -->
+          <div class="edit-form-body space-y-3">
+            <!-- Sección: Datos Principales -->
+            <div class="edit-form-section">
+              <p class="edit-form-section-title">
+                <app-icon name="user" [size]="12" />
+                Datos del Paciente
+              </p>
+              <div class="space-y-3">
+                <div>
+                  <label class="edit-label edit-label-required">Nombre Completo</label>
+                  <app-input placeholder="Nombre completo" [(value)]="editNombre" />
+                </div>
+                <div>
+                  <label class="edit-label">Categoría / Nivel</label>
+                  <select
+                    [value]="editCategoria()"
+                    (change)="editCategoria.set($any($event.target).value)"
+                    class="edit-select">
+                    <option value="GOLD">⭐ Gold (VIP)</option>
+                    <option value="SILVER">🥈 Silver</option>
+                    <option value="BRONZE">🥉 Bronze</option>
+                    <option value="PROSPECTO">👤 Prospecto</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="edit-label">Correo Electrónico</label>
+                  <app-input type="email" placeholder="correo@ejemplo.com" [(value)]="editEmail" />
+                </div>
+              </div>
             </div>
 
-            <div class="space-y-3.5">
-              <div>
-                <label class="block text-[11px] font-bold text-text-dark mb-1">Nombre Completo *</label>
-                <app-input placeholder="Nombre completo" [(value)]="editNombre" />
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-bold text-text-dark mb-1">Categoría / Nivel</label>
-                <select
-                  [value]="editCategoria()"
-                  (change)="editCategoria.set($any($event.target).value)"
-                  class="w-full text-xs p-2.5 border border-border rounded-xl focus:border-primary focus:outline-none bg-white text-text-dark font-medium">
-                  <option value="GOLD">Gold (VIP)</option>
-                  <option value="SILVER">Silver</option>
-                  <option value="BRONZE">Bronze</option>
-                  <option value="PROSPECTO">Prospecto</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-bold text-text-dark mb-1">Correo Electrónico</label>
-                <app-input type="email" placeholder="correo@ejemplo.com" [(value)]="editEmail" />
-              </div>
-
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="block text-[11px] font-bold text-text-dark mb-1">Edad</label>
-                  <app-input placeholder="Ej. 34" [(value)]="editEdad" />
+            <!-- Sección: Perfil Extendido -->
+            <div class="edit-form-section">
+              <p class="edit-form-section-title">
+                <app-icon name="briefcase" [size]="12" />
+                Perfil Extendido
+              </p>
+              <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label class="edit-label">Edad</label>
+                    <app-input placeholder="Ej. 34" [(value)]="editEdad" />
+                  </div>
+                  <div>
+                    <label class="edit-label">Lugar de Nac.</label>
+                    <app-input placeholder="Ej. Santa Cruz" [(value)]="editLugarNacimiento" />
+                  </div>
                 </div>
                 <div>
-                  <label class="block text-[11px] font-bold text-text-dark mb-1">Lugar de Nac.</label>
-                  <app-input placeholder="Ej. Santa Cruz" [(value)]="editLugarNacimiento" />
+                  <label class="edit-label">Empresa / Ocupación</label>
+                  <app-input placeholder="Empresa o profesión" [(value)]="editEmpresa" />
                 </div>
               </div>
+            </div>
 
-              <div>
-                <label class="block text-[11px] font-bold text-text-dark mb-1">Empresa / Ocupación</label>
-                <app-input placeholder="Empresa o profesión" [(value)]="editEmpresa" />
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-bold text-text-dark mb-1">Notas</label>
-                <textarea
-                  #txtNotas
-                  [value]="editNotas()"
-                  (input)="editNotas.set(txtNotas.value)"
-                  placeholder="Escribe notas relevantes aquí..."
-                  class="w-full text-xs p-2.5 border border-border rounded-xl focus:border-primary focus:outline-none transition-colors min-h-[70px] resize-y bg-bg-workspace"></textarea>
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-bold text-text-dark mb-1">Tags / Etiquetas (sep. por comas)</label>
-                <app-input placeholder="ej. cirugía, vip, preferente" [(value)]="editTags" />
+            <!-- Sección: Notas y Tags -->
+            <div class="edit-form-section">
+              <p class="edit-form-section-title">
+                <app-icon name="file-text" [size]="12" />
+                Notas y Etiquetas
+              </p>
+              <div class="space-y-3">
+                <div>
+                  <label class="edit-label">Notas del paciente</label>
+                  <textarea
+                    #txtNotas
+                    [value]="editNotas()"
+                    (input)="editNotas.set(txtNotas.value)"
+                    placeholder="Escribe notas relevantes aquí..."
+                    class="edit-textarea"></textarea>
+                </div>
+                <div>
+                  <label class="edit-label">Tags (separadas por comas)</label>
+                  <app-input placeholder="ej. cirugía, vip, preferente" [(value)]="editTags" />
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="flex gap-2 border-t border-border pt-4 mt-auto">
+          <!-- Footer con botones -->
+          <div class="edit-form-footer">
             <button
               type="button"
               (click)="cancelarEdicion()"
-              class="flex-1 px-3 py-2 border border-border rounded-xl text-xs font-semibold text-text-muted hover:bg-bg-light cursor-pointer">
+              class="flex-1 px-3 py-2.5 border border-border rounded-xl text-xs font-semibold text-text-muted hover:bg-bg-light cursor-pointer transition-colors">
               Cancelar
             </button>
             <app-button
@@ -635,15 +678,15 @@
               type="button"
               [loading]="guardandoFicha()"
               (clicked)="guardarFicha()">
-              Guardar
+              Guardar cambios
             </app-button>
           </div>
         </div>
       } @else {
-        <!-- Modo Visualización Ficha de Cliente -->
+        <!-- ═══ Modo Visualización — Premium Redesign ═══ -->
         <div class="flex flex-col h-full overflow-y-auto">
-          <!-- Perfil e Iniciales -->
-          <div class="client-profile relative">
+          <!-- Perfil con gradiente -->
+          <div class="client-profile">
             <app-avatar [initials]="iniciales(chat.cliente.nombre)" size="lg" />
             <p class="font-semibold text-text-dark mt-3 text-center leading-tight">
               {{ chat.cliente.nombre }}
@@ -660,7 +703,7 @@
             <button
               type="button"
               (click)="iniciarEdicion()"
-              class="absolute top-2 right-2 p-1.5 rounded-lg border border-border bg-white text-text-muted hover:text-primary hover:border-primary/20 transition-all cursor-pointer"
+              class="absolute top-3 right-3 p-1.5 rounded-lg border border-border/80 bg-white/90 backdrop-blur text-text-muted hover:text-primary hover:border-primary/30 hover:bg-white transition-all cursor-pointer shadow-sm"
               title="Editar ficha del cliente">
               <app-icon name="edit" [size]="14" />
             </button>
@@ -669,29 +712,35 @@
           <!-- Datos de contacto -->
           <div class="client-details">
             <h3 class="detail-section-title">Contacto</h3>
-            <div class="detail-row justify-between">
-              <div class="flex items-center gap-2 min-w-0">
-                <app-icon name="phone" [size]="14" class="text-text-muted shrink-0" />
-                <span class="text-sm text-text-dark truncate">{{ chat.cliente.telefono }}</span>
+            <div class="detail-card">
+              <div class="detail-card-icon bg-primary/8">
+                <app-icon name="phone" [size]="14" class="text-primary" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[10px] text-text-muted leading-tight">Teléfono</p>
+                <p class="text-xs font-medium text-text-dark truncate">{{ chat.cliente.telefono }}</p>
               </div>
               <button
                 type="button"
                 (click)="copiarTexto(chat.cliente.telefono, 'Teléfono')"
-                class="p-1 text-text-muted hover:text-primary transition-colors cursor-pointer"
+                class="p-1.5 text-text-muted hover:text-primary transition-colors cursor-pointer rounded-lg hover:bg-primary/5"
                 title="Copiar teléfono">
                 <app-icon name="copy" [size]="12" />
               </button>
             </div>
             @if (chat.cliente.email) {
-              <div class="detail-row justify-between mt-1">
-                <div class="flex items-center gap-2 min-w-0">
-                  <app-icon name="mail" [size]="14" class="text-text-muted shrink-0" />
-                  <span class="text-sm text-text-dark break-all truncate">{{ chat.cliente.email }}</span>
+              <div class="detail-card mt-2">
+                <div class="detail-card-icon bg-secondary/10">
+                  <app-icon name="mail" [size]="14" class="text-secondary" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-[10px] text-text-muted leading-tight">Email</p>
+                  <p class="text-xs font-medium text-text-dark truncate">{{ chat.cliente.email }}</p>
                 </div>
                 <button
                   type="button"
                   (click)="copiarTexto(chat.cliente.email!, 'Email')"
-                  class="p-1 text-text-muted hover:text-primary transition-colors cursor-pointer"
+                  class="p-1.5 text-text-muted hover:text-primary transition-colors cursor-pointer rounded-lg hover:bg-primary/5"
                   title="Copiar email">
                   <app-icon name="copy" [size]="12" />
                 </button>
@@ -699,51 +748,66 @@
             }
           </div>
 
-          <!-- Perfil extendido: Edad, Nacimiento, Empresa -->
+          <!-- Perfil extendido con detail-cards -->
           @if (chat.cliente.datosExtra?.empresa || chat.cliente.datosExtra?.edad || chat.cliente.datosExtra?.lugarNacimiento) {
             <div class="client-details">
               <h3 class="detail-section-title">Perfil Extendido</h3>
-              @if (chat.cliente.datosExtra?.empresa) {
-                <div class="detail-row">
-                  <app-icon name="briefcase" [size]="14" class="text-text-muted shrink-0" />
-                  <span class="text-xs text-text-dark"><strong>Empresa:</strong> {{ chat.cliente.datosExtra?.empresa }}</span>
-                </div>
-              }
-              @if (chat.cliente.datosExtra?.edad) {
-                <div class="detail-row">
-                  <app-icon name="clock" [size]="14" class="text-text-muted shrink-0" />
-                  <span class="text-xs text-text-dark"><strong>Edad:</strong> {{ chat.cliente.datosExtra?.edad }} años</span>
-                </div>
-              }
-              @if (chat.cliente.datosExtra?.lugarNacimiento) {
-                <div class="detail-row">
-                  <app-icon name="users" [size]="14" class="text-text-muted shrink-0" />
-                  <span class="text-xs text-text-dark"><strong>Origen:</strong> {{ chat.cliente.datosExtra?.lugarNacimiento }}</span>
-                </div>
-              }
+              <div class="space-y-2">
+                @if (chat.cliente.datosExtra?.empresa) {
+                  <div class="detail-card">
+                    <div class="detail-card-icon bg-primary/8">
+                      <app-icon name="briefcase" [size]="14" class="text-primary" />
+                    </div>
+                    <div class="min-w-0">
+                      <p class="text-[10px] text-text-muted leading-tight">Empresa</p>
+                      <p class="text-xs font-medium text-text-dark">{{ chat.cliente.datosExtra?.empresa }}</p>
+                    </div>
+                  </div>
+                }
+                @if (chat.cliente.datosExtra?.edad) {
+                  <div class="detail-card">
+                    <div class="detail-card-icon bg-secondary/10">
+                      <app-icon name="clock" [size]="14" class="text-secondary" />
+                    </div>
+                    <div class="min-w-0">
+                      <p class="text-[10px] text-text-muted leading-tight">Edad</p>
+                      <p class="text-xs font-medium text-text-dark">{{ chat.cliente.datosExtra?.edad }} años</p>
+                    </div>
+                  </div>
+                }
+                @if (chat.cliente.datosExtra?.lugarNacimiento) {
+                  <div class="detail-card">
+                    <div class="detail-card-icon bg-primary/8">
+                      <app-icon name="map-pin" [size]="14" class="text-primary" />
+                    </div>
+                    <div class="min-w-0">
+                      <p class="text-[10px] text-text-muted leading-tight">Origen</p>
+                      <p class="text-xs font-medium text-text-dark">{{ chat.cliente.datosExtra?.lugarNacimiento }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
             </div>
           }
 
-          <!-- Notas -->
+          <!-- Notas con estilo premium -->
           @if (chat.cliente.datosExtra?.notas) {
             <div class="client-details">
               <h3 class="detail-section-title">Notas</h3>
-              <div class="p-2.5 rounded-xl bg-bg-light border border-border text-xs text-text-dark whitespace-pre-wrap leading-relaxed">
+              <div class="notes-card">
                 {{ chat.cliente.datosExtra?.notas }}
               </div>
             </div>
           }
 
-          <!-- Tags / Etiquetas -->
+          <!-- Tags con estilo premium -->
           @if (chat.cliente.datosExtra?.tags; as tags) {
             @if (tags.length > 0) {
               <div class="client-details">
-                <h3 class="detail-section-title">Tags</h3>
+                <h3 class="detail-section-title">Etiquetas</h3>
                 <div class="flex flex-wrap gap-1.5">
                   @for (tag of tags; track tag) {
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-[11px] leading-tight border border-primary/20">
-                      {{ tag }}
-                    </span>
+                    <span class="tag-pill">{{ tag }}</span>
                   }
                 </div>
               </div>
@@ -832,19 +896,19 @@
             }
           </div>
 
-          <!-- Info de la conversación -->
-          <div class="client-details mt-auto border-t border-border pt-4">
-            <h3 class="detail-section-title">Conversación</h3>
-            <div class="detail-row">
-              <app-icon name="message-circle" [size]="14" class="text-text-muted shrink-0" />
-              <span class="text-sm text-text-dark">
+          <!-- Info de la conversación — footer premium -->
+          <div class="conv-stats-footer">
+            <h3 class="detail-section-title">Resumen</h3>
+            <div class="conv-stat-item">
+              <app-icon name="message-circle" [size]="14" class="text-primary shrink-0" />
+              <span class="text-xs font-medium text-text-dark">
                 {{ chat.mensajes.length }} mensaje{{ chat.mensajes.length === 1 ? '' : 's' }}
               </span>
             </div>
             @if (chat.mensajes.length > 0) {
-              <div class="detail-row">
-                <app-icon name="clock" [size]="14" class="text-text-muted shrink-0" />
-                <span class="text-sm text-text-muted">
+              <div class="conv-stat-item">
+                <app-icon name="clock" [size]="14" class="text-secondary shrink-0" />
+                <span class="text-xs text-text-muted">
                   Último: {{ tiempoRelativo(chat.mensajes[chat.mensajes.length - 1].createdAt) }}
                 </span>
               </div>
