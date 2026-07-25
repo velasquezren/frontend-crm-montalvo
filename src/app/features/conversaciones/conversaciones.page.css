@@ -1088,7 +1088,13 @@
     height: calc(100dvh - 64px - 3.8rem);
   }
 
-  .inbox-wrapper {
+  /* En móvil SIEMPRE una columna. Estos selectores compuestos igualan la
+     especificidad de las reglas de escritorio (.inbox-wrapper.has-details.panel-open,
+     etc.) que si no ganan dentro del media query y dejaban una columna vacía
+     de 320px a la derecha (el "espacio en blanco"). */
+  .inbox-wrapper,
+  .inbox-wrapper.has-details.panel-open,
+  .inbox-wrapper.has-details.panel-collapsed {
     grid-template-columns: 1fr;
     height: 100%;
     border-radius: 0;

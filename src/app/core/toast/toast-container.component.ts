@@ -7,7 +7,7 @@ import { ToastService } from './toast.service';
   selector: 'app-toast-container',
   imports: [IconComponent],
   template: `
-    <div class="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4">
+    <div class="fixed bottom-[4.8rem] left-4 right-4 sm:bottom-5 sm:left-auto sm:right-5 sm:max-w-sm z-50 flex flex-col gap-2.5 pointer-events-none">
       @for (toast of toasts(); track toast.id) {
         <div
           class="pointer-events-auto flex items-start gap-3 p-4 rounded-2xl shadow-xl border transition-all duration-300 animate-toast-slide"
