@@ -135,16 +135,19 @@
                     @if (ultimo.direccion === 'SALIENTE') {
                       @switch (ultimo.estadoEnvio) {
                         @case ('LEIDO') {
-                          <span class="text-blue-500 font-bold text-[12px] shrink-0 leading-none" title="Leído">✓✓</span>
+                          <app-icon name="check-check" [size]="14" class="text-secondary shrink-0" title="Leído" />
                         }
                         @case ('ENTREGADO') {
-                          <span class="text-text-muted/80 font-bold text-[12px] shrink-0 leading-none" title="Entregado">✓✓</span>
+                          <app-icon name="check-check" [size]="14" class="text-text-muted/70 shrink-0" title="Entregado" />
                         }
                         @case ('FALLIDO') {
-                          <span class="text-critical font-bold text-[11px] shrink-0 leading-none" title="Falló el envío">⚠️</span>
+                          <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 font-semibold text-[10px] shrink-0 leading-none border border-amber-500/20" title="Falló el envío">
+                            <app-icon name="alert-circle" [size]="10" class="text-amber-600" />
+                            <span>No enviado</span>
+                          </span>
                         }
                         @default {
-                          <span class="text-text-muted/70 font-bold text-[12px] shrink-0 leading-none" title="Enviado">✓</span>
+                          <app-icon name="check" [size]="14" class="text-text-muted/70 shrink-0" title="Enviado" />
                         }
                       }
                     }
@@ -351,7 +354,7 @@
                   } @else if (esUrlPdf(item.mensaje.contenido)) {
                     <a [href]="item.mensaje.contenido" target="_blank" rel="noopener" class="flex items-center gap-2 p-2.5 rounded-xl bg-black/5 hover:bg-black/10 transition-colors my-1 border border-border/50">
                       <app-icon name="file-text" [size]="20" class="shrink-0 text-primary" />
-                      <span class="text-xs font-bold truncate">Ver Documento PDF ↗</span>
+                      <span class="text-xs font-bold truncate flex items-center gap-1">Ver Documento PDF <app-icon name="external-link" [size]="12" /></span>
                     </a>
                   } @else {
                     <p class="bubble-text">{{ item.mensaje.contenido }}</p>
@@ -604,10 +607,10 @@
                     [value]="editCategoria()"
                     (change)="editCategoria.set($any($event.target).value)"
                     class="edit-select">
-                    <option value="GOLD">⭐ Gold (VIP)</option>
-                    <option value="SILVER">🥈 Silver</option>
-                    <option value="BRONZE">🥉 Bronze</option>
-                    <option value="PROSPECTO">👤 Prospecto</option>
+                    <option value="GOLD">Gold (VIP)</option>
+                    <option value="SILVER">Silver</option>
+                    <option value="BRONZE">Bronze</option>
+                    <option value="PROSPECTO">Prospecto</option>
                   </select>
                 </div>
                 <div>
