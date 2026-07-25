@@ -444,14 +444,12 @@
                         <app-icon name="check-check" [size]="12" class="inline-block ml-0.5 -mt-px" title="Entregado" />
                       }
                       @case ('FALLIDO') {
-                        <button
-                          type="button"
-                          (click)="reintentarEnvio(item.mensaje)"
-                          class="inline-flex items-center gap-0.5 ml-1 text-critical hover:underline cursor-pointer"
-                          title="No se pudo enviar — reintentar">
+                        <span
+                          class="inline-flex items-center gap-0.5 ml-1 text-critical"
+                          title="No se pudo enviar. Fuera de la ventana de 24h solo se pueden enviar Plantillas Aprobadas de WhatsApp.">
                           <app-icon name="alert-circle" [size]="12" />
-                          <span class="text-[10px] font-semibold">Reintentar</span>
-                        </button>
+                          <span class="text-[10px] font-semibold">No enviado</span>
+                        </span>
                       }
                       @default {
                         <app-icon name="check" [size]="12" class="inline-block ml-0.5 -mt-px" title="Enviado" />
@@ -597,32 +595,47 @@
       }
 
       <!-- Caja de texto -->
-      <form (submit)="enviar($event)" class="chat-input-bar">
-        <!-- Botón Adjuntar Imagen / Documento -->
-        <label class="p-2.5 rounded-full text-text-muted hover:text-primary hover:bg-bg-light cursor-pointer transition-colors shrink-0 flex items-center justify-center border border-border/80" title="Adjuntar imagen o documento">
-          <app-icon name="image" [size]="18" />
-          <input type="file" (change)="adjuntarMediaChat($event)" accept="image/*,application/pdf" class="hidden" />
-        </label>
+      @if (ventana24hActiva()) {
+        <form (submit)="enviar($event)" class="chat-input-bar">
+          <!-- Botón Adjuntar Imagen / Documento -->
+          <label class="p-2.5 rounded-full text-text-muted hover:text-primary hover:bg-bg-light cursor-pointer transition-colors shrink-0 flex items-center justify-center border border-border/80" title="Adjuntar imagen o documento">
+            <app-icon name="image" [size]="18" />
+            <input type="file" (change)="adjuntarMediaChat($event)" accept="image/*,application/pdf" class="hidden" />
+          </label>
 
-        <app-button type="button" variant="secondary" icon="database" [circle]="true"
-          (clicked)="togglePopoverMemoria()" aria-label="Mi Memoria Personal"
-          title="Insertar desde Mi Memoria Personal (Biblioteca Privada)" />
-        <app-button type="button" variant="secondary" icon="file-text" [circle]="true"
-          (clicked)="abrirPlantillas()" aria-label="Enviar plantilla"
-          title="Enviar plantilla de WhatsApp (para escribir fuera de las 24h)" />
-        <div class="flex-1">
-          <textarea
-            #composer
-            rows="1"
-            class="chat-composer"
-            placeholder="Escribe un mensaje o '/' para usar tus respuestas rápidas…"
-            [value]="mensajeNuevo()"
-            (input)="mensajeNuevo.set(composer.value)"
-            (keydown)="onComposerKeydown($event)"></textarea>
+          <app-button type="button" variant="secondary" icon="database" [circle]="true"
+            (clicked)="togglePopoverMemoria()" aria-label="Mi Memoria Personal"
+            title="Insertar desde Mi Memoria Personal (Biblioteca Privada)" />
+          <app-button type="button" variant="secondary" icon="file-text" [circle]="true"
+            (clicked)="abrirPlantillas()" aria-label="Enviar plantilla"
+            title="Enviar plantilla de WhatsApp (para escribir fuera de las 24h)" />
+          <div class="flex-1">
+            <textarea
+              #composer
+              rows="1"
+              class="chat-composer"
+              placeholder="Escribe un mensaje o '/' para usar tus respuestas rápidas…"
+              [value]="mensajeNuevo()"
+              (input)="mensajeNuevo.set(composer.value)"
+              (keydown)="onComposerKeydown($event)"></textarea>
+          </div>
+          <app-button type="submit" icon="send" [circle]="true" [loading]="enviando()"
+            aria-label="Enviar mensaje" />
+        </form>
+      } @else {
+        <!-- Fuera de la ventana de 24h: Meta bloquea texto libre y media.
+             Solo se permite enviar una Plantilla Aprobada. -->
+        <div class="chat-input-bar chat-input-bar--bloqueada">
+          <div class="flex-1 flex items-center gap-2 text-xs text-text-muted min-w-0">
+            <app-icon name="clock" [size]="16" class="shrink-0" />
+            <span class="truncate">Ventana de 24h cerrada — solo puedes responder con una Plantilla.</span>
+          </div>
+          <app-button type="button" variant="primary" icon="file-text"
+            (clicked)="abrirPlantillas()" aria-label="Enviar plantilla">
+            Enviar Plantilla
+          </app-button>
         </div>
-        <app-button type="submit" icon="send" [circle]="true" [loading]="enviando()"
-          aria-label="Enviar mensaje" />
-      </form>
+      }
     } @else {
       <!-- Estado vacío: ningún chat seleccionado -->
       <div class="chat-empty-state">

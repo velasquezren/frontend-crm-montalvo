@@ -824,17 +824,6 @@ export class ConversacionesPage implements AfterViewInit {
     }
   }
 
-  /** Reenvía el mismo texto de un mensaje que quedó FALLIDO (ticks del chat).
-   *  El mensaje fallido original se queda tal cual en el historial —no se
-   *  borra, es la constancia de que ese intento no llegó— y este crea uno
-   *  nuevo, igual que el botón "reintentar" de WhatsApp Web. */
-  protected async reintentarEnvio(mensaje: MensajeApi): Promise<void> {
-    const id = this.seleccionadaId();
-    if (!id || this.enviando()) return;
-    this.toastService.info('Reintentando envío... Si pasaron más de 24h del último mensaje del cliente, usa una Plantilla de WhatsApp.', 'WhatsApp API');
-    await this.enviarTexto(id, mensaje.contenido);
-  }
-
   private async enviarTexto(id: string, texto: string): Promise<void> {
     /* Envío optimista: la burbuja aparece de inmediato en vez de esperar el
        round-trip al backend (que a su vez ya no espera a Meta, pero sigue

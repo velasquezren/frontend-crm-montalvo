@@ -331,6 +331,12 @@
   background: white;
 }
 
+/* Barra de entrada bloqueada: ventana de 24h cerrada, solo plantillas. */
+.chat-input-bar--bloqueada {
+  background: var(--color-bg-light);
+  justify-content: space-between;
+}
+
 /* Estado vacío premium */
 .chat-empty-state {
   flex: 1;
