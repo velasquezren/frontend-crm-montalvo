@@ -52,7 +52,10 @@ export type IconName =
   | 'panel-right-close'
   | 'panel-right-open'
   | 'user'
-  | 'map-pin';
+  | 'map-pin'
+  | 'pin'
+  | 'download'
+  | 'volume-2';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -284,6 +287,20 @@ export type IconName =
         @case ('map-pin') {
           <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
           <circle cx="12" cy="10" r="3" />
+        }
+        @case ('pin') {
+          <path d="M12 17v5" />
+          <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16h14v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" />
+        }
+        @case ('download') {
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" x2="12" y1="15" y2="3" />
+        }
+        @case ('volume-2') {
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
         }
       }
     </svg>

@@ -282,6 +282,56 @@
         </div>
       </header>
 
+      <!-- Banner de Nota Médica / Aviso Fijado en Cabecera (Pinned Note) -->
+      @if (chat.cliente.datosExtra?.['notaFijada'] || editandoNotaFijada()) {
+        <div class="pinned-note-banner">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <app-icon name="pin" [size]="14" class="text-amber-700 shrink-0" />
+            @if (editandoNotaFijada()) {
+              <div class="flex items-center gap-2 flex-1 min-w-0">
+                <input
+                  type="text"
+                  #inputNotaFijada
+                  [value]="editNotaFijada()"
+                  (input)="editNotaFijada.set(inputNotaFijada.value)"
+                  (keydown.enter)="guardarNotaFijada()"
+                  placeholder="Ej: Interesada en Rinoplastia - Paciente VIP (Alergia a Penicilina)"
+                  class="edit-pinned-input" />
+                <button type="button" (click)="guardarNotaFijada()" [disabled]="guardandoNotaFijada()" class="btn-save-pin">
+                  Guardar
+                </button>
+                <button type="button" (click)="cancelarEdicionNotaFijada()" class="btn-cancel-pin">
+                  Cancelar
+                </button>
+              </div>
+            } @else {
+              <p class="pinned-note-text truncate">
+                <span class="font-bold text-amber-950">Aviso Fijado:</span> {{ chat.cliente.datosExtra?.['notaFijada'] }}
+              </p>
+            }
+          </div>
+          @if (!editandoNotaFijada()) {
+            <div class="flex items-center gap-1 shrink-0 ml-2">
+              <button
+                type="button"
+                (click)="iniciarEdicionNotaFijada(chat.cliente.datosExtra?.['notaFijada'])"
+                class="btn-edit-pin cursor-pointer"
+                title="Editar nota fijada">
+                <app-icon name="edit" [size]="12" />
+              </button>
+            </div>
+          }
+        </div>
+      } @else {
+        <button
+          type="button"
+          (click)="iniciarEdicionNotaFijada()"
+          class="btn-add-pin-trigger cursor-pointer">
+          <app-icon name="pin" [size]="12" />
+          <span>+ Fijar nota o aviso médico importante</span>
+        </button>
+      }
+
       <!-- Mensajes con separadores de fecha -->
       <div class="chat-messages" #messagesScroll (scroll)="onMessagesScroll()">
         @for (item of mensajesAgrupados(); track (item.tipo === 'fecha' ? item.label : item.mensaje.id)) {
@@ -301,17 +351,19 @@
                 @switch (item.mensaje.tipo) {
                   @case ('IMAGEN') {
                     @if (item.mensaje.mediaUrl) {
-                      <a [href]="item.mensaje.mediaUrl" target="_blank" rel="noopener">
+                      <button type="button" (click)="abrirLightbox(item.mensaje.mediaUrl)" class="block mb-1 cursor-zoom-in text-left">
                         <img [src]="item.mensaje.mediaUrl" alt="Imagen"
-                          class="rounded-lg max-w-full max-h-72 object-cover mb-1 cursor-zoom-in" />
-                      </a>
+                          class="rounded-lg max-w-full max-h-72 object-cover hover:opacity-90 transition-opacity" />
+                      </button>
                     } @else {
                       <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando imagen…</div>
                     }
                   }
                   @case ('STICKER') {
                     @if (item.mensaje.mediaUrl) {
-                      <img [src]="item.mensaje.mediaUrl" alt="Sticker" class="w-28 h-28 object-contain mb-1" />
+                      <button type="button" (click)="abrirLightbox(item.mensaje.mediaUrl)" class="block mb-1 cursor-zoom-in text-left">
+                        <img [src]="item.mensaje.mediaUrl" alt="Sticker" class="w-28 h-28 object-contain hover:opacity-90 transition-opacity" />
+                      </button>
                     } @else {
                       <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando…</div>
                     }
@@ -325,7 +377,29 @@
                   }
                   @case ('AUDIO') {
                     @if (item.mensaje.mediaUrl) {
-                      <audio [src]="item.mensaje.mediaUrl" controls class="max-w-full mb-1"></audio>
+                      <div class="audio-player-container">
+                        <audio #voiceAudio [src]="item.mensaje.mediaUrl" controls class="max-w-full h-8 flex-1"></audio>
+                        <div class="speed-btn-group">
+                          <button
+                            type="button"
+                            (click)="cambiarVelocidadAudio(voiceAudio, 1)"
+                            [class.active-speed]="obtenerVelocidadAudio(voiceAudio) === 1"
+                            class="speed-btn"
+                            title="Velocidad normal (1x)">1x</button>
+                          <button
+                            type="button"
+                            (click)="cambiarVelocidadAudio(voiceAudio, 1.5)"
+                            [class.active-speed]="obtenerVelocidadAudio(voiceAudio) === 1.5"
+                            class="speed-btn"
+                            title="Velocidad 1.5x">1.5x</button>
+                          <button
+                            type="button"
+                            (click)="cambiarVelocidadAudio(voiceAudio, 2)"
+                            [class.active-speed]="obtenerVelocidadAudio(voiceAudio) === 2"
+                            class="speed-btn"
+                            title="Velocidad doble (2x)">2x</button>
+                        </div>
+                      </div>
                     } @else {
                       <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando audio…</div>
                     }
@@ -346,9 +420,9 @@
                 <!-- Texto / pie de foto / URL de media -->
                 @if (item.mensaje.contenido) {
                   @if (esUrlImagen(item.mensaje.contenido)) {
-                    <a [href]="item.mensaje.contenido" target="_blank" rel="noopener" class="block my-1">
+                    <button type="button" (click)="abrirLightbox(item.mensaje.contenido)" class="block my-1 cursor-zoom-in text-left">
                       <img [src]="item.mensaje.contenido" alt="Imagen adjunta" class="max-w-xs max-h-72 rounded-xl object-cover border border-border shadow-xs hover:opacity-95 transition-opacity" />
-                    </a>
+                    </button>
                   } @else if (esUrlPdf(item.mensaje.contenido)) {
                     <a [href]="item.mensaje.contenido" target="_blank" rel="noopener" class="flex items-center gap-2 p-2.5 rounded-xl bg-black/5 hover:bg-black/10 transition-colors my-1 border border-border/50">
                       <app-icon name="file-text" [size]="20" class="shrink-0 text-primary" />
@@ -1113,3 +1187,18 @@
     </div>
   </div>
 </ng-template>
+
+<!-- Modal Lightbox para imágenes en pantalla completa -->
+@if (lightboxImagenUrl(); as imgUrl) {
+  <div class="lightbox-overlay" (click)="cerrarLightbox()">
+    <div class="lightbox-content" (click)="$event.stopPropagation()">
+      <button type="button" (click)="cerrarLightbox()" class="lightbox-close-btn" title="Cerrar (Esc)">
+        <app-icon name="x" [size]="20" />
+      </button>
+      <a [href]="imgUrl" target="_blank" download class="lightbox-download-btn" title="Descargar imagen">
+        <app-icon name="download" [size]="18" />
+      </a>
+      <img [src]="imgUrl" alt="Previsualización de foto" class="lightbox-image" />
+    </div>
+  </div>
+}

@@ -470,6 +470,210 @@
   color: var(--color-primary);
 }
 
+/* ── Pinned Clinical Notes Banner ────────────────────────────── */
+.pinned-note-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #fffbe6 0%, #fef3c7 100%);
+  border-bottom: 1px solid #fde68a;
+  font-size: 12px;
+  color: #92400e;
+  z-index: 10;
+  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.08);
+}
+
+.pinned-note-text {
+  font-size: 12px;
+  color: #78350f;
+  line-height: 1.4;
+}
+
+.edit-pinned-input {
+  flex: 1;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #f59e0b;
+  outline: none;
+  background: white;
+  color: #78350f;
+}
+
+.btn-save-pin {
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #d97706;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s;
+}
+.btn-save-pin:hover {
+  background: #b45309;
+}
+
+.btn-cancel-pin {
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: transparent;
+  color: #92400e;
+  font-size: 11px;
+  cursor: pointer;
+  border: 1px solid #fcd34d;
+}
+
+.btn-edit-pin {
+  padding: 4px 6px;
+  border-radius: 6px;
+  color: #92400e;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-edit-pin:hover {
+  background: rgba(217, 119, 6, 0.15);
+}
+
+.btn-add-pin-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  padding: 4px 16px;
+  background: var(--color-bg-workspace);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.15s;
+}
+.btn-add-pin-trigger:hover {
+  color: var(--color-primary);
+  background: var(--color-bg-light);
+}
+
+/* ── Audio Speed Buttons ─────────────────────────────────────── */
+.audio-player-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-text-muted) 8%, white);
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  margin-bottom: 4px;
+}
+
+.speed-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 8px;
+  background: white;
+  border: 1px solid var(--color-border);
+}
+
+.speed-btn {
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: all 0.15s;
+}
+.speed-btn:hover {
+  color: var(--color-primary);
+  background: var(--color-bg-light);
+}
+.speed-btn.active-speed {
+  background: var(--color-primary);
+  color: white;
+  font-weight: 700;
+}
+
+/* ── Lightbox Overlay ────────────────────────────────────────── */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.lightbox-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox-image {
+  max-width: 100%;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.lightbox-close-btn {
+  position: absolute;
+  top: -44px;
+  right: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s;
+}
+.lightbox-close-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.lightbox-download-btn {
+  position: absolute;
+  top: -44px;
+  right: 48px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.lightbox-download-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* ── Client Profile Header — Premium gradient ────────────────── */
 .client-profile {
   display: flex;

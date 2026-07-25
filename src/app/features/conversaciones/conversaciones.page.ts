@@ -130,6 +130,13 @@ export class ConversacionesPage implements AfterViewInit {
   protected readonly editTags = signal('');
   protected readonly guardandoFicha = signal(false);
 
+  /* ── Lightbox & Audio Speed & Pinned Notes ──────────────────────── */
+  protected readonly lightboxImagenUrl = signal<string | null>(null);
+
+  protected readonly editandoNotaFijada = signal(false);
+  protected readonly editNotaFijada = signal('');
+  protected readonly guardandoNotaFijada = signal(false);
+
   /* ── Respuestas Rápidas Personalizadas del Agente ────────────────── */
   protected readonly plantillasAgente = httpResource<PlantillaAgente[]>(
     () => this.conversacionesService.plantillasAgenteRequest(),
@@ -631,6 +638,65 @@ export class ConversacionesPage implements AfterViewInit {
       );
     } finally {
       this.guardandoFicha.set(false);
+    }
+  }
+
+  /* ── Lightbox de Imágenes ─────────────────────────────────────── */
+  protected abrirLightbox(url: string): void {
+    if (url) {
+      this.lightboxImagenUrl.set(url);
+    }
+  }
+
+  protected cerrarLightbox(): void {
+    this.lightboxImagenUrl.set(null);
+  }
+
+  /* ── Control de Velocidad de Audio ───────────────────────────── */
+  protected cambiarVelocidadAudio(audioElem: HTMLAudioElement, speed: number): void {
+    if (audioElem) {
+      audioElem.playbackRate = speed;
+      const currentSpeed = (audioElem as any)['_speed'] ?? 1;
+      (audioElem as any)['_speed'] = speed;
+    }
+  }
+
+  protected obtenerVelocidadAudio(audioElem: HTMLAudioElement): number {
+    return (audioElem as any)?._speed ?? 1;
+  }
+
+  /* ── Notas Médicas Fijadas en Cabecera ──────────────────────── */
+  protected iniciarEdicionNotaFijada(notaActual?: string): void {
+    this.editNotaFijada.set(notaActual || '');
+    this.editandoNotaFijada.set(true);
+  }
+
+  protected cancelarEdicionNotaFijada(): void {
+    this.editandoNotaFijada.set(false);
+    this.editNotaFijada.set('');
+  }
+
+  protected async guardarNotaFijada(): Promise<void> {
+    const chat = this.detalle.value();
+    if (!chat || this.guardandoNotaFijada()) return;
+
+    const texto = this.editNotaFijada().trim();
+    this.guardandoNotaFijada.set(true);
+    try {
+      const datosExtraActuales = (chat.cliente.datosExtra as Record<string, any>) || {};
+      const nuevosDatosExtra = {
+        ...datosExtraActuales,
+        notaFijada: texto || null,
+      };
+
+      await this.clientesService.actualizar(chat.cliente.id, { datosExtra: nuevosDatosExtra });
+      this.toastService.success(texto ? 'Nota clínica fijada en la cabecera' : 'Nota fijada eliminada', 'Nota Fijada');
+      this.editandoNotaFijada.set(false);
+      this.detalle.reload();
+    } catch (err) {
+      this.toastService.error(mensajeDeError(err, 'No se pudo guardar la nota fijada.'), 'Error');
+    } finally {
+      this.guardandoNotaFijada.set(false);
     }
   }
 
