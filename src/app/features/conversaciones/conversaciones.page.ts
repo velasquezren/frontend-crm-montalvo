@@ -478,6 +478,9 @@ export class ConversacionesPage implements AfterViewInit {
       if (timerReload) clearTimeout(timerReload);
       timerReload = setTimeout(() => {
         this.conversaciones.reload();
+        /* Requisito 2: Actualizar mapa de caché para CUALQUIER conversación (abierta o no) */
+        void this.conversacionesService.actualizarCachePorRealtime(aviso.conversacionId);
+
         if (this.seleccionadaId() === aviso.conversacionId) {
           this.detalle.reload();
           /* El chat está abierto y llegó algo nuevo: marcarlo leído al instante. */
