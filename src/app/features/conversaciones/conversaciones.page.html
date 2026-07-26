@@ -575,25 +575,6 @@
         </div>
       }
 
-      <!-- Banner Informativo 24h Meta -->
-      @if (!ventana24hActiva()) {
-        <div class="px-4 py-2 bg-amber-50 border-t border-amber-200/70 flex items-center justify-between gap-3 text-xs text-amber-900 shrink-0">
-          <div class="flex items-center gap-2 min-w-0">
-            <app-icon name="alert-circle" [size]="15" class="text-amber-600 shrink-0" />
-            <span class="truncate">
-              <strong>Ventana 24h expirada:</strong> El cliente no ha escrito en 24h. Meta requiere enviar una Plantilla Aprobada.
-            </span>
-          </div>
-          <button
-            type="button"
-            (click)="abrirPlantillas()"
-            class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg text-[11px] transition-colors cursor-pointer shrink-0 shadow-2xs flex items-center gap-1">
-            <app-icon name="file-text" [size]="12" />
-            <span>Enviar Plantilla</span>
-          </button>
-        </div>
-      }
-
       <!-- Caja de texto -->
       @if (ventana24hActiva()) {
         <form (submit)="enviar($event)" class="chat-input-bar">
@@ -624,11 +605,13 @@
         </form>
       } @else {
         <!-- Fuera de la ventana de 24h: Meta bloquea texto libre y media.
-             Solo se permite enviar una Plantilla Aprobada. -->
-        <div class="chat-input-bar chat-input-bar--bloqueada">
-          <div class="flex-1 flex items-center gap-2 text-xs text-text-muted min-w-0">
-            <app-icon name="clock" [size]="16" class="shrink-0" />
-            <span class="truncate">Ventana de 24h cerrada — solo puedes responder con una Plantilla.</span>
+             Solo se permite enviar una Plantilla Aprobada. (Único aviso unificado y elegante) -->
+        <div class="chat-input-bar chat-input-bar--bloqueada bg-amber-50/70 border-t border-amber-200/80">
+          <div class="flex-1 flex items-center gap-2.5 text-xs text-amber-900 min-w-0">
+            <app-icon name="alert-circle" [size]="18" class="text-amber-600 shrink-0" />
+            <span class="truncate">
+              <strong>Ventana 24h expirada:</strong> Meta requiere responder con una Plantilla Aprobada.
+            </span>
           </div>
           <app-button type="button" variant="primary" icon="file-text"
             (clicked)="abrirPlantillas()" aria-label="Enviar plantilla">
