@@ -3,43 +3,51 @@ import { Component, inject } from '@angular/core';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { ToastService } from './toast.service';
 
+/**
+ * ToastContainerComponent — Sistema de Notificaciones Flotantes Premium
+ * Posicionado en Top-Right para no colisionar con el FAB Menu ni la Bottom Bar.
+ * Diseño Glassmorphism limpio alineado con los tokens de Clínicas Montalvo.
+ */
 @Component({
   selector: 'app-toast-container',
   imports: [IconComponent],
   template: `
-    <div class="fixed bottom-[4.8rem] left-4 right-4 sm:bottom-5 sm:left-auto sm:right-5 sm:max-w-sm z-50 flex flex-col gap-2.5 pointer-events-none">
+    <div class="fixed top-4 right-4 sm:top-5 sm:right-5 w-[calc(100%-2rem)] sm:w-auto sm:max-w-sm z-50 flex flex-col gap-2.5 pointer-events-none">
       @for (toast of toasts(); track toast.id) {
         <div
-          class="pointer-events-auto flex items-start gap-3 p-4 rounded-2xl shadow-xl border transition-all duration-300 animate-toast-slide"
-          [class]="getClasses(toast.type)">
+          class="pointer-events-auto flex items-start gap-3.5 p-4 rounded-2xl bg-white/95 backdrop-blur-xl border border-border/80 text-text-dark shadow-2xl shadow-slate-900/10 transition-all duration-300 animate-toast-slide">
 
-          <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" [class]="getIconBg(toast.type)">
+          <!-- Ícono temático -->
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border" [class]="getIconBg(toast.type)">
             <app-icon [name]="getIconName(toast.type)" [size]="18" />
           </div>
 
+          <!-- Contenido -->
           <div class="flex-1 min-w-0 pr-1">
             @if (toast.title) {
-              <h4 class="text-xs font-bold leading-snug tracking-wide uppercase opacity-90 mb-0.5">
+              <h4 class="text-xs font-bold text-text-dark tracking-tight mb-0.5">
                 {{ toast.title }}
               </h4>
             }
-            <p class="text-xs font-medium leading-relaxed">
+            <p class="text-xs font-medium text-text-muted leading-relaxed">
               {{ toast.message }}
             </p>
             @if (toast.actionLabel && toast.onAction) {
               <button
                 type="button"
                 (click)="toast.onAction(); dismiss(toast.id)"
-                class="mt-2 text-xs font-bold px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white cursor-pointer transition-colors shadow-xs">
-                {{ toast.actionLabel }}
+                class="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-dark text-white text-xs font-semibold rounded-xl transition-all shadow-xs hover:shadow-md cursor-pointer active:scale-95">
+                <span>{{ toast.actionLabel }}</span>
               </button>
             }
           </div>
 
+          <!-- Botón Cerrar -->
           <button
             type="button"
             (click)="dismiss(toast.id)"
-            class="text-current opacity-50 hover:opacity-100 transition-opacity p-1 cursor-pointer">
+            class="text-text-muted hover:text-text-dark hover:bg-bg-light p-1 rounded-lg transition-colors cursor-pointer shrink-0"
+            aria-label="Cerrar notificación">
             <app-icon name="x" [size]="14" />
           </button>
         </div>
@@ -55,29 +63,16 @@ export class ToastContainerComponent {
     this.toastService.dismiss(id);
   }
 
-  getClasses(type: string): string {
-    switch (type) {
-      case 'success':
-        return 'bg-emerald-900 text-white border-emerald-700/50 shadow-emerald-950/20';
-      case 'error':
-        return 'bg-rose-900 text-white border-rose-700/50 shadow-rose-950/20';
-      case 'warning':
-        return 'bg-amber-900 text-white border-amber-700/50 shadow-amber-950/20';
-      default:
-        return 'bg-slate-900 text-white border-slate-700/50 shadow-slate-950/20';
-    }
-  }
-
   getIconBg(type: string): string {
     switch (type) {
       case 'success':
-        return 'bg-emerald-500/20 text-emerald-300';
+        return 'bg-emerald-50 text-emerald-600 border-emerald-200/60';
       case 'error':
-        return 'bg-rose-500/20 text-rose-300';
+        return 'bg-rose-50 text-rose-600 border-rose-200/60';
       case 'warning':
-        return 'bg-amber-500/20 text-amber-300';
+        return 'bg-amber-50 text-amber-600 border-amber-200/60';
       default:
-        return 'bg-sky-500/20 text-sky-300';
+        return 'bg-sky-50 text-sky-600 border-sky-200/60';
     }
   }
 
