@@ -26,6 +26,14 @@ import { ToastService } from './toast.service';
             <p class="text-xs font-medium leading-relaxed">
               {{ toast.message }}
             </p>
+            @if (toast.actionLabel && toast.onAction) {
+              <button
+                type="button"
+                (click)="toast.onAction(); dismiss(toast.id)"
+                class="mt-2 text-xs font-bold px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white cursor-pointer transition-colors shadow-xs">
+                {{ toast.actionLabel }}
+              </button>
+            }
           </div>
 
           <button
