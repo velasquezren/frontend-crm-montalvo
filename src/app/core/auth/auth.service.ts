@@ -29,13 +29,13 @@ export class AuthService {
   readonly isAdmin = computed(() => this.currentUser()?.rol === 'ADMIN');
 
   get token(): string | null {
-    return localStorage.getItem(TOKEN_KEY);
+    return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
   }
 
-  async login(email: string, password: string): Promise<boolean> {
+  async login(email: string, password: string, rememberMe = true): Promise<boolean> {
     try {
       const respuesta = await firstValueFrom(
-        this.http.post<LoginResponse>(`${API_URL}/auth/login`, { email, password }),
+        this.http.post<LoginResponse>(`${API_URL}/auth/login`, { email, password, rememberMe }),
       );
 
       const usuario: User = {
@@ -47,8 +47,14 @@ export class AuthService {
         foto: respuesta.usuario.foto,
       };
 
-      localStorage.setItem(TOKEN_KEY, respuesta.access_token);
-      localStorage.setItem(USER_KEY, JSON.stringify(usuario));
+      const storage = rememberMe ? localStorage : sessionStorage;
+      // Limpiar storage opuesto para evitar inconsistencias
+      const storageOpuesto = rememberMe ? sessionStorage : localStorage;
+      storageOpuesto.removeItem(TOKEN_KEY);
+      storageOpuesto.removeItem(USER_KEY);
+
+      storage.setItem(TOKEN_KEY, respuesta.access_token);
+      storage.setItem(USER_KEY, JSON.stringify(usuario));
       this.currentUser.set(usuario);
       return true;
     } catch {
@@ -57,21 +63,27 @@ export class AuthService {
   }
 
   actualizarUsuarioLocal(nuevoUsuario: User): void {
-    localStorage.setItem(USER_KEY, JSON.stringify(nuevoUsuario));
+    if (localStorage.getItem(TOKEN_KEY)) {
+      localStorage.setItem(USER_KEY, JSON.stringify(nuevoUsuario));
+    } else {
+      sessionStorage.setItem(USER_KEY, JSON.stringify(nuevoUsuario));
+    }
     this.currentUser.set(nuevoUsuario);
   }
 
   logout(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(USER_KEY);
     this.currentUser.set(null);
   }
 
   private restaurarSesion(): User | null {
     try {
-      const token = localStorage.getItem(TOKEN_KEY);
-      const usuario = localStorage.getItem(USER_KEY);
-      return token && usuario ? (JSON.parse(usuario) as User) : null;
+      const token = this.token;
+      const usuarioStr = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY);
+      return token && usuarioStr ? (JSON.parse(usuarioStr) as User) : null;
     } catch {
       return null;
     }

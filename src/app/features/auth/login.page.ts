@@ -41,7 +41,7 @@ export class LoginPage {
 
     this.isLoading.set(true);
 
-    const success = await this.authService.login(this.email(), this.password());
+    const success = await this.authService.login(this.email(), this.password(), this.rememberMe());
 
     if (success) {
       await this.router.navigate(['/dashboard']);
