@@ -108,6 +108,99 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
       background: color-mix(in srgb, var(--color-bg-light) 40%, white);
     }
 
+
+    /* ── Alineación heredada de la cabecera ──────────────────────────
+       Declarar la alineación en el <th> la propaga a toda su columna, así
+       no hay que repetirla celda por celda: olvidarla en un <td> era la
+       causa real de las columnas torcidas (pasó dos veces con tablas de
+       once columnas). Las reglas por celda llevan !important y siguen
+       ganando, de modo que esto es solo la red de seguridad.
+       :has() es Baseline desde 2023. */
+    .crm-table:has(thead th:nth-child(1).text-right) tbody td:nth-child(1),
+    .crm-table:has(thead th:nth-child(1).text-right) tfoot td:nth-child(1) { text-align: right; }
+    .crm-table:has(thead th:nth-child(1).text-center) tbody td:nth-child(1),
+    .crm-table:has(thead th:nth-child(1).text-center) tfoot td:nth-child(1) { text-align: center; }
+    .crm-table:has(thead th:nth-child(1).text-left) tbody td:nth-child(1),
+    .crm-table:has(thead th:nth-child(1).text-left) tfoot td:nth-child(1) { text-align: left; }
+    .crm-table:has(thead th:nth-child(2).text-right) tbody td:nth-child(2),
+    .crm-table:has(thead th:nth-child(2).text-right) tfoot td:nth-child(2) { text-align: right; }
+    .crm-table:has(thead th:nth-child(2).text-center) tbody td:nth-child(2),
+    .crm-table:has(thead th:nth-child(2).text-center) tfoot td:nth-child(2) { text-align: center; }
+    .crm-table:has(thead th:nth-child(2).text-left) tbody td:nth-child(2),
+    .crm-table:has(thead th:nth-child(2).text-left) tfoot td:nth-child(2) { text-align: left; }
+    .crm-table:has(thead th:nth-child(3).text-right) tbody td:nth-child(3),
+    .crm-table:has(thead th:nth-child(3).text-right) tfoot td:nth-child(3) { text-align: right; }
+    .crm-table:has(thead th:nth-child(3).text-center) tbody td:nth-child(3),
+    .crm-table:has(thead th:nth-child(3).text-center) tfoot td:nth-child(3) { text-align: center; }
+    .crm-table:has(thead th:nth-child(3).text-left) tbody td:nth-child(3),
+    .crm-table:has(thead th:nth-child(3).text-left) tfoot td:nth-child(3) { text-align: left; }
+    .crm-table:has(thead th:nth-child(4).text-right) tbody td:nth-child(4),
+    .crm-table:has(thead th:nth-child(4).text-right) tfoot td:nth-child(4) { text-align: right; }
+    .crm-table:has(thead th:nth-child(4).text-center) tbody td:nth-child(4),
+    .crm-table:has(thead th:nth-child(4).text-center) tfoot td:nth-child(4) { text-align: center; }
+    .crm-table:has(thead th:nth-child(4).text-left) tbody td:nth-child(4),
+    .crm-table:has(thead th:nth-child(4).text-left) tfoot td:nth-child(4) { text-align: left; }
+    .crm-table:has(thead th:nth-child(5).text-right) tbody td:nth-child(5),
+    .crm-table:has(thead th:nth-child(5).text-right) tfoot td:nth-child(5) { text-align: right; }
+    .crm-table:has(thead th:nth-child(5).text-center) tbody td:nth-child(5),
+    .crm-table:has(thead th:nth-child(5).text-center) tfoot td:nth-child(5) { text-align: center; }
+    .crm-table:has(thead th:nth-child(5).text-left) tbody td:nth-child(5),
+    .crm-table:has(thead th:nth-child(5).text-left) tfoot td:nth-child(5) { text-align: left; }
+    .crm-table:has(thead th:nth-child(6).text-right) tbody td:nth-child(6),
+    .crm-table:has(thead th:nth-child(6).text-right) tfoot td:nth-child(6) { text-align: right; }
+    .crm-table:has(thead th:nth-child(6).text-center) tbody td:nth-child(6),
+    .crm-table:has(thead th:nth-child(6).text-center) tfoot td:nth-child(6) { text-align: center; }
+    .crm-table:has(thead th:nth-child(6).text-left) tbody td:nth-child(6),
+    .crm-table:has(thead th:nth-child(6).text-left) tfoot td:nth-child(6) { text-align: left; }
+    .crm-table:has(thead th:nth-child(7).text-right) tbody td:nth-child(7),
+    .crm-table:has(thead th:nth-child(7).text-right) tfoot td:nth-child(7) { text-align: right; }
+    .crm-table:has(thead th:nth-child(7).text-center) tbody td:nth-child(7),
+    .crm-table:has(thead th:nth-child(7).text-center) tfoot td:nth-child(7) { text-align: center; }
+    .crm-table:has(thead th:nth-child(7).text-left) tbody td:nth-child(7),
+    .crm-table:has(thead th:nth-child(7).text-left) tfoot td:nth-child(7) { text-align: left; }
+    .crm-table:has(thead th:nth-child(8).text-right) tbody td:nth-child(8),
+    .crm-table:has(thead th:nth-child(8).text-right) tfoot td:nth-child(8) { text-align: right; }
+    .crm-table:has(thead th:nth-child(8).text-center) tbody td:nth-child(8),
+    .crm-table:has(thead th:nth-child(8).text-center) tfoot td:nth-child(8) { text-align: center; }
+    .crm-table:has(thead th:nth-child(8).text-left) tbody td:nth-child(8),
+    .crm-table:has(thead th:nth-child(8).text-left) tfoot td:nth-child(8) { text-align: left; }
+    .crm-table:has(thead th:nth-child(9).text-right) tbody td:nth-child(9),
+    .crm-table:has(thead th:nth-child(9).text-right) tfoot td:nth-child(9) { text-align: right; }
+    .crm-table:has(thead th:nth-child(9).text-center) tbody td:nth-child(9),
+    .crm-table:has(thead th:nth-child(9).text-center) tfoot td:nth-child(9) { text-align: center; }
+    .crm-table:has(thead th:nth-child(9).text-left) tbody td:nth-child(9),
+    .crm-table:has(thead th:nth-child(9).text-left) tfoot td:nth-child(9) { text-align: left; }
+    .crm-table:has(thead th:nth-child(10).text-right) tbody td:nth-child(10),
+    .crm-table:has(thead th:nth-child(10).text-right) tfoot td:nth-child(10) { text-align: right; }
+    .crm-table:has(thead th:nth-child(10).text-center) tbody td:nth-child(10),
+    .crm-table:has(thead th:nth-child(10).text-center) tfoot td:nth-child(10) { text-align: center; }
+    .crm-table:has(thead th:nth-child(10).text-left) tbody td:nth-child(10),
+    .crm-table:has(thead th:nth-child(10).text-left) tfoot td:nth-child(10) { text-align: left; }
+    .crm-table:has(thead th:nth-child(11).text-right) tbody td:nth-child(11),
+    .crm-table:has(thead th:nth-child(11).text-right) tfoot td:nth-child(11) { text-align: right; }
+    .crm-table:has(thead th:nth-child(11).text-center) tbody td:nth-child(11),
+    .crm-table:has(thead th:nth-child(11).text-center) tfoot td:nth-child(11) { text-align: center; }
+    .crm-table:has(thead th:nth-child(11).text-left) tbody td:nth-child(11),
+    .crm-table:has(thead th:nth-child(11).text-left) tfoot td:nth-child(11) { text-align: left; }
+    .crm-table:has(thead th:nth-child(12).text-right) tbody td:nth-child(12),
+    .crm-table:has(thead th:nth-child(12).text-right) tfoot td:nth-child(12) { text-align: right; }
+    .crm-table:has(thead th:nth-child(12).text-center) tbody td:nth-child(12),
+    .crm-table:has(thead th:nth-child(12).text-center) tfoot td:nth-child(12) { text-align: center; }
+    .crm-table:has(thead th:nth-child(12).text-left) tbody td:nth-child(12),
+    .crm-table:has(thead th:nth-child(12).text-left) tfoot td:nth-child(12) { text-align: left; }
+    .crm-table:has(thead th:nth-child(13).text-right) tbody td:nth-child(13),
+    .crm-table:has(thead th:nth-child(13).text-right) tfoot td:nth-child(13) { text-align: right; }
+    .crm-table:has(thead th:nth-child(13).text-center) tbody td:nth-child(13),
+    .crm-table:has(thead th:nth-child(13).text-center) tfoot td:nth-child(13) { text-align: center; }
+    .crm-table:has(thead th:nth-child(13).text-left) tbody td:nth-child(13),
+    .crm-table:has(thead th:nth-child(13).text-left) tfoot td:nth-child(13) { text-align: left; }
+    .crm-table:has(thead th:nth-child(14).text-right) tbody td:nth-child(14),
+    .crm-table:has(thead th:nth-child(14).text-right) tfoot td:nth-child(14) { text-align: right; }
+    .crm-table:has(thead th:nth-child(14).text-center) tbody td:nth-child(14),
+    .crm-table:has(thead th:nth-child(14).text-center) tfoot td:nth-child(14) { text-align: center; }
+    .crm-table:has(thead th:nth-child(14).text-left) tbody td:nth-child(14),
+    .crm-table:has(thead th:nth-child(14).text-left) tfoot td:nth-child(14) { text-align: left; }
+
     /* Modo denso (ideal para planillas de datos / Excel) */
     .crm-table-dense .crm-table thead th {
       padding: 10px 14px;
