@@ -14,6 +14,7 @@ import { InputComponent } from '../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
+import { TableComponent } from '../../shared/components/table/table.component';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import { PlanillaComisionesService } from './planilla-comisiones.service';
 import {
@@ -54,6 +55,7 @@ type Pestana = 'IMPORTAR' | 'CLASIFICACION' | 'REPORTES' | 'CONFIGURACION';
     LoadingSkeletonComponent,
     PageHeaderComponent,
     PaginatorComponent,
+    TableComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './planilla-comisiones.page.html',

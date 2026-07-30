@@ -2,17 +2,17 @@
   title="Planilla de Comisiones"
   subtitle="Liquidación mensual del equipo comercial desde el Excel de FileMaker" />
 
-<!-- ── Selector de periodo + pestañas ──────────────────────────────── -->
+<!-- ── Selector de periodo + información general ────────────────────── -->
 <div class="planilla-barra">
   <div class="periodo-selector">
     <label class="etiqueta-mini">Periodo</label>
     @if (periodos.isLoading()) {
       <app-loading-skeleton width="180px" height="38px" />
     } @else if (periodos.value().datos.length === 0) {
-      <span class="text-sm text-text-muted">Aún no hay ninguna planilla importada</span>
+      <span class="text-sm text-text-muted font-medium">Aún no hay ninguna planilla importada</span>
     } @else {
       <select
-        class="select-base"
+        class="select-base font-semibold"
         [value]="periodoId() ?? ''"
         (change)="seleccionarPeriodo($any($event.target).value)">
         <option value="" disabled>Elegir mes…</option>
@@ -26,11 +26,13 @@
   </div>
 
   @if (periodoActual(); as periodo) {
-    <div class="flex items-center gap-2 flex-wrap">
+    <div class="flex items-center gap-3 flex-wrap">
       <app-badge [variant]="periodo.estado === 'CALCULADO' ? 'success' : periodo.estado === 'CERRADO' ? 'neutral' : 'info'">
         {{ estadoLabel[periodo.estado] }}
       </app-badge>
-      <span class="text-xs text-text-muted">TC {{ periodo.tipoCambio }}</span>
+      <span class="text-xs font-semibold text-text-muted bg-bg-light px-2.5 py-1 rounded-full border border-border">
+        TC {{ periodo.tipoCambio }}
+      </span>
       @if (hayAlertas()) {
         <app-badge variant="critical" icon="alert-circle">Revisar antes de calcular</app-badge>
       }
@@ -38,6 +40,7 @@
   }
 </div>
 
+<!-- ── Pestañas de navegación ──────────────────────────────────────── -->
 <nav class="pestanas">
   @if (esSuperAdmin()) {
     <button type="button" class="pestana" [class.pestana-activa]="pestana() === 'IMPORTAR'" (click)="setPestana('IMPORTAR')">
@@ -60,12 +63,14 @@
   </button>
 </nav>
 
-<!-- ══════════════ IMPORTAR ══════════════ -->
+<!-- ══════════════ 1. IMPORTAR ══════════════ -->
 @if (pestana() === 'IMPORTAR' && esSuperAdmin()) {
   <section class="panel">
     <div class="zona-carga">
-      <app-icon name="download" [size]="34" class="text-primary/50" />
-      <h3 class="text-base font-semibold text-text-dark mt-3">Subir el Excel del mes</h3>
+      <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-3">
+        <app-icon name="download" [size]="28" />
+      </div>
+      <h3 class="text-base font-bold text-text-dark">Subir el Excel del mes</h3>
       <p class="text-sm text-text-muted mt-1 max-w-md text-center">
         Exporta el archivo desde FileMaker y súbelo aquí. El sistema deduce el mes y el tipo de
         cambio del propio archivo, y clasifica cada venta automáticamente.
@@ -74,7 +79,7 @@
       <label class="boton-archivo mt-5">
         @if (subiendo()) {
           <app-icon name="loader" [size]="16" class="animate-spin" />
-          <span>Procesando…</span>
+          <span>Procesando archivo…</span>
         } @else {
           <app-icon name="download" [size]="16" />
           <span>Elegir archivo .xlsx</span>
@@ -89,11 +94,20 @@
 
     @if (ultimaImportacion(); as r) {
       <div class="resumen-import">
-        <h4 class="text-sm font-bold text-text-dark mb-3">Última importación</h4>
+        <h4 class="text-sm font-bold text-text-dark mb-3">Resumen de la última importación</h4>
         <div class="grid-metricas">
-          <div class="metrica"><span class="metrica-valor">{{ r.filasLeidas }}</span><span class="metrica-label">filas leídas</span></div>
-          <div class="metrica"><span class="metrica-valor text-secondary">{{ r.filasComisionables }}</span><span class="metrica-label">comisionables</span></div>
-          <div class="metrica"><span class="metrica-valor">{{ r.vendedorasDetectadas }}</span><span class="metrica-label">vendedoras</span></div>
+          <div class="metrica">
+            <span class="metrica-valor">{{ r.filasLeidas }}</span>
+            <span class="metrica-label">filas leídas</span>
+          </div>
+          <div class="metrica">
+            <span class="metrica-valor text-secondary">{{ r.filasComisionables }}</span>
+            <span class="metrica-label">comisionables</span>
+          </div>
+          <div class="metrica">
+            <span class="metrica-valor">{{ r.vendedorasDetectadas }}</span>
+            <span class="metrica-label">vendedoras</span>
+          </div>
           <div class="metrica">
             <span class="metrica-valor" [class.text-critical]="r.filasSinClasificar > 0">{{ r.filasSinClasificar }}</span>
             <span class="metrica-label">sin clasificar</span>
@@ -101,7 +115,7 @@
         </div>
         @if (r.columnasAusentes.length > 0) {
           <p class="aviso-amber mt-3">
-            Columnas que no venían en el archivo: {{ r.columnasAusentes.join(', ') }}
+            Columnas ausentes en el archivo: {{ r.columnasAusentes.join(', ') }}
           </p>
         }
       </div>
@@ -110,78 +124,91 @@
     <!-- Historial de periodos -->
     @if (periodos.value().datos.length > 0) {
       <div class="mt-6">
-        <h4 class="text-sm font-bold text-text-dark mb-2">Planillas cargadas</h4>
-        <div class="tabla-scroll">
-          <table class="tabla">
-            <thead>
-              <tr><th>Mes</th><th>Estado</th><th class="num">Filas</th><th class="num">Comisionables</th><th>Archivo</th><th>Calculada</th><th></th></tr>
-            </thead>
-            <tbody>
-              @for (p of periodos.value().datos; track p.id) {
-                <tr [class.fila-activa]="p.id === periodoId()">
-                  <td class="font-medium">{{ nombreMes(p.mes) }} {{ p.anio }}</td>
-                  <td><app-badge [variant]="p.estado === 'CALCULADO' ? 'success' : 'neutral'">{{ estadoLabel[p.estado] }}</app-badge></td>
-                  <td class="num">{{ p.filasTotales }}</td>
-                  <td class="num">{{ p.filasValidas }}</td>
-                  <td class="text-xs text-text-muted truncate max-w-[180px]">{{ p.archivoNombre }}</td>
-                  <td class="text-xs text-text-muted">{{ p.calculadoEn ? (p.calculadoEn | date: 'dd/MM/yy HH:mm') : '—' }}</td>
-                  <td class="text-right whitespace-nowrap">
+        <h4 class="text-sm font-bold text-text-dark mb-3">Planillas cargadas en el sistema</h4>
+        <app-table [dense]="true">
+          <thead>
+            <tr>
+              <th class="text-left">Mes / Año</th>
+              <th class="text-center">Estado</th>
+              <th class="text-right">Filas Totales</th>
+              <th class="text-right">Comisionables</th>
+              <th class="text-left">Archivo Excel</th>
+              <th class="text-left">Fecha Carga</th>
+              <th class="text-right">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of periodos.value().datos; track p.id) {
+              <tr [class.fila-activa]="p.id === periodoId()">
+                <td class="text-left font-semibold text-text-dark">{{ nombreMes(p.mes) }} {{ p.anio }}</td>
+                <td class="text-center">
+                  <app-badge [variant]="p.estado === 'CALCULADO' ? 'success' : 'neutral'">
+                    {{ estadoLabel[p.estado] }}
+                  </app-badge>
+                </td>
+                <td class="text-right font-medium text-text-dark">{{ p.filasTotales | number }}</td>
+                <td class="text-right font-semibold text-secondary">{{ p.filasValidas | number }}</td>
+                <td class="text-left text-xs text-text-muted truncate max-w-[180px]">{{ p.archivoNombre }}</td>
+                <td class="text-left text-xs text-text-muted">{{ p.calculadoEn ? (p.calculadoEn | date: 'dd/MM/yy HH:mm') : '—' }}</td>
+                <td class="text-right whitespace-nowrap">
+                  <div class="flex items-center justify-end gap-1">
                     <app-button variant="ghost" size="sm" icon="eye" (clicked)="seleccionarPeriodo(p.id)">Abrir</app-button>
                     @if (p.estado !== 'CERRADO' && esSuperAdmin()) {
                       <app-button variant="ghost" size="sm" icon="trash" (clicked)="eliminarPeriodo(p)">Borrar</app-button>
                     }
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </app-table>
       </div>
     }
   </section>
 }
 
-<!-- ══════════════ CLASIFICACIÓN ══════════════ -->
+<!-- ══════════════ 2. CLASIFICACIÓN ══════════════ -->
 @if (pestana() === 'CLASIFICACION') {
   @if (!periodoId()) {
     <app-empty-state icon="file-text" title="Elige un periodo"
       description="Selecciona arriba el mes que quieres revisar, o importa un Excel nuevo." />
   } @else {
-    <!-- Alertas -->
+    <!-- Alertas de revisión -->
     @if (alertas(); as a) {
       @if (hayAlertas()) {
         <section class="panel-alertas">
           <h4 class="text-sm font-bold text-amber-900 flex items-center gap-2">
-            <app-icon name="alert-circle" [size]="16" /> Revisar antes de calcular
+            <app-icon name="alert-circle" [size]="18" /> Revisión pendiente antes de calcular
           </h4>
 
           @if (a.serviciosSinClasificar.length > 0) {
             <div class="mt-3">
-              <p class="text-xs font-semibold text-amber-900 mb-1.5">
-                Servicios que el sistema no reconoció ({{ a.totales.filasSinClasificar }} filas).
-                Asígnales una clasificación y quedará guardada para los próximos meses:
+              <p class="text-xs font-semibold text-amber-900 mb-2">
+                Servicios no reconocidos ({{ a.totales.filasSinClasificar }} filas). Asígnales clasificación para guardar la regla:
               </p>
-              @for (s of a.serviciosSinClasificar; track s.detalle) {
-                <div class="fila-sin-clasificar">
-                  <div class="min-w-0">
-                    <span class="font-medium text-sm truncate block">{{ s.detalle }}</span>
-                    <span class="text-[11px] text-text-muted">
-                      {{ s.modulo }} · {{ s.veces }} venta(s) · {{ s.montoAfectado | moneda }}
-                    </span>
+              <div class="flex flex-col gap-2">
+                @for (s of a.serviciosSinClasificar; track s.detalle) {
+                  <div class="fila-sin-clasificar">
+                    <div class="min-w-0 flex-1">
+                      <span class="font-semibold text-sm text-text-dark truncate block">{{ s.detalle }}</span>
+                      <span class="text-[11px] text-text-muted">
+                        Módulo: {{ s.modulo ?? 'General' }} · {{ s.veces }} venta(s) · {{ s.montoAfectado | moneda }}
+                      </span>
+                    </div>
+                    <select class="select-base select-mini font-medium" (change)="crearReglaDesdeServicio(s.detalle, $any($event.target).value)">
+                      <option value="" selected>Clasificar como…</option>
+                      @for (c of clasificaciones; track c) {
+                        <option [value]="c">{{ clasifLabel[c] }}</option>
+                      }
+                    </select>
                   </div>
-                  <select class="select-base select-mini" (change)="crearReglaDesdeServicio(s.detalle, $any($event.target).value)">
-                    <option value="" selected>Clasificar como…</option>
-                    @for (c of clasificaciones; track c) {
-                      <option [value]="c">{{ clasifLabel[c] }}</option>
-                    }
-                  </select>
-                </div>
-              }
+                }
+              </div>
             </div>
           }
 
           @if (a.vendedorasPendientes.length > 0) {
-            <p class="text-xs text-amber-900 mt-3">
+            <p class="text-xs text-amber-900 mt-3 font-medium">
               <strong>{{ a.totales.vendedorasSinConfigurar }} vendedora(s) sin configurar</strong>
               (tipo, área y sueldo base) — ve a la pestaña Configuración:
               {{ a.vendedorasPendientes[0].nombre }}@if (a.vendedorasPendientes.length > 1) { y {{ a.vendedorasPendientes.length - 1 }} más}.
@@ -199,13 +226,13 @@
       }
     }
 
-    <!-- Filtros -->
+    <!-- Panel principal de clasificación -->
     <section class="panel">
-      <div class="filtros">
-        <div class="flex-1 min-w-[200px]">
-          <app-input type="search" placeholder="Buscar servicio o paciente…" [(value)]="busqueda" />
+      <div class="filtros mb-4">
+        <div class="flex-1 min-w-[220px]">
+          <app-input type="search" placeholder="Buscar por servicio o paciente…" [(value)]="busqueda" />
         </div>
-        <select class="select-base" [value]="filtroClasif() ?? ''" (change)="filtrarPorClasif($any($event.target).value)">
+        <select class="select-base font-medium" [value]="filtroClasif() ?? ''" (change)="filtrarPorClasif($any($event.target).value)">
           <option value="">Todas las clasificaciones</option>
           @for (c of clasificaciones; track c) {
             <option [value]="c">{{ clasifLabel[c] }}</option>
@@ -227,72 +254,86 @@
       </div>
 
       @if (ventas.isLoading()) {
-        <div class="mt-4 flex flex-col gap-2">
-          @for (n of [1,2,3,4,5,6]; track n) { <app-loading-skeleton height="34px" /> }
+        <div class="flex flex-col gap-2">
+          @for (n of [1,2,3,4,5,6]; track n) { <app-loading-skeleton height="38px" /> }
         </div>
       } @else if (ventas.value().datos.length === 0) {
         <app-empty-state icon="file-x" title="Sin resultados"
           description="Ninguna fila coincide con los filtros aplicados." />
       } @else {
-        <div class="tabla-scroll mt-4">
-          <table class="tabla">
-            <thead>
-              <tr>
-                <th>Fecha</th><th>Servicio</th><th>Vendedora</th><th>Canal</th>
-                <th class="num">Precio</th><th class="num">Base</th>
-                <th>Clasificación</th><th>Tipo</th><th></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (v of ventas.value().datos; track v.id) {
-                <tr [class.fila-excluida]="!v.comisionable">
-                  <td class="text-xs whitespace-nowrap">{{ v.fecha ? (v.fecha | date: 'dd/MM') : '—' }}</td>
-                  <td>
-                    <span class="font-medium text-sm">{{ v.detalle }}</span>
-                    @if (v.paciente) { <span class="block text-[11px] text-text-muted truncate max-w-[200px]">{{ v.paciente }}</span> }
-                  </td>
-                  <td class="text-xs">{{ v.vendedora?.nombre ?? '—' }}</td>
-                  <td>
-                    <app-badge [variant]="v.canal === 'PROPIO' ? 'info' : 'neutral'">{{ v.canal }}</app-badge>
-                  </td>
-                  <td class="num">{{ v.precio | moneda }}</td>
-                  <td class="num text-text-muted">{{ v.ingresoNeto | moneda }}</td>
-                  <td>
-                    <select class="select-base select-mini" [value]="v.clasif"
-                      (change)="cambiarClasificacion(v, $any($event.target).value)">
-                      @for (c of clasificaciones; track c) {
-                        <option [value]="c">{{ clasifLabel[c] }}</option>
-                      }
-                    </select>
-                  </td>
-                  <td><span class="tipo-pill" [title]="tipoLabel[v.tipo]">{{ v.tipo }}</span></td>
-                  <td class="whitespace-nowrap">
-                    @if (v.requiereRevision) {
-                      <app-badge variant="critical">Revisar</app-badge>
-                    } @else if (!v.comisionable) {
-                      <span class="text-[11px] text-critical" [title]="v.motivoExclusion ?? ''">No comisiona</span>
-                    } @else if (v.ajustadaManual) {
-                      <app-badge variant="info">Ajustada</app-badge>
+        <app-table [dense]="true">
+          <thead>
+            <tr>
+              <th class="text-left w-[80px]">Fecha</th>
+              <th class="text-left">Servicio / Paciente</th>
+              <th class="text-left min-w-[130px]">Vendedora</th>
+              <th class="text-center w-[90px]">Canal</th>
+              <th class="text-right w-[110px]">Precio</th>
+              <th class="text-right w-[110px]">Base Cálculo</th>
+              <th class="text-left min-w-[160px]">Clasificación</th>
+              <th class="text-center w-[70px]">Tipo</th>
+              <th class="text-right min-w-[110px]">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (v of ventas.value().datos; track v.id) {
+              <tr [class.fila-excluida]="!v.comisionable">
+                <td class="text-left text-xs whitespace-nowrap text-text-muted">
+                  {{ v.fecha ? (v.fecha | date: 'dd/MM/yyyy') : '—' }}
+                </td>
+                <td class="text-left">
+                  <span class="font-semibold text-sm text-text-dark block">{{ v.detalle }}</span>
+                  @if (v.paciente) {
+                    <span class="block text-[11px] text-text-muted truncate max-w-[240px]">{{ v.paciente }}</span>
+                  }
+                </td>
+                <td class="text-left text-xs font-medium text-text-dark">{{ v.vendedora?.nombre ?? '—' }}</td>
+                <td class="text-center">
+                  <app-badge [variant]="v.canal === 'PROPIO' ? 'info' : 'neutral'">{{ v.canal }}</app-badge>
+                </td>
+                <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ v.precio | moneda }}</td>
+                <td class="text-right text-text-muted whitespace-nowrap">{{ v.ingresoNeto | moneda }}</td>
+                <td class="text-left">
+                  <select class="select-base select-mini w-full font-medium" [value]="v.clasif"
+                    (change)="cambiarClasificacion(v, $any($event.target).value)">
+                    @for (c of clasificaciones; track c) {
+                      <option [value]="c">{{ clasifLabel[c] }}</option>
                     }
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+                  </select>
+                </td>
+                <td class="text-center">
+                  <span class="tipo-pill" [title]="tipoLabel[v.tipo]">{{ v.tipo }}</span>
+                </td>
+                <td class="text-right whitespace-nowrap">
+                  @if (v.requiereRevision) {
+                    <app-badge variant="critical">Revisar</app-badge>
+                  } @else if (!v.comisionable) {
+                    <span class="text-[11px] font-semibold text-text-muted" [title]="v.motivoExclusion ?? ''">No comisiona</span>
+                  } @else if (v.ajustadaManual) {
+                    <app-badge variant="info">Ajustada</app-badge>
+                  } @else {
+                    <span class="text-xs text-text-muted">OK</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </app-table>
 
-        <app-paginator
-          [pagina]="ventas.value().pagina"
-          [totalPaginas]="ventas.value().totalPaginas"
-          [total]="ventas.value().total"
-          [limite]="ventas.value().limite"
-          (cambiar)="pagina.set($event)" />
+        <div class="mt-4">
+          <app-paginator
+            [pagina]="ventas.value().pagina"
+            [totalPaginas]="ventas.value().totalPaginas"
+            [total]="ventas.value().total"
+            [limite]="ventas.value().limite"
+            (cambiar)="pagina.set($event)" />
+        </div>
       }
     </section>
   }
 }
 
-<!-- ══════════════ REPORTES ══════════════ -->
+<!-- ══════════════ 3. REPORTES ══════════════ -->
 @if (pestana() === 'REPORTES') {
   @if (!consolidado()) {
     <app-empty-state icon="bar-chart" title="Todavía no hay liquidación"
@@ -300,17 +341,29 @@
   } @else {
     @if (consolidado(); as rep) {
       <!-- Totales del equipo -->
-      <section class="panel">
+      <section class="panel mb-4">
         <h3 class="text-sm font-bold text-text-dark mb-3">
-          Consolidado — {{ nombreMes(rep.periodo.mes) }} {{ rep.periodo.anio }}
+          Consolidado General — {{ nombreMes(rep.periodo.mes) }} {{ rep.periodo.anio }}
         </h3>
         <div class="grid-metricas">
-          <div class="metrica"><span class="metrica-valor">{{ rep.totales['montoVendido'] | moneda }}</span><span class="metrica-label">vendido</span></div>
-          <div class="metrica"><span class="metrica-valor">{{ rep.totales['baseCalculo'] | moneda }}</span><span class="metrica-label">base de cálculo</span></div>
-          <div class="metrica"><span class="metrica-valor text-secondary">${{ rep.totales['totalUsd'] | number: '1.2-2' }}</span><span class="metrica-label">comisión USD</span></div>
-          <div class="metrica"><span class="metrica-valor">{{ rep.totales['totalBob'] | moneda }}</span><span class="metrica-label">comisión Bs</span></div>
+          <div class="metrica">
+            <span class="metrica-valor">{{ rep.totales['montoVendido'] | moneda }}</span>
+            <span class="metrica-label">total vendido</span>
+          </div>
+          <div class="metrica">
+            <span class="metrica-valor">{{ rep.totales['baseCalculo'] | moneda }}</span>
+            <span class="metrica-label">base de cálculo</span>
+          </div>
+          <div class="metrica">
+            <span class="metrica-valor text-primary">${{ rep.totales['totalUsd'] | number: '1.2-2' }}</span>
+            <span class="metrica-label">comisión total (USD)</span>
+          </div>
+          <div class="metrica">
+            <span class="metrica-valor text-secondary">{{ rep.totales['totalBob'] | moneda }}</span>
+            <span class="metrica-label">comisión total (Bs)</span>
+          </div>
         </div>
-        <div class="flex flex-wrap gap-2 mt-3">
+        <div class="flex flex-wrap gap-2 mt-4">
           <span class="chip-motivo">Tipo A · Planes: ${{ rep.totales['comisionA'] | number: '1.2-2' }}</span>
           <span class="chip-motivo">Tipo B · Cirugías: ${{ rep.totales['comisionB'] | number: '1.2-2' }}</span>
           <span class="chip-motivo">Tipo C · Servicios: ${{ rep.totales['comisionC'] | number: '1.2-2' }}</span>
@@ -320,63 +373,70 @@
 
       <!-- Planilla final por persona -->
       <section class="panel">
-        <h3 class="text-sm font-bold text-text-dark mb-3">Planilla por persona</h3>
-        <div class="tabla-scroll">
-          <table class="tabla">
-            <thead>
+        <h3 class="text-sm font-bold text-text-dark mb-3">Planilla por Persona</h3>
+        <app-table [dense]="true">
+          <thead>
+            <tr>
+              <th class="text-left min-w-[160px]">Vendedora</th>
+              <th class="text-right min-w-[110px]">Vendido</th>
+              <th class="text-right min-w-[100px]">Planes</th>
+              <th class="text-right min-w-[110px]">Cirugías</th>
+              <th class="text-right min-w-[90px]">Comisión A</th>
+              <th class="text-right min-w-[90px]">Comisión B</th>
+              <th class="text-right min-w-[90px]">Comisión C</th>
+              <th class="text-right min-w-[85px]">Bonos</th>
+              <th class="text-right min-w-[100px]">Total USD</th>
+              <th class="text-right min-w-[110px]">Total Bs</th>
+              <th class="text-right min-w-[100px]">Sueldo Base</th>
+              <th class="text-right min-w-[120px]">Total Ganado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (f of rep.filas; track f.vendedoraId) {
               <tr>
-                <th>Vendedora</th><th class="num">Vendido</th><th class="num">Planes</th>
-                <th class="num">Cirugías</th><th class="num">A</th><th class="num">B</th><th class="num">C</th>
-                <th class="num">Bonos</th><th class="num">Total USD</th><th class="num">Total Bs</th>
-                <th class="num">Sueldo</th><th class="num">Total ganado</th>
+                <td class="text-left">
+                  <span class="font-semibold text-sm text-text-dark block">{{ f.nombre }}</span>
+                  <span class="block text-[11px] text-text-muted">{{ f.tipo }} · {{ f.area }}</span>
+                </td>
+                <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ f.montoVendido | moneda }}</td>
+                <td class="text-right whitespace-nowrap">
+                  <span class="font-medium text-text-dark">{{ f.planesVendidos }}</span>
+                  @if (!f.cumpleObjetivoPlanes) {
+                    <span class="text-[10px] text-critical font-semibold block text-right" title="No alcanzó el objetivo: no comisiona Tipo A">sin objetivo</span>
+                  }
+                </td>
+                <td class="text-right whitespace-nowrap">
+                  <span class="font-medium text-text-dark">{{ f.acumuladoCirugias | moneda }}</span>
+                  @if (f.nivelCirugia) {
+                    <span class="text-[10px] text-text-muted font-medium block text-right">nivel {{ f.nivelCirugia }}</span>
+                  }
+                </td>
+                <td class="text-right whitespace-nowrap">${{ f.comisionA | number: '1.2-2' }}</td>
+                <td class="text-right whitespace-nowrap">${{ f.comisionB | number: '1.2-2' }}</td>
+                <td class="text-right whitespace-nowrap">${{ f.comisionC | number: '1.2-2' }}</td>
+                <td class="text-right whitespace-nowrap">${{ f.bonoJefatura + f.bonoTrimestral | number: '1.2-2' }}</td>
+                <td class="text-right font-semibold text-primary whitespace-nowrap">${{ f.totalUsd | number: '1.2-2' }}</td>
+                <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ f.totalBob | moneda }}</td>
+                <td class="text-right text-text-muted whitespace-nowrap">{{ f.sueldoBase | moneda }}</td>
+                <td class="text-right font-extrabold text-secondary text-base whitespace-nowrap">{{ f.totalGanado | moneda }}</td>
               </tr>
-            </thead>
-            <tbody>
-              @for (f of rep.filas; track f.vendedoraId) {
-                <tr>
-                  <td>
-                    <span class="font-medium text-sm">{{ f.nombre }}</span>
-                    <span class="block text-[11px] text-text-muted">{{ f.tipo }} · {{ f.area }}</span>
-                  </td>
-                  <td class="num">{{ f.montoVendido | moneda }}</td>
-                  <td class="num">
-                    {{ f.planesVendidos }}
-                    @if (!f.cumpleObjetivoPlanes) {
-                      <span class="text-[10px] text-critical block" title="No alcanzó el objetivo: no comisiona Tipo A">sin objetivo</span>
-                    }
-                  </td>
-                  <td class="num">
-                    {{ f.acumuladoCirugias | moneda }}
-                    @if (f.nivelCirugia) { <span class="text-[10px] text-text-muted block">nivel {{ f.nivelCirugia }}</span> }
-                  </td>
-                  <td class="num">${{ f.comisionA | number: '1.2-2' }}</td>
-                  <td class="num">${{ f.comisionB | number: '1.2-2' }}</td>
-                  <td class="num">${{ f.comisionC | number: '1.2-2' }}</td>
-                  <td class="num">${{ f.bonoJefatura + f.bonoTrimestral | number: '1.2-2' }}</td>
-                  <td class="num font-semibold">${{ f.totalUsd | number: '1.2-2' }}</td>
-                  <td class="num">{{ f.totalBob | moneda }}</td>
-                  <td class="num text-text-muted">{{ f.sueldoBase | moneda }}</td>
-                  <td class="num font-bold text-secondary">{{ f.totalGanado | moneda }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+            }
+          </tbody>
+        </app-table>
       </section>
     }
   }
 }
 
-<!-- ══════════════ CONFIGURACIÓN ══════════════ -->
+<!-- ══════════════ 4. CONFIGURACIÓN ══════════════ -->
 @if (pestana() === 'CONFIGURACION') {
   <!-- Vendedoras -->
-  <section class="panel">
+  <section class="panel mb-4">
     <h3 class="text-sm font-bold text-text-dark mb-1">Vendedoras</h3>
     <p class="text-xs text-text-muted mb-3">
       Se dan de alta solas al importar. El agente del CRM se reconoce por el <strong>código de
       empresa</strong> (el mismo <code>vendedora_pk</code> del Excel), así que no hay que vincular
-      nada a mano: basta con que un super administrador se lo haya asignado en Agentes.
-      Fíjales tipo, área y sueldo base para que la liquidación sea correcta.
+      nada a mano. Fíjales tipo, área y sueldo base para que la liquidación sea correcta.
     </p>
 
     @if (vendedoras.isLoading()) {
@@ -385,198 +445,252 @@
       <app-empty-state icon="users" title="Sin vendedoras"
         description="Aparecerán aquí en cuanto importes el primer Excel." />
     } @else {
-      <div class="tabla-scroll">
-        <table class="tabla">
-          <thead>
-            <tr><th>Nombre</th><th>Código</th><th>Agente del CRM</th><th>Tipo</th><th>Área</th><th class="num">Sueldo base (Bs)</th><th>Estado</th></tr>
-          </thead>
-          <tbody>
-            @for (v of vendedoras.value(); track v.id) {
-              <tr [class.fila-pendiente]="!v.configurada">
-                <td class="font-medium text-sm">{{ v.nombre }}</td>
-                <td class="text-xs text-text-muted">{{ v.codigo }}</td>
-                <td>
-                  @if (v.agente; as ag) {
-                    <span class="text-sm font-medium">{{ ag.nombre }}</span>
-                    <span class="block text-[10px] text-text-muted">{{ ag.email }}</span>
-                  } @else {
-                    <app-badge variant="neutral" icon="alert-circle">Sin agente</app-badge>
-                    <span class="block text-[10px] text-text-muted mt-0.5">
-                      Asigna el código <strong>{{ v.codigo }}</strong> a su agente
-                    </span>
-                  }
-                </td>
-                <td>
-                  <select class="select-base select-mini" [value]="v.tipo" (change)="cambiarTipoVendedora(v, $any($event.target).value)">
-                    <option value="VENDEDORA">Vendedora</option>
-                    <option value="JEFA">Jefa</option>
-                  </select>
-                </td>
-                <td>
-                  <select class="select-base select-mini" [value]="v.area" (change)="cambiarAreaVendedora(v, $any($event.target).value)">
-                    <option value="EJECUTIVA">Ejecutiva</option>
-                    <option value="RA">Coordinadora RA</option>
-                    <option value="PUBLICIDAD">Publicidad</option>
-                  </select>
-                </td>
-                <td class="num">
-                  <input type="number" min="0" step="0.01" class="input-mini" [value]="v.sueldoBase"
+      <app-table [dense]="true">
+        <thead>
+          <tr>
+            <th class="text-left">Nombre</th>
+            <th class="text-left">Código</th>
+            <th class="text-left">Agente CRM</th>
+            <th class="text-center">Tipo</th>
+            <th class="text-center">Área</th>
+            <th class="text-right">Sueldo Base (Bs)</th>
+            <th class="text-center">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (v of vendedoras.value(); track v.id) {
+            <tr [class.fila-pendiente]="!v.configurada">
+              <td class="text-left font-semibold text-sm text-text-dark">{{ v.nombre }}</td>
+              <td class="text-left text-xs font-mono text-text-muted">{{ v.codigo }}</td>
+              <td class="text-left">
+                @if (v.agente; as ag) {
+                  <span class="text-sm font-medium text-text-dark">{{ ag.nombre }}</span>
+                  <span class="block text-[10px] text-text-muted">{{ ag.email }}</span>
+                } @else {
+                  <app-badge variant="neutral" icon="alert-circle">Sin agente</app-badge>
+                }
+              </td>
+              <td class="text-center">
+                <select class="select-base select-mini font-medium" [value]="v.tipo" (change)="cambiarTipoVendedora(v, $any($event.target).value)">
+                  <option value="VENDEDORA">Vendedora</option>
+                  <option value="JEFA">Jefa</option>
+                </select>
+              </td>
+              <td class="text-center">
+                <select class="select-base select-mini font-medium" [value]="v.area" (change)="cambiarAreaVendedora(v, $any($event.target).value)">
+                  <option value="EJECUTIVA">Ejecutiva</option>
+                  <option value="RA">Coordinadora RA</option>
+                  <option value="PUBLICIDAD">Publicidad</option>
+                </select>
+              </td>
+              <td class="text-right">
+                <div class="flex justify-end">
+                  <input type="number" min="0" step="0.01" class="input-mini text-right" [value]="v.sueldoBase"
                     (change)="guardarSueldo(v, $any($event.target).value)" />
-                </td>
-                <td>
-                  @if (v.configurada) {
-                    <app-badge variant="success">Configurada</app-badge>
-                  } @else {
-                    <app-badge variant="critical">Pendiente</app-badge>
-                  }
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+                </div>
+              </td>
+              <td class="text-center">
+                @if (v.configurada) {
+                  <app-badge variant="success">Configurada</app-badge>
+                } @else {
+                  <app-badge variant="critical">Pendiente</app-badge>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
     }
   </section>
 
   @if (configuracion(); as cfg) {
     <!-- Tipo A -->
-    <section class="panel">
+    <section class="panel mb-4">
       <h3 class="text-sm font-bold text-text-dark mb-1">Tipo A — Planes (%)</h3>
       <p class="text-xs text-text-muted mb-3">Por nivel del plan de maternidad, y PLANNIN para los paquetes varios.</p>
-      <div class="tabla-scroll">
-        <table class="tabla">
-          <thead><tr><th>Nivel</th><th class="num">Empresa %</th><th class="num">Propio %</th><th></th></tr></thead>
-          <tbody>
-            @for (t of cfg.tarifasPlan; track t.id) {
-              <tr>
-                <td class="font-medium">{{ t.clave }}</td>
-                <td class="num"><input #te type="number" min="0" max="100" step="0.1" class="input-mini" [value]="t.pctEmpresa" /></td>
-                <td class="num"><input #tp type="number" min="0" max="100" step="0.1" class="input-mini" [value]="t.pctPropio" /></td>
-                <td class="text-right">
-                  <app-button variant="ghost" size="sm" icon="check" (clicked)="guardarTarifaPlan(t.clave, te.value, tp.value)">Guardar</app-button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      <app-table [dense]="true">
+        <thead>
+          <tr>
+            <th class="text-left">Nivel</th>
+            <th class="text-right">Empresa %</th>
+            <th class="text-right">Propio %</th>
+            <th class="text-right">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of cfg.tarifasPlan; track t.id) {
+            <tr>
+              <td class="text-left font-semibold text-text-dark">{{ t.clave }}</td>
+              <td class="text-right">
+                <div class="flex justify-end">
+                  <input #te type="number" min="0" max="100" step="0.1" class="input-mini text-right" [value]="t.pctEmpresa" />
+                </div>
+              </td>
+              <td class="text-right">
+                <div class="flex justify-end">
+                  <input #tp type="number" min="0" max="100" step="0.1" class="input-mini text-right" [value]="t.pctPropio" />
+                </div>
+              </td>
+              <td class="text-right">
+                <app-button variant="ghost" size="sm" icon="check" (clicked)="guardarTarifaPlan(t.clave, te.value, tp.value)">Guardar</app-button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
     </section>
 
     <!-- Tipo C -->
-    <section class="panel">
+    <section class="panel mb-4">
       <h3 class="text-sm font-bold text-text-dark mb-1">Tipo C — Consultas, laboratorios y otros (%)</h3>
-      <div class="tabla-scroll">
-        <table class="tabla">
-          <thead><tr><th>Clasificación</th><th class="num">Empresa %</th><th class="num">Propio %</th><th></th></tr></thead>
-          <tbody>
-            @for (t of cfg.tarifasServicio; track t.id) {
-              <tr>
-                <td class="font-medium">{{ clasifLabel[t.clasif] }}</td>
-                <td class="num"><input #se type="number" min="0" max="100" step="0.1" class="input-mini" [value]="t.pctEmpresa" /></td>
-                <td class="num"><input #sp type="number" min="0" max="100" step="0.1" class="input-mini" [value]="t.pctPropio" /></td>
-                <td class="text-right">
-                  <app-button variant="ghost" size="sm" icon="check" (clicked)="guardarTarifaServicio(t.clasif, se.value, sp.value)">Guardar</app-button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      <app-table [dense]="true">
+        <thead>
+          <tr>
+            <th class="text-left">Clasificación</th>
+            <th class="text-right">Empresa %</th>
+            <th class="text-right">Propio %</th>
+            <th class="text-right">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of cfg.tarifasServicio; track t.id) {
+            <tr>
+              <td class="text-left font-semibold text-text-dark">{{ clasifLabel[t.clasif] }}</td>
+              <td class="text-right">
+                <div class="flex justify-end">
+                  <input #se type="number" min="0" max="100" step="0.1" class="input-mini text-right" [value]="t.pctEmpresa" />
+                </div>
+              </td>
+              <td class="text-right">
+                <div class="flex justify-end">
+                  <input #sp type="number" min="0" max="100" step="0.1" class="input-mini text-right" [value]="t.pctPropio" />
+                </div>
+              </td>
+              <td class="text-right">
+                <app-button variant="ghost" size="sm" icon="check" (clicked)="guardarTarifaServicio(t.clasif, se.value, sp.value)">Guardar</app-button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
     </section>
 
     <!-- Tipo B -->
-    <section class="panel">
+    <section class="panel mb-4">
       <h3 class="text-sm font-bold text-text-dark mb-1">Tipo B — Escala de cirugías</h3>
       <p class="text-xs text-text-muted mb-3">
         El nivel se decide con el monto acumulado de cirugías del mes de cada vendedora.
       </p>
-      <div class="tabla-scroll">
-        <table class="tabla">
-          <thead><tr><th>Nivel</th><th class="num">Desde</th><th class="num">Hasta</th><th class="num">Empresa %</th><th class="num">Propio %</th></tr></thead>
-          <tbody>
-            @for (n of cfg.nivelesCirugia; track n.id) {
-              <tr>
-                <td class="font-medium">Nivel {{ n.nivel }}</td>
-                <td class="num">{{ n.montoDesde | moneda }}</td>
-                <td class="num">{{ n.montoHasta | moneda }}</td>
-                <td class="num">{{ n.pctEmpresa }}%</td>
-                <td class="num">{{ n.pctPropio }}%</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      <app-table [dense]="true">
+        <thead>
+          <tr>
+            <th class="text-left">Nivel</th>
+            <th class="text-right">Monto Desde</th>
+            <th class="text-right">Monto Hasta</th>
+            <th class="text-right">Empresa %</th>
+            <th class="text-right">Propio %</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (n of cfg.nivelesCirugia; track n.id) {
+            <tr>
+              <td class="text-left font-semibold text-text-dark">Nivel {{ n.nivel }}</td>
+              <td class="text-right text-text-dark font-medium">{{ n.montoDesde | moneda }}</td>
+              <td class="text-right text-text-dark font-medium">{{ n.montoHasta | moneda }}</td>
+              <td class="text-right font-semibold text-primary">{{ n.pctEmpresa }}%</td>
+              <td class="text-right font-semibold text-secondary">{{ n.pctPropio }}%</td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
     </section>
 
     <!-- Tarifas RA -->
-    <section class="panel">
+    <section class="panel mb-4">
       <h3 class="text-sm font-bold text-text-dark mb-1">Tipo B — Coordinadoras RA (USD por procedimiento)</h3>
-      <div class="tabla-scroll">
-        <table class="tabla">
-          <thead><tr><th>Procedimiento</th><th class="num">Clínica</th><th class="num">Propia</th></tr></thead>
-          <tbody>
-            @for (t of cfg.tarifasRA; track t.id) {
-              <tr>
-                <td class="text-sm">{{ t.procedimiento }}</td>
-                <td class="num">{{ t.esPorcentaje ? t.montoEmpresa + '%' : '$' + t.montoEmpresa }}</td>
-                <td class="num">{{ t.esPorcentaje ? t.montoPropio + '%' : '$' + t.montoPropio }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      <app-table [dense]="true">
+        <thead>
+          <tr>
+            <th class="text-left">Procedimiento</th>
+            <th class="text-right">Clínica</th>
+            <th class="text-right">Propia</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of cfg.tarifasRA; track t.id) {
+            <tr>
+              <td class="text-left font-medium text-text-dark">{{ t.procedimiento }}</td>
+              <td class="text-right font-medium text-text-dark">{{ t.esPorcentaje ? t.montoEmpresa + '%' : '$' + t.montoEmpresa }}</td>
+              <td class="text-right font-medium text-text-dark">{{ t.esPorcentaje ? t.montoPropio + '%' : '$' + t.montoPropio }}</td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
     </section>
 
     <!-- Objetivos -->
-    <section class="panel">
-      <h3 class="text-sm font-bold text-text-dark mb-1">Objetivos</h3>
+    <section class="panel mb-4">
+      <h3 class="text-sm font-bold text-text-dark mb-1">Objetivos del Equipo Comercial</h3>
       <p class="text-xs text-text-muted mb-3">
         Si no alcanza el mínimo de planes, la vendedora no cobra comisión Tipo A ese mes.
       </p>
-      <div class="tabla-scroll">
-        <table class="tabla">
-          <thead><tr><th>Tipo</th><th class="num">Planes mínimos</th><th class="num">Objetivo mensual (USD)</th><th class="num">Objetivo trimestral (USD)</th></tr></thead>
-          <tbody>
-            @for (o of cfg.objetivos; track o.id) {
-              <tr>
-                <td class="font-medium">{{ o.tipo }}</td>
-                <td class="num">{{ o.planesMinimos }}</td>
-                <td class="num">${{ o.montoMensualUsd }}</td>
-                <td class="num">${{ o.montoTrimestralUsd }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      <app-table [dense]="true">
+        <thead>
+          <tr>
+            <th class="text-left">Tipo Vendedora</th>
+            <th class="text-right">Planes Mínimos</th>
+            <th class="text-right">Objetivo Mensual (USD)</th>
+            <th class="text-right">Objetivo Trimestral (USD)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (o of cfg.objetivos; track o.id) {
+            <tr>
+              <td class="text-left font-semibold text-text-dark">{{ o.tipo }}</td>
+              <td class="text-right font-bold text-secondary">{{ o.planesMinimos }}</td>
+              <td class="text-right font-medium text-text-dark">${{ o.montoMensualUsd }}</td>
+              <td class="text-right font-medium text-text-dark">${{ o.montoTrimestralUsd }}</td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
     </section>
 
     <!-- Diccionario -->
-    <section class="panel">
-      <h3 class="text-sm font-bold text-text-dark mb-1">Diccionario de clasificación ({{ cfg.reglas.length }})</h3>
+    <section class="panel mb-4">
+      <h3 class="text-sm font-bold text-text-dark mb-1">Diccionario de clasificación ({{ cfg.reglas.length }} reglas)</h3>
       <p class="text-xs text-text-muted mb-3">
         Manda sobre la clasificación automática. Se evalúa de menor a mayor prioridad.
       </p>
-      <div class="tabla-scroll" style="max-height: 420px">
-        <table class="tabla">
-          <thead><tr><th class="num">Prior.</th><th>Si el servicio contiene…</th><th>Se clasifica como</th><th>Unidad</th><th></th></tr></thead>
-          <tbody>
-            @for (r of cfg.reglas; track r.id) {
-              <tr>
-                <td class="num text-xs">{{ r.prioridad }}</td>
-                <td class="text-sm">
-                  {{ r.patron }}
-                  @if (r.notas) { <span class="block text-[11px] text-text-muted">{{ r.notas }}</span> }
-                </td>
-                <td><app-badge variant="neutral">{{ clasifLabel[r.clasif] }}</app-badge></td>
-                <td class="text-xs text-text-muted">{{ r.unidadNegocio ?? '—' }}</td>
-                <td class="text-right">
-                  <app-button variant="ghost" size="sm" icon="trash" (clicked)="eliminarRegla(r.id, r.patron)">Quitar</app-button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      <app-table [dense]="true">
+        <thead>
+          <tr>
+            <th class="text-center w-[70px]">Prioridad</th>
+            <th class="text-left">Patrón (Servicio contiene…)</th>
+            <th class="text-center min-w-[150px]">Clasificación</th>
+            <th class="text-left min-w-[120px]">Unidad de Negocio</th>
+            <th class="text-right">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of cfg.reglas; track r.id) {
+            <tr>
+              <td class="text-center font-mono text-xs text-text-muted">{{ r.prioridad }}</td>
+              <td class="text-left">
+                <span class="font-semibold text-sm text-text-dark block">{{ r.patron }}</span>
+                @if (r.notas) { <span class="block text-[11px] text-text-muted">{{ r.notas }}</span> }
+              </td>
+              <td class="text-center">
+                <app-badge variant="neutral">{{ clasifLabel[r.clasif] }}</app-badge>
+              </td>
+              <td class="text-left text-xs font-medium text-text-muted">{{ r.unidadNegocio ?? '—' }}</td>
+              <td class="text-right">
+                <app-button variant="ghost" size="sm" icon="trash" (clicked)="eliminarRegla(r.id, r.patron)">Quitar</app-button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
     </section>
   } @else {
     <section class="panel"><app-loading-skeleton height="200px" /></section>
