@@ -1,8 +1,7 @@
 import { Routes } from '@angular/router';
 
-import { adminGuard } from './core/auth/admin.guard';
 import { authGuard } from './core/auth/auth.guard';
-import { superAdminGuard } from './core/auth/super-admin.guard';
+import { exigeRol } from './core/auth/roles';
 
 /**
  * Rutas del CRM
@@ -51,7 +50,7 @@ export const routes: Routes = [
         /* Consume KPIs globales y la planilla de comisiones (endpoints de admin):
            sin este guard un agente veria la pagina cargar y fallar con 403. */
         path: 'reportes',
-        canActivate: [adminGuard],
+        canActivate: [exigeRol('ADMIN')],
         loadComponent: () =>
           import('./features/reportes/reportes.page').then(
             m => m.ReportesPage,
@@ -95,7 +94,7 @@ export const routes: Routes = [
         /* Planilla mensual de comisiones (Excel de FileMaker) — solo admin:
            son datos de remuneración de todo el equipo. */
         path: 'planilla-comisiones',
-        canActivate: [adminGuard],
+        canActivate: [exigeRol('ADMIN')],
         loadComponent: () =>
           import('./features/planilla-comisiones/planilla-comisiones.page').then(
             m => m.PlanillaComisionesPage,
@@ -105,7 +104,7 @@ export const routes: Routes = [
         /* Gestión de agentes: solo super admin — es donde se asignan los códigos
            de empresa de los que depende toda la planilla de comisiones. */
         path: 'agentes',
-        canActivate: [superAdminGuard],
+        canActivate: [exigeRol('SUPER_ADMIN')],
         loadComponent: () =>
           import('./features/agentes/agentes.page').then(m => m.AgentesPage),
       },

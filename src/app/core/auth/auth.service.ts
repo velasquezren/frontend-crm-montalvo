@@ -3,6 +3,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import { API_URL } from '../api/api.constants';
+import { cubreRol } from './roles';
 import { generarIniciales, RolUsuario, User } from './user.model';
 
 interface LoginResponse {
@@ -26,13 +27,10 @@ export class AuthService {
 
   readonly user = this.currentUser.asReadonly();
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
-  /** Un SUPER_ADMIN también es admin: la jerarquía se respeta en toda la UI. */
-  readonly isAdmin = computed(() => {
-    const rol = this.currentUser()?.rol;
-    return rol === 'ADMIN' || rol === 'SUPER_ADMIN';
-  });
+  /** De ADMIN para arriba — un super admin puede todo lo que puede un admin. */
+  readonly isAdmin = computed(() => cubreRol(this.currentUser()?.rol, 'ADMIN'));
   /** Solo el super admin: gestiona agentes (y sus códigos) e importa la planilla. */
-  readonly isSuperAdmin = computed(() => this.currentUser()?.rol === 'SUPER_ADMIN');
+  readonly isSuperAdmin = computed(() => cubreRol(this.currentUser()?.rol, 'SUPER_ADMIN'));
 
   get token(): string | null {
     return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);

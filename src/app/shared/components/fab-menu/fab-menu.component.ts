@@ -4,13 +4,16 @@ import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, map } from 'rxjs';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { cubreRol } from '../../../core/auth/roles';
+import { RolUsuario } from '../../../core/auth/user.model';
 import { IconComponent, IconName } from '../icon/icon.component';
 
 export interface FabMenuItem {
   readonly icon: IconName;
   readonly label: string;
   readonly path: string;
-  readonly soloAdmin?: boolean;
+  /** Nivel mínimo para ver la acción; sin él, la ve todo el mundo. */
+  readonly rolMinimo?: RolUsuario;
   /** Color de acento del ícono (CSS custom property o hex). Fallback: --color-primary */
   readonly accent?: string;
 }
@@ -317,10 +320,10 @@ export class FabMenuComponent {
     return !url.includes('/conversaciones') && !url.includes('/login');
   });
 
-  /** Filtrar items por rol del usuario. */
+  /** Oculta las acciones que el rol actual no alcanza (mismo criterio que el menú lateral). */
   protected readonly filteredItems = computed(() => {
-    const isAdmin = this.authService.isAdmin();
-    return this.items().filter(item => !item.soloAdmin || isAdmin);
+    const rol = this.authService.user()?.rol;
+    return this.items().filter(item => !item.rolMinimo || cubreRol(rol, item.rolMinimo));
   });
 
   protected toggle(): void {

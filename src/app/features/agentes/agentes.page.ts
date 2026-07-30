@@ -13,6 +13,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InputComponent } from '../../shared/components/input/input.component';
 import { ToastService } from '../../core/toast/toast.service';
+import { ROL_LABEL } from '../../core/auth/roles';
 import { RolUsuario } from '../../core/auth/user.model';
 import { Agente, CreateAgentePayload } from './agente.model';
 import { AgentesService } from './agentes.service';
@@ -70,12 +71,8 @@ export class AgentesPage {
   protected readonly formPassword = signal('');
   protected readonly formRol = signal<'ADMIN' | 'AGENTE'>('AGENTE');
 
-  /** Etiquetas de rol — fuente única para badges y textos de la vista. */
-  protected readonly rolLabel: Record<RolUsuario, string> = {
-    SUPER_ADMIN: 'Super administrador',
-    ADMIN: 'Administrador',
-    AGENTE: 'Agente',
-  };
+  /** Etiquetas de rol — vienen de core/auth/roles.ts, no se redefinen aquí. */
+  protected readonly rolLabel = ROL_LABEL;
 
   /* ── Datos del Servidor ────────────────────────────────────────── */
   protected readonly agentes = httpResource<Agente[]>(

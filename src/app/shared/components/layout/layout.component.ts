@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, HostListener, computed,
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { cubreRol } from '../../../core/auth/roles';
 import { ToastContainerComponent } from '../../../core/toast/toast-container.component';
 import { AvatarComponent } from '../avatar/avatar.component';
 import { FabMenuComponent, FabMenuItem } from '../fab-menu/fab-menu.component';
@@ -72,14 +73,11 @@ export class LayoutComponent {
     this.showInstallBanner.set(false);
   }
 
-  /* Un agente no ve los módulos solo-admin (el backend además los bloquea con @Roles) */
-  protected readonly navItems = computed(() =>
-    NAV_ITEMS.filter(
-      item =>
-        (!item.soloAdmin || this.authService.isAdmin()) &&
-        (!item.soloSuperAdmin || this.authService.isSuperAdmin()),
-    ),
-  );
+  /* Se ocultan los módulos que el rol no alcanza (el backend los bloquea igual con @Roles) */
+  protected readonly navItems = computed(() => {
+    const rol = this.authService.user()?.rol;
+    return NAV_ITEMS.filter(item => !item.rolMinimo || cubreRol(rol, item.rolMinimo));
+  });
 
   toggleSidebar(event?: MouseEvent): void {
     if (event) {
@@ -109,7 +107,7 @@ export class LayoutComponent {
 
   /* Acciones rápidas del FAB — el ítem más usado va último (más cerca del botón) */
   protected readonly fabItems: readonly FabMenuItem[] = [
-    { icon: 'users',        label: 'Gestionar Agentes',   path: '/agentes',                  soloAdmin: true, accent: '#6366f1' },
+    { icon: 'users',        label: 'Gestionar Agentes',   path: '/agentes',                  rolMinimo: 'SUPER_ADMIN', accent: '#6366f1' },
     { icon: 'message-circle', label: 'Abrir WhatsApp',    path: '/conversaciones',            accent: '#10b981' },
     { icon: 'shopping-bag', label: 'Registrar Venta',     path: '/ventas',                    accent: '#f59e0b' },
     { icon: 'user-plus',    label: 'Registro Presencial', path: '/leads/registro-presencial', accent: 'var(--color-primary)' },
