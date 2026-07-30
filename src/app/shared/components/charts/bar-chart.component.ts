@@ -75,41 +75,35 @@ export interface ChartItem {
         </div>
       } @else {
         <!-- Modo Columnas Verticales -->
-        <div class="pt-6 pb-2" [style.height]="height()">
-          <div class="h-full flex items-end justify-between gap-2 border-b border-border pb-2 px-1">
-            @for (item of processedItems(); track item.label) {
-              <div
-                class="flex-1 flex flex-col items-center h-full justify-end group relative cursor-pointer"
-                (mouseenter)="hoveredLabel.set(item.label)"
-                (mouseleave)="hoveredLabel.set(null)">
+        <div class="grafico-columnas" [style.height]="height()">
+          @for (item of processedItems(); track item.label) {
+            <div
+              class="columna"
+              (mouseenter)="hoveredLabel.set(item.label)"
+              (mouseleave)="hoveredLabel.set(null)">
 
-                <!-- Tooltip al pasar el cursor -->
-                @if (hoveredLabel() === item.label) {
-                  <div class="absolute -top-10 z-20 bg-text-dark text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-lifted whitespace-nowrap animate-fade-in pointer-events-none">
-                    {{ item.label }}: {{ format(item.value) }}
-                  </div>
-                }
-
-                <!-- Valor superior si cabe -->
-                <span class="text-[10px] font-bold text-text-muted mb-1 opacity-80 group-hover:opacity-100 group-hover:text-primary transition-all">
-                  {{ formatCompact(item.value) }}
-                </span>
-
-                <!-- Columna vertical con animación -->
-                <div class="w-full max-w-[42px] bg-bg-light rounded-t-lg overflow-hidden flex items-end p-0.5 border border-border/50 transition-all group-hover:border-primary/50">
-                  <div
-                    class="w-full rounded-t-md transition-all duration-500 ease-out"
-                    [style.height.%]="item.barWidth"
-                    [style.background-color]="item.color || 'var(--color-primary)'"></div>
+              @if (hoveredLabel() === item.label) {
+                <div class="columna-tooltip">
+                  {{ item.label }} · {{ format(item.value) }}
+                  @if (item.sublabel) { <span class="opacity-70">({{ item.sublabel }})</span> }
                 </div>
+              }
 
-                <!-- Etiqueta eje X -->
-                <span class="text-[11px] font-semibold text-text-muted mt-2 truncate w-full text-center group-hover:text-text-dark transition-colors">
-                  {{ item.label }}
-                </span>
+              <span class="columna-valor">{{ formatCompact(item.value) }}</span>
+
+              <!-- La pista ocupa el alto restante: es contra ella que se
+                   resuelve el alto porcentual de la barra. Sin esto, todas
+                   las columnas se veían del mismo tamaño. -->
+              <div class="columna-pista">
+                <div
+                  class="columna-barra"
+                  [style.height.%]="item.barWidth"
+                  [style.background-color]="item.color || 'var(--color-primary)'"></div>
               </div>
-            }
-          </div>
+
+              <span class="columna-etiqueta">{{ item.label }}</span>
+            </div>
+          }
         </div>
       }
     </div>
@@ -117,6 +111,100 @@ export interface ChartItem {
   styles: `
     .chart-container {
       width: 100%;
+    }
+
+    /* ── Columnas verticales ──────────────────────────────────────── */
+    .grafico-columnas {
+      display: flex;
+      align-items: stretch;
+      gap: 6px;
+      padding: 26px 4px 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .columna {
+      position: relative;
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .columna-valor {
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 5px;
+      color: var(--color-text-muted);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      transition: color 0.15s;
+    }
+
+    .columna:hover .columna-valor {
+      color: var(--color-primary);
+    }
+
+    /* Ocupa todo el alto sobrante — imprescindible para que la barra escale. */
+    .columna-pista {
+      flex: 1 1 auto;
+      min-height: 0;
+      width: 100%;
+      max-width: 46px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .columna-barra {
+      width: 100%;
+      border-radius: 6px 6px 0 0;
+      transition: height 0.45s cubic-bezier(0.4, 0, 0.2, 1), filter 0.15s;
+      min-height: 3px;
+    }
+
+    .columna:hover .columna-barra {
+      filter: brightness(1.08);
+    }
+
+    .columna-etiqueta {
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1;
+      margin-top: 8px;
+      color: var(--color-text-muted);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      transition: color 0.15s;
+    }
+
+    .columna:hover .columna-etiqueta {
+      color: var(--color-text-dark);
+    }
+
+    .columna-tooltip {
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      transform: translate(-50%, -100%);
+      z-index: 20;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: white;
+      background: var(--color-text-dark);
+      border-radius: 8px;
+      box-shadow: var(--shadow-lifted);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* Con muchos días el valor sobre cada barra se amontona: se oculta y
+       queda disponible en el tooltip. */
+    @container (max-width: 560px) {
+      .columna-valor { display: none; }
     }
   `,
 })

@@ -292,14 +292,14 @@
               <tr class="fila-totales">
                 <td class="font-bold">TOTALES</td>
                 <td class="num font-bold">{{ rep.totales['montoVendido'] | moneda }}</td>
-                <td></td>
+                <td class="num"></td>
                 <td class="num">${{ rep.totales['comisionA'] | number: '1.2-2' }}</td>
                 <td class="num">${{ rep.totales['comisionB'] | number: '1.2-2' }}</td>
                 <td class="num">${{ rep.totales['comisionC'] | number: '1.2-2' }}</td>
                 <td class="num">${{ rep.totales['bonos'] | number: '1.2-2' }}</td>
                 <td class="num font-bold">${{ rep.totales['totalUsd'] | number: '1.2-2' }}</td>
                 <td class="num font-bold">{{ rep.totales['totalBob'] | moneda }}</td>
-                <td></td>
+                <td class="num"></td>
                 <td class="num font-bold text-secondary">{{ rep.totales['totalGanado'] | moneda }}</td>
               </tr>
             </tfoot>
