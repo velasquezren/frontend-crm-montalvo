@@ -534,7 +534,8 @@
                 <span>Gestionar (30 MB)</span>
                 <app-icon name="external-link" [size]="10" />
               </a>
-              <button type="button" (click)="togglePopoverMemoria()" class="p-1 text-text-muted hover:text-text-dark cursor-pointer rounded-lg hover:bg-black/5">
+              <button type="button" (click)="togglePopoverMemoria()" class="p-1 text-text-muted hover:text-text-dark cursor-pointer rounded-lg hover:bg-black/5"
+            aria-label="Cerrar">
                 <app-icon name="x" [size]="14" />
               </button>
             </div>
@@ -673,7 +674,8 @@
               </div>
             </div>
             <button type="button" (click)="cancelarEdicion()"
-              class="p-1.5 rounded-lg hover:bg-black/5 text-text-muted hover:text-text-dark cursor-pointer transition-colors">
+              class="p-1.5 rounded-lg hover:bg-black/5 text-text-muted hover:text-text-dark cursor-pointer transition-colors"
+            aria-label="Cancelar edición">
               <app-icon name="x" [size]="16" />
             </button>
           </div>
@@ -763,7 +765,8 @@
             <button
               type="button"
               (click)="cancelarEdicion()"
-              class="flex-1 px-3 py-2.5 border border-border rounded-xl text-xs font-semibold text-text-muted hover:bg-bg-light cursor-pointer transition-colors">
+              class="flex-1 px-3 py-2.5 border border-border rounded-xl text-xs font-semibold text-text-muted hover:bg-bg-light cursor-pointer transition-colors"
+            aria-label="Cancelar edición">
               Cancelar
             </button>
             <app-button
@@ -947,7 +950,8 @@
                     <div class="agent-dropdown-header">
                       <span class="text-xs font-semibold text-text-dark">Elegir agente</span>
                       <button type="button" (click)="dropdownAgenteAbierto.set(false)"
-                        class="text-text-muted hover:text-text-dark cursor-pointer">
+                        class="text-text-muted hover:text-text-dark cursor-pointer"
+            aria-label="Cerrar selector de agente">
                         <app-icon name="x" [size]="14" />
                       </button>
                     </div>
@@ -1121,7 +1125,8 @@
         <h2 class="text-sm font-bold text-text-dark">Mis Respuestas Rápidas</h2>
         <p class="text-xs text-text-muted">Crea respuestas personalizadas para enviar en 1 clic o con /comando</p>
       </div>
-      <button type="button" (click)="cerrarGestionPlantillas()" class="p-1 rounded-lg text-text-muted hover:text-text-dark cursor-pointer">
+      <button type="button" (click)="cerrarGestionPlantillas()" class="p-1 rounded-lg text-text-muted hover:text-text-dark cursor-pointer"
+            aria-label="Cerrar">
         <app-icon name="x" [size]="18" />
       </button>
     </div>
