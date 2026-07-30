@@ -74,7 +74,11 @@ export class LayoutComponent {
 
   /* Un agente no ve los módulos solo-admin (el backend además los bloquea con @Roles) */
   protected readonly navItems = computed(() =>
-    NAV_ITEMS.filter(item => !item.soloAdmin || this.authService.isAdmin()),
+    NAV_ITEMS.filter(
+      item =>
+        (!item.soloAdmin || this.authService.isAdmin()) &&
+        (!item.soloSuperAdmin || this.authService.isSuperAdmin()),
+    ),
   );
 
   toggleSidebar(event?: MouseEvent): void {

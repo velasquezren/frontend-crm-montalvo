@@ -10,6 +10,8 @@ export interface NavItem {
   readonly label: string;
   readonly icon: IconName;
   readonly soloAdmin?: boolean;
+  /** Más restrictivo que `soloAdmin`: ni siquiera un ADMIN lo ve. */
+  readonly soloSuperAdmin?: boolean;
 }
 
 export const NAV_ITEMS: readonly NavItem[] = [
@@ -20,5 +22,5 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { path: '/ventas', label: 'Ventas', icon: 'shopping-bag' },
   { path: '/comisiones', label: 'Comisiones', icon: 'wallet' },
   { path: '/planilla-comisiones', label: 'Planilla', icon: 'pie-chart', soloAdmin: true },
-  { path: '/agentes', label: 'Agentes', icon: 'shield', soloAdmin: true },
+  { path: '/agentes', label: 'Agentes', icon: 'shield', soloSuperAdmin: true },
 ];

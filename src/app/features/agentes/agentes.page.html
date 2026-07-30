@@ -167,10 +167,10 @@
                 {{ agente.email }}
               </td>
               <td class="py-4 px-6">
-                @if (agente.rol === 'ADMIN') {
-                  <app-badge variant="info" icon="shield">Administrador</app-badge>
-                } @else {
+                @if (agente.rol === 'AGENTE') {
                   <app-badge variant="neutral" icon="users">Agente</app-badge>
+                } @else {
+                  <app-badge variant="info" icon="shield">{{ rolLabel[agente.rol] }}</app-badge>
                 }
               </td>
               <td class="py-4 px-6">
@@ -340,7 +340,7 @@
             </h2>
             <div class="flex flex-wrap items-center gap-2 mt-1.5">
               <app-badge [variant]="ag.rol === 'ADMIN' ? 'success' : 'info'">
-                {{ ag.rol === 'ADMIN' ? 'Administrador' : 'Agente' }}
+                {{ rolLabel[ag.rol] }}
               </app-badge>
               @if (!ag.activo) {
                 <app-badge variant="neutral">Inactivo</app-badge>
@@ -423,7 +423,22 @@
                   : 'bg-white text-text-muted border-border hover:border-primary/30 hover:bg-bg-light'">
                 Administrador
               </button>
+              <button
+                type="button"
+                (click)="editRol.set('SUPER_ADMIN')"
+                [disabled]="editandoseASiMismo()"
+                class="px-4 py-2 rounded-full border text-xs font-medium transition-all cursor-pointer
+                       disabled:opacity-40 disabled:cursor-not-allowed"
+                [class]="editRol() === 'SUPER_ADMIN'
+                  ? 'bg-primary text-white border-primary shadow-subtle'
+                  : 'bg-white text-text-muted border-border hover:border-primary/30 hover:bg-bg-light'">
+                Super administrador
+              </button>
             </div>
+            <p class="text-xs text-text-muted">
+              Solo un <strong>super administrador</strong> gestiona agentes (y sus códigos) e
+              importa la planilla de comisiones.
+            </p>
 
             @if (editandoseASiMismo()) {
               <p class="flex items-start gap-2 text-xs text-text-muted mt-1">

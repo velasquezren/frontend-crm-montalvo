@@ -39,9 +39,11 @@
 </div>
 
 <nav class="pestanas">
-  <button type="button" class="pestana" [class.pestana-activa]="pestana() === 'IMPORTAR'" (click)="setPestana('IMPORTAR')">
-    <app-icon name="download" [size]="15" /> <span>Importar</span>
-  </button>
+  @if (esSuperAdmin()) {
+    <button type="button" class="pestana" [class.pestana-activa]="pestana() === 'IMPORTAR'" (click)="setPestana('IMPORTAR')">
+      <app-icon name="download" [size]="15" /> <span>Importar</span>
+    </button>
+  }
   <button type="button" class="pestana" [class.pestana-activa]="pestana() === 'CLASIFICACION'" (click)="setPestana('CLASIFICACION')">
     <app-icon name="file-text" [size]="15" /> <span>Clasificación</span>
     @if (alertas(); as a) {
@@ -59,7 +61,7 @@
 </nav>
 
 <!-- ══════════════ IMPORTAR ══════════════ -->
-@if (pestana() === 'IMPORTAR') {
+@if (pestana() === 'IMPORTAR' && esSuperAdmin()) {
   <section class="panel">
     <div class="zona-carga">
       <app-icon name="download" [size]="34" class="text-primary/50" />
@@ -125,7 +127,7 @@
                   <td class="text-xs text-text-muted">{{ p.calculadoEn ? (p.calculadoEn | date: 'dd/MM/yy HH:mm') : '—' }}</td>
                   <td class="text-right whitespace-nowrap">
                     <app-button variant="ghost" size="sm" icon="eye" (clicked)="seleccionarPeriodo(p.id)">Abrir</app-button>
-                    @if (p.estado !== 'CERRADO') {
+                    @if (p.estado !== 'CERRADO' && esSuperAdmin()) {
                       <app-button variant="ghost" size="sm" icon="trash" (clicked)="eliminarPeriodo(p)">Borrar</app-button>
                     }
                   </td>
@@ -371,9 +373,10 @@
   <section class="panel">
     <h3 class="text-sm font-bold text-text-dark mb-1">Vendedoras</h3>
     <p class="text-xs text-text-muted mb-3">
-      Se dan de alta solas al importar y se vinculan con el agente del CRM por su código de empresa
-      (o por el nombre, si no hay ambigüedad). Fíjales tipo, área y sueldo base para que la
-      liquidación sea correcta.
+      Se dan de alta solas al importar. El agente del CRM se reconoce por el <strong>código de
+      empresa</strong> (el mismo <code>vendedora_pk</code> del Excel), así que no hay que vincular
+      nada a mano: basta con que un super administrador se lo haya asignado en Agentes.
+      Fíjales tipo, área y sueldo base para que la liquidación sea correcta.
     </p>
 
     @if (vendedoras.isLoading()) {
@@ -393,20 +396,14 @@
                 <td class="font-medium text-sm">{{ v.nombre }}</td>
                 <td class="text-xs text-text-muted">{{ v.codigo }}</td>
                 <td>
-                  <select class="select-base select-mini" [value]="v.usuarioId ?? ''"
-                    (change)="vincularAgente(v, $any($event.target).value)">
-                    <option value="">— sin vincular —</option>
-                    @for (a of agentes.value(); track a.id) {
-                      <!-- Se ocultan los agentes que ya son otra vendedora: el enlace es 1 a 1. -->
-                      @if (!a.vendedoraComision || a.vendedoraComision.id === v.id) {
-                        <option [value]="a.id">
-                          {{ a.nombre }}@if (a.codigo) { · {{ a.codigo }} }
-                        </option>
-                      }
-                    }
-                  </select>
-                  @if (v.usuario) {
-                    <span class="block text-[10px] text-text-muted mt-0.5">{{ v.usuario.email }}</span>
+                  @if (v.agente; as ag) {
+                    <span class="text-sm font-medium">{{ ag.nombre }}</span>
+                    <span class="block text-[10px] text-text-muted">{{ ag.email }}</span>
+                  } @else {
+                    <app-badge variant="neutral" icon="alert-circle">Sin agente</app-badge>
+                    <span class="block text-[10px] text-text-muted mt-0.5">
+                      Asigna el código <strong>{{ v.codigo }}</strong> a su agente
+                    </span>
                   }
                 </td>
                 <td>

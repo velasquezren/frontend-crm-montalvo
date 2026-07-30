@@ -2,7 +2,6 @@ import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
 import {
-  AgenteVinculable,
   Alertas,
   ClasifComision,
   ConfiguracionPlanilla,
@@ -67,10 +66,6 @@ export class PlanillaComisionesService {
 
   vendedorasRequest(): ResourceRequest {
     return this.api.request('/planilla-comisiones/vendedoras');
-  }
-
-  agentesVinculablesRequest(): ResourceRequest {
-    return this.api.request('/planilla-comisiones/agentes-vinculables');
   }
 
   configuracionRequest(): ResourceRequest {

@@ -2,7 +2,11 @@
  * Modelo de Usuario — espejo del payload JWT del backend (auth.service.ts de NestJS).
  * Ref: CRM_MANIFESTO.md §1.1 (Dominio: auth)
  */
-export type RolUsuario = 'ADMIN' | 'AGENTE';
+/**
+ * Jerarquía: SUPER_ADMIN cubre todo lo que puede ADMIN, y ADMIN todo lo de AGENTE.
+ * El backend es la autoridad (RolesGuard); esto solo decide qué se muestra.
+ */
+export type RolUsuario = 'SUPER_ADMIN' | 'ADMIN' | 'AGENTE';
 
 export interface User {
   readonly id: string;

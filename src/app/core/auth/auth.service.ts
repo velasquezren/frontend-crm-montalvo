@@ -26,7 +26,13 @@ export class AuthService {
 
   readonly user = this.currentUser.asReadonly();
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
-  readonly isAdmin = computed(() => this.currentUser()?.rol === 'ADMIN');
+  /** Un SUPER_ADMIN también es admin: la jerarquía se respeta en toda la UI. */
+  readonly isAdmin = computed(() => {
+    const rol = this.currentUser()?.rol;
+    return rol === 'ADMIN' || rol === 'SUPER_ADMIN';
+  });
+  /** Solo el super admin: gestiona agentes (y sus códigos) e importa la planilla. */
+  readonly isSuperAdmin = computed(() => this.currentUser()?.rol === 'SUPER_ADMIN');
 
   get token(): string | null {
     return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);

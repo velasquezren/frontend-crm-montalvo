@@ -1,8 +1,10 @@
+import { RolUsuario } from '../../core/auth/user.model';
+
 export interface Agente {
   id: string;
   nombre: string;
   email: string;
-  rol: 'ADMIN' | 'AGENTE';
+  rol: RolUsuario;
   activo: boolean;
   foto?: string | null;
   /**
@@ -19,5 +21,5 @@ export interface CreateAgentePayload {
   nombre: string;
   email: string;
   password: string;
-  rol: 'ADMIN' | 'AGENTE';
+  rol: RolUsuario;
 }

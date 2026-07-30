@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 
 import { adminGuard } from './core/auth/admin.guard';
 import { authGuard } from './core/auth/auth.guard';
+import { superAdminGuard } from './core/auth/super-admin.guard';
 
 /**
  * Rutas del CRM
@@ -91,7 +92,10 @@ export const routes: Routes = [
           ),
       },
       {
+        /* Gestión de agentes: solo super admin — es donde se asignan los códigos
+           de empresa de los que depende toda la planilla de comisiones. */
         path: 'agentes',
+        canActivate: [superAdminGuard],
         loadComponent: () =>
           import('./features/agentes/agentes.page').then(m => m.AgentesPage),
       },

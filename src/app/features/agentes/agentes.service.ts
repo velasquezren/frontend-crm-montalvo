@@ -1,13 +1,14 @@
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
+import { RolUsuario } from '../../core/auth/user.model';
 import { Agente, CreateAgentePayload } from './agente.model';
 
 /** Campos editables de un agente. La contraseña solo viaja si se cambia. */
 export interface ActualizarAgenteDto {
   nombre?: string;
   email?: string;
-  rol?: 'ADMIN' | 'AGENTE';
+  rol?: RolUsuario;
   activo?: boolean;
   password?: string;
   /** Identificador de la empresa (ej. Pe2455) — vincula al agente con la planilla. */

@@ -3,6 +3,7 @@ import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 
 import { mensajeDeError } from '../../core/api/http-error';
+import { AuthService } from '../../core/auth/auth.service';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { ToastService } from '../../core/toast/toast.service';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
@@ -16,7 +17,6 @@ import { PaginatorComponent } from '../../shared/components/paginator/paginator.
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import { PlanillaComisionesService } from './planilla-comisiones.service';
 import {
-  AgenteVinculable,
   Alertas,
   ClasifComision,
   CLASIF_LABEL,
@@ -62,6 +62,10 @@ type Pestana = 'IMPORTAR' | 'CLASIFICACION' | 'REPORTES' | 'CONFIGURACION';
 export class PlanillaComisionesPage {
   private readonly service = inject(PlanillaComisionesService);
   private readonly toast = inject(ToastService);
+  private readonly authService = inject(AuthService);
+
+  /** Importar y borrar planillas queda reservado al super admin. */
+  protected readonly esSuperAdmin = this.authService.isSuperAdmin;
 
   protected readonly clasifLabel = CLASIF_LABEL;
   protected readonly estadoLabel = ESTADO_PERIODO_LABEL;
@@ -71,7 +75,9 @@ export class PlanillaComisionesPage {
 
   /* ── Estado de UI ───────────────────────────────────────────────────── */
 
-  protected readonly pestana = signal<Pestana>('IMPORTAR');
+  protected readonly pestana = signal<Pestana>(
+    this.authService.isSuperAdmin() ? 'IMPORTAR' : 'CLASIFICACION',
+  );
   protected readonly periodoId = signal<string | null>(null);
 
   protected readonly subiendo = signal(false);
@@ -130,12 +136,6 @@ export class PlanillaComisionesPage {
 
   protected readonly vendedoras = httpResource<Vendedora[]>(
     () => this.service.vendedorasRequest(),
-    { defaultValue: [] },
-  );
-
-  /** Agentes del CRM para el desplegable de vinculación manual. */
-  protected readonly agentes = httpResource<AgenteVinculable[]>(
-    () => this.service.agentesVinculablesRequest(),
     { defaultValue: [] },
   );
 
@@ -258,26 +258,6 @@ export class PlanillaComisionesPage {
       if (id) await this.refrescarPanelesDelPeriodo(id);
     } catch (err) {
       this.toast.error(mensajeDeError(err, 'No se pudo guardar.'), 'Error');
-    }
-  }
-
-  /**
-   * Vincula (o desvincula, con cadena vacía) la vendedora del Excel con el
-   * agente del CRM que es la misma persona.
-   */
-  protected async vincularAgente(vendedora: Vendedora, usuarioId: string): Promise<void> {
-    try {
-      await this.service.actualizarVendedora(vendedora.id, { usuarioId: usuarioId || null });
-      this.toast.success(
-        usuarioId
-          ? `${vendedora.nombre} quedó vinculada a su agente del CRM.`
-          : `${vendedora.nombre} quedó sin vincular.`,
-        'Vinculación actualizada',
-      );
-      this.vendedoras.reload();
-      this.agentes.reload();
-    } catch (err) {
-      this.toast.error(mensajeDeError(err, 'No se pudo vincular al agente.'), 'Error');
     }
   }
 
