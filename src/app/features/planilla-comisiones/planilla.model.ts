@@ -101,6 +101,27 @@ export interface Vendedora {
   sueldoBase: string;
   activa: boolean;
   configurada: boolean;
+  /** Agente del CRM que es esta misma persona, si se pudo vincular. */
+  usuario: AgenteVinculado | null;
+  usuarioId: string | null;
+}
+
+/** Agente del CRM tal como lo devuelve la vendedora ya vinculada. */
+export interface AgenteVinculado {
+  id: string;
+  nombre: string;
+  email: string;
+  codigo: string | null;
+}
+
+/** Agente candidato para el desplegable de vinculación. */
+export interface AgenteVinculable {
+  id: string;
+  nombre: string;
+  email: string;
+  codigo: string | null;
+  /** Si ya está tomado por otra vendedora, no se puede reasignar sin soltarlo. */
+  vendedoraComision: { id: string; nombre: string } | null;
 }
 
 export interface FilaConsolidado {

@@ -25,6 +25,8 @@ export interface UsuarioApi {
   readonly rol: RolUsuario;
   readonly activo: boolean;
   readonly foto: string | null;
+  /** Identificador de la empresa (ej. Pe2455): cruza al agente con la planilla de comisiones. */
+  readonly codigo: string | null;
   readonly createdAt: string;
   readonly updatedAt: string;
 }

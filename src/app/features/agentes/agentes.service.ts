@@ -10,6 +10,8 @@ export interface ActualizarAgenteDto {
   rol?: 'ADMIN' | 'AGENTE';
   activo?: boolean;
   password?: string;
+  /** Identificador de la empresa (ej. Pe2455) — vincula al agente con la planilla. */
+  codigo?: string;
 }
 
 /**

@@ -371,7 +371,9 @@
   <section class="panel">
     <h3 class="text-sm font-bold text-text-dark mb-1">Vendedoras</h3>
     <p class="text-xs text-text-muted mb-3">
-      Se dan de alta solas al importar. Fíjales tipo, área y sueldo base para que la liquidación sea correcta.
+      Se dan de alta solas al importar y se vinculan con el agente del CRM por su código de empresa
+      (o por el nombre, si no hay ambigüedad). Fíjales tipo, área y sueldo base para que la
+      liquidación sea correcta.
     </p>
 
     @if (vendedoras.isLoading()) {
@@ -383,13 +385,30 @@
       <div class="tabla-scroll">
         <table class="tabla">
           <thead>
-            <tr><th>Nombre</th><th>Código</th><th>Tipo</th><th>Área</th><th class="num">Sueldo base (Bs)</th><th>Estado</th></tr>
+            <tr><th>Nombre</th><th>Código</th><th>Agente del CRM</th><th>Tipo</th><th>Área</th><th class="num">Sueldo base (Bs)</th><th>Estado</th></tr>
           </thead>
           <tbody>
             @for (v of vendedoras.value(); track v.id) {
               <tr [class.fila-pendiente]="!v.configurada">
                 <td class="font-medium text-sm">{{ v.nombre }}</td>
                 <td class="text-xs text-text-muted">{{ v.codigo }}</td>
+                <td>
+                  <select class="select-base select-mini" [value]="v.usuarioId ?? ''"
+                    (change)="vincularAgente(v, $any($event.target).value)">
+                    <option value="">— sin vincular —</option>
+                    @for (a of agentes.value(); track a.id) {
+                      <!-- Se ocultan los agentes que ya son otra vendedora: el enlace es 1 a 1. -->
+                      @if (!a.vendedoraComision || a.vendedoraComision.id === v.id) {
+                        <option [value]="a.id">
+                          {{ a.nombre }}@if (a.codigo) { · {{ a.codigo }} }
+                        </option>
+                      }
+                    }
+                  </select>
+                  @if (v.usuario) {
+                    <span class="block text-[10px] text-text-muted mt-0.5">{{ v.usuario.email }}</span>
+                  }
+                </td>
                 <td>
                   <select class="select-base select-mini" [value]="v.tipo" (change)="cambiarTipoVendedora(v, $any($event.target).value)">
                     <option value="VENDEDORA">Vendedora</option>

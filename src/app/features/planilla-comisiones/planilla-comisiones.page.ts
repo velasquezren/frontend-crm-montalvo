@@ -16,6 +16,7 @@ import { PaginatorComponent } from '../../shared/components/paginator/paginator.
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import { PlanillaComisionesService } from './planilla-comisiones.service';
 import {
+  AgenteVinculable,
   Alertas,
   ClasifComision,
   CLASIF_LABEL,
@@ -129,6 +130,12 @@ export class PlanillaComisionesPage {
 
   protected readonly vendedoras = httpResource<Vendedora[]>(
     () => this.service.vendedorasRequest(),
+    { defaultValue: [] },
+  );
+
+  /** Agentes del CRM para el desplegable de vinculación manual. */
+  protected readonly agentes = httpResource<AgenteVinculable[]>(
+    () => this.service.agentesVinculablesRequest(),
     { defaultValue: [] },
   );
 
@@ -251,6 +258,26 @@ export class PlanillaComisionesPage {
       if (id) await this.refrescarPanelesDelPeriodo(id);
     } catch (err) {
       this.toast.error(mensajeDeError(err, 'No se pudo guardar.'), 'Error');
+    }
+  }
+
+  /**
+   * Vincula (o desvincula, con cadena vacía) la vendedora del Excel con el
+   * agente del CRM que es la misma persona.
+   */
+  protected async vincularAgente(vendedora: Vendedora, usuarioId: string): Promise<void> {
+    try {
+      await this.service.actualizarVendedora(vendedora.id, { usuarioId: usuarioId || null });
+      this.toast.success(
+        usuarioId
+          ? `${vendedora.nombre} quedó vinculada a su agente del CRM.`
+          : `${vendedora.nombre} quedó sin vincular.`,
+        'Vinculación actualizada',
+      );
+      this.vendedoras.reload();
+      this.agentes.reload();
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo vincular al agente.'), 'Error');
     }
   }
 

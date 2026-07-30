@@ -384,6 +384,19 @@
               [(value)]="editEmail" />
           </div>
 
+          <!-- Código de empresa: es lo que cruza a esta persona con sus ventas
+               en la planilla de comisiones, sin depender de cómo se escriba el nombre. -->
+          <div class="flex flex-col gap-1">
+            <app-input
+              label="Código de empresa"
+              placeholder="Ej. Pe2455"
+              [(value)]="editCodigo" />
+            <p class="text-xs text-text-muted">
+              El mismo identificador que usa FileMaker (columna <code>vendedora_pk</code>).
+              Con esto la Planilla de Comisiones reconoce sus ventas automáticamente.
+            </p>
+          </div>
+
           <!-- Rol -->
           <div class="flex flex-col gap-1.5">
             <label class="text-sm font-medium text-text-dark">Rol</label>

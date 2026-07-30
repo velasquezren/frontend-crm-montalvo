@@ -189,6 +189,7 @@ export class AgentesPage {
   protected readonly editEmail = signal('');
   protected readonly editRol = signal<'ADMIN' | 'AGENTE'>('AGENTE');
   protected readonly editPassword = signal('');
+  protected readonly editCodigo = signal('');
 
   /** True si el admin se está editando a sí mismo: no puede degradarse ni desactivarse. */
   protected readonly editandoseASiMismo = computed(
@@ -199,6 +200,7 @@ export class AgentesPage {
     this.agenteEditando.set(agente);
     this.editNombre.set(agente.nombre);
     this.editEmail.set(agente.email);
+    this.editCodigo.set(agente.codigo ?? '');
     this.editRol.set(agente.rol);
     this.editPassword.set('');
     this.errorMensaje.set(null);
@@ -242,6 +244,8 @@ export class AgentesPage {
         nombre,
         email,
         rol: this.editRol(),
+        /* Vacío = se limpia el código (el backend lo guarda como NULL). */
+        codigo: this.editCodigo().trim(),
         /* La contraseña solo se envía si el admin escribió una nueva. */
         ...(password ? { password } : {}),
       })
