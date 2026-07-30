@@ -133,24 +133,22 @@
       height="280px"
       [items]="serieCategorias()" />
 
-    <div class="tabla-scroll mt-4">
-      <table class="tabla">
+    <app-table [dense]="true">
         <thead>
-          <tr><th>Categoría</th><th class="num">Ventas</th><th class="num">Facturado</th><th class="num">Base</th><th class="num">% del mes</th></tr>
+          <tr><th class="text-left">Categoría</th><th class="text-right">Ventas</th><th class="text-right">Facturado</th><th class="text-right">Base</th><th class="text-right">% del mes</th></tr>
         </thead>
         <tbody>
           @for (c of a.porClasificacion; track c.clave) {
             <tr>
-              <td class="font-medium">{{ c.etiqueta }}</td>
-              <td class="num">{{ c.cantidad }}</td>
-              <td class="num">{{ c.montoVendido | moneda }}</td>
-              <td class="num text-text-muted">{{ c.baseCalculo | moneda }}</td>
-              <td class="num font-semibold">{{ c.pctMonto }}%</td>
+              <td class="text-left font-medium">{{ c.etiqueta }}</td>
+              <td class="text-right">{{ c.cantidad }}</td>
+              <td class="text-right">{{ c.montoVendido | moneda }}</td>
+              <td class="text-right text-text-muted">{{ c.baseCalculo | moneda }}</td>
+              <td class="text-right font-semibold">{{ c.pctMonto }}%</td>
             </tr>
           }
         </tbody>
-      </table>
-    </div>
+    </app-table>
   </section>
 
   <!-- ══ 4. Evolución del mes ══ -->
@@ -209,41 +207,37 @@
     <section class="panel">
       <h3 class="titulo-seccion">Servicios que más facturan</h3>
       <p class="subtitulo-seccion">Top 15 del mes por importe</p>
-      <div class="tabla-scroll">
-        <table class="tabla">
-          <thead><tr><th>Servicio</th><th class="num">Veces</th><th class="num">Facturado</th><th class="num">%</th></tr></thead>
+      <app-table [dense]="true">
+          <thead><tr><th class="text-left">Servicio</th><th class="text-right">Veces</th><th class="text-right">Facturado</th><th class="text-right">%</th></tr></thead>
           <tbody>
             @for (s of a.topServicios; track s.etiqueta) {
               <tr>
-                <td class="text-sm">{{ s.etiqueta }}</td>
-                <td class="num">{{ s.cantidad }}</td>
-                <td class="num">{{ s.montoVendido | moneda }}</td>
-                <td class="num text-text-muted">{{ s.pctMonto }}%</td>
+                <td class="text-left text-sm">{{ s.etiqueta }}</td>
+                <td class="text-right">{{ s.cantidad }}</td>
+                <td class="text-right">{{ s.montoVendido | moneda }}</td>
+                <td class="text-right text-text-muted">{{ s.pctMonto }}%</td>
               </tr>
             }
           </tbody>
-        </table>
-      </div>
+      </app-table>
     </section>
 
     <section class="panel">
       <h3 class="titulo-seccion">Médicos que más facturan</h3>
       <p class="subtitulo-seccion">Top 10 del mes por importe</p>
-      <div class="tabla-scroll">
-        <table class="tabla">
-          <thead><tr><th>Médico</th><th class="num">Atenciones</th><th class="num">Facturado</th><th class="num">%</th></tr></thead>
+      <app-table [dense]="true">
+          <thead><tr><th class="text-left">Médico</th><th class="text-right">Atenciones</th><th class="text-right">Facturado</th><th class="text-right">%</th></tr></thead>
           <tbody>
             @for (m of a.topMedicos; track m.etiqueta) {
               <tr>
-                <td class="text-sm">{{ m.etiqueta }}</td>
-                <td class="num">{{ m.cantidad }}</td>
-                <td class="num">{{ m.montoVendido | moneda }}</td>
-                <td class="num text-text-muted">{{ m.pctMonto }}%</td>
+                <td class="text-left text-sm">{{ m.etiqueta }}</td>
+                <td class="text-right">{{ m.cantidad }}</td>
+                <td class="text-right">{{ m.montoVendido | moneda }}</td>
+                <td class="text-right text-text-muted">{{ m.pctMonto }}%</td>
               </tr>
             }
           </tbody>
-        </table>
-      </div>
+      </app-table>
     </section>
   </div>
 
@@ -253,14 +247,13 @@
       <section class="panel">
         <h3 class="titulo-seccion">Liquidación por vendedora</h3>
         <p class="subtitulo-seccion">Lo que corresponde pagar este mes</p>
-        <div class="tabla-scroll">
-          <table class="tabla">
+        <app-table [dense]="true">
             <thead>
               <tr>
-                <th>Vendedora</th><th class="num">Facturado</th><th class="num">Planes</th>
-                <th class="num">Tipo A</th><th class="num">Tipo B</th><th class="num">Tipo C</th>
-                <th class="num">Bonos</th><th class="num">Total USD</th><th class="num">Total Bs</th>
-                <th class="num">Sueldo</th><th class="num">A pagar</th>
+                <th class="text-left">Vendedora</th><th class="text-right">Facturado</th><th class="text-right">Planes</th>
+                <th class="text-right">Tipo A</th><th class="text-right">Tipo B</th><th class="text-right">Tipo C</th>
+                <th class="text-right">Bonos</th><th class="text-right">Total USD</th><th class="text-right">Total Bs</th>
+                <th class="text-right">Sueldo</th><th class="text-right">A pagar</th>
               </tr>
             </thead>
             <tbody>
@@ -270,41 +263,40 @@
                     <span class="font-medium text-sm">{{ f.nombre }}</span>
                     <span class="block text-[11px] text-text-muted">{{ f.tipo }} · {{ f.area }}</span>
                   </td>
-                  <td class="num">{{ f.montoVendido | moneda }}</td>
-                  <td class="num">
+                  <td class="text-right">{{ f.montoVendido | moneda }}</td>
+                  <td class="text-right">
                     {{ f.planesVendidos }}
                     @if (!f.cumpleObjetivoPlanes) {
                       <span class="block text-[10px] text-critical" title="No alcanzó el objetivo: no cobra Tipo A">sin objetivo</span>
                     }
                   </td>
-                  <td class="num">${{ f.comisionA | number: '1.2-2' }}</td>
-                  <td class="num">${{ f.comisionB | number: '1.2-2' }}</td>
-                  <td class="num">${{ f.comisionC | number: '1.2-2' }}</td>
-                  <td class="num">${{ f.bonoJefatura + f.bonoTrimestral | number: '1.2-2' }}</td>
-                  <td class="num font-semibold">${{ f.totalUsd | number: '1.2-2' }}</td>
-                  <td class="num">{{ f.totalBob | moneda }}</td>
-                  <td class="num text-text-muted">{{ f.sueldoBase | moneda }}</td>
-                  <td class="num font-bold text-secondary">{{ f.totalGanado | moneda }}</td>
+                  <td class="text-right">${{ f.comisionA | number: '1.2-2' }}</td>
+                  <td class="text-right">${{ f.comisionB | number: '1.2-2' }}</td>
+                  <td class="text-right">${{ f.comisionC | number: '1.2-2' }}</td>
+                  <td class="text-right">${{ f.bonoJefatura + f.bonoTrimestral | number: '1.2-2' }}</td>
+                  <td class="text-right font-semibold">${{ f.totalUsd | number: '1.2-2' }}</td>
+                  <td class="text-right">{{ f.totalBob | moneda }}</td>
+                  <td class="text-right text-text-muted">{{ f.sueldoBase | moneda }}</td>
+                  <td class="text-right font-bold text-secondary">{{ f.totalGanado | moneda }}</td>
                 </tr>
               }
             </tbody>
             <tfoot>
               <tr class="fila-totales">
-                <td class="font-bold">TOTALES</td>
-                <td class="num font-bold">{{ rep.totales['montoVendido'] | moneda }}</td>
-                <td class="num"></td>
-                <td class="num">${{ rep.totales['comisionA'] | number: '1.2-2' }}</td>
-                <td class="num">${{ rep.totales['comisionB'] | number: '1.2-2' }}</td>
-                <td class="num">${{ rep.totales['comisionC'] | number: '1.2-2' }}</td>
-                <td class="num">${{ rep.totales['bonos'] | number: '1.2-2' }}</td>
-                <td class="num font-bold">${{ rep.totales['totalUsd'] | number: '1.2-2' }}</td>
-                <td class="num font-bold">{{ rep.totales['totalBob'] | moneda }}</td>
-                <td class="num"></td>
-                <td class="num font-bold text-secondary">{{ rep.totales['totalGanado'] | moneda }}</td>
+                <td class="text-left font-bold">TOTALES</td>
+                <td class="text-right font-bold">{{ rep.totales['montoVendido'] | moneda }}</td>
+                <td class="text-right"></td>
+                <td class="text-right">${{ rep.totales['comisionA'] | number: '1.2-2' }}</td>
+                <td class="text-right">${{ rep.totales['comisionB'] | number: '1.2-2' }}</td>
+                <td class="text-right">${{ rep.totales['comisionC'] | number: '1.2-2' }}</td>
+                <td class="text-right">${{ rep.totales['bonos'] | number: '1.2-2' }}</td>
+                <td class="text-right font-bold">${{ rep.totales['totalUsd'] | number: '1.2-2' }}</td>
+                <td class="text-right font-bold">{{ rep.totales['totalBob'] | moneda }}</td>
+                <td class="text-right"></td>
+                <td class="text-right font-bold text-secondary">{{ rep.totales['totalGanado'] | moneda }}</td>
               </tr>
             </tfoot>
-          </table>
-        </div>
+        </app-table>
       </section>
     }
   }

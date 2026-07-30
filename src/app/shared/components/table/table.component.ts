@@ -80,6 +80,26 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
       text-align: left !important;
     }
 
+    /* Fila de totales: se separa del cuerpo y no reacciona al hover, porque
+       no es un registro más sino el resumen de la tabla. */
+    .crm-table tfoot td {
+      padding: 12px 20px;
+      background: var(--color-bg-light);
+      border-top: 2px solid var(--color-border);
+      color: var(--color-text-dark);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .crm-table tfoot td.text-right,
+    .crm-table tfoot td.num {
+      text-align: right;
+    }
+
+    .crm-table tfoot td.text-center {
+      text-align: center;
+    }
+
     .crm-table tbody tr {
       transition: background-color 0.15s ease;
     }
@@ -96,6 +116,11 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
 
     .crm-table-dense .crm-table tbody td {
       padding: 10px 14px;
+      font-size: 13px;
+    }
+
+    .crm-table-dense .crm-table tfoot td {
+      padding: 11px 14px;
       font-size: 13px;
     }
   `,

@@ -163,61 +163,6 @@
   color: var(--color-text-muted);
 }
 
-/* ── Tablas ───────────────────────────────────────────────────────── */
-/* El scroll vive aquí: la página nunca se desborda en horizontal. */
-.tabla-scroll {
-  overflow-x: auto;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-}
-
-.tabla {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.tabla thead th {
-  padding: 9px 12px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  text-align: left;
-  white-space: nowrap;
-  color: var(--color-text-muted);
-  background: var(--color-bg-light);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.tabla tbody td {
-  padding: 9px 12px;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text-dark);
-  vertical-align: middle;
-}
-
-.tabla tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.tabla tbody tr:hover {
-  background: var(--color-bg-light);
-}
-
-.tabla .num {
-  text-align: right;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-
-.fila-totales td {
-  padding: 10px 12px;
-  background: var(--color-bg-light);
-  border-top: 2px solid var(--color-border);
-  font-variant-numeric: tabular-nums;
-}
-
 @media (max-width: 768px) {
   .barra-periodo {
     flex-direction: column;
