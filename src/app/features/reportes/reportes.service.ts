@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
+import { ReporteConsolidado } from '../planilla-comisiones/planilla.model';
 
 /**
  * Servicio del dominio Reportes y Analítica — consolida endpoints de KPIs y Planilla
@@ -22,7 +23,9 @@ export class ReportesService {
   }
 
   /** Consolidado detallado de un periodo específico de comisiones. */
-  obtenerConsolidadoPeriodo(periodoId: string) {
-    return this.api.get<any>(`/planilla-comisiones/periodos/${periodoId}/reporte/consolidado`);
+  obtenerConsolidadoPeriodo(periodoId: string): Promise<ReporteConsolidado> {
+    return this.api.get<ReporteConsolidado>(
+      `/planilla-comisiones/periodos/${periodoId}/reporte/consolidado`,
+    );
   }
 }

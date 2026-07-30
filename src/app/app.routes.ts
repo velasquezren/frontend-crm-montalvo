@@ -48,7 +48,10 @@ export const routes: Routes = [
           ),
       },
       {
+        /* Consume KPIs globales y la planilla de comisiones (endpoints de admin):
+           sin este guard un agente veria la pagina cargar y fallar con 403. */
         path: 'reportes',
+        canActivate: [adminGuard],
         loadComponent: () =>
           import('./features/reportes/reportes.page').then(
             m => m.ReportesPage,

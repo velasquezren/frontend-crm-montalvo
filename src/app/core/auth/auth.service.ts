@@ -3,11 +3,11 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import { API_URL } from '../api/api.constants';
-import { generarIniciales, User } from './user.model';
+import { generarIniciales, RolUsuario, User } from './user.model';
 
 interface LoginResponse {
   access_token: string;
-  usuario: { sub: string; email: string; nombre: string; rol: 'ADMIN' | 'AGENTE'; foto: string | null };
+  usuario: { sub: string; email: string; nombre: string; rol: RolUsuario; foto: string | null };
 }
 
 const TOKEN_KEY = 'crm_token';
@@ -83,6 +83,49 @@ export class AuthService {
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(USER_KEY);
     this.currentUser.set(null);
+  }
+
+  /**
+   * Comprueba contra el servidor si el rol guardado sigue siendo el real.
+   *
+   * El rol viaja DENTRO del JWT (que dura 8h) y además se cachea en el
+   * navegador, así que un cambio de rol no se nota hasta volver a entrar: el
+   * menú muestra opciones que el backend rechazará, o esconde otras que la
+   * persona ya tiene. Al arrancar la app se contrasta con `/auth/perfil` y,
+   * si no coinciden, se cierra la sesión para que vuelva a entrar con un token
+   * coherente. Nunca cierra sesión por un fallo de red: solo si el servidor
+   * responde y el rol es distinto.
+   */
+  async sincronizarRol(): Promise<{ rolCambio: boolean }> {
+    const actual = this.currentUser();
+    if (!actual) return { rolCambio: false };
+
+    try {
+      const perfil = await firstValueFrom(
+        this.http.get<{ rol: RolUsuario; nombre: string; foto: string | null }>(
+          `${API_URL}/auth/perfil`,
+        ),
+      );
+
+      if (perfil.rol !== actual.rol) {
+        this.logout();
+        return { rolCambio: true };
+      }
+
+      // Aprovecha para refrescar nombre y foto sin tocar el rol ni el token.
+      if (perfil.nombre !== actual.nombre || perfil.foto !== actual.foto) {
+        this.actualizarUsuarioLocal({
+          ...actual,
+          nombre: perfil.nombre,
+          foto: perfil.foto,
+          iniciales: generarIniciales(perfil.nombre),
+        });
+      }
+      return { rolCambio: false };
+    } catch {
+      // Sin conexión o token ya expirado: lo resuelve el interceptor, no aquí.
+      return { rolCambio: false };
+    }
   }
 
   private restaurarSesion(): User | null {
