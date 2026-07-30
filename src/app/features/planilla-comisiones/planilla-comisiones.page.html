@@ -1,0 +1,568 @@
+<app-page-header
+  title="Planilla de Comisiones"
+  subtitle="Liquidación mensual del equipo comercial desde el Excel de FileMaker" />
+
+<!-- ── Selector de periodo + pestañas ──────────────────────────────── -->
+<div class="planilla-barra">
+  <div class="periodo-selector">
+    <label class="etiqueta-mini">Periodo</label>
+    @if (periodos.isLoading()) {
+      <app-loading-skeleton width="180px" height="38px" />
+    } @else if (periodos.value().datos.length === 0) {
+      <span class="text-sm text-text-muted">Aún no hay ninguna planilla importada</span>
+    } @else {
+      <select
+        class="select-base"
+        [value]="periodoId() ?? ''"
+        (change)="seleccionarPeriodo($any($event.target).value)">
+        <option value="" disabled>Elegir mes…</option>
+        @for (p of periodos.value().datos; track p.id) {
+          <option [value]="p.id">
+            {{ nombreMes(p.mes) }} {{ p.anio }} — {{ estadoLabel[p.estado] }} ({{ p.filasTotales }} filas)
+          </option>
+        }
+      </select>
+    }
+  </div>
+
+  @if (periodoActual(); as periodo) {
+    <div class="flex items-center gap-2 flex-wrap">
+      <app-badge [variant]="periodo.estado === 'CALCULADO' ? 'success' : periodo.estado === 'CERRADO' ? 'neutral' : 'info'">
+        {{ estadoLabel[periodo.estado] }}
+      </app-badge>
+      <span class="text-xs text-text-muted">TC {{ periodo.tipoCambio }}</span>
+      @if (hayAlertas()) {
+        <app-badge variant="critical" icon="alert-circle">Revisar antes de calcular</app-badge>
+      }
+    </div>
+  }
+</div>
+
+<nav class="pestanas">
+  <button type="button" class="pestana" [class.pestana-activa]="pestana() === 'IMPORTAR'" (click)="setPestana('IMPORTAR')">
+    <app-icon name="download" [size]="15" /> <span>Importar</span>
+  </button>
+  <button type="button" class="pestana" [class.pestana-activa]="pestana() === 'CLASIFICACION'" (click)="setPestana('CLASIFICACION')">
+    <app-icon name="file-text" [size]="15" /> <span>Clasificación</span>
+    @if (alertas(); as a) {
+      @if (a.totales.filasSinClasificar > 0) {
+        <span class="contador-alerta">{{ a.totales.filasSinClasificar }}</span>
+      }
+    }
+  </button>
+  <button type="button" class="pestana" [class.pestana-activa]="pestana() === 'REPORTES'" (click)="setPestana('REPORTES')">
+    <app-icon name="bar-chart" [size]="15" /> <span>Reportes</span>
+  </button>
+  <button type="button" class="pestana" [class.pestana-activa]="pestana() === 'CONFIGURACION'" (click)="abrirConfiguracion()">
+    <app-icon name="shield" [size]="15" /> <span>Configuración</span>
+  </button>
+</nav>
+
+<!-- ══════════════ IMPORTAR ══════════════ -->
+@if (pestana() === 'IMPORTAR') {
+  <section class="panel">
+    <div class="zona-carga">
+      <app-icon name="download" [size]="34" class="text-primary/50" />
+      <h3 class="text-base font-semibold text-text-dark mt-3">Subir el Excel del mes</h3>
+      <p class="text-sm text-text-muted mt-1 max-w-md text-center">
+        Exporta el archivo desde FileMaker y súbelo aquí. El sistema deduce el mes y el tipo de
+        cambio del propio archivo, y clasifica cada venta automáticamente.
+      </p>
+
+      <label class="boton-archivo mt-5">
+        @if (subiendo()) {
+          <app-icon name="loader" [size]="16" class="animate-spin" />
+          <span>Procesando…</span>
+        } @else {
+          <app-icon name="download" [size]="16" />
+          <span>Elegir archivo .xlsx</span>
+        }
+        <input type="file" accept=".xlsx,.xls" class="hidden" [disabled]="subiendo()" (change)="subirArchivo($event)" />
+      </label>
+
+      <p class="text-[11px] text-text-muted mt-3">
+        Reimportar un mes ya cargado lo reemplaza y conserva las correcciones manuales.
+      </p>
+    </div>
+
+    @if (ultimaImportacion(); as r) {
+      <div class="resumen-import">
+        <h4 class="text-sm font-bold text-text-dark mb-3">Última importación</h4>
+        <div class="grid-metricas">
+          <div class="metrica"><span class="metrica-valor">{{ r.filasLeidas }}</span><span class="metrica-label">filas leídas</span></div>
+          <div class="metrica"><span class="metrica-valor text-secondary">{{ r.filasComisionables }}</span><span class="metrica-label">comisionables</span></div>
+          <div class="metrica"><span class="metrica-valor">{{ r.vendedorasDetectadas }}</span><span class="metrica-label">vendedoras</span></div>
+          <div class="metrica">
+            <span class="metrica-valor" [class.text-critical]="r.filasSinClasificar > 0">{{ r.filasSinClasificar }}</span>
+            <span class="metrica-label">sin clasificar</span>
+          </div>
+        </div>
+        @if (r.columnasAusentes.length > 0) {
+          <p class="aviso-amber mt-3">
+            Columnas que no venían en el archivo: {{ r.columnasAusentes.join(', ') }}
+          </p>
+        }
+      </div>
+    }
+
+    <!-- Historial de periodos -->
+    @if (periodos.value().datos.length > 0) {
+      <div class="mt-6">
+        <h4 class="text-sm font-bold text-text-dark mb-2">Planillas cargadas</h4>
+        <div class="tabla-scroll">
+          <table class="tabla">
+            <thead>
+              <tr><th>Mes</th><th>Estado</th><th class="num">Filas</th><th class="num">Comisionables</th><th>Archivo</th><th>Calculada</th><th></th></tr>
+            </thead>
+            <tbody>
+              @for (p of periodos.value().datos; track p.id) {
+                <tr [class.fila-activa]="p.id === periodoId()">
+                  <td class="font-medium">{{ nombreMes(p.mes) }} {{ p.anio }}</td>
+                  <td><app-badge [variant]="p.estado === 'CALCULADO' ? 'success' : 'neutral'">{{ estadoLabel[p.estado] }}</app-badge></td>
+                  <td class="num">{{ p.filasTotales }}</td>
+                  <td class="num">{{ p.filasValidas }}</td>
+                  <td class="text-xs text-text-muted truncate max-w-[180px]">{{ p.archivoNombre }}</td>
+                  <td class="text-xs text-text-muted">{{ p.calculadoEn ? (p.calculadoEn | date: 'dd/MM/yy HH:mm') : '—' }}</td>
+                  <td class="text-right whitespace-nowrap">
+                    <app-button variant="ghost" size="sm" icon="eye" (clicked)="seleccionarPeriodo(p.id)">Abrir</app-button>
+                    @if (p.estado !== 'CERRADO') {
+                      <app-button variant="ghost" size="sm" icon="trash" (clicked)="eliminarPeriodo(p)">Borrar</app-button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  </section>
+}
+
+<!-- ══════════════ CLASIFICACIÓN ══════════════ -->
+@if (pestana() === 'CLASIFICACION') {
+  @if (!periodoId()) {
+    <app-empty-state icon="file-text" title="Elige un periodo"
+      description="Selecciona arriba el mes que quieres revisar, o importa un Excel nuevo." />
+  } @else {
+    <!-- Alertas -->
+    @if (alertas(); as a) {
+      @if (hayAlertas()) {
+        <section class="panel-alertas">
+          <h4 class="text-sm font-bold text-amber-900 flex items-center gap-2">
+            <app-icon name="alert-circle" [size]="16" /> Revisar antes de calcular
+          </h4>
+
+          @if (a.serviciosSinClasificar.length > 0) {
+            <div class="mt-3">
+              <p class="text-xs font-semibold text-amber-900 mb-1.5">
+                Servicios que el sistema no reconoció ({{ a.totales.filasSinClasificar }} filas).
+                Asígnales una clasificación y quedará guardada para los próximos meses:
+              </p>
+              @for (s of a.serviciosSinClasificar; track s.detalle) {
+                <div class="fila-sin-clasificar">
+                  <div class="min-w-0">
+                    <span class="font-medium text-sm truncate block">{{ s.detalle }}</span>
+                    <span class="text-[11px] text-text-muted">
+                      {{ s.modulo }} · {{ s.veces }} venta(s) · {{ s.montoAfectado | moneda }}
+                    </span>
+                  </div>
+                  <select class="select-base select-mini" (change)="crearReglaDesdeServicio(s.detalle, $any($event.target).value)">
+                    <option value="" selected>Clasificar como…</option>
+                    @for (c of clasificaciones; track c) {
+                      <option [value]="c">{{ clasifLabel[c] }}</option>
+                    }
+                  </select>
+                </div>
+              }
+            </div>
+          }
+
+          @if (a.vendedorasPendientes.length > 0) {
+            <p class="text-xs text-amber-900 mt-3">
+              <strong>{{ a.totales.vendedorasSinConfigurar }} vendedora(s) sin configurar</strong>
+              (tipo, área y sueldo base) — ve a la pestaña Configuración:
+              {{ a.vendedorasPendientes[0].nombre }}@if (a.vendedorasPendientes.length > 1) { y {{ a.vendedorasPendientes.length - 1 }} más}.
+            </p>
+          }
+
+          @if (a.motivosExclusion.length > 0) {
+            <div class="mt-3 flex flex-wrap gap-2">
+              @for (m of a.motivosExclusion; track m.motivo) {
+                <span class="chip-motivo">{{ m.motivo }}: {{ m.filas }} fila(s)</span>
+              }
+            </div>
+          }
+        </section>
+      }
+    }
+
+    <!-- Filtros -->
+    <section class="panel">
+      <div class="filtros">
+        <div class="flex-1 min-w-[200px]">
+          <app-input type="search" placeholder="Buscar servicio o paciente…" [(value)]="busqueda" />
+        </div>
+        <select class="select-base" [value]="filtroClasif() ?? ''" (change)="filtrarPorClasif($any($event.target).value)">
+          <option value="">Todas las clasificaciones</option>
+          @for (c of clasificaciones; track c) {
+            <option [value]="c">{{ clasifLabel[c] }}</option>
+          }
+        </select>
+        <button type="button" class="chip-filtro" [class.chip-filtro-activo]="soloSinClasificar()" (click)="alternarSoloSinClasificar()">
+          Sin clasificar
+        </button>
+        <button type="button" class="chip-filtro" [class.chip-filtro-activo]="soloExcluidas()" (click)="alternarSoloExcluidas()">
+          Excluidas
+        </button>
+        <app-button variant="ghost" size="sm" icon="x" (clicked)="limpiarFiltros()">Limpiar</app-button>
+
+        @if (periodoActual()?.estado !== 'CERRADO') {
+          <app-button icon="percent" [loading]="calculando()" (clicked)="calcular()">
+            Calcular planilla
+          </app-button>
+        }
+      </div>
+
+      @if (ventas.isLoading()) {
+        <div class="mt-4 flex flex-col gap-2">
+          @for (n of [1,2,3,4,5,6]; track n) { <app-loading-skeleton height="34px" /> }
+        </div>
+      } @else if (ventas.value().datos.length === 0) {
+        <app-empty-state icon="file-x" title="Sin resultados"
+          description="Ninguna fila coincide con los filtros aplicados." />
+      } @else {
+        <div class="tabla-scroll mt-4">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Fecha</th><th>Servicio</th><th>Vendedora</th><th>Canal</th>
+                <th class="num">Precio</th><th class="num">Base</th>
+                <th>Clasificación</th><th>Tipo</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (v of ventas.value().datos; track v.id) {
+                <tr [class.fila-excluida]="!v.comisionable">
+                  <td class="text-xs whitespace-nowrap">{{ v.fecha ? (v.fecha | date: 'dd/MM') : '—' }}</td>
+                  <td>
+                    <span class="font-medium text-sm">{{ v.detalle }}</span>
+                    @if (v.paciente) { <span class="block text-[11px] text-text-muted truncate max-w-[200px]">{{ v.paciente }}</span> }
+                  </td>
+                  <td class="text-xs">{{ v.vendedora?.nombre ?? '—' }}</td>
+                  <td>
+                    <app-badge [variant]="v.canal === 'PROPIO' ? 'info' : 'neutral'">{{ v.canal }}</app-badge>
+                  </td>
+                  <td class="num">{{ v.precio | moneda }}</td>
+                  <td class="num text-text-muted">{{ v.ingresoNeto | moneda }}</td>
+                  <td>
+                    <select class="select-base select-mini" [value]="v.clasif"
+                      (change)="cambiarClasificacion(v, $any($event.target).value)">
+                      @for (c of clasificaciones; track c) {
+                        <option [value]="c">{{ clasifLabel[c] }}</option>
+                      }
+                    </select>
+                  </td>
+                  <td><span class="tipo-pill" [title]="tipoLabel[v.tipo]">{{ v.tipo }}</span></td>
+                  <td class="whitespace-nowrap">
+                    @if (v.requiereRevision) {
+                      <app-badge variant="critical">Revisar</app-badge>
+                    } @else if (!v.comisionable) {
+                      <span class="text-[11px] text-critical" [title]="v.motivoExclusion ?? ''">No comisiona</span>
+                    } @else if (v.ajustadaManual) {
+                      <app-badge variant="info">Ajustada</app-badge>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <app-paginator
+          [pagina]="ventas.value().pagina"
+          [totalPaginas]="ventas.value().totalPaginas"
+          [total]="ventas.value().total"
+          [limite]="ventas.value().limite"
+          (cambiar)="pagina.set($event)" />
+      }
+    </section>
+  }
+}
+
+<!-- ══════════════ REPORTES ══════════════ -->
+@if (pestana() === 'REPORTES') {
+  @if (!consolidado()) {
+    <app-empty-state icon="bar-chart" title="Todavía no hay liquidación"
+      description="Elige un periodo y pulsa «Calcular planilla» en la pestaña Clasificación." />
+  } @else {
+    @if (consolidado(); as rep) {
+      <!-- Totales del equipo -->
+      <section class="panel">
+        <h3 class="text-sm font-bold text-text-dark mb-3">
+          Consolidado — {{ nombreMes(rep.periodo.mes) }} {{ rep.periodo.anio }}
+        </h3>
+        <div class="grid-metricas">
+          <div class="metrica"><span class="metrica-valor">{{ rep.totales['montoVendido'] | moneda }}</span><span class="metrica-label">vendido</span></div>
+          <div class="metrica"><span class="metrica-valor">{{ rep.totales['baseCalculo'] | moneda }}</span><span class="metrica-label">base de cálculo</span></div>
+          <div class="metrica"><span class="metrica-valor text-secondary">${{ rep.totales['totalUsd'] | number: '1.2-2' }}</span><span class="metrica-label">comisión USD</span></div>
+          <div class="metrica"><span class="metrica-valor">{{ rep.totales['totalBob'] | moneda }}</span><span class="metrica-label">comisión Bs</span></div>
+        </div>
+        <div class="flex flex-wrap gap-2 mt-3">
+          <span class="chip-motivo">Tipo A · Planes: ${{ rep.totales['comisionA'] | number: '1.2-2' }}</span>
+          <span class="chip-motivo">Tipo B · Cirugías: ${{ rep.totales['comisionB'] | number: '1.2-2' }}</span>
+          <span class="chip-motivo">Tipo C · Servicios: ${{ rep.totales['comisionC'] | number: '1.2-2' }}</span>
+          <span class="chip-motivo">Bonos: ${{ rep.totales['bonos'] | number: '1.2-2' }}</span>
+        </div>
+      </section>
+
+      <!-- Planilla final por persona -->
+      <section class="panel">
+        <h3 class="text-sm font-bold text-text-dark mb-3">Planilla por persona</h3>
+        <div class="tabla-scroll">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Vendedora</th><th class="num">Vendido</th><th class="num">Planes</th>
+                <th class="num">Cirugías</th><th class="num">A</th><th class="num">B</th><th class="num">C</th>
+                <th class="num">Bonos</th><th class="num">Total USD</th><th class="num">Total Bs</th>
+                <th class="num">Sueldo</th><th class="num">Total ganado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (f of rep.filas; track f.vendedoraId) {
+                <tr>
+                  <td>
+                    <span class="font-medium text-sm">{{ f.nombre }}</span>
+                    <span class="block text-[11px] text-text-muted">{{ f.tipo }} · {{ f.area }}</span>
+                  </td>
+                  <td class="num">{{ f.montoVendido | moneda }}</td>
+                  <td class="num">
+                    {{ f.planesVendidos }}
+                    @if (!f.cumpleObjetivoPlanes) {
+                      <span class="text-[10px] text-critical block" title="No alcanzó el objetivo: no comisiona Tipo A">sin objetivo</span>
+                    }
+                  </td>
+                  <td class="num">
+                    {{ f.acumuladoCirugias | moneda }}
+                    @if (f.nivelCirugia) { <span class="text-[10px] text-text-muted block">nivel {{ f.nivelCirugia }}</span> }
+                  </td>
+                  <td class="num">${{ f.comisionA | number: '1.2-2' }}</td>
+                  <td class="num">${{ f.comisionB | number: '1.2-2' }}</td>
+                  <td class="num">${{ f.comisionC | number: '1.2-2' }}</td>
+                  <td class="num">${{ f.bonoJefatura + f.bonoTrimestral | number: '1.2-2' }}</td>
+                  <td class="num font-semibold">${{ f.totalUsd | number: '1.2-2' }}</td>
+                  <td class="num">{{ f.totalBob | moneda }}</td>
+                  <td class="num text-text-muted">{{ f.sueldoBase | moneda }}</td>
+                  <td class="num font-bold text-secondary">{{ f.totalGanado | moneda }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+  }
+}
+
+<!-- ══════════════ CONFIGURACIÓN ══════════════ -->
+@if (pestana() === 'CONFIGURACION') {
+  <!-- Vendedoras -->
+  <section class="panel">
+    <h3 class="text-sm font-bold text-text-dark mb-1">Vendedoras</h3>
+    <p class="text-xs text-text-muted mb-3">
+      Se dan de alta solas al importar. Fíjales tipo, área y sueldo base para que la liquidación sea correcta.
+    </p>
+
+    @if (vendedoras.isLoading()) {
+      <app-loading-skeleton height="120px" />
+    } @else if (vendedoras.value().length === 0) {
+      <app-empty-state icon="users" title="Sin vendedoras"
+        description="Aparecerán aquí en cuanto importes el primer Excel." />
+    } @else {
+      <div class="tabla-scroll">
+        <table class="tabla">
+          <thead>
+            <tr><th>Nombre</th><th>Código</th><th>Tipo</th><th>Área</th><th class="num">Sueldo base (Bs)</th><th>Estado</th></tr>
+          </thead>
+          <tbody>
+            @for (v of vendedoras.value(); track v.id) {
+              <tr [class.fila-pendiente]="!v.configurada">
+                <td class="font-medium text-sm">{{ v.nombre }}</td>
+                <td class="text-xs text-text-muted">{{ v.codigo }}</td>
+                <td>
+                  <select class="select-base select-mini" [value]="v.tipo" (change)="cambiarTipoVendedora(v, $any($event.target).value)">
+                    <option value="VENDEDORA">Vendedora</option>
+                    <option value="JEFA">Jefa</option>
+                  </select>
+                </td>
+                <td>
+                  <select class="select-base select-mini" [value]="v.area" (change)="cambiarAreaVendedora(v, $any($event.target).value)">
+                    <option value="EJECUTIVA">Ejecutiva</option>
+                    <option value="RA">Coordinadora RA</option>
+                    <option value="PUBLICIDAD">Publicidad</option>
+                  </select>
+                </td>
+                <td class="num">
+                  <input type="number" min="0" step="0.01" class="input-mini" [value]="v.sueldoBase"
+                    (change)="guardarSueldo(v, $any($event.target).value)" />
+                </td>
+                <td>
+                  @if (v.configurada) {
+                    <app-badge variant="success">Configurada</app-badge>
+                  } @else {
+                    <app-badge variant="critical">Pendiente</app-badge>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  @if (configuracion(); as cfg) {
+    <!-- Tipo A -->
+    <section class="panel">
+      <h3 class="text-sm font-bold text-text-dark mb-1">Tipo A — Planes (%)</h3>
+      <p class="text-xs text-text-muted mb-3">Por nivel del plan de maternidad, y PLANNIN para los paquetes varios.</p>
+      <div class="tabla-scroll">
+        <table class="tabla">
+          <thead><tr><th>Nivel</th><th class="num">Empresa %</th><th class="num">Propio %</th><th></th></tr></thead>
+          <tbody>
+            @for (t of cfg.tarifasPlan; track t.id) {
+              <tr>
+                <td class="font-medium">{{ t.clave }}</td>
+                <td class="num"><input #te type="number" min="0" max="100" step="0.1" class="input-mini" [value]="t.pctEmpresa" /></td>
+                <td class="num"><input #tp type="number" min="0" max="100" step="0.1" class="input-mini" [value]="t.pctPropio" /></td>
+                <td class="text-right">
+                  <app-button variant="ghost" size="sm" icon="check" (clicked)="guardarTarifaPlan(t.clave, te.value, tp.value)">Guardar</app-button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Tipo C -->
+    <section class="panel">
+      <h3 class="text-sm font-bold text-text-dark mb-1">Tipo C — Consultas, laboratorios y otros (%)</h3>
+      <div class="tabla-scroll">
+        <table class="tabla">
+          <thead><tr><th>Clasificación</th><th class="num">Empresa %</th><th class="num">Propio %</th><th></th></tr></thead>
+          <tbody>
+            @for (t of cfg.tarifasServicio; track t.id) {
+              <tr>
+                <td class="font-medium">{{ clasifLabel[t.clasif] }}</td>
+                <td class="num"><input #se type="number" min="0" max="100" step="0.1" class="input-mini" [value]="t.pctEmpresa" /></td>
+                <td class="num"><input #sp type="number" min="0" max="100" step="0.1" class="input-mini" [value]="t.pctPropio" /></td>
+                <td class="text-right">
+                  <app-button variant="ghost" size="sm" icon="check" (clicked)="guardarTarifaServicio(t.clasif, se.value, sp.value)">Guardar</app-button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Tipo B -->
+    <section class="panel">
+      <h3 class="text-sm font-bold text-text-dark mb-1">Tipo B — Escala de cirugías</h3>
+      <p class="text-xs text-text-muted mb-3">
+        El nivel se decide con el monto acumulado de cirugías del mes de cada vendedora.
+      </p>
+      <div class="tabla-scroll">
+        <table class="tabla">
+          <thead><tr><th>Nivel</th><th class="num">Desde</th><th class="num">Hasta</th><th class="num">Empresa %</th><th class="num">Propio %</th></tr></thead>
+          <tbody>
+            @for (n of cfg.nivelesCirugia; track n.id) {
+              <tr>
+                <td class="font-medium">Nivel {{ n.nivel }}</td>
+                <td class="num">{{ n.montoDesde | moneda }}</td>
+                <td class="num">{{ n.montoHasta | moneda }}</td>
+                <td class="num">{{ n.pctEmpresa }}%</td>
+                <td class="num">{{ n.pctPropio }}%</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Tarifas RA -->
+    <section class="panel">
+      <h3 class="text-sm font-bold text-text-dark mb-1">Tipo B — Coordinadoras RA (USD por procedimiento)</h3>
+      <div class="tabla-scroll">
+        <table class="tabla">
+          <thead><tr><th>Procedimiento</th><th class="num">Clínica</th><th class="num">Propia</th></tr></thead>
+          <tbody>
+            @for (t of cfg.tarifasRA; track t.id) {
+              <tr>
+                <td class="text-sm">{{ t.procedimiento }}</td>
+                <td class="num">{{ t.esPorcentaje ? t.montoEmpresa + '%' : '$' + t.montoEmpresa }}</td>
+                <td class="num">{{ t.esPorcentaje ? t.montoPropio + '%' : '$' + t.montoPropio }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Objetivos -->
+    <section class="panel">
+      <h3 class="text-sm font-bold text-text-dark mb-1">Objetivos</h3>
+      <p class="text-xs text-text-muted mb-3">
+        Si no alcanza el mínimo de planes, la vendedora no cobra comisión Tipo A ese mes.
+      </p>
+      <div class="tabla-scroll">
+        <table class="tabla">
+          <thead><tr><th>Tipo</th><th class="num">Planes mínimos</th><th class="num">Objetivo mensual (USD)</th><th class="num">Objetivo trimestral (USD)</th></tr></thead>
+          <tbody>
+            @for (o of cfg.objetivos; track o.id) {
+              <tr>
+                <td class="font-medium">{{ o.tipo }}</td>
+                <td class="num">{{ o.planesMinimos }}</td>
+                <td class="num">${{ o.montoMensualUsd }}</td>
+                <td class="num">${{ o.montoTrimestralUsd }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Diccionario -->
+    <section class="panel">
+      <h3 class="text-sm font-bold text-text-dark mb-1">Diccionario de clasificación ({{ cfg.reglas.length }})</h3>
+      <p class="text-xs text-text-muted mb-3">
+        Manda sobre la clasificación automática. Se evalúa de menor a mayor prioridad.
+      </p>
+      <div class="tabla-scroll" style="max-height: 420px">
+        <table class="tabla">
+          <thead><tr><th class="num">Prior.</th><th>Si el servicio contiene…</th><th>Se clasifica como</th><th>Unidad</th><th></th></tr></thead>
+          <tbody>
+            @for (r of cfg.reglas; track r.id) {
+              <tr>
+                <td class="num text-xs">{{ r.prioridad }}</td>
+                <td class="text-sm">
+                  {{ r.patron }}
+                  @if (r.notas) { <span class="block text-[11px] text-text-muted">{{ r.notas }}</span> }
+                </td>
+                <td><app-badge variant="neutral">{{ clasifLabel[r.clasif] }}</app-badge></td>
+                <td class="text-xs text-text-muted">{{ r.unidadNegocio ?? '—' }}</td>
+                <td class="text-right">
+                  <app-button variant="ghost" size="sm" icon="trash" (clicked)="eliminarRegla(r.id, r.patron)">Quitar</app-button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  } @else {
+    <section class="panel"><app-loading-skeleton height="200px" /></section>
+  }
+}

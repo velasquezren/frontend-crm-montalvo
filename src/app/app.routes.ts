@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { adminGuard } from './core/auth/admin.guard';
 import { authGuard } from './core/auth/auth.guard';
 
 /**
@@ -78,6 +79,16 @@ export const routes: Routes = [
         path: 'comisiones',
         loadComponent: () =>
           import('./features/comisiones/comisiones.page').then(m => m.ComisionesPage),
+      },
+      {
+        /* Planilla mensual de comisiones (Excel de FileMaker) — solo admin:
+           son datos de remuneración de todo el equipo. */
+        path: 'planilla-comisiones',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./features/planilla-comisiones/planilla-comisiones.page').then(
+            m => m.PlanillaComisionesPage,
+          ),
       },
       {
         path: 'agentes',

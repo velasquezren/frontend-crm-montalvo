@@ -19,5 +19,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { path: '/conversaciones', label: 'WhatsApp', icon: 'message-circle' },
   { path: '/ventas', label: 'Ventas', icon: 'shopping-bag' },
   { path: '/comisiones', label: 'Comisiones', icon: 'wallet' },
+  { path: '/planilla-comisiones', label: 'Planilla', icon: 'pie-chart', soloAdmin: true },
   { path: '/agentes', label: 'Agentes', icon: 'shield', soloAdmin: true },
 ];
