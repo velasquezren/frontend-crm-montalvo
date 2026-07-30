@@ -1,0 +1,17 @@
+/* Estilos complementarios para la vista de Reportes y Analítica General. */
+
+.select-reportes {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.select-reportes:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+}

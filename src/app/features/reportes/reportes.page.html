@@ -1,0 +1,183 @@
+<div class="flex flex-col gap-6">
+
+  <!-- ── Header de la página + Selector de Periodo ────────────────── -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <app-page-header
+      title="Reportes y Analítica General"
+      subtitle="Visualización ejecutiva de ingresos, canales, comisiones y rendimiento comercial" />
+
+    <div class="flex items-center gap-3 bg-white p-2.5 rounded-2xl border border-border shadow-subtle">
+      <app-icon name="calendar" [size]="18" class="text-primary" />
+      <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">Periodo:</span>
+      @if (periodosData.isLoading()) {
+        <app-loading-skeleton width="140px" height="34px" />
+      } @else if (periodosData.value().datos.length > 0) {
+        <select
+          class="select-reportes"
+          [value]="periodoId() ?? ''"
+          (change)="seleccionarPeriodo($any($event.target).value)">
+          @for (p of periodosData.value().datos; track p.id) {
+            <option [value]="p.id">
+              {{ nombreMes(p.mes) }} {{ p.anio }} ({{ p.filasValidas }} comisionables)
+            </option>
+          }
+        </select>
+      } @else {
+        <span class="text-xs text-text-muted">Sin planillas cargadas</span>
+      }
+
+      <app-button
+        variant="ghost"
+        size="sm"
+        [icon]="modoGrafico() === 'COLUMN' ? 'bar-chart' : 'activity'"
+        (clicked)="alternarModoGrafico()">
+        {{ modoGrafico() === 'COLUMN' ? 'Ver Horizontales' : 'Ver Columnas' }}
+      </app-button>
+    </div>
+  </div>
+
+  <!-- ── KPIs Resumen Ejecutivos ────────────────────────────────────── -->
+  @if (kpiData.isLoading()) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <app-loading-skeleton shape="card" height="110px" />
+      <app-loading-skeleton shape="card" height="110px" />
+      <app-loading-skeleton shape="card" height="110px" />
+      <app-loading-skeleton shape="card" height="110px" />
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      @for (m of kpisMetricas(); track m.title) {
+        <app-card [hoverable]="true" class="transition-all hover:-translate-y-0.5">
+          <div class="flex items-start justify-between mb-3">
+            <div class="w-10 h-10 rounded-xl bg-bg-light flex items-center justify-center text-primary shrink-0">
+              <app-icon [name]="m.icon" [size]="18" />
+            </div>
+            <app-badge [variant]="m.variant">{{ m.badge }}</app-badge>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-text-muted uppercase tracking-wider">{{ m.title }}</p>
+            <p class="text-2xl font-extrabold text-text-dark mt-0.5 tracking-tight">{{ m.val }}</p>
+            <p class="text-[11px] text-text-muted mt-1 font-medium">{{ m.sub }}</p>
+          </div>
+        </app-card>
+      }
+    </div>
+  }
+
+  <!-- ── Sección 1: Gráficos de Barras de Canales y Categorías ─────── -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <app-card>
+      <app-bar-chart
+        title="Captación de Leads por Canal de Origen"
+        subtitle="Distribución de interesados recibidos según el canal publicitario u orgánico"
+        [items]="canalesChartData()"
+        [mode]="modoGrafico()"
+        formatType="number"
+        height="260px" />
+    </app-card>
+
+    <app-card>
+      <app-bar-chart
+        title="Distribución de Clientes por Categoría"
+        subtitle="Clasificación de la cartera de clientes (Gold, Silver, Bronze, Prospecto)"
+        [items]="categoriasChartData()"
+        [mode]="modoGrafico()"
+        formatType="number"
+        height="260px" />
+    </app-card>
+  </div>
+
+  <!-- ── Sección 2: Desglose por Vendedora (Periodo Seleccionado) ───── -->
+  @if (periodoId()) {
+    <div class="flex items-center justify-between mt-2">
+      <h2 class="text-base font-bold text-text-dark flex items-center gap-2">
+        <app-icon name="pie-chart" [size]="18" class="text-primary" />
+        Análisis del Periodo Comercial Seleccionado
+      </h2>
+      @if (consolidadoEstado(); as c) {
+        <span class="text-xs font-semibold text-text-muted bg-white px-3 py-1 rounded-full border border-border">
+          Planilla {{ nombreMes(c.periodo.mes) }} {{ c.periodo.anio }}
+        </span>
+      }
+    </div>
+
+    @if (cargandoConsolidado()) {
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <app-loading-skeleton shape="card" height="280px" />
+        <app-loading-skeleton shape="card" height="280px" />
+      </div>
+    } @else if (consolidadoEstado(); as rep) {
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <app-card>
+          <app-bar-chart
+            title="Monto Vendido por Ejecutiva Comercial (Bs)"
+            subtitle="Volumen bruto generado en el mes seleccionado por vendedora"
+            [items]="vendedorasVentasChartData()"
+            [mode]="modoGrafico()"
+            formatType="currency"
+            height="260px" />
+        </app-card>
+
+        <app-card>
+          <app-bar-chart
+            title="Comisiones Alcanzadas por Ejecutiva (USD)"
+            subtitle="Monto en comisiones aprobadas para liquidación por persona"
+            [items]="vendedorasComisionesChartData()"
+            [mode]="modoGrafico()"
+            formatType="number"
+            height="260px" />
+        </app-card>
+      </div>
+
+      <!-- Tabla Resumen por Persona del Periodo -->
+      <app-card>
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-sm font-bold text-text-dark">Resumen Tabular de Liquidación por Vendedora</h3>
+            <p class="text-xs text-text-muted mt-0.5">
+              Consolidado de ventas, paquetes, sueldos base y comisión final ganada
+            </p>
+          </div>
+          <app-badge variant="success" icon="check">
+            Total Ganado: {{ rep.totales['totalBob'] | moneda }}
+          </app-badge>
+        </div>
+
+        <app-table [dense]="true">
+          <thead>
+            <tr>
+              <th class="text-left">Ejecutiva</th>
+              <th class="text-left">Tipo / Área</th>
+              <th class="text-right">Monto Vendido</th>
+              <th class="text-right">Planes</th>
+              <th class="text-right">Comisión USD</th>
+              <th class="text-right">Comisión Bs</th>
+              <th class="text-right">Sueldo Base</th>
+              <th class="text-right">Total Ganado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (f of rep.filas; track f.vendedoraId) {
+              <tr>
+                <td class="text-left font-semibold text-text-dark">{{ f.nombre }}</td>
+                <td class="text-left text-xs text-text-muted">{{ f.tipo }} · {{ f.area }}</td>
+                <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ f.montoVendido | moneda }}</td>
+                <td class="text-right font-medium whitespace-nowrap">{{ f.planesVendidos }}</td>
+                <td class="text-right font-semibold text-primary whitespace-nowrap">${{ f.totalUsd | number: '1.2-2' }}</td>
+                <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ f.totalBob | moneda }}</td>
+                <td class="text-right text-text-muted whitespace-nowrap">{{ f.sueldoBase | moneda }}</td>
+                <td class="text-right font-extrabold text-secondary text-base whitespace-nowrap">{{ f.totalGanado | moneda }}</td>
+              </tr>
+            }
+          </tbody>
+        </app-table>
+      </app-card>
+    } @else {
+      <app-empty-state
+        icon="bar-chart"
+        title="Sin liquidación calculada para este periodo"
+        description="Selecciona un periodo que haya sido calculado en la sección Planilla de Comisiones para visualizar su desglose por vendedora." />
+    }
+  }
+
+</div>
