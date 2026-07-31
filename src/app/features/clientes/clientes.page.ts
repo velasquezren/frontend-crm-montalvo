@@ -219,8 +219,9 @@ export class ClientesPage {
     this.editNombre.set(cliente.nombre);
     this.editEmail.set(cliente.email || '');
     this.editTelefono.set(cliente.telefono);
-    this.editEmpresa.set(cliente.datosExtra?.empresa || '');
-    this.editEdad.set(cliente.datosExtra?.edad != null ? String(cliente.datosExtra.edad) : '');
+    const datosExtra = cliente.datosExtra as Record<string, any> | null;
+    const edadValor = datosExtra?.['edad'] ?? datosExtra?.['Edad.a'];
+    this.editEdad.set(edadValor != null ? String(edadValor) : '');
     this.editLugarNacimiento.set(cliente.datosExtra?.lugarNacimiento || '');
     this.editCategoria.set(cliente.categoria || 'PROSPECTO');
     this.editNotas.set(cliente.datosExtra?.notas || '');
@@ -317,29 +318,28 @@ export class ClientesPage {
       .map(([etiqueta, valor]) => ({ etiqueta, valor: String(valor) }));
   });
 
+  protected obtenerEdad(cliente: Cliente): string | null {
+    const d = cliente.datosExtra as Record<string, any> | null;
+    if (!d) return null;
+    const edad = d['edad'] ?? d['Edad.a'];
+    return edad != null && edad !== '' ? `${edad} años` : null;
+  }
+
   /**
-   * Trae la ficha del paciente y su historial de servicios.
-   *
-   * Las dos peticiones van en paralelo y sus fallos no se propagan: si el
-   * cliente no es paciente (alta manual, lead de redes) el historial responde
-   * vacío, y un error de red no debe impedir editar sus datos de contacto.
+   * Trae únicamente la ficha del paciente para apertura ultrarrápida del modal.
+   * El historial se consulta por separado en su propia vista para no ralentizar la apertura.
    */
   private async cargarFichaPaciente(id: string): Promise<void> {
     this.fichaPaciente.set(null);
-    this.historial.set(null);
     this.cargandoFicha.set(true);
 
-    const [ficha, historial] = await Promise.allSettled([
-      this.clientesService.obtener(id),
-      this.clientesService.historial(id),
-    ]);
-
-    if (ficha.status === 'fulfilled') {
-      this.fichaPaciente.set(ficha.value.paciente ?? null);
+    try {
+      const ficha = await this.clientesService.obtener(id);
+      this.fichaPaciente.set(ficha.paciente ?? null);
+    } catch {
+      this.fichaPaciente.set(null);
+    } finally {
+      this.cargandoFicha.set(false);
     }
-    if (historial.status === 'fulfilled') {
-      this.historial.set(historial.value);
-    }
-    this.cargandoFicha.set(false);
   }
 }

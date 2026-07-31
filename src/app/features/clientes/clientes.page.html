@@ -92,8 +92,8 @@
             </td>
             <td>
               <div class="text-xs text-text-dark">
-                @if (cliente.datosExtra?.edad) {
-                  <span class="font-semibold">{{ cliente.datosExtra?.edad }} años</span>
+                @if (obtenerEdad(cliente); as edad) {
+                  <span class="font-semibold">{{ edad }}</span>
                 } @else {
                   <span class="text-text-muted italic">Sin edad</span>
                 }
