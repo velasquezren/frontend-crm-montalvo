@@ -23,7 +23,8 @@ import {
   CATEGORIA_LABEL,
   CategoriaCliente,
 } from '../../shared/models/cliente-categoria.model';
-import { Cliente } from './cliente.model';
+import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
+import { Cliente, DatosPaciente, HistorialPaciente } from './cliente.model';
 import { ClientesService } from './clientes.service';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { OverlayRef } from '@angular/cdk/overlay';
@@ -40,6 +41,7 @@ import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-clientes',
   imports: [
+    MonedaPipe,
     PageHeaderComponent,
     InputComponent,
     FilterChipComponent,
@@ -130,6 +132,10 @@ export class ClientesPage {
 
   /* ── Estado del Modal de Creación / Edición ────────────────────── */
   protected readonly clienteSeleccionado = signal<Cliente | null>(null);
+  /** Ficha del paciente y su historial: se piden al abrir el detalle, no en la lista. */
+  protected readonly fichaPaciente = signal<DatosPaciente | null>(null);
+  protected readonly historial = signal<HistorialPaciente | null>(null);
+  protected readonly cargandoFicha = signal(false);
   protected readonly modalEditarAbierto = signal(false);
   protected readonly esCreacion = signal(false);
   protected readonly editNombre = signal('');
@@ -197,6 +203,9 @@ export class ClientesPage {
     this.editCategoria.set('PROSPECTO');
     this.editNotas.set('');
     this.editTags.set('');
+    // Un cliente nuevo todavía no tiene ficha de paciente ni historial.
+    this.fichaPaciente.set(null);
+    this.historial.set(null);
     this.modalEditarAbierto.set(true);
     if (template) {
       this.activeOverlayRef?.dispose();
@@ -217,6 +226,7 @@ export class ClientesPage {
     this.editNotas.set(cliente.datosExtra?.notas || '');
     this.editTags.set((cliente.datosExtra?.tags || []).join(', '));
     this.modalEditarAbierto.set(true);
+    void this.cargarFichaPaciente(cliente.id);
     if (template) {
       this.activeOverlayRef?.dispose();
       this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
@@ -282,5 +292,54 @@ export class ClientesPage {
     } finally {
       this.guardando.set(false);
     }
+  }
+
+  /**
+   * Campos de la ficha que tienen valor. Se filtran los vacíos en vez de
+   * pintar celdas con guiones: en FileMaker muchos pacientes solo traen dos o
+   * tres datos, y una rejilla llena de huecos no comunica nada.
+   */
+  protected readonly datosFicha = computed(() => {
+    const p = this.fichaPaciente();
+    if (!p) return [];
+    const campos: Array<[string, string | number | null]> = [
+      ['Edad', p.edad !== null ? `${p.edad} años` : null],
+      ['Ocupación', p.ocupacion],
+      ['CI', p.ci ? `${p.ci}${p.lugarCi ? ' ' + p.lugarCi : ''}` : null],
+      ['Sexo', p.sexo],
+      ['Estado civil', p.estadoCivil],
+      ['Nacionalidad', p.nacionalidad],
+      ['Dirección', p.direccion],
+      ['Teléfono fijo', p.telefonoFijo],
+    ];
+    return campos
+      .filter(([, valor]) => valor !== null && valor !== '')
+      .map(([etiqueta, valor]) => ({ etiqueta, valor: String(valor) }));
+  });
+
+  /**
+   * Trae la ficha del paciente y su historial de servicios.
+   *
+   * Las dos peticiones van en paralelo y sus fallos no se propagan: si el
+   * cliente no es paciente (alta manual, lead de redes) el historial responde
+   * vacío, y un error de red no debe impedir editar sus datos de contacto.
+   */
+  private async cargarFichaPaciente(id: string): Promise<void> {
+    this.fichaPaciente.set(null);
+    this.historial.set(null);
+    this.cargandoFicha.set(true);
+
+    const [ficha, historial] = await Promise.allSettled([
+      this.clientesService.obtener(id),
+      this.clientesService.historial(id),
+    ]);
+
+    if (ficha.status === 'fulfilled') {
+      this.fichaPaciente.set(ficha.value.paciente ?? null);
+    }
+    if (historial.status === 'fulfilled') {
+      this.historial.set(historial.value);
+    }
+    this.cargandoFicha.set(false);
   }
 }

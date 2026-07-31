@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
 import { CategoriaCliente } from '../../shared/models/cliente-categoria.model';
-import { Cliente } from './cliente.model';
+import { Cliente, HistorialPaciente } from './cliente.model';
 
 export interface FiltroClientes {
   busqueda?: string;
@@ -68,5 +68,20 @@ export class ClientesService {
 
   actualizar(id: string, cambios: ActualizarClienteDto): Promise<Cliente> {
     return this.api.patch<Cliente>(`/clientes/${id}`, cambios);
+  }
+
+  /**
+   * Ficha completa de un cliente. Se pide al abrir el detalle y no viene en el
+   * listado a propósito: la ficha del paciente son diez campos más que solo se
+   * miran de uno en uno, y arrastrarlos en cada página de 25 encarece la lista
+   * sin que nadie los lea.
+   */
+  obtener(id: string): Promise<Cliente> {
+    return this.api.get<Cliente>(`/clientes/${id}`);
+  }
+
+  /** Servicios que se le realizaron al paciente, cruzados por su PAC. */
+  historial(id: string): Promise<HistorialPaciente> {
+    return this.api.get<HistorialPaciente>(`/clientes/${id}/historial`);
   }
 }

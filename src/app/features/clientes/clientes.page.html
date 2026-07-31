@@ -202,6 +202,52 @@
     <!-- ── Formulario ───────────────────────────────────────────── -->
     <form (submit)="guardarEdicion($event)" class="px-6 sm:px-8 py-6 flex flex-col gap-6 overflow-y-auto flex-1">
 
+
+      <!-- ── Ficha del paciente (FileMaker) ─────────────────────────
+           Solo lectura: estos datos son la fuente de verdad del sistema
+           clínico, no se editan desde el CRM. -->
+      @if (cargandoFicha()) {
+        <app-loading-skeleton height="80px" />
+      } @else if (fichaPaciente(); as pac) {
+        <section class="flex flex-col gap-3">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider">
+              Ficha del paciente
+            </h3>
+            @if (pac.pac) {
+              <span class="text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full font-mono">
+                {{ pac.pac }}
+              </span>
+            }
+          </div>
+
+          <dl class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            @for (dato of datosFicha(); track dato.etiqueta) {
+              <div class="bg-bg-light border border-border rounded-xl px-3 py-2 min-w-0">
+                <dt class="text-[10px] font-semibold text-text-muted uppercase tracking-wide">
+                  {{ dato.etiqueta }}
+                </dt>
+                <dd class="text-sm font-semibold text-text-dark truncate" [title]="dato.valor">
+                  {{ dato.valor }}
+                </dd>
+              </div>
+            }
+          </dl>
+
+          @if (historial(); as h) {
+            @if (h.totalServicios > 0) {
+              <div class="flex items-center gap-2 text-xs text-text-muted mt-1">
+                <app-icon name="activity" [size]="14" class="text-secondary shrink-0" />
+                <span>
+                  <strong class="text-text-dark">{{ h.totalServicios }}</strong>
+                  servicio(s) registrado(s) · {{ h.montoTotal | moneda }}
+                </span>
+              </div>
+            }
+          }
+        </section>
+      }
+
       <!-- Datos de contacto e identidad -->
       <section class="flex flex-col gap-4">
         <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider">
