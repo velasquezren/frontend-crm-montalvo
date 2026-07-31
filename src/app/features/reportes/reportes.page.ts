@@ -22,7 +22,7 @@ import {
   ReporteConsolidado,
 } from '../planilla-comisiones/planilla.model';
 import { ReportesService } from './reportes.service';
-import { AnaliticaPeriodo, Porcion } from './reportes.model';
+import { AnaliticaPeriodo, FilaRanking, Porcion } from './reportes.model';
 
 /** Paleta de las series — tokens de la paleta cerrada, no hex sueltos. */
 const COLORES = [
@@ -33,6 +33,9 @@ const COLORES = [
   'var(--color-critical)',
   'var(--color-neutral)',
 ];
+
+type ColClasif = 'etiqueta' | 'cantidad' | 'montoVendido' | 'baseCalculo' | 'pctMonto';
+type ColRanking = 'etiqueta' | 'cantidad' | 'montoVendido' | 'pctMonto';
 
 /**
  * Informe Mensual de Comisiones.
@@ -70,6 +73,17 @@ export class ReportesPage {
   protected readonly estadoLabel = ESTADO_PERIODO_LABEL;
 
   protected readonly periodoId = signal<string | null>(null);
+
+  /* ── Estado de ordenamiento local (Listas cortas completas del informe) ─ */
+
+  protected readonly sortClasifCol = signal<ColClasif>('montoVendido');
+  protected readonly sortClasifDir = signal<'asc' | 'desc'>('desc');
+
+  protected readonly sortServiciosCol = signal<ColRanking>('montoVendido');
+  protected readonly sortServiciosDir = signal<'asc' | 'desc'>('desc');
+
+  protected readonly sortMedicosCol = signal<ColRanking>('montoVendido');
+  protected readonly sortMedicosDir = signal<'asc' | 'desc'>('desc');
 
   /* ── Recursos ───────────────────────────────────────────────────────── */
 
@@ -113,6 +127,50 @@ export class ReportesPage {
     () => (this.analitica.value()?.resumen.vendedorasLiquidadas ?? 0) > 0,
   );
 
+  /* ── Derivados Ordenados (Listas cortas completas, inmutables) ─────── */
+
+  protected readonly porClasificacionOrdenadas = computed<readonly Porcion[]>(() => {
+    const list = this.analitica.value()?.porClasificacion ?? [];
+    const col = this.sortClasifCol();
+    const mult = this.sortClasifDir() === 'asc' ? 1 : -1;
+    return [...list].sort((a, b) => {
+      const valA = a[col];
+      const valB = b[col];
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        return valA.localeCompare(valB) * mult;
+      }
+      return ((valA as number) - (valB as number)) * mult;
+    });
+  });
+
+  protected readonly topServiciosOrdenados = computed<readonly FilaRanking[]>(() => {
+    const list = this.analitica.value()?.topServicios ?? [];
+    const col = this.sortServiciosCol();
+    const mult = this.sortServiciosDir() === 'asc' ? 1 : -1;
+    return [...list].sort((a, b) => {
+      const valA = a[col];
+      const valB = b[col];
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        return valA.localeCompare(valB) * mult;
+      }
+      return ((valA as number) - (valB as number)) * mult;
+    });
+  });
+
+  protected readonly topMedicosOrdenados = computed<readonly FilaRanking[]>(() => {
+    const list = this.analitica.value()?.topMedicos ?? [];
+    const col = this.sortMedicosCol();
+    const mult = this.sortMedicosDir() === 'asc' ? 1 : -1;
+    return [...list].sort((a, b) => {
+      const valA = a[col];
+      const valB = b[col];
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        return valA.localeCompare(valB) * mult;
+      }
+      return ((valA as number) - (valB as number)) * mult;
+    });
+  });
+
   /* ── Series de los gráficos ─────────────────────────────────────────── */
 
   protected readonly serieCategorias = computed(() =>
@@ -135,6 +193,33 @@ export class ReportesPage {
   );
 
   /* ── Acciones ───────────────────────────────────────────────────────── */
+
+  protected ordenarClasif(col: ColClasif): void {
+    if (this.sortClasifCol() === col) {
+      this.sortClasifDir.update(d => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      this.sortClasifCol.set(col);
+      this.sortClasifDir.set('desc');
+    }
+  }
+
+  protected ordenarServicios(col: ColRanking): void {
+    if (this.sortServiciosCol() === col) {
+      this.sortServiciosDir.update(d => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      this.sortServiciosCol.set(col);
+      this.sortServiciosDir.set('desc');
+    }
+  }
+
+  protected ordenarMedicos(col: ColRanking): void {
+    if (this.sortMedicosCol() === col) {
+      this.sortMedicosDir.update(d => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      this.sortMedicosCol.set(col);
+      this.sortMedicosDir.set('desc');
+    }
+  }
 
   /** Descarga el informe del mes en Excel y lo entrega al navegador. */
   protected async descargarExcel(): Promise<void> {

@@ -199,17 +199,17 @@
     <section class="panel aviso-sin-calcular">
       <app-icon name="alert-circle" [size]="18" class="shrink-0 text-critical" />
       <span>
-        Este mes está importado pero <strong>todavía no se ha calculado</strong>. Las cifras de venta
+        Este mes está importado pero <strong>todavía no se ha calculated</strong>. Las cifras de venta
         ya son reales; las comisiones aparecerán al pulsar «Calcular planilla».
       </span>
     </section>
   }
 
-  <!-- ══ 3. Categorías de servicio (Split Panel: Dona + Tabla) ══ -->
+  <!-- ══ 3. Categorías de servicio (Split Panel: Dona + Tabla con Ordenamiento) ══ -->
   <section style="--indice: 1" class="aparecer panel">
     <div class="mb-4">
       <h3 class="titulo-seccion">Categorías de servicio</h3>
-      <p class="subtitulo-seccion">Peso y distribución de cada categoría en la facturación del mes</p>
+      <p class="subtitulo-seccion">Peso y distribución de cada categoría en la facturación del mes (Haz clic en los encabezados para ordenar)</p>
     </div>
 
     <div class="grid-split-categorias">
@@ -225,15 +225,30 @@
         <app-table [dense]="true">
           <thead>
             <tr>
-              <th class="text-left">Categoría</th>
-              <th class="text-right">Ventas</th>
-              <th class="text-right">Facturado</th>
-              <th class="text-right">Base</th>
-              <th class="text-right">% del mes</th>
+              <th class="text-left cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarClasif('etiqueta')">
+                Categoría
+                @if (sortClasifCol() === 'etiqueta') { <span>{{ sortClasifDir() === 'asc' ? '↑' : '↓' }}</span> }
+              </th>
+              <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarClasif('cantidad')">
+                Ventas
+                @if (sortClasifCol() === 'cantidad') { <span>{{ sortClasifDir() === 'asc' ? '↑' : '↓' }}</span> }
+              </th>
+              <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarClasif('montoVendido')">
+                Facturado
+                @if (sortClasifCol() === 'montoVendido') { <span>{{ sortClasifDir() === 'asc' ? '↑' : '↓' }}</span> }
+              </th>
+              <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarClasif('baseCalculo')">
+                Base
+                @if (sortClasifCol() === 'baseCalculo') { <span>{{ sortClasifDir() === 'asc' ? '↑' : '↓' }}</span> }
+              </th>
+              <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarClasif('pctMonto')">
+                % del mes
+                @if (sortClasifCol() === 'pctMonto') { <span>{{ sortClasifDir() === 'asc' ? '↑' : '↓' }}</span> }
+              </th>
             </tr>
           </thead>
           <tbody>
-            @for (c of a.porClasificacion; track c.clave) {
+            @for (c of porClasificacionOrdenadas(); track c.clave) {
               <tr>
                 <td class="text-left font-semibold text-text-dark">{{ c.etiqueta }}</td>
                 <td class="text-right font-medium">{{ c.cantidad }}</td>
@@ -250,77 +265,109 @@
     </div>
   </section>
 
-  <!-- ══ 4. Evolución del mes ══ -->
-  <section style="--indice: 2" class="aparecer panel">
-    <app-bar-chart
-      title="Evolución diaria"
-      subtitle="Facturación acumulada por día del mes"
-      mode="COLUMN"
-      height="240px"
-      [items]="serieDiaria()" />
-  </section>
-
-  <!-- ══ 5. Canal y unidad de negocio ══ -->
-  <div class="grid-dos-equitativo">
-    <section style="--indice: 3" class="aparecer panel">
-      <app-donut-chart
-        title="Canal de venta"
-        subtitle="Empresa vs. gestión propia de la vendedora"
-        etiquetaTotal="facturado"
-        [items]="serieCanal()" />
-    </section>
-    <section style="--indice: 4" class="aparecer panel">
-      <app-donut-chart
-        title="Unidad de negocio"
-        subtitle="Maternidad, Reproducción Asistida y Varios"
-        etiquetaTotal="facturado"
-        [items]="serieUnidad()" />
-    </section>
-  </div>
-
-  <div class="grid-dos-equitativo">
-    <section style="--indice: 5" class="aparecer panel">
+  <!-- ══ 4. Evolución del mes (@defer on viewport con altura exacta de 240px) ══ -->
+  @defer (on viewport) {
+    <section style="--indice: 2" class="aparecer panel">
       <app-bar-chart
-        title="Módulo de origen"
-        subtitle="De qué parte de FileMaker viene cada venta"
-        mode="BAR" height="190px"
-        [items]="serieModulo()" />
+        title="Evolución diaria"
+        subtitle="Facturación acumulada por día del mes"
+        mode="COLUMN"
+        height="240px"
+        [items]="serieDiaria()" />
     </section>
-    <section style="--indice: 6" class="aparecer panel">
-      @if (serieNivel().length > 0) {
-        <app-bar-chart
-          title="Nivel de plan"
-          subtitle="Reparto de los planes de maternidad vendidos"
-          mode="BAR" height="190px"
-          [items]="serieNivel()" />
-      } @else {
-        <h3 class="titulo-seccion mb-2">Nivel de plan</h3>
-        <app-empty-state icon="file-x" title="Sin planes de maternidad"
-          description="Este mes no se vendieron planes con nivel asignado." />
-      }
+  } @placeholder {
+    <section class="panel">
+      <app-loading-skeleton shape="card" height="240px" />
     </section>
-  </div>
+  }
 
-  <!-- ══ 6. Rankings ══ -->
+  <!-- ══ 5. Canal y unidad de negocio (@defer on viewport con altura exacta de 200px) ══ -->
+  @defer (on viewport) {
+    <div class="grid-dos-equitativo">
+      <section style="--indice: 3" class="aparecer panel">
+        <app-donut-chart
+          title="Canal de venta"
+          subtitle="Empresa vs. gestión propia de la vendedora"
+          etiquetaTotal="facturado"
+          [items]="serieCanal()" />
+      </section>
+      <section style="--indice: 4" class="aparecer panel">
+        <app-donut-chart
+          title="Unidad de negocio"
+          subtitle="Maternidad, Reproducción Asistida y Varios"
+          etiquetaTotal="facturado"
+          [items]="serieUnidad()" />
+      </section>
+    </div>
+  } @placeholder {
+    <div class="grid-dos-equitativo">
+      <app-loading-skeleton shape="card" height="200px" />
+      <app-loading-skeleton shape="card" height="200px" />
+    </div>
+  }
+
+  @defer (on viewport) {
+    <div class="grid-dos-equitativo">
+      <section style="--indice: 5" class="aparecer panel">
+        <app-bar-chart
+          title="Módulo de origen"
+          subtitle="De qué parte de FileMaker viene cada venta"
+          mode="BAR" height="190px"
+          [items]="serieModulo()" />
+      </section>
+      <section style="--indice: 6" class="aparecer panel">
+        @if (serieNivel().length > 0) {
+          <app-bar-chart
+            title="Nivel de plan"
+            subtitle="Reparto de los planes de maternidad vendidos"
+            mode="BAR" height="190px"
+            [items]="serieNivel()" />
+        } @else {
+          <h3 class="titulo-seccion mb-2">Nivel de plan</h3>
+          <app-empty-state icon="file-x" title="Sin planes de maternidad"
+            description="Este mes no se vendieron planes con nivel asignado." />
+        }
+      </section>
+    </div>
+  } @placeholder {
+    <div class="grid-dos-equitativo">
+      <app-loading-skeleton shape="card" height="190px" />
+      <app-loading-skeleton shape="card" height="190px" />
+    </div>
+  }
+
+  <!-- ══ 6. Rankings con Ordenamiento Interactivo ══ -->
   <div class="grid-dos-equitativo">
     <section style="--indice: 7" class="aparecer panel">
       <div class="flex items-center justify-between mb-2">
         <h3 class="titulo-seccion">Servicios que más facturan</h3>
         <span class="badge-tag">Top 15</span>
       </div>
-      <p class="subtitulo-seccion mb-3">Principales conceptos por importe total</p>
+      <p class="subtitulo-seccion mb-3">Haz clic en los encabezados para ordenar los conceptos</p>
       <app-table [dense]="true">
         <thead>
           <tr>
             <th class="text-left w-[40px]">#</th>
-            <th class="text-left">Servicio</th>
-            <th class="text-right">Veces</th>
-            <th class="text-right">Facturado</th>
-            <th class="text-right">%</th>
+            <th class="text-left cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarServicios('etiqueta')">
+              Servicio
+              @if (sortServiciosCol() === 'etiqueta') { <span>{{ sortServiciosDir() === 'asc' ? '↑' : '↓' }}</span> }
+            </th>
+            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarServicios('cantidad')">
+              Veces
+              @if (sortServiciosCol() === 'cantidad') { <span>{{ sortServiciosDir() === 'asc' ? '↑' : '↓' }}</span> }
+            </th>
+            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarServicios('montoVendido')">
+              Facturado
+              @if (sortServiciosCol() === 'montoVendido') { <span>{{ sortServiciosDir() === 'asc' ? '↑' : '↓' }}</span> }
+            </th>
+            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarServicios('pctMonto')">
+              %
+              @if (sortServiciosCol() === 'pctMonto') { <span>{{ sortServiciosDir() === 'asc' ? '↑' : '↓' }}</span> }
+            </th>
           </tr>
         </thead>
         <tbody>
-          @for (s of a.topServicios; track s.etiqueta; let i = $index) {
+          @for (s of topServiciosOrdenados(); track s.etiqueta; let i = $index) {
             <tr>
               <td class="text-left font-bold text-xs text-text-muted">
                 <span [class.ranking-top]="i < 3">{{ i + 1 }}</span>
@@ -340,19 +387,31 @@
         <h3 class="titulo-seccion">Médicos que más facturan</h3>
         <span class="badge-tag">Top 10</span>
       </div>
-      <p class="subtitulo-seccion mb-3">Principales profesionales por importe atendido</p>
+      <p class="subtitulo-seccion mb-3">Haz clic en los encabezados para ordenar los profesionales</p>
       <app-table [dense]="true">
         <thead>
           <tr>
             <th class="text-left w-[40px]">#</th>
-            <th class="text-left">Médico</th>
-            <th class="text-right">Atenciones</th>
-            <th class="text-right">Facturado</th>
-            <th class="text-right">%</th>
+            <th class="text-left cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarMedicos('etiqueta')">
+              Médico
+              @if (sortMedicosCol() === 'etiqueta') { <span>{{ sortMedicosDir() === 'asc' ? '↑' : '↓' }}</span> }
+            </th>
+            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarMedicos('cantidad')">
+              Atenciones
+              @if (sortMedicosCol() === 'cantidad') { <span>{{ sortMedicosDir() === 'asc' ? '↑' : '↓' }}</span> }
+            </th>
+            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarMedicos('montoVendido')">
+              Facturado
+              @if (sortMedicosCol() === 'montoVendido') { <span>{{ sortMedicosDir() === 'asc' ? '↑' : '↓' }}</span> }
+            </th>
+            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarMedicos('pctMonto')">
+              %
+              @if (sortMedicosCol() === 'pctMonto') { <span>{{ sortMedicosDir() === 'asc' ? '↑' : '↓' }}</span> }
+            </th>
           </tr>
         </thead>
         <tbody>
-          @for (m of a.topMedicos; track m.etiqueta; let i = $index) {
+          @for (m of topMedicosOrdenados(); track m.etiqueta; let i = $index) {
             <tr>
               <td class="text-left font-bold text-xs text-text-muted">
                 <span [class.ranking-top]="i < 3">{{ i + 1 }}</span>

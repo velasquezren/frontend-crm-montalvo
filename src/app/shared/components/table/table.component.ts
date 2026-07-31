@@ -28,7 +28,8 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
   styles: `
     .crm-table-wrap {
       width: 100%;
-      overflow-x: auto;
+      max-height: calc(100vh - 220px);
+      overflow: auto;
       background: white;
       border-radius: 16px;
       box-shadow: var(--shadow-subtle);
@@ -42,6 +43,9 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
     }
 
     .crm-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
       background: var(--color-bg-workspace);
       color: var(--color-text-muted);
       font-weight: 600;
@@ -51,7 +55,7 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
       text-align: left;
       padding: 12px 20px;
       white-space: nowrap;
-      border-bottom: 1px solid var(--color-border);
+      box-shadow: inset 0 -1px 0 var(--color-border), inset 0 -2px 0 rgba(0, 0, 0, 0.03);
     }
 
     .crm-table tbody td {
@@ -83,9 +87,12 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
     /* Fila de totales: se separa del cuerpo y no reacciona al hover, porque
        no es un registro más sino el resumen de la tabla. */
     .crm-table tfoot td {
+      position: sticky;
+      bottom: 0;
+      z-index: 9;
       padding: 12px 20px;
       background: var(--color-bg-light);
-      border-top: 2px solid var(--color-border);
+      box-shadow: inset 0 2px 0 var(--color-border);
       color: var(--color-text-dark);
       font-weight: 700;
       font-variant-numeric: tabular-nums;
@@ -109,13 +116,7 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
     }
 
 
-    /* ── Alineación heredada de la cabecera ──────────────────────────
-       Declarar la alineación en el <th> la propaga a toda su columna, así
-       no hay que repetirla celda por celda: olvidarla en un <td> era la
-       causa real de las columnas torcidas (pasó dos veces con tablas de
-       once columnas). Las reglas por celda llevan !important y siguen
-       ganando, de modo que esto es solo la red de seguridad.
-       :has() es Baseline desde 2023. */
+    /* ── Alineación heredada de la cabecera ────────────────────────── */
     .crm-table:has(thead th:nth-child(1).text-right) tbody td:nth-child(1),
     .crm-table:has(thead th:nth-child(1).text-right) tfoot td:nth-child(1) { text-align: right; }
     .crm-table:has(thead th:nth-child(1).text-center) tbody td:nth-child(1),
@@ -221,4 +222,3 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
 export class TableComponent {
   readonly dense = input<boolean>(false);
 }
-
