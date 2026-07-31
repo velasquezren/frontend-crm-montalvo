@@ -1,4 +1,7 @@
-/* Planilla de Comisiones — Estilos complementarios sobre tokens del sistema de diseño. */
+/* ==========================================================================
+   Planilla de Comisiones — Estilos Específicos de la Vista
+   SSOT §3 (Tokens Inmutables & Layout Avanzado)
+   ========================================================================== */
 
 /* ── Barra de periodo ─────────────────────────────────────────────── */
 .planilla-barra {
@@ -7,12 +10,12 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 12px 18px;
   background: white;
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: 16px;
   box-shadow: var(--shadow-subtle);
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .periodo-selector {
@@ -24,20 +27,21 @@
 
 .etiqueta-mini {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--color-text-muted);
 }
 
 /* ── Pestañas ─────────────────────────────────────────────────────── */
 .pestanas {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   border-bottom: 1px solid var(--color-border);
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   overflow-x: auto;
   scrollbar-width: none;
+  padding-bottom: 2px;
 }
 
 .pestanas::-webkit-scrollbar {
@@ -47,26 +51,30 @@
 .pestana {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 9px 16px;
+  gap: 8px;
+  padding: 10px 18px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text-muted);
+  border: 1px solid transparent;
   border-bottom: 2px solid transparent;
+  border-radius: 10px 10px 0 0;
   margin-bottom: -1px;
   white-space: nowrap;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .pestana:hover {
   color: var(--color-text-dark);
+  background-color: var(--color-bg-workspace);
 }
 
 .pestana-activa {
   color: var(--color-primary);
-  font-weight: 600;
-  border-bottom-color: var(--color-primary);
+  background-color: white;
+  border-color: var(--color-border) var(--color-border) transparent var(--color-border);
+  border-bottom: 2px solid var(--color-primary);
 }
 
 .contador-alerta {
@@ -77,10 +85,11 @@
   height: 18px;
   padding: 0 5px;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 800;
   color: white;
   background: var(--color-critical);
-  border-radius: 9px;
+  border-radius: 999px;
+  line-height: 1;
 }
 
 /* ── Paneles ──────────────────────────────────────────────────────── */
@@ -90,15 +99,16 @@
   border-radius: 16px;
   padding: 20px;
   box-shadow: var(--shadow-subtle);
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .panel-alertas {
-  background: var(--color-info-bg);
-  border: 1px solid var(--color-info);
+  background: color-mix(in srgb, var(--color-secondary) 8%, white);
+  border: 1px solid color-mix(in srgb, var(--color-secondary) 30%, transparent);
   border-radius: 16px;
   padding: 16px 20px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-subtle);
 }
 
 /* ── Zona de carga del Excel ──────────────────────────────────────── */
@@ -106,41 +116,43 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 36px 20px;
-  border: 2px dashed var(--color-border);
-  border-radius: 14px;
-  background: var(--color-bg-workspace);
-  transition: border-color 0.15s;
+  padding: 42px 24px;
+  border: 2px dashed color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+  border-radius: 16px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 2%, white), var(--color-bg-workspace));
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
 }
 
 .zona-carga:hover {
   border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 5%, white);
 }
 
 .boton-archivo {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 22px;
+  gap: 10px;
+  padding: 11px 24px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   color: white;
   background: var(--color-primary);
   border-radius: 999px;
   cursor: pointer;
   box-shadow: var(--shadow-subtle);
-  transition: opacity 0.15s, transform 0.1s;
+  transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .boton-archivo:hover {
-  opacity: 0.92;
+  opacity: 0.94;
   transform: translateY(-1px);
+  box-shadow: var(--shadow-lifted);
 }
 
 /* ── Métricas ─────────────────────────────────────────────────────── */
 .resumen-import {
   margin-top: 20px;
-  padding: 18px;
+  padding: 20px;
   background: var(--color-bg-workspace);
   border: 1px solid var(--color-border);
   border-radius: 14px;
@@ -148,37 +160,41 @@
 
 .grid-metricas {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
 }
 
 .metrica {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 12px 14px;
+  gap: 3px;
+  padding: 14px 16px;
   background: white;
   border: 1px solid var(--color-border);
   border-radius: 12px;
+  box-shadow: var(--shadow-subtle);
 }
 
 .metrica-valor {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
   color: var(--color-text-dark);
   line-height: 1.15;
   letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }
 
 .metrica-label {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .aviso-amber {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text-critical);
 }
 
@@ -191,16 +207,16 @@
 }
 
 .chip-filtro {
-  padding: 7px 14px;
+  padding: 7px 16px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text-muted);
   background: var(--color-bg-workspace);
   border: 1px solid var(--color-border);
   border-radius: 999px;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
 }
 
 .chip-filtro:hover {
@@ -218,7 +234,7 @@
   display: inline-block;
   padding: 5px 12px;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text-muted);
   background: var(--color-bg-workspace);
   border: 1px solid var(--color-border);
@@ -227,19 +243,22 @@
 
 /* ── Controles de formulario ──────────────────────────────────────── */
 .select-base {
-  padding: 8px 12px;
+  padding: 8px 14px;
   font-size: 13px;
+  font-weight: 600;
   color: var(--color-text-dark);
   background: white;
   border: 1px solid var(--color-border);
   border-radius: 10px;
   cursor: pointer;
   max-width: 100%;
+  transition: border-color 0.15s ease;
 }
 
 .select-base:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: -1px;
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
 .select-mini {
@@ -252,16 +271,18 @@
   width: 96px;
   padding: 5px 8px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text-dark);
   background: white;
   border: 1px solid var(--color-border);
   border-radius: 8px;
+  font-variant-numeric: tabular-nums;
 }
 
 .input-mini:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: -1px;
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
 /* ── Servicios sin clasificar ─────────────────────────────────────── */
@@ -270,10 +291,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 12px 16px;
   background: white;
   border: 1px solid var(--color-border);
   border-radius: 12px;
+  box-shadow: var(--shadow-subtle);
 }
 
 /* ── Filas con estados especiales ─────────────────────────────────── */
@@ -294,14 +316,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--color-primary);
   background: var(--color-bg-light);
   border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 /* ── Móvil ────────────────────────────────────────────────────────── */
@@ -319,7 +341,7 @@
 
   .panel {
     padding: 14px;
-    border-radius: 12px;
+    border-radius: 14px;
   }
 
   .filtros > * {

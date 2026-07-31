@@ -1,66 +1,158 @@
-/* Informe Mensual de Comisiones — solo tokens de la paleta cerrada. */
+/* ==========================================================================
+   Informe Mensual de Comisiones — Estilos Específicos de la Vista
+   Manifiesto SSOT §3 (Tokens Inmutables, 2026 Spring Animations & Modern Layout)
+   ========================================================================== */
 
+/* ── Toolbar de Periodo ───────────────────────────────────────────── */
 .barra-periodo {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 12px 18px;
   background: white;
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: 16px;
   box-shadow: var(--shadow-subtle);
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.icono-periodo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.contenedor-select-periodo {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .select-periodo {
-  padding: 8px 14px;
+  padding: 8px 36px 8px 14px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text-dark);
-  background: white;
+  background: var(--color-bg-workspace);
   border: 1px solid var(--color-border);
   border-radius: 10px;
   cursor: pointer;
+  appearance: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.select-periodo:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
 }
 
 .select-periodo:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: -1px;
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
-/* ── Cifras del mes ───────────────────────────────────────────────── */
-.grid-kpis {
+.select-icono-flecha {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  color: var(--color-text-muted);
+}
+
+.pill-meta {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-bg-workspace);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+}
+
+/* ── Cifras del Mes (Modern KPI Grid) ──────────────────────────────── */
+.grid-kpis-modern {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
 }
 
-.kpi {
+.kpi-card {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  justify-content: space-between;
   padding: 16px 18px;
   background: white;
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: 16px;
   box-shadow: var(--shadow-subtle);
+  transition: transform 0.22s var(--ease-spring-smooth, cubic-bezier(0.16, 1, 0.3, 1)),
+              box-shadow 0.22s var(--ease-spring-smooth, cubic-bezier(0.16, 1, 0.3, 1)),
+              border-color 0.2s ease;
 }
 
-/* El dato que se mira primero al abrir el informe. */
-.kpi-destacado {
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lifted);
+}
+
+/* El dato héroe que se mira primero al abrir el informe */
+.kpi-card-destacado {
   border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 4%, white);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 5%, white), white);
+}
+
+.kpi-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .kpi-label {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--color-text-muted);
+}
+
+.kpi-icono {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpi-icono-primary {
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
+  color: var(--color-primary);
+}
+
+.kpi-icono-secondary {
+  background: color-mix(in srgb, var(--color-secondary) 15%, white);
+  color: var(--color-secondary);
+}
+
+.kpi-icono-neutral {
+  background: var(--color-bg-workspace);
+  color: var(--color-text-muted);
+}
+
+.kpi-icono-critical {
+  background: color-mix(in srgb, var(--color-text-critical) 8%, white);
+  color: var(--color-text-critical);
 }
 
 .kpi-valor {
@@ -69,116 +161,243 @@
   line-height: 1.15;
   letter-spacing: -0.02em;
   color: var(--color-text-dark);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 6px;
 }
 
 .kpi-pie {
   font-size: 11px;
   color: var(--color-text-muted);
+  line-height: 1.3;
 }
 
-/* ── Paneles ──────────────────────────────────────────────────────── */
+/* ── Paneles Generales ────────────────────────────────────────────── */
 .panel {
   background: white;
   border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 20px;
   box-shadow: var(--shadow-subtle);
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .titulo-seccion {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--color-text-dark);
+  letter-spacing: -0.01em;
 }
 
 .subtitulo-seccion {
   font-size: 12px;
   color: var(--color-text-muted);
-  margin-bottom: 14px;
+  margin-top: 2px;
 }
 
-.grid-dos {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
+.badge-tag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.03em;
 }
 
 .aviso-sin-calcular {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  padding: 16px;
   font-size: 13px;
-  color: var(--color-text-critical);
-  background: var(--color-critical-bg);
-  border-color: var(--color-critical);
+  color: var(--color-text-dark);
+  background: color-mix(in srgb, var(--color-text-critical) 5%, white);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
 }
 
-/* ── Comisión por tipo ────────────────────────────────────────────── */
-.grid-tipos {
+/* ── Comisión por Tipo ────────────────────────────────────────────── */
+.grid-tipos-modern {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 12px;
+  margin-top: 14px;
 }
 
 .tipo-card {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px;
+  padding: 14px 16px;
   background: var(--color-bg-workspace);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: 14px;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.tipo-letra {
+.tipo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-subtle);
+  border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+
+.tipo-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   font-size: 16px;
   font-weight: 800;
   color: white;
-  background: var(--color-primary);
-  border-radius: 10px;
+  border-radius: 11px;
   flex-shrink: 0;
 }
 
-.tipo-letra-bono {
+.tipo-badge-a {
+  background: var(--color-primary);
+}
+
+.tipo-badge-b {
   background: var(--color-secondary);
+}
+
+.tipo-badge-c {
+  background: #4B5563;
+}
+
+.tipo-badge-bono {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+}
+
+.tipo-info {
+  min-width: 0;
 }
 
 .tipo-monto {
   display: block;
   font-size: 18px;
   font-weight: 800;
-  line-height: 1.2;
+  line-height: 1.15;
   color: var(--color-text-dark);
+  font-variant-numeric: tabular-nums;
 }
 
 .tipo-desc {
   display: block;
   font-size: 11px;
   color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+/* ── Split Panel: Categorías de Servicio ──────────────────────────── */
+.grid-split-categorias {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  align-items: center;
+}
+
+@media (min-width: 992px) {
+  .grid-split-categorias {
+    grid-template-columns: 360px 1fr;
+  }
+}
+
+.contenedor-chart-dona {
+  width: 100%;
+}
+
+.contenedor-tabla-categorias {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.badge-pct {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Grids de 2 Columnas Equitativas ───────────────────────────────── */
+.grid-dos-equitativo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+/* ── Rankings ─────────────────────────────────────────────────────── */
+.ranking-top {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 12%, white);
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
+/* ── Tabla de Liquidación con Sticky Scroll ────────────────────────── */
+.contenedor-tabla-scroll {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+.celda-sticky {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 2;
+  border-right: 1px solid var(--color-border);
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.02);
+}
+
+tr:hover .celda-sticky {
+  background: var(--color-bg-workspace);
+}
+
+tfoot .celda-sticky {
+  background: color-mix(in srgb, var(--color-primary) 5%, white);
+}
+
+.fila-totales {
+  background: color-mix(in srgb, var(--color-primary) 5%, white);
+  font-weight: 700;
+}
+
+/* ── Responsividad Móvil ──────────────────────────────────────────── */
 @media (max-width: 768px) {
   .barra-periodo {
     flex-direction: column;
     align-items: stretch;
+    padding: 14px;
   }
 
   .panel {
-    padding: 14px;
-    border-radius: 12px;
+    padding: 16px;
+    border-radius: 14px;
   }
 
-  .kpi {
-    padding: 12px 14px;
+  .kpi-card {
+    padding: 14px 16px;
   }
 
   .kpi-valor {
-    font-size: 19px;
+    font-size: 20px;
+  }
+
+  .grid-dos-equitativo {
+    grid-template-columns: 1fr;
   }
 }

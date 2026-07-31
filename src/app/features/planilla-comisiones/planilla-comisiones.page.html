@@ -13,7 +13,7 @@
     } @else {
       <select
         class="select-base font-semibold"
-        [value]="periodoId() ?? ''"
+        [value]="periodoId() || ''"
         (change)="seleccionarPeriodo($any($event.target).value)">
         <option value="" disabled>Elegir mes…</option>
         @for (p of periodos.value().datos; track p.id) {
@@ -232,7 +232,7 @@
         <div class="flex-1 min-w-[220px]">
           <app-input type="search" placeholder="Buscar por servicio o paciente…" [(value)]="busqueda" />
         </div>
-        <select class="select-base font-medium" [value]="filtroClasif() ?? ''" (change)="filtrarPorClasif($any($event.target).value)">
+        <select class="select-base font-medium" [value]="filtroClasif() || ''" (change)="filtrarPorClasif($any($event.target).value)">
           <option value="">Todas las clasificaciones</option>
           @for (c of clasificaciones; track c) {
             <option [value]="c">{{ clasifLabel[c] }}</option>

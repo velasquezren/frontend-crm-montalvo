@@ -2,30 +2,35 @@
   title="Informe Mensual de Comisiones"
   subtitle="Todo lo que llega en el Excel de FileMaker: categorías, servicios, canales y liquidación" />
 
-<!-- ── Selector de mes ─────────────────────────────────────────────── -->
+<!-- ── Selector de mes y acciones ─────────────────────────────────── -->
 <div class="barra-periodo">
   <div class="flex items-center gap-3 min-w-0">
-    <app-icon name="calendar" [size]="16" class="text-primary shrink-0" />
+    <div class="icono-periodo">
+      <app-icon name="calendar" [size]="18" />
+    </div>
     @if (periodos.isLoading()) {
       <app-loading-skeleton width="200px" height="36px" />
     } @else if (periodos.value().datos.length === 0) {
-      <span class="text-sm text-text-muted">Todavía no hay ninguna planilla importada</span>
+      <span class="text-sm text-text-muted font-medium">Todavía no hay ninguna planilla importada</span>
     } @else {
-      <select class="select-periodo" [value]="periodoIdEfectivo() ?? ''"
-        (change)="seleccionarPeriodo($any($event.target).value)">
-        @for (p of periodos.value().datos; track p.id) {
-          <option [value]="p.id">{{ nombreMes(p.mes) }} {{ p.anio }}</option>
-        }
-      </select>
+      <div class="contenedor-select-periodo">
+        <select class="select-periodo" [value]="periodoIdEfectivo() || ''"
+          (change)="seleccionarPeriodo($any($event.target).value)">
+          @for (p of periodos.value().datos; track p.id) {
+            <option [value]="p.id">{{ nombreMes(p.mes) }} {{ p.anio }}</option>
+          }
+        </select>
+        <app-icon name="chevron-down" [size]="16" class="select-icono-flecha" />
+      </div>
     }
   </div>
 
   @if (periodoActual(); as p) {
-    <div class="flex items-center gap-2 flex-wrap">
+    <div class="flex items-center gap-3 flex-wrap">
       <app-badge [variant]="p.estado === 'CALCULADO' ? 'success' : 'neutral'">
         {{ estadoLabel[p.estado] }}
       </app-badge>
-      <span class="text-xs text-text-muted">{{ p.filasTotales }} filas · TC {{ p.tipoCambio }}</span>
+      <span class="pill-meta">{{ p.filasTotales }} filas · TC {{ p.tipoCambio }}</span>
       <app-button icon="download" size="sm" [loading]="descargando()" (clicked)="descargarExcel()">
         Descargar Excel
       </app-button>
@@ -34,43 +39,81 @@
 </div>
 
 @if (analitica.isLoading()) {
-  <div class="grid-kpis">
-    @for (n of [1,2,3,4,5,6]; track n) { <app-loading-skeleton height="88px" /> }
+  <div class="grid-kpis-modern">
+    @for (n of [1,2,3,4,5,6]; track n) { <app-loading-skeleton height="100px" /> }
   </div>
 } @else if (!hayDatos()) {
   <app-empty-state icon="bar-chart" title="Sin datos para este mes"
     description="Importa el Excel del mes desde la Planilla de Comisiones para ver el informe." />
 } @else if (analitica.value(); as a) {
 
-  <!-- ══ 1. Cifras del mes ══ -->
-  <section class="grid-kpis">
-    <div style="--indice: 0" class="aparecer kpi kpi-destacado">
-      <span class="kpi-label">Facturado</span>
+  <!-- ══ 1. Cifras del mes (KPI Cards) ══ -->
+  <section class="grid-kpis-modern">
+    <div style="--indice: 0" class="aparecer kpi-card kpi-card-destacado">
+      <div class="kpi-cabecera">
+        <span class="kpi-label">Facturado</span>
+        <div class="kpi-icono kpi-icono-primary">
+          <app-icon name="wallet" [size]="18" />
+        </div>
+      </div>
       <span class="kpi-valor">{{ a.resumen.montoVendido | moneda }}</span>
-      <span class="kpi-pie">{{ a.resumen.filasComisionables }} ventas comisionables</span>
+      <span class="kpi-pie font-medium">
+        <app-icon name="check-circle" [size]="12" class="inline text-primary mr-1" />
+        {{ a.resumen.filasComisionables }} ventas comisionables
+      </span>
     </div>
-    <div style="--indice: 1" class="aparecer kpi">
-      <span class="kpi-label">Base de cálculo</span>
+
+    <div style="--indice: 1" class="aparecer kpi-card">
+      <div class="kpi-cabecera">
+        <span class="kpi-label">Base de cálculo</span>
+        <div class="kpi-icono kpi-icono-neutral">
+          <app-icon name="activity" [size]="18" />
+        </div>
+      </div>
       <span class="kpi-valor">{{ a.resumen.baseCalculo | moneda }}</span>
       <span class="kpi-pie">tras descontar {{ a.resumen.impuestosDescontados | moneda }} de impuestos</span>
     </div>
-    <div style="--indice: 2" class="aparecer kpi">
-      <span class="kpi-label">Comisión total</span>
+
+    <div style="--indice: 2" class="aparecer kpi-card">
+      <div class="kpi-cabecera">
+        <span class="kpi-label">Comisión total</span>
+        <div class="kpi-icono kpi-icono-secondary">
+          <app-icon name="trending-up" [size]="18" />
+        </div>
+      </div>
       <span class="kpi-valor text-secondary">${{ a.resumen.comisionTotalUsd | number: '1.2-2' }}</span>
-      <span class="kpi-pie">{{ a.resumen.comisionTotalBob | moneda }} · TC {{ a.resumen.tipoCambio }}</span>
+      <span class="kpi-pie font-medium">{{ a.resumen.comisionTotalBob | moneda }} · TC {{ a.resumen.tipoCambio }}</span>
     </div>
-    <div style="--indice: 3" class="aparecer kpi">
-      <span class="kpi-label">Ticket promedio</span>
+
+    <div style="--indice: 3" class="aparecer kpi-card">
+      <div class="kpi-cabecera">
+        <span class="kpi-label">Ticket promedio</span>
+        <div class="kpi-icono kpi-icono-neutral">
+          <app-icon name="shopping-bag" [size]="18" />
+        </div>
+      </div>
       <span class="kpi-valor">{{ a.resumen.ticketPromedio | moneda }}</span>
       <span class="kpi-pie">venta mayor {{ a.resumen.ventaMayor | moneda }}</span>
     </div>
-    <div style="--indice: 4" class="aparecer kpi">
-      <span class="kpi-label">Pacientes atendidos</span>
+
+    <div style="--indice: 4" class="aparecer kpi-card">
+      <div class="kpi-cabecera">
+        <span class="kpi-label">Pacientes atendidos</span>
+        <div class="kpi-icono kpi-icono-neutral">
+          <app-icon name="users" [size]="18" />
+        </div>
+      </div>
       <span class="kpi-valor">{{ a.resumen.pacientesUnicos }}</span>
       <span class="kpi-pie">{{ a.resumen.serviciosDistintos }} servicios distintos</span>
     </div>
-    <div style="--indice: 5" class="aparecer kpi">
-      <span class="kpi-label">Excluidas del cálculo</span>
+
+    <div style="--indice: 5" class="aparecer kpi-card">
+      <div class="kpi-cabecera">
+        <span class="kpi-label">Excluidas del cálculo</span>
+        <div class="kpi-icono" [class.kpi-icono-critical]="a.resumen.filasExcluidas > 0" [class.kpi-icono-neutral]="a.resumen.filasExcluidas === 0">
+          <app-icon name="file-x" [size]="18" />
+        </div>
+      </div>
       <span class="kpi-valor" [class.text-critical]="a.resumen.filasExcluidas > 0">
         {{ a.resumen.filasExcluidas }}
       </span>
@@ -86,31 +129,33 @@
         {{ a.resumen.vendedorasLiquidadas }} vendedoras liquidadas. A = planes · B = cirugías y RA ·
         C = consultas, laboratorios y otros servicios.
       </p>
-      <div class="grid-tipos">
-        <div class="tipo-card">
-          <span class="tipo-letra">A</span>
-          <div>
+      <div class="grid-tipos-modern">
+        <div class="tipo-card tipo-card-a">
+          <span class="tipo-badge tipo-badge-a">A</span>
+          <div class="tipo-info">
             <span class="tipo-monto">${{ a.resumen.comisionTipoAUsd | number: '1.2-2' }}</span>
             <span class="tipo-desc">Planes y paquetes</span>
           </div>
         </div>
-        <div class="tipo-card">
-          <span class="tipo-letra">B</span>
-          <div>
+        <div class="tipo-card tipo-card-b">
+          <span class="tipo-badge tipo-badge-b">B</span>
+          <div class="tipo-info">
             <span class="tipo-monto">${{ a.resumen.comisionTipoBUsd | number: '1.2-2' }}</span>
             <span class="tipo-desc">Cirugías y Reproducción Asistida</span>
           </div>
         </div>
-        <div class="tipo-card">
-          <span class="tipo-letra">C</span>
-          <div>
+        <div class="tipo-card tipo-card-c">
+          <span class="tipo-badge tipo-badge-c">C</span>
+          <div class="tipo-info">
             <span class="tipo-monto">${{ a.resumen.comisionTipoCUsd | number: '1.2-2' }}</span>
             <span class="tipo-desc">Consultas, labs, ecografías</span>
           </div>
         </div>
-        <div class="tipo-card">
-          <span class="tipo-letra tipo-letra-bono">★</span>
-          <div>
+        <div class="tipo-card tipo-card-bono">
+          <span class="tipo-badge tipo-badge-bono">
+            <app-icon name="star" [size]="16" />
+          </span>
+          <div class="tipo-info">
             <span class="tipo-monto">${{ a.resumen.bonosUsd | number: '1.2-2' }}</span>
             <span class="tipo-desc">Bonos de jefatura y trimestrales</span>
           </div>
@@ -119,7 +164,7 @@
     </section>
   } @else {
     <section class="panel aviso-sin-calcular">
-      <app-icon name="alert-circle" [size]="18" class="shrink-0" />
+      <app-icon name="alert-circle" [size]="18" class="shrink-0 text-critical" />
       <span>
         Este mes está importado pero <strong>todavía no se ha calculado</strong>. Las cifras de venta
         ya son reales; las comisiones aparecerán al pulsar «Calcular planilla».
@@ -127,44 +172,63 @@
     </section>
   }
 
-  <!-- ══ 3. Categorías de servicio (lo que más te interesa) ══ -->
+  <!-- ══ 3. Categorías de servicio (Split Panel: Dona + Tabla) ══ -->
   <section style="--indice: 1" class="aparecer panel">
-    <app-donut-chart
-      title="Categorías de servicio"
-      subtitle="Qué peso tiene cada categoría en la facturación del mes"
-      etiquetaTotal="facturado en el mes"
-      [items]="serieCategorias()" />
+    <div class="mb-4">
+      <h3 class="titulo-seccion">Categorías de servicio</h3>
+      <p class="subtitulo-seccion">Peso y distribución de cada categoría en la facturación del mes</p>
+    </div>
 
-    <app-table [dense]="true">
-        <thead>
-          <tr><th class="text-left">Categoría</th><th class="text-right">Ventas</th><th class="text-right">Facturado</th><th class="text-right">Base</th><th class="text-right">% del mes</th></tr>
-        </thead>
-        <tbody>
-          @for (c of a.porClasificacion; track c.clave) {
+    <div class="grid-split-categorias">
+      <div class="contenedor-chart-dona">
+        <app-donut-chart
+          title=""
+          subtitle=""
+          etiquetaTotal="facturado"
+          [items]="serieCategorias()" />
+      </div>
+
+      <div class="contenedor-tabla-categorias">
+        <app-table [dense]="true">
+          <thead>
             <tr>
-              <td class="text-left font-medium">{{ c.etiqueta }}</td>
-              <td class="text-right">{{ c.cantidad }}</td>
-              <td class="text-right">{{ c.montoVendido | moneda }}</td>
-              <td class="text-right text-text-muted">{{ c.baseCalculo | moneda }}</td>
-              <td class="text-right font-semibold">{{ c.pctMonto }}%</td>
+              <th class="text-left">Categoría</th>
+              <th class="text-right">Ventas</th>
+              <th class="text-right">Facturado</th>
+              <th class="text-right">Base</th>
+              <th class="text-right">% del mes</th>
             </tr>
-          }
-        </tbody>
-    </app-table>
+          </thead>
+          <tbody>
+            @for (c of a.porClasificacion; track c.clave) {
+              <tr>
+                <td class="text-left font-semibold text-text-dark">{{ c.etiqueta }}</td>
+                <td class="text-right font-medium">{{ c.cantidad }}</td>
+                <td class="text-right font-semibold text-text-dark">{{ c.montoVendido | moneda }}</td>
+                <td class="text-right text-text-muted">{{ c.baseCalculo | moneda }}</td>
+                <td class="text-right">
+                  <span class="badge-pct">{{ c.pctMonto }}%</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </app-table>
+      </div>
+    </div>
   </section>
 
   <!-- ══ 4. Evolución del mes ══ -->
   <section style="--indice: 2" class="aparecer panel">
     <app-bar-chart
       title="Evolución diaria"
-      subtitle="Facturación por día del mes"
+      subtitle="Facturación acumulada por día del mes"
       mode="COLUMN"
       height="240px"
       [items]="serieDiaria()" />
   </section>
 
   <!-- ══ 5. Canal y unidad de negocio ══ -->
-  <div class="grid-dos">
+  <div class="grid-dos-equitativo">
     <section style="--indice: 3" class="aparecer panel">
       <app-donut-chart
         title="Canal de venta"
@@ -181,12 +245,12 @@
     </section>
   </div>
 
-  <div class="grid-dos">
+  <div class="grid-dos-equitativo">
     <section style="--indice: 5" class="aparecer panel">
       <app-bar-chart
         title="Módulo de origen"
         subtitle="De qué parte de FileMaker viene cada venta"
-        mode="BAR" height="180px"
+        mode="BAR" height="190px"
         [items]="serieModulo()" />
     </section>
     <section style="--indice: 6" class="aparecer panel">
@@ -194,51 +258,79 @@
         <app-bar-chart
           title="Nivel de plan"
           subtitle="Reparto de los planes de maternidad vendidos"
-          mode="BAR" height="180px"
+          mode="BAR" height="190px"
           [items]="serieNivel()" />
       } @else {
-        <h3 class="titulo-seccion">Nivel de plan</h3>
+        <h3 class="titulo-seccion mb-2">Nivel de plan</h3>
         <app-empty-state icon="file-x" title="Sin planes de maternidad"
-          description="Este mes no se vendieron planes con nivel." />
+          description="Este mes no se vendieron planes con nivel asignado." />
       }
     </section>
   </div>
 
   <!-- ══ 6. Rankings ══ -->
-  <div class="grid-dos">
+  <div class="grid-dos-equitativo">
     <section style="--indice: 7" class="aparecer panel">
-      <h3 class="titulo-seccion">Servicios que más facturan</h3>
-      <p class="subtitulo-seccion">Top 15 del mes por importe</p>
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="titulo-seccion">Servicios que más facturan</h3>
+        <span class="badge-tag">Top 15</span>
+      </div>
+      <p class="subtitulo-seccion mb-3">Principales conceptos por importe total</p>
       <app-table [dense]="true">
-          <thead><tr><th class="text-left">Servicio</th><th class="text-right">Veces</th><th class="text-right">Facturado</th><th class="text-right">%</th></tr></thead>
-          <tbody>
-            @for (s of a.topServicios; track s.etiqueta) {
-              <tr>
-                <td class="text-left text-sm">{{ s.etiqueta }}</td>
-                <td class="text-right">{{ s.cantidad }}</td>
-                <td class="text-right">{{ s.montoVendido | moneda }}</td>
-                <td class="text-right text-text-muted">{{ s.pctMonto }}%</td>
-              </tr>
-            }
-          </tbody>
+        <thead>
+          <tr>
+            <th class="text-left w-[40px]">#</th>
+            <th class="text-left">Servicio</th>
+            <th class="text-right">Veces</th>
+            <th class="text-right">Facturado</th>
+            <th class="text-right">%</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of a.topServicios; track s.etiqueta; let i = $index) {
+            <tr>
+              <td class="text-left font-bold text-xs text-text-muted">
+                <span [class.ranking-top]="i < 3">{{ i + 1 }}</span>
+              </td>
+              <td class="text-left text-sm font-medium text-text-dark">{{ s.etiqueta }}</td>
+              <td class="text-right font-medium">{{ s.cantidad }}</td>
+              <td class="text-right font-semibold text-text-dark">{{ s.montoVendido | moneda }}</td>
+              <td class="text-right text-text-muted font-medium">{{ s.pctMonto }}%</td>
+            </tr>
+          }
+        </tbody>
       </app-table>
     </section>
 
     <section style="--indice: 8" class="aparecer panel">
-      <h3 class="titulo-seccion">Médicos que más facturan</h3>
-      <p class="subtitulo-seccion">Top 10 del mes por importe</p>
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="titulo-seccion">Médicos que más facturan</h3>
+        <span class="badge-tag">Top 10</span>
+      </div>
+      <p class="subtitulo-seccion mb-3">Principales profesionales por importe atendido</p>
       <app-table [dense]="true">
-          <thead><tr><th class="text-left">Médico</th><th class="text-right">Atenciones</th><th class="text-right">Facturado</th><th class="text-right">%</th></tr></thead>
-          <tbody>
-            @for (m of a.topMedicos; track m.etiqueta) {
-              <tr>
-                <td class="text-left text-sm">{{ m.etiqueta }}</td>
-                <td class="text-right">{{ m.cantidad }}</td>
-                <td class="text-right">{{ m.montoVendido | moneda }}</td>
-                <td class="text-right text-text-muted">{{ m.pctMonto }}%</td>
-              </tr>
-            }
-          </tbody>
+        <thead>
+          <tr>
+            <th class="text-left w-[40px]">#</th>
+            <th class="text-left">Médico</th>
+            <th class="text-right">Atenciones</th>
+            <th class="text-right">Facturado</th>
+            <th class="text-right">%</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (m of a.topMedicos; track m.etiqueta; let i = $index) {
+            <tr>
+              <td class="text-left font-bold text-xs text-text-muted">
+                <span [class.ranking-top]="i < 3">{{ i + 1 }}</span>
+              </td>
+              <td class="text-left text-sm font-medium text-text-dark">{{ m.etiqueta }}</td>
+              <td class="text-right font-medium">{{ m.cantidad }}</td>
+              <td class="text-right font-semibold text-text-dark">{{ m.montoVendido | moneda }}</td>
+              <td class="text-right text-text-muted font-medium">{{ m.pctMonto }}%</td>
+            </tr>
+          }
+        </tbody>
       </app-table>
     </section>
   </div>
@@ -247,58 +339,72 @@
   @if (consolidado.value(); as rep) {
     @if (rep.filas.length > 0) {
       <section style="--indice: 9" class="aparecer panel">
-        <h3 class="titulo-seccion">Liquidación por vendedora</h3>
-        <p class="subtitulo-seccion">Lo que corresponde pagar este mes</p>
-        <app-table [dense]="true">
+        <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+          <div>
+            <h3 class="titulo-seccion">Liquidación por vendedora</h3>
+            <p class="subtitulo-seccion">Monto final a pagar en el periodo actual</p>
+          </div>
+        </div>
+
+        <div class="contenedor-tabla-scroll">
+          <app-table [dense]="true">
             <thead>
               <tr>
-                <th class="text-left">Vendedora</th><th class="text-right">Facturado</th><th class="text-right">Planes</th>
-                <th class="text-right">Tipo A</th><th class="text-right">Tipo B</th><th class="text-right">Tipo C</th>
-                <th class="text-right">Bonos</th><th class="text-right">Total USD</th><th class="text-right">Total Bs</th>
-                <th class="text-right">Sueldo</th><th class="text-right">A pagar</th>
+                <th class="text-left celda-sticky">Vendedora</th>
+                <th class="text-right">Facturado</th>
+                <th class="text-right">Planes</th>
+                <th class="text-right">Tipo A</th>
+                <th class="text-right">Tipo B</th>
+                <th class="text-right">Tipo C</th>
+                <th class="text-right">Bonos</th>
+                <th class="text-right">Total USD</th>
+                <th class="text-right">Total Bs</th>
+                <th class="text-right">Sueldo</th>
+                <th class="text-right">A pagar</th>
               </tr>
             </thead>
             <tbody>
               @for (f of rep.filas; track f.vendedoraId) {
                 <tr>
-                  <td>
-                    <span class="font-medium text-sm">{{ f.nombre }}</span>
-                    <span class="block text-[11px] text-text-muted">{{ f.tipo }} · {{ f.area }}</span>
+                  <td class="celda-sticky">
+                    <span class="font-semibold text-sm text-text-dark block">{{ f.nombre }}</span>
+                    <span class="block text-[11px] text-text-muted font-normal">{{ f.tipo }} · {{ f.area }}</span>
                   </td>
-                  <td class="text-right">{{ f.montoVendido | moneda }}</td>
-                  <td class="text-right">
-                    {{ f.planesVendidos }}
+                  <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ f.montoVendido | moneda }}</td>
+                  <td class="text-right whitespace-nowrap">
+                    <span class="font-medium text-text-dark">{{ f.planesVendidos }}</span>
                     @if (!f.cumpleObjetivoPlanes) {
-                      <span class="block text-[10px] text-critical" title="No alcanzó el objetivo: no cobra Tipo A">sin objetivo</span>
+                      <span class="block text-[10px] text-critical font-semibold" title="No alcanzó el objetivo: no cobra Tipo A">sin objetivo</span>
                     }
                   </td>
-                  <td class="text-right">${{ f.comisionA | number: '1.2-2' }}</td>
-                  <td class="text-right">${{ f.comisionB | number: '1.2-2' }}</td>
-                  <td class="text-right">${{ f.comisionC | number: '1.2-2' }}</td>
-                  <td class="text-right">${{ f.bonoJefatura + f.bonoTrimestral | number: '1.2-2' }}</td>
-                  <td class="text-right font-semibold">${{ f.totalUsd | number: '1.2-2' }}</td>
-                  <td class="text-right">{{ f.totalBob | moneda }}</td>
-                  <td class="text-right text-text-muted">{{ f.sueldoBase | moneda }}</td>
-                  <td class="text-right font-bold text-secondary">{{ f.totalGanado | moneda }}</td>
+                  <td class="text-right whitespace-nowrap">${{ f.comisionA | number: '1.2-2' }}</td>
+                  <td class="text-right whitespace-nowrap">${{ f.comisionB | number: '1.2-2' }}</td>
+                  <td class="text-right whitespace-nowrap">${{ f.comisionC | number: '1.2-2' }}</td>
+                  <td class="text-right whitespace-nowrap">${{ f.bonoJefatura + f.bonoTrimestral | number: '1.2-2' }}</td>
+                  <td class="text-right font-semibold text-primary whitespace-nowrap">${{ f.totalUsd | number: '1.2-2' }}</td>
+                  <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ f.totalBob | moneda }}</td>
+                  <td class="text-right text-text-muted whitespace-nowrap">{{ f.sueldoBase | moneda }}</td>
+                  <td class="text-right font-bold text-secondary text-base whitespace-nowrap">{{ f.totalGanado | moneda }}</td>
                 </tr>
               }
             </tbody>
             <tfoot>
               <tr class="fila-totales">
-                <td class="text-left font-bold">TOTALES</td>
+                <td class="text-left font-bold celda-sticky">TOTALES</td>
                 <td class="text-right font-bold">{{ rep.totales['montoVendido'] | moneda }}</td>
                 <td class="text-right"></td>
-                <td class="text-right">${{ rep.totales['comisionA'] | number: '1.2-2' }}</td>
-                <td class="text-right">${{ rep.totales['comisionB'] | number: '1.2-2' }}</td>
-                <td class="text-right">${{ rep.totales['comisionC'] | number: '1.2-2' }}</td>
-                <td class="text-right">${{ rep.totales['bonos'] | number: '1.2-2' }}</td>
-                <td class="text-right font-bold">${{ rep.totales['totalUsd'] | number: '1.2-2' }}</td>
+                <td class="text-right font-bold">${{ rep.totales['comisionA'] | number: '1.2-2' }}</td>
+                <td class="text-right font-bold">${{ rep.totales['comisionB'] | number: '1.2-2' }}</td>
+                <td class="text-right font-bold">${{ rep.totales['comisionC'] | number: '1.2-2' }}</td>
+                <td class="text-right font-bold">${{ rep.totales['bonos'] | number: '1.2-2' }}</td>
+                <td class="text-right font-bold text-primary">${{ rep.totales['totalUsd'] | number: '1.2-2' }}</td>
                 <td class="text-right font-bold">{{ rep.totales['totalBob'] | moneda }}</td>
                 <td class="text-right"></td>
-                <td class="text-right font-bold text-secondary">{{ rep.totales['totalGanado'] | moneda }}</td>
+                <td class="text-right font-extrabold text-secondary text-base">{{ rep.totales['totalGanado'] | moneda }}</td>
               </tr>
             </tfoot>
-        </app-table>
+          </app-table>
+        </div>
       </section>
     }
   }

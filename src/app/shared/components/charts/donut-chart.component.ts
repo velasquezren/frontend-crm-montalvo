@@ -64,11 +64,12 @@ import { ChartItem } from './bar-chart.component';
             @for (p of porciones(); track p.clave) {
               <li
                 class="donut-leyenda-item"
+                [class.donut-leyenda-activa]="resaltada() === p.clave"
                 [class.donut-leyenda-atenuada]="resaltada() !== null && resaltada() !== p.clave"
                 (mouseenter)="resaltada.set(p.clave)"
                 (mouseleave)="resaltada.set(null)">
                 <span class="donut-punto" [style.background-color]="p.color"></span>
-                <span class="donut-leyenda-texto">{{ p.label }}</span>
+                <span class="donut-leyenda-texto" [title]="p.label">{{ p.label }}</span>
                 <span class="donut-leyenda-pct">{{ p.pct }}%</span>
               </li>
             }
@@ -78,9 +79,9 @@ import { ChartItem } from './bar-chart.component';
     </div>
   `,
   styles: `
-    :host { display: block; }
+    :host { display: block; width: 100%; }
 
-    .donut-cabecera { margin-bottom: 16px; }
+    .donut-cabecera { margin-bottom: 14px; }
 
     .donut-titulo {
       font-size: 14px;
@@ -105,15 +106,16 @@ import { ChartItem } from './bar-chart.component';
     .donut-cuerpo {
       display: flex;
       align-items: center;
-      gap: 24px;
+      gap: 20px;
       flex-wrap: wrap;
     }
 
     .donut-grafico {
       position: relative;
-      width: 176px;
-      height: 176px;
+      width: 170px;
+      height: 170px;
       flex-shrink: 0;
+      margin: 0 auto;
     }
 
     .donut-grafico svg {
@@ -133,7 +135,7 @@ import { ChartItem } from './bar-chart.component';
       stroke-width: 5;
       stroke-linecap: butt;
       cursor: pointer;
-      transition: stroke-width 0.2s ease, opacity 0.2s ease;
+      transition: stroke-width 0.22s var(--ease-spring-smooth, cubic-bezier(0.16, 1, 0.3, 1)), opacity 0.2s ease;
       /* Se dibuja desde cero al aparecer, escalonando cada porción. */
       animation: donut-entrada 0.7s cubic-bezier(0.32, 0.72, 0, 1) backwards;
       animation-delay: var(--retraso, 0ms);
@@ -145,7 +147,7 @@ import { ChartItem } from './bar-chart.component';
 
     .donut-porcion-atenuada,
     .donut-leyenda-atenuada {
-      opacity: 0.32;
+      opacity: 0.35;
     }
 
     @keyframes donut-entrada {
@@ -161,11 +163,11 @@ import { ChartItem } from './bar-chart.component';
       justify-content: center;
       pointer-events: none;
       text-align: center;
-      padding: 0 26px;
+      padding: 0 20px;
     }
 
     .donut-centro-valor {
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 800;
       line-height: 1.1;
       color: var(--color-text-dark);
@@ -175,27 +177,39 @@ import { ChartItem } from './bar-chart.component';
 
     .donut-centro-etiqueta {
       font-size: 10px;
-      font-weight: 500;
+      font-weight: 600;
       line-height: 1.25;
       color: var(--color-text-muted);
       margin-top: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
     }
 
     .donut-leyenda {
-      flex: 1 1 190px;
+      flex: 1 1 180px;
       min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 7px;
+      gap: 6px;
+      padding: 0;
+      margin: 0;
+      list-style: none;
     }
 
     .donut-leyenda-item {
       display: flex;
       align-items: center;
       gap: 8px;
+      padding: 5px 8px;
+      border-radius: 8px;
       font-size: 12px;
       cursor: pointer;
-      transition: opacity 0.2s ease;
+      transition: background-color 0.15s ease, opacity 0.15s ease;
+    }
+
+    .donut-leyenda-item:hover,
+    .donut-leyenda-activa {
+      background-color: var(--color-bg-light);
     }
 
     .donut-punto {
@@ -208,6 +222,7 @@ import { ChartItem } from './bar-chart.component';
     .donut-leyenda-texto {
       flex: 1;
       min-width: 0;
+      font-weight: 500;
       color: var(--color-text-dark);
       overflow: hidden;
       text-overflow: ellipsis;
@@ -216,8 +231,13 @@ import { ChartItem } from './bar-chart.component';
 
     .donut-leyenda-pct {
       font-weight: 700;
-      color: var(--color-text-muted);
+      font-size: 11px;
+      color: var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 10%, white);
+      padding: 1px 6px;
+      border-radius: 6px;
       font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
     }
 
     /* Quien pidió menos movimiento en su sistema no ve la animación. */
