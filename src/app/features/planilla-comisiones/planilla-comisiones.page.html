@@ -69,6 +69,7 @@
     <div
       class="zona-carga"
       [class.zona-carga-dragged]="isDragging()"
+      (dragenter)="onDragEnter($event)"
       (dragover)="onDragOver($event)"
       (dragleave)="onDragLeave($event)"
       (drop)="onDrop($event)">

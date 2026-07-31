@@ -1,6 +1,6 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnDestroy, signal } from '@angular/core';
 
 import { mensajeDeError } from '../../core/api/http-error';
 import { AuthService } from '../../core/auth/auth.service';
@@ -60,7 +60,7 @@ type Pestana = 'IMPORTAR' | 'CLASIFICACION' | 'REPORTES' | 'CONFIGURACION';
   templateUrl: './planilla-comisiones.page.html',
   styleUrl: './planilla-comisiones.page.css',
 })
-export class PlanillaComisionesPage {
+export class PlanillaComisionesPage implements OnDestroy {
   private readonly service = inject(PlanillaComisionesService);
   private readonly toast = inject(ToastService);
   private readonly authService = inject(AuthService);
@@ -83,6 +83,8 @@ export class PlanillaComisionesPage {
 
   protected readonly subiendo = signal(false);
   protected readonly isDragging = signal(false);
+  private dragCounter = 0;
+
   protected readonly calculando = signal(false);
   protected readonly ultimaImportacion = signal<ResumenImportacion | null>(null);
 
@@ -99,7 +101,15 @@ export class PlanillaComisionesPage {
   protected readonly consolidado = signal<ReporteConsolidado | null>(null);
   protected readonly configuracion = signal<ConfiguracionPlanilla | null>(null);
 
+  private readonly preventDefaultDrag = (e: DragEvent) => e.preventDefault();
+
   constructor() {
+    // Evita que el navegador navegue o abra el archivo si se suelta fuera de la zona
+    if (typeof window !== 'undefined') {
+      window.addEventListener('dragover', this.preventDefaultDrag);
+      window.addEventListener('drop', this.preventDefaultDrag);
+    }
+
     effect(onCleanup => {
       const texto = this.busqueda();
       const id = setTimeout(() => this.busquedaDebounced.set(texto), 350);
@@ -112,6 +122,13 @@ export class PlanillaComisionesPage {
       if (!id) return;
       void this.refrescarPanelesDelPeriodo(id);
     });
+  }
+
+  ngOnDestroy(): void {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('dragover', this.preventDefaultDrag);
+      window.removeEventListener('drop', this.preventDefaultDrag);
+    }
   }
 
   /* ── Recursos ───────────────────────────────────────────────────────── */
@@ -179,24 +196,37 @@ export class PlanillaComisionesPage {
     input.value = '';
   }
 
-  /** Manejadores de Drag and Drop */
+  /** Manejadores de Drag and Drop sin parpadeos */
+  protected onDragEnter(e: DragEvent): void {
+    e.preventDefault();
+    this.dragCounter++;
+    if (this.dragCounter === 1 && !this.subiendo()) {
+      this.isDragging.set(true);
+    }
+  }
+
   protected onDragOver(e: DragEvent): void {
     e.preventDefault();
     e.stopPropagation();
-    if (!this.subiendo()) {
-      this.isDragging.set(true);
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = 'copy';
     }
   }
 
   protected onDragLeave(e: DragEvent): void {
     e.preventDefault();
     e.stopPropagation();
-    this.isDragging.set(false);
+    this.dragCounter--;
+    if (this.dragCounter <= 0) {
+      this.dragCounter = 0;
+      this.isDragging.set(false);
+    }
   }
 
   protected onDrop(e: DragEvent): void {
     e.preventDefault();
     e.stopPropagation();
+    this.dragCounter = 0;
     this.isDragging.set(false);
     if (this.subiendo()) return;
 
