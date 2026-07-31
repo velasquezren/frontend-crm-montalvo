@@ -128,6 +128,13 @@
   background: color-mix(in srgb, var(--color-primary) 5%, white);
 }
 
+.zona-carga-dragged {
+  border-color: var(--color-primary) !important;
+  background: color-mix(in srgb, var(--color-primary) 10%, white) !important;
+  transform: scale(1.01);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
 .boton-archivo {
   display: inline-flex;
   align-items: center;

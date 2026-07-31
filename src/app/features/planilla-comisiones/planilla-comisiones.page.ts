@@ -38,8 +38,7 @@ type Pestana = 'IMPORTAR' | 'CLASIFICACION' | 'REPORTES' | 'CONFIGURACION';
  * Planilla de Comisiones — liquidación mensual del equipo comercial a partir
  * del Excel que exporta FileMaker.
  *
- * Flujo: subir el Excel → revisar cómo quedó clasificado (y corregir lo que
- * haga falta) → calcular → leer los reportes. Solo ADMIN (adminGuard + @Roles).
+ * Flujo: subir/arrastrar el Excel → revisar cómo quedó clasificado → calcular → reportes.
  */
 @Component({
   selector: 'app-planilla-comisiones',
@@ -83,6 +82,7 @@ export class PlanillaComisionesPage {
   protected readonly periodoId = signal<string | null>(null);
 
   protected readonly subiendo = signal(false);
+  protected readonly isDragging = signal(false);
   protected readonly calculando = signal(false);
   protected readonly ultimaImportacion = signal<ResumenImportacion | null>(null);
 
@@ -155,7 +155,7 @@ export class PlanillaComisionesPage {
     return t.filasSinClasificar > 0 || t.vendedorasSinConfigurar > 0 || t.filasExcluidas > 0;
   });
 
-  /* ── Acciones ───────────────────────────────────────────────────────── */
+  /* ── Acciones Drag & Drop / Selección de Archivo ─────────────────────── */
 
   protected setPestana(p: Pestana): void {
     this.pestana.set(p);
@@ -175,6 +175,43 @@ export class PlanillaComisionesPage {
     const input = evento.target as HTMLInputElement;
     const archivo = input.files?.[0];
     if (!archivo) return;
+    await this.procesarArchivo(archivo);
+    input.value = '';
+  }
+
+  /** Manejadores de Drag and Drop */
+  protected onDragOver(e: DragEvent): void {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!this.subiendo()) {
+      this.isDragging.set(true);
+    }
+  }
+
+  protected onDragLeave(e: DragEvent): void {
+    e.preventDefault();
+    e.stopPropagation();
+    this.isDragging.set(false);
+  }
+
+  protected onDrop(e: DragEvent): void {
+    e.preventDefault();
+    e.stopPropagation();
+    this.isDragging.set(false);
+    if (this.subiendo()) return;
+
+    const archivo = e.dataTransfer?.files?.[0];
+    if (archivo) {
+      void this.procesarArchivo(archivo);
+    }
+  }
+
+  /** Procesa la importación del archivo cargado o arrastrado. */
+  private async procesarArchivo(archivo: File): Promise<void> {
+    if (!archivo.name.endsWith('.xlsx') && !archivo.name.endsWith('.xls')) {
+      this.toast.error('Por favor selecciona o arrastra un archivo de Excel (.xlsx o .xls).', 'Formato no válido');
+      return;
+    }
 
     this.subiendo.set(true);
     try {
@@ -192,8 +229,6 @@ export class PlanillaComisionesPage {
       this.toast.error(mensajeDeError(err, 'No se pudo importar el Excel.'), 'Error');
     } finally {
       this.subiendo.set(false);
-      // Permite volver a elegir el mismo archivo si hubo que corregirlo.
-      input.value = '';
     }
   }
 

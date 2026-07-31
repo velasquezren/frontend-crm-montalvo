@@ -66,23 +66,28 @@
 <!-- ══════════════ 1. IMPORTAR ══════════════ -->
 @if (pestana() === 'IMPORTAR' && esSuperAdmin()) {
   <section style="--indice: 0" class="aparecer panel">
-    <div class="zona-carga">
-      <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-3">
+    <div
+      class="zona-carga"
+      [class.zona-carga-dragged]="isDragging()"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)">
+      <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-3 transition-transform" [class.scale-110]="isDragging()">
         <app-icon name="download" [size]="28" />
       </div>
-      <h3 class="text-base font-bold text-text-dark">Subir el Excel del mes</h3>
+      <h3 class="text-base font-bold text-text-dark">Subir o arrastrar el Excel del mes</h3>
       <p class="text-sm text-text-muted mt-1 max-w-md text-center">
-        Exporta el archivo desde FileMaker y súbelo aquí. El sistema deduce el mes y el tipo de
+        Exporta el archivo desde FileMaker y súbelo o arrástralo aquí. El sistema deduce el mes y el tipo de
         cambio del propio archivo, y clasifica cada venta automáticamente.
       </p>
 
-      <label class="boton-archivo mt-5">
+      <label class="boton-archivo mt-5 cursor-pointer">
         @if (subiendo()) {
           <app-icon name="loader" [size]="16" class="animate-spin" />
           <span>Procesando archivo…</span>
         } @else {
           <app-icon name="download" [size]="16" />
-          <span>Elegir archivo .xlsx</span>
+          <span>Subir o arrastrar .xlsx</span>
         }
         <input type="file" accept=".xlsx,.xls" class="hidden" [disabled]="subiendo()" (change)="subirArchivo($event)" />
       </label>
