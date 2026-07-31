@@ -26,6 +26,9 @@
         {{ estadoLabel[p.estado] }}
       </app-badge>
       <span class="text-xs text-text-muted">{{ p.filasTotales }} filas · TC {{ p.tipoCambio }}</span>
+      <app-button icon="download" size="sm" [loading]="descargando()" (clicked)="descargarExcel()">
+        Descargar Excel
+      </app-button>
     </div>
   }
 </div>

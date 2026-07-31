@@ -2,8 +2,11 @@ import { DecimalPipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
+import { mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
+import { ToastService } from '../../core/toast/toast.service';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
+import { ButtonComponent } from '../../shared/components/button/button.component';
 import { BarChartComponent, ChartItem } from '../../shared/components/charts/bar-chart.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
@@ -43,6 +46,7 @@ const COLORES = [
     DecimalPipe,
     MonedaPipe,
     BadgeComponent,
+    ButtonComponent,
     BarChartComponent,
     EmptyStateComponent,
     IconComponent,
@@ -56,6 +60,9 @@ const COLORES = [
 })
 export class ReportesPage {
   private readonly service = inject(ReportesService);
+  private readonly toast = inject(ToastService);
+
+  protected readonly descargando = signal(false);
 
   protected readonly meses = MESES;
   protected readonly estadoLabel = ESTADO_PERIODO_LABEL;
@@ -126,6 +133,29 @@ export class ReportesPage {
   );
 
   /* ── Acciones ───────────────────────────────────────────────────────── */
+
+  /** Descarga el informe del mes en Excel y lo entrega al navegador. */
+  protected async descargarExcel(): Promise<void> {
+    const id = this.periodoIdEfectivo();
+    if (!id || this.descargando()) return;
+
+    this.descargando.set(true);
+    try {
+      const { blob, nombre } = await this.service.descargarExcel(id);
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement('a');
+      enlace.href = url;
+      enlace.download = nombre;
+      enlace.click();
+      // Sin revocar, el blob queda retenido en memoria hasta recargar la página.
+      URL.revokeObjectURL(url);
+      this.toast.success(`${nombre} descargado.`, 'Informe listo');
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo generar el informe.'), 'Error');
+    } finally {
+      this.descargando.set(false);
+    }
+  }
 
   protected seleccionarPeriodo(id: string): void {
     this.periodoId.set(id);
