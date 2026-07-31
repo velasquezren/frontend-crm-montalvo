@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
  * Organismo Table — tabla estándar del sistema de diseño.
  * Se usa proyectando <thead>/<tbody> nativos dentro de <app-table>:
  *
- *   <app-table [dense]="true">
+ *   <app-table [dense]="true" [maxHeight]="'calc(100dvh - 220px)'">
  *     <thead><tr><th class="text-left">…</th><th class="text-right">…</th></tr></thead>
  *     <tbody><tr><td class="text-left">…</td><td class="text-right">…</td></tr></tbody>
  *   </app-table>
@@ -19,7 +19,10 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
   selector: 'app-table',
   encapsulation: ViewEncapsulation.None,
   template: `
-    <div class="crm-table-wrap" [class.crm-table-dense]="dense()">
+    <div
+      class="crm-table-wrap"
+      [class.crm-table-dense]="dense()"
+      [style.max-height]="maxHeight()">
       <table class="crm-table">
         <ng-content />
       </table>
@@ -28,7 +31,6 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
   styles: `
     .crm-table-wrap {
       width: 100%;
-      max-height: calc(100vh - 220px);
       overflow: auto;
       background: white;
       border-radius: 16px;
@@ -221,4 +223,5 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
 })
 export class TableComponent {
   readonly dense = input<boolean>(false);
+  readonly maxHeight = input<string | undefined>(undefined);
 }
