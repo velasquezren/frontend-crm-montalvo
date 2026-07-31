@@ -65,7 +65,7 @@
 
 <!-- ══════════════ 1. IMPORTAR ══════════════ -->
 @if (pestana() === 'IMPORTAR' && esSuperAdmin()) {
-  <section class="panel">
+  <section style="--indice: 0" class="aparecer panel">
     <div class="zona-carga">
       <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-3">
         <app-icon name="download" [size]="28" />
@@ -227,7 +227,7 @@
     }
 
     <!-- Panel principal de clasificación -->
-    <section class="panel">
+    <section style="--indice: 1" class="aparecer panel">
       <div class="filtros mb-4">
         <div class="flex-1 min-w-[220px]">
           <app-input type="search" placeholder="Buscar por servicio o paciente…" [(value)]="busqueda" />
@@ -372,7 +372,7 @@
       </section>
 
       <!-- Planilla final por persona -->
-      <section class="panel">
+      <section style="--indice: 2" class="aparecer panel">
         <h3 class="text-sm font-bold text-text-dark mb-3">Planilla por Persona</h3>
         <app-table [dense]="true">
           <thead>
@@ -693,6 +693,6 @@
       </app-table>
     </section>
   } @else {
-    <section class="panel"><app-loading-skeleton height="200px" /></section>
+    <section style="--indice: 3" class="aparecer panel"><app-loading-skeleton height="200px" /></section>
   }
 }

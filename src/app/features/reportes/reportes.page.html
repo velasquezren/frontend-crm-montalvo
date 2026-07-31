@@ -44,32 +44,32 @@
 
   <!-- ══ 1. Cifras del mes ══ -->
   <section class="grid-kpis">
-    <div class="kpi kpi-destacado">
+    <div style="--indice: 0" class="aparecer kpi kpi-destacado">
       <span class="kpi-label">Facturado</span>
       <span class="kpi-valor">{{ a.resumen.montoVendido | moneda }}</span>
       <span class="kpi-pie">{{ a.resumen.filasComisionables }} ventas comisionables</span>
     </div>
-    <div class="kpi">
+    <div style="--indice: 1" class="aparecer kpi">
       <span class="kpi-label">Base de cálculo</span>
       <span class="kpi-valor">{{ a.resumen.baseCalculo | moneda }}</span>
       <span class="kpi-pie">tras descontar {{ a.resumen.impuestosDescontados | moneda }} de impuestos</span>
     </div>
-    <div class="kpi">
+    <div style="--indice: 2" class="aparecer kpi">
       <span class="kpi-label">Comisión total</span>
       <span class="kpi-valor text-secondary">${{ a.resumen.comisionTotalUsd | number: '1.2-2' }}</span>
       <span class="kpi-pie">{{ a.resumen.comisionTotalBob | moneda }} · TC {{ a.resumen.tipoCambio }}</span>
     </div>
-    <div class="kpi">
+    <div style="--indice: 3" class="aparecer kpi">
       <span class="kpi-label">Ticket promedio</span>
       <span class="kpi-valor">{{ a.resumen.ticketPromedio | moneda }}</span>
       <span class="kpi-pie">venta mayor {{ a.resumen.ventaMayor | moneda }}</span>
     </div>
-    <div class="kpi">
+    <div style="--indice: 4" class="aparecer kpi">
       <span class="kpi-label">Pacientes atendidos</span>
       <span class="kpi-valor">{{ a.resumen.pacientesUnicos }}</span>
       <span class="kpi-pie">{{ a.resumen.serviciosDistintos }} servicios distintos</span>
     </div>
-    <div class="kpi">
+    <div style="--indice: 5" class="aparecer kpi">
       <span class="kpi-label">Excluidas del cálculo</span>
       <span class="kpi-valor" [class.text-critical]="a.resumen.filasExcluidas > 0">
         {{ a.resumen.filasExcluidas }}
@@ -80,7 +80,7 @@
 
   <!-- ══ 2. Reparto de la comisión por tipo ══ -->
   @if (liquidacionLista()) {
-    <section class="panel">
+    <section style="--indice: 0" class="aparecer panel">
       <h3 class="titulo-seccion">Comisión por tipo</h3>
       <p class="subtitulo-seccion">
         {{ a.resumen.vendedorasLiquidadas }} vendedoras liquidadas. A = planes · B = cirugías y RA ·
@@ -128,12 +128,11 @@
   }
 
   <!-- ══ 3. Categorías de servicio (lo que más te interesa) ══ -->
-  <section class="panel">
-    <app-bar-chart
+  <section style="--indice: 1" class="aparecer panel">
+    <app-donut-chart
       title="Categorías de servicio"
-      subtitle="Cuánto factura cada categoría de comisión"
-      mode="BAR"
-      height="280px"
+      subtitle="Qué peso tiene cada categoría en la facturación del mes"
+      etiquetaTotal="facturado en el mes"
       [items]="serieCategorias()" />
 
     <app-table [dense]="true">
@@ -155,7 +154,7 @@
   </section>
 
   <!-- ══ 4. Evolución del mes ══ -->
-  <section class="panel">
+  <section style="--indice: 2" class="aparecer panel">
     <app-bar-chart
       title="Evolución diaria"
       subtitle="Facturación por día del mes"
@@ -166,31 +165,31 @@
 
   <!-- ══ 5. Canal y unidad de negocio ══ -->
   <div class="grid-dos">
-    <section class="panel">
-      <app-bar-chart
+    <section style="--indice: 3" class="aparecer panel">
+      <app-donut-chart
         title="Canal de venta"
         subtitle="Empresa vs. gestión propia de la vendedora"
-        mode="BAR" height="150px"
+        etiquetaTotal="facturado"
         [items]="serieCanal()" />
     </section>
-    <section class="panel">
-      <app-bar-chart
+    <section style="--indice: 4" class="aparecer panel">
+      <app-donut-chart
         title="Unidad de negocio"
         subtitle="Maternidad, Reproducción Asistida y Varios"
-        mode="BAR" height="150px"
+        etiquetaTotal="facturado"
         [items]="serieUnidad()" />
     </section>
   </div>
 
   <div class="grid-dos">
-    <section class="panel">
+    <section style="--indice: 5" class="aparecer panel">
       <app-bar-chart
         title="Módulo de origen"
         subtitle="De qué parte de FileMaker viene cada venta"
         mode="BAR" height="180px"
         [items]="serieModulo()" />
     </section>
-    <section class="panel">
+    <section style="--indice: 6" class="aparecer panel">
       @if (serieNivel().length > 0) {
         <app-bar-chart
           title="Nivel de plan"
@@ -207,7 +206,7 @@
 
   <!-- ══ 6. Rankings ══ -->
   <div class="grid-dos">
-    <section class="panel">
+    <section style="--indice: 7" class="aparecer panel">
       <h3 class="titulo-seccion">Servicios que más facturan</h3>
       <p class="subtitulo-seccion">Top 15 del mes por importe</p>
       <app-table [dense]="true">
@@ -225,7 +224,7 @@
       </app-table>
     </section>
 
-    <section class="panel">
+    <section style="--indice: 8" class="aparecer panel">
       <h3 class="titulo-seccion">Médicos que más facturan</h3>
       <p class="subtitulo-seccion">Top 10 del mes por importe</p>
       <app-table [dense]="true">
@@ -247,7 +246,7 @@
   <!-- ══ 7. Liquidación por vendedora ══ -->
   @if (consolidado.value(); as rep) {
     @if (rep.filas.length > 0) {
-      <section class="panel">
+      <section style="--indice: 9" class="aparecer panel">
         <h3 class="titulo-seccion">Liquidación por vendedora</h3>
         <p class="subtitulo-seccion">Lo que corresponde pagar este mes</p>
         <app-table [dense]="true">
