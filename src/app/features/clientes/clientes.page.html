@@ -54,7 +54,8 @@
           <th>Cliente / Empresa</th>
           <th>Teléfono</th>
           <th>Categoría</th>
-          <th>Edad / Origen</th>
+          <th>PAC</th>
+          <th>Edad / Ocupación</th>
           <th>Agente</th>
           <th>Intereses</th>
           <th>Última actualización</th>
@@ -91,14 +92,23 @@
               </app-badge>
             </td>
             <td>
+              @if (cliente.pac) {
+                <span class="text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-md font-mono whitespace-nowrap">
+                  {{ cliente.pac }}
+                </span>
+              } @else {
+                <span class="text-xs text-text-muted">—</span>
+              }
+            </td>
+            <td>
               <div class="text-xs text-text-dark">
                 @if (obtenerEdad(cliente); as edad) {
                   <span class="font-semibold">{{ edad }}</span>
                 } @else {
                   <span class="text-text-muted italic">Sin edad</span>
                 }
-                @if (cliente.datosExtra?.lugarNacimiento) {
-                  <span class="text-text-muted block text-[11px] mt-0.5">Nac: {{ cliente.datosExtra?.lugarNacimiento }}</span>
+                @if (cliente.ocupacion) {
+                  <span class="text-text-muted block text-[11px] mt-0.5 truncate max-w-[140px]" [title]="cliente.ocupacion">{{ cliente.ocupacion }}</span>
                 }
               </div>
             </td>

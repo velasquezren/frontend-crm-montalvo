@@ -315,19 +315,22 @@ export class ClientesPage {
       ['Dirección', p.direccion ?? null],
       ['Teléfono fijo', p.telefonoFijo ?? null],
       ['NIT', p.nit ?? null],
-      ['Saldo pendiente', p.saldoTotal && Number(p.saldoTotal) > 0 ? `Bs ${p.saldoTotal}` : null],
     ];
     return campos
       .filter(([, valor]) => valor !== null && valor !== '')
       .map(([etiqueta, valor]) => ({ etiqueta, valor: String(valor) }));
   });
 
+  /**
+   * Edad para la tabla. Sale de `fechaNacimiento`, que sí viaja en el listado.
+   *
+   * Antes leía `datosExtra`, que el listado dejó de enviar al aligerarlo: la
+   * columna mostraba "Sin edad" para todos.
+   */
   protected obtenerEdad(cliente: Cliente): string | null {
-    const d = cliente.datosExtra as Record<string, any> | null;
-    if (!d) return null;
-    const edad = d['edad'] ?? d['Edad.a'];
-    return edad != null && edad !== '' ? `${edad} años` : null;
+    return this.edad(cliente.fechaNacimiento);
   }
+
 
   /**
    * Edad calculada desde la fecha de nacimiento.
@@ -336,7 +339,7 @@ export class ClientesPage {
    * la del día de la exportación y hoy se desvía hasta 18 años. Esto siempre
    * dice la verdad, y además nunca hay que reimportar para corregirla.
    */
-  private edad(fechaNacimiento: string | null | undefined): string | null {
+  protected edad(fechaNacimiento: string | null | undefined): string | null {
     if (!fechaNacimiento) return null;
     const nacimiento = new Date(fechaNacimiento);
     if (Number.isNaN(nacimiento.getTime())) return null;
