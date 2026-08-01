@@ -1,20 +1,6 @@
-import { CategoriaCliente } from '../../shared/models/cliente-categoria.model';
+import { CategoriaCliente, OrigenLead as OrigenLeadApi, EstadoLead } from '../../core/api/db-types';
 
-/** Enums espejo del schema.prisma del backend. */
-export type OrigenLeadApi =
-  | 'FACEBOOK_LEAD_AD'
-  | 'FACEBOOK_COMENTARIO'
-  | 'FACEBOOK_MENSAJE'
-  | 'INSTAGRAM_LEAD_AD'
-  | 'INSTAGRAM_COMENTARIO'
-  | 'INSTAGRAM_MENSAJE'
-  | 'WHATSAPP_DIRECTO'
-  | 'PRESENCIAL'
-  | 'IMPORTACION';
-
-import { EstadoLead } from '../../shared/models/estados.model';
-
-export type { EstadoLead };
+export type { OrigenLeadApi, EstadoLead };
 
 export const ORIGEN_LABEL: Record<OrigenLeadApi, string> = {
   FACEBOOK_LEAD_AD: 'Facebook · Lead Ad',
@@ -34,18 +20,13 @@ export interface Lead {
   readonly origen: OrigenLeadApi;
   readonly estado: EstadoLead;
   readonly cliente: {
-    id: string;
-    nombre: string;
-    telefono: string;
-    categoria: CategoriaCliente;
-    agente?: { id: string; nombre: string } | null;
-    datosExtra?: {
-      empresa?: string;
-      edad?: number | string;
-      lugarNacimiento?: string;
-      [key: string]: any;
-    } | null;
+    readonly id: string;
+    readonly nombre: string;
+    readonly telefono: string;
+    readonly categoria: CategoriaCliente;
+    readonly agente?: { readonly id: string; readonly nombre: string } | null;
+    readonly datosExtra?: Record<string, any> | null;
   };
-  readonly agente: { id: string; nombre: string } | null;
+  readonly agente: { readonly id: string; readonly nombre: string } | null;
   readonly createdAt: string;
 }

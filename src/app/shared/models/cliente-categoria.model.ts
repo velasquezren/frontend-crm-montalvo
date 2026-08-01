@@ -1,12 +1,13 @@
 import { BadgeVariant } from '../components/badge/badge.component';
 import { IconName } from '../components/icon/icon.component';
+import { CategoriaCliente } from '../../core/api/db-types';
+
+export type { CategoriaCliente };
 
 /**
  * Categorización de clientes — espejo del enum CategoriaCliente del schema.prisma
  * del backend (Prospecto/Bronze/Silver/Gold). Ref: CRM_MANIFESTO.md §1.1 (Modelo Único).
  */
-export type CategoriaCliente = 'GOLD' | 'SILVER' | 'BRONZE' | 'PROSPECTO';
-
 export const CATEGORIA_LABEL: Record<CategoriaCliente, string> = {
   GOLD: 'Gold (VIP)',
   SILVER: 'Silver',

@@ -1,27 +1,24 @@
-/**
- * Planilla de comisiones — espejo de las respuestas del backend
- * (`modules/planilla-comisiones`). Los enums replican los de Prisma; el schema
- * del backend es la fuente de verdad.
- */
+import {
+  AreaVendedora,
+  CanalVenta,
+  ClasifComision,
+  EstadoPeriodo,
+  NivelPlan,
+  TipoComision,
+  TipoVendedora,
+  UnidadNegocio,
+} from '../../core/api/db-types';
 
-export type CanalVenta = 'EMPRESA' | 'PROPIO';
-export type UnidadNegocio = 'MATERNIDAD' | 'RA' | 'VARIOS';
-export type TipoComision = 'A' | 'B' | 'C';
-export type NivelPlan = 'BRONCE' | 'SILVER' | 'GOLD';
-export type TipoVendedora = 'JEFA' | 'VENDEDORA';
-export type AreaVendedora = 'EJECUTIVA' | 'RA' | 'PUBLICIDAD';
-export type EstadoPeriodo = 'BORRADOR' | 'CALCULADO' | 'CERRADO';
-
-export type ClasifComision =
-  | 'PLANPAQ'
-  | 'PLANNIN'
-  | 'CIRUGIA'
-  | 'CONSULTA'
-  | 'LAB'
-  | 'ECOGRAFIA'
-  | 'OTROSS'
-  | 'CAMPANA'
-  | 'PROMOCION';
+export type {
+  AreaVendedora,
+  CanalVenta,
+  ClasifComision,
+  EstadoPeriodo,
+  NivelPlan,
+  TipoComision,
+  TipoVendedora,
+  UnidadNegocio,
+};
 
 export interface PeriodoComision {
   id: string;
@@ -101,14 +98,9 @@ export interface Vendedora {
   sueldoBase: string;
   activa: boolean;
   configurada: boolean;
-  /**
-   * Agente del CRM con este mismo `codigo`. Lo resuelve el backend cruzando por
-   * el identificador de empresa: no hay nada que vincular a mano.
-   */
   agente: AgenteDelCrm | null;
 }
 
-/** Agente del CRM que corresponde a una vendedora, cruzado por su código. */
 export interface AgenteDelCrm {
   id: string;
   nombre: string;
