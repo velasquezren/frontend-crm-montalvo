@@ -206,17 +206,15 @@
       <!-- ── Ficha del paciente (FileMaker) ─────────────────────────
            Solo lectura: estos datos son la fuente de verdad del sistema
            clínico, no se editan desde el CRM. -->
-      @if (cargandoFicha()) {
-        <app-loading-skeleton height="80px" />
-      } @else if (fichaPaciente(); as pac) {
+      @if (datosFicha().length > 0 || clienteSeleccionado()?.pac) {
         <section class="flex flex-col gap-3">
           <div class="flex items-center justify-between gap-3 flex-wrap">
             <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider">
               Ficha del paciente
             </h3>
-            @if (pac.pac) {
+            @if (clienteSeleccionado()?.pac; as codigo) {
               <span class="text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full font-mono">
-                {{ pac.pac }}
+                {{ codigo }}
               </span>
             }
           </div>

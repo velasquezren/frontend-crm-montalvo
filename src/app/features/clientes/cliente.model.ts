@@ -1,17 +1,3 @@
-/** Ficha clínica del paciente — espejo de `DatosPaciente` del backend. */
-export interface DatosPaciente {
-  readonly pac: string | null;
-  readonly edad: number | null;
-  readonly ocupacion: string | null;
-  readonly ci: string | null;
-  readonly lugarCi: string | null;
-  readonly sexo: string | null;
-  readonly estadoCivil: string | null;
-  readonly direccion: string | null;
-  readonly nacionalidad: string | null;
-  readonly telefonoFijo: string | null;
-}
-
 import { CategoriaCliente } from '../../shared/models/cliente-categoria.model';
 
 /** Respuesta de GET /clientes del backend (schema.prisma es la fuente de verdad). */
@@ -32,13 +18,23 @@ export interface Cliente {
   readonly agenteId: string | null;
   readonly agente: { id: string; nombre: string } | null;
   readonly intereses: readonly InteresApi[];
-  /**
-   * Ficha del paciente ya traducida por el backend. Antes aquí llegaba el
-   * volcado crudo de FileMaker con sus nombres (`Edad.a`, `CI.Lug.Pac`), que
-   * además no coincidían con las claves que esperaba esta interfaz — por eso
-   * los datos nunca aparecían en pantalla.
-   */
-  readonly paciente?: DatosPaciente | null;
+  /* ── Ficha del paciente ──────────────────────────────────────────────
+     Campos propios del cliente, no un objeto aparte: el paciente y el
+     contacto son la misma entidad. Vienen en el listado, así que la ficha
+     abre sin pedir nada al servidor. */
+  readonly pac?: string | null;
+  /** Fuente de verdad de la edad; se calcula al mostrarla y nunca caduca. */
+  readonly fechaNacimiento?: string | null;
+  readonly sexo?: string | null;
+  readonly ocupacion?: string | null;
+  readonly ci?: string | null;
+  readonly ciLugar?: string | null;
+  readonly estadoCivil?: string | null;
+  readonly direccion?: string | null;
+  readonly nacionalidad?: string | null;
+  readonly telefonoFijo?: string | null;
+  readonly nit?: string | null;
+  readonly saldoTotal?: string | null;
   readonly datosExtra?: {
     empresa?: string;
     edad?: number | string;

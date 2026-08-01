@@ -24,7 +24,7 @@ import {
   CategoriaCliente,
 } from '../../shared/models/cliente-categoria.model';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
-import { Cliente, DatosPaciente, HistorialPaciente } from './cliente.model';
+import { Cliente, HistorialPaciente } from './cliente.model';
 import { ClientesService } from './clientes.service';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { OverlayRef } from '@angular/cdk/overlay';
@@ -133,7 +133,6 @@ export class ClientesPage {
   /* ── Estado del Modal de Creación / Edición ────────────────────── */
   protected readonly clienteSeleccionado = signal<Cliente | null>(null);
   /** Ficha del paciente y su historial: se piden al abrir el detalle, no en la lista. */
-  protected readonly fichaPaciente = signal<DatosPaciente | null>(null);
   protected readonly historial = signal<HistorialPaciente | null>(null);
   protected readonly cargandoFicha = signal(false);
   protected readonly modalEditarAbierto = signal(false);
@@ -204,7 +203,6 @@ export class ClientesPage {
     this.editNotas.set('');
     this.editTags.set('');
     // Un cliente nuevo todavía no tiene ficha de paciente ni historial.
-    this.fichaPaciente.set(null);
     this.historial.set(null);
     this.modalEditarAbierto.set(true);
     if (template) {
@@ -227,7 +225,7 @@ export class ClientesPage {
     this.editNotas.set(cliente.datosExtra?.notas || '');
     this.editTags.set((cliente.datosExtra?.tags || []).join(', '));
     this.modalEditarAbierto.set(true);
-    void this.cargarFichaPaciente(cliente.id);
+    void this.cargarHistorial(cliente.id);
     if (template) {
       this.activeOverlayRef?.dispose();
       this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
@@ -301,17 +299,20 @@ export class ClientesPage {
    * tres datos, y una rejilla llena de huecos no comunica nada.
    */
   protected readonly datosFicha = computed(() => {
-    const p = this.fichaPaciente();
+    // Sale del cliente que ya se tiene del listado: cero peticiones, cero espera.
+    const p = this.clienteSeleccionado();
     if (!p) return [];
     const campos: Array<[string, string | number | null]> = [
-      ['Edad', p.edad !== null ? `${p.edad} años` : null],
-      ['Ocupación', p.ocupacion],
-      ['CI', p.ci ? `${p.ci}${p.lugarCi ? ' ' + p.lugarCi : ''}` : null],
-      ['Sexo', p.sexo],
-      ['Estado civil', p.estadoCivil],
-      ['Nacionalidad', p.nacionalidad],
-      ['Dirección', p.direccion],
-      ['Teléfono fijo', p.telefonoFijo],
+      ['Edad', this.edad(p.fechaNacimiento)],
+      ['Ocupación', p.ocupacion ?? null],
+      ['CI', p.ci ? `${p.ci}${p.ciLugar ? ' ' + p.ciLugar : ''}` : null],
+      ['Sexo', p.sexo === 'M' ? 'Masculino' : p.sexo === 'F' ? 'Femenino' : null],
+      ['Estado civil', p.estadoCivil ?? null],
+      ['Nacionalidad', p.nacionalidad ?? null],
+      ['Dirección', p.direccion ?? null],
+      ['Teléfono fijo', p.telefonoFijo ?? null],
+      ['NIT', p.nit ?? null],
+      ['Saldo pendiente', p.saldoTotal && Number(p.saldoTotal) > 0 ? `Bs ${p.saldoTotal}` : null],
     ];
     return campos
       .filter(([, valor]) => valor !== null && valor !== '')
@@ -326,18 +327,38 @@ export class ClientesPage {
   }
 
   /**
-   * Trae únicamente la ficha del paciente para apertura ultrarrápida del modal.
-   * El historial se consulta por separado en su propia vista para no ralentizar la apertura.
+   * Edad calculada desde la fecha de nacimiento.
+   *
+   * La edad no se guarda en la base a propósito: el volcado de FileMaker traía
+   * la del día de la exportación y hoy se desvía hasta 18 años. Esto siempre
+   * dice la verdad, y además nunca hay que reimportar para corregirla.
    */
-  private async cargarFichaPaciente(id: string): Promise<void> {
-    this.fichaPaciente.set(null);
-    this.cargandoFicha.set(true);
+  private edad(fechaNacimiento: string | null | undefined): string | null {
+    if (!fechaNacimiento) return null;
+    const nacimiento = new Date(fechaNacimiento);
+    if (Number.isNaN(nacimiento.getTime())) return null;
 
+    const hoy = new Date();
+    let anios = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) anios--;
+    return anios >= 0 && anios < 130 ? `${anios} años` : null;
+  }
+
+  /**
+   * Historial de servicios: la ÚNICA petición que hace la ficha.
+   *
+   * El resto de datos del paciente ya vienen con el cliente del listado, así
+   * que el modal abre de inmediato y esto solo rellena el resumen del final.
+   */
+  private async cargarHistorial(id: string): Promise<void> {
+    this.historial.set(null);
+    this.cargandoFicha.set(true);
     try {
-      const ficha = await this.clientesService.obtener(id);
-      this.fichaPaciente.set(ficha.paciente ?? null);
+      this.historial.set(await this.clientesService.historial(id));
     } catch {
-      this.fichaPaciente.set(null);
+      // Sin historial la ficha sigue siendo editable: no se bloquea nada.
+      this.historial.set(null);
     } finally {
       this.cargandoFicha.set(false);
     }
