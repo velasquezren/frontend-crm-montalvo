@@ -1,51 +1,51 @@
-<div class="flex flex-col gap-8">
+<!-- ══════════════════════════════════════════════════════════════════════
+     Clientes — Vista Principal (RF-01 / RF-03 / RF-24)
+     SSOT §2.11, §3 (Diseño Atómico), §5.1 (CRM_MANIFESTO.md)
+     ══════════════════════════════════════════════════════════════════════ -->
 
-  <app-page-header
-    title="Clientes y Prospectos"
-    subtitle="Expediente único por cliente: historial, categoría (Gold/Silver/Bronze/Prospecto), edad y empresa">
-    <div actions>
-      <app-button
-        variant="primary"
-        icon="user-plus"
-        (clicked)="abrirCreacion(modalFicha)">
-        Nuevo Cliente
-      </app-button>
-    </div>
-  </app-page-header>
+<app-page-header
+  title="Clientes y Pacientes"
+  description="Gestión integral de pacientes y clientes potenciales.">
 
-  <!-- ── Búsqueda + Filtros por categoría (RF-24) ─────────────────── -->
-  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-    <div class="w-full lg:max-w-sm">
-      <app-input
-        type="search"
-        placeholder="Buscar por nombre, teléfono, email o empresa…"
-        [(value)]="busqueda" />
-    </div>
+  <!-- Acción principal de cabecera -->
+  <app-button
+    icon="user-plus"
+    (clicked)="abrirCreacion(modalFicha)">
+    Nuevo Cliente
+  </app-button>
+</app-page-header>
 
-    <div class="flex flex-wrap items-center gap-2">
-      @for (opcion of filtros; track opcion) {
-        <app-filter-chip
-          [active]="filtro() === opcion"
-          (clicked)="cambiarFiltro(opcion)">
-          {{ opcion === 'TODOS' ? 'Todos' : categoriaLabel[opcion] }}
-        </app-filter-chip>
-      }
-    </div>
+<!-- ── Barra de herramientas: Búsqueda y Filtros de Categoría ───────── -->
+<div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6">
+  <!-- Búsqueda con debounce (300ms) -->
+  <div class="w-full sm:w-80">
+    <app-input
+      placeholder="Buscar por nombre, teléfono o correo…"
+      icon="search"
+      [(value)]="busqueda" />
   </div>
 
-  <!-- ── Tabla de clientes (datos reales del backend) ─────────────── -->
+  <!-- Filtros rápidos por Categoría -->
+  <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+    @for (cat of filtros; track cat) {
+      <app-filter-chip
+        [active]="filtro() === cat"
+        (clicked)="cambiarFiltro(cat)">
+        {{ cat === 'TODOS' ? 'Todos' : categoriaLabel[cat] }}
+      </app-filter-chip>
+    }
+  </div>
+</div>
+
+<!-- ── Tabla Principal / Skeleton / State Vacio ──────────────────────── -->
+<div class="w-full">
   @if (clientesRaw.isLoading()) {
-    <div class="bg-white rounded-2xl shadow-subtle p-6 flex flex-col gap-4">
-      @for (fila of [1, 2, 3, 4, 5]; track fila) {
-        <app-loading-skeleton shape="text" height="2.5rem" />
-      }
-    </div>
-  } @else if (clientesRaw.error()) {
-    <div class="bg-white rounded-2xl shadow-subtle">
-      <app-empty-state
-        icon="alert-circle"
-        title="No se pudo cargar los clientes"
-        description="Verifica que el servidor del CRM esté encendido e intenta de nuevo." />
+    <div class="bg-white rounded-2xl p-6 shadow-subtle flex flex-col gap-4">
+      <app-loading-skeleton height="48px" />
+      <app-loading-skeleton height="48px" />
+      <app-loading-skeleton height="48px" />
+      <app-loading-skeleton height="48px" />
+      <app-loading-skeleton height="48px" />
     </div>
   } @else if (clientes().datos.length > 0) {
     <app-table>
@@ -54,8 +54,7 @@
           <th>Cliente / Empresa</th>
           <th>Teléfono</th>
           <th>Categoría</th>
-          <th>PAC</th>
-          <th>Edad / Ocupación</th>
+          <th>Edad / Origen</th>
           <th>Agente</th>
           <th>Intereses</th>
           <th>Última actualización</th>
@@ -92,23 +91,14 @@
               </app-badge>
             </td>
             <td>
-              @if (cliente.pac) {
-                <span class="text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-md font-mono whitespace-nowrap">
-                  {{ cliente.pac }}
-                </span>
-              } @else {
-                <span class="text-xs text-text-muted">—</span>
-              }
-            </td>
-            <td>
               <div class="text-xs text-text-dark">
                 @if (obtenerEdad(cliente); as edad) {
                   <span class="font-semibold">{{ edad }}</span>
                 } @else {
                   <span class="text-text-muted italic">Sin edad</span>
                 }
-                @if (cliente.ocupacion) {
-                  <span class="text-text-muted block text-[11px] mt-0.5 truncate max-w-[140px]" [title]="cliente.ocupacion">{{ cliente.ocupacion }}</span>
+                @if (cliente.datosExtra?.lugarNacimiento) {
+                  <span class="text-text-muted block text-[11px] mt-0.5">Nac: {{ cliente.datosExtra?.lugarNacimiento }}</span>
                 }
               </div>
             </td>
@@ -164,203 +154,252 @@
     aria-labelledby="titulo-ficha"
     (click)="$event.stopPropagation()">
 
-    <!-- ── Cabecera: identidad del cliente ─────────── -->
-    <header class="flex items-start justify-between gap-4 px-6 sm:px-8 pt-6 pb-5 border-b border-border bg-white shrink-0">
-      <div class="flex items-center gap-3.5 min-w-0">
-        @if (esCreacion()) {
-          <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-            <app-icon name="user-plus" [size]="24" />
-          </div>
-          <div>
-            <h2 id="titulo-ficha" class="text-lg font-bold text-text-dark">
-              Nuevo Cliente o Prospecto
-            </h2>
-            <p class="text-xs text-text-muted mt-0.5">Ingresa los datos del nuevo contacto en el expediente del CRM.</p>
-          </div>
-        } @else if (clienteSeleccionado(); as cli) {
-          <app-avatar [initials]="iniciales(cli.nombre)" size="lg" />
-          <div class="min-w-0">
-            <h2 id="titulo-ficha" class="text-lg font-bold text-text-dark truncate">
-              {{ cli.nombre }}
-            </h2>
-            <div class="flex flex-wrap items-center gap-2 mt-1.5">
-              <app-badge
-                [variant]="categoriaBadge[cli.categoria]"
-                [icon]="categoriaIcon[cli.categoria]">
-                {{ categoriaLabel[cli.categoria] }}
-              </app-badge>
-              <span class="text-xs text-text-muted font-medium font-mono">{{ cli.telefono }}</span>
-              <a [routerLink]="['/conversaciones']" [queryParams]="{ clienteId: cli.id }" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer ml-1" (click)="cerrarEdicion()" title="Ir al chat del cliente">
-                <app-icon name="message-circle" [size]="13" />
-                <span>Chat</span>
-              </a>
+    <!-- ── Cabecera Héroe con degradado médico sobrio ─────────── -->
+    <header class="relative px-6 sm:px-8 pt-6 pb-4 border-b border-border bg-gradient-to-r from-bg-light/80 via-white to-white shrink-0">
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex items-center gap-4 min-w-0">
+          @if (esCreacion()) {
+            <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0 border border-primary/20">
+              <app-icon name="user-plus" [size]="22" />
             </div>
-          </div>
-        }
+            <div>
+              <h2 id="titulo-ficha" class="text-lg font-bold text-text-dark">
+                Nuevo Cliente o Prospecto
+              </h2>
+              <p class="text-xs text-text-muted mt-0.5">Ingresa los datos del nuevo contacto en el CRM.</p>
+            </div>
+          } @else if (clienteSeleccionado(); as cli) {
+            <app-avatar [initials]="iniciales(cli.nombre)" size="lg" />
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h2 id="titulo-ficha" class="text-lg font-bold text-text-dark truncate">
+                  {{ cli.nombre }}
+                </h2>
+                <app-badge
+                  [variant]="categoriaBadge[cli.categoria]"
+                  [icon]="categoriaIcon[cli.categoria]">
+                  {{ categoriaLabel[cli.categoria] }}
+                </app-badge>
+              </div>
+              <div class="flex flex-wrap items-center gap-2.5 mt-1.5 text-xs text-text-muted">
+                <span class="font-medium font-mono text-text-dark flex items-center gap-1">
+                  <app-icon name="phone" [size]="12" class="text-text-muted" />
+                  {{ cli.telefono }}
+                </span>
+                @if (cli.pac; as codigo) {
+                  <span class="text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full font-mono">
+                    {{ codigo }}
+                  </span>
+                }
+                <a
+                  [routerLink]="['/conversaciones']"
+                  [queryParams]="{ clienteId: cli.id }"
+                  class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer"
+                  (click)="cerrarEdicion()"
+                  title="Abrir conversación de WhatsApp">
+                  <app-icon name="message-circle" [size]="12" />
+                  <span>WhatsApp</span>
+                </a>
+              </div>
+            </div>
+          }
+        </div>
+
+        <button
+          type="button"
+          (click)="cerrarEdicion()"
+          class="w-8 h-8 shrink-0 rounded-xl flex items-center justify-center text-text-muted
+                 hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
+          aria-label="Cerrar">
+          <app-icon name="x" [size]="16" />
+        </button>
       </div>
 
-      <button
-        type="button"
-        (click)="cerrarEdicion()"
-        class="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-text-muted
-               hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
-        aria-label="Cerrar">
-        <app-icon name="x" [size]="18" />
-      </button>
+      <!-- ── Sub-navegación por Pestañas Sobria ─────────── -->
+      @if (!esCreacion()) {
+        <nav class="flex gap-2 mt-5 pt-1 border-t border-border/50">
+          <button
+            type="button"
+            (click)="pestanaModal.set('EXPEDIENTE')"
+            class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
+            [class]="pestanaModal() === 'EXPEDIENTE' ? 'bg-primary text-white shadow-xs' : 'text-text-muted hover:text-text-dark hover:bg-bg-light'">
+            <app-icon name="file-text" [size]="13" />
+            <span>Expediente Clínico</span>
+          </button>
+          <button
+            type="button"
+            (click)="pestanaModal.set('CONTACTO')"
+            class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
+            [class]="pestanaModal() === 'CONTACTO' ? 'bg-primary text-white shadow-xs' : 'text-text-muted hover:text-text-dark hover:bg-bg-light'">
+            <app-icon name="user" [size]="13" />
+            <span>Datos de Contacto</span>
+          </button>
+          <button
+            type="button"
+            (click)="pestanaModal.set('NOTAS')"
+            class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
+            [class]="pestanaModal() === 'NOTAS' ? 'bg-primary text-white shadow-xs' : 'text-text-muted hover:text-text-dark hover:bg-bg-light'">
+            <app-icon name="edit" [size]="13" />
+            <span>Perfil & Notas</span>
+          </button>
+        </nav>
+      }
     </header>
 
-    <!-- ── Formulario ───────────────────────────────────────────── -->
-    <form (submit)="guardarEdicion($event)" class="px-6 sm:px-8 py-6 flex flex-col gap-6 overflow-y-auto flex-1">
+    <!-- ── Cuerpo del Formulario ─────────────────────────────────── -->
+    <form (submit)="guardarEdicion($event)" class="flex flex-col flex-1 overflow-hidden">
+      <div class="px-6 sm:px-8 py-6 flex flex-col gap-6 overflow-y-auto flex-1">
 
-
-      <!-- ── Ficha del paciente (FileMaker) ─────────────────────────
-           Solo lectura: estos datos son la fuente de verdad del sistema
-           clínico, no se editan desde el CRM. -->
-      @if (datosFicha().length > 0 || clienteSeleccionado()?.pac) {
-        <section class="flex flex-col gap-3">
-          <div class="flex items-center justify-between gap-3 flex-wrap">
-            <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider">
-              Ficha del paciente
-            </h3>
-            @if (clienteSeleccionado()?.pac; as codigo) {
-              <span class="text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full font-mono">
-                {{ codigo }}
-              </span>
-            }
-          </div>
-
-          <dl class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            @for (dato of datosFicha(); track dato.etiqueta) {
-              <div class="bg-bg-light border border-border rounded-xl px-3 py-2 min-w-0">
-                <dt class="text-[10px] font-semibold text-text-muted uppercase tracking-wide">
-                  {{ dato.etiqueta }}
-                </dt>
-                <dd class="text-sm font-semibold text-text-dark truncate" [title]="dato.valor">
-                  {{ dato.valor }}
-                </dd>
-              </div>
-            }
-          </dl>
-
-          @if (historial(); as h) {
-            @if (h.totalServicios > 0) {
-              <div class="flex items-center gap-2 text-xs text-text-muted mt-1">
-                <app-icon name="activity" [size]="14" class="text-secondary shrink-0" />
-                <span>
-                  <strong class="text-text-dark">{{ h.totalServicios }}</strong>
-                  servicio(s) registrado(s) · {{ h.montoTotal | moneda }}
+        <!-- ══ PESTAÑA 1: EXPEDIENTE CLÍNICO (FileMaker) ══ -->
+        @if (esCreacion() || pestanaModal() === 'EXPEDIENTE') {
+          @if (datosFicha().length > 0) {
+            <section class="flex flex-col gap-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">
+                  Ficha Médica FileMaker
                 </span>
+                <span class="text-[11px] text-text-muted font-medium">Datos sincronizados</span>
               </div>
-            }
-          }
-        </section>
-      }
 
-      <!-- Datos de contacto e identidad -->
-      <section class="flex flex-col gap-4">
-        <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider">
-          Identidad y Contacto
-        </h3>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <app-input label="Nombre completo *" placeholder="Ej. Juan Pérez" [(value)]="editNombre" />
-          <app-input
-            label="Teléfono / WhatsApp *"
-            type="tel"
-            placeholder="Ej. +59170000000"
-            [(value)]="editTelefono" />
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <app-input
-            label="Correo electrónico"
-            type="email"
-            placeholder="correo@ejemplo.com"
-            [(value)]="editEmail" />
-
-          <div class="flex flex-col gap-1.5">
-            <label class="text-sm font-medium text-text-dark">Categoría / Nivel</label>
-            <select
-              [value]="editCategoria()"
-              (change)="editCategoria.set($any($event.target).value)"
-              class="w-full h-11 px-4 rounded-xl border border-border bg-white text-sm text-text-dark font-medium transition-all duration-200 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10">
-              <option value="GOLD">Gold (VIP)</option>
-              <option value="SILVER">Silver</option>
-              <option value="BRONZE">Bronze</option>
-              <option value="PROSPECTO">Prospecto</option>
-            </select>
-          </div>
-        </div>
-
-        <p class="flex items-start gap-2 text-xs text-text-muted">
-          <app-icon name="alert-circle" [size]="14" class="shrink-0 mt-px" />
-          El teléfono identifica al cliente de forma única para asociar sus chats y ventas.
-        </p>
-      </section>
-
-      <!-- Perfil Extendido (Edad, Origen, Empresa) -->
-      <section class="flex flex-col gap-4 pt-4 border-t border-border">
-        <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider">
-          Perfil Extendido
-        </h3>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <app-input
-            label="Fecha de nacimiento"
-            type="date"
-            [(value)]="editFechaNacimiento" />
-          <app-input label="Lugar de Nacimiento" placeholder="Ej. Santa Cruz" [(value)]="editLugarNacimiento" />
-          <app-input label="Empresa / Ocupación" placeholder="Ej. YPFB / Abogado" [(value)]="editEmpresa" />
-        </div>
-      </section>
-
-      <!-- Notas y etiquetas -->
-      <section class="flex flex-col gap-4 pt-4 border-t border-border">
-        <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider">
-          Seguimiento interno
-        </h3>
-
-        <div class="flex flex-col gap-1.5">
-          <label for="ficha-notas" class="text-sm font-medium text-text-dark">Notas internas</label>
-          <textarea
-            id="ficha-notas"
-            #txtEditNotas
-            [value]="editNotas()"
-            (input)="editNotas.set(txtEditNotas.value)"
-            rows="3"
-            placeholder="Preferencias, tratamiento consultado, acuerdos acordados…"
-            class="w-full px-4 py-3 rounded-xl border border-border bg-white text-sm text-text-dark
-                   transition-all duration-200 outline-none resize-y
-                   placeholder:text-text-muted/50
-                   focus:border-primary focus:ring-4 focus:ring-primary/10"></textarea>
-        </div>
-
-        <div class="flex flex-col gap-2">
-          <app-input
-            label="Etiquetas / Intereses"
-            placeholder="cirugía, botox, preferente, vip"
-            [(value)]="editTags" />
-          <p class="text-xs text-text-muted">Sepáralas con comas.</p>
-
-          @if (tagsPreview().length > 0) {
-            <div class="flex flex-wrap gap-1.5 mt-1">
-              @for (tag of tagsPreview(); track tag) {
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-[11px] leading-tight border border-primary/20">
-                  {{ tag }}
-                </span>
-              }
+              <dl class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                @for (dato of datosFicha(); track dato.etiqueta) {
+                  <div class="bg-bg-workspace border border-border/70 rounded-xl p-3 flex flex-col justify-between hover:border-primary/30 transition-all">
+                    <dt class="text-[10px] font-bold text-text-muted uppercase tracking-wider flex items-center gap-1.5">
+                      <app-icon [name]="dato.icono" [size]="12" class="text-primary/70" />
+                      <span>{{ dato.etiqueta }}</span>
+                    </dt>
+                    <dd class="text-sm font-bold text-text-dark mt-1.5 truncate" [title]="dato.valor">
+                      {{ dato.valor }}
+                    </dd>
+                  </div>
+                }
+              </dl>
+            </section>
+          } @else if (!esCreacion()) {
+            <div class="p-6 rounded-2xl bg-bg-workspace border border-border/70 text-center">
+              <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2">
+                <app-icon name="file-text" [size]="20" />
+              </div>
+              <p class="text-xs font-semibold text-text-dark">Sin ficha médica de FileMaker</p>
+              <p class="text-[11px] text-text-muted mt-1 max-w-sm mx-auto">
+                Este contacto no tiene un código PAC asignado aún o fue registrado manualmente desde el CRM.
+              </p>
             </div>
           }
-        </div>
-      </section>
+        }
 
-      <!-- ── Acciones ───────────────────────────────────────────── -->
-      <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-5 border-t border-border mt-auto">
-        <app-button variant="secondary" (clicked)="cerrarEdicion()">Cancelar</app-button>
-        <app-button type="submit" [loading]="guardando()">
-          {{ guardando() ? 'Guardando…' : (esCreacion() ? 'Crear Cliente' : 'Guardar cambios') }}
-        </app-button>
+        <!-- ══ PESTAÑA 2: DATOS DE CONTACTO ══ -->
+        @if (esCreacion() || pestanaModal() === 'CONTACTO') {
+          <section class="flex flex-col gap-4">
+            <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">
+              Identidad & Contacto Comercial
+            </span>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <app-input label="Nombre completo *" placeholder="Ej. Juan Pérez" [(value)]="editNombre" />
+              <app-input
+                label="Teléfono / WhatsApp *"
+                type="tel"
+                placeholder="Ej. +59170000000"
+                [(value)]="editTelefono" />
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <app-input
+                label="Correo electrónico"
+                type="email"
+                placeholder="correo@ejemplo.com"
+                [(value)]="editEmail" />
+
+              <div class="flex flex-col gap-1.5">
+                <label class="text-sm font-medium text-text-dark">Categoría / Nivel</label>
+                <select
+                  [value]="editCategoria()"
+                  (change)="editCategoria.set($any($event.target).value)"
+                  class="w-full h-11 px-4 rounded-xl border border-border bg-white text-sm text-text-dark font-medium transition-all duration-200 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10">
+                  <option value="GOLD">Gold (VIP)</option>
+                  <option value="SILVER">Silver</option>
+                  <option value="BRONZE">Bronze</option>
+                  <option value="PROSPECTO">Prospecto</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 p-3 rounded-xl bg-bg-light/60 border border-border/60 text-xs text-text-muted">
+              <app-icon name="shield" [size]="15" class="text-primary shrink-0" />
+              <span>El número de teléfono es el identificador único que enlaza WhatsApp y ventas.</span>
+            </div>
+          </section>
+        }
+
+        <!-- ══ PESTAÑA 3: PERFIL & NOTAS ══ -->
+        @if (esCreacion() || pestanaModal() === 'NOTAS') {
+          <section class="flex flex-col gap-4">
+            <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">
+              Información Complementaria
+            </span>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <app-input
+                label="Fecha de nacimiento"
+                type="date"
+                [(value)]="editFechaNacimiento" />
+              <app-input label="Lugar de Nacimiento" placeholder="Ej. Santa Cruz" [(value)]="editLugarNacimiento" />
+              <app-input label="Empresa / Ocupación" placeholder="Ej. YPFB / Abogado" [(value)]="editEmpresa" />
+            </div>
+
+            <div class="flex flex-col gap-1.5 pt-2">
+              <label for="ficha-notas" class="text-sm font-medium text-text-dark">Notas internas de seguimiento</label>
+              <textarea
+                id="ficha-notas"
+                #txtEditNotas
+                [value]="editNotas()"
+                (input)="editNotas.set(txtEditNotas.value)"
+                rows="3"
+                placeholder="Preferencias, acuerdos acordados, observaciones del paciente…"
+                class="w-full px-4 py-3 rounded-xl border border-border bg-white text-sm text-text-dark
+                       transition-all duration-200 outline-none resize-y
+                       placeholder:text-text-muted/50
+                       focus:border-primary focus:ring-4 focus:ring-primary/10"></textarea>
+            </div>
+
+            <div class="flex flex-col gap-2 pt-2">
+              <app-input
+                label="Etiquetas / Intereses"
+                placeholder="cirugía, botox, preferente, vip"
+                [(value)]="editTags" />
+              <p class="text-xs text-text-muted">Ingresa los intereses separados por comas.</p>
+
+              @if (tagsPreview().length > 0) {
+                <div class="flex flex-wrap gap-1.5 mt-1">
+                  @for (tag of tagsPreview(); track tag) {
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-[11px] leading-tight border border-primary/20">
+                      {{ tag }}
+                    </span>
+                  }
+                </div>
+              }
+            </div>
+          </section>
+        }
+
       </div>
+
+      <!-- ── Pie Fijo de Acciones ─────────────────────────────────── -->
+      <footer class="flex items-center justify-end gap-3 px-6 sm:px-8 py-4 bg-bg-workspace/80 border-t border-border backdrop-blur-xs shrink-0">
+        <app-button
+          type="button"
+          variant="ghost"
+          (clicked)="cerrarEdicion()">
+          Cancelar
+        </app-button>
+        <app-button
+          type="submit"
+          icon="check"
+          [loading]="guardando()">
+          {{ esCreacion() ? 'Crear Cliente' : 'Guardar Cambios' }}
+        </app-button>
+      </footer>
     </form>
   </div>
 </ng-template>

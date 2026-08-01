@@ -8,7 +8,7 @@ import { generarIniciales } from '../../core/auth/user.model';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
-import { IconComponent } from '../../shared/components/icon/icon.component';
+import { IconComponent, IconName } from '../../shared/components/icon/icon.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { InputComponent } from '../../shared/components/input/input.component';
@@ -23,25 +23,23 @@ import {
   CATEGORIA_LABEL,
   CategoriaCliente,
 } from '../../shared/models/cliente-categoria.model';
-import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
-import { Cliente, HistorialPaciente } from './cliente.model';
+import { Cliente } from './cliente.model';
 import { ClientesService } from './clientes.service';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { OverlayRef } from '@angular/cdk/overlay';
 import { TemplateRef, ViewContainerRef } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 type FiltroCategoria = CategoriaCliente | 'TODOS';
+type PestanaModal = 'EXPEDIENTE' | 'CONTACTO' | 'NOTAS';
 
 /**
  * Clientes — listado real desde GET /clientes (RF-01/RF-03/RF-24).
  * El backend ya aplica visibilidad por rol: un agente ve sus clientes + pool sin asignar.
  */
-import { RouterLink } from '@angular/router';
-
 @Component({
   selector: 'app-clientes',
   imports: [
-    MonedaPipe,
     PageHeaderComponent,
     InputComponent,
     FilterChipComponent,
@@ -88,7 +86,7 @@ export class ClientesPage {
 
   protected readonly pagina = signal(1);
 
-  protected readonly clientesRaw = httpResource<RespuestaPaginada<Cliente>>(
+  protected readonly clientesRaw = httpResource<any>(
     () => {
       const filtro = this.filtro();
       return this.clientesService.listarRequest({
@@ -100,17 +98,29 @@ export class ClientesPage {
     { defaultValue: paginaVacia<Cliente>() },
   );
 
-  /**
-   * El recurso ya devuelve el sobre paginado del backend, así que esto solo
-   * cubre el primer render, antes de que llegue la respuesta.
-   *
-   * Antes había aquí una normalización de dos formatos alternativos
-   * (`raw.data` + `raw.meta`) que este backend nunca ha devuelto: era código
-   * muerto que el `any` del recurso mantenía invisible al compilador.
-   */
-  protected readonly clientes = computed<RespuestaPaginada<Cliente>>(
-    () => this.clientesRaw.value() ?? paginaVacia<Cliente>(),
-  );
+  protected readonly clientes = computed<RespuestaPaginada<Cliente>>(() => {
+    const raw = this.clientesRaw.value();
+    if (!raw) return paginaVacia<Cliente>();
+    if (Array.isArray(raw.datos)) {
+      return {
+        datos: raw.datos,
+        total: raw.total ?? raw.datos.length,
+        pagina: raw.pagina ?? 1,
+        limite: raw.limite ?? 25,
+        totalPaginas: raw.totalPaginas ?? 1,
+      };
+    }
+    if (Array.isArray(raw.data)) {
+      return {
+        datos: raw.data,
+        total: raw.meta?.total ?? raw.total ?? raw.data.length,
+        pagina: raw.meta?.page ?? raw.pagina ?? 1,
+        limite: raw.meta?.limit ?? raw.limite ?? 25,
+        totalPaginas: raw.meta?.lastPage ?? raw.totalPaginas ?? 1,
+      };
+    }
+    return raw;
+  });
 
   /** Al cambiar filtro o búsqueda se vuelve a la primera página. */
   protected cambiarFiltro(nuevo: FiltroCategoria): void {
@@ -120,18 +130,14 @@ export class ClientesPage {
 
   /* ── Estado del Modal de Creación / Edición ────────────────────── */
   protected readonly clienteSeleccionado = signal<Cliente | null>(null);
-  /** Ficha del paciente y su historial: se piden al abrir el detalle, no en la lista. */
-  protected readonly historial = signal<HistorialPaciente | null>(null);
-  protected readonly cargandoFicha = signal(false);
+  protected readonly pestanaModal = signal<PestanaModal>('EXPEDIENTE');
+
   protected readonly modalEditarAbierto = signal(false);
   protected readonly esCreacion = signal(false);
   protected readonly editNombre = signal('');
   protected readonly editEmail = signal('');
   protected readonly editTelefono = signal('');
   protected readonly editEmpresa = signal('');
-  /** Fecha de nacimiento (AAAA-MM-DD). Sustituye al campo de edad: la edad se
-      calcula al mostrarla, así que editarla directamente no tenía sentido —
-      escribía en un sitio y la ficha leía de otro. */
   protected readonly editFechaNacimiento = signal('');
   protected readonly editLugarNacimiento = signal('');
   protected readonly editCategoria = signal<CategoriaCliente>('PROSPECTO');
@@ -183,6 +189,7 @@ export class ClientesPage {
 
   protected abrirCreacion(template: TemplateRef<unknown>): void {
     this.esCreacion.set(true);
+    this.pestanaModal.set('CONTACTO');
     this.clienteSeleccionado.set(null);
     this.editNombre.set('');
     this.editEmail.set('');
@@ -193,8 +200,6 @@ export class ClientesPage {
     this.editCategoria.set('PROSPECTO');
     this.editNotas.set('');
     this.editTags.set('');
-    // Un cliente nuevo todavía no tiene ficha de paciente ni historial.
-    this.historial.set(null);
     this.modalEditarAbierto.set(true);
     if (template) {
       this.activeOverlayRef?.dispose();
@@ -204,21 +209,21 @@ export class ClientesPage {
 
   protected abrirEdicion(cliente: Cliente, template?: TemplateRef<unknown>): void {
     this.esCreacion.set(false);
+    this.pestanaModal.set('EXPEDIENTE');
     this.clienteSeleccionado.set(cliente);
     this.editNombre.set(cliente.nombre);
     this.editEmail.set(cliente.email || '');
     this.editTelefono.set(cliente.telefono);
     const datosExtra = cliente.datosExtra as Record<string, any> | null;
-    this.editFechaNacimiento.set((cliente.fechaNacimiento ?? '').slice(0, 10));
-    this.editLugarNacimiento.set(cliente.datosExtra?.lugarNacimiento || '');
+    this.editEmpresa.set(cliente.empresaTrabajo || datosExtra?.['empresa'] || '');
+    const fn = cliente.fechaNacimiento || datosExtra?.['fechaNacimiento'] || datosExtra?.['fn'];
+    this.editFechaNacimiento.set(fn ? String(fn).slice(0, 10) : '');
+    this.editLugarNacimiento.set(cliente.ciLugar || datosExtra?.['lugarNacimiento'] || datosExtra?.['CI.Lug.Pac'] || '');
     this.editCategoria.set(cliente.categoria || 'PROSPECTO');
-    this.editNotas.set(cliente.datosExtra?.notas || '');
-    this.editTags.set((cliente.datosExtra?.tags || []).join(', '));
+    this.editNotas.set(datosExtra?.['notas'] || '');
+    const tags = datosExtra?.['tags'];
+    this.editTags.set(Array.isArray(tags) ? tags.join(', ') : '');
     this.modalEditarAbierto.set(true);
-    // El listado no trae `datosExtra` (empresa, notas, tags): se pide la ficha
-    // completa para que el formulario no abra vacío y los borre al guardar.
-    void this.cargarFichaCompleta(cliente.id);
-    void this.cargarHistorial(cliente.id);
     if (template) {
       this.activeOverlayRef?.dispose();
       this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
@@ -257,7 +262,7 @@ export class ClientesPage {
         categoria: this.editCategoria(),
         datosExtra: {
           empresa: this.editEmpresa().trim() || null,
-          fechaNacimiento: this.editFechaNacimiento().trim() || null,
+          fechaNacimiento: this.editFechaNacimiento() || null,
           lugarNacimiento: this.editLugarNacimiento().trim() || null,
           notas: this.editNotas().trim() || null,
           tags: tagsArray,
@@ -287,103 +292,54 @@ export class ClientesPage {
   }
 
   /**
-   * Campos de la ficha que tienen valor. Se filtran los vacíos en vez de
-   * pintar celdas con guiones: en FileMaker muchos pacientes solo traen dos o
-   * tres datos, y una rejilla llena de huecos no comunica nada.
+   * Campos de la ficha médica derivados síncronamente con micro-iconos.
    */
   protected readonly datosFicha = computed(() => {
-    // Sale del cliente que ya se tiene del listado: cero peticiones, cero espera.
-    const p = this.clienteSeleccionado();
-    if (!p) return [];
-    const campos: Array<[string, string | number | null]> = [
-      ['Edad', this.edad(p.fechaNacimiento)],
-      ['Ocupación', p.ocupacion ?? null],
-      ['CI', p.ci ? `${p.ci}${p.ciLugar ? ' ' + p.ciLugar : ''}` : null],
-      ['Sexo', p.sexo === 'M' ? 'Masculino' : p.sexo === 'F' ? 'Femenino' : null],
-      ['Estado civil', p.estadoCivil ?? null],
-      ['Nacionalidad', p.nacionalidad ?? null],
-      ['Dirección', p.direccion ?? null],
-      ['Teléfono fijo', p.telefonoFijo ?? null],
-      ['NIT', p.nit ?? null],
-      ['Trabaja en', p.empresaTrabajo ?? null],
-      ['Contacto de referencia', p.contactoRef
-        ? `${p.contactoRef}${p.telefonoRef ? ' · ' + p.telefonoRef : ''}`
-        : null],
-      ['Teléfono oficina', p.telefonoOficina ?? null],
-      ['Visitas previas', p.visitasPrevias ? `${p.visitasPrevias}` : null],
+    const cli = this.clienteSeleccionado();
+    if (!cli) return [];
+
+    const d = (cli.datosExtra as Record<string, any> | null) ?? {};
+    const edadVal = this.obtenerEdad(cli);
+    const ocupacion = cli.ocupacion ?? d['ocupacion'] ?? d['Profesion'];
+    const ciVal = cli.ci ? `${cli.ci}${cli.ciLugar ? ' ' + cli.ciLugar : ''}` : (d['CI.Pac'] ? `${d['CI.Pac']}${d['CI.Lug.Pac'] ? ' ' + d['CI.Lug.Pac'] : ''}` : null);
+    const sexo = cli.sexo ?? d['sexo'] ?? d['Sexo'];
+    const estadoCivil = cli.estadoCivil ?? d['estadoCivil'] ?? d['E_Civil'];
+    const nacionalidad = cli.nacionalidad ?? d['nacionalidad'] ?? d['Nacionalidad'];
+    const direccion = cli.direccion ?? d['direccion'] ?? d['Direccion'];
+    const telefonoFijo = cli.telefonoFijo ?? d['telefonoFijo'] ?? d['Telef.Dom'];
+
+    const campos: Array<[string, string | null, IconName]> = [
+      ['Edad', edadVal, 'user'],
+      ['Ocupación', ocupacion ? String(ocupacion) : null, 'briefcase'],
+      ['CI', ciVal ? String(ciVal) : null, 'file-text'],
+      ['Sexo', sexo ? String(sexo) : null, 'users'],
+      ['Estado civil', estadoCivil ? String(estadoCivil) : null, 'shield'],
+      ['Nacionalidad', nacionalidad ? String(nacionalidad) : null, 'database'],
+      ['Dirección', direccion ? String(direccion) : null, 'map-pin'],
+      ['Teléfono fijo', telefonoFijo ? String(telefonoFijo) : null, 'phone'],
     ];
+
     return campos
       .filter(([, valor]) => valor !== null && valor !== '')
-      .map(([etiqueta, valor]) => ({ etiqueta, valor: String(valor) }));
+      .map(([etiqueta, valor, icono]) => ({ etiqueta, valor: String(valor), icono }));
   });
 
-  /**
-   * Edad para la tabla. Sale de `fechaNacimiento`, que sí viaja en el listado.
-   *
-   * Antes leía `datosExtra`, que el listado dejó de enviar al aligerarlo: la
-   * columna mostraba "Sin edad" para todos.
-   */
   protected obtenerEdad(cliente: Cliente): string | null {
-    return this.edad(cliente.fechaNacimiento);
-  }
+    const d = cliente.datosExtra as Record<string, any> | null;
+    const edad = d?.['edad'] ?? d?.['Edad.a'];
+    if (edad != null && edad !== '') return `${edad} años`;
 
-
-  /**
-   * Edad calculada desde la fecha de nacimiento.
-   *
-   * La edad no se guarda en la base a propósito: el volcado de FileMaker traía
-   * la del día de la exportación y hoy se desvía hasta 18 años. Esto siempre
-   * dice la verdad, y además nunca hay que reimportar para corregirla.
-   */
-  protected edad(fechaNacimiento: string | null | undefined): string | null {
-    if (!fechaNacimiento) return null;
-    const nacimiento = new Date(fechaNacimiento);
-    if (Number.isNaN(nacimiento.getTime())) return null;
-
-    const hoy = new Date();
-    let anios = hoy.getFullYear() - nacimiento.getFullYear();
-    const mes = hoy.getMonth() - nacimiento.getMonth();
-    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) anios--;
-    return anios >= 0 && anios < 130 ? `${anios} años` : null;
-  }
-
-  /**
-   * Completa el formulario con los campos que solo viajan en la ficha.
-   *
-   * El listado se mantiene ligero a propósito, así que `empresa`, `notas` y
-   * `tags` —que viven en `datosExtra`— llegan con esta llamada. Los datos del
-   * paciente ya están en pantalla desde el primer momento: esto solo rellena
-   * el formulario, no bloquea nada.
-   */
-  private async cargarFichaCompleta(id: string): Promise<void> {
-    try {
-      const ficha = await this.clientesService.obtener(id);
-      const extra = ficha.datosExtra ?? {};
-      this.editEmpresa.set(extra.empresa ?? '');
-      this.editNotas.set(extra.notas ?? '');
-      this.editTags.set((extra.tags ?? []).join(', '));
-      this.clienteSeleccionado.set(ficha);
-    } catch {
-      // Si falla, el formulario conserva lo que trajo el listado.
+    const fn = cliente.fechaNacimiento || d?.['fechaNacimiento'] || d?.['fn'];
+    if (fn) {
+      const nac = new Date(fn);
+      if (!isNaN(nac.getTime())) {
+        const hoy = new Date();
+        let e = hoy.getFullYear() - nac.getFullYear();
+        const m = hoy.getMonth() - nac.getMonth();
+        if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) e--;
+        if (e >= 0) return `${e} años`;
+      }
     }
-  }
-
-  /**
-   * Historial de servicios: la ÚNICA petición que hace la ficha.
-   *
-   * El resto de datos del paciente ya vienen con el cliente del listado, así
-   * que el modal abre de inmediato y esto solo rellena el resumen del final.
-   */
-  private async cargarHistorial(id: string): Promise<void> {
-    this.historial.set(null);
-    this.cargandoFicha.set(true);
-    try {
-      this.historial.set(await this.clientesService.historial(id));
-    } catch {
-      // Sin historial la ficha sigue siendo editable: no se bloquea nada.
-      this.historial.set(null);
-    } finally {
-      this.cargandoFicha.set(false);
-    }
+    return null;
   }
 }
