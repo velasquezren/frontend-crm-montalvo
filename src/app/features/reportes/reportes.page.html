@@ -227,23 +227,33 @@
             <tr>
               <th class="text-left cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarClasif('etiqueta')">
                 Categoría
-                @if (sortClasifCol() === 'etiqueta') { <span>{{ sortClasifDir() === 'asc' ? '↑' : '↓' }}</span> }
+                @if (sortClasifCol() === 'etiqueta') {
+                  <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortClasifDir() === 'asc'" />
+                }
               </th>
               <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarClasif('cantidad')">
                 Ventas
-                @if (sortClasifCol() === 'cantidad') { <span>{{ sortClasifDir() === 'asc' ? '↑' : '↓' }}</span> }
+                @if (sortClasifCol() === 'cantidad') {
+                  <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortClasifDir() === 'asc'" />
+                }
               </th>
               <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarClasif('montoVendido')">
                 Facturado
-                @if (sortClasifCol() === 'montoVendido') { <span>{{ sortClasifDir() === 'asc' ? '↑' : '↓' }}</span> }
+                @if (sortClasifCol() === 'montoVendido') {
+                  <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortClasifDir() === 'asc'" />
+                }
               </th>
               <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarClasif('baseCalculo')">
                 Base
-                @if (sortClasifCol() === 'baseCalculo') { <span>{{ sortClasifDir() === 'asc' ? '↑' : '↓' }}</span> }
+                @if (sortClasifCol() === 'baseCalculo') {
+                  <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortClasifDir() === 'asc'" />
+                }
               </th>
               <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarClasif('pctMonto')">
                 % del mes
-                @if (sortClasifCol() === 'pctMonto') { <span>{{ sortClasifDir() === 'asc' ? '↑' : '↓' }}</span> }
+                @if (sortClasifCol() === 'pctMonto') {
+                  <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortClasifDir() === 'asc'" />
+                }
               </th>
             </tr>
           </thead>
@@ -350,19 +360,27 @@
             <th class="text-left w-[40px]">#</th>
             <th class="text-left cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarServicios('etiqueta')">
               Servicio
-              @if (sortServiciosCol() === 'etiqueta') { <span>{{ sortServiciosDir() === 'asc' ? '↑' : '↓' }}</span> }
+              @if (sortServiciosCol() === 'etiqueta') {
+                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortServiciosDir() === 'asc'" />
+              }
             </th>
             <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarServicios('cantidad')">
               Veces
-              @if (sortServiciosCol() === 'cantidad') { <span>{{ sortServiciosDir() === 'asc' ? '↑' : '↓' }}</span> }
+              @if (sortServiciosCol() === 'cantidad') {
+                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortServiciosDir() === 'asc'" />
+              }
             </th>
             <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarServicios('montoVendido')">
               Facturado
-              @if (sortServiciosCol() === 'montoVendido') { <span>{{ sortServiciosDir() === 'asc' ? '↑' : '↓' }}</span> }
+              @if (sortServiciosCol() === 'montoVendido') {
+                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortServiciosDir() === 'asc'" />
+              }
             </th>
             <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarServicios('pctMonto')">
               %
-              @if (sortServiciosCol() === 'pctMonto') { <span>{{ sortServiciosDir() === 'asc' ? '↑' : '↓' }}</span> }
+              @if (sortServiciosCol() === 'pctMonto') {
+                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortServiciosDir() === 'asc'" />
+              }
             </th>
           </tr>
         </thead>
@@ -394,19 +412,27 @@
             <th class="text-left w-[40px]">#</th>
             <th class="text-left cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarMedicos('etiqueta')">
               Médico
-              @if (sortMedicosCol() === 'etiqueta') { <span>{{ sortMedicosDir() === 'asc' ? '↑' : '↓' }}</span> }
+              @if (sortMedicosCol() === 'etiqueta') {
+                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortMedicosDir() === 'asc'" />
+              }
             </th>
             <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarMedicos('cantidad')">
               Atenciones
-              @if (sortMedicosCol() === 'cantidad') { <span>{{ sortMedicosDir() === 'asc' ? '↑' : '↓' }}</span> }
+              @if (sortMedicosCol() === 'cantidad') {
+                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortMedicosDir() === 'asc'" />
+              }
             </th>
             <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarMedicos('montoVendido')">
               Facturado
-              @if (sortMedicosCol() === 'montoVendido') { <span>{{ sortMedicosDir() === 'asc' ? '↑' : '↓' }}</span> }
+              @if (sortMedicosCol() === 'montoVendido') {
+                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortMedicosDir() === 'asc'" />
+              }
             </th>
             <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarMedicos('pctMonto')">
               %
-              @if (sortMedicosCol() === 'pctMonto') { <span>{{ sortMedicosDir() === 'asc' ? '↑' : '↓' }}</span> }
+              @if (sortMedicosCol() === 'pctMonto') {
+                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortMedicosDir() === 'asc'" />
+              }
             </th>
           </tr>
         </thead>
