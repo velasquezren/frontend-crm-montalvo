@@ -5,7 +5,6 @@ import {
   CdkDragDrop,
   DragDropModule,
   moveItemInArray,
-  transferArrayItem,
 } from '@angular/cdk/drag-drop';
 
 import { mensajeDeError } from '../../core/api/http-error';
@@ -14,7 +13,6 @@ import { generarIniciales } from '../../core/auth/user.model';
 import { ToastService } from '../../core/toast/toast.service';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
-import { ButtonComponent } from '../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
@@ -29,6 +27,7 @@ import {
 } from '../../shared/models/estados.model';
 import { Lead, ORIGEN_LABEL, OrigenLeadApi } from './lead.model';
 import { FiltroLeads, LeadsService, ResumenLeads } from './leads.service';
+import { ActivatedRoute } from '@angular/router';
 
 type FiltroOrigen = OrigenLeadApi | 'TODOS';
 
@@ -36,8 +35,6 @@ type FiltroOrigen = OrigenLeadApi | 'TODOS';
  * Leads — Pipeline Kanban Drag-and-Drop + Vista Tabla.
  * Ref: CRM_MANIFESTO.md §1.2, §3
  */
-import { ActivatedRoute } from '@angular/router';
-
 @Component({
   selector: 'app-leads',
   imports: [
@@ -122,11 +119,14 @@ export class LeadsPage {
     { defaultValue: paginaVacia<Lead>() },
   );
 
-  /* ── Estados para columnas del Kanban ──────────────────────────── */
-  protected readonly nuevos = signal<Lead[]>([]);
-  protected readonly contactados = signal<Lead[]>([]);
-  protected readonly convertidos = signal<Lead[]>([]);
-  protected readonly perdidos = signal<Lead[]>([]);
+  /* ── Copia local pura para Kanban y Drag & Drop optimista ─────────── */
+  protected readonly leadsLocales = signal<Lead[]>([]);
+
+  /* ── Columnas del Kanban derivadas síncronamente con computed() ────── */
+  protected readonly nuevos = computed(() => this.leadsLocales().filter(l => l.estado === 'NUEVO'));
+  protected readonly contactados = computed(() => this.leadsLocales().filter(l => l.estado === 'CONTACTADO'));
+  protected readonly convertidos = computed(() => this.leadsLocales().filter(l => l.estado === 'CONVERTIDO'));
+  protected readonly perdidos = computed(() => this.leadsLocales().filter(l => l.estado === 'PERDIDO'));
 
   /** Cuántas tarjetas hay sin cargar en cada columna (total real − cargadas). */
   protected ocultasEn(estado: EstadoLead, cargadas: number): number {
@@ -145,12 +145,9 @@ export class LeadsPage {
       }
     });
 
+    // Sincronizar datos entrantes del servidor en la señal local
     effect(() => {
-      const data = this.leads.value().datos;
-      this.nuevos.set(data.filter(l => l.estado === 'NUEVO'));
-      this.contactados.set(data.filter(l => l.estado === 'CONTACTADO'));
-      this.convertidos.set(data.filter(l => l.estado === 'CONVERTIDO'));
-      this.perdidos.set(data.filter(l => l.estado === 'PERDIDO'));
+      this.leadsLocales.set(this.leads.value().datos);
     });
   }
 
@@ -170,12 +167,9 @@ export class LeadsPage {
       const item = event.previousContainer.data[event.previousIndex];
       const targetColumnId = event.container.id as EstadoLead;
 
-      // 1. Actualización optimista local
-      transferArrayItem(
-        event.previousContainer.data,
-        event.container.data,
-        event.previousIndex,
-        event.currentIndex,
+      // 1. Actualización optimista pura sustituyendo la propiedad estado en la señal
+      this.leadsLocales.update(lista =>
+        lista.map(l => (l.id === item.id ? { ...l, estado: targetColumnId } : l)),
       );
 
       // 2. Persistir en el Backend
@@ -193,7 +187,7 @@ export class LeadsPage {
             mensajeDeError(err, 'Ocurrió un error al actualizar el estado del lead.'),
             'Error al Mover',
           );
-          this.leads.reload(); // Revertir cambios
+          this.leads.reload(); // Revertir cambios recargando
         });
     }
   }
