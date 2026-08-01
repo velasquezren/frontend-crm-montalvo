@@ -7,7 +7,7 @@ import {
   TipoComision,
   TipoVendedora,
   UnidadNegocio,
-} from '../../core/api/db-types';
+} from '../../core/api/db-enums';
 
 export type {
   AreaVendedora,

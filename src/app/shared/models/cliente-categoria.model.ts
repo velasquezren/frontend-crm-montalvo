@@ -1,6 +1,6 @@
 import { BadgeVariant } from '../components/badge/badge.component';
 import { IconName } from '../components/icon/icon.component';
-import { CategoriaCliente } from '../../core/api/db-types';
+import { CategoriaCliente } from '../../core/api/db-enums';
 
 export type { CategoriaCliente };
 

@@ -1,5 +1,5 @@
 import { BadgeVariant } from '../components/badge/badge.component';
-import { EstadoComision, EstadoLead, EstadoVenta } from '../../core/api/db-types';
+import { EstadoComision, EstadoLead, EstadoVenta } from '../../core/api/db-enums';
 
 export type { EstadoComision, EstadoLead, EstadoVenta };
 

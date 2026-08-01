@@ -1,4 +1,4 @@
-import { CategoriaCliente, OrigenLead as OrigenLeadApi, EstadoLead } from '../../core/api/db-types';
+import { CategoriaCliente, OrigenLead as OrigenLeadApi, EstadoLead } from '../../core/api/db-enums';
 
 export type { OrigenLeadApi, EstadoLead };
 
