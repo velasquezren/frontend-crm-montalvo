@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import {
   CdkDragDrop,
   DragDropModule,
@@ -119,8 +119,8 @@ export class LeadsPage {
     { defaultValue: paginaVacia<Lead>() },
   );
 
-  /* ── Copia local pura para Kanban y Drag & Drop optimista ─────────── */
-  protected readonly leadsLocales = signal<Lead[]>([]);
+  /* ── Copia local reactiva auto-sincronizada con linkedSignal (Angular 19/21) ─────────── */
+  protected readonly leadsLocales = linkedSignal(() => this.leads.value().datos);
 
   /* ── Columnas del Kanban derivadas síncronamente con computed() ────── */
   protected readonly nuevos = computed(() => this.leadsLocales().filter(l => l.estado === 'NUEVO'));
@@ -144,11 +144,6 @@ export class LeadsPage {
         this.filtro.set(params['origen'] as FiltroOrigen);
       }
     });
-
-    // Sincronizar datos entrantes del servidor en la señal local
-    effect(() => {
-      this.leadsLocales.set(this.leads.value().datos);
-    });
   }
 
   protected cambiarFiltro(valor: FiltroOrigen): void {
@@ -162,12 +157,27 @@ export class LeadsPage {
 
   protected drop(event: CdkDragDrop<Lead[], any, any>): void {
     if (event.previousContainer === event.container) {
-      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+      // Reordenamiento dentro de la misma columna usando leadsLocales de forma inmutable
+      const itemsColumna = event.container.data;
+      const prev = itemsColumna[event.previousIndex];
+      const curr = itemsColumna[event.currentIndex];
+
+      if (prev && curr) {
+        this.leadsLocales.update(lista => {
+          const copia = [...lista];
+          const idxPrev = copia.findIndex(l => l.id === prev.id);
+          const idxCurr = copia.findIndex(l => l.id === curr.id);
+          if (idxPrev !== -1 && idxCurr !== -1) {
+            moveItemInArray(copia, idxPrev, idxCurr);
+          }
+          return copia;
+        });
+      }
     } else {
       const item = event.previousContainer.data[event.previousIndex];
       const targetColumnId = event.container.id as EstadoLead;
 
-      // 1. Actualización optimista pura sustituyendo la propiedad estado en la señal
+      // 1. Actualización optimista pura sustituyendo la propiedad estado en la señal escribible linkedSignal
       this.leadsLocales.update(lista =>
         lista.map(l => (l.id === item.id ? { ...l, estado: targetColumnId } : l)),
       );
