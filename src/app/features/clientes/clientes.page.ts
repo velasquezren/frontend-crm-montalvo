@@ -88,7 +88,7 @@ export class ClientesPage {
 
   protected readonly pagina = signal(1);
 
-  protected readonly clientesRaw = httpResource<any>(
+  protected readonly clientesRaw = httpResource<RespuestaPaginada<Cliente>>(
     () => {
       const filtro = this.filtro();
       return this.clientesService.listarRequest({
@@ -100,29 +100,17 @@ export class ClientesPage {
     { defaultValue: paginaVacia<Cliente>() },
   );
 
-  protected readonly clientes = computed<RespuestaPaginada<Cliente>>(() => {
-    const raw = this.clientesRaw.value();
-    if (!raw) return paginaVacia<Cliente>();
-    if (Array.isArray(raw.datos)) {
-      return {
-        datos: raw.datos,
-        total: raw.total ?? raw.datos.length,
-        pagina: raw.pagina ?? 1,
-        limite: raw.limite ?? 25,
-        totalPaginas: raw.totalPaginas ?? 1,
-      };
-    }
-    if (Array.isArray(raw.data)) {
-      return {
-        datos: raw.data,
-        total: raw.meta?.total ?? raw.total ?? raw.data.length,
-        pagina: raw.meta?.page ?? raw.pagina ?? 1,
-        limite: raw.meta?.limit ?? raw.limite ?? 25,
-        totalPaginas: raw.meta?.lastPage ?? raw.totalPaginas ?? 1,
-      };
-    }
-    return raw;
-  });
+  /**
+   * El recurso ya devuelve el sobre paginado del backend, así que esto solo
+   * cubre el primer render, antes de que llegue la respuesta.
+   *
+   * Antes había aquí una normalización de dos formatos alternativos
+   * (`raw.data` + `raw.meta`) que este backend nunca ha devuelto: era código
+   * muerto que el `any` del recurso mantenía invisible al compilador.
+   */
+  protected readonly clientes = computed<RespuestaPaginada<Cliente>>(
+    () => this.clientesRaw.value() ?? paginaVacia<Cliente>(),
+  );
 
   /** Al cambiar filtro o búsqueda se vuelve a la primera página. */
   protected cambiarFiltro(nuevo: FiltroCategoria): void {
@@ -317,6 +305,12 @@ export class ClientesPage {
       ['Dirección', p.direccion ?? null],
       ['Teléfono fijo', p.telefonoFijo ?? null],
       ['NIT', p.nit ?? null],
+      ['Trabaja en', p.empresaTrabajo ?? null],
+      ['Contacto de referencia', p.contactoRef
+        ? `${p.contactoRef}${p.telefonoRef ? ' · ' + p.telefonoRef : ''}`
+        : null],
+      ['Teléfono oficina', p.telefonoOficina ?? null],
+      ['Visitas previas', p.visitasPrevias ? `${p.visitasPrevias}` : null],
     ];
     return campos
       .filter(([, valor]) => valor !== null && valor !== '')

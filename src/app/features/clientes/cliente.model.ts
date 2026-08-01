@@ -35,6 +35,12 @@ export interface Cliente {
   readonly telefonoFijo?: string | null;
   readonly nit?: string | null;
   readonly saldoTotal?: string | null;
+  readonly empresaTrabajo?: string | null;
+  readonly contactoRef?: string | null;
+  readonly telefonoRef?: string | null;
+  readonly telefonoOficina?: string | null;
+  /** Visitas acumuladas en el sistema antiguo: indicador de recurrencia. */
+  readonly visitasPrevias?: number | null;
   readonly datosExtra?: {
     empresa?: string;
     edad?: number | string;

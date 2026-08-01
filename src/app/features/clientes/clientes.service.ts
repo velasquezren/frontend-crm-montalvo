@@ -27,7 +27,8 @@ export interface ActualizarClienteDto {
     lugarNacimiento?: string | null;
     notas?: string | null;
     tags?: string[];
-    [key: string]: any;
+    /** Nota fijada del chat (la usa Conversaciones, no la ficha del cliente). */
+    notaFijada?: string | null;
   };
 }
 
