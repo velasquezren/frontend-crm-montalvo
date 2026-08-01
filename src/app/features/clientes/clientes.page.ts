@@ -225,6 +225,9 @@ export class ClientesPage {
     this.editNotas.set(cliente.datosExtra?.notas || '');
     this.editTags.set((cliente.datosExtra?.tags || []).join(', '));
     this.modalEditarAbierto.set(true);
+    // El listado no trae `datosExtra` (empresa, notas, tags): se pide la ficha
+    // completa para que el formulario no abra vacío y los borre al guardar.
+    void this.cargarFichaCompleta(cliente.id);
     void this.cargarHistorial(cliente.id);
     if (template) {
       this.activeOverlayRef?.dispose();
@@ -343,6 +346,27 @@ export class ClientesPage {
     const mes = hoy.getMonth() - nacimiento.getMonth();
     if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) anios--;
     return anios >= 0 && anios < 130 ? `${anios} años` : null;
+  }
+
+  /**
+   * Completa el formulario con los campos que solo viajan en la ficha.
+   *
+   * El listado se mantiene ligero a propósito, así que `empresa`, `notas` y
+   * `tags` —que viven en `datosExtra`— llegan con esta llamada. Los datos del
+   * paciente ya están en pantalla desde el primer momento: esto solo rellena
+   * el formulario, no bloquea nada.
+   */
+  private async cargarFichaCompleta(id: string): Promise<void> {
+    try {
+      const ficha = await this.clientesService.obtener(id);
+      const extra = ficha.datosExtra ?? {};
+      this.editEmpresa.set(extra.empresa ?? '');
+      this.editNotas.set(extra.notas ?? '');
+      this.editTags.set((extra.tags ?? []).join(', '));
+      this.clienteSeleccionado.set(ficha);
+    } catch {
+      // Si falla, el formulario conserva lo que trajo el listado.
+    }
   }
 
   /**
