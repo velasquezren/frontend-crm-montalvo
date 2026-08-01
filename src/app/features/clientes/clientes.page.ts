@@ -141,7 +141,10 @@ export class ClientesPage {
   protected readonly editEmail = signal('');
   protected readonly editTelefono = signal('');
   protected readonly editEmpresa = signal('');
-  protected readonly editEdad = signal('');
+  /** Fecha de nacimiento (AAAA-MM-DD). Sustituye al campo de edad: la edad se
+      calcula al mostrarla, así que editarla directamente no tenía sentido —
+      escribía en un sitio y la ficha leía de otro. */
+  protected readonly editFechaNacimiento = signal('');
   protected readonly editLugarNacimiento = signal('');
   protected readonly editCategoria = signal<CategoriaCliente>('PROSPECTO');
   protected readonly editNotas = signal('');
@@ -197,7 +200,7 @@ export class ClientesPage {
     this.editEmail.set('');
     this.editTelefono.set('');
     this.editEmpresa.set('');
-    this.editEdad.set('');
+    this.editFechaNacimiento.set('');
     this.editLugarNacimiento.set('');
     this.editCategoria.set('PROSPECTO');
     this.editNotas.set('');
@@ -218,8 +221,7 @@ export class ClientesPage {
     this.editEmail.set(cliente.email || '');
     this.editTelefono.set(cliente.telefono);
     const datosExtra = cliente.datosExtra as Record<string, any> | null;
-    const edadValor = datosExtra?.['edad'] ?? datosExtra?.['Edad.a'];
-    this.editEdad.set(edadValor != null ? String(edadValor) : '');
+    this.editFechaNacimiento.set((cliente.fechaNacimiento ?? '').slice(0, 10));
     this.editLugarNacimiento.set(cliente.datosExtra?.lugarNacimiento || '');
     this.editCategoria.set(cliente.categoria || 'PROSPECTO');
     this.editNotas.set(cliente.datosExtra?.notas || '');
@@ -267,7 +269,7 @@ export class ClientesPage {
         categoria: this.editCategoria(),
         datosExtra: {
           empresa: this.editEmpresa().trim() || null,
-          edad: this.editEdad().trim() || null,
+          fechaNacimiento: this.editFechaNacimiento().trim() || null,
           lugarNacimiento: this.editLugarNacimiento().trim() || null,
           notas: this.editNotas().trim() || null,
           tags: tagsArray,

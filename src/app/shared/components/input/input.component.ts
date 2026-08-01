@@ -2,7 +2,11 @@ import { ChangeDetectionStrategy, Component, computed, input, model, signal } fr
 
 import { IconComponent } from '../icon/icon.component';
 
-export type InputType = 'text' | 'email' | 'password' | 'tel' | 'search';
+export type InputType = 'text' | 'email' | 'password' | 'tel' | 'search' | 'date' | 'number';
+
+/* `date` y `number` se añaden al átomo en vez de poner un <input> suelto en la
+   vista: así el selector de fecha hereda los mismos bordes, foco y estados de
+   error que el resto de campos del sistema de diseño. */
 
 let nextId = 0;
 

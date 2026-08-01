@@ -305,7 +305,10 @@
         </h3>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <app-input label="Edad (años)" placeholder="Ej. 35" [(value)]="editEdad" />
+          <app-input
+            label="Fecha de nacimiento"
+            type="date"
+            [(value)]="editFechaNacimiento" />
           <app-input label="Lugar de Nacimiento" placeholder="Ej. Santa Cruz" [(value)]="editLugarNacimiento" />
           <app-input label="Empresa / Ocupación" placeholder="Ej. YPFB / Abogado" [(value)]="editEmpresa" />
         </div>
