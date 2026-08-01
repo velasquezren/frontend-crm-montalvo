@@ -1,11 +1,15 @@
+import { DatosExtra } from '../../core/api/datos-extra';
+
+import { TipoMensaje } from '../../core/api/db-enums';
+
+export type { TipoMensaje };
+
 import { CategoriaCliente } from '../../shared/models/cliente-categoria.model';
 
 /** Ticks estilo WhatsApp — solo tiene sentido en mensajes SALIENTE. */
 export type EstadoEnvioMensaje = 'ENVIADO' | 'ENTREGADO' | 'LEIDO' | 'FALLIDO';
 
 /** Tipo de contenido del mensaje. */
-export type TipoMensaje = 'TEXTO' | 'IMAGEN' | 'DOCUMENTO' | 'AUDIO' | 'VIDEO' | 'STICKER';
-
 /** Respuestas de GET /conversaciones y GET /conversaciones/:id. */
 export interface MensajeApi {
   readonly id: string;
@@ -28,14 +32,13 @@ export interface ConversacionResumen {
     telefono: string;
     email: string | null;
     categoria: CategoriaCliente;
-    datosExtra?: {
-      empresa?: string;
-      edad?: number | string;
-      lugarNacimiento?: string;
-      notas?: string;
-      tags?: string[];
-      [key: string]: any;
-    } | null;
+    /* Columnas reales del paciente; solo llegan en el detalle, no en el listado. */
+    pac?: string | null;
+    fechaNacimiento?: string | null;
+    ocupacion?: string | null;
+    empresaTrabajo?: string | null;
+    ciLugar?: string | null;
+    datosExtra?: DatosExtra | null;
   };
   readonly agente: { id: string; nombre: string } | null;
   /** El listado incluye solo el último mensaje (take: 1, desc). */

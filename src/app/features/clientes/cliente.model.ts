@@ -1,3 +1,5 @@
+import { DatosExtra } from '../../core/api/datos-extra';
+
 import { CategoriaCliente } from '../../shared/models/cliente-categoria.model';
 
 /** Respuesta de GET /clientes del backend (schema.prisma es la fuente de verdad). */
@@ -41,13 +43,7 @@ export interface Cliente {
   readonly telefonoOficina?: string | null;
   /** Visitas acumuladas en el sistema antiguo: indicador de recurrencia. */
   readonly visitasPrevias?: number | null;
-  readonly datosExtra?: {
-    empresa?: string;
-    edad?: number | string;
-    lugarNacimiento?: string;
-    notas?: string;
-    tags?: string[];
-  } | null;
+  readonly datosExtra?: DatosExtra | null;
   readonly createdAt: string;
   readonly updatedAt: string;
 }

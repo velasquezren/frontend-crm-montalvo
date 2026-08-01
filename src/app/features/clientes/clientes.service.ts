@@ -1,3 +1,5 @@
+import { DatosExtra } from '../../core/api/datos-extra';
+
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
@@ -21,15 +23,7 @@ export interface ActualizarClienteDto {
   telefono?: string;
   email?: string | null;
   categoria?: CategoriaCliente;
-  datosExtra?: {
-    empresa?: string | null;
-    edad?: string | number | null;
-    lugarNacimiento?: string | null;
-    notas?: string | null;
-    tags?: string[];
-    /** Nota fijada del chat (la usa Conversaciones, no la ficha del cliente). */
-    notaFijada?: string | null;
-  };
+  datosExtra?: DatosExtra;
 }
 
 export interface CrearClienteDto {
@@ -38,7 +32,7 @@ export interface CrearClienteDto {
   email?: string | null;
   categoria?: CategoriaCliente;
   agenteId?: string;
-  datosExtra?: Record<string, any>;
+  datosExtra?: DatosExtra;
 }
 
 /**

@@ -1,6 +1,9 @@
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { OverlayRef } from '@angular/cdk/overlay';
+import { listaExtra, textoExtra } from '../../core/api/datos-extra';
+import { calcularEdad } from '../../core/api/edad';
+import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -10,6 +13,7 @@ import {
   effect,
   ElementRef,
   inject,
+  linkedSignal,
   signal,
   TemplateRef,
   ViewContainerRef,
@@ -64,6 +68,9 @@ import { ConversacionesService } from './conversaciones.service';
  * Visibilidad por rol resuelta en el servidor.
  */
 import { RouterLink } from '@angular/router';
+
+/** El paciente tal y como lo entrega el detalle de la conversación. */
+type ClienteChat = ConversacionResumen['cliente'];
 
 @Component({
   selector: 'app-conversaciones',
@@ -123,7 +130,7 @@ export class ConversacionesPage implements AfterViewInit {
   protected readonly editNombre = signal('');
   protected readonly editEmail = signal('');
   protected readonly editEmpresa = signal('');
-  protected readonly editEdad = signal('');
+  protected readonly editFechaNacimiento = signal('');
   protected readonly editLugarNacimiento = signal('');
   protected readonly editCategoria = signal<CategoriaCliente>('PROSPECTO');
   protected readonly editNotas = signal('');
@@ -237,26 +244,21 @@ export class ConversacionesPage implements AfterViewInit {
   protected readonly mostrarPopoverMemoria = signal(false);
   protected readonly busquedaMemoria = signal('');
 
-  protected readonly recursosMemoriaRaw = httpResource<any>(
+  private readonly recursosMemoriaRecurso = httpResource<RespuestaPaginada<RecursoMemoria>>(
     () =>
       this.memoriaService.listarRequest({
         busqueda: this.busquedaMemoria(),
       }),
+    { defaultValue: paginaVacia<RecursoMemoria>() },
   );
 
-  protected readonly recursosMemoria = computed<RecursoMemoria[]>(() => {
-    const raw = this.recursosMemoriaRaw.value();
-    if (!raw) return [];
-    if (Array.isArray(raw)) return raw;
-    if (Array.isArray(raw.datos)) return raw.datos;
-    if (Array.isArray(raw.data)) return raw.data;
-    return [];
-  });
+  /** Proyección: la vista solo necesita la lista, no la envoltura de paginación. */
+  protected readonly recursosMemoria = computed(() => this.recursosMemoriaRecurso.value().datos);
 
   protected togglePopoverMemoria(): void {
     const estadoActual = this.mostrarPopoverMemoria();
     if (!estadoActual) {
-      this.recursosMemoriaRaw.reload();
+      this.recursosMemoriaRecurso.reload();
     }
     this.mostrarPopoverMemoria.set(!estadoActual);
   }
@@ -301,10 +303,17 @@ export class ConversacionesPage implements AfterViewInit {
   }
 
   /* ── Datos del servidor ────────────────────────────────────────── */
-  protected readonly conversaciones = httpResource<ConversacionResumen[]>(
+  private readonly conversacionesRecurso = httpResource<ConversacionResumen[]>(
     () => this.conversacionesService.listarRequest(),
     { defaultValue: [] },
   );
+
+  /**
+   * Copia escribible de la lista del servidor. Permite limpiar el contador de
+   * no leídos al instante sin esperar al backend; linkedSignal la resincroniza
+   * sola en cuanto llega una respuesta nueva (no hace falta un effect).
+   */
+  protected readonly conversaciones = linkedSignal(() => this.conversacionesRecurso.value());
 
   protected readonly detalle = httpResource<ConversacionDetalle | undefined>(() => {
     const id = this.seleccionadaId();
@@ -349,7 +358,7 @@ export class ConversacionesPage implements AfterViewInit {
 
   /** Estadísticas del inbox para la barra superior. */
   protected readonly stats = computed(() => {
-    const lista = this.conversaciones.value();
+    const lista = this.conversaciones();
     return {
       total: lista.length,
       sinAsignar: lista.filter(c => !c.agente).length,
@@ -363,7 +372,7 @@ export class ConversacionesPage implements AfterViewInit {
     const tab = this.filtroTab();
     const agenteFilter = this.filtroAgenteId();
     const userId = this.currentUserId();
-    let lista = this.conversaciones.value();
+    let lista = this.conversaciones();
 
     // Filtro por tab
     if (tab === 'SIN_ASIGNAR') {
@@ -391,7 +400,7 @@ export class ConversacionesPage implements AfterViewInit {
 
   /** Agentes únicos que tienen al menos 1 conversación asignada — para el dropdown rápido. */
   protected readonly agentesConChats = computed(() => {
-    const lista = this.conversaciones.value();
+    const lista = this.conversaciones();
     const map = new Map<string, { id: string; nombre: string; count: number }>();
     for (const c of lista) {
       if (c.agente) {
@@ -477,7 +486,7 @@ export class ConversacionesPage implements AfterViewInit {
 
       if (timerReload) clearTimeout(timerReload);
       timerReload = setTimeout(() => {
-        this.conversaciones.reload();
+        this.conversacionesRecurso.reload();
         /* Requisito 2: Actualizar mapa de caché para CUALQUIER conversación (abierta o no) */
         void this.conversacionesService.actualizarCachePorRealtime(aviso.conversacionId);
 
@@ -497,7 +506,7 @@ export class ConversacionesPage implements AfterViewInit {
       const n = this.realtimeService.reconectado();
       if (n === 0) return;
 
-      this.conversaciones.reload();
+      this.conversacionesRecurso.reload();
       if (this.seleccionadaId()) {
         this.detalle.reload();
       }
@@ -533,14 +542,10 @@ export class ConversacionesPage implements AfterViewInit {
     /* Tildes azules: al abrir el chat, el paciente ve que leímos su mensaje. */
     void this.conversacionesService.marcarLeido(id, false).catch(() => {});
 
-    /* Inmediatamente limpia el contador de no leídos en la lista local */
-    const lista = this.conversaciones.value();
-    if (lista) {
-      const conv = lista.find(c => c.id === id);
-      if (conv && (conv as any).noLeidosCount > 0) {
-        (conv as any).noLeidosCount = 0;
-      }
-    }
+    /* Limpia el contador de no leídos al instante (actualización optimista) */
+    this.conversaciones.update(lista =>
+      lista.map(c => (c.id === id && (c.noLeidosCount ?? 0) > 0 ? { ...c, noLeidosCount: 0 } : c)),
+    );
   }
 
   /** Detecta si el agente está cerca del fondo del hilo (para el auto-scroll inteligente). */
@@ -586,12 +591,12 @@ export class ConversacionesPage implements AfterViewInit {
 
     this.editNombre.set(chat.cliente.nombre);
     this.editEmail.set(chat.cliente.email || '');
-    this.editEmpresa.set(chat.cliente.datosExtra?.empresa || '');
-    this.editEdad.set(chat.cliente.datosExtra?.edad != null ? String(chat.cliente.datosExtra.edad) : '');
-    this.editLugarNacimiento.set(chat.cliente.datosExtra?.lugarNacimiento || '');
+    this.editEmpresa.set(this.empresaDe(chat.cliente));
+    this.editFechaNacimiento.set(chat.cliente.fechaNacimiento?.slice(0, 10) ?? '');
+    this.editLugarNacimiento.set(this.lugarNacimientoDe(chat.cliente));
     this.editCategoria.set(chat.cliente.categoria || 'PROSPECTO');
-    this.editNotas.set(chat.cliente.datosExtra?.notas || '');
-    this.editTags.set((chat.cliente.datosExtra?.tags || []).join(', '));
+    this.editNotas.set(textoExtra(chat.cliente.datosExtra, 'notas'));
+    this.editTags.set(listaExtra(chat.cliente.datosExtra, 'tags').join(', '));
     this.editandoFicha.set(true);
   }
 
@@ -620,10 +625,12 @@ export class ConversacionesPage implements AfterViewInit {
         nombre,
         email: this.editEmail().trim() || null,
         categoria: this.editCategoria(),
+        /* Mismo contrato que la ficha de Clientes: lo que tiene columna va al
+           primer nivel; el JSON guarda solo notas y etiquetas. */
+        empresa: this.editEmpresa().trim(),
+        fechaNacimiento: this.editFechaNacimiento() || undefined,
+        lugarNacimiento: this.editLugarNacimiento().trim(),
         datosExtra: {
-          empresa: this.editEmpresa().trim() || null,
-          edad: this.editEdad().trim() || null,
-          lugarNacimiento: this.editLugarNacimiento().trim() || null,
           notas: this.editNotas().trim() || null,
           tags: tagsArray,
         },
@@ -633,7 +640,7 @@ export class ConversacionesPage implements AfterViewInit {
       this.toastService.success('Ficha de cliente actualizada', 'Ficha Cliente');
       this.editandoFicha.set(false);
       this.detalle.reload();
-      this.conversaciones.reload();
+      this.conversacionesRecurso.reload();
     } catch (err) {
       this.toastService.error(
         mensajeDeError(err, 'No se pudo guardar los cambios.'),
@@ -657,18 +664,50 @@ export class ConversacionesPage implements AfterViewInit {
 
   /* ── Control de Velocidad de Audio ───────────────────────────── */
   protected cambiarVelocidadAudio(audioElem: HTMLAudioElement, speed: number): void {
-    if (audioElem) {
-      audioElem.playbackRate = speed;
-      const currentSpeed = (audioElem as any)['_speed'] ?? 1;
-      (audioElem as any)['_speed'] = speed;
-    }
+    audioElem.playbackRate = speed;
   }
 
+  /** El propio <audio> es la fuente de verdad: no hace falta estado paralelo. */
   protected obtenerVelocidadAudio(audioElem: HTMLAudioElement): number {
-    return (audioElem as any)?._speed ?? 1;
+    return audioElem.playbackRate;
+  }
+
+  /* ── Perfil del paciente (columna real primero, JSON heredado después) ── */
+  protected empresaDe(cliente: ClienteChat): string {
+    return cliente.empresaTrabajo || textoExtra(cliente.datosExtra, 'empresa');
+  }
+
+  protected lugarNacimientoDe(cliente: ClienteChat): string {
+    return cliente.ciLugar || textoExtra(cliente.datosExtra, 'lugarNacimiento', 'CI.Lug.Pac');
+  }
+
+  protected ocupacionDe(cliente: ClienteChat): string {
+    return cliente.ocupacion || textoExtra(cliente.datosExtra, 'ocupacion', 'Profesion');
+  }
+
+  protected notasDe(cliente: ClienteChat): string {
+    return textoExtra(cliente.datosExtra, 'notas');
+  }
+
+  protected tagsDe(cliente: ClienteChat): string[] {
+    return listaExtra(cliente.datosExtra, 'tags');
+  }
+
+  protected edadDe(cliente: ClienteChat): string | null {
+    return calcularEdad(cliente.fechaNacimiento);
   }
 
   /* ── Notas Médicas Fijadas en Cabecera ──────────────────────── */
+  /**
+   * La nota fijada vive dentro del JSON libre `datosExtra` (el backend no la
+   * conoce como columna). Este accesor la estrecha a string en un solo sitio,
+   * en vez de castear en cada punto de la plantilla.
+   */
+  protected notaFijadaDe(cliente: { readonly datosExtra?: Record<string, unknown> | null }): string {
+    const nota = cliente.datosExtra?.['notaFijada'];
+    return typeof nota === 'string' ? nota : '';
+  }
+
   protected iniciarEdicionNotaFijada(notaActual?: string): void {
     this.editNotaFijada.set(notaActual || '');
     this.editandoNotaFijada.set(true);
@@ -686,7 +725,7 @@ export class ConversacionesPage implements AfterViewInit {
     const texto = this.editNotaFijada().trim();
     this.guardandoNotaFijada.set(true);
     try {
-      const datosExtraActuales = (chat.cliente.datosExtra as Record<string, any>) || {};
+      const datosExtraActuales = chat.cliente.datosExtra ?? {};
       const nuevosDatosExtra = {
         ...datosExtraActuales,
         notaFijada: texto || null,
@@ -819,7 +858,7 @@ export class ConversacionesPage implements AfterViewInit {
       this.toastService.success('Plantilla enviada al paciente', 'WhatsApp');
       this.cerrarPlantillas();
       this.detalle.reload();
-      this.conversaciones.reload();
+      this.conversacionesRecurso.reload();
     } catch (err) {
       this.toastService.error(mensajeDeError(err, 'No se pudo enviar la plantilla'), 'Error');
     } finally {
@@ -850,7 +889,7 @@ export class ConversacionesPage implements AfterViewInit {
       await this.conversacionesService.enviarMensaje(id, texto);
       this.toastService.success('Mensaje enviado al paciente', 'WhatsApp');
       this.detalle.reload();
-      this.conversaciones.reload();
+      this.conversacionesRecurso.reload();
     } catch (err) {
       // Revierte la burbuja optimista y devuelve el texto al campo.
       if (chatPrevio && chatPrevio.id === id) {
@@ -877,7 +916,7 @@ export class ConversacionesPage implements AfterViewInit {
       await this.conversacionesService.asignarAgente(id, agenteId);
       this.toastService.success('Conversación reasignada', 'Inbox Admin');
       this.detalle.reload();
-      this.conversaciones.reload();
+      this.conversacionesRecurso.reload();
     } catch (err) {
       this.toastService.error(
         mensajeDeError(err, 'No se pudo reasignar el agente'),
@@ -944,7 +983,7 @@ export class ConversacionesPage implements AfterViewInit {
 
   private startPolling(): void {
     this.pollingInterval = setInterval(() => {
-      this.conversaciones.reload();
+      this.conversacionesRecurso.reload();
       if (this.seleccionadaId()) {
         this.detalle.reload();
       }

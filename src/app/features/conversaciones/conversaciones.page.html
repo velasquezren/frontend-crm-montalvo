@@ -283,7 +283,7 @@
       </header>
 
       <!-- Banner de Nota Médica / Aviso Fijado en Cabecera (Pinned Note) -->
-      @if (chat.cliente.datosExtra?.['notaFijada'] || editandoNotaFijada()) {
+      @if (notaFijadaDe(chat.cliente) || editandoNotaFijada()) {
         <div class="pinned-note-banner">
           <div class="flex items-center gap-2 min-w-0 flex-1">
             <app-icon name="pin" [size]="14" class="text-amber-700 shrink-0" />
@@ -306,7 +306,7 @@
               </div>
             } @else {
               <p class="pinned-note-text truncate">
-                <span class="font-bold text-amber-950">Aviso Fijado:</span> {{ chat.cliente.datosExtra?.['notaFijada'] }}
+                <span class="font-bold text-amber-950">Aviso Fijado:</span> {{ notaFijadaDe(chat.cliente) }}
               </p>
             }
           </div>
@@ -314,7 +314,7 @@
             <div class="flex items-center gap-1 shrink-0 ml-2">
               <button
                 type="button"
-                (click)="iniciarEdicionNotaFijada(chat.cliente.datosExtra?.['notaFijada'])"
+                (click)="iniciarEdicionNotaFijada(notaFijadaDe(chat.cliente))"
                 class="btn-edit-pin cursor-pointer"
                 title="Editar nota fijada">
                 <app-icon name="edit" [size]="12" />
@@ -721,8 +721,8 @@
               <div class="space-y-3">
                 <div class="grid grid-cols-2 gap-2.5">
                   <div>
-                    <label class="edit-label">Edad</label>
-                    <app-input placeholder="Ej. 34" [(value)]="editEdad" />
+                    <label class="edit-label">Fecha de Nac.</label>
+                    <app-input type="date" [(value)]="editFechaNacimiento" />
                   </div>
                   <div>
                     <label class="edit-label">Lugar de Nac.</label>
@@ -845,40 +845,40 @@
           </div>
 
           <!-- Perfil extendido con detail-cards -->
-          @if (chat.cliente.datosExtra?.empresa || chat.cliente.datosExtra?.edad || chat.cliente.datosExtra?.lugarNacimiento) {
+          @if (empresaDe(chat.cliente) || edadDe(chat.cliente) || lugarNacimientoDe(chat.cliente) || ocupacionDe(chat.cliente)) {
             <div class="client-details">
               <h3 class="detail-section-title">Perfil Extendido</h3>
               <div class="space-y-2">
-                @if (chat.cliente.datosExtra?.empresa) {
+                @if (empresaDe(chat.cliente)) {
                   <div class="detail-card">
                     <div class="detail-card-icon bg-primary/8">
                       <app-icon name="briefcase" [size]="14" class="text-primary" />
                     </div>
                     <div class="min-w-0">
                       <p class="text-[10px] text-text-muted leading-tight">Empresa</p>
-                      <p class="text-xs font-medium text-text-dark">{{ chat.cliente.datosExtra?.empresa }}</p>
+                      <p class="text-xs font-medium text-text-dark">{{ empresaDe(chat.cliente) }}</p>
                     </div>
                   </div>
                 }
-                @if (chat.cliente.datosExtra?.edad) {
+                @if (edadDe(chat.cliente)) {
                   <div class="detail-card">
                     <div class="detail-card-icon bg-secondary/10">
                       <app-icon name="clock" [size]="14" class="text-secondary" />
                     </div>
                     <div class="min-w-0">
                       <p class="text-[10px] text-text-muted leading-tight">Edad</p>
-                      <p class="text-xs font-medium text-text-dark">{{ chat.cliente.datosExtra?.edad }} años</p>
+                      <p class="text-xs font-medium text-text-dark">{{ edadDe(chat.cliente) }}</p>
                     </div>
                   </div>
                 }
-                @if (chat.cliente.datosExtra?.lugarNacimiento) {
+                @if (lugarNacimientoDe(chat.cliente)) {
                   <div class="detail-card">
                     <div class="detail-card-icon bg-primary/8">
                       <app-icon name="map-pin" [size]="14" class="text-primary" />
                     </div>
                     <div class="min-w-0">
                       <p class="text-[10px] text-text-muted leading-tight">Origen</p>
-                      <p class="text-xs font-medium text-text-dark">{{ chat.cliente.datosExtra?.lugarNacimiento }}</p>
+                      <p class="text-xs font-medium text-text-dark">{{ lugarNacimientoDe(chat.cliente) }}</p>
                     </div>
                   </div>
                 }
@@ -887,17 +887,17 @@
           }
 
           <!-- Notas con estilo premium -->
-          @if (chat.cliente.datosExtra?.notas) {
+          @if (notasDe(chat.cliente)) {
             <div class="client-details">
               <h3 class="detail-section-title">Notas</h3>
               <div class="notes-card">
-                {{ chat.cliente.datosExtra?.notas }}
+                {{ notasDe(chat.cliente) }}
               </div>
             </div>
           }
 
           <!-- Tags con estilo premium -->
-          @if (chat.cliente.datosExtra?.tags; as tags) {
+          @if (tagsDe(chat.cliente); as tags) {
             @if (tags.length > 0) {
               <div class="client-details">
                 <h3 class="detail-section-title">Etiquetas</h3>

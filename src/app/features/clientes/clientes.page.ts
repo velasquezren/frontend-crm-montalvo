@@ -2,6 +2,7 @@ import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, effect, HostListener, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 
+import { listaExtra, textoExtra, textoExtraOpcional } from '../../core/api/datos-extra';
 import { mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { generarIniciales } from '../../core/auth/user.model';
@@ -86,7 +87,7 @@ export class ClientesPage {
 
   protected readonly pagina = signal(1);
 
-  protected readonly clientesRaw = httpResource<any>(
+  protected readonly clientes = httpResource<RespuestaPaginada<Cliente>>(
     () => {
       const filtro = this.filtro();
       return this.clientesService.listarRequest({
@@ -97,30 +98,6 @@ export class ClientesPage {
     },
     { defaultValue: paginaVacia<Cliente>() },
   );
-
-  protected readonly clientes = computed<RespuestaPaginada<Cliente>>(() => {
-    const raw = this.clientesRaw.value();
-    if (!raw) return paginaVacia<Cliente>();
-    if (Array.isArray(raw.datos)) {
-      return {
-        datos: raw.datos,
-        total: raw.total ?? raw.datos.length,
-        pagina: raw.pagina ?? 1,
-        limite: raw.limite ?? 25,
-        totalPaginas: raw.totalPaginas ?? 1,
-      };
-    }
-    if (Array.isArray(raw.data)) {
-      return {
-        datos: raw.data,
-        total: raw.meta?.total ?? raw.total ?? raw.data.length,
-        pagina: raw.meta?.page ?? raw.pagina ?? 1,
-        limite: raw.meta?.limit ?? raw.limite ?? 25,
-        totalPaginas: raw.meta?.lastPage ?? raw.totalPaginas ?? 1,
-      };
-    }
-    return raw;
-  });
 
   /** Al cambiar filtro o búsqueda se vuelve a la primera página. */
   protected cambiarFiltro(nuevo: FiltroCategoria): void {
@@ -171,12 +148,7 @@ export class ClientesPage {
     if (cliente.intereses && cliente.intereses.length > 0) {
       return cliente.intereses.map(i => i.descripcion);
     }
-    const datosExtra = cliente.datosExtra as Record<string, any> | null;
-    const tags = datosExtra?.['tags'];
-    if (Array.isArray(tags)) {
-      return tags.map(t => String(t));
-    }
-    return [];
+    return listaExtra(cliente.datosExtra, 'tags');
   }
 
   /** Cerrar con Escape: comportamiento esperado en cualquier modal. */
@@ -214,13 +186,15 @@ export class ClientesPage {
     this.editNombre.set(cliente.nombre);
     this.editEmail.set(cliente.email || '');
     this.editTelefono.set(cliente.telefono);
-    const datosExtra = cliente.datosExtra as Record<string, any> | null;
-    this.editEmpresa.set(cliente.empresaTrabajo || datosExtra?.['empresa'] || '');
-    const fn = cliente.fechaNacimiento || datosExtra?.['fechaNacimiento'] || datosExtra?.['fn'];
-    this.editFechaNacimiento.set(fn ? String(fn).slice(0, 10) : '');
-    this.editLugarNacimiento.set(cliente.ciLugar || datosExtra?.['lugarNacimiento'] || datosExtra?.['CI.Lug.Pac'] || '');
+    const datosExtra = cliente.datosExtra;
+    this.editEmpresa.set(cliente.empresaTrabajo || textoExtra(datosExtra, 'empresa'));
+    const fn = cliente.fechaNacimiento || textoExtra(datosExtra, 'fechaNacimiento', 'fn');
+    this.editFechaNacimiento.set(fn ? fn.slice(0, 10) : '');
+    this.editLugarNacimiento.set(
+      cliente.ciLugar || textoExtra(datosExtra, 'lugarNacimiento', 'CI.Lug.Pac'),
+    );
     this.editCategoria.set(cliente.categoria || 'PROSPECTO');
-    this.editNotas.set(datosExtra?.['notas'] || '');
+    this.editNotas.set(textoExtra(datosExtra, 'notas'));
     const tags = datosExtra?.['tags'];
     this.editTags.set(Array.isArray(tags) ? tags.join(', ') : '');
     this.modalEditarAbierto.set(true);
@@ -260,10 +234,13 @@ export class ClientesPage {
         telefono,
         email: this.editEmail().trim() || null,
         categoria: this.editCategoria(),
+        /* Con columna propia: van al primer nivel para que el backend
+           los guarde donde la ficha luego los lee. */
+        empresa: this.editEmpresa().trim(),
+        fechaNacimiento: this.editFechaNacimiento() || undefined,
+        lugarNacimiento: this.editLugarNacimiento().trim(),
+        /* Sin columna: se quedan en el JSON libre. */
         datosExtra: {
-          empresa: this.editEmpresa().trim() || null,
-          fechaNacimiento: this.editFechaNacimiento() || null,
-          lugarNacimiento: this.editLugarNacimiento().trim() || null,
           notas: this.editNotas().trim() || null,
           tags: tagsArray,
         },
@@ -280,7 +257,7 @@ export class ClientesPage {
       }
 
       this.cerrarEdicion();
-      this.clientesRaw.reload();
+      this.clientes.reload();
     } catch (err) {
       this.toast.error(
         mensajeDeError(err, 'No se pudo guardar la información.'),
@@ -298,15 +275,15 @@ export class ClientesPage {
     const cli = this.clienteSeleccionado();
     if (!cli) return [];
 
-    const d = (cli.datosExtra as Record<string, any> | null) ?? {};
+    const d = cli.datosExtra;
     const edadVal = this.obtenerEdad(cli);
-    const ocupacion = cli.ocupacion ?? d['ocupacion'] ?? d['Profesion'];
-    const ciVal = cli.ci ? `${cli.ci}${cli.ciLugar ? ' ' + cli.ciLugar : ''}` : (d['CI.Pac'] ? `${d['CI.Pac']}${d['CI.Lug.Pac'] ? ' ' + d['CI.Lug.Pac'] : ''}` : null);
-    const sexo = cli.sexo ?? d['sexo'] ?? d['Sexo'];
-    const estadoCivil = cli.estadoCivil ?? d['estadoCivil'] ?? d['E_Civil'];
-    const nacionalidad = cli.nacionalidad ?? d['nacionalidad'] ?? d['Nacionalidad'];
-    const direccion = cli.direccion ?? d['direccion'] ?? d['Direccion'];
-    const telefonoFijo = cli.telefonoFijo ?? d['telefonoFijo'] ?? d['Telef.Dom'];
+    const ocupacion = cli.ocupacion ?? textoExtraOpcional(d, 'ocupacion', 'Profesion');
+    const ciVal = cli.ci ? `${cli.ci}${cli.ciLugar ? ' ' + cli.ciLugar : ''}` : (textoExtra(d, 'CI.Pac') ? `${textoExtra(d, 'CI.Pac')} ${textoExtra(d, 'CI.Lug.Pac')}`.trim() : null);
+    const sexo = cli.sexo ?? textoExtraOpcional(d, 'sexo', 'Sexo');
+    const estadoCivil = cli.estadoCivil ?? textoExtraOpcional(d, 'estadoCivil', 'E_Civil');
+    const nacionalidad = cli.nacionalidad ?? textoExtraOpcional(d, 'nacionalidad', 'Nacionalidad');
+    const direccion = cli.direccion ?? textoExtraOpcional(d, 'direccion', 'Direccion');
+    const telefonoFijo = cli.telefonoFijo ?? textoExtraOpcional(d, 'telefonoFijo', 'Telef.Dom');
 
     const campos: Array<[string, string | null, IconName]> = [
       ['Edad', edadVal, 'user'],
@@ -324,12 +301,13 @@ export class ClientesPage {
       .map(([etiqueta, valor, icono]) => ({ etiqueta, valor: String(valor), icono }));
   });
 
+  /**
+   * Siempre se calcula desde la fecha de nacimiento. El campo `Edad.a` que trae
+   * FileMaker es la edad del día en que se capturó el registro y está desfasado
+   * hasta 18 años, así que se ignora deliberadamente.
+   */
   protected obtenerEdad(cliente: Cliente): string | null {
-    const d = cliente.datosExtra as Record<string, any> | null;
-    const edad = d?.['edad'] ?? d?.['Edad.a'];
-    if (edad != null && edad !== '') return `${edad} años`;
-
-    const fn = cliente.fechaNacimiento || d?.['fechaNacimiento'] || d?.['fn'];
+    const fn = cliente.fechaNacimiento || textoExtra(cliente.datosExtra, 'fechaNacimiento', 'fn');
     if (fn) {
       const nac = new Date(fn);
       if (!isNaN(nac.getTime())) {

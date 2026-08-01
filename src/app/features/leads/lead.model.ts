@@ -1,3 +1,5 @@
+import { DatosExtra } from '../../core/api/datos-extra';
+
 import { CategoriaCliente, OrigenLead as OrigenLeadApi, EstadoLead } from '../../core/api/db-enums';
 
 export type { OrigenLeadApi, EstadoLead };
@@ -25,7 +27,7 @@ export interface Lead {
     readonly telefono: string;
     readonly categoria: CategoriaCliente;
     readonly agente?: { readonly id: string; readonly nombre: string } | null;
-    readonly datosExtra?: Record<string, any> | null;
+    readonly datosExtra?: DatosExtra | null;
   };
   readonly agente: { readonly id: string; readonly nombre: string } | null;
   readonly createdAt: string;

@@ -1,12 +1,6 @@
-export type TipoRecursoMemoria = 'TEXTO' | 'IMAGEN' | 'DOCUMENTO' | 'ENLACE';
+import { CategoriaRecursoMemoria, TipoRecursoMemoria } from '../../core/api/db-enums';
 
-export type CategoriaRecursoMemoria =
-  | 'GENERAL'
-  | 'RESPUESTA_RAPIDA'
-  | 'PROMOCION'
-  | 'PRECIOS'
-  | 'PRODUCTO_TRATAMIENTO'
-  | 'INSTRUCCION_INTERNA';
+export type { CategoriaRecursoMemoria, TipoRecursoMemoria };
 
 export interface RecursoMemoria {
   readonly id: string;

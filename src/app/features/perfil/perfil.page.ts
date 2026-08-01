@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, ViewChild, computed, in
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { mensajeDeError } from '../../core/api/http-error';
+import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales, UsuarioApi } from '../../core/auth/user.model';
 import { ToastService } from '../../core/toast/toast.service';
@@ -63,22 +64,17 @@ export class PerfilPage {
     () => this.memoriaService.cuotaRequest(),
   );
 
-  protected readonly recursosMemoriaRaw = httpResource<any>(
+  private readonly recursosMemoriaRecurso = httpResource<RespuestaPaginada<RecursoMemoria>>(
     () =>
       this.memoriaService.listarRequest({
         busqueda: this.busquedaMemoria(),
         tipo: this.filtroTipoMemoria(),
       }),
+    { defaultValue: paginaVacia<RecursoMemoria>() },
   );
 
-  protected readonly recursosMemoria = computed<RecursoMemoria[]>(() => {
-    const raw = this.recursosMemoriaRaw.value();
-    if (!raw) return [];
-    if (Array.isArray(raw)) return raw;
-    if (Array.isArray(raw.datos)) return raw.datos;
-    if (Array.isArray(raw.data)) return raw.data;
-    return [];
-  });
+  /** Proyección: la vista solo necesita la lista, no la envoltura de paginación. */
+  protected readonly recursosMemoria = computed(() => this.recursosMemoriaRecurso.value().datos);
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
@@ -93,7 +89,7 @@ export class PerfilPage {
     if (tabParam === 'memoria') {
       this.tabActiva.set('memoria');
       this.cuotaMemoria.reload();
-      this.recursosMemoriaRaw.reload();
+      this.recursosMemoriaRecurso.reload();
     }
 
     const u = this.user();
@@ -112,7 +108,7 @@ export class PerfilPage {
     this.tabActiva.set(tab);
     if (tab === 'memoria') {
       this.cuotaMemoria.reload();
-      this.recursosMemoriaRaw.reload();
+      this.recursosMemoriaRecurso.reload();
     }
   }
 
@@ -242,7 +238,7 @@ export class PerfilPage {
       this.tituloNuevoMemoria.set('');
       this.contenidoNuevoMemoria.set('');
       this.atajoNuevoMemoria.set('');
-      this.recursosMemoriaRaw.reload();
+      this.recursosMemoriaRecurso.reload();
       this.cuotaMemoria.reload();
     } catch (err) {
       this.toast.error(mensajeDeError(err, 'No se pudo guardar'), 'Error');
@@ -261,7 +257,7 @@ export class PerfilPage {
       await this.memoriaService.subirBinario(file, { titulo: file.name });
       this.toast.success(`Archivo "${file.name}" subido a tu Memoria`, 'Éxito');
       input.value = '';
-      this.recursosMemoriaRaw.reload();
+      this.recursosMemoriaRecurso.reload();
       this.cuotaMemoria.reload();
     } catch (err) {
       this.toast.error(mensajeDeError(err, 'Error al subir archivo'), 'Error');
@@ -274,7 +270,7 @@ export class PerfilPage {
     try {
       await this.memoriaService.eliminar(id);
       this.toast.success('Recurso eliminado. Espacio liberado.', 'Éxito');
-      this.recursosMemoriaRaw.reload();
+      this.recursosMemoriaRecurso.reload();
       this.cuotaMemoria.reload();
     } catch (err) {
       this.toast.error(mensajeDeError(err, 'No se pudo eliminar'), 'Error');

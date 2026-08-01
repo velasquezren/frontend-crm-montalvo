@@ -39,7 +39,7 @@
 
 <!-- ── Tabla Principal / Skeleton / State Vacio ──────────────────────── -->
 <div class="w-full">
-  @if (clientesRaw.isLoading()) {
+  @if (clientes.isLoading()) {
     <div class="bg-white rounded-2xl p-6 shadow-subtle flex flex-col gap-4">
       <app-loading-skeleton height="48px" />
       <app-loading-skeleton height="48px" />
@@ -47,7 +47,7 @@
       <app-loading-skeleton height="48px" />
       <app-loading-skeleton height="48px" />
     </div>
-  } @else if (clientes().datos.length > 0) {
+  } @else if (clientes.value().datos.length > 0) {
     <app-table>
       <thead>
         <tr>
@@ -61,7 +61,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (cliente of clientes().datos; track cliente.id) {
+        @for (cliente of clientes.value().datos; track cliente.id) {
           <tr class="cursor-pointer hover:bg-bg-light/40 transition-colors" (click)="abrirEdicion(cliente, modalFicha)" title="Haga clic para ver/editar ficha">
             <td>
               <div class="flex items-center gap-3">
@@ -72,10 +72,10 @@
                     @if (cliente.email) {
                       <span>{{ cliente.email }}</span>
                     }
-                    @if (cliente.datosExtra?.empresa) {
+                    @if (cliente.empresaTrabajo) {
                       <span class="inline-flex items-center gap-1 font-semibold text-primary/80">
                         <app-icon name="briefcase" [size]="11" />
-                        {{ cliente.datosExtra?.empresa }}
+                        {{ cliente.empresaTrabajo }}
                       </span>
                     }
                   </div>
@@ -97,8 +97,8 @@
                 } @else {
                   <span class="text-text-muted italic">Sin edad</span>
                 }
-                @if (cliente.datosExtra?.lugarNacimiento) {
-                  <span class="text-text-muted block text-[11px] mt-0.5">Nac: {{ cliente.datosExtra?.lugarNacimiento }}</span>
+                @if (cliente.ciLugar) {
+                  <span class="text-text-muted block text-[11px] mt-0.5">Nac: {{ cliente.ciLugar }}</span>
                 }
               </div>
             </td>
@@ -127,10 +127,10 @@
     </app-table>
 
     <app-paginator
-      [pagina]="clientes().pagina"
-      [totalPaginas]="clientes().totalPaginas"
-      [total]="clientes().total"
-      [limite]="clientes().limite"
+      [pagina]="clientes.value().pagina"
+      [totalPaginas]="clientes.value().totalPaginas"
+      [total]="clientes.value().total"
+      [limite]="clientes.value().limite"
       (cambiar)="pagina.set($event)" />
   } @else {
     <div class="bg-white rounded-2xl shadow-subtle">

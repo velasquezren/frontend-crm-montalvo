@@ -155,7 +155,7 @@ export class LeadsPage {
     this.modoVista.set(modo);
   }
 
-  protected drop(event: CdkDragDrop<Lead[], any, any>): void {
+  protected drop(event: CdkDragDrop<Lead[], Lead[], Lead>): void {
     if (event.previousContainer === event.container) {
       // Reordenamiento dentro de la misma columna usando leadsLocales de forma inmutable
       const itemsColumna = event.container.data;
