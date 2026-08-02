@@ -189,6 +189,8 @@ export interface TarifaRA {
 export interface Objetivo {
   id: string;
   tipo: TipoVendedora;
+  /** null = meta por defecto; con id = meta propia de ese mes. */
+  periodoId: string | null;
   /** Paquetes de maternidad a SUPERAR (igualar no comisiona). */
   planpaqMinimos: number;
   /** Planes varios / niño sano. Objetivo independiente. */

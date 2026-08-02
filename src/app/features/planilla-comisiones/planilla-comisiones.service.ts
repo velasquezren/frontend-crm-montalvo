@@ -5,11 +5,13 @@ import {
   Alertas,
   ClasifComision,
   ConfiguracionPlanilla,
+  Objetivo,
   PeriodoComision,
   ReglaClasificacion,
   ReporteConsolidado,
   RespuestaImportacion,
   ResultadoCalculo,
+  TipoVendedora,
   Vendedora,
 } from './planilla.model';
 
@@ -167,6 +169,32 @@ export class PlanillaComisionesService {
     },
   ): Promise<unknown> {
     return this.api.patch(`/planilla-comisiones/configuracion/objetivos/${id}`, datos);
+  }
+
+  /** Metas que rigen en un periodo: las propias del mes o, si no hay, las base. */
+  objetivosDelPeriodo(periodoId: string): Promise<Objetivo[]> {
+    return this.api.get<Objetivo[]>(`/planilla-comisiones/periodos/${periodoId}/objetivos`);
+  }
+
+  guardarObjetivoDePeriodo(
+    periodoId: string,
+    tipo: TipoVendedora,
+    datos: {
+      planpaqMinimos: number;
+      planninMinimos: number;
+      montoMensualUsd: number;
+      montoTrimestralUsd: number;
+    },
+  ): Promise<Objetivo> {
+    return this.api.put<Objetivo>(
+      `/planilla-comisiones/periodos/${periodoId}/objetivos/${tipo}`,
+      datos,
+    );
+  }
+
+  /** Quita la meta propia del mes: vuelve a regir la base. */
+  eliminarObjetivoDePeriodo(periodoId: string, tipo: TipoVendedora): Promise<unknown> {
+    return this.api.delete(`/planilla-comisiones/periodos/${periodoId}/objetivos/${tipo}`);
   }
 
   guardarCaptacion(valor: string, canal: 'EMPRESA' | 'PROPIO'): Promise<unknown> {

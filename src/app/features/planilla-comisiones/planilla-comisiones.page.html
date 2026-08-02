@@ -796,29 +796,105 @@
 
     <!-- Objetivos -->
     <section class="panel mb-4">
-      <h3 class="text-sm font-bold text-text-dark mb-1">Objetivos del Equipo Comercial</h3>
-      <p class="text-xs text-text-muted mb-3">
-        El objetivo es una franquicia, no un interruptor: <strong>solo comisionan los planes que lo superan</strong>.
-        Con 5 paquetes y objetivo 4, comisiona 1. Igualar el objetivo paga cero.
-      </p>
+      <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">
+        Metas del Equipo Comercial
+        <app-info-hint titulo="Cómo funcionan las metas">
+          <p>
+            El objetivo es una <strong>franquicia, no un interruptor</strong>: solo comisionan los
+            planes que lo superan. Con 5 paquetes y objetivo 4, comisiona 1. Igualar paga cero.
+          </p>
+          <p>
+            <strong>Mensual:</strong> quien lo supera aporta a la bolsa que cobra publicidad.
+            <strong>Trimestral:</strong> se compara contra el promedio del trimestre.
+          </p>
+          <p>
+            Hay dos capas: las metas <strong>por defecto</strong> rigen siempre, y cada mes puede
+            tener las suyas propias. Cambiar la meta de un mes no toca lo ya liquidado en otro.
+          </p>
+        </app-info-hint>
+      </h3>
+
+      <div class="flex items-center gap-2 flex-wrap mb-3">
+        <app-filter-chip [active]="metasDelPeriodo() === false" (clicked)="verMetas(false)">
+          Por defecto
+        </app-filter-chip>
+        @if (periodoActual(); as p) {
+          <app-filter-chip [active]="metasDelPeriodo() === true" (clicked)="verMetas(true)">
+            {{ nombreMes(p.mes) }} {{ p.anio }}
+          </app-filter-chip>
+        }
+      </div>
+
+      @if (metasDelPeriodo() && periodoActual(); as periodo) {
+        <p class="text-xs text-text-muted mb-3">
+          @if (hayMetasPropias()) {
+            Este mes tiene metas propias. Guardar las cambia solo para
+            <strong>{{ nombreMes(periodo.mes) }} {{ periodo.anio }}</strong>.
+          } @else {
+            Este mes usa las metas por defecto. Al guardar aquí se crean metas propias para
+            <strong>{{ nombreMes(periodo.mes) }} {{ periodo.anio }}</strong>, sin tocar las demás.
+          }
+        </p>
+      } @else {
+        <p class="text-xs text-text-muted mb-3">
+          Metas base: rigen en todos los meses que no tengan las suyas propias.
+        </p>
+      }
+
       <app-table [dense]="true">
         <thead>
           <tr>
             <th class="text-left">Tipo Vendedora</th>
             <th class="text-right">Mín. Paquetes</th>
             <th class="text-right">Mín. Planes Varios</th>
-            <th class="text-right">Objetivo Mensual (USD)</th>
-            <th class="text-right">Objetivo Trimestral (USD)</th>
+            <th class="text-right">Meta Mensual (USD)</th>
+            <th class="text-right">Meta Trimestral (USD)</th>
+            <th class="text-right">Acción</th>
           </tr>
         </thead>
         <tbody>
-          @for (o of cfg.objetivos; track o.id) {
+          @for (o of metasVisibles(); track o.tipo) {
             <tr>
-              <td class="text-left font-semibold text-text-dark">{{ o.tipo }}</td>
-              <td class="text-right font-bold text-secondary">{{ o.planpaqMinimos }}</td>
-              <td class="text-right font-bold text-secondary">{{ o.planninMinimos }}</td>
-              <td class="text-right font-medium text-text-dark">${{ o.montoMensualUsd }}</td>
-              <td class="text-right font-medium text-text-dark">${{ o.montoTrimestralUsd }}</td>
+              <td class="text-left font-semibold text-text-dark">
+                {{ o.tipo }}
+                @if (metasDelPeriodo() && o.periodoId) {
+                  <app-badge variant="info">propia</app-badge>
+                }
+              </td>
+              <td class="text-right">
+                <div class="flex justify-end">
+                  <input #mpq type="number" min="0" step="1" class="input-mini text-right" [value]="o.planpaqMinimos" />
+                </div>
+              </td>
+              <td class="text-right">
+                <div class="flex justify-end">
+                  <input #mpn type="number" min="0" step="1" class="input-mini text-right" [value]="o.planninMinimos" />
+                </div>
+              </td>
+              <td class="text-right">
+                <div class="flex justify-end">
+                  <input #mme type="number" min="0" step="100" class="input-mini text-right" [value]="o.montoMensualUsd" />
+                </div>
+              </td>
+              <td class="text-right">
+                <div class="flex justify-end">
+                  <input #mtr type="number" min="0" step="100" class="input-mini text-right" [value]="o.montoTrimestralUsd" />
+                </div>
+              </td>
+              <td class="text-right whitespace-nowrap">
+                <app-button
+                  variant="ghost"
+                  size="sm"
+                  icon="check"
+                  (clicked)="guardarMeta(o, mpq.value, mpn.value, mme.value, mtr.value)">
+                  Guardar
+                </app-button>
+                @if (metasDelPeriodo() && o.periodoId) {
+                  <app-button variant="ghost" size="sm" icon="trash" (clicked)="quitarMetaDelMes(o.tipo)">
+                    Usar la base
+                  </app-button>
+                }
+              </td>
             </tr>
           }
         </tbody>

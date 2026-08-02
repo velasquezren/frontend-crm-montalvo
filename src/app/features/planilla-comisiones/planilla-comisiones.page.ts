@@ -9,6 +9,7 @@ import { ToastService } from '../../core/toast/toast.service';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
+import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InfoHintComponent } from '../../shared/components/info-hint/info-hint.component';
 import { InputComponent } from '../../shared/components/input/input.component';
@@ -25,10 +26,12 @@ import {
   ConfiguracionPlanilla,
   ESTADO_PERIODO_LABEL,
   MESES,
+  Objetivo,
   PeriodoComision,
   ReporteConsolidado,
   ResumenImportacion,
   TIPO_LABEL,
+  TipoVendedora,
   Vendedora,
   VentaImportada,
 } from './planilla.model';
@@ -50,6 +53,7 @@ type Pestana = 'IMPORTAR' | 'CLASIFICACION' | 'REPORTES' | 'CONFIGURACION';
     BadgeComponent,
     ButtonComponent,
     EmptyStateComponent,
+    FilterChipComponent,
     IconComponent,
     InfoHintComponent,
     InputComponent,
@@ -374,6 +378,85 @@ export class PlanillaComisionesPage implements OnDestroy {
   protected async abrirConfiguracion(): Promise<void> {
     this.pestana.set('CONFIGURACION');
     if (!this.configuracion()) await this.cargarConfiguracion();
+  }
+
+  /* ── Metas: base o propias del mes ───────────────────────────────────── */
+
+  /** Metas que rigen en el periodo elegido (propias del mes, o las base). */
+  private readonly metasResueltas = signal<Objetivo[]>([]);
+
+  /** Qué pestaña de metas se está viendo: las base o las del mes. */
+  protected readonly metasDelPeriodo = signal(false);
+
+  /** Las que se muestran y editan según la pestaña activa. */
+  protected readonly metasVisibles = computed(() =>
+    this.metasDelPeriodo() ? this.metasResueltas() : (this.configuracion()?.objetivos ?? []),
+  );
+
+  /** true = este mes tiene metas propias, no las heredadas. */
+  protected readonly hayMetasPropias = computed(() =>
+    this.metasResueltas().some(o => o.periodoId !== null),
+  );
+
+  protected async verMetas(delPeriodo: boolean): Promise<void> {
+    this.metasDelPeriodo.set(delPeriodo);
+    const periodoId = this.periodoId();
+    if (delPeriodo && periodoId) {
+      try {
+        this.metasResueltas.set(await this.service.objetivosDelPeriodo(periodoId));
+      } catch (err) {
+        this.toast.error(mensajeDeError(err, 'No se pudieron cargar las metas del mes.'), 'Error');
+      }
+    }
+  }
+
+  protected async guardarMeta(
+    objetivo: Objetivo,
+    planpaq: string,
+    plannin: string,
+    mensual: string,
+    trimestral: string,
+  ): Promise<void> {
+    const datos = {
+      planpaqMinimos: Number(planpaq),
+      planninMinimos: Number(plannin),
+      montoMensualUsd: Number(mensual),
+      montoTrimestralUsd: Number(trimestral),
+    };
+
+    if (Object.values(datos).some(v => !Number.isFinite(v) || v < 0)) {
+      this.toast.error('Las metas deben ser números positivos.', 'Valor inválido');
+      return;
+    }
+
+    const periodoId = this.periodoId();
+    try {
+      if (this.metasDelPeriodo() && periodoId) {
+        // Aunque la fila venga heredada, guardar crea la meta propia del mes.
+        await this.service.guardarObjetivoDePeriodo(periodoId, objetivo.tipo, datos);
+        this.toast.success(`Meta de ${objetivo.tipo} guardada para este mes.`, 'Guardado');
+        await this.verMetas(true);
+      } else {
+        await this.service.actualizarObjetivo(objetivo.id, datos);
+        this.toast.success(`Meta base de ${objetivo.tipo} actualizada.`, 'Guardado');
+        await this.cargarConfiguracion();
+      }
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo guardar la meta.'), 'Error');
+    }
+  }
+
+  protected async quitarMetaDelMes(tipo: TipoVendedora): Promise<void> {
+    const periodoId = this.periodoId();
+    if (!periodoId) return;
+
+    try {
+      await this.service.eliminarObjetivoDePeriodo(periodoId, tipo);
+      this.toast.success(`${tipo} vuelve a la meta base.`, 'Eliminada');
+      await this.verMetas(true);
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo quitar la meta del mes.'), 'Error');
+    }
   }
 
   protected async guardarCaptacion(valor: string, canal: string): Promise<void> {
