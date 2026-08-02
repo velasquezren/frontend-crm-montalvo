@@ -1,6 +1,6 @@
 ---
 name: crm-feature-page
-description: Patrón obligatorio para construir o modificar una vista (página) de este CRM Angular — capa de servicios, httpResource, filtros, estados de carga/error/vacío y manejo de errores. Úsalo al crear una página nueva bajo src/app/features/, al conectar una vista al backend NestJS, o al añadir una llamada HTTP.
+description: Patrón obligatorio para construir o modificar una vista (página) de este CRM Angular — capa de servicios, httpResource, filtros, estados de carga/error/vacío, modales, tiempo real y permisos por rol. Úsalo SIEMPRE al crear o tocar una página bajo src/app/features/, al conectar una vista al backend NestJS, al añadir una llamada HTTP, al abrir un modal, o al ocultar algo según el rol del usuario — incluso para cambios que suenan pequeños ("agrega un filtro", "muestra el total").
 ---
 
 # Patrón de página de feature
@@ -147,6 +147,15 @@ cerrarEdicion(): void {
 </ng-template>
 ```
 
+### Al abrir un modal, deriva los datos en memoria — no dispares otra petición
+
+El registro que el usuario acaba de tocar **ya está en el listado que cargaste**. Resuelve el
+contenido del modal con `computed()` sobre el ítem seleccionado en vez de pedir el detalle al
+servidor: un spinner al abrir una ficha que ya tenías en pantalla se siente lento y roto.
+
+Reserva la petición para lo que de verdad no tienes (el historial completo de un chat, por
+ejemplo), y muéstralo *dentro* del modal ya abierto, no como bloqueo previo a abrirlo.
+
 **No hace falta implementar `OnDestroy` para evitar fugas**: `DialogService.openTemplate()` ya
 registra la limpieza en el `DestroyRef` del componente dueño del `ViewContainerRef` — si el usuario
 navega a otra vista con el modal abierto sin cerrarlo, el overlay se destruye solo. Antes de esto,
@@ -208,14 +217,31 @@ etc.) — ahí sí conviene esperar la respuesta antes de reflejar el cambio.
 
 ## Roles y permisos
 
+Hay tres roles jerárquicos: `AGENTE` < `ADMIN` < `SUPER_ADMIN`. La jerarquía vive en
+`core/auth/roles.ts` y es espejo de `common/auth/roles.ts` del backend — **si añades un rol,
+tócalo en los dos lados**.
+
 El **backend** es la autoridad: acota por rol según el JWT y bloquea con `@Roles`.
 El frontend solo *oculta* lo que no aplica:
 
-- `authService.isAdmin()` para mostrar/ocultar acciones de admin.
-- `adminGuard` en la ruta para vistas exclusivas de admin.
-- `soloAdmin: true` en `NAV_ITEMS` para ocultarlas del sidebar.
+- `authService.isAdmin()` / `isSuperAdmin()` para mostrar u ocultar acciones.
+- `exigeRol('ADMIN')` o `exigeRol('SUPER_ADMIN')` como `canActivate` de la ruta.
+- `rolMinimo` en `NAV_ITEMS` para ocultar la entrada del sidebar.
 
-Nunca asumas que ocultar en el frontend es suficiente: si un endpoint nuevo es sensible, verifica que el backend también lo restrinja.
+```ts
+{ path: 'agentes', canActivate: [exigeRol('SUPER_ADMIN')], loadComponent: … }
+```
+
+`exigeRol` sustituyó a los guards por rol, que eran el mismo archivo copiado cambiando una
+comparación: cada copia era un lugar más donde olvidar un rol nuevo. Por eso **no escribas un
+guard de rol a mano** — usa la fábrica.
+
+Como la comparación es por **rango mínimo**, pedir `ADMIN` deja pasar también al `SUPER_ADMIN`
+sin enumerarlo. Nunca compares `rol === 'ADMIN'` a mano: eso deja fuera al super admin y es
+exactamente el bug que la jerarquía existe para prevenir.
+
+Ocultar en el frontend nunca es suficiente: si un endpoint nuevo es sensible, verifica que el
+backend también lo restrinja.
 
 ## Rutas
 
@@ -228,5 +254,15 @@ Lazy loading por página en `app.routes.ts`, dentro del layout con `authGuard`:
 ## Antes de dar por terminado
 
 - `npx ng build` sin errores (**no uses el navegador en este proyecto**).
-- Reutilizaste átomos de `shared/components/` en vez de HTML suelto.
-- Ningún hex nuevo, ningún `any`, ningún `console.log`.
+- Reutilizaste átomos de `shared/components/` en vez de HTML suelto — inventario y paleta en
+  el skill `crm-design-system`.
+- Los 4 estados (carga / error / vacío / contenido) están cubiertos.
+- Ningún hex nuevo, ningún `any`, ningún `console.log`, ningún `rol === '…'` a mano.
+
+## Mantenimiento
+
+`npm run check:skills` contrasta los datos de este archivo con el código (rutas citadas,
+selectores, roles declarados en `core/auth/roles.ts`) y va encadenado a `npm run build`.
+
+Verifica **datos, no criterio**: los patrones y el porqué de cada decisión se actualizan a mano.
+Cuando el validador te contradiga, corrige el skill — el código es la verdad.

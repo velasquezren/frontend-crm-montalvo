@@ -1,82 +1,173 @@
 ---
 name: crm-design-system
-description: Sistema de diseño e inventario de componentes atómicos de este CRM. Úsalo ANTES de escribir cualquier HTML/CSS de una vista, de elegir un color, de crear un botón/input/tabla/badge, o de añadir un ícono. Evita reinventar componentes que ya existen y colores fuera de la paleta cerrada.
+description: Sistema de diseño, paleta cerrada e inventario de componentes atómicos de este CRM Angular. Úsalo SIEMPRE antes de escribir HTML o CSS de una vista, elegir un color, maquetar un modal, o crear un botón, input, tabla, badge, gráfico o ícono — incluso si el pedido suena trivial ("agrega un botón", "ponle un borde rojo", "un chart de ventas"). Evita reinventar componentes que ya existen, hexadecimales fuera de la paleta y SVGs sueltos en las plantillas.
 ---
 
 # Sistema de diseño del CRM
 
-Fuente de verdad: `CRM_MANIFESTO.md` §3 y §4. Los tokens viven en `src/styles.css` (`@theme` de Tailwind v4).
+Tokens reales: `src/styles.css` (bloque `@theme` de Tailwind v4). Racional de marca: `CRM_MANIFESTO.md` §3.
+
+> Las tablas de abajo son una copia de consulta rápida. **Si alguna vez discrepan con
+> `styles.css` o con el `.component.ts` del átomo, gana el código** — y aprovecha para
+> corregir este archivo en el mismo commit. Este skill ya se desincronizó una vez; las
+> reglas envejecen bien, las tablas de datos no. Por eso `npm run check:skills` las
+> compara con el código y falla si mienten (ver *Mantenimiento* al final).
 
 ## Regla de oro
 
-**Nunca escribas un `<button>`, `<input>`, `<table>` o badge a mano.** Existe un átomo para cada uno en
-`src/app/shared/components/`. Si necesitas algo que no existe, extiende el átomo con un `input()` nuevo
-antes de crear un componente duplicado.
+**No escribas a mano un `<button>`, `<input>`, `<table>` ni un badge.** Existe un átomo para
+cada uno en `src/app/shared/components/`. Si necesitas una variante que no existe, agrégale un
+`input()` al átomo — un componente duplicado con "casi lo mismo" es cómo se pierde la coherencia
+visual, porque después solo uno de los dos recibe los arreglos.
 
-## Paleta (cerrada — no inventar colores)
+## Paleta (cerrada — no inventar hexadecimales)
 
 | Token Tailwind | Hex | Uso |
 |---|---|---|
-| `primary` | `#006156` | Botones primarios, activos, acentos |
+| `primary` | `#006156` | Botones primarios, estados activos, acentos |
 | `secondary` | `#39ADA3` | Hover, barras secundarias, indicadores |
 | `bg-light` | `#EAF7F5` | Fondos suaves, chips, estado activo |
 | `bg-workspace` | `#F8F9FA` | Fondo del área de trabajo |
+| `background` | `#FFFFFF` | Superficies (tarjetas, modales, tablas) |
 | `text-dark` | `#1F2937` | Texto principal |
 | `text-muted` | `#6B7280` | Texto secundario |
+| `text-critical` | `#000000` | Texto de estado crítico |
 | `border` | `#E5E7EB` | Bordes sutiles |
 
-Cualquier tono adicional se **deriva** con `color-mix()` en `styles.css`, nunca se escribe un hex nuevo en un componente.
+Cualquier tono adicional se **deriva** con `color-mix()` dentro de `styles.css`; nunca se escribe
+un hex nuevo en un componente.
 
 ### Estados semánticos
 
-No hay rojo/ámbar de alarma: es intencional (línea "premium médico" calmada). Los estados reutilizan la paleta:
+No hay rojo ni ámbar de alarma, y es deliberado: la línea es "premium médico" calmada. Los estados
+reutilizan la paleta base, cada uno con su par `-bg`:
 
-- `success` = primary · `info` = secondary · `neutral` = text-muted · `critical` = negro (no rojo)
+- `success` = primary · `info` = secondary · `neutral` = text-muted · **`critical` = negro, no rojo**
 
-Cada uno tiene su par `-bg`. Se consumen **solo** vía el átomo `<app-badge variant="…">`.
+Se consumen **solo** vía `<app-badge variant="…">`. Si una vista necesita un rojo de alerta,
+eso es un cambio de identidad visual: consúltalo antes de introducirlo, no lo resuelvas con un
+hex local.
 
-## Geometría
+## Geometría y superficie
 
 - Botones: `rounded-full` (píldora) — siempre
-- Inputs: `rounded-xl` (12px)
-- Tarjetas: `rounded-2xl` (16px) + `shadow-subtle`
-- Sombras: solo `shadow-subtle` y `shadow-lifted`. Prohibido glassmorphism o sombras pesadas.
+- Inputs: `rounded-xl` (12px) · Tarjetas y modales: `rounded-2xl` (16px)
+- Sombras: solo `shadow-subtle` y `shadow-lifted`
+- **Glassmorphism (`backdrop-blur`): solo en capas que flotan *sobre* el contenido** — el toast y
+  los backdrops de overlay. Nunca en tarjetas, tablas ni superficies de contenido, donde compite
+  con la legibilidad de los datos clínicos.
 
-## Tipografía
+## Tipografía y números
 
 Poppins. Jerarquía: H1 48 / H2 36 / H3 28 / base 16 / small 14.
 
+**Montos, teléfonos, fechas y cualquier número en columna van con `tabular-nums`** (ya viene en
+`<app-table>` y en los charts). Sin ancho fijo por dígito, las cifras bailan al cambiar de fila y
+una tabla de comisiones se vuelve incómoda de escanear.
+
+## Animación
+
+Clases utilitarias definidas en `styles.css` — úsalas en vez de escribir `@keyframes` nuevos:
+
+| Clase | Para |
+|---|---|
+| `animate-modal-pop` | Apertura de modales y popovers |
+| `animate-fade-scale` | Aparición suave de paneles |
+| `animate-toast-slide` | Entrada del toast |
+
+Curvas: `--ease-spring-smooth`, `--ease-spring-bounce`, `--ease-press`. Para hover y transiciones
+simples, `transition-all duration-200`.
+
+**Gráficos y bloques pesados bajo el pliegue van en `@defer (on viewport)`**, con un
+`<app-loading-skeleton>` de **altura exacta** en el `@placeholder`. Si el esqueleto mide distinto
+que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
+`reportes.page.html` y `ventas.page.html`.
+
 ## Inventario de átomos (`src/app/shared/components/`)
 
-| Componente | Selector | Inputs principales |
+| Componente | Selector | API |
 |---|---|---|
-| Button | `<app-button>` | `variant` (primary/secondary/ghost), `size`, `icon`, `loading`, `fullWidth`, `circle`, `type` |
-| Input | `<app-input>` | `label`, `type` (incl. password con toggle), `placeholder`, `error`, `[(value)]` |
+| Button | `<app-button>` | `variant` (primary/secondary/ghost), `size`, `type`, `icon`, `loading`, `disabled`, `fullWidth`, `circle` · `(clicked)` |
+| Input | `<app-input>` | `label`, `type` (incl. password con toggle), `placeholder`, `autocomplete`, `error`, `disabled` · `[(value)]` |
 | Badge | `<app-badge>` | `variant` (success/info/neutral/critical), `icon` |
 | Card | `<app-card>` | `padding` (sm/md/lg), `hoverable` |
-| Avatar | `<app-avatar>` | `initials`, `size` (sm/md/lg), `variant` (light/solid) |
+| Avatar | `<app-avatar>` | `initials` (requerido), `size`, `variant` (light/solid), `imageUrl` |
 | Icon | `<app-icon>` | `name` (catálogo cerrado), `size`, `strokeWidth` |
-| EmptyState | `<app-empty-state>` | `icon`, `title`, `description` + contenido proyectado |
+| EmptyState | `<app-empty-state>` | `icon`, `title` (requerido), `description` + contenido proyectado |
 | LoadingSkeleton | `<app-loading-skeleton>` | `shape`, `width`, `height` |
-| PageHeader | `<app-page-header>` | `title`, `subtitle` + acciones proyectadas |
-| FilterChip | `<app-filter-chip>` | `active`, `count`, `size`, `(clicked)` |
-| Table | `<app-table>` | proyecta `<thead>`/`<tbody>` nativos |
+| PageHeader | `<app-page-header>` | `title` (requerido), **`subtitle`** + acciones proyectadas |
+| FilterChip | `<app-filter-chip>` | `active`, `count`, `size` · `(clicked)` |
+| Table | `<app-table>` | `dense`, `maxHeight` — proyecta `<thead>`/`<tbody>` nativos |
+| Paginator | `<app-paginator>` | `pagina`, `totalPaginas`, `total` (requeridos), `limite` · `(cambiar)` |
+| BarChart | `<app-bar-chart>` | `items`, `mode` (BAR/COLUMN), `title`, `subtitle`, `height`, `formatType` |
+| DonutChart | `<app-donut-chart>` | `items`, `title`, `subtitle`, `etiquetaTotal` |
 | FabMenu | `<app-fab-menu>` | `items` — acciones rápidas flotantes (vive en el layout) |
+| DialogService | *(servicio)* | `openTemplate(tpl, vcr)` — modales por CDK Overlay, ver `crm-feature-page` |
 
-### Íconos
+### Uso típico
 
-`IconName` en `icon.component.ts` es un **catálogo cerrado** (estilo Lucide, outline, stroke 2).
+```html
+<app-page-header title="Clientes y Pacientes" subtitle="Gestión integral de contactos.">
+  <app-button icon="plus" (clicked)="abrirCreacion()">Nuevo</app-button>
+</app-page-header>
+
+<app-filter-chip [active]="filtro() === 'GOLD'" [count]="totalGold()" (clicked)="cambiarFiltro('GOLD')">
+  Gold (VIP)
+</app-filter-chip>
+
+<app-table [dense]="true" maxHeight="calc(100dvh - 220px)">
+  <thead>
+    <tr><th class="text-left">Paciente</th><th class="text-right">Monto</th></tr>
+  </thead>
+  <tbody>
+    @for (venta of ventas(); track venta.id) {
+      <tr>
+        <td class="text-left">{{ venta.cliente.nombre }}</td>
+        <td class="text-right">{{ venta.monto | moneda }}</td>
+      </tr>
+    }
+  </tbody>
+</app-table>
+
+<app-button variant="primary" icon="user-plus" [loading]="guardando()" (clicked)="guardar()">
+  Guardar Registro
+</app-button>
+```
+
+## Íconos: catálogo cerrado, cero emojis
+
+`IconName` en `icon.component.ts` es un catálogo cerrado (estilo Lucide, outline, stroke 2).
 Para usar uno nuevo: añade el `@case` con el path del SVG y su nombre al tipo `IconName`.
-Nunca pegues un `<svg>` suelto en una vista.
+
+- **Nunca pegues un `<svg>` suelto** en una vista — se escapa del catálogo y del tamaño/stroke coherentes.
+- **Nunca uses emojis** en etiquetas, botones, títulos ni modales. Renderizan distinto en cada
+  sistema operativo y rompen el tono clínico; el ícono vectorial es la única fuente de simbología.
+  *(Esta regla aplica a la interfaz. Los emojis en documentación como este archivo están bien.)*
 
 ## Helpers compartidos
 
-- `moneda.pipe.ts` → `{{ monto | moneda }}` o `formatearBs(n)`. **Moneda del sistema: Bs (es-BO).** Nunca formatees montos a mano.
+- `moneda.pipe.ts` → `{{ monto | moneda }}` o `formatearBs(n)`. **Moneda del sistema: Bs (es-BO).**
+  Nunca formatees montos a mano.
 - `generarIniciales(nombre)` en `core/auth/user.model.ts` → iniciales para avatares.
 - `shared/models/estados.model.ts` → etiquetas y variantes de badge de Lead/Venta/Comisión.
 - `shared/models/cliente-categoria.model.ts` → Gold/Silver/Bronze/Prospecto.
+- `core/api/db-enums.ts` → enums espejo de Prisma, **generados** por `tools/generar-db-enums.mjs`.
+  No los edites a mano: se regeneran desde `schema.prisma`.
 
 ## Marca
 
-El proyecto es **agnóstico de marca**: no inventes logo, isotipo ni iniciales.
-El slot del logo (topbar, login) queda vacío hasta que el cliente entregue el suyo.
+El proyecto es **agnóstico de marca**: no inventes logo, isotipo ni iniciales. El slot del logo
+(topbar, login) queda vacío hasta que el cliente entregue el suyo.
+
+## Mantenimiento
+
+```bash
+npm run check:skills
+```
+
+Contrasta este archivo con el código: hexadecimales contra los tokens de `styles.css`, cada
+`input`/`output` de la tabla de inventario contra el `.component.ts` del átomo, los selectores
+`<app-…>`, las clases `animate-…` y las rutas citadas. Va encadenado a `npm run build`.
+
+Verifica **datos, no criterio**: si añades una regla o cambias un patrón, este archivo se
+actualiza a mano. Cuando el validador te contradiga, corrige el skill — el código es la verdad.

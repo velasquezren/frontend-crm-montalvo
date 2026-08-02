@@ -17,8 +17,9 @@ export interface ActualizarAgenteDto {
 
 /**
  * Agentes (usuarios) — gestión del equipo de ventas.
- * Todo el módulo es exclusivo de ADMIN: el backend lo bloquea con @Roles,
- * y el frontend además oculta la ruta con `adminGuard`.
+ * Todo el módulo es exclusivo de SUPER_ADMIN: el backend lo bloquea con
+ * `@Roles('SUPER_ADMIN')`, y el frontend además oculta la ruta con
+ * `exigeRol('SUPER_ADMIN')`.
  *
  * El backend impide que un admin se desactive o degrade a sí mismo, y que
  * el sistema quede sin ningún administrador activo.
