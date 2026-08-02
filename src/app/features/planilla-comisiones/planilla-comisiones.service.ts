@@ -4,7 +4,9 @@ import { ApiService, ResourceRequest } from '../../core/api/api.service';
 import {
   Alertas,
   ClasifComision,
+  CanalVenta,
   ConfiguracionPlanilla,
+  MapeoCaptacion,
   Objetivo,
   PeriodoComision,
   ReglaClasificacion,
@@ -197,10 +199,12 @@ export class PlanillaComisionesService {
     return this.api.delete(`/planilla-comisiones/periodos/${periodoId}/objetivos/${tipo}`);
   }
 
-  guardarCaptacion(valor: string, canal: 'EMPRESA' | 'PROPIO'): Promise<unknown> {
-    return this.api.put(`/planilla-comisiones/configuracion/captacion/${encodeURIComponent(valor)}`, {
-      canal,
-    });
+  /** Devuelve el registro ya guardado (con el valor normalizado por el backend). */
+  guardarCaptacion(valor: string, canal: CanalVenta): Promise<MapeoCaptacion> {
+    return this.api.put<MapeoCaptacion>(
+      `/planilla-comisiones/configuracion/captacion/${encodeURIComponent(valor)}`,
+      { canal },
+    );
   }
 
   eliminarCaptacion(valor: string): Promise<unknown> {

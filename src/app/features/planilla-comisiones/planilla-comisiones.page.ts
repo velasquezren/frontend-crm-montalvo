@@ -25,6 +25,7 @@ import {
   CLASIF_LABEL,
   ConfiguracionPlanilla,
   ESTADO_PERIODO_LABEL,
+  MapeoCaptacion,
   MESES,
   Objetivo,
   PeriodoComision,
@@ -459,6 +460,22 @@ export class PlanillaComisionesPage implements OnDestroy {
     }
   }
 
+  /**
+   * Aplica sobre la configuración ya cargada el canal que devolvió el backend,
+   * en vez de volver a pedirla entera. Ajustar los canales uno tras otro es el
+   * uso normal de esa tabla, y cada refresco completo son varias consultas para
+   * reflejar el cambio de un solo campo.
+   */
+  private aplicarCaptacion(guardado: MapeoCaptacion | null, valorBorrado?: string): void {
+    this.configuracion.update(cfg => {
+      if (!cfg) return cfg;
+      const clave = guardado?.valor ?? valorBorrado;
+      const resto = cfg.captacion.filter(c => c.valor !== clave);
+      const lista = guardado ? [...resto, guardado] : resto;
+      return { ...cfg, captacion: lista.sort((a, b) => a.valor.localeCompare(b.valor)) };
+    });
+  }
+
   protected async guardarCaptacion(valor: string, canal: string): Promise<void> {
     const limpio = valor.trim();
     if (!limpio) {
@@ -467,10 +484,13 @@ export class PlanillaComisionesPage implements OnDestroy {
     }
 
     try {
-      await this.service.guardarCaptacion(limpio, canal === 'PROPIO' ? 'PROPIO' : 'EMPRESA');
-      this.toast.success(`"${limpio.toUpperCase()}" cuenta como ${canal}.`, 'Guardado');
+      const guardado = await this.service.guardarCaptacion(
+        limpio,
+        canal === 'PROPIO' ? 'PROPIO' : 'EMPRESA',
+      );
+      this.toast.success(`"${guardado.valor}" cuenta como ${guardado.canal}.`, 'Guardado');
       this.captacionNueva.set('');
-      await this.cargarConfiguracion();
+      this.aplicarCaptacion(guardado);
     } catch (err) {
       this.toast.error(mensajeDeError(err, 'No se pudo guardar la captación.'), 'Error');
     }
@@ -481,7 +501,7 @@ export class PlanillaComisionesPage implements OnDestroy {
       await this.service.eliminarCaptacion(valor);
       // Sin regla propia, el clasificador lo trata como EMPRESA.
       this.toast.success(`"${valor}" vuelve a contar como EMPRESA.`, 'Eliminado');
-      await this.cargarConfiguracion();
+      this.aplicarCaptacion(null, valor);
     } catch (err) {
       this.toast.error(mensajeDeError(err, 'No se pudo eliminar la captación.'), 'Error');
     }
