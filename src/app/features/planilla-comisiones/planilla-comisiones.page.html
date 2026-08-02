@@ -524,7 +524,19 @@
 @if (pestana() === 'CONFIGURACION') {
   <!-- Vendedoras -->
   <section class="panel mb-4">
-    <h3 class="text-sm font-bold text-text-dark mb-1">Vendedoras</h3>
+    <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">Vendedoras
+        <app-info-hint titulo="Cómo se reconoce a cada vendedora">
+          <p>
+            El sistema NO cruza por nombre —se escribe distinto cada vez— sino por el
+            <strong>código</strong> de la columna <code>vendedora_pk</code> del Excel (Pe2455).
+          </p>
+          <p>
+            Ese mismo código va en la ficha del agente del CRM. Mientras coincidan, cada venta cae
+            sola en su dueña; si no, la vendedora se crea aparte y queda <strong>sin configurar</strong>.
+          </p>
+          <p>Una vendedora sin sueldo base ni tipo asignado no puede liquidarse bien.</p>
+        </app-info-hint>
+      </h3>
     <p class="text-xs text-text-muted mb-3">
       Se dan de alta solas al importar. El agente del CRM se reconoce por el <strong>código de
       empresa</strong> (el mismo <code>vendedora_pk</code> del Excel), así que no hay que vincular
@@ -598,7 +610,19 @@
   @if (configuracion(); as cfg) {
     <!-- Tipo A -->
     <section class="panel mb-4">
-      <h3 class="text-sm font-bold text-text-dark mb-1">Tipo A — Planes (%)</h3>
+      <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">Tipo A — Planes (%)
+        <app-info-hint titulo="Tarifas de planes y paquetes">
+          <p>
+            Los paquetes de maternidad cobran según su <strong>nivel</strong>; los planes varios
+            (niño sano, bariátrica) usan la fila PLANNIN.
+          </p>
+          <p>
+            Dos columnas porque el <strong>canal</strong> cambia la tarifa: la venta propia paga más
+            que la que llegó por la clínica.
+          </p>
+          <p>Recuerda que solo comisionan los planes que superan el objetivo del mes.</p>
+        </app-info-hint>
+      </h3>
       <p class="text-xs text-text-muted mb-3">Por nivel del plan de maternidad, y PLANNIN para los paquetes varios.</p>
       <app-table [dense]="true">
         <thead>
@@ -634,7 +658,22 @@
 
     <!-- Tipo C -->
     <section class="panel mb-4">
-      <h3 class="text-sm font-bold text-text-dark mb-1">Tipo C — Consultas, laboratorios y otros (%)</h3>
+      <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">Tipo C — Consultas, laboratorios y otros (%)
+        <app-info-hint titulo="Tarifas de servicios sueltos">
+          <p>
+            Consultas, laboratorios, ecografías y otros servicios <strong>facturados aparte</strong>.
+          </p>
+          <p>
+            Lo que va incluido dentro de un plan no llega como fila propia al Excel: se cobra con el
+            plan y comisiona como Tipo A, no aquí.
+          </p>
+          <p>
+            <strong>Campaña y promoción van en 0%</strong> a propósito: entran al reporte para que se
+            vean, pero no se pagan.
+          </p>
+          <p>No dependen del objetivo de planes: se pagan aunque no se llegue a la meta.</p>
+        </app-info-hint>
+      </h3>
       <app-table [dense]="true">
         <thead>
           <tr>
@@ -669,7 +708,21 @@
 
     <!-- Tipo B -->
     <section class="panel mb-4">
-      <h3 class="text-sm font-bold text-text-dark mb-1">Tipo B — Escala de cirugías</h3>
+      <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">Tipo B — Escala de cirugías
+        <app-info-hint titulo="Cómo funciona la escala">
+          <p>
+            Se suman TODAS las cirugías del mes de la vendedora, y ese acumulado decide el nivel.
+          </p>
+          <p>
+            Luego ese porcentaje se aplica <strong>a todas</strong>, no por tramos: no es que las
+            primeras paguen menos y las últimas más.
+          </p>
+          <p>
+            En una frontera exacta manda el tramo de arriba. Por debajo del primer nivel no hay
+            comisión, y por encima del último se aplica ese último.
+          </p>
+        </app-info-hint>
+      </h3>
       <p class="text-xs text-text-muted mb-3">
         El nivel se decide con el monto acumulado de cirugías del mes de cada vendedora.
       </p>
@@ -699,7 +752,22 @@
 
     <!-- Tarifas RA -->
     <section class="panel mb-4">
-      <h3 class="text-sm font-bold text-text-dark mb-1">Tipo B — Coordinadoras RA (USD por procedimiento)</h3>
+      <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">Tipo B — Coordinadoras RA (USD por procedimiento)
+        <app-info-hint titulo="Por qué RA no usa escala">
+          <p>
+            Reproducción Asistida cobra <strong>monto fijo en dólares por procedimiento</strong>, no un
+            porcentaje sobre el precio.
+          </p>
+          <p>
+            Solo lo cobran las <strong>coordinadoras</strong> del área. Para una ejecutiva, una venta de
+            RA no comisiona.
+          </p>
+          <p>
+            El procedimiento se reconoce por el nombre del servicio, y gana la coincidencia más
+            específica: "Laparoscopia + Histeroscopia" no se confunde con "Histeroscopia" sola.
+          </p>
+        </app-info-hint>
+      </h3>
       <app-table [dense]="true">
         <thead>
           <tr>
@@ -904,7 +972,25 @@
 
     <!-- Diccionario -->
     <section class="panel mb-4">
-      <h3 class="text-sm font-bold text-text-dark mb-1">Diccionario de clasificación ({{ cfg.reglas.length }} reglas)</h3>
+      <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">Diccionario de clasificación ({{ cfg.reglas.length }} reglas)
+        <app-info-hint titulo="Para qué sirve el diccionario">
+          <p>
+            Cada venta del Excel hay que clasificarla. El sistema lo deduce del nombre del servicio,
+            pero cuando se equivoca —o cuando el catálogo dice otra cosa— manda una regla de aquí.
+          </p>
+          <p>
+            <strong>Prioridad baja gana.</strong> Se usan números bajos para las excepciones que deben
+            vencer a la deducción automática, y altos para las que solo confirman.
+          </p>
+          <p>
+            Es también la <strong>única</strong> forma de marcar una venta como del área RA.
+          </p>
+          <p>
+            Si dos reglas tienen el mismo patrón y la misma prioridad, cuál gana queda al azar:
+            conviene que no se repitan.
+          </p>
+        </app-info-hint>
+      </h3>
       <p class="text-xs text-text-muted mb-3">
         Manda sobre la clasificación automática. Se evalúa de menor a mayor prioridad.
       </p>
