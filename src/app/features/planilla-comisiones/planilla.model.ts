@@ -197,6 +197,15 @@ export interface Objetivo {
   montoTrimestralUsd: string;
 }
 
+/**
+ * Un valor de la columna `captacion` y el canal al que corresponde. Decide si
+ * la venta paga tarifa propia (más alta) o de empresa.
+ */
+export interface MapeoCaptacion {
+  valor: string;
+  canal: CanalVenta;
+}
+
 export interface ReglaClasificacion {
   id: string;
   patron: string;
@@ -217,6 +226,8 @@ export interface ConfiguracionPlanilla {
   tarifasRA: TarifaRA[];
   objetivos: Objetivo[];
   parametros: { clave: string; valor: string }[];
+  /** Qué valor de `captacion` del Excel cuenta como venta propia. */
+  captacion: MapeoCaptacion[];
   reglas: ReglaClasificacion[];
 }
 

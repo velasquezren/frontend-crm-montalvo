@@ -101,6 +101,7 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 | Paginator | `<app-paginator>` | `pagina`, `totalPaginas`, `total` (requeridos), `limite` · `(cambiar)` |
 | BarChart | `<app-bar-chart>` | `items`, `mode` (BAR/COLUMN), `title`, `subtitle`, `height`, `formatType` |
 | DonutChart | `<app-donut-chart>` | `items`, `title`, `subtitle`, `etiquetaTotal` |
+| InfoHint | `<app-info-hint>` | `titulo` (requerido), `size` + contenido proyectado — el "!" que explica una regla |
 | FabMenu | `<app-fab-menu>` | `items` — acciones rápidas flotantes (vive en el layout) |
 | DialogService | *(servicio)* | `openTemplate(tpl, vcr)` — modales por CDK Overlay, ver `crm-feature-page` |
 

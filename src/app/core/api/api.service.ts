@@ -50,6 +50,14 @@ export class ApiService {
     return firstValueFrom(this.http.patch<T>(this.url(path), body));
   }
 
+  /**
+   * Para endpoints que crean o reemplazan según la clave de la ruta (upsert),
+   * donde `patch` mentiría: no hay nada que parchear si el recurso aún no existe.
+   */
+  put<T>(path: string, body: unknown = {}): Promise<T> {
+    return firstValueFrom(this.http.put<T>(this.url(path), body));
+  }
+
   delete<T>(path: string): Promise<T> {
     return firstValueFrom(this.http.delete<T>(this.url(path)));
   }

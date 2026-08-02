@@ -10,6 +10,7 @@ import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { InfoHintComponent } from '../../shared/components/info-hint/info-hint.component';
 import { InputComponent } from '../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
@@ -50,6 +51,7 @@ type Pestana = 'IMPORTAR' | 'CLASIFICACION' | 'REPORTES' | 'CONFIGURACION';
     ButtonComponent,
     EmptyStateComponent,
     IconComponent,
+    InfoHintComponent,
     InputComponent,
     LoadingSkeletonComponent,
     PageHeaderComponent,
@@ -90,6 +92,8 @@ export class PlanillaComisionesPage implements OnDestroy {
 
   protected readonly pagina = signal(1);
   protected readonly busqueda = signal('');
+  /** Campo para dar de alta un valor de captación nuevo desde configuración. */
+  protected readonly captacionNueva = signal('');
   protected readonly filtroClasif = signal<ClasifComision | null>(null);
   protected readonly soloExcluidas = signal(false);
   protected readonly soloSinClasificar = signal(false);
@@ -370,6 +374,34 @@ export class PlanillaComisionesPage implements OnDestroy {
   protected async abrirConfiguracion(): Promise<void> {
     this.pestana.set('CONFIGURACION');
     if (!this.configuracion()) await this.cargarConfiguracion();
+  }
+
+  protected async guardarCaptacion(valor: string, canal: string): Promise<void> {
+    const limpio = valor.trim();
+    if (!limpio) {
+      this.toast.error('Escribe el valor tal como aparece en el Excel.', 'Falta el valor');
+      return;
+    }
+
+    try {
+      await this.service.guardarCaptacion(limpio, canal === 'PROPIO' ? 'PROPIO' : 'EMPRESA');
+      this.toast.success(`"${limpio.toUpperCase()}" cuenta como ${canal}.`, 'Guardado');
+      this.captacionNueva.set('');
+      await this.cargarConfiguracion();
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo guardar la captación.'), 'Error');
+    }
+  }
+
+  protected async eliminarCaptacion(valor: string): Promise<void> {
+    try {
+      await this.service.eliminarCaptacion(valor);
+      // Sin regla propia, el clasificador lo trata como EMPRESA.
+      this.toast.success(`"${valor}" vuelve a contar como EMPRESA.`, 'Eliminado');
+      await this.cargarConfiguracion();
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo eliminar la captación.'), 'Error');
+    }
   }
 
   protected async guardarTarifaPlan(clave: string, empresa: string, propio: string): Promise<void> {

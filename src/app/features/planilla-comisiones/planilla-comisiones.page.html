@@ -384,13 +384,92 @@
           <thead>
             <tr>
               <th class="text-left min-w-[160px]">Vendedora</th>
-              <th class="text-right min-w-[110px]">Vendido</th>
-              <th class="text-right min-w-[100px]">Planes</th>
-              <th class="text-right min-w-[110px]">Cirugías</th>
-              <th class="text-right min-w-[90px]">Comisión A</th>
-              <th class="text-right min-w-[90px]">Comisión B</th>
-              <th class="text-right min-w-[90px]">Comisión C</th>
-              <th class="text-right min-w-[85px]">Bonos</th>
+              <th class="text-right min-w-[110px]">
+                Vendido
+                <app-info-hint titulo="Monto vendido y base de cálculo">
+                  <p>Lo cobrado en el mes, tal como viene del Excel.</p>
+                  <p>
+                    Las comisiones no se calculan sobre este número sino sobre la
+                    <strong>base</strong>, que es el monto <strong>× 0,87</strong> (se descuenta el 13%
+                    de impuestos).
+                  </p>
+                </app-info-hint>
+              </th>
+              <th class="text-right min-w-[100px]">
+                Planes
+                <app-info-hint titulo="Objetivo de planes">
+                  <p>
+                    El objetivo es una <strong>franquicia, no un interruptor</strong>: solo comisionan
+                    los planes que lo superan.
+                  </p>
+                  <p>Con 5 paquetes y objetivo 4, comisiona 1 — no los 5.</p>
+                  <p><strong>Igualar el objetivo paga cero.</strong> Hay que superarlo.</p>
+                  <p>
+                    Son dos objetivos independientes: paquetes de maternidad y planes varios (niño sano).
+                  </p>
+                </app-info-hint>
+              </th>
+              <th class="text-right min-w-[110px]">
+                Cirugías
+                <app-info-hint titulo="Nivel de cirugías">
+                  <p>
+                    El nivel sale del <strong>acumulado del mes</strong>, y una vez definido se aplica a
+                    <strong>todas</strong> las cirugías por igual.
+                  </p>
+                  <p>
+                    No es por tramos: si acumuló Bs 25.000 cae en nivel 5, y ese porcentaje va sobre los
+                    25.000 completos.
+                  </p>
+                  <p>Por debajo del primer nivel no hay comisión.</p>
+                </app-info-hint>
+              </th>
+              <th class="text-right min-w-[90px]">
+                Comisión A
+                <app-info-hint titulo="Tipo A — Planes y paquetes">
+                  <p>Paquetes de maternidad y planes varios.</p>
+                  <p>
+                    El porcentaje depende del <strong>nivel</strong> (Bronce, Silver, Gold) y del
+                    <strong>canal</strong>: una venta propia paga casi el doble que una de la clínica.
+                  </p>
+                  <p>Solo entran los planes por encima del objetivo.</p>
+                </app-info-hint>
+              </th>
+              <th class="text-right min-w-[90px]">
+                Comisión B
+                <app-info-hint titulo="Tipo B — Cirugías">
+                  <p>Se paga por escala según el acumulado de cirugías del mes.</p>
+                  <p>
+                    Las <strong>coordinadoras de RA</strong> no van por escala: cobran una
+                    <strong>tarifa fija en dólares</strong> por procedimiento.
+                  </p>
+                </app-info-hint>
+              </th>
+              <th class="text-right min-w-[90px]">
+                Comisión C
+                <app-info-hint titulo="Tipo C — Servicios">
+                  <p>Consultas, laboratorios, ecografías y otros servicios.</p>
+                  <p>Porcentaje fijo, más alto si la captación fue propia.</p>
+                  <p><strong>Campañas y promociones no comisionan.</strong></p>
+                  <p>No dependen del objetivo de planes: se pagan igual.</p>
+                </app-info-hint>
+              </th>
+              <th class="text-right min-w-[85px]">
+                Bonos
+                <app-info-hint titulo="Bonos">
+                  <p>
+                    <strong>Trimestral:</strong> promedio de ventas del trimestre. Si supera el objetivo,
+                    paga un porcentaje de ese promedio.
+                  </p>
+                  <p>
+                    <strong>Jefatura:</strong> cada vendedora que supera su objetivo de monto aporta un
+                    porcentaje de su base a una bolsa común.
+                  </p>
+                  <p>
+                    Esa bolsa <strong>no la cobra la jefa</strong>: se reparte en partes iguales entre el
+                    equipo de publicidad.
+                  </p>
+                </app-info-hint>
+              </th>
               <th class="text-right min-w-[100px]">Total USD</th>
               <th class="text-right min-w-[110px]">Total Bs</th>
               <th class="text-right min-w-[100px]">Sueldo Base</th>
@@ -638,6 +717,81 @@
           }
         </tbody>
       </app-table>
+    </section>
+
+    <!-- Captación: qué cuenta como venta propia -->
+    <section class="panel mb-4">
+      <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">
+        Canales de Captación
+        <app-info-hint titulo="Cómo se decide si una venta es propia">
+          <p>
+            Cada venta del Excel trae una <strong>captación</strong> (Clínica, Propio, Facebook…).
+            Aquí se define cuáles cuentan como venta <strong>propia</strong> de la vendedora.
+          </p>
+          <p>
+            No es un detalle: una venta propia paga bastante más que una de la empresa
+            (5,5% contra 4,5% en servicios, y hasta el doble en planes).
+          </p>
+          <p>
+            <strong>Lo que no esté en esta lista cuenta como EMPRESA</strong>, que es la tarifa más
+            baja. Si aparece un canal nuevo el sistema paga de menos y ustedes lo corrigen, en vez de
+            pagar de más y tener que recuperarlo.
+          </p>
+        </app-info-hint>
+      </h3>
+      <p class="text-xs text-text-muted mb-3">
+        Escribe el valor tal como aparece en la columna de captación del Excel.
+      </p>
+
+      <app-table [dense]="true">
+        <thead>
+          <tr>
+            <th class="text-left">Valor en el Excel</th>
+            <th class="text-left">Cuenta como</th>
+            <th class="text-right">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of cfg.captacion; track c.valor) {
+            <tr>
+              <td class="text-left font-semibold text-text-dark font-mono">{{ c.valor }}</td>
+              <td class="text-left">
+                <select
+                  class="select-base"
+                  [value]="c.canal"
+                  (change)="guardarCaptacion(c.valor, $any($event.target).value)">
+                  <option value="EMPRESA">Empresa (tarifa base)</option>
+                  <option value="PROPIO">Propia (tarifa alta)</option>
+                </select>
+              </td>
+              <td class="text-right">
+                <app-button variant="ghost" size="sm" icon="trash" (clicked)="eliminarCaptacion(c.valor)">
+                  Quitar
+                </app-button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="3" class="text-center text-text-muted text-xs py-3">
+                Sin canales configurados — todas las ventas cuentan como empresa.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
+
+      <div class="flex items-end gap-2 mt-3 flex-wrap">
+        <app-input
+          label="Agregar canal"
+          placeholder="Ej. TIKTOK"
+          [(value)]="captacionNueva" />
+        <app-button variant="secondary" icon="plus" (clicked)="guardarCaptacion(captacionNueva(), 'EMPRESA')">
+          Agregar como empresa
+        </app-button>
+        <app-button variant="primary" icon="plus" (clicked)="guardarCaptacion(captacionNueva(), 'PROPIO')">
+          Agregar como propia
+        </app-button>
+      </div>
     </section>
 
     <!-- Objetivos -->

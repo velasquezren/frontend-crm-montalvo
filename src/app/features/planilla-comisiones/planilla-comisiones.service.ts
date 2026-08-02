@@ -169,6 +169,16 @@ export class PlanillaComisionesService {
     return this.api.patch(`/planilla-comisiones/configuracion/objetivos/${id}`, datos);
   }
 
+  guardarCaptacion(valor: string, canal: 'EMPRESA' | 'PROPIO'): Promise<unknown> {
+    return this.api.put(`/planilla-comisiones/configuracion/captacion/${encodeURIComponent(valor)}`, {
+      canal,
+    });
+  }
+
+  eliminarCaptacion(valor: string): Promise<unknown> {
+    return this.api.delete(`/planilla-comisiones/configuracion/captacion/${encodeURIComponent(valor)}`);
+  }
+
   crearRegla(regla: Partial<ReglaClasificacion>): Promise<ReglaClasificacion> {
     return this.api.post<ReglaClasificacion>('/planilla-comisiones/configuracion/reglas', regla);
   }
