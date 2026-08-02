@@ -133,6 +133,8 @@ export interface FilaConsolidado {
   /** Parte del pote de jefatura que cobra cada persona del área de publicidad. */
   bonoPublicidad: number;
   bonoTrimestral: number;
+  /** Los tres bonos ya sumados por el backend: las plantillas solo formatean. */
+  totalBonos: number;
   totalUsd: number;
   totalBob: number;
   sueldoBase: number;

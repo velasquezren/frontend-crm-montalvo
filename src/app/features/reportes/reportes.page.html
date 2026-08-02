@@ -491,14 +491,20 @@
                   <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ f.montoVendido | moneda }}</td>
                   <td class="text-right whitespace-nowrap">
                     <span class="font-medium text-text-dark">{{ f.planesVendidos }}</span>
-                    @if (!f.cumpleObjetivoPlanes) {
-                      <span class="block text-[10px] text-critical font-semibold" title="No alcanzó el objetivo: no cobra Tipo A">sin objetivo</span>
+                    @if (f.planpaqComisionables + f.planninComisionables; as comisionables) {
+                      <span class="text-[10px] text-primary font-semibold block text-right"
+                        title="Solo los planes por encima del objetivo comisionan Tipo A">
+                        {{ comisionables }} comisiona{{ comisionables === 1 ? '' : 'n' }}
+                      </span>
+                    } @else {
+                      <span class="text-[10px] text-critical font-semibold block text-right"
+                        title="No superó el objetivo: ningún plan comisiona Tipo A">sin objetivo</span>
                     }
                   </td>
                   <td class="text-right whitespace-nowrap">${{ f.comisionA | number: '1.2-2' }}</td>
                   <td class="text-right whitespace-nowrap">${{ f.comisionB | number: '1.2-2' }}</td>
                   <td class="text-right whitespace-nowrap">${{ f.comisionC | number: '1.2-2' }}</td>
-                  <td class="text-right whitespace-nowrap">${{ f.bonoJefatura + f.bonoPublicidad + f.bonoTrimestral | number: '1.2-2' }}</td>
+                  <td class="text-right whitespace-nowrap">${{ f.totalBonos | number: '1.2-2' }}</td>
                   <td class="text-right font-semibold text-primary whitespace-nowrap">${{ f.totalUsd | number: '1.2-2' }}</td>
                   <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ f.totalBob | moneda }}</td>
                   <td class="text-right text-text-muted whitespace-nowrap">{{ f.sueldoBase | moneda }}</td>

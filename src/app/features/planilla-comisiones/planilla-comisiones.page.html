@@ -390,8 +390,8 @@
                   <p>Lo cobrado en el mes, tal como viene del Excel.</p>
                   <p>
                     Las comisiones no se calculan sobre este número sino sobre la
-                    <strong>base</strong>, que es el monto <strong>× 0,87</strong> (se descuenta el 13%
-                    de impuestos).
+                    <strong>base</strong>, que es el monto menos el impuesto vigente. El porcentaje
+                    exacto se configura más abajo, en Parámetros.
                   </p>
                 </app-info-hint>
               </th>
@@ -417,8 +417,8 @@
                     <strong>todas</strong> las cirugías por igual.
                   </p>
                   <p>
-                    No es por tramos: si acumuló Bs 25.000 cae en nivel 5, y ese porcentaje va sobre los
-                    25.000 completos.
+                    No es por tramos: si el acumulado cae en un nivel, ese porcentaje va sobre el
+                    acumulado completo. Los tramos se configuran más abajo, en Tipo B.
                   </p>
                   <p>Por debajo del primer nivel no hay comisión.</p>
                 </app-info-hint>
@@ -428,8 +428,9 @@
                 <app-info-hint titulo="Tipo A — Planes y paquetes">
                   <p>Paquetes de maternidad y planes varios.</p>
                   <p>
-                    El porcentaje depende del <strong>nivel</strong> (Bronce, Silver, Gold) y del
-                    <strong>canal</strong>: una venta propia paga casi el doble que una de la clínica.
+                    El porcentaje depende del <strong>nivel</strong> del paquete y del
+                    <strong>canal</strong>: una venta propia paga bastante más que una de la clínica.
+                    Las tarifas se configuran más abajo.
                   </p>
                   <p>Solo entran los planes por encima del objetivo.</p>
                 </app-info-hint>
@@ -505,7 +506,7 @@
                 <td class="text-right whitespace-nowrap">${{ f.comisionA | number: '1.2-2' }}</td>
                 <td class="text-right whitespace-nowrap">${{ f.comisionB | number: '1.2-2' }}</td>
                 <td class="text-right whitespace-nowrap">${{ f.comisionC | number: '1.2-2' }}</td>
-                <td class="text-right whitespace-nowrap">${{ f.bonoJefatura + f.bonoPublicidad + f.bonoTrimestral | number: '1.2-2' }}</td>
+                <td class="text-right whitespace-nowrap">${{ f.totalBonos | number: '1.2-2' }}</td>
                 <td class="text-right font-semibold text-primary whitespace-nowrap">${{ f.totalUsd | number: '1.2-2' }}</td>
                 <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ f.totalBob | moneda }}</td>
                 <td class="text-right text-text-muted whitespace-nowrap">{{ f.sueldoBase | moneda }}</td>
@@ -729,8 +730,8 @@
             Aquí se define cuáles cuentan como venta <strong>propia</strong> de la vendedora.
           </p>
           <p>
-            No es un detalle: una venta propia paga bastante más que una de la empresa
-            (5,5% contra 4,5% en servicios, y hasta el doble en planes).
+            No es un detalle: una venta propia paga bastante más que una de la empresa, tanto en
+            servicios como en planes. Las tarifas exactas están en las tablas de arriba.
           </p>
           <p>
             <strong>Lo que no esté en esta lista cuenta como EMPRESA</strong>, que es la tarifa más
