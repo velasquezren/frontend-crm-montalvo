@@ -118,13 +118,20 @@ export interface FilaConsolidado {
   montoVendido: number;
   baseCalculo: number;
   planesVendidos: number;
+  /** true = superó alguno de los dos objetivos y por eso generó comisión Tipo A. */
   cumpleObjetivoPlanes: boolean;
+  planpaqVendidos: number;
+  planpaqComisionables: number;
+  planninVendidos: number;
+  planninComisionables: number;
   acumuladoCirugias: number;
   nivelCirugia: number | null;
   comisionA: number;
   comisionB: number;
   comisionC: number;
   bonoJefatura: number;
+  /** Parte del pote de jefatura que cobra cada persona del área de publicidad. */
+  bonoPublicidad: number;
   bonoTrimestral: number;
   totalUsd: number;
   totalBob: number;
@@ -182,7 +189,10 @@ export interface TarifaRA {
 export interface Objetivo {
   id: string;
   tipo: TipoVendedora;
-  planesMinimos: number;
+  /** Paquetes de maternidad a SUPERAR (igualar no comisiona). */
+  planpaqMinimos: number;
+  /** Planes varios / niño sano. Objetivo independiente. */
+  planninMinimos: number;
   montoMensualUsd: string;
   montoTrimestralUsd: string;
 }

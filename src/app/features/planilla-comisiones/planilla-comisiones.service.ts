@@ -159,7 +159,12 @@ export class PlanillaComisionesService {
 
   actualizarObjetivo(
     id: string,
-    datos: { planesMinimos: number; montoMensualUsd: number; montoTrimestralUsd: number },
+    datos: {
+      planpaqMinimos: number;
+      planninMinimos: number;
+      montoMensualUsd: number;
+      montoTrimestralUsd: number;
+    },
   ): Promise<unknown> {
     return this.api.patch(`/planilla-comisiones/configuracion/objetivos/${id}`, datos);
   }
