@@ -1,5 +1,3 @@
-<div class="flex flex-col gap-8">
-
 <app-page-header
   title="Historial de Servicios"
   subtitle="Qué se hizo en la clínica, a quién y quién lo atendió" />
@@ -139,7 +137,7 @@
         </div>
       </section>
 
-      <section style="--indice: 1" class="aparecer panel">
+      <section style="--indice: 4" class="aparecer panel">
         <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div>
             <h3 class="titulo-seccion">Servicios por módulo</h3>
@@ -179,31 +177,39 @@
       </section>
 
       @defer (on viewport) {
-        <app-bar-chart
-          title="Evolución mensual"
-          subtitle="Servicios por mes cargado"
-          mode="COLUMN"
-          height="240px"
-          formatType="number"
-          [items]="serieMeses()" />
+        <section style="--indice: 2" class="aparecer panel">
+          <app-bar-chart
+            title="Evolución mensual"
+            subtitle="Servicios por mes cargado"
+            mode="COLUMN"
+            height="240px"
+            formatType="number"
+            [items]="serieMeses()" />
+        </section>
       } @placeholder {
-        <app-loading-skeleton shape="card" height="240px" />
+        <section class="panel">
+          <app-loading-skeleton shape="card" height="240px" />
+        </section>
       }
 
       @defer (on viewport) {
-        <app-bar-chart
-          title="Servicios más realizados"
-          subtitle="Los doce con más volumen en el periodo"
-          mode="BAR"
-          height="360px"
-          formatType="number"
-          [items]="serieTopServicios()" />
+        <section style="--indice: 3" class="aparecer panel">
+          <app-bar-chart
+            title="Servicios más realizados"
+            subtitle="Los doce con más volumen en el periodo"
+            mode="BAR"
+            height="360px"
+            formatType="number"
+            [items]="serieTopServicios()" />
+        </section>
       } @placeholder {
-        <app-loading-skeleton shape="card" height="360px" />
+        <section class="panel">
+          <app-loading-skeleton shape="card" height="360px" />
+        </section>
       }
 
       <!-- Ranking de médicos -->
-      <section style="--indice: 1" class="aparecer panel">
+      <section style="--indice: 5" class="aparecer panel">
         <h3 class="titulo-seccion">Médicos con más atenciones</h3>
         <p class="subtitulo-seccion">Ordenados por volumen de servicios en el periodo</p>
         <app-table [dense]="true">
@@ -231,7 +237,7 @@
       </section>
 
       <!-- Demografía de la base de pacientes -->
-      <section style="--indice: 1" class="aparecer panel">
+      <section style="--indice: 6" class="aparecer panel">
         <h3 class="titulo-seccion">
           Perfil de los pacientes
           <app-info-hint titulo="De dónde salen estos datos">
@@ -272,13 +278,17 @@
             }
           </section>
 
-          <div class="grid-dos-equitativo">
-            <app-donut-chart title="Por sexo" etiquetaTotal="pacientes" [items]="serieSexo()" />
-            <app-donut-chart
-              title="Por departamento"
-              subtitle="Según el lugar de emisión del CI"
-              etiquetaTotal="pacientes"
-              [items]="serieDepartamento()" />
+          <div class="grid-dos-equitativo mb-5">
+            <div class="sub-panel">
+              <app-donut-chart title="Por sexo" etiquetaTotal="pacientes" [items]="serieSexo()" />
+            </div>
+            <div class="sub-panel">
+              <app-donut-chart
+                title="Por departamento"
+                subtitle="Según el lugar de emisión del CI"
+                etiquetaTotal="pacientes"
+                [items]="serieDepartamento()" />
+            </div>
           </div>
 
           @defer (on viewport) {
@@ -292,6 +302,7 @@
           } @placeholder {
             <app-loading-skeleton shape="card" height="220px" />
           }
+
         }
       </section>
     }
@@ -300,7 +311,7 @@
 
 <!-- ══════════════ PACIENTES ══════════════ -->
 @if (pestana() === 'PACIENTES') {
-  <section style="--indice: 1" class="aparecer panel">
+  <section style="--indice: 7" class="aparecer panel">
     <div class="mb-3 max-w-md">
       <app-input
         label="Buscar paciente"
@@ -369,7 +380,7 @@
 
 <!-- ══════════════ MÉDICOS ══════════════ -->
 @if (pestana() === 'MEDICOS') {
-  <section style="--indice: 1" class="aparecer panel">
+  <section style="--indice: 8" class="aparecer panel">
     <div class="mb-3 max-w-md">
       <app-input label="Buscar médico" placeholder="Nombre o código" [(value)]="busquedaMedicos" />
     </div>
@@ -539,5 +550,3 @@
     </div>
   </aside>
 }
-
-</div>

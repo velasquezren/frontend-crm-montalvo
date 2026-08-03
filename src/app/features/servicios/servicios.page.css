@@ -17,6 +17,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 14px;
+  margin-bottom: 20px;
 }
 
 .kpi-card {
@@ -127,12 +128,25 @@
 
 /* ── Paneles y títulos ──────────────────────────────────────────────── */
 
+/* El ritmo vertical lo dan los márgenes de cada bloque, no un contenedor flex:
+   así cada sección se puede mover o envolver en un `@defer` sin romper el
+   espaciado. Es como está resuelto en Reportes. */
 .panel {
   background: white;
   border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 20px;
   box-shadow: var(--shadow-subtle);
+  margin-bottom: 20px;
+}
+
+/* Panel anidado: un gráfico dentro de una sección que ya es panel. Sin sombra
+   para no apilar dos elevaciones. */
+.sub-panel {
+  background: var(--color-bg-workspace);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-radius: 12px;
+  padding: 16px;
 }
 
 .titulo-seccion {
@@ -190,6 +204,7 @@ tr:hover .celda-sticky {
   display: flex;
   gap: 6px;
   border-bottom: 1px solid var(--color-border);
+  margin-bottom: 20px;
   overflow-x: auto;
   scrollbar-width: none;
   padding-bottom: 2px;
@@ -353,6 +368,7 @@ tr:hover .celda-sticky {
   border: 1px solid var(--color-border);
   border-radius: 16px;
   box-shadow: var(--shadow-subtle);
+  margin-bottom: 20px;
 }
 
 .icono-periodo {
