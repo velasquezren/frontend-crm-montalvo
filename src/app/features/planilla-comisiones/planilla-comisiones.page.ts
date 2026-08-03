@@ -262,7 +262,7 @@ export class PlanillaComisionesPage implements OnDestroy {
         }
         for (const plan of planes) {
           if (elegidos.size >= cupo) break;
-          if (plan.comisionaPlan === null) elegidos.add(plan.id);
+          if ((plan.comisionaPlan ?? null) === null) elegidos.add(plan.id);
         }
 
         return { ...grupo, objetivo, cupo, planes, elegidos };
@@ -296,7 +296,14 @@ export class PlanillaComisionesPage implements OnDestroy {
    * comisiona → no comisiona → automático. El backend recalcula al liquidar.
    */
   protected async alternarPlan(plan: VentaImportada): Promise<void> {
-    const siguiente = plan.comisionaPlan === null ? true : plan.comisionaPlan ? false : null;
+    /*
+     * `?? null` no es decorativo: si el backend no conoce todavía el campo lo
+     * omite del JSON y llega `undefined`, no `null`. Sin normalizar, el ciclo
+     * calculaba `null` para ese caso y el botón guardaba el mismo valor que ya
+     * tenía — se veía como que el clic no hacía nada.
+     */
+    const actual = plan.comisionaPlan ?? null;
+    const siguiente = actual === null ? true : actual ? false : null;
     try {
       await this.service.marcarPlanComisiona(plan.id, siguiente);
       this.planesPaq.reload();
