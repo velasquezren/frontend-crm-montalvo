@@ -74,7 +74,7 @@
         description="El historial se llena con el mismo Excel mensual que alimenta la planilla de comisiones. Importa un mes desde Planilla → Importar." />
     } @else {
       <!-- Filtro por módulo -->
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2 mb-5">
         <span class="text-xs font-semibold text-text-muted">Módulo:</span>
         @for (m of modulosDisponibles(); track m.etiqueta) {
           <app-filter-chip
@@ -151,7 +151,7 @@
         </div>
 
         <div class="grid-split">
-          <app-donut-chart etiquetaTotal="servicios" [items]="serieModulos()" />
+          <app-donut-chart etiquetaTotal="servicios" formatType="number" [items]="serieModulos()" />
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             @for (m of desgloseModulos(); track m.etiqueta) {
@@ -263,7 +263,7 @@
         } @else if (demografia.error()) {
           <app-empty-state icon="alert-circle" title="No se pudo cargar el perfil" />
         } @else if (demografia.value(); as dg) {
-          <section class="grid-kpis-modern mb-5">
+          <section class="grid-kpis-modern">
             @for (item of resumenDemografia(); track item.label; let i = $index) {
               <div [style.--indice]="i" class="aparecer kpi-card">
                 <div class="kpi-cabecera">
@@ -280,13 +280,14 @@
 
           <div class="grid-dos-equitativo mb-5">
             <div class="sub-panel">
-              <app-donut-chart title="Por sexo" etiquetaTotal="pacientes" [items]="serieSexo()" />
+              <app-donut-chart title="Por sexo" etiquetaTotal="pacientes" formatType="number" [items]="serieSexo()" />
             </div>
             <div class="sub-panel">
               <app-donut-chart
                 title="Por departamento"
                 subtitle="Según el lugar de emisión del CI"
                 etiquetaTotal="pacientes"
+                formatType="number"
                 [items]="serieDepartamento()" />
             </div>
           </div>
@@ -312,7 +313,7 @@
 <!-- ══════════════ PACIENTES ══════════════ -->
 @if (pestana() === 'PACIENTES') {
   <section style="--indice: 7" class="aparecer panel">
-    <div class="mb-3 max-w-md">
+    <div class="mb-6 max-w-md">
       <app-input
         label="Buscar paciente"
         placeholder="Nombre o código (PAC12345)"
@@ -363,12 +364,14 @@
         </tbody>
       </app-table>
 
-      <app-paginator
+      <div class="mt-5">
+        <app-paginator
         [pagina]="pacientes.value().pagina"
         [totalPaginas]="pacientes.value().totalPaginas"
         [total]="pacientes.value().total"
         [limite]="pacientes.value().limite"
-        (cambiar)="paginaPacientes.set($event)" />
+          (cambiar)="paginaPacientes.set($event)" />
+      </div>
     } @else {
       <app-empty-state
         icon="users"
@@ -381,7 +384,7 @@
 <!-- ══════════════ MÉDICOS ══════════════ -->
 @if (pestana() === 'MEDICOS') {
   <section style="--indice: 8" class="aparecer panel">
-    <div class="mb-3 max-w-md">
+    <div class="mb-6 max-w-md">
       <app-input label="Buscar médico" placeholder="Nombre o código" [(value)]="busquedaMedicos" />
     </div>
 
@@ -420,12 +423,14 @@
         </tbody>
       </app-table>
 
-      <app-paginator
+      <div class="mt-5">
+        <app-paginator
         [pagina]="medicos.value().pagina"
         [totalPaginas]="medicos.value().totalPaginas"
         [total]="medicos.value().total"
         [limite]="medicos.value().limite"
-        (cambiar)="paginaMedicos.set($event)" />
+          (cambiar)="paginaMedicos.set($event)" />
+      </div>
     } @else {
       <app-empty-state icon="briefcase" title="Sin resultados" description="Prueba con otro nombre." />
     }
@@ -451,7 +456,7 @@
 
     <div class="flex-1 overflow-y-auto p-5">
       <!-- Resumen -->
-      <section class="grid-kpis-modern mb-5">
+      <section class="grid-kpis-modern">
         @for (item of resumenHistorial(); track item.label; let i = $index) {
           <div [style.--indice]="i" class="aparecer kpi-card" [class.kpi-card-destacado]="item.destacado">
             <div class="kpi-cabecera">

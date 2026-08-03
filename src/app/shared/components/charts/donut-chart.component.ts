@@ -255,6 +255,15 @@ export class DonutChartComponent {
   /** Qué se lee en el centro cuando no hay nada resaltado. */
   readonly etiquetaTotal = input<string>('Total');
 
+  /**
+   * Cómo se escribe el total del centro. Mismo contrato que `<app-bar-chart>`.
+   *
+   * Por defecto `currency` para no cambiar lo que ya existe, pero hay donas que
+   * cuentan cosas —servicios, pacientes— y ponerles "Bs" delante las hacía
+   * mentir: 711 servicios no son 711 bolivianos.
+   */
+  readonly formatType = input<'currency' | 'number' | 'percent'>('currency');
+
   protected readonly resaltada = signal<string | null>(null);
 
   private readonly total = computed(() =>
@@ -292,12 +301,19 @@ export class DonutChartComponent {
   protected readonly detalleCentro = computed(() => {
     const resaltada = this.resaltada();
     if (resaltada === null) {
-      return { valor: formatearBs(this.total()), etiqueta: this.etiquetaTotal() };
+      return { valor: this.formatearTotal(this.total()), etiqueta: this.etiquetaTotal() };
     }
     const porcion = this.porciones().find(p => p.clave === resaltada);
     if (!porcion) return null;
     return { valor: `${porcion.pct}%`, etiqueta: porcion.label };
   });
+
+  private formatearTotal(valor: number): string {
+    const tipo = this.formatType();
+    if (tipo === 'currency') return formatearBs(valor);
+    if (tipo === 'percent') return `${valor.toFixed(1)}%`;
+    return valor.toLocaleString('es-BO');
+  }
 
   /** Descripción para lectores de pantalla: el gráfico no se puede "ver". */
   protected readonly descripcion = computed(() => {
