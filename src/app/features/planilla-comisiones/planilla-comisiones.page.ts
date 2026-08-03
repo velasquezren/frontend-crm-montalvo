@@ -180,16 +180,20 @@ export class PlanillaComisionesPage implements OnDestroy {
   );
 
   /*
-   * Planes del periodo. Se piden aparte de la tabla de vista previa —y sin
-   * paginar, con un tope holgado— porque la decisión de qué plan comisiona se
-   * toma mirando TODOS los planes de la vendedora juntos: son pocos (30 en el
-   * mes más cargado) y partirlos en páginas haría imposible comparar.
+   * Planes del periodo, en una sola página. La decisión de qué plan comisiona
+   * se toma mirando TODOS los planes de la vendedora juntos, así que partirlos
+   * en páginas haría imposible compararlos.
+   *
+   * Se piden 100, que es el tope que admite la paginación del backend
+   * (`LIMITE_MAXIMO`). Sobra: el mes más cargado de 2026 trae 30 planes. Pedir
+   * más devuelve 400 y la vista muestra el error de carga — que es exactamente
+   * lo que pasaba pidiendo 200.
    */
   protected readonly planesPaq = httpResource<RespuestaPaginada<VentaImportada>>(
     () => {
       const id = this.periodoId();
       return id
-        ? this.service.ventasRequest(id, { clasif: 'PLANPAQ', limite: 200 })
+        ? this.service.ventasRequest(id, { clasif: 'PLANPAQ', limite: 100 })
         : undefined;
     },
     { defaultValue: paginaVacia<VentaImportada>() },
@@ -199,7 +203,7 @@ export class PlanillaComisionesPage implements OnDestroy {
     () => {
       const id = this.periodoId();
       return id
-        ? this.service.ventasRequest(id, { clasif: 'PLANNIN', limite: 200 })
+        ? this.service.ventasRequest(id, { clasif: 'PLANNIN', limite: 100 })
         : undefined;
     },
     { defaultValue: paginaVacia<VentaImportada>() },
