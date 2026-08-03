@@ -49,6 +49,12 @@ export const routes: Routes = [
       {
         /* Consume KPIs globales y la planilla de comisiones (endpoints de admin):
            sin este guard un agente veria la pagina cargar y fallar con 403. */
+        path: 'servicios',
+        canActivate: [exigeRol('ADMIN')],
+        loadComponent: () =>
+          import('./features/servicios/servicios.page').then(m => m.ServiciosPage),
+      },
+      {
         path: 'reportes',
         canActivate: [exigeRol('ADMIN')],
         loadComponent: () =>

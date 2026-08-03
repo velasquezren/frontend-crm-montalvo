@@ -16,6 +16,7 @@ export interface NavItem {
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
+  { path: '/servicios', label: 'Historial Clínico', icon: 'activity', rolMinimo: 'ADMIN' },
   { path: '/reportes', label: 'Reportes y Gráficos', icon: 'bar-chart', rolMinimo: 'ADMIN' },
   { path: '/clientes', label: 'Clientes', icon: 'users' },
   { path: '/leads', label: 'Leads', icon: 'user-plus' },

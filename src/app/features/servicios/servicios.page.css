@@ -1,0 +1,164 @@
+/*
+ * Historial de Servicios.
+ *
+ * Reusa deliberadamente los mismos nombres de clase que la planilla de
+ * comisiones (`pestanas`, `panel`, `metrica`…): son dos vistas de análisis
+ * hermanas y deben sentirse iguales. Si algún día estas clases se repiten en
+ * una tercera pantalla, toca subirlas a `styles.css` en vez de copiarlas otra vez.
+ */
+
+.pestanas {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.pestanas::-webkit-scrollbar {
+  display: none;
+}
+
+.pestana {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  border: 1px solid transparent;
+  border-bottom: 2px solid transparent;
+  border-radius: 10px 10px 0 0;
+  margin-bottom: -1px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.pestana:hover {
+  color: var(--color-text-dark);
+  background-color: var(--color-bg-workspace);
+}
+
+.pestana-activa {
+  color: var(--color-primary);
+  background-color: white;
+  border-color: var(--color-border) var(--color-border) transparent var(--color-border);
+  border-bottom: 2px solid var(--color-primary);
+}
+
+.panel {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow-subtle);
+  margin-bottom: 16px;
+}
+
+.grid-metricas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.metrica {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  background: var(--color-bg-workspace);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.metrica-valor {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.metrica-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Dos gráficos por fila en escritorio, uno en móvil. */
+.grid-graficos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.filtros {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+/* Línea de tiempo del paciente: un servicio por fila, agrupados por fecha. */
+.linea-tiempo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 46vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.evento {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--color-bg-workspace);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.evento-fecha {
+  min-width: 78px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+  padding-top: 2px;
+}
+
+.dato {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.dato-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.dato-valor {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
+.grid-ficha {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}

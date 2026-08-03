@@ -1,0 +1,465 @@
+<app-page-header
+  title="Historial de Servicios"
+  subtitle="Qué se hizo en la clínica, a quién y quién lo atendió" />
+
+<!-- ── Pestañas ────────────────────────────────────────────────────── -->
+<nav class="pestanas">
+  <button type="button" class="pestana" [class.pestana-activa]="pestana() === 'DASHBOARD'" (click)="setPestana('DASHBOARD')">
+    <app-icon name="bar-chart" [size]="15" /> <span>Resumen</span>
+  </button>
+  <button type="button" class="pestana" [class.pestana-activa]="pestana() === 'PACIENTES'" (click)="setPestana('PACIENTES')">
+    <app-icon name="users" [size]="15" /> <span>Pacientes</span>
+  </button>
+  <button type="button" class="pestana" [class.pestana-activa]="pestana() === 'MEDICOS'" (click)="setPestana('MEDICOS')">
+    <app-icon name="briefcase" [size]="15" /> <span>Médicos</span>
+  </button>
+</nav>
+
+<!-- ══════════════ RESUMEN ══════════════ -->
+@if (pestana() === 'DASHBOARD') {
+  @if (dashboard.isLoading()) {
+    <app-loading-skeleton shape="text" height="6rem" />
+  } @else if (dashboard.error()) {
+    <app-empty-state
+      icon="alert-circle"
+      title="No se pudo cargar el resumen"
+      description="Verifica que el servidor esté encendido." />
+  } @else if (dashboard.value(); as d) {
+    @if (d.totales.servicios === 0) {
+      <app-empty-state
+        icon="inbox"
+        title="Todavía no hay servicios cargados"
+        description="El historial se llena con el mismo Excel mensual que alimenta la planilla de comisiones. Importa un mes desde Planilla → Importar." />
+    } @else {
+      <!-- Filtro por módulo -->
+      <div class="filtros">
+        <span class="text-xs font-semibold text-text-muted">Módulo:</span>
+        @for (m of modulosDisponibles(); track m) {
+          <app-filter-chip [active]="filtroModulo() === m" (clicked)="alternarModulo(m)">
+            {{ m }}
+          </app-filter-chip>
+        }
+        @if (filtroModulo()) {
+          <app-button variant="ghost" size="sm" icon="x" (clicked)="alternarModulo(filtroModulo()!)">
+            Quitar filtro
+          </app-button>
+        }
+      </div>
+
+      <!-- KPIs -->
+      <section class="panel">
+        <div class="grid-metricas">
+          <div class="metrica">
+            <span class="metrica-valor">{{ d.totales.servicios | number }}</span>
+            <span class="metrica-label">servicios</span>
+          </div>
+          <div class="metrica">
+            <span class="metrica-valor text-secondary">{{ d.totales.pacientes | number }}</span>
+            <span class="metrica-label">pacientes atendidos</span>
+          </div>
+          <div class="metrica">
+            <span class="metrica-valor">{{ d.totales.medicos | number }}</span>
+            <span class="metrica-label">médicos</span>
+          </div>
+          <div class="metrica">
+            <span class="metrica-valor text-primary">{{ d.totales.ingreso | moneda }}</span>
+            <span class="metrica-label">facturado</span>
+          </div>
+        </div>
+
+        <!-- El hueco del cruce, a la vista y no escondido -->
+        <div class="mt-4 flex items-center gap-2 flex-wrap text-xs">
+          <app-badge [variant]="pctCobertura() >= 80 ? 'success' : 'critical'">
+            {{ pctCobertura() }}% enlazado a una ficha
+          </app-badge>
+          <span class="text-text-muted">
+            {{ d.cobertura.conFicha | number }} de {{ d.cobertura.servicios | number }} servicios
+            encuentran al paciente en el CRM
+          </span>
+          <app-info-hint titulo="Por qué no todos los servicios tienen ficha">
+            <p>
+              Cada servicio del Excel trae el <strong>código del paciente</strong> y con él se busca
+              su ficha en el CRM.
+            </p>
+            <p>
+              Si el porcentaje es bajo no es un error del sistema: significa que
+              <strong>el maestro de pacientes está importado a medias</strong>. Los servicios se
+              siguen mostrando con el nombre que trae el Excel, pero sin ficha no hay datos
+              demográficos ni teléfono.
+            </p>
+            <p>Se arregla completando la importación de pacientes desde FileMaker.</p>
+          </app-info-hint>
+        </div>
+      </section>
+
+      <!-- Gráficos de servicios -->
+      <div class="grid-graficos">
+        <app-donut-chart
+          title="Por módulo"
+          subtitle="De dónde viene cada servicio"
+          etiquetaTotal="servicios"
+          [items]="serieModulos()" />
+        <app-donut-chart
+          title="Por clasificación"
+          subtitle="Cómo los clasifica el motor de comisiones"
+          etiquetaTotal="servicios"
+          [items]="serieClasif()" />
+      </div>
+
+      @defer (on viewport) {
+        <app-bar-chart
+          title="Evolución mensual"
+          subtitle="Servicios por mes cargado"
+          mode="COLUMN"
+          height="240px"
+          formatType="number"
+          [items]="serieMeses()" />
+      } @placeholder {
+        <app-loading-skeleton shape="card" height="240px" />
+      }
+
+      @defer (on viewport) {
+        <app-bar-chart
+          title="Servicios más realizados"
+          subtitle="Los doce con más volumen en el periodo"
+          mode="BAR"
+          height="360px"
+          formatType="number"
+          [items]="serieTopServicios()" />
+      } @placeholder {
+        <app-loading-skeleton shape="card" height="360px" />
+      }
+
+      <!-- Ranking de médicos -->
+      <section class="panel">
+        <h3 class="text-sm font-bold text-text-dark mb-3">Médicos con más atenciones</h3>
+        <app-table [dense]="true">
+          <thead>
+            <tr>
+              <th class="text-left">Médico</th>
+              <th class="text-left">Código</th>
+              <th class="text-right">Servicios</th>
+              <th class="text-right">Facturado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of d.porMedico; track m.codigo) {
+              <tr>
+                <td class="text-left font-semibold text-text-dark">{{ m.etiqueta }}</td>
+                <td class="text-left text-xs text-text-muted font-mono">{{ m.codigo }}</td>
+                <td class="text-right font-medium">{{ m.total | number }}</td>
+                <td class="text-right font-medium text-primary">{{ m.ingreso | moneda }}</td>
+              </tr>
+            }
+          </tbody>
+        </app-table>
+      </section>
+
+      <!-- Demografía de la base de pacientes -->
+      <section class="panel">
+        <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">
+          Perfil de los pacientes
+          <app-info-hint titulo="De dónde salen estos datos">
+            <p>
+              Esto describe <strong>toda la base de pacientes del CRM</strong>, no solo a quienes
+              tienen un servicio cargado.
+            </p>
+            <p>
+              Es a propósito: hay muchas más fichas que servicios importados, y limitarlo al cruce
+              daría una foto pobre y sesgada.
+            </p>
+            <p>
+              El departamento sale del <strong>lugar de emisión del carnet</strong>. Lo que no es un
+              departamento boliviano se agrupa como extranjero, y lo que viene vacío como
+              <em>sin dato</em> — que no es lo mismo.
+            </p>
+          </app-info-hint>
+        </h3>
+
+        @if (demografia.isLoading()) {
+          <app-loading-skeleton shape="card" height="200px" />
+        } @else if (demografia.error()) {
+          <app-empty-state icon="alert-circle" title="No se pudo cargar el perfil" />
+        } @else if (demografia.value(); as dg) {
+          <div class="grid-metricas mb-4">
+            <div class="metrica">
+              <span class="metrica-valor">{{ dg.total | number }}</span>
+              <span class="metrica-label">fichas registradas</span>
+            </div>
+            <div class="metrica">
+              <span class="metrica-valor text-secondary">{{ dg.visitasPromedio | number: '1.1-1' }}</span>
+              <span class="metrica-label">visitas promedio</span>
+            </div>
+            <div class="metrica">
+              <span class="metrica-valor">{{ dg.saldoAcumulado | moneda }}</span>
+              <span class="metrica-label">saldo arrastrado</span>
+            </div>
+          </div>
+
+          <div class="grid-graficos">
+            <app-donut-chart title="Por sexo" etiquetaTotal="pacientes" [items]="serieSexo()" />
+            <app-donut-chart
+              title="Por departamento"
+              subtitle="Según el lugar de emisión del CI"
+              etiquetaTotal="pacientes"
+              [items]="serieDepartamento()" />
+          </div>
+
+          @defer (on viewport) {
+            <app-bar-chart
+              title="Por edad"
+              subtitle="Calculada de la fecha de nacimiento, nunca guardada"
+              mode="COLUMN"
+              height="220px"
+              formatType="number"
+              [items]="serieEdad()" />
+          } @placeholder {
+            <app-loading-skeleton shape="card" height="220px" />
+          }
+        }
+      </section>
+    }
+  }
+}
+
+<!-- ══════════════ PACIENTES ══════════════ -->
+@if (pestana() === 'PACIENTES') {
+  <section class="panel">
+    <div class="mb-3 max-w-md">
+      <app-input
+        label="Buscar paciente"
+        placeholder="Nombre o código (PAC12345)"
+        [(value)]="busquedaPacientes" />
+    </div>
+
+    @if (pacientes.isLoading()) {
+      <app-loading-skeleton shape="text" height="2.5rem" />
+    } @else if (pacientes.error()) {
+      <app-empty-state
+        icon="alert-circle"
+        title="No se pudieron cargar los pacientes"
+        description="Verifica que el servidor esté encendido." />
+    } @else if (pacientes.value().datos.length > 0) {
+      <app-table [dense]="true">
+        <thead>
+          <tr>
+            <th class="text-left">Paciente</th>
+            <th class="text-left">Código</th>
+            <th class="text-right">Servicios</th>
+            <th class="text-right">Gastado</th>
+            <th class="text-left">Última visita</th>
+            <th class="text-right">Historial</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of pacientes.value().datos; track p.pac) {
+            <tr>
+              <td class="text-left font-semibold text-text-dark">
+                {{ p.paciente || '—' }}
+                @if (!p.clienteId) {
+                  <app-badge variant="neutral">sin ficha</app-badge>
+                }
+              </td>
+              <td class="text-left text-xs text-text-muted font-mono">{{ p.pac }}</td>
+              <td class="text-right font-medium">{{ p.servicios | number }}</td>
+              <td class="text-right font-medium text-primary">{{ p.gastado | moneda }}</td>
+              <td class="text-left text-xs text-text-muted">
+                {{ p.ultimaVisita ? (p.ultimaVisita | date: 'dd/MM/yy') : '—' }}
+              </td>
+              <td class="text-right">
+                <app-button variant="ghost" size="sm" icon="eye" (clicked)="abrirHistorial(p.pac)">
+                  Ver
+                </app-button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
+
+      <app-paginator
+        [pagina]="pacientes.value().pagina"
+        [totalPaginas]="pacientes.value().totalPaginas"
+        [total]="pacientes.value().total"
+        [limite]="pacientes.value().limite"
+        (cambiar)="paginaPacientes.set($event)" />
+    } @else {
+      <app-empty-state
+        icon="users"
+        title="Sin resultados"
+        description="Prueba con otro nombre o código de paciente." />
+    }
+  </section>
+}
+
+<!-- ══════════════ MÉDICOS ══════════════ -->
+@if (pestana() === 'MEDICOS') {
+  <section class="panel">
+    <div class="mb-3 max-w-md">
+      <app-input label="Buscar médico" placeholder="Nombre o código" [(value)]="busquedaMedicos" />
+    </div>
+
+    @if (medicos.isLoading()) {
+      <app-loading-skeleton shape="text" height="2.5rem" />
+    } @else if (medicos.error()) {
+      <app-empty-state
+        icon="alert-circle"
+        title="No se pudieron cargar los médicos"
+        description="Verifica que el servidor esté encendido." />
+    } @else if (medicos.value().datos.length > 0) {
+      <app-table [dense]="true">
+        <thead>
+          <tr>
+            <th class="text-left">Médico</th>
+            <th class="text-left">Código</th>
+            <th class="text-right">Servicios</th>
+            <th class="text-right">Pacientes</th>
+            <th class="text-right">Facturado</th>
+            <th class="text-left">Última atención</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (m of medicos.value().datos; track m.codigo) {
+            <tr>
+              <td class="text-left font-semibold text-text-dark">{{ m.nombre || '—' }}</td>
+              <td class="text-left text-xs text-text-muted font-mono">{{ m.codigo }}</td>
+              <td class="text-right font-medium">{{ m.servicios | number }}</td>
+              <td class="text-right font-medium text-secondary">{{ m.pacientes | number }}</td>
+              <td class="text-right font-medium text-primary">{{ m.ingreso | moneda }}</td>
+              <td class="text-left text-xs text-text-muted">
+                {{ m.ultimaAtencion ? (m.ultimaAtencion | date: 'dd/MM/yy') : '—' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
+
+      <app-paginator
+        [pagina]="medicos.value().pagina"
+        [totalPaginas]="medicos.value().totalPaginas"
+        [total]="medicos.value().total"
+        [limite]="medicos.value().limite"
+        (cambiar)="paginaMedicos.set($event)" />
+    } @else {
+      <app-empty-state icon="briefcase" title="Sin resultados" description="Prueba con otro nombre." />
+    }
+  </section>
+}
+
+<!-- ══════════════ HISTORIAL DEL PACIENTE ══════════════ -->
+@if (historial(); as h) {
+  <div
+    class="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 animate-fade-in"
+    (click)="cerrarHistorial()"></div>
+
+  <aside
+    class="fixed top-0 right-0 h-full w-full sm:max-w-2xl bg-white shadow-lifted z-50
+           flex flex-col animate-fade-scale">
+    <header class="flex items-start justify-between gap-3 p-5 border-b border-border">
+      <div>
+        <h2 class="text-lg font-bold text-text-dark">{{ h.nombre }}</h2>
+        <p class="text-xs text-text-muted font-mono mt-0.5">{{ h.pac }}</p>
+      </div>
+      <app-button variant="ghost" size="sm" icon="x" [circle]="true" (clicked)="cerrarHistorial()" />
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-5">
+      <!-- Resumen -->
+      <div class="grid-metricas mb-4">
+        <div class="metrica">
+          <span class="metrica-valor">{{ h.resumen.servicios | number }}</span>
+          <span class="metrica-label">servicios</span>
+        </div>
+        <div class="metrica">
+          <span class="metrica-valor text-primary">{{ h.resumen.gastado | moneda }}</span>
+          <span class="metrica-label">gastado</span>
+        </div>
+        <div class="metrica">
+          <span class="metrica-valor">{{ h.resumen.medicos | number }}</span>
+          <span class="metrica-label">médicos</span>
+        </div>
+      </div>
+
+      <!-- Ficha, si existe -->
+      @if (h.ficha; as f) {
+        <section class="mb-5">
+          <h3 class="text-sm font-bold text-text-dark mb-2">Ficha del paciente</h3>
+          <div class="grid-ficha">
+            @if (f.edad !== null) {
+              <div class="dato"><span class="dato-label">Edad</span><span class="dato-valor">{{ f.edad }} años</span></div>
+            }
+            @if (f.sexo) {
+              <div class="dato"><span class="dato-label">Sexo</span><span class="dato-valor">{{ f.sexo }}</span></div>
+            }
+            @if (f.ocupacion) {
+              <div class="dato"><span class="dato-label">Ocupación</span><span class="dato-valor">{{ f.ocupacion }}</span></div>
+            }
+            @if (f.ciLugar) {
+              <div class="dato"><span class="dato-label">CI emitido en</span><span class="dato-valor">{{ f.ciLugar }}</span></div>
+            }
+            @if (f.nacionalidad) {
+              <div class="dato"><span class="dato-label">Nacionalidad</span><span class="dato-valor">{{ f.nacionalidad }}</span></div>
+            }
+            @if (f.estadoCivil) {
+              <div class="dato"><span class="dato-label">Estado civil</span><span class="dato-valor">{{ f.estadoCivil }}</span></div>
+            }
+            @if (f.telefono) {
+              <div class="dato"><span class="dato-label">Teléfono</span><span class="dato-valor">{{ f.telefono }}</span></div>
+            }
+            @if (f.empresaTrabajo) {
+              <div class="dato"><span class="dato-label">Empresa</span><span class="dato-valor">{{ f.empresaTrabajo }}</span></div>
+            }
+            @if (f.visitasPrevias !== null) {
+              <div class="dato"><span class="dato-label">Visitas previas</span><span class="dato-valor">{{ f.visitasPrevias }}</span></div>
+            }
+            @if (f.agente) {
+              <div class="dato"><span class="dato-label">Agente</span><span class="dato-valor">{{ f.agente.nombre }}</span></div>
+            }
+          </div>
+          @if (f.direccion) {
+            <p class="text-xs text-text-muted mt-3">
+              <app-icon name="map-pin" [size]="12" /> {{ f.direccion }}
+            </p>
+          }
+        </section>
+      } @else {
+        <div class="mb-5 p-3 rounded-xl border border-border bg-bg-workspace">
+          <p class="text-xs text-text-muted">
+            Este paciente <strong>aún no tiene ficha en el CRM</strong>. Su historial se muestra con
+            los datos que trae el Excel. Al completar la importación de pacientes desde FileMaker
+            aparecerán aquí su edad, procedencia y contacto.
+          </p>
+        </div>
+      }
+
+      <!-- Línea de tiempo -->
+      <h3 class="text-sm font-bold text-text-dark mb-2">
+        Línea de tiempo
+        <span class="text-xs font-medium text-text-muted">
+          — del {{ h.resumen.primeraVisita | date: 'dd/MM/yy' }} al
+          {{ h.resumen.ultimaVisita | date: 'dd/MM/yy' }}
+        </span>
+      </h3>
+
+      <div class="linea-tiempo">
+        @for (s of h.servicios; track s.id) {
+          <article class="evento">
+            <span class="evento-fecha">{{ s.fecha ? (s.fecha | date: 'dd/MM/yy') : '—' }}</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-text-dark">{{ s.detalle }}</p>
+              <p class="text-xs text-text-muted mt-0.5">
+                @if (s.medico) { {{ s.medico }} · }
+                {{ s.modulo }}
+                @if (s.seguro) { · {{ s.seguro }} }
+              </p>
+            </div>
+            <span class="text-sm font-semibold text-primary whitespace-nowrap">
+              {{ s.precio | moneda }}
+            </span>
+          </article>
+        } @empty {
+          <app-empty-state icon="inbox" title="Sin servicios registrados" />
+        }
+      </div>
+    </div>
+  </aside>
+}
