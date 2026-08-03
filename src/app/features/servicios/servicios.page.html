@@ -49,30 +49,37 @@
       <!-- KPIs -->
       <section class="panel">
         <div class="grid-metricas">
-          <div class="metrica">
+          <div class="metrica metrica-primaria">
             <span class="metrica-valor">{{ d.totales.servicios | number }}</span>
             <span class="metrica-label">servicios</span>
           </div>
-          <div class="metrica">
-            <span class="metrica-valor text-secondary">{{ d.totales.pacientes | number }}</span>
+          <div class="metrica metrica-secundaria">
+            <span class="metrica-valor">{{ d.totales.pacientes | number }}</span>
             <span class="metrica-label">pacientes atendidos</span>
           </div>
-          <div class="metrica">
+          <div class="metrica metrica-secundaria">
             <span class="metrica-valor">{{ d.totales.medicos | number }}</span>
             <span class="metrica-label">médicos</span>
           </div>
-          <div class="metrica">
+          <div class="metrica metrica-primaria">
             <span class="metrica-valor text-primary">{{ d.totales.ingreso | moneda }}</span>
             <span class="metrica-label">facturado</span>
           </div>
         </div>
 
         <!-- El hueco del cruce, a la vista y no escondido -->
-        <div class="mt-4 flex items-center gap-2 flex-wrap text-xs">
-          <app-badge [variant]="pctCobertura() >= 80 ? 'success' : 'critical'">
+        <div class="aviso-cobertura" [class.aviso-cobertura-incompleto]="pctCobertura() < 80">
+          <app-icon
+            [name]="pctCobertura() >= 80 ? 'check-circle' : 'alert-circle'"
+            [size]="16"
+            [class.text-primary]="pctCobertura() >= 80" />
+          <span class="text-xs font-bold text-text-dark whitespace-nowrap">
             {{ pctCobertura() }}% enlazado a una ficha
-          </app-badge>
-          <span class="text-text-muted">
+          </span>
+          <span class="barra-cobertura" [class.barra-cobertura-incompleto]="pctCobertura() < 80">
+            <span [style.width.%]="pctCobertura()"></span>
+          </span>
+          <span class="text-xs text-text-muted">
             {{ d.cobertura.conFicha | number }} de {{ d.cobertura.servicios | number }} servicios
             encuentran al paciente en el CRM
           </span>
@@ -132,7 +139,8 @@
 
       <!-- Ranking de médicos -->
       <section class="panel">
-        <h3 class="text-sm font-bold text-text-dark mb-3">Médicos con más atenciones</h3>
+        <h3 class="titulo-seccion">Médicos con más atenciones</h3>
+        <p class="subtitulo-seccion">Ordenados por volumen de servicios en el periodo</p>
         <app-table [dense]="true">
           <thead>
             <tr>
@@ -157,7 +165,7 @@
 
       <!-- Demografía de la base de pacientes -->
       <section class="panel">
-        <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">
+        <h3 class="titulo-seccion">
           Perfil de los pacientes
           <app-info-hint titulo="De dónde salen estos datos">
             <p>
@@ -175,6 +183,7 @@
             </p>
           </app-info-hint>
         </h3>
+        <p class="subtitulo-seccion">Toda la base de fichas del CRM, no solo quienes tienen servicio</p>
 
         @if (demografia.isLoading()) {
           <app-loading-skeleton shape="card" height="200px" />
@@ -182,15 +191,15 @@
           <app-empty-state icon="alert-circle" title="No se pudo cargar el perfil" />
         } @else if (demografia.value(); as dg) {
           <div class="grid-metricas mb-4">
-            <div class="metrica">
+            <div class="metrica metrica-primaria">
               <span class="metrica-valor">{{ dg.total | number }}</span>
               <span class="metrica-label">fichas registradas</span>
             </div>
-            <div class="metrica">
-              <span class="metrica-valor text-secondary">{{ dg.visitasPromedio | number: '1.1-1' }}</span>
+            <div class="metrica metrica-secundaria">
+              <span class="metrica-valor">{{ dg.visitasPromedio | number: '1.1-1' }}</span>
               <span class="metrica-label">visitas promedio</span>
             </div>
-            <div class="metrica">
+            <div class="metrica metrica-secundaria">
               <span class="metrica-valor">{{ dg.saldoAcumulado | moneda }}</span>
               <span class="metrica-label">saldo arrastrado</span>
             </div>
@@ -365,15 +374,15 @@
     <div class="flex-1 overflow-y-auto p-5">
       <!-- Resumen -->
       <div class="grid-metricas mb-4">
-        <div class="metrica">
+        <div class="metrica metrica-secundaria">
           <span class="metrica-valor">{{ h.resumen.servicios | number }}</span>
           <span class="metrica-label">servicios</span>
         </div>
-        <div class="metrica">
+        <div class="metrica metrica-primaria">
           <span class="metrica-valor text-primary">{{ h.resumen.gastado | moneda }}</span>
           <span class="metrica-label">gastado</span>
         </div>
-        <div class="metrica">
+        <div class="metrica metrica-secundaria">
           <span class="metrica-valor">{{ h.resumen.medicos | number }}</span>
           <span class="metrica-label">médicos</span>
         </div>
