@@ -27,6 +27,11 @@ export class ServiciosService {
     });
   }
 
+  /** Meses importados. Se reutiliza el listado de la planilla: es el mismo dato. */
+  periodosRequest(): ResourceRequest {
+    return this.api.request('/planilla-comisiones/periodos', { limite: 100 });
+  }
+
   demografiaRequest(): ResourceRequest {
     return this.api.request('/servicios/demografia');
   }

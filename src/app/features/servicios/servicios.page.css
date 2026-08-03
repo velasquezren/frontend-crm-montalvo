@@ -337,3 +337,130 @@ tr:hover .celda-sticky {
     font-size: 19px;
   }
 }
+
+/* ── Barra de periodo ───────────────────────────────────────────────────
+   Misma cabecera de contexto que Reportes: qué mes se está mirando y con qué
+   volumen, antes de cualquier cifra. */
+
+.barra-periodo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 18px;
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-subtle);
+}
+
+.icono-periodo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.contenedor-select-periodo {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.select-periodo {
+  padding: 8px 36px 8px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  background: var(--color-bg-workspace);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  appearance: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.select-periodo:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+}
+
+.select-periodo:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+
+.select-icono-flecha {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  color: var(--color-text-muted);
+}
+
+.pill-meta {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-bg-workspace);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+}
+
+/* Dona y tabla del mismo dato, lado a lado. */
+.grid-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .grid-split {
+    grid-template-columns: minmax(260px, 380px) 1fr;
+  }
+}
+
+/* Sub-tarjeta dentro de un panel: el desglose que acompaña a una cifra. */
+.sub-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+  background: var(--color-bg-workspace);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-radius: 12px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.sub-card:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
+  box-shadow: var(--shadow-subtle);
+}
+
+.sub-card-cifra {
+  display: block;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.sub-card-pie {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}

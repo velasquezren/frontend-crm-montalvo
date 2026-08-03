@@ -20,7 +20,11 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 import { formatearBs, MonedaPipe } from '../../shared/pipes/moneda.pipe';
-import { MESES } from '../planilla-comisiones/planilla.model';
+import {
+  ESTADO_PERIODO_LABEL,
+  MESES,
+  PeriodoComision,
+} from '../planilla-comisiones/planilla.model';
 import { ServiciosService } from './servicios.service';
 import {
   DashboardServicios,
@@ -68,11 +72,14 @@ export class ServiciosPage {
   private readonly toast = inject(ToastService);
 
   protected readonly meses = MESES;
+  protected readonly estadoLabel = ESTADO_PERIODO_LABEL;
 
   /* ── Estado de UI ───────────────────────────────────────────────────── */
 
   protected readonly pestana = signal<Pestana>('DASHBOARD');
   protected readonly filtroModulo = signal<string | null>(null);
+  /** null = todo el historial; con id = solo ese mes. */
+  protected readonly periodoId = signal<string | null>(null);
 
   protected readonly paginaPacientes = signal(1);
   protected readonly paginaMedicos = signal(1);
@@ -108,8 +115,18 @@ export class ServiciosPage {
 
   /* ── Recursos ───────────────────────────────────────────────────────── */
 
+  /** Meses importados, para el selector de la barra superior. */
+  protected readonly periodos = httpResource<RespuestaPaginada<PeriodoComision>>(
+    () => this.service.periodosRequest(),
+    { defaultValue: paginaVacia<PeriodoComision>() },
+  );
+
   protected readonly dashboard = httpResource<DashboardServicios | null>(
-    () => this.service.dashboardRequest({ modulo: this.filtroModulo() ?? undefined }),
+    () =>
+      this.service.dashboardRequest({
+        modulo: this.filtroModulo() ?? undefined,
+        periodoId: this.periodoId() ?? undefined,
+      }),
     { defaultValue: null },
   );
 
@@ -306,6 +323,27 @@ export class ServiciosPage {
   });
 
   /* ── Acciones ───────────────────────────────────────────────────────── */
+
+  protected readonly periodoActual = computed(() =>
+    this.periodos.value().datos.find(p => p.id === this.periodoId()) ?? null,
+  );
+
+  /** Desglose por módulo como sub-tarjetas, con su peso sobre el total. */
+  protected readonly desgloseModulos = computed(() => {
+    const d = this.dashboard.value();
+    if (!d) return [];
+    const total = d.totales.servicios || 1;
+    return d.porModulo.map(m => ({
+      etiqueta: m.etiqueta,
+      total: m.total,
+      ingreso: m.ingreso,
+      pct: Math.round((m.total / total) * 100),
+    }));
+  });
+
+  protected seleccionarPeriodo(id: string): void {
+    this.periodoId.set(id || null);
+  }
 
   protected setPestana(p: Pestana): void {
     this.pestana.set(p);

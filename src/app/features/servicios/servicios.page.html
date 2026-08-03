@@ -4,6 +4,44 @@
   title="Historial de Servicios"
   subtitle="Qué se hizo en la clínica, a quién y quién lo atendió" />
 
+<!-- ── Selector de mes y contexto ─────────────────────────────────── -->
+<div class="barra-periodo">
+  <div class="flex items-center gap-3 min-w-0">
+    <div class="icono-periodo">
+      <app-icon name="calendar" [size]="18" />
+    </div>
+    @if (periodos.isLoading()) {
+      <app-loading-skeleton width="200px" height="36px" />
+    } @else {
+      <div class="contenedor-select-periodo">
+        <select
+          class="select-periodo"
+          [value]="periodoId() || ''"
+          (change)="seleccionarPeriodo($any($event.target).value)">
+          <option value="">Todo el historial</option>
+          @for (p of periodos.value().datos; track p.id) {
+            <option [value]="p.id">{{ nombreMes(p.mes) }} {{ p.anio }}</option>
+          }
+        </select>
+        <app-icon name="chevron-down" [size]="16" class="select-icono-flecha" />
+      </div>
+    }
+  </div>
+
+  <div class="flex items-center gap-3 flex-wrap">
+    @if (periodoActual(); as p) {
+      <app-badge [variant]="p.estado === 'CALCULADO' ? 'success' : 'neutral'">
+        {{ estadoLabel[p.estado] }}
+      </app-badge>
+      <span class="pill-meta">{{ p.filasTotales }} filas · TC {{ p.tipoCambio }}</span>
+    } @else if (dashboard.value(); as d) {
+      <span class="pill-meta">
+        {{ d.porMes.length }} {{ d.porMes.length === 1 ? 'mes cargado' : 'meses cargados' }}
+      </span>
+    }
+  </div>
+</div>
+
 <!-- ── Pestañas ────────────────────────────────────────────────────── -->
 <nav class="pestanas">
   <button type="button" class="pestana" [class.pestana-activa]="pestana() === 'DASHBOARD'" (click)="setPestana('DASHBOARD')">
@@ -20,7 +58,11 @@
 <!-- ══════════════ RESUMEN ══════════════ -->
 @if (pestana() === 'DASHBOARD') {
   @if (dashboard.isLoading()) {
-    <app-loading-skeleton shape="text" height="6rem" />
+    <div class="grid-kpis-modern">
+      @for (n of [1, 2, 3, 4, 5]; track n) {
+        <app-loading-skeleton height="100px" />
+      }
+    </div>
   } @else if (dashboard.error()) {
     <app-empty-state
       icon="alert-circle"
@@ -97,19 +139,44 @@
         </div>
       </section>
 
-      <!-- Gráficos de servicios -->
-      <div class="grid-dos-equitativo">
-        <app-donut-chart
-          title="Por módulo"
-          subtitle="De dónde viene cada servicio"
-          etiquetaTotal="servicios"
-          [items]="serieModulos()" />
-        <app-donut-chart
-          title="Por clasificación"
-          subtitle="Cómo los clasifica el motor de comisiones"
-          etiquetaTotal="servicios"
-          [items]="serieClasif()" />
-      </div>
+      <section style="--indice: 1" class="aparecer panel">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <div>
+            <h3 class="titulo-seccion">Servicios por módulo</h3>
+            <p class="subtitulo-seccion">De dónde viene cada atención registrada</p>
+          </div>
+          @if (filtroModulo(); as m) {
+            <app-button variant="ghost" size="sm" icon="x" (clicked)="alternarModulo(m)">
+              Quitar filtro
+            </app-button>
+          }
+        </div>
+
+        <div class="grid-split">
+          <app-donut-chart etiquetaTotal="servicios" [items]="serieModulos()" />
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            @for (m of desgloseModulos(); track m.etiqueta) {
+              <button
+                type="button"
+                class="sub-card text-left cursor-pointer"
+                [class.ring-2]="filtroModulo() === m.etiqueta"
+                (click)="alternarModulo(m.etiqueta)">
+                <div class="flex items-center justify-between mb-3">
+                  <app-badge [variant]="filtroModulo() === m.etiqueta ? 'success' : 'neutral'">
+                    {{ m.etiqueta }}
+                  </app-badge>
+                  <span class="badge-pct">{{ m.pct }}%</span>
+                </div>
+                <div>
+                  <span class="sub-card-cifra">{{ m.total | number }}</span>
+                  <span class="sub-card-pie">{{ m.ingreso | moneda }} facturado</span>
+                </div>
+              </button>
+            }
+          </div>
+        </div>
+      </section>
 
       @defer (on viewport) {
         <app-bar-chart
@@ -136,7 +203,7 @@
       }
 
       <!-- Ranking de médicos -->
-      <section class="panel">
+      <section style="--indice: 1" class="aparecer panel">
         <h3 class="titulo-seccion">Médicos con más atenciones</h3>
         <p class="subtitulo-seccion">Ordenados por volumen de servicios en el periodo</p>
         <app-table [dense]="true">
@@ -164,7 +231,7 @@
       </section>
 
       <!-- Demografía de la base de pacientes -->
-      <section class="panel">
+      <section style="--indice: 1" class="aparecer panel">
         <h3 class="titulo-seccion">
           Perfil de los pacientes
           <app-info-hint titulo="De dónde salen estos datos">
@@ -233,7 +300,7 @@
 
 <!-- ══════════════ PACIENTES ══════════════ -->
 @if (pestana() === 'PACIENTES') {
-  <section class="panel">
+  <section style="--indice: 1" class="aparecer panel">
     <div class="mb-3 max-w-md">
       <app-input
         label="Buscar paciente"
@@ -302,7 +369,7 @@
 
 <!-- ══════════════ MÉDICOS ══════════════ -->
 @if (pestana() === 'MEDICOS') {
-  <section class="panel">
+  <section style="--indice: 1" class="aparecer panel">
     <div class="mb-3 max-w-md">
       <app-input label="Buscar médico" placeholder="Nombre o código" [(value)]="busquedaMedicos" />
     </div>
