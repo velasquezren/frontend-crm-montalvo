@@ -7,6 +7,7 @@ import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model'
 import { ToastService } from '../../core/toast/toast.service';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
+import { CardComponent } from '../../shared/components/card/card.component';
 import { BarChartComponent, ChartItem } from '../../shared/components/charts/bar-chart.component';
 import { DonutChartComponent } from '../../shared/components/charts/donut-chart.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
@@ -18,7 +19,7 @@ import { LoadingSkeletonComponent } from '../../shared/components/loading-skelet
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { TableComponent } from '../../shared/components/table/table.component';
-import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
+import { formatearBs, MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import { MESES } from '../planilla-comisiones/planilla.model';
 import { ServiciosService } from './servicios.service';
 import {
@@ -46,6 +47,7 @@ type Pestana = 'DASHBOARD' | 'PACIENTES' | 'MEDICOS';
     BadgeComponent,
     BarChartComponent,
     ButtonComponent,
+    CardComponent,
     DonutChartComponent,
     EmptyStateComponent,
     FilterChipComponent,
@@ -163,9 +165,45 @@ export class ServiciosPage {
     })),
   );
 
+  /**
+   * Tarjetas de resumen, en el mismo formato que Ventas y Comisiones
+   * (`{ label, valor, icon }`): así las tres pantallas comparten literalmente el
+   * mismo bloque de marcado y no hay dos maneras de pintar un KPI en el CRM.
+   */
+  protected readonly resumen = computed(() => {
+    const d = this.dashboard.value();
+    if (!d) return [];
+    return [
+      { label: 'Servicios', valor: d.totales.servicios.toLocaleString('es-BO'), icon: 'activity' as const },
+      { label: 'Pacientes atendidos', valor: d.totales.pacientes.toLocaleString('es-BO'), icon: 'users' as const },
+      { label: 'Médicos', valor: d.totales.medicos.toLocaleString('es-BO'), icon: 'briefcase' as const },
+      { label: 'Facturado', valor: formatearBs(d.totales.ingreso), icon: 'wallet' as const },
+    ];
+  });
+
+  protected readonly resumenDemografia = computed(() => {
+    const g = this.demografia.value();
+    if (!g) return [];
+    return [
+      { label: 'Fichas registradas', valor: g.total.toLocaleString('es-BO'), icon: 'users' as const },
+      { label: 'Visitas promedio', valor: g.visitasPromedio.toFixed(1), icon: 'trending-up' as const },
+      { label: 'Saldo arrastrado', valor: formatearBs(g.saldoAcumulado), icon: 'wallet' as const },
+    ];
+  });
+
+  protected readonly resumenHistorial = computed(() => {
+    const h = this.historial();
+    if (!h) return [];
+    return [
+      { label: 'Servicios', valor: String(h.resumen.servicios), icon: 'activity' as const },
+      { label: 'Gastado', valor: formatearBs(h.resumen.gastado), icon: 'wallet' as const },
+      { label: 'Médicos', valor: String(h.resumen.medicos), icon: 'briefcase' as const },
+    ];
+  });
+
   /** Módulos que existen en los datos, para los filtros. */
   protected readonly modulosDisponibles = computed(() =>
-    (this.dashboard.value()?.porModulo ?? []).map(m => m.etiqueta),
+    (this.dashboard.value()?.porModulo ?? []).map(m => ({ etiqueta: m.etiqueta, total: m.total })),
   );
 
   /** Qué parte de los servicios llega a enlazar con una ficha del CRM. */

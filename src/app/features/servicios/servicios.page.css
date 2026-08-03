@@ -1,17 +1,19 @@
 /*
  * Historial de Servicios.
  *
- * Reusa deliberadamente los mismos nombres de clase que la planilla de
- * comisiones (`pestanas`, `panel`, `metrica`…): son dos vistas de análisis
- * hermanas y deben sentirse iguales. Si algún día estas clases se repiten en
- * una tercera pantalla, toca subirlas a `styles.css` en vez de copiarlas otra vez.
+ * Casi todo se pinta con los átomos compartidos —`app-card` para los paneles y
+ * las tarjetas de métrica, `app-table` para las tablas—, igual que Ventas,
+ * Comisiones y Clientes. Aquí solo queda lo que no existe como átomo: las
+ * pestañas, el aviso de cobertura y la línea de tiempo.
  */
 
+/* ── Pestañas ──────────────────────────────────────────────────────────
+   Mismo diseño que la planilla de comisiones, que es la otra pantalla con
+   pestañas. Si aparece una tercera, toca subirlas a un átomo compartido. */
 .pestanas {
   display: flex;
   gap: 6px;
   border-bottom: 1px solid var(--color-border);
-  margin-bottom: 20px;
   overflow-x: auto;
   scrollbar-width: none;
   padding-bottom: 2px;
@@ -53,26 +55,15 @@
   border-bottom: 2px solid var(--color-primary);
 }
 
-.panel {
-  background: white;
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: var(--shadow-subtle);
-  margin-bottom: 16px;
-}
-
-/*
- * Aviso de cuántos servicios llegan a enlazar con una ficha. Es un dato
- * incómodo, así que se le da presencia propia en vez de dejarlo como una línea
- * de texto más: en ámbar cuando falta cobertura, en verde cuando está sana.
- */
+/* ── Aviso de cobertura ────────────────────────────────────────────────
+   Cuántos servicios llegan a enlazar con una ficha. Es un dato incómodo, así
+   que se le da presencia con una barra de progreso en vez de dejarlo como una
+   línea de texto más, que nadie miraría. */
 .aviso-cobertura {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  margin-top: 16px;
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid color-mix(in srgb, var(--color-secondary) 35%, white);
@@ -80,8 +71,8 @@
 }
 
 .aviso-cobertura-incompleto {
-  border-color: #f0d9a8;
-  background: #fdf8ec;
+  border-color: color-mix(in srgb, var(--color-text-muted) 30%, white);
+  background: var(--color-bg-workspace);
 }
 
 .barra-cobertura {
@@ -101,111 +92,16 @@
   transition: width 0.4s var(--ease-spring-smooth);
 }
 
+/* Sin cobertura no se usa un rojo de alarma: la paleta reserva el crítico para
+   errores, y esto es una advertencia de dato incompleto. */
 .barra-cobertura-incompleto > span {
-  background: #d99a2b;
+  background: var(--color-text-muted);
 }
 
-/* Cabecera de sección: título y ayuda alineados, con un poco de aire debajo. */
-.titulo-seccion {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--color-text-dark);
-  margin-bottom: 4px;
-}
-
-.subtitulo-seccion {
-  font-size: 12px;
-  color: var(--color-text-muted);
-  margin-bottom: 16px;
-}
-
-.grid-metricas {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
-}
-
-/*
- * Tarjeta de métrica. Lleva una barra de color a la izquierda en vez de teñir
- * el fondo: el número tiene que seguir siendo lo primero que se lee, y un fondo
- * de color le compite.
- */
-.metrica {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 16px 18px 16px 20px;
-  background: white;
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  overflow: hidden;
-  transition:
-    transform 0.2s var(--ease-spring-smooth),
-    box-shadow 0.2s var(--ease-spring-smooth);
-}
-
-.metrica::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 4px;
-  background: var(--color-border);
-}
-
-.metrica:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-subtle);
-}
-
-.metrica-primaria::before {
-  background: var(--color-primary);
-}
-.metrica-secundaria::before {
-  background: var(--color-secondary);
-}
-
-.metrica-valor {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--color-text-dark);
-  font-variant-numeric: tabular-nums;
-}
-
-.metrica-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
-
-/* Dos gráficos por fila en escritorio, uno en móvil. */
-.grid-graficos {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.filtros {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-}
-
-/*
- * Línea de tiempo del paciente.
- *
- * Lleva un hilo vertical continuo con un punto por servicio: sin él, una lista
- * de tarjetas sueltas no comunica que hay una secuencia en el tiempo, que es
- * justo lo que se viene a leer aquí.
- */
+/* ── Línea de tiempo del paciente ──────────────────────────────────────
+   Hilo vertical con un punto por servicio: sin él, una lista de tarjetas
+   sueltas no comunica que hay una secuencia en el tiempo, que es justo lo que
+   se viene a leer aquí. */
 .linea-tiempo {
   position: relative;
   display: flex;
@@ -271,6 +167,13 @@
   padding-top: 2px;
 }
 
+/* ── Ficha del paciente en el panel lateral ────────────────────────── */
+.grid-ficha {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
 .dato {
   display: flex;
   flex-direction: column;
@@ -289,10 +192,4 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-dark);
-}
-
-.grid-ficha {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
 }
