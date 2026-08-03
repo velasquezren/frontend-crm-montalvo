@@ -3,14 +3,12 @@
  * no tiene columna propia. Sus valores son `unknown` a propósito — nadie
  * garantiza su forma — así que se estrechan aquí, en un solo sitio, en vez de
  * castear a `any` en cada punto de lectura.
+ *
+ * Claves que escribe la aplicación (el resto viene de FileMaker y varía):
+ * `empresa`, `lugarNacimiento`, `notas`, `tags`, `notaFijada`. La edad NO se
+ * guarda aquí: se calcula desde `fechaNacimiento`.
  */
 export type DatosExtra = Record<string, unknown>;
-
-/**
- * Claves que escribe la aplicación (el resto viene de FileMaker y varía):
- * `empresa`, `lugarNacimiento`, `notas`, `tags`, `notaFijada`.
- * La edad NO se guarda aquí: se calcula desde `fechaNacimiento`.
- */
 
 /**
  * Primer valor legible como texto entre las claves dadas, o cadena vacía.
