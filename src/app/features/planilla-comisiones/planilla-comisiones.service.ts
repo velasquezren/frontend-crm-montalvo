@@ -25,6 +25,8 @@ export interface AjusteVenta {
   nivel?: 'BRONCE' | 'SILVER' | 'GOLD';
   comisionable?: boolean;
   vendedoraId?: string;
+  /** `null` devuelve la decisión al sistema. */
+  comisionaPlan?: boolean | null;
 }
 
 /** Filtros de la tabla de vista previa. */
@@ -34,6 +36,7 @@ export interface FiltroVentas {
   buscar?: string;
   soloExcluidas?: boolean;
   soloSinClasificar?: boolean;
+  limite?: number;
 }
 
 /**
@@ -57,6 +60,7 @@ export class PlanillaComisionesService {
       buscar: filtro.buscar,
       soloExcluidas: filtro.soloExcluidas ? true : undefined,
       soloSinClasificar: filtro.soloSinClasificar ? true : undefined,
+      limite: filtro.limite,
     });
   }
 
@@ -96,6 +100,14 @@ export class PlanillaComisionesService {
 
   ajustarVenta(ventaId: string, ajuste: AjusteVenta): Promise<unknown> {
     return this.api.patch(`/planilla-comisiones/ventas/${ventaId}`, ajuste);
+  }
+
+  /**
+   * Decide si un plan concreto comisiona. `null` devuelve la decisión al
+   * sistema, que elige los de base más baja hasta llenar el cupo.
+   */
+  marcarPlanComisiona(ventaId: string, comisiona: boolean | null): Promise<unknown> {
+    return this.ajustarVenta(ventaId, { comisionaPlan: comisiona });
   }
 
   eliminarPeriodo(periodoId: string): Promise<unknown> {

@@ -17,6 +17,7 @@ export type IconName =
   | 'eye-off'
   | 'alert-circle'
   | 'check-circle'
+  | 'circle'
   | 'x-circle'
   | 'clock'
   | 'chevron-down'
@@ -131,6 +132,11 @@ export type IconName =
         @case ('check-circle') {
           <circle cx="12" cy="12" r="10" />
           <path d="m9 12 2 2 4-4" />
+        }
+        <!-- El par vacío de check-circle: mismo diámetro, para que al alternar
+             entre los dos no se mueva nada de sitio. -->
+        @case ('circle') {
+          <circle cx="12" cy="12" r="10" />
         }
         @case ('x-circle') {
           <circle cx="12" cy="12" r="10" />

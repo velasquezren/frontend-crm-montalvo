@@ -68,6 +68,11 @@ export interface VentaImportada {
   motivoExclusion: string | null;
   requiereRevision: boolean;
   ajustadaManual: boolean;
+  /**
+   * Solo en planes. `null` = lo elige el sistema (base más baja primero);
+   * `true`/`false` = administración lo decidió a mano y su decisión manda.
+   */
+  comisionaPlan: boolean | null;
   vendedora: { id: string; nombre: string; codigo: string } | null;
 }
 

@@ -37,7 +37,24 @@ import {
   VentaImportada,
 } from './planilla.model';
 
-type Pestana = 'IMPORTAR' | 'CLASIFICACION' | 'REPORTES' | 'CONFIGURACION';
+type Pestana = 'IMPORTAR' | 'CLASIFICACION' | 'PLANES' | 'REPORTES' | 'CONFIGURACION';
+
+/** Los dos tipos de plan que tienen objetivo propio. */
+type TipoPlan = 'PLANPAQ' | 'PLANNIN';
+
+/** Los planes de una vendedora de un tipo, con su objetivo y su cupo resueltos. */
+interface GrupoPlanes {
+  clave: string;
+  vendedoraId: string;
+  vendedoraNombre: string;
+  tipo: TipoPlan;
+  /** Cuántos hay que superar para que empiecen a comisionar. */
+  objetivo: number;
+  /** Cuántos comisionan: vendidos − objetivo. */
+  cupo: number;
+  planes: VentaImportada[];
+  elegidos?: ReadonlySet<string>;
+}
 
 /**
  * Planilla de Comisiones — liquidación mensual del equipo comercial a partir
@@ -162,6 +179,93 @@ export class PlanillaComisionesPage implements OnDestroy {
     { defaultValue: paginaVacia<VentaImportada>() },
   );
 
+  /*
+   * Planes del periodo. Se piden aparte de la tabla de vista previa —y sin
+   * paginar, con un tope holgado— porque la decisión de qué plan comisiona se
+   * toma mirando TODOS los planes de la vendedora juntos: son pocos (30 en el
+   * mes más cargado) y partirlos en páginas haría imposible comparar.
+   */
+  protected readonly planesPaq = httpResource<RespuestaPaginada<VentaImportada>>(
+    () => {
+      const id = this.periodoId();
+      return id
+        ? this.service.ventasRequest(id, { clasif: 'PLANPAQ', limite: 200 })
+        : undefined;
+    },
+    { defaultValue: paginaVacia<VentaImportada>() },
+  );
+
+  protected readonly planesNin = httpResource<RespuestaPaginada<VentaImportada>>(
+    () => {
+      const id = this.periodoId();
+      return id
+        ? this.service.ventasRequest(id, { clasif: 'PLANNIN', limite: 200 })
+        : undefined;
+    },
+    { defaultValue: paginaVacia<VentaImportada>() },
+  );
+
+  /**
+   * Los planes agrupados por vendedora y tipo, con el cupo ya resuelto.
+   *
+   * El cupo es `vendidos − objetivo`: solo comisionan los planes que SUPERAN el
+   * objetivo, así que con 5 paquetes y objetivo 4 comisiona uno. Se marca cuál
+   * comisiona reproduciendo el orden que usa el sistema (base más baja primero),
+   * para que lo que se ve en pantalla sea lo que se va a pagar.
+   */
+  protected readonly gruposDePlanes = computed<GrupoPlanes[]>(() => {
+    const objetivos: readonly Objetivo[] = this.configuracion()?.objetivos ?? [];
+    const porVendedora = new Map<string, GrupoPlanes>();
+
+    const agregar = (venta: VentaImportada, tipo: TipoPlan): void => {
+      if (!venta.vendedora) return;
+      const clave = `${venta.vendedora.id}·${tipo}`;
+      const grupo = porVendedora.get(clave) ?? {
+        clave,
+        vendedoraId: venta.vendedora.id,
+        vendedoraNombre: venta.vendedora.nombre,
+        tipo,
+        objetivo: 0,
+        cupo: 0,
+        planes: [],
+      };
+      grupo.planes.push(venta);
+      porVendedora.set(clave, grupo);
+    };
+
+    for (const venta of this.planesPaq.value().datos) agregar(venta, 'PLANPAQ');
+    for (const venta of this.planesNin.value().datos) agregar(venta, 'PLANNIN');
+
+    const vendedorasPorId = new Map(this.vendedoras.value().map(v => [v.id, v]));
+
+    return [...porVendedora.values()]
+      .map(grupo => {
+        const vendedora = vendedorasPorId.get(grupo.vendedoraId);
+        const meta = objetivos.find(objetivo => objetivo.tipo === (vendedora?.tipo ?? 'VENDEDORA'));
+        const objetivo =
+          grupo.tipo === 'PLANPAQ' ? (meta?.planpaqMinimos ?? 0) : (meta?.planninMinimos ?? 0);
+
+        // Mismo orden que usa el motor: base ascendente, y a igualdad el id.
+        const planes = [...grupo.planes].sort(
+          (a, b) => Number(a.ingresoNeto) - Number(b.ingresoNeto) || a.id.localeCompare(b.id),
+        );
+        const cupo = Math.max(0, planes.length - objetivo);
+
+        // Reproduce la selección del backend: lo marcado a mano primero.
+        const elegidos = new Set<string>();
+        for (const plan of planes) {
+          if (plan.comisionaPlan === true && elegidos.size < cupo) elegidos.add(plan.id);
+        }
+        for (const plan of planes) {
+          if (elegidos.size >= cupo) break;
+          if (plan.comisionaPlan === null) elegidos.add(plan.id);
+        }
+
+        return { ...grupo, objetivo, cupo, planes, elegidos };
+      })
+      .sort((a, b) => a.vendedoraNombre.localeCompare(b.vendedoraNombre) || a.tipo.localeCompare(b.tipo));
+  });
+
   protected readonly vendedoras = httpResource<Vendedora[]>(
     () => this.service.vendedorasRequest(),
     { defaultValue: [] },
@@ -182,6 +286,21 @@ export class PlanillaComisionesPage implements OnDestroy {
   });
 
   /* ── Acciones Drag & Drop / Selección de Archivo ─────────────────────── */
+
+  /**
+   * Marca o desmarca un plan. Tres estados en un solo botón: automático →
+   * comisiona → no comisiona → automático. El backend recalcula al liquidar.
+   */
+  protected async alternarPlan(plan: VentaImportada): Promise<void> {
+    const siguiente = plan.comisionaPlan === null ? true : plan.comisionaPlan ? false : null;
+    try {
+      await this.service.marcarPlanComisiona(plan.id, siguiente);
+      this.planesPaq.reload();
+      this.planesNin.reload();
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo cambiar el plan.'), 'Planes');
+    }
+  }
 
   protected setPestana(p: Pestana): void {
     this.pestana.set(p);
