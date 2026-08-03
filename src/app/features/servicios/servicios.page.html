@@ -51,39 +51,35 @@
         }
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        @for (item of resumen(); track item.label) {
-          <app-card [hoverable]="true" class="transition-all">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 text-primary">
-                <app-icon [name]="item.icon" [size]="22" />
-              </div>
-              <div>
-                <p class="text-xs text-text-muted font-bold uppercase tracking-wider">{{ item.label }}</p>
-                <p class="text-2xl font-extrabold text-text-dark mt-0.5 tracking-tight">{{ item.valor }}</p>
+      <section class="grid-kpis-modern">
+        @for (item of resumen(); track item.label; let i = $index) {
+          <div [style.--indice]="i" class="aparecer kpi-card" [class.kpi-card-destacado]="item.destacado">
+            <div class="kpi-cabecera">
+              <span class="kpi-label">{{ item.label }}</span>
+              <div class="kpi-icono" [class]="'kpi-icono kpi-icono-' + item.tono">
+                <app-icon [name]="item.icon" [size]="18" />
               </div>
             </div>
-          </app-card>
+            <span class="kpi-valor">{{ item.valor }}</span>
+            <span class="kpi-pie">{{ item.pie }}</span>
+          </div>
         }
-      </div>
 
-      <app-card>
-        <!-- El hueco del cruce, a la vista y no escondido -->
-          <div class="aviso-cobertura" [class.aviso-cobertura-incompleto]="pctCobertura() < 80">
-            <app-icon
-              [name]="pctCobertura() >= 80 ? 'check-circle' : 'alert-circle'"
-              [size]="16"
-              [class.text-primary]="pctCobertura() >= 80" />
-            <span class="text-xs font-bold text-text-dark whitespace-nowrap">
-              {{ pctCobertura() }}% enlazado a una ficha
-            </span>
-            <span class="barra-cobertura" [class.barra-cobertura-incompleto]="pctCobertura() < 80">
-              <span [style.width.%]="pctCobertura()"></span>
-            </span>
-            <span class="text-xs text-text-muted">
-              {{ d.cobertura.conFicha | number }} de {{ d.cobertura.servicios | number }} servicios
-              encuentran al paciente en el CRM
-            </span>
+        <!-- La cobertura es una cifra más, no una nota al pie: sin ella no se
+             sabe cuánto del historial está realmente conectado al CRM. -->
+        <div [style.--indice]="4" class="aparecer kpi-card">
+          <div class="kpi-cabecera">
+            <span class="kpi-label">Enlazado a ficha</span>
+            <div class="kpi-icono" [class.kpi-icono-primary]="pctCobertura() >= 80" [class.kpi-icono-neutral]="pctCobertura() < 80">
+              <app-icon [name]="pctCobertura() >= 80 ? 'check-circle' : 'alert-circle'" [size]="18" />
+            </div>
+          </div>
+          <span class="kpi-valor">{{ pctCobertura() }}%</span>
+          <span class="kpi-barra" [class.kpi-barra-incompleta]="pctCobertura() < 80">
+            <span [style.width.%]="pctCobertura()"></span>
+          </span>
+          <span class="kpi-pie">
+            {{ d.cobertura.conFicha | number }} de {{ d.cobertura.servicios | number }} servicios
             <app-info-hint titulo="Por qué no todos los servicios tienen ficha">
               <p>
                 Cada servicio del Excel trae el <strong>código del paciente</strong> y con él se busca
@@ -97,11 +93,12 @@
               </p>
               <p>Se arregla completando la importación de pacientes desde FileMaker.</p>
             </app-info-hint>
-          </div>
-      </app-card>
+          </span>
+        </div>
+      </section>
 
       <!-- Gráficos de servicios -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="grid-dos-equitativo">
         <app-donut-chart
           title="Por módulo"
           subtitle="De dónde viene cada servicio"
@@ -139,34 +136,36 @@
       }
 
       <!-- Ranking de médicos -->
-      <app-card>
-        <h3 class="text-base font-semibold text-text-dark flex items-center gap-1.5">Médicos con más atenciones</h3>
-        <p class="text-xs text-text-muted mt-1 mb-4">Ordenados por volumen de servicios en el periodo</p>
+      <section class="panel">
+        <h3 class="titulo-seccion">Médicos con más atenciones</h3>
+        <p class="subtitulo-seccion">Ordenados por volumen de servicios en el periodo</p>
         <app-table [dense]="true">
           <thead>
             <tr>
-              <th class="text-left">Médico</th>
+              <th class="text-left celda-sticky">Médico</th>
               <th class="text-left">Código</th>
               <th class="text-right">Servicios</th>
+              <th class="text-right">% del total</th>
               <th class="text-right">Facturado</th>
             </tr>
           </thead>
           <tbody>
             @for (m of d.porMedico; track m.codigo) {
               <tr>
-                <td class="text-left font-semibold text-text-dark">{{ m.etiqueta }}</td>
+                <td class="text-left font-semibold text-text-dark celda-sticky">{{ m.etiqueta }}</td>
                 <td class="text-left text-xs text-text-muted font-mono">{{ m.codigo }}</td>
                 <td class="text-right font-medium">{{ m.total | number }}</td>
+                <td class="text-right"><span class="badge-pct">{{ pctDelTotal()(m.total) }}%</span></td>
                 <td class="text-right font-medium text-primary">{{ m.ingreso | moneda }}</td>
               </tr>
             }
           </tbody>
         </app-table>
-      </app-card>
+      </section>
 
       <!-- Demografía de la base de pacientes -->
-      <app-card>
-        <h3 class="text-base font-semibold text-text-dark flex items-center gap-1.5">
+      <section class="panel">
+        <h3 class="titulo-seccion">
           Perfil de los pacientes
           <app-info-hint titulo="De dónde salen estos datos">
             <p>
@@ -184,30 +183,29 @@
             </p>
           </app-info-hint>
         </h3>
-        <p class="text-xs text-text-muted mt-1 mb-4">Toda la base de fichas del CRM, no solo quienes tienen servicio</p>
+        <p class="subtitulo-seccion">Toda la base de fichas del CRM, no solo quienes tienen servicio</p>
 
         @if (demografia.isLoading()) {
           <app-loading-skeleton shape="card" height="200px" />
         } @else if (demografia.error()) {
           <app-empty-state icon="alert-circle" title="No se pudo cargar el perfil" />
         } @else if (demografia.value(); as dg) {
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            @for (item of resumenDemografia(); track item.label) {
-              <app-card [hoverable]="true" class="transition-all">
-                <div class="flex items-center gap-4">
-                  <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 text-primary">
-                    <app-icon [name]="item.icon" [size]="22" />
-                  </div>
-                  <div>
-                    <p class="text-xs text-text-muted font-bold uppercase tracking-wider">{{ item.label }}</p>
-                    <p class="text-2xl font-extrabold text-text-dark mt-0.5 tracking-tight">{{ item.valor }}</p>
+          <section class="grid-kpis-modern mb-5">
+            @for (item of resumenDemografia(); track item.label; let i = $index) {
+              <div [style.--indice]="i" class="aparecer kpi-card">
+                <div class="kpi-cabecera">
+                  <span class="kpi-label">{{ item.label }}</span>
+                  <div [class]="'kpi-icono kpi-icono-' + item.tono">
+                    <app-icon [name]="item.icon" [size]="18" />
                   </div>
                 </div>
-              </app-card>
+                <span class="kpi-valor">{{ item.valor }}</span>
+                <span class="kpi-pie">{{ item.pie }}</span>
+              </div>
             }
-          </div>
+          </section>
 
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="grid-dos-equitativo">
             <app-donut-chart title="Por sexo" etiquetaTotal="pacientes" [items]="serieSexo()" />
             <app-donut-chart
               title="Por departamento"
@@ -228,14 +226,14 @@
             <app-loading-skeleton shape="card" height="220px" />
           }
         }
-      </app-card>
+      </section>
     }
   }
 }
 
 <!-- ══════════════ PACIENTES ══════════════ -->
 @if (pestana() === 'PACIENTES') {
-  <app-card>
+  <section class="panel">
     <div class="mb-3 max-w-md">
       <app-input
         label="Buscar paciente"
@@ -254,7 +252,7 @@
       <app-table [dense]="true">
         <thead>
           <tr>
-            <th class="text-left">Paciente</th>
+            <th class="text-left celda-sticky">Paciente</th>
             <th class="text-left">Código</th>
             <th class="text-right">Servicios</th>
             <th class="text-right">Gastado</th>
@@ -265,7 +263,7 @@
         <tbody>
           @for (p of pacientes.value().datos; track p.pac) {
             <tr>
-              <td class="text-left font-semibold text-text-dark">
+              <td class="text-left font-semibold text-text-dark celda-sticky">
                 {{ p.paciente || '—' }}
                 @if (!p.clienteId) {
                   <app-badge variant="neutral">sin ficha</app-badge>
@@ -299,12 +297,12 @@
         title="Sin resultados"
         description="Prueba con otro nombre o código de paciente." />
     }
-  </app-card>
+  </section>
 }
 
 <!-- ══════════════ MÉDICOS ══════════════ -->
 @if (pestana() === 'MEDICOS') {
-  <app-card>
+  <section class="panel">
     <div class="mb-3 max-w-md">
       <app-input label="Buscar médico" placeholder="Nombre o código" [(value)]="busquedaMedicos" />
     </div>
@@ -320,7 +318,7 @@
       <app-table [dense]="true">
         <thead>
           <tr>
-            <th class="text-left">Médico</th>
+            <th class="text-left celda-sticky">Médico</th>
             <th class="text-left">Código</th>
             <th class="text-right">Servicios</th>
             <th class="text-right">Pacientes</th>
@@ -331,7 +329,7 @@
         <tbody>
           @for (m of medicos.value().datos; track m.codigo) {
             <tr>
-              <td class="text-left font-semibold text-text-dark">{{ m.nombre || '—' }}</td>
+              <td class="text-left font-semibold text-text-dark celda-sticky">{{ m.nombre || '—' }}</td>
               <td class="text-left text-xs text-text-muted font-mono">{{ m.codigo }}</td>
               <td class="text-right font-medium">{{ m.servicios | number }}</td>
               <td class="text-right font-medium text-secondary">{{ m.pacientes | number }}</td>
@@ -353,7 +351,7 @@
     } @else {
       <app-empty-state icon="briefcase" title="Sin resultados" description="Prueba con otro nombre." />
     }
-  </app-card>
+  </section>
 }
 
 <!-- ══════════════ HISTORIAL DEL PACIENTE ══════════════ -->
@@ -375,14 +373,20 @@
 
     <div class="flex-1 overflow-y-auto p-5">
       <!-- Resumen -->
-      <div class="grid grid-cols-3 gap-3 mb-5">
-        @for (item of resumenHistorial(); track item.label) {
-          <app-card padding="sm">
-            <p class="text-xs text-text-muted font-bold uppercase tracking-wider">{{ item.label }}</p>
-            <p class="text-xl font-extrabold text-text-dark mt-0.5 tracking-tight">{{ item.valor }}</p>
-          </app-card>
+      <section class="grid-kpis-modern mb-5">
+        @for (item of resumenHistorial(); track item.label; let i = $index) {
+          <div [style.--indice]="i" class="aparecer kpi-card" [class.kpi-card-destacado]="item.destacado">
+            <div class="kpi-cabecera">
+              <span class="kpi-label">{{ item.label }}</span>
+              <div [class]="'kpi-icono kpi-icono-' + item.tono">
+                <app-icon [name]="item.icon" [size]="18" />
+              </div>
+            </div>
+            <span class="kpi-valor">{{ item.valor }}</span>
+            <span class="kpi-pie">{{ item.pie }}</span>
+          </div>
         }
-      </div>
+      </section>
 
       <!-- Ficha, si existe -->
       @if (h.ficha; as f) {

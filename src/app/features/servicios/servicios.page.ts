@@ -170,35 +170,127 @@ export class ServiciosPage {
    * (`{ label, valor, icon }`): así las tres pantallas comparten literalmente el
    * mismo bloque de marcado y no hay dos maneras de pintar un KPI en el CRM.
    */
+  /**
+   * Cifras de cabecera, con el mismo contrato que Reportes: además del número,
+   * cada tarjeta lleva un **pie con contexto**. Un dato suelto no dice nada —
+   * "1.287 servicios" cobra sentido junto a "en 3 meses cargados".
+   */
   protected readonly resumen = computed(() => {
     const d = this.dashboard.value();
     if (!d) return [];
+
+    const meses = d.porMes.length;
+    const promedio = meses > 0 ? Math.round(d.totales.servicios / meses) : 0;
+    const ticket = d.totales.servicios > 0 ? d.totales.ingreso / d.totales.servicios : 0;
+
     return [
-      { label: 'Servicios', valor: d.totales.servicios.toLocaleString('es-BO'), icon: 'activity' as const },
-      { label: 'Pacientes atendidos', valor: d.totales.pacientes.toLocaleString('es-BO'), icon: 'users' as const },
-      { label: 'Médicos', valor: d.totales.medicos.toLocaleString('es-BO'), icon: 'briefcase' as const },
-      { label: 'Facturado', valor: formatearBs(d.totales.ingreso), icon: 'wallet' as const },
+      {
+        label: 'Servicios',
+        valor: d.totales.servicios.toLocaleString('es-BO'),
+        icon: 'activity' as const,
+        tono: 'primary' as const,
+        destacado: true,
+        pie: `${promedio.toLocaleString('es-BO')} al mes · ${meses} ${meses === 1 ? 'mes cargado' : 'meses cargados'}`,
+      },
+      {
+        label: 'Pacientes atendidos',
+        valor: d.totales.pacientes.toLocaleString('es-BO'),
+        icon: 'users' as const,
+        tono: 'secondary' as const,
+        destacado: false,
+        pie: `${(d.totales.pacientes > 0 ? d.totales.servicios / d.totales.pacientes : 0).toFixed(1)} servicios por paciente`,
+      },
+      {
+        label: 'Médicos',
+        valor: d.totales.medicos.toLocaleString('es-BO'),
+        icon: 'briefcase' as const,
+        tono: 'neutral' as const,
+        destacado: false,
+        pie: 'con al menos una atención',
+      },
+      {
+        label: 'Facturado',
+        valor: formatearBs(d.totales.ingreso),
+        icon: 'wallet' as const,
+        tono: 'primary' as const,
+        destacado: false,
+        pie: `${formatearBs(ticket)} por servicio`,
+      },
     ];
   });
 
   protected readonly resumenDemografia = computed(() => {
     const g = this.demografia.value();
     if (!g) return [];
+    const mayoria = g.porDepartamento[0];
+    const pctMayoria = mayoria && g.total > 0 ? Math.round((mayoria.total / g.total) * 100) : 0;
+
     return [
-      { label: 'Fichas registradas', valor: g.total.toLocaleString('es-BO'), icon: 'users' as const },
-      { label: 'Visitas promedio', valor: g.visitasPromedio.toFixed(1), icon: 'trending-up' as const },
-      { label: 'Saldo arrastrado', valor: formatearBs(g.saldoAcumulado), icon: 'wallet' as const },
+      {
+        label: 'Fichas registradas',
+        valor: g.total.toLocaleString('es-BO'),
+        icon: 'users' as const,
+        tono: 'primary' as const,
+        destacado: false,
+        pie: mayoria ? `${pctMayoria}% de ${mayoria.etiqueta}` : '',
+      },
+      {
+        label: 'Visitas promedio',
+        valor: g.visitasPromedio.toFixed(1),
+        icon: 'trending-up' as const,
+        tono: 'secondary' as const,
+        destacado: false,
+        pie: 'por paciente, según el sistema antiguo',
+      },
+      {
+        label: 'Saldo arrastrado',
+        valor: formatearBs(g.saldoAcumulado),
+        icon: 'wallet' as const,
+        tono: 'neutral' as const,
+        destacado: false,
+        pie: 'pendiente del sistema antiguo',
+      },
     ];
   });
 
   protected readonly resumenHistorial = computed(() => {
     const h = this.historial();
     if (!h) return [];
+    const ticket = h.resumen.servicios > 0 ? h.resumen.gastado / h.resumen.servicios : 0;
+
     return [
-      { label: 'Servicios', valor: String(h.resumen.servicios), icon: 'activity' as const },
-      { label: 'Gastado', valor: formatearBs(h.resumen.gastado), icon: 'wallet' as const },
-      { label: 'Médicos', valor: String(h.resumen.medicos), icon: 'briefcase' as const },
+      {
+        label: 'Servicios',
+        valor: String(h.resumen.servicios),
+        icon: 'activity' as const,
+        tono: 'secondary' as const,
+        destacado: false,
+        pie: '',
+      },
+      {
+        label: 'Gastado',
+        valor: formatearBs(h.resumen.gastado),
+        icon: 'wallet' as const,
+        tono: 'primary' as const,
+        destacado: true,
+        pie: `${formatearBs(ticket)} por servicio`,
+      },
+      {
+        label: 'Médicos',
+        valor: String(h.resumen.medicos),
+        icon: 'briefcase' as const,
+        tono: 'neutral' as const,
+        destacado: false,
+        pie: 'lo atendieron',
+      },
     ];
+  });
+
+  /** Peso de cada médico sobre el total, para la columna de porcentaje. */
+  protected readonly pctDelTotal = computed(() => {
+    const d = this.dashboard.value();
+    const total = d?.totales.servicios ?? 0;
+    return (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
   });
 
   /** Módulos que existen en los datos, para los filtros. */

@@ -1,15 +1,191 @@
 /*
  * Historial de Servicios.
  *
- * Casi todo se pinta con los átomos compartidos —`app-card` para los paneles y
- * las tarjetas de métrica, `app-table` para las tablas—, igual que Ventas,
- * Comisiones y Clientes. Aquí solo queda lo que no existe como átomo: las
- * pestañas, el aviso de cobertura y la línea de tiempo.
+ * Comparte el lenguaje visual de **Reportes**, que es la otra pantalla de
+ * análisis del CRM: mismas `kpi-card` con cabecera, ícono y pie; mismos
+ * `panel`, `titulo-seccion` y rejillas. Están duplicados a propósito y no
+ * extraídos todavía — cuando una tercera pantalla los necesite, toca subirlos
+ * a `styles.css` en vez de copiarlos una vez más.
+ *
+ * Lo propio de aquí es solo: las pestañas, la barra de cobertura y la línea de
+ * tiempo del paciente.
  */
 
-/* ── Pestañas ──────────────────────────────────────────────────────────
-   Mismo diseño que la planilla de comisiones, que es la otra pantalla con
-   pestañas. Si aparece una tercera, toca subirlas a un átomo compartido. */
+/* ── Tarjetas de cifras ─────────────────────────────────────────────── */
+
+.grid-kpis-modern {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.kpi-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px 18px;
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-subtle);
+  transition:
+    transform 0.22s var(--ease-spring-smooth),
+    box-shadow 0.22s var(--ease-spring-smooth),
+    border-color 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lifted);
+}
+
+.kpi-card-destacado {
+  border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 5%, white), white);
+}
+
+.kpi-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.kpi-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.kpi-icono {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpi-icono-primary {
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
+  color: var(--color-primary);
+}
+
+.kpi-icono-secondary {
+  background: color-mix(in srgb, var(--color-secondary) 15%, white);
+  color: var(--color-secondary);
+}
+
+.kpi-icono-neutral {
+  background: var(--color-bg-workspace);
+  color: var(--color-text-muted);
+}
+
+.kpi-valor {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--color-text-dark);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 6px;
+}
+
+.kpi-pie {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  line-height: 1.3;
+}
+
+/* La barra vive dentro del pie de una tarjeta, así que va fina y sin etiqueta. */
+.kpi-barra {
+  display: block;
+  height: 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-text-muted) 16%, white);
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.kpi-barra > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-primary);
+  transition: width 0.5s var(--ease-spring-smooth);
+}
+
+/* Cobertura incompleta no usa el crítico: la paleta lo reserva para errores, y
+   esto es una advertencia de dato faltante, no un fallo del sistema. */
+.kpi-barra-incompleta > span {
+  background: var(--color-text-muted);
+}
+
+/* ── Paneles y títulos ──────────────────────────────────────────────── */
+
+.panel {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow-subtle);
+}
+
+.titulo-seccion {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  letter-spacing: -0.01em;
+}
+
+.subtitulo-seccion {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+  margin-bottom: 16px;
+}
+
+.grid-dos-equitativo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.badge-pct {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* La primera columna se queda fija al desplazar la tabla en horizontal: sin
+   ella se pierde de vista a quién pertenece cada cifra. */
+.celda-sticky {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 2;
+  border-right: 1px solid var(--color-border);
+  box-shadow: 2px 0 5px rgb(0 0 0 / 0.02);
+}
+
+tr:hover .celda-sticky {
+  background: var(--color-bg-workspace);
+}
+
+/* ── Pestañas ───────────────────────────────────────────────────────── */
+
 .pestanas {
   display: flex;
   gap: 6px;
@@ -55,51 +231,9 @@
   border-bottom: 2px solid var(--color-primary);
 }
 
-/* ── Aviso de cobertura ────────────────────────────────────────────────
-   Cuántos servicios llegan a enlazar con una ficha. Es un dato incómodo, así
-   que se le da presencia con una barra de progreso en vez de dejarlo como una
-   línea de texto más, que nadie miraría. */
-.aviso-cobertura {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--color-secondary) 35%, white);
-  background: var(--color-bg-light);
-}
+/* ── Línea de tiempo del paciente ───────────────────────────────────── */
 
-.aviso-cobertura-incompleto {
-  border-color: color-mix(in srgb, var(--color-text-muted) 30%, white);
-  background: var(--color-bg-workspace);
-}
-
-.barra-cobertura {
-  flex: 1 1 120px;
-  min-width: 110px;
-  height: 6px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--color-text-muted) 18%, white);
-  overflow: hidden;
-}
-
-.barra-cobertura > span {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: var(--color-primary);
-  transition: width 0.4s var(--ease-spring-smooth);
-}
-
-/* Sin cobertura no se usa un rojo de alarma: la paleta reserva el crítico para
-   errores, y esto es una advertencia de dato incompleto. */
-.barra-cobertura-incompleto > span {
-  background: var(--color-text-muted);
-}
-
-/* ── Línea de tiempo del paciente ──────────────────────────────────────
-   Hilo vertical con un punto por servicio: sin él, una lista de tarjetas
+/* Hilo vertical con un punto por servicio: sin él, una lista de tarjetas
    sueltas no comunica que hay una secuencia en el tiempo, que es justo lo que
    se viene a leer aquí. */
 .linea-tiempo {
@@ -145,7 +279,6 @@
   box-shadow: var(--shadow-subtle);
 }
 
-/* El punto del hilo, alineado con la fecha del evento. */
 .evento::before {
   content: '';
   position: absolute;
@@ -167,7 +300,8 @@
   padding-top: 2px;
 }
 
-/* ── Ficha del paciente en el panel lateral ────────────────────────── */
+/* ── Ficha del paciente ─────────────────────────────────────────────── */
+
 .grid-ficha {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -192,4 +326,14 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-dark);
+}
+
+@media (max-width: 640px) {
+  .kpi-card {
+    padding: 14px 16px;
+  }
+
+  .kpi-valor {
+    font-size: 19px;
+  }
 }
