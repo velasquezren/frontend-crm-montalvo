@@ -127,8 +127,14 @@ export class AgentesPage {
       res = res.filter((a: Agente) => a.rol === rol);
     }
     if (q) {
+      /* También por código: es la clave con la que FileMaker identifica a la
+         persona y con la que se enlaza su ficha de vendedora o de médico, así
+         que buscar «Pe2455» tiene que encontrarla igual que buscar su nombre. */
       res = res.filter(
-        (a: Agente) => a.nombre.toLowerCase().includes(q) || a.email.toLowerCase().includes(q),
+        (usuario: Agente) =>
+          usuario.nombre.toLowerCase().includes(q) ||
+          usuario.email.toLowerCase().includes(q) ||
+          (usuario.codigo ?? '').toLowerCase().includes(q),
       );
     }
     return res;
