@@ -3,7 +3,7 @@
   <!-- Cabecera de la vista -->
   <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-bold text-text-dark tracking-tight">Gestión de Agentes</h1>
+      <h1 class="text-2xl font-bold text-text-dark tracking-tight">Usuarios</h1>
       <p class="text-sm text-text-muted mt-1">
         Administra las cuentas del equipo de Clínica Montalvo, asigna roles y gestiona accesos.
       </p>
@@ -44,7 +44,7 @@
       <div class="flex items-center justify-between">
         <div>
           <p class="text-xs font-medium text-text-muted">Administradores</p>
-          <p class="text-2xl font-bold text-text-dark mt-1">{{ stats().admins }}</p>
+          <p class="text-2xl font-bold text-text-dark mt-1">{{ stats().porRol.ADMIN }}</p>
         </div>
         <div class="w-10 h-10 rounded-xl bg-bg-light flex items-center justify-center text-text-muted">
           <app-icon name="shield" [size]="20" />
@@ -55,8 +55,8 @@
     <app-card>
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-xs font-medium text-text-muted">Agentes Comercial</p>
-          <p class="text-2xl font-bold text-text-dark mt-1">{{ stats().agentes }}</p>
+          <p class="text-xs font-medium text-text-muted">Agentes comerciales</p>
+          <p class="text-2xl font-bold text-text-dark mt-1">{{ stats().porRol.AGENTE }}</p>
         </div>
         <div class="w-10 h-10 rounded-xl bg-bg-light flex items-center justify-center text-text-muted">
           <app-icon name="message-circle" [size]="20" />
@@ -67,72 +67,40 @@
 
   <!-- Barra de Filtros: Switcher por Rol + Búsqueda -->
   <div class="bg-white p-4 rounded-2xl border border-border flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-subtle">
-    <!-- Switcher de Roles (Tabs) -->
-    <div class="inline-flex p-1 bg-bg-workspace rounded-xl border border-border/80 gap-1 self-start md:self-auto">
-      <button
-        type="button"
-        (click)="filtroRol.set('TODOS')"
-        class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center gap-2"
-        [class.bg-white]="filtroRol() === 'TODOS'"
-        [class.text-primary]="filtroRol() === 'TODOS'"
-        [class.shadow-subtle]="filtroRol() === 'TODOS'"
-        [class.text-text-muted]="filtroRol() !== 'TODOS'"
-        [class.hover:text-text-dark]="filtroRol() !== 'TODOS'">
-        <app-icon name="users" [size]="14" />
-        <span>Todos</span>
-        <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold"
-              [class.bg-primary/10]="filtroRol() === 'TODOS'"
-              [class.text-primary]="filtroRol() === 'TODOS'"
-              [class.bg-border/50]="filtroRol() !== 'TODOS'"
-              [class.text-text-muted]="filtroRol() !== 'TODOS'">
-          {{ stats().total }}
-        </span>
-      </button>
-
-      <button
-        type="button"
-        (click)="filtroRol.set('ADMIN')"
-        class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center gap-2"
-        [class.bg-white]="filtroRol() === 'ADMIN'"
-        [class.text-primary]="filtroRol() === 'ADMIN'"
-        [class.shadow-subtle]="filtroRol() === 'ADMIN'"
-        [class.text-text-muted]="filtroRol() !== 'ADMIN'"
-        [class.hover:text-text-dark]="filtroRol() !== 'ADMIN'">
-        <app-icon name="shield" [size]="14" />
-        <span>Administradores</span>
-        <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold"
-              [class.bg-primary/10]="filtroRol() === 'ADMIN'"
-              [class.text-primary]="filtroRol() === 'ADMIN'"
-              [class.bg-border/50]="filtroRol() !== 'ADMIN'"
-              [class.text-text-muted]="filtroRol() !== 'ADMIN'">
-          {{ stats().admins }}
-        </span>
-      </button>
-
-      <button
-        type="button"
-        (click)="filtroRol.set('AGENTE')"
-        class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center gap-2"
-        [class.bg-white]="filtroRol() === 'AGENTE'"
-        [class.text-primary]="filtroRol() === 'AGENTE'"
-        [class.shadow-subtle]="filtroRol() === 'AGENTE'"
-        [class.text-text-muted]="filtroRol() !== 'AGENTE'"
-        [class.hover:text-text-dark]="filtroRol() !== 'AGENTE'">
-        <app-icon name="message-circle" [size]="14" />
-        <span>Agentes Comerciales</span>
-        <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold"
-              [class.bg-primary/10]="filtroRol() === 'AGENTE'"
-              [class.text-primary]="filtroRol() === 'AGENTE'"
-              [class.bg-border/50]="filtroRol() !== 'AGENTE'"
-              [class.text-text-muted]="filtroRol() !== 'AGENTE'">
-          {{ stats().agentes }}
-        </span>
-      </button>
+    <!-- Pestañas de rol — se generan desde filtrosRol(), no una por una -->
+    <div
+      class="inline-flex p-1 bg-bg-workspace rounded-xl border border-border/80 gap-1 self-start md:self-auto overflow-x-auto"
+      role="tablist"
+      aria-label="Filtrar usuarios por rol">
+      @for (filtro of filtrosRol(); track filtro.valor) {
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="filtroRol() === filtro.valor"
+          (click)="filtroRol.set(filtro.valor)"
+          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center gap-2 whitespace-nowrap"
+          [class.bg-white]="filtroRol() === filtro.valor"
+          [class.text-primary]="filtroRol() === filtro.valor"
+          [class.shadow-subtle]="filtroRol() === filtro.valor"
+          [class.text-text-muted]="filtroRol() !== filtro.valor"
+          [class.hover:text-text-dark]="filtroRol() !== filtro.valor">
+          <app-icon [name]="filtro.icono" [size]="14" />
+          <span>{{ filtro.etiqueta }}</span>
+          <span
+            class="px-1.5 py-0.5 rounded-md text-[10px] font-bold"
+            [class.bg-primary/10]="filtroRol() === filtro.valor"
+            [class.text-primary]="filtroRol() === filtro.valor"
+            [class.bg-border/50]="filtroRol() !== filtro.valor"
+            [class.text-text-muted]="filtroRol() !== filtro.valor">
+            {{ filtro.total }}
+          </span>
+        </button>
+      }
     </div>
 
     <!-- Buscador -->
     <div class="w-full md:w-72">
-      <app-input type="search" placeholder="Buscar por nombre o email…" [(value)]="busqueda" />
+      <app-input type="search" placeholder="Buscar por nombre, email o código…" [(value)]="busqueda" />
     </div>
   </div>
 
@@ -232,7 +200,7 @@
               <td colspan="5" class="py-12">
                 <app-empty-state
                   icon="users"
-                  title="Sin agentes registrados"
+                  title="Sin usuarios registrados"
                   description="No se encontraron cuentas que coincidan con los criterios." />
               </td>
             </tr>

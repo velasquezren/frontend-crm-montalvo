@@ -103,7 +103,7 @@ export const routes: Routes = [
       {
         /* Gestión de agentes: solo super admin — es donde se asignan los códigos
            de empresa de los que depende toda la planilla de comisiones. */
-        path: 'agentes',
+        path: 'usuarios',
         canActivate: [exigeRol('SUPER_ADMIN')],
         loadComponent: () =>
           import('./features/agentes/agentes.page').then(m => m.AgentesPage),

@@ -13,6 +13,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InputComponent } from '../../shared/components/input/input.component';
 import { ToastService } from '../../core/toast/toast.service';
+import { IconName } from '../../shared/components/icon/icon.component';
 import { ROL_LABEL } from '../../core/auth/roles';
 import { RolUsuario } from '../../core/auth/user.model';
 import { Agente, CreateAgentePayload } from './agente.model';
@@ -22,7 +23,11 @@ import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { OverlayRef } from '@angular/cdk/overlay';
 import { TemplateRef, ViewContainerRef } from '@angular/core';
 
-export type FiltroRolAgentes = 'TODOS' | 'ADMIN' | 'AGENTE';
+/**
+ * Los tres roles, no dos: filtrar sin SUPER_ADMIN dejaba invisible justo al rol
+ * que administra el sistema, y era imposible ver cuántos hay.
+ */
+export type FiltroRolAgentes = 'TODOS' | 'SUPER_ADMIN' | 'ADMIN' | 'AGENTE';
 
 /**
  * Gestión de Agentes y Usuarios — Solo administradores
@@ -83,12 +88,33 @@ export class AgentesPage {
   /* ── Datos Derivados ───────────────────────────────────────────── */
   protected readonly stats = computed(() => {
     const lista: Agente[] = this.agentes.value() ?? [];
+    const porRol = { SUPER_ADMIN: 0, ADMIN: 0, AGENTE: 0 } as Record<RolUsuario, number>;
+    for (const usuario of lista) porRol[usuario.rol] += 1;
+
     return {
       total: lista.length,
-      activos: lista.filter((a: Agente) => a.activo).length,
-      admins: lista.filter((a: Agente) => a.rol === 'ADMIN').length,
-      agentes: lista.filter((a: Agente) => a.rol === 'AGENTE').length,
+      activos: lista.filter((usuario: Agente) => usuario.activo).length,
+      porRol,
     };
+  });
+
+  /**
+   * Las pestañas de rol, derivadas de la lista real.
+   *
+   * Se generan en vez de escribirse a mano porque antes eran tres bloques de
+   * HTML casi idénticos y añadir un rol significaba copiar veinte líneas — que
+   * es exactamente por lo que SUPER_ADMIN nunca se agregó y los super admins
+   * quedaban invisibles al filtrar.
+   */
+  protected readonly filtrosRol = computed(() => {
+    const { total, porRol } = this.stats();
+
+    return [
+      { valor: 'TODOS' as const, etiqueta: 'Todos', icono: 'users' as IconName, total },
+      { valor: 'SUPER_ADMIN' as const, etiqueta: 'Super administradores', icono: 'shield' as IconName, total: porRol.SUPER_ADMIN },
+      { valor: 'ADMIN' as const, etiqueta: 'Administradores', icono: 'shield' as IconName, total: porRol.ADMIN },
+      { valor: 'AGENTE' as const, etiqueta: 'Agentes comerciales', icono: 'message-circle' as IconName, total: porRol.AGENTE },
+    ];
   });
 
   protected readonly filtrados = computed(() => {
