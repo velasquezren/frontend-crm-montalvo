@@ -334,6 +334,10 @@
 
       <!-- Mensajes con separadores de fecha -->
       <div class="chat-messages" #messagesScroll (scroll)="onMessagesScroll()">
+        <!-- Historial anterior: se carga al llegar arriba del hilo -->
+        @if (cargandoAntiguos()) {
+          <app-loading-skeleton shape="text" height="2rem" />
+        }
         @for (item of mensajesAgrupados(); track (item.tipo === 'fecha' ? item.label : item.mensaje.id)) {
           @if (item.tipo === 'fecha') {
             <div class="date-separator">

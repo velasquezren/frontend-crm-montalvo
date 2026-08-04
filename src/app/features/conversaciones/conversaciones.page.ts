@@ -72,6 +72,12 @@ import { RouterLink } from '@angular/router';
 /** El paciente tal y como lo entrega el detalle de la conversación. */
 type ClienteChat = ConversacionResumen['cliente'];
 
+/** Mensajes por lote al subir por el historial. Coincide con el tope del backend. */
+const LOTE_HISTORIAL = 50;
+
+/** Distancia al techo (px) a la que se dispara la carga del lote anterior. */
+const UMBRAL_CARGA_HISTORIAL = 120;
+
 @Component({
   selector: 'app-conversaciones',
   imports: [
@@ -415,19 +421,49 @@ export class ConversacionesPage implements AfterViewInit {
     return [...map.values()].sort((a, b) => a.nombre.localeCompare(b.nombre));
   });
 
+  /* ── Historial: scroll hacia arriba ────────────────────────────────
+     El detalle solo trae los 50 mensajes más recientes. Hasta ahora no había
+     forma de ver nada anterior: el endpoint, la paginación por cursor y el
+     método del servicio existían, pero ningún componente los llamaba, así que
+     el historial de un paciente antiguo era inalcanzable desde la interfaz. */
+
+  /** Mensajes anteriores ya traídos, en orden cronológico, delante del detalle. */
+  private readonly mensajesAntiguos = signal<readonly MensajeApi[]>([]);
+  protected readonly cargandoAntiguos = signal(false);
+  /** false cuando el servidor devolvió menos de los pedidos: ya no queda nada más atrás. */
+  private readonly quedaHistorial = signal(true);
+
+  /** Hilo completo: lo traído por scroll + lo que vino en el detalle. */
+  private readonly mensajesDelHilo = computed<readonly MensajeApi[]>(() => {
+    const chat = this.detalle.value();
+    if (!chat) return [];
+
+    /* Se deduplica por id: si mientras el agente leía historial entraron
+       muchos mensajes nuevos, la ventana de 50 del detalle puede solaparse
+       con lo que ya se había traído por cursor. */
+    const vistos = new Set<string>();
+    const hilo: MensajeApi[] = [];
+    for (const msg of [...this.mensajesAntiguos(), ...chat.mensajes]) {
+      if (vistos.has(msg.id)) continue;
+      vistos.add(msg.id);
+      hilo.push(msg);
+    }
+    return hilo;
+  });
+
   /** Mensajes del detalle agrupados con separadores de fecha. */
   protected readonly mensajesAgrupados = computed<
     Array<{ tipo: 'fecha'; label: string } | { tipo: 'mensaje'; mensaje: MensajeApi }>
   >(() => {
-    const chat = this.detalle.value();
-    if (!chat) return [];
+    const mensajes = this.mensajesDelHilo();
+    if (mensajes.length === 0) return [];
 
     const result: Array<
       { tipo: 'fecha'; label: string } | { tipo: 'mensaje'; mensaje: MensajeApi }
     > = [];
     let lastDate = '';
 
-    for (const msg of chat.mensajes) {
+    for (const msg of mensajes) {
       const date = new Date(msg.createdAt);
       const dateKey = date.toLocaleDateString('es-BO', {
         year: 'numeric',
@@ -535,6 +571,10 @@ export class ConversacionesPage implements AfterViewInit {
   protected seleccionar(id: string): void {
     this.seleccionadaId.set(id);
     this.editandoFicha.set(false);
+    /* El historial traído por scroll es de la conversación anterior: si no se
+       limpia, los mensajes de un paciente aparecerían en el hilo de otro. */
+    this.mensajesAntiguos.set([]);
+    this.quedaHistorial.set(true);
     /* Al abrir un chat siempre queremos ver lo último: forzar que el próximo
        render baje al fondo, sin importar dónde estaba el scroll del chat previo. */
     this.estaCercaDelFondo = true;
@@ -555,6 +595,65 @@ export class ConversacionesPage implements AfterViewInit {
     this.estaCercaDelFondo = c.scrollHeight - c.scrollTop - c.clientHeight < 150;
     if (this.estaCercaDelFondo) {
       this.mostrarBotonBajar.set(false);
+    }
+
+    /* Cerca del techo: traer el lote anterior antes de que el agente choque
+       con el borde, para que el historial se sienta continuo. */
+    if (c.scrollTop < UMBRAL_CARGA_HISTORIAL) {
+      void this.cargarAnteriores();
+    }
+  }
+
+  /**
+   * Trae el lote de mensajes anterior al más viejo que hay en pantalla.
+   * Se apoya en la paginación por cursor del backend (`antesDe`), no en offset:
+   * con mensajes entrando en vivo, un offset se desplaza y repite o salta filas.
+   */
+  private async cargarAnteriores(): Promise<void> {
+    if (this.cargandoAntiguos() || !this.quedaHistorial()) return;
+
+    const id = this.seleccionadaId();
+    const masViejo = this.mensajesDelHilo()[0];
+    if (!id || !masViejo) return;
+
+    const contenedor = this.messagesContainer()?.nativeElement;
+    const alturaPrevia = contenedor?.scrollHeight ?? 0;
+
+    this.cargandoAntiguos.set(true);
+    try {
+      const previos = await this.conversacionesService.obtenerMensajesAnteriores(
+        id,
+        masViejo.createdAt,
+        LOTE_HISTORIAL,
+      );
+
+      /* Menos de los pedidos significa que se acabó el hilo: se deja de pedir
+         para no golpear el servidor en cada scroll al llegar al principio. */
+      if (previos.length < LOTE_HISTORIAL) {
+        this.quedaHistorial.set(false);
+      }
+
+      if (previos.length > 0) {
+        this.mensajesAntiguos.update(actuales => [...previos, ...actuales]);
+
+        /* Mantener el punto de lectura: al insertar contenido arriba, lo que el
+           agente estaba leyendo se desplaza hacia abajo. Sin compensar, la vista
+           salta y hay que volver a buscar por dónde iba. Se corrige sumando lo
+           que creció el contenedor. */
+        setTimeout(() => {
+          const c = this.messagesContainer()?.nativeElement;
+          if (c) {
+            c.scrollTop += c.scrollHeight - alturaPrevia;
+          }
+        });
+      }
+    } catch (err) {
+      this.toastService.error(
+        mensajeDeError(err, 'No se pudo cargar el historial anterior.'),
+        'Conversaciones',
+      );
+    } finally {
+      this.cargandoAntiguos.set(false);
     }
   }
 
