@@ -145,6 +145,32 @@ Para usar uno nuevo: añade el `@case` con el path del SVG y su nombre al tipo `
   sistema operativo y rompen el tono clínico; el ícono vectorial es la única fuente de simbología.
   *(Esta regla aplica a la interfaz. Los emojis en documentación como este archivo están bien.)*
 
+## Al partir una página en subcomponentes, el CSS viaja con su HTML
+
+Los componentes usan encapsulación `Emulated`: Angular marca los elementos de
+*cada* plantilla con un atributo propio y acota su CSS a ese atributo. Por eso,
+al mover un bloque de HTML a un subcomponente, **el CSS del padre deja de
+aplicarle** — y la página se queda sin estilos sin que nada avise.
+
+Ninguna compuerta lo detecta: `check:tipos`, `check:skills` y `npm run build`
+pasan en verde sobre una vista rota, porque el problema no es de tipos ni de
+sintaxis, es de a qué elemento le llega la regla.
+
+**Al terminar un refactor así, comprueba que ningún selector quede definido en un
+archivo y usado solo en otro.** Es lo único que atrapa el fallo.
+
+### Si la misma clase la necesitan dos o tres plantillas, es un átomo
+
+Copiar el bloque de CSS a cada subcomponente *funciona* — es el precio de la
+encapsulación — pero es la señal de que ese pedazo de interfaz ya no pertenece a
+una vista. Al partir `features/servicios` quedaron tres plantillas maquetando a
+mano la misma tarjeta de KPI, cada una con su copia de `.kpi-card`, `.kpi-icono`
+y sus variantes.
+
+Cuando eso pase, extrae un átomo a `shared/components/` en vez de repartir
+copias: una sola definición, un solo lugar donde cambiarla, y el resto de las
+vistas lo hereda gratis.
+
 ## Helpers compartidos
 
 - `moneda.pipe.ts` → `{{ monto | moneda }}` o `formatearBs(n)`. **Moneda del sistema: Bs (es-BO).**
