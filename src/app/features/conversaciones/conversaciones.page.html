@@ -118,6 +118,26 @@
 
     <!-- Lista de conversaciones -->
     <div class="sidebar-list">
+      @if (cargandoInbox()) {
+        <!-- Esqueleto con la altura real de una fila: si midiera distinto, la
+             lista saltaría al llegar los datos. -->
+        @for (n of [1, 2, 3, 4, 5, 6]; track n) {
+          <div class="chat-item-skeleton">
+            <app-loading-skeleton shape="circle" width="40px" height="40px" />
+            <div class="flex-1 space-y-2">
+              <app-loading-skeleton shape="text" height="0.9rem" width="60%" />
+              <app-loading-skeleton shape="text" height="0.75rem" width="85%" />
+            </div>
+          </div>
+        }
+      } @else if (errorInbox()) {
+        <app-empty-state
+          icon="alert-circle"
+          title="No se pudo cargar el inbox"
+          description="No hay respuesta del servidor. Revisa tu conexión e inténtalo de nuevo.">
+          <app-button icon="loader" (clicked)="recargarInbox()">Reintentar</app-button>
+        </app-empty-state>
+      } @else {
       @for (chat of filtradas(); track chat.id) {
         <button
           type="button"
@@ -237,6 +257,7 @@
       } @empty {
         <app-empty-state icon="message-circle" title="Sin resultados"
           description="No hay conversaciones que coincidan con tu filtro." />
+      }
       }
     </div>
   </aside>
@@ -485,7 +506,7 @@
                 @if (item.mensaje.contenido) {
                   @if (esUrlImagen(item.mensaje.contenido)) {
                     <button type="button" (click)="abrirLightbox(item.mensaje.contenido)" class="block my-1 cursor-zoom-in text-left">
-                      <img [src]="item.mensaje.contenido" alt="Imagen adjunta" loading="lazy" decoding="async" class="max-w-xs max-h-72 rounded-xl object-cover border border-border shadow-xs hover:opacity-95 transition-opacity" />
+                      <img [src]="item.mensaje.contenido" alt="Imagen adjunta" loading="lazy" decoding="async" class="max-w-xs max-h-72 rounded-xl object-cover border border-border shadow-subtle hover:opacity-95 transition-opacity" />
                     </button>
                   } @else if (esUrlPdf(item.mensaje.contenido)) {
                     <a [href]="item.mensaje.contenido" target="_blank" rel="noopener" class="flex items-center gap-2 p-2.5 rounded-xl bg-black/5 hover:bg-black/10 transition-colors my-1 border border-border/50">
@@ -540,7 +561,7 @@
 
       <!-- Sugerencias de atajo por comando '/' -->
       @if (sugerenciasAtajo().length > 0) {
-        <div class="bg-white border border-border shadow-lg rounded-xl p-2 mb-2 max-h-48 overflow-y-auto space-y-1">
+        <div class="bg-white border border-border shadow-lifted rounded-xl p-2 mb-2 max-h-48 overflow-y-auto space-y-1">
           <p class="text-[10px] font-bold text-text-muted uppercase px-2 py-0.5">Respuestas rápidas disponibles (haz clic para insertar):</p>
           @for (sug of sugerenciasAtajo(); track sug.id) {
             <button
@@ -587,7 +608,7 @@
 
       <!-- Popover Flotante de Memoria Personal del Agente (Anclado a bottom-20) -->
       @if (mostrarPopoverMemoria()) {
-        <div class="absolute bottom-20 left-4 w-84 max-w-[calc(100%-2rem)] bg-white rounded-2xl shadow-2xl border border-border p-3.5 z-50 animate-modal-pop space-y-2.5">
+        <div class="absolute bottom-20 left-4 w-84 max-w-[calc(100%-2rem)] bg-white rounded-2xl shadow-lifted border border-border p-3.5 z-50 animate-modal-pop space-y-2.5">
           <div class="flex items-center justify-between border-b border-border pb-2">
             <span class="text-xs font-bold text-text-dark flex items-center gap-1.5">
               <app-icon name="database" [size]="14" class="text-primary" />
@@ -701,7 +722,7 @@
   <!-- Backdrop para Ficha del Paciente en pantallas < 1280px -->
   @if (panelAbierto() && !!detalle.value()) {
     <div
-      class="xl:hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 animate-fade-in cursor-pointer"
+      class="xl:hidden fixed inset-0 bg-black/40 backdrop-blur-xs z-40 animate-fade-in cursor-pointer"
       (click)="togglePanel()"
       aria-hidden="true"></div>
   }
@@ -863,7 +884,7 @@
             <button
               type="button"
               (click)="iniciarEdicion()"
-              class="absolute top-3 right-3 p-1.5 rounded-lg border border-border/80 bg-white/90 backdrop-blur text-text-muted hover:text-primary hover:border-primary/30 hover:bg-white transition-all cursor-pointer shadow-sm"
+              class="absolute top-3 right-3 p-1.5 rounded-lg border border-border/80 bg-white/90 backdrop-blur text-text-muted hover:text-primary hover:border-primary/30 hover:bg-white transition-all cursor-pointer shadow-subtle"
               title="Editar ficha del cliente">
               <app-icon name="edit" [size]="14" />
             </button>
@@ -1183,7 +1204,7 @@
 
 <!-- Modal para personalizar/gestionar Respuestas Rápidas del Agente -->
 <ng-template #modalGestionPlantillas>
-  <div class="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-border overflow-hidden">
+  <div class="w-full max-w-lg bg-white rounded-2xl shadow-lifted border border-border overflow-hidden">
     <div class="flex items-center justify-between px-5 py-4 border-b border-border bg-bg-light">
       <div>
         <h2 class="text-sm font-bold text-text-dark">Mis Respuestas Rápidas</h2>

@@ -323,6 +323,25 @@ export class ConversacionesPage implements AfterViewInit {
    */
   protected readonly conversaciones = linkedSignal(() => this.conversacionesRecurso.value());
 
+  /* ── Estados del inbox ─────────────────────────────────────────────
+     Faltaban los dos: sin ellos, un backend caído o una carga en curso
+     caían en el `@empty` de la lista, que dice "no hay conversaciones que
+     coincidan con tu filtro". Es decirle al agente que su filtro no
+     encontró nada cuando lo que pasa es que el servidor no contesta.
+
+     Ambos se condicionan a que NO haya datos ya en pantalla: el inbox se
+     recarga solo (socket y polling de respaldo), y no queremos que un
+     refresco de fondo haga parpadear esqueletos ni tape una lista que se
+     está viendo bien porque una recarga puntual falló. */
+
+  protected readonly cargandoInbox = computed(
+    () => this.conversacionesRecurso.isLoading() && this.conversaciones().length === 0,
+  );
+
+  protected readonly errorInbox = computed(
+    () => !!this.conversacionesRecurso.error() && this.conversaciones().length === 0,
+  );
+
   protected readonly detalle = httpResource<ConversacionDetalle | undefined>(() => {
     const id = this.seleccionadaId();
     return id ? this.conversacionesService.detalleRequest(id) : undefined;
@@ -664,6 +683,11 @@ export class ConversacionesPage implements AfterViewInit {
   }
 
   /* ── Acciones ──────────────────────────────────────────────────── */
+
+  /** Reintento manual desde el estado de error del inbox. */
+  protected recargarInbox(): void {
+    this.conversacionesRecurso.reload();
+  }
 
   protected seleccionar(id: string): void {
     this.seleccionadaId.set(id);

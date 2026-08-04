@@ -51,7 +51,7 @@
   align-items: center;
   gap: 5px;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: 9999px;
   background: var(--color-bg-light);
   font-size: 10px;
   font-weight: 600;
@@ -92,7 +92,7 @@
   align-items: center;
   gap: 5px;
   padding: 3px 10px 3px 3px;
-  border-radius: 999px;
+  border-radius: 9999px;
   border: 1px solid var(--color-border);
   font-size: 11px;
   font-weight: 500;
@@ -119,7 +119,7 @@
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
-  border-radius: 999px;
+  border-radius: 9999px;
   background: color-mix(in srgb, var(--color-text-muted) 10%, transparent);
   font-size: 9px;
   font-weight: 700;
@@ -182,7 +182,7 @@
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  border-radius: 999px;
+  border-radius: 9999px;
   background: color-mix(in srgb, var(--color-primary) 12%, transparent);
   color: var(--color-primary);
   font-size: 10px;
@@ -304,7 +304,7 @@
   display: inline-flex;
   align-items: center;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: 9999px;
   border: 1px solid var(--color-border);
   background: white;
   font-size: 11px;
@@ -354,7 +354,7 @@
 .empty-icon-wrapper {
   width: 80px;
   height: 80px;
-  border-radius: 24px;
+  border-radius: 16px;
   background: var(--color-bg-light);
   display: flex;
   align-items: center;
@@ -372,7 +372,7 @@
 .date-separator-label {
   display: inline-block;
   padding: 4px 14px;
-  border-radius: 999px;
+  border-radius: 9999px;
   background: color-mix(in srgb, var(--color-text-muted) 10%, white);
   font-size: 11px;
   font-weight: 600;
@@ -455,7 +455,7 @@
   align-items: center;
   gap: 5px;
   padding: 5px 10px;
-  border-radius: 8px;
+  border-radius: 9999px;
   border: 1px solid var(--color-border);
   background: white;
   color: var(--color-text-muted);
@@ -558,14 +558,14 @@
   align-items: center;
   gap: 2px;
   padding: 2px;
-  border-radius: 8px;
+  border-radius: 9999px;
   background: white;
   border: 1px solid var(--color-border);
 }
 
 .speed-btn {
   padding: 2px 6px;
-  border-radius: 6px;
+  border-radius: 9999px;
   font-size: 10px;
   font-weight: 600;
   color: var(--color-text-muted);
@@ -702,7 +702,7 @@
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: 16px;
   background: var(--color-bg-workspace);
   border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
   transition: all 0.2s;
@@ -716,7 +716,7 @@
 .detail-card-icon {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -780,7 +780,7 @@
 .edit-form-header-icon {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: 12px;
   background: color-mix(in srgb, var(--color-primary) 10%, white);
   display: flex;
   align-items: center;
@@ -831,7 +831,7 @@
   font-size: 13px;
   padding: 9px 12px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 12px;
   outline: none;
   background: white;
   color: var(--color-text-dark);
@@ -856,7 +856,7 @@
   font-size: 13px;
   padding: 10px 12px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 12px;
   outline: none;
   background: white;
   color: var(--color-text-dark);
@@ -892,7 +892,7 @@
 /* ── Notes display card ──────────────────────────────────────── */
 .notes-card {
   padding: 12px 14px;
-  border-radius: 10px;
+  border-radius: 16px;
   background: linear-gradient(
     135deg,
     color-mix(in srgb, var(--color-secondary) 6%, white) 0%,
@@ -910,7 +910,7 @@
   display: inline-flex;
   align-items: center;
   padding: 3px 10px;
-  border-radius: 6px;
+  border-radius: 9999px;
   background: color-mix(in srgb, var(--color-primary) 8%, white);
   color: var(--color-primary);
   font-weight: 600;
@@ -937,7 +937,7 @@
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
-  border-radius: 8px;
+  border-radius: 12px;
   background: white;
   border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
 }
@@ -1034,7 +1034,7 @@
 .agent-dropdown-list::-webkit-scrollbar-thumb,
 .edit-form-body::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--color-text-muted) 20%, transparent);
-  border-radius: 999px;
+  border-radius: 9999px;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
@@ -1184,7 +1184,7 @@
   gap: 6px;
   padding: 8px 10px;
   margin-bottom: 4px;
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--color-bg-light, #eaf7f5);
   color: var(--color-text-muted, #6b7280);
   font-size: 12px;
@@ -1243,4 +1243,15 @@
 
 .bubble-match-active {
   box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+/* Esqueleto de fila del inbox. Replica el padding y el gap de `.chat-item`
+   a propósito: si midiera distinto, la lista daría un salto al llegar los
+   datos reales (CLS) y la carga se sentiría barata. */
+.chat-item-skeleton {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
 }
