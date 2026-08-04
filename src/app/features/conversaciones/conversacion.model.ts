@@ -83,4 +83,21 @@ export interface PlantillaAgente {
 }
 
 /** Filtros de la vista del inbox. */
-export type FiltroInbox = 'TODAS' | 'SIN_ASIGNAR' | 'MIS_CHATS';
+export type FiltroInbox = 'TODAS' | 'SIN_RESPONDER' | 'SIN_ASIGNAR' | 'MIS_CHATS';
+
+/**
+ * Una conversación está sin responder si el ÚLTIMO mensaje lo escribió el
+ * paciente: si nadie contestó después, sigue esperando.
+ *
+ * Se resuelve con lo que el listado ya trae —el backend incluye el último
+ * mensaje de cada conversación (`take: 1`)—, así que no cuesta ni una consulta
+ * ni un byte extra.
+ */
+export function estaSinResponder(c: ConversacionResumen): boolean {
+  return c.mensajes[0]?.direccion === 'ENTRANTE';
+}
+
+/** Momento en que el paciente quedó esperando, o null si ya se le respondió. */
+export function esperandoDesde(c: ConversacionResumen): Date | null {
+  return estaSinResponder(c) ? new Date(c.mensajes[0].createdAt) : null;
+}

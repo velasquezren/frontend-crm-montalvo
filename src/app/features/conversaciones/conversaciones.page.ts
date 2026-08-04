@@ -47,6 +47,8 @@ import {
   AgenteResumen,
   ConversacionDetalle,
   ConversacionResumen,
+  esperandoDesde,
+  estaSinResponder,
   FiltroInbox,
   MensajeApi,
   PlantillaAgente,
@@ -367,10 +369,32 @@ export class ConversacionesPage implements AfterViewInit {
     const lista = this.conversaciones();
     return {
       total: lista.length,
+      sinResponder: lista.filter(estaSinResponder).length,
       sinAsignar: lista.filter(c => !c.agente).length,
       misChats: lista.filter(c => c.agente?.id === this.currentUserId()).length,
     };
   });
+
+  /**
+   * Cuánto lleva esperando el paciente, en formato corto para la fila del
+   * inbox. Devuelve null si ya se le respondió.
+   */
+  protected tiempoEsperando(c: ConversacionResumen): string | null {
+    const desde = esperandoDesde(c);
+    if (!desde) return null;
+
+    const minutos = Math.floor((Date.now() - desde.getTime()) / 60000);
+    if (minutos < 60) return `${Math.max(minutos, 1)} min`;
+    const horas = Math.floor(minutos / 60);
+    if (horas < 24) return `${horas} h`;
+    return `${Math.floor(horas / 24)} d`;
+  }
+
+  /** true cuando lleva esperando más de un día: se marca con más fuerza. */
+  protected esperaLarga(c: ConversacionResumen): boolean {
+    const desde = esperandoDesde(c);
+    return !!desde && Date.now() - desde.getTime() > 24 * 60 * 60 * 1000;
+  }
 
   /** Lista filtrada por tab + búsqueda + agente seleccionado (admin). */
   protected readonly filtradas = computed(() => {
@@ -381,7 +405,20 @@ export class ConversacionesPage implements AfterViewInit {
     let lista = this.conversaciones();
 
     // Filtro por tab
-    if (tab === 'SIN_ASIGNAR') {
+    if (tab === 'SIN_RESPONDER') {
+      /* Aquí el orden se invierte a propósito: el resto del inbox va por
+         actividad reciente, pero en esta pestaña lo urgente es quien lleva
+         MÁS tiempo esperando. Con el orden normal, el paciente que lleva
+         cinco días sin respuesta queda al fondo, que es justo como se llega
+         a tener once conversaciones sin contestar. */
+      lista = lista
+        .filter(estaSinResponder)
+        .sort(
+          (a, b) =>
+            new Date(a.mensajes[0].createdAt).getTime() -
+            new Date(b.mensajes[0].createdAt).getTime(),
+        );
+    } else if (tab === 'SIN_ASIGNAR') {
       lista = lista.filter(c => !c.agente);
     } else if (tab === 'MIS_CHATS') {
       lista = lista.filter(c => c.agente?.id === userId);
