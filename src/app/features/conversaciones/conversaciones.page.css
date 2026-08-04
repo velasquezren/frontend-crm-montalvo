@@ -478,71 +478,48 @@
   color: var(--color-primary);
 }
 
-/* ── Pinned Clinical Notes Banner ────────────────────────────── */
+/* ── Aviso clínico fijado ─────────────────────────────────────
+   Iba en una escala ámbar completa (nueve hexadecimales sueltos, degradado
+   y sombra teñida) más un asterisco rojo. La paleta de este CRM es cerrada
+   y excluye ámbares y rojos de alarma **a propósito** — la línea es
+   "premium médico" calmada, ver CRM_MANIFESTO.md §3. Un aviso no necesita
+   gritar en otro idioma visual: destaca con los tokens de marca, igual que
+   el resto de superficies activas de la app, y la barra lateral izquierda
+   le da el peso que antes daba el color. */
 .pinned-note-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 8px 16px;
-  background: linear-gradient(135deg, #fffbe6 0%, #fef3c7 100%);
-  border-bottom: 1px solid #fde68a;
+  background: var(--color-bg-light);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  border-left: 3px solid var(--color-primary);
   font-size: 12px;
-  color: #92400e;
+  color: var(--color-text-dark);
   z-index: 10;
-  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.08);
 }
 
 .pinned-note-text {
   font-size: 12px;
-  color: #78350f;
+  color: var(--color-text-dark);
   line-height: 1.4;
 }
 
+/* Inputs del sistema: rounded-xl (12px), no 6px sueltos. */
 .edit-pinned-input {
   flex: 1;
   font-size: 12px;
   padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid #f59e0b;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
   outline: none;
-  background: white;
-  color: #78350f;
+  background: var(--color-background);
+  color: var(--color-text-dark);
+  transition: border-color 0.2s;
 }
 
-.btn-save-pin {
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: #d97706;
-  color: white;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  transition: background 0.15s;
-}
-.btn-save-pin:hover {
-  background: #b45309;
-}
-
-.btn-cancel-pin {
-  padding: 4px 8px;
-  border-radius: 6px;
-  background: transparent;
-  color: #92400e;
-  font-size: 11px;
-  cursor: pointer;
-  border: 1px solid #fcd34d;
-}
-
-.btn-edit-pin {
-  padding: 4px 6px;
-  border-radius: 6px;
-  color: #92400e;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.btn-edit-pin:hover {
-  background: rgba(217, 119, 6, 0.15);
+.edit-pinned-input:focus {
+  border-color: var(--color-primary);
 }
 
 .btn-add-pin-trigger {
@@ -904,9 +881,11 @@
   margin-bottom: 4px;
 }
 
+/* `critical` en este sistema es NEGRO, no rojo — ver la tabla de estados
+   semánticos del skill crm-design-system. */
 .edit-label-required::after {
   content: ' *';
-  color: #ef4444;
+  color: var(--color-text-critical);
   font-weight: 700;
 }
 
@@ -1210,4 +1189,58 @@
   color: var(--color-text-muted, #6b7280);
   font-size: 12px;
   font-style: italic;
+}
+
+/* ── Buscar dentro de la conversación ─────────────────────────
+   El resaltado usa la paleta de marca (primary), no un amarillo de
+   "highlight" de navegador: la paleta es cerrada y el amarillo rompería
+   la línea calmada del resto de la app. */
+.chat-search-box {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 10px;
+  border-radius: 9999px;
+  background: var(--color-bg-light);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+  max-width: 320px;
+}
+
+.chat-search-input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  font-size: 12px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text-dark);
+}
+
+.chat-search-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* El navegador pinta su propia "x" en los input[type=search]; sobra
+   teniendo el botón de cerrar del sistema de diseño al lado. */
+.chat-search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.chat-search-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-primary);
+  padding: 0 4px;
+  white-space: nowrap;
+}
+
+/* Coincidencia: anillo sutil. La activa se refuerza, para distinguir
+   "dónde estoy" de "dónde más aparece" sin cambiar de color. */
+.bubble-match {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-secondary) 45%, transparent);
+}
+
+.bubble-match-active {
+  box-shadow: 0 0 0 2px var(--color-primary);
 }

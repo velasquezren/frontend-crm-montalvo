@@ -488,6 +488,66 @@ export class ConversacionesPage implements AfterViewInit {
     return hilo;
   });
 
+  /* ── Buscar dentro de la conversación abierta ──────────────────────
+     Todo el hilo ya está en memoria, así que la búsqueda es un `computed()`
+     sobre lo cargado: no cuesta ni una petición ni toca el servidor. Es la
+     contrapartida natural del scroll de historial — de poco sirve poder
+     traer meses de conversación si luego hay que leerla entera a mano. */
+
+  protected readonly busquedaChat = signal('');
+  protected readonly buscandoEnChat = signal(false);
+
+  /** Ids de los mensajes que contienen el término, en orden cronológico. */
+  protected readonly coincidenciasChat = computed<readonly string[]>(() => {
+    const termino = this.busquedaChat().trim().toLowerCase();
+    if (termino.length < 2) return [];
+    return this.mensajesDelHilo()
+      .filter(m => m.contenido?.toLowerCase().includes(termino))
+      .map(m => m.id);
+  });
+
+  /** Posición actual dentro de las coincidencias (0 = la más antigua). */
+  private readonly indiceCoincidencia = signal(0);
+
+  /** Id resaltado ahora mismo, para marcar la burbuja activa. */
+  protected readonly coincidenciaActiva = computed<string | null>(() => {
+    const ids = this.coincidenciasChat();
+    return ids[this.indiceCoincidencia()] ?? ids[0] ?? null;
+  });
+
+  protected abrirBusquedaChat(): void {
+    this.buscandoEnChat.set(true);
+  }
+
+  protected cerrarBusquedaChat(): void {
+    this.buscandoEnChat.set(false);
+    this.busquedaChat.set('');
+    this.indiceCoincidencia.set(0);
+  }
+
+  /** Salta a la coincidencia siguiente o anterior, dando la vuelta al llegar al final. */
+  protected irACoincidencia(paso: 1 | -1): void {
+    const total = this.coincidenciasChat().length;
+    if (total === 0) return;
+    const siguiente = (this.indiceCoincidencia() + paso + total) % total;
+    this.indiceCoincidencia.set(siguiente);
+    this.desplazarACoincidencia();
+  }
+
+  /** Centra en pantalla el mensaje resaltado. */
+  private desplazarACoincidencia(): void {
+    setTimeout(() => {
+      const id = this.coincidenciaActiva();
+      const contenedor = this.messagesContainer()?.nativeElement;
+      if (!id || !contenedor) return;
+      /* Se busca DENTRO del contenedor del hilo, no en todo el documento:
+         los ids de mensaje solo tienen sentido dentro de este chat. */
+      contenedor
+        .querySelector(`[data-mensaje-id="${id}"]`)
+        ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    });
+  }
+
   /** Mensajes del detalle agrupados con separadores de fecha. */
   protected readonly mensajesAgrupados = computed<
     Array<{ tipo: 'fecha'; label: string } | { tipo: 'mensaje'; mensaje: MensajeApi }>
@@ -612,6 +672,7 @@ export class ConversacionesPage implements AfterViewInit {
        limpia, los mensajes de un paciente aparecerían en el hilo de otro. */
     this.mensajesAntiguos.set([]);
     this.quedaHistorial.set(true);
+    this.cerrarBusquedaChat();
     /* Al abrir un chat siempre queremos ver lo último: forzar que el próximo
        render baje al fondo, sin importar dónde estaba el scroll del chat previo. */
     this.estaCercaDelFondo = true;

@@ -158,7 +158,7 @@
                           <app-icon name="check-check" [size]="14" class="text-text-muted/70 shrink-0" title="Entregado" />
                         }
                         @case ('FALLIDO') {
-                          <span class="text-amber-600 font-semibold text-[11px] shrink-0 leading-none" title="Falló el envío">No enviado</span>
+                          <span class="text-text-critical font-semibold text-[11px] shrink-0 leading-none" title="Falló el envío">No enviado</span>
                         }
                         @default {
                           <app-icon name="check" [size]="14" class="text-text-muted/70 shrink-0" title="Enviado" />
@@ -273,6 +273,40 @@
         </div>
 
         <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <!-- Buscar dentro de esta conversación (sobre el hilo ya cargado) -->
+          @if (buscandoEnChat()) {
+            <div class="chat-search-box">
+              <app-icon name="search" [size]="14" class="text-text-muted shrink-0" />
+              <input
+                type="search"
+                #inputBuscarChat
+                autofocus
+                [value]="busquedaChat()"
+                (input)="busquedaChat.set(inputBuscarChat.value)"
+                (keydown.enter)="irACoincidencia(1)"
+                (keydown.escape)="cerrarBusquedaChat()"
+                placeholder="Buscar en el chat…"
+                aria-label="Buscar dentro de esta conversación"
+                class="chat-search-input" />
+              @if (busquedaChat().trim().length > 1) {
+                <span class="chat-search-count tabular-nums">{{ coincidenciasChat().length }}</span>
+              }
+              <app-button
+                variant="ghost" size="sm" icon="chevron-down" [circle]="true"
+                aria-label="Coincidencia siguiente"
+                (clicked)="irACoincidencia(1)" />
+              <app-button
+                variant="ghost" size="sm" icon="x" [circle]="true"
+                aria-label="Cerrar búsqueda"
+                (clicked)="cerrarBusquedaChat()" />
+            </div>
+          } @else {
+            <app-button
+              variant="ghost" size="sm" icon="search" [circle]="true"
+              aria-label="Buscar en esta conversación"
+              (clicked)="abrirBusquedaChat()" />
+          }
+
           <!-- Acciones Rápidas del Agente -->
           <a
             routerLink="/ventas"
@@ -308,7 +342,7 @@
       @if (notaFijadaDe(chat.cliente) || editandoNotaFijada()) {
         <div class="pinned-note-banner">
           <div class="flex items-center gap-2 min-w-0 flex-1">
-            <app-icon name="pin" [size]="14" class="text-amber-700 shrink-0" />
+            <app-icon name="pin" [size]="14" class="text-primary shrink-0" />
             @if (editandoNotaFijada()) {
               <div class="flex items-center gap-2 flex-1 min-w-0">
                 <input
@@ -319,28 +353,29 @@
                   (keydown.enter)="guardarNotaFijada()"
                   placeholder="Ej: Interesada en Rinoplastia - Paciente VIP (Alergia a Penicilina)"
                   class="edit-pinned-input" />
-                <button type="button" (click)="guardarNotaFijada()" [disabled]="guardandoNotaFijada()" class="btn-save-pin">
-                  Guardar
-                </button>
-                <button type="button" (click)="cancelarEdicionNotaFijada()" class="btn-cancel-pin">
-                  Cancelar
-                </button>
+                <app-button
+                  size="sm"
+                  [loading]="guardandoNotaFijada()"
+                  (clicked)="guardarNotaFijada()">Guardar</app-button>
+                <app-button
+                  variant="ghost"
+                  size="sm"
+                  (clicked)="cancelarEdicionNotaFijada()">Cancelar</app-button>
               </div>
             } @else {
               <p class="pinned-note-text truncate">
-                <span class="font-bold text-amber-950">Aviso Fijado:</span> {{ notaFijadaDe(chat.cliente) }}
+                <span class="font-bold text-primary">Aviso Fijado:</span> {{ notaFijadaDe(chat.cliente) }}
               </p>
             }
           </div>
           @if (!editandoNotaFijada()) {
             <div class="flex items-center gap-1 shrink-0 ml-2">
-              <button
-                type="button"
-                (click)="iniciarEdicionNotaFijada(notaFijadaDe(chat.cliente))"
-                class="btn-edit-pin cursor-pointer"
-                title="Editar nota fijada">
-                <app-icon name="edit" [size]="12" />
-              </button>
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="edit"
+                [circle]="true"
+                (clicked)="iniciarEdicionNotaFijada(notaFijadaDe(chat.cliente))" />
             </div>
           }
         </div>
@@ -367,18 +402,21 @@
             </div>
           } @else {
             <div class="bubble-row"
+                 [attr.data-mensaje-id]="item.mensaje.id"
                  [class.bubble-row-out]="item.mensaje.direccion === 'SALIENTE'"
                  [class.bubble-row-in]="item.mensaje.direccion === 'ENTRANTE'">
               <div class="bubble"
                    [class.bubble-out]="item.mensaje.direccion === 'SALIENTE'"
-                   [class.bubble-in]="item.mensaje.direccion === 'ENTRANTE'">
+                   [class.bubble-in]="item.mensaje.direccion === 'ENTRANTE'"
+                   [class.bubble-match]="coincidenciasChat().includes(item.mensaje.id)"
+                   [class.bubble-match-active]="coincidenciaActiva() === item.mensaje.id">
 
                 <!-- Media (foto / video / audio / documento). Texto = @default -->
                 @switch (item.mensaje.tipo) {
                   @case ('IMAGEN') {
                     @if (item.mensaje.mediaUrl) {
                       <button type="button" (click)="abrirLightbox(item.mensaje.mediaUrl)" class="block mb-1 cursor-zoom-in text-left">
-                        <img [src]="item.mensaje.mediaUrl" alt="Imagen"
+                        <img [src]="item.mensaje.mediaUrl" alt="Imagen" loading="lazy" decoding="async"
                           class="rounded-lg max-w-full max-h-72 object-cover hover:opacity-90 transition-opacity" />
                       </button>
                     } @else {
@@ -388,7 +426,7 @@
                   @case ('STICKER') {
                     @if (item.mensaje.mediaUrl) {
                       <button type="button" (click)="abrirLightbox(item.mensaje.mediaUrl)" class="block mb-1 cursor-zoom-in text-left">
-                        <img [src]="item.mensaje.mediaUrl" alt="Sticker" class="w-28 h-28 object-contain hover:opacity-90 transition-opacity" />
+                        <img [src]="item.mensaje.mediaUrl" alt="Sticker" loading="lazy" decoding="async" class="w-28 h-28 object-contain hover:opacity-90 transition-opacity" />
                       </button>
                     } @else {
                       <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando…</div>
@@ -396,7 +434,7 @@
                   }
                   @case ('VIDEO') {
                     @if (item.mensaje.mediaUrl) {
-                      <video [src]="item.mensaje.mediaUrl" controls class="rounded-lg max-w-full max-h-72 mb-1"></video>
+                      <video [src]="item.mensaje.mediaUrl" controls preload="none" class="rounded-lg max-w-full max-h-72 mb-1"></video>
                     } @else {
                       <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando video…</div>
                     }
@@ -404,7 +442,7 @@
                   @case ('AUDIO') {
                     @if (item.mensaje.mediaUrl) {
                       <div class="audio-player-container">
-                        <audio #voiceAudio [src]="item.mensaje.mediaUrl" controls class="max-w-full h-8 flex-1"></audio>
+                        <audio #voiceAudio [src]="item.mensaje.mediaUrl" controls preload="none" class="max-w-full h-8 flex-1"></audio>
                         <div class="speed-btn-group">
                           <button
                             type="button"
@@ -447,7 +485,7 @@
                 @if (item.mensaje.contenido) {
                   @if (esUrlImagen(item.mensaje.contenido)) {
                     <button type="button" (click)="abrirLightbox(item.mensaje.contenido)" class="block my-1 cursor-zoom-in text-left">
-                      <img [src]="item.mensaje.contenido" alt="Imagen adjunta" class="max-w-xs max-h-72 rounded-xl object-cover border border-border shadow-xs hover:opacity-95 transition-opacity" />
+                      <img [src]="item.mensaje.contenido" alt="Imagen adjunta" loading="lazy" decoding="async" class="max-w-xs max-h-72 rounded-xl object-cover border border-border shadow-xs hover:opacity-95 transition-opacity" />
                     </button>
                   } @else if (esUrlPdf(item.mensaje.contenido)) {
                     <a [href]="item.mensaje.contenido" target="_blank" rel="noopener" class="flex items-center gap-2 p-2.5 rounded-xl bg-black/5 hover:bg-black/10 transition-colors my-1 border border-border/50">
@@ -633,9 +671,9 @@
       } @else {
         <!-- Fuera de la ventana de 24h: Meta bloquea texto libre y media.
              Solo se permite enviar una Plantilla Aprobada. (Único aviso unificado y elegante) -->
-        <div class="chat-input-bar chat-input-bar--bloqueada bg-amber-50/70 border-t border-amber-200/80">
-          <div class="flex-1 flex items-center gap-2.5 text-xs text-amber-900 min-w-0">
-            <app-icon name="alert-circle" [size]="18" class="text-amber-600 shrink-0" />
+        <div class="chat-input-bar chat-input-bar--bloqueada bg-bg-light border-t border-border">
+          <div class="flex-1 flex items-center gap-2.5 text-xs text-text-dark min-w-0">
+            <app-icon name="alert-circle" [size]="18" class="text-primary shrink-0" />
             <span class="truncate">
               <strong>Ventana 24h expirada:</strong> Meta requiere responder con una Plantilla Aprobada.
             </span>
