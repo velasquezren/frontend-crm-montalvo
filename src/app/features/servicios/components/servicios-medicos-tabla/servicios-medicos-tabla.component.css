@@ -1,0 +1,21 @@
+.panel {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow-subtle);
+  margin-bottom: 20px;
+}
+
+.celda-sticky {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 2;
+  border-right: 1px solid var(--color-border);
+  box-shadow: 2px 0 5px rgb(0 0 0 / 0.02);
+}
+
+tr:hover .celda-sticky {
+  background: var(--color-bg-workspace);
+}

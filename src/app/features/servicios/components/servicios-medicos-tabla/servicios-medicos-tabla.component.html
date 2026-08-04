@@ -1,0 +1,56 @@
+<section style="--indice: 8" class="aparecer panel">
+  <div class="mb-6 max-w-md">
+    <app-input
+      label="Buscar médico"
+      placeholder="Nombre o código"
+      [value]="busqueda()"
+      (valueChange)="onBusquedaInput($event)" />
+  </div>
+
+  @if (isLoading()) {
+    <app-loading-skeleton shape="text" height="2.5rem" />
+  } @else if (error()) {
+    <app-empty-state
+      icon="alert-circle"
+      title="No se pudieron cargar los médicos"
+      description="Verifica que el servidor esté encendido." />
+  } @else if (medicos().datos.length > 0) {
+    <app-table [dense]="true">
+      <thead>
+        <tr>
+          <th class="text-left celda-sticky">Médico</th>
+          <th class="text-left">Código</th>
+          <th class="text-right">Servicios</th>
+          <th class="text-right">Pacientes</th>
+          <th class="text-right">Facturado</th>
+          <th class="text-left">Última atención</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (m of medicos().datos; track m.codigo) {
+          <tr>
+            <td class="text-left font-semibold text-text-dark celda-sticky">{{ m.nombre || '—' }}</td>
+            <td class="text-left text-xs text-text-muted font-mono">{{ m.codigo }}</td>
+            <td class="text-right font-medium">{{ m.servicios | number }}</td>
+            <td class="text-right font-medium text-secondary">{{ m.pacientes | number }}</td>
+            <td class="text-right font-medium text-primary">{{ m.ingreso | moneda }}</td>
+            <td class="text-left text-xs text-text-muted">
+              {{ m.ultimaAtencion ? (m.ultimaAtencion | date: 'dd/MM/yy') : '—' }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </app-table>
+
+    <div class="mt-5">
+      <app-paginator
+        [pagina]="medicos().pagina"
+        [totalPaginas]="medicos().totalPaginas"
+        [total]="medicos().total"
+        [limite]="medicos().limite"
+        (cambiar)="paginaChange.emit($event)" />
+    </div>
+  } @else {
+    <app-empty-state icon="briefcase" title="Sin resultados" description="Prueba con otro nombre." />
+  }
+</section>

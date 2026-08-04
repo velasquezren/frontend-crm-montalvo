@@ -1,0 +1,115 @@
+<div
+  class="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 animate-fade-in"
+  (click)="cerrar.emit()"></div>
+
+<aside
+  class="fixed top-0 right-0 h-full w-full sm:max-w-2xl bg-white shadow-lifted z-50
+         flex flex-col animate-fade-scale">
+  <header class="flex items-start justify-between gap-3 p-5 border-b border-border">
+    <div>
+      <h2 class="text-lg font-bold text-text-dark">{{ historial().nombre }}</h2>
+      <p class="text-xs text-text-muted font-mono mt-0.5">{{ historial().pac }}</p>
+    </div>
+    <app-button variant="ghost" size="sm" icon="x" [circle]="true" (clicked)="cerrar.emit()" />
+  </header>
+
+  <div class="flex-1 overflow-y-auto p-5">
+    <!-- Resumen -->
+    <section class="grid-kpis-modern">
+      @for (item of resumenHistorial(); track item.label; let i = $index) {
+        <div [style.--indice]="i" class="aparecer kpi-card" [class.kpi-card-destacado]="item.destacado">
+          <div class="kpi-cabecera">
+            <span class="kpi-label">{{ item.label }}</span>
+            <div [class]="'kpi-icono kpi-icono-' + item.tono">
+              <app-icon [name]="item.icon" [size]="18" />
+            </div>
+          </div>
+          <span class="kpi-valor">{{ item.valor }}</span>
+          <span class="kpi-pie">{{ item.pie }}</span>
+        </div>
+      }
+    </section>
+
+    <!-- Ficha, si existe -->
+    @if (historial().ficha; as f) {
+      <div class="mb-5">
+        <h3 class="text-sm font-bold text-text-dark mb-2">Ficha del paciente</h3>
+        <div class="grid-ficha">
+          @if (f.edad !== null) {
+            <div class="dato"><span class="dato-label">Edad</span><span class="dato-valor">{{ f.edad }} años</span></div>
+          }
+          @if (f.sexo) {
+            <div class="dato"><span class="dato-label">Sexo</span><span class="dato-valor">{{ f.sexo }}</span></div>
+          }
+          @if (f.ocupacion) {
+            <div class="dato"><span class="dato-label">Ocupación</span><span class="dato-valor">{{ f.ocupacion }}</span></div>
+          }
+          @if (f.ciLugar) {
+            <div class="dato"><span class="dato-label">CI emitido en</span><span class="dato-valor">{{ f.ciLugar }}</span></div>
+          }
+          @if (f.nacionalidad) {
+            <div class="dato"><span class="dato-label">Nacionalidad</span><span class="dato-valor">{{ f.nacionalidad }}</span></div>
+          }
+          @if (f.estadoCivil) {
+            <div class="dato"><span class="dato-label">Estado civil</span><span class="dato-valor">{{ f.estadoCivil }}</span></div>
+          }
+          @if (f.telefono) {
+            <div class="dato"><span class="dato-label">Teléfono</span><span class="dato-valor">{{ f.telefono }}</span></div>
+          }
+          @if (f.empresaTrabajo) {
+            <div class="dato"><span class="dato-label">Empresa</span><span class="dato-valor">{{ f.empresaTrabajo }}</span></div>
+          }
+          @if (f.visitasPrevias !== null) {
+            <div class="dato"><span class="dato-label">Visitas previas</span><span class="dato-valor">{{ f.visitasPrevias }}</span></div>
+          }
+          @if (f.agente) {
+            <div class="dato"><span class="dato-label">Agente</span><span class="dato-valor">{{ f.agente.nombre }}</span></div>
+          }
+        </div>
+        @if (f.direccion) {
+          <p class="text-xs text-text-muted mt-3">
+            <app-icon name="map-pin" [size]="12" /> {{ f.direccion }}
+          </p>
+        }
+      </div>
+    } @else {
+      <div class="mb-5 p-3 rounded-xl border border-border bg-bg-workspace">
+        <p class="text-xs text-text-muted">
+          Este paciente <strong>aún no tiene ficha en el CRM</strong>. Su historial se muestra con
+          los datos que trae el Excel. Al completar la importación de pacientes desde FileMaker
+          aparecerán aquí su edad, procedencia y contacto.
+        </p>
+      </div>
+    }
+
+    <!-- Línea de tiempo -->
+    <h3 class="text-sm font-bold text-text-dark mb-2">
+      Línea de tiempo
+      <span class="text-xs font-medium text-text-muted">
+        — del {{ historial().resumen.primeraVisita | date: 'dd/MM/yy' }} al
+        {{ historial().resumen.ultimaVisita | date: 'dd/MM/yy' }}
+      </span>
+    </h3>
+
+    <div class="linea-tiempo">
+      @for (s of historial().servicios; track s.id) {
+        <article class="evento">
+          <span class="evento-fecha">{{ s.fecha ? (s.fecha | date: 'dd/MM/yy') : '—' }}</span>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-text-dark">{{ s.detalle }}</p>
+            <p class="text-xs text-text-muted mt-0.5">
+              @if (s.medico) { {{ s.medico }} · }
+              {{ s.modulo }}
+              @if (s.seguro) { · {{ s.seguro }} }
+            </p>
+          </div>
+          <span class="text-sm font-semibold text-primary whitespace-nowrap">
+            {{ s.precio | moneda }}
+          </span>
+        </article>
+      } @empty {
+        <app-empty-state icon="inbox" title="Sin servicios registrados" />
+      }
+    </div>
+  </div>
+</aside>

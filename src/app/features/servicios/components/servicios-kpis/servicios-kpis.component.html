@@ -1,0 +1,43 @@
+<section class="grid-kpis-modern">
+  @for (item of resumen(); track item.label; let i = $index) {
+    <div [style.--indice]="i" class="aparecer kpi-card" [class.kpi-card-destacado]="item.destacado">
+      <div class="kpi-cabecera">
+        <span class="kpi-label">{{ item.label }}</span>
+        <div class="kpi-icono" [class]="'kpi-icono kpi-icono-' + item.tono">
+          <app-icon [name]="item.icon" [size]="18" />
+        </div>
+      </div>
+      <span class="kpi-valor">{{ item.valor }}</span>
+      <span class="kpi-pie">{{ item.pie }}</span>
+    </div>
+  }
+
+  <div [style.--indice]="4" class="aparecer kpi-card">
+    <div class="kpi-cabecera">
+      <span class="kpi-label">Enlazado a ficha</span>
+      <div class="kpi-icono" [class.kpi-icono-primary]="pctCobertura() >= 80" [class.kpi-icono-neutral]="pctCobertura() < 80">
+        <app-icon [name]="pctCobertura() >= 80 ? 'check-circle' : 'alert-circle'" [size]="18" />
+      </div>
+    </div>
+    <span class="kpi-valor">{{ pctCobertura() }}%</span>
+    <span class="kpi-barra" [class.kpi-barra-incompleta]="pctCobertura() < 80">
+      <span [style.width.%]="pctCobertura()"></span>
+    </span>
+    <span class="kpi-pie">
+      {{ cobertura().conFicha | number }} de {{ cobertura().servicios | number }} servicios
+      <app-info-hint titulo="Por qué no todos los servicios tienen ficha">
+        <p>
+          Cada servicio del Excel trae el <strong>código del paciente</strong> y con él se busca
+          su ficha en el CRM.
+        </p>
+        <p>
+          Si el porcentaje es bajo no es un error del sistema: significa que
+          <strong>el maestro de pacientes está importado a medias</strong>. Los servicios se
+          siguen mostrando con el nombre que trae el Excel, pero sin ficha no hay datos
+          demográficos ni teléfono.
+        </p>
+        <p>Se arregla completando la importación de pacientes desde FileMaker.</p>
+      </app-info-hint>
+    </span>
+  </div>
+</section>

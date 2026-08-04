@@ -1,0 +1,68 @@
+<section style="--indice: 7" class="aparecer panel">
+  <div class="mb-6 max-w-md">
+    <app-input
+      label="Buscar paciente"
+      placeholder="Nombre o código (PAC12345)"
+      [value]="busqueda()"
+      (valueChange)="onBusquedaInput($event)" />
+  </div>
+
+  @if (isLoading()) {
+    <app-loading-skeleton shape="text" height="2.5rem" />
+  } @else if (error()) {
+    <app-empty-state
+      icon="alert-circle"
+      title="No se pudieron cargar los pacientes"
+      description="Verifica que el servidor esté encendido." />
+  } @else if (pacientes().datos.length > 0) {
+    <app-table [dense]="true">
+      <thead>
+        <tr>
+          <th class="text-left celda-sticky">Paciente</th>
+          <th class="text-left">Código</th>
+          <th class="text-right">Servicios</th>
+          <th class="text-right">Gastado</th>
+          <th class="text-left">Última visita</th>
+          <th class="text-right">Historial</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of pacientes().datos; track p.pac) {
+          <tr>
+            <td class="text-left font-semibold text-text-dark celda-sticky">
+              {{ p.paciente || '—' }}
+              @if (!p.clienteId) {
+                <app-badge variant="neutral">sin ficha</app-badge>
+              }
+            </td>
+            <td class="text-left text-xs text-text-muted font-mono">{{ p.pac }}</td>
+            <td class="text-right font-medium">{{ p.servicios | number }}</td>
+            <td class="text-right font-medium text-primary">{{ p.gastado | moneda }}</td>
+            <td class="text-left text-xs text-text-muted">
+              {{ p.ultimaVisita ? (p.ultimaVisita | date: 'dd/MM/yy') : '—' }}
+            </td>
+            <td class="text-right">
+              <app-button variant="ghost" size="sm" icon="eye" (clicked)="abrirHistorial.emit(p.pac)">
+                Ver
+              </app-button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </app-table>
+
+    <div class="mt-5">
+      <app-paginator
+        [pagina]="pacientes().pagina"
+        [totalPaginas]="pacientes().totalPaginas"
+        [total]="pacientes().total"
+        [limite]="pacientes().limite"
+        (cambiar)="paginaChange.emit($event)" />
+    </div>
+  } @else {
+    <app-empty-state
+      icon="users"
+      title="Sin resultados"
+      description="Prueba con otro nombre o código de paciente." />
+  }
+</section>

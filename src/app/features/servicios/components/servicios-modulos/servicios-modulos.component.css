@@ -1,0 +1,76 @@
+.titulo-seccion {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  letter-spacing: -0.01em;
+}
+
+.subtitulo-seccion {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+  margin-bottom: 16px;
+}
+
+.grid-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .grid-split {
+    grid-template-columns: minmax(260px, 380px) 1fr;
+    gap: 32px;
+  }
+}
+
+.sub-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+  background: var(--color-bg-workspace);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-radius: 12px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.sub-card:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
+  box-shadow: var(--shadow-subtle);
+}
+
+.sub-card-cifra {
+  display: block;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.sub-card-pie {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.badge-pct {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}

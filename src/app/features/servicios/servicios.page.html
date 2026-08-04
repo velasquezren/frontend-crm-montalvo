@@ -91,89 +91,17 @@
         }
       </div>
 
-      <section class="grid-kpis-modern">
-        @for (item of resumen(); track item.label; let i = $index) {
-          <div [style.--indice]="i" class="aparecer kpi-card" [class.kpi-card-destacado]="item.destacado">
-            <div class="kpi-cabecera">
-              <span class="kpi-label">{{ item.label }}</span>
-              <div class="kpi-icono" [class]="'kpi-icono kpi-icono-' + item.tono">
-                <app-icon [name]="item.icon" [size]="18" />
-              </div>
-            </div>
-            <span class="kpi-valor">{{ item.valor }}</span>
-            <span class="kpi-pie">{{ item.pie }}</span>
-          </div>
-        }
-
-        <!-- La cobertura es una cifra más, no una nota al pie: sin ella no se
-             sabe cuánto del historial está realmente conectado al CRM. -->
-        <div [style.--indice]="4" class="aparecer kpi-card">
-          <div class="kpi-cabecera">
-            <span class="kpi-label">Enlazado a ficha</span>
-            <div class="kpi-icono" [class.kpi-icono-primary]="pctCobertura() >= 80" [class.kpi-icono-neutral]="pctCobertura() < 80">
-              <app-icon [name]="pctCobertura() >= 80 ? 'check-circle' : 'alert-circle'" [size]="18" />
-            </div>
-          </div>
-          <span class="kpi-valor">{{ pctCobertura() }}%</span>
-          <span class="kpi-barra" [class.kpi-barra-incompleta]="pctCobertura() < 80">
-            <span [style.width.%]="pctCobertura()"></span>
-          </span>
-          <span class="kpi-pie">
-            {{ d.cobertura.conFicha | number }} de {{ d.cobertura.servicios | number }} servicios
-            <app-info-hint titulo="Por qué no todos los servicios tienen ficha">
-              <p>
-                Cada servicio del Excel trae el <strong>código del paciente</strong> y con él se busca
-                su ficha en el CRM.
-              </p>
-              <p>
-                Si el porcentaje es bajo no es un error del sistema: significa que
-                <strong>el maestro de pacientes está importado a medias</strong>. Los servicios se
-                siguen mostrando con el nombre que trae el Excel, pero sin ficha no hay datos
-                demográficos ni teléfono.
-              </p>
-              <p>Se arregla completando la importación de pacientes desde FileMaker.</p>
-            </app-info-hint>
-          </span>
-        </div>
-      </section>
+      <app-servicios-kpis
+        [resumen]="resumen()"
+        [pctCobertura]="pctCobertura()"
+        [cobertura]="d.cobertura" />
 
       <section style="--indice: 4" class="aparecer panel">
-        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <div>
-            <h3 class="titulo-seccion">Servicios por módulo</h3>
-            <p class="subtitulo-seccion">De dónde viene cada atención registrada</p>
-          </div>
-          @if (filtroModulo(); as m) {
-            <app-button variant="ghost" size="sm" icon="x" (clicked)="alternarModulo(m)">
-              Quitar filtro
-            </app-button>
-          }
-        </div>
-
-        <div class="grid-split">
-          <app-donut-chart etiquetaTotal="servicios" formatType="number" [items]="serieModulos()" />
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            @for (m of desgloseModulos(); track m.etiqueta) {
-              <button
-                type="button"
-                class="sub-card text-left cursor-pointer"
-                [class.ring-2]="filtroModulo() === m.etiqueta"
-                (click)="alternarModulo(m.etiqueta)">
-                <div class="flex items-center justify-between mb-3">
-                  <app-badge [variant]="filtroModulo() === m.etiqueta ? 'success' : 'neutral'">
-                    {{ m.etiqueta }}
-                  </app-badge>
-                  <span class="badge-pct">{{ m.pct }}%</span>
-                </div>
-                <div>
-                  <span class="sub-card-cifra">{{ m.total | number }}</span>
-                  <span class="sub-card-pie">{{ m.ingreso | moneda }} facturado</span>
-                </div>
-              </button>
-            }
-          </div>
-        </div>
+        <app-servicios-modulos
+          [serieModulos]="serieModulos()"
+          [desgloseModulos]="desgloseModulos()"
+          [filtroModulo]="filtroModulo()"
+          (alternarModulo)="alternarModulo($event)" />
       </section>
 
       @defer (on viewport) {
@@ -312,246 +240,31 @@
 
 <!-- ══════════════ PACIENTES ══════════════ -->
 @if (pestana() === 'PACIENTES') {
-  <section style="--indice: 7" class="aparecer panel">
-    <div class="mb-6 max-w-md">
-      <app-input
-        label="Buscar paciente"
-        placeholder="Nombre o código (PAC12345)"
-        [(value)]="busquedaPacientes" />
-    </div>
-
-    @if (pacientes.isLoading()) {
-      <app-loading-skeleton shape="text" height="2.5rem" />
-    } @else if (pacientes.error()) {
-      <app-empty-state
-        icon="alert-circle"
-        title="No se pudieron cargar los pacientes"
-        description="Verifica que el servidor esté encendido." />
-    } @else if (pacientes.value().datos.length > 0) {
-      <app-table [dense]="true">
-        <thead>
-          <tr>
-            <th class="text-left celda-sticky">Paciente</th>
-            <th class="text-left">Código</th>
-            <th class="text-right">Servicios</th>
-            <th class="text-right">Gastado</th>
-            <th class="text-left">Última visita</th>
-            <th class="text-right">Historial</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (p of pacientes.value().datos; track p.pac) {
-            <tr>
-              <td class="text-left font-semibold text-text-dark celda-sticky">
-                {{ p.paciente || '—' }}
-                @if (!p.clienteId) {
-                  <app-badge variant="neutral">sin ficha</app-badge>
-                }
-              </td>
-              <td class="text-left text-xs text-text-muted font-mono">{{ p.pac }}</td>
-              <td class="text-right font-medium">{{ p.servicios | number }}</td>
-              <td class="text-right font-medium text-primary">{{ p.gastado | moneda }}</td>
-              <td class="text-left text-xs text-text-muted">
-                {{ p.ultimaVisita ? (p.ultimaVisita | date: 'dd/MM/yy') : '—' }}
-              </td>
-              <td class="text-right">
-                <app-button variant="ghost" size="sm" icon="eye" (clicked)="abrirHistorial(p.pac)">
-                  Ver
-                </app-button>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </app-table>
-
-      <div class="mt-5">
-        <app-paginator
-        [pagina]="pacientes.value().pagina"
-        [totalPaginas]="pacientes.value().totalPaginas"
-        [total]="pacientes.value().total"
-        [limite]="pacientes.value().limite"
-          (cambiar)="paginaPacientes.set($event)" />
-      </div>
-    } @else {
-      <app-empty-state
-        icon="users"
-        title="Sin resultados"
-        description="Prueba con otro nombre o código de paciente." />
-    }
-  </section>
+  <app-servicios-pacientes-tabla
+    [pacientes]="pacientes.value()"
+    [isLoading]="pacientes.isLoading()"
+    [error]="pacientes.error()"
+    [busqueda]="busquedaPacientes()"
+    (busquedaChange)="busquedaPacientes.set($event)"
+    (paginaChange)="paginaPacientes.set($event)"
+    (abrirHistorial)="abrirHistorial($event)" />
 }
 
 <!-- ══════════════ MÉDICOS ══════════════ -->
 @if (pestana() === 'MEDICOS') {
-  <section style="--indice: 8" class="aparecer panel">
-    <div class="mb-6 max-w-md">
-      <app-input label="Buscar médico" placeholder="Nombre o código" [(value)]="busquedaMedicos" />
-    </div>
-
-    @if (medicos.isLoading()) {
-      <app-loading-skeleton shape="text" height="2.5rem" />
-    } @else if (medicos.error()) {
-      <app-empty-state
-        icon="alert-circle"
-        title="No se pudieron cargar los médicos"
-        description="Verifica que el servidor esté encendido." />
-    } @else if (medicos.value().datos.length > 0) {
-      <app-table [dense]="true">
-        <thead>
-          <tr>
-            <th class="text-left celda-sticky">Médico</th>
-            <th class="text-left">Código</th>
-            <th class="text-right">Servicios</th>
-            <th class="text-right">Pacientes</th>
-            <th class="text-right">Facturado</th>
-            <th class="text-left">Última atención</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (m of medicos.value().datos; track m.codigo) {
-            <tr>
-              <td class="text-left font-semibold text-text-dark celda-sticky">{{ m.nombre || '—' }}</td>
-              <td class="text-left text-xs text-text-muted font-mono">{{ m.codigo }}</td>
-              <td class="text-right font-medium">{{ m.servicios | number }}</td>
-              <td class="text-right font-medium text-secondary">{{ m.pacientes | number }}</td>
-              <td class="text-right font-medium text-primary">{{ m.ingreso | moneda }}</td>
-              <td class="text-left text-xs text-text-muted">
-                {{ m.ultimaAtencion ? (m.ultimaAtencion | date: 'dd/MM/yy') : '—' }}
-              </td>
-            </tr>
-          }
-        </tbody>
-      </app-table>
-
-      <div class="mt-5">
-        <app-paginator
-        [pagina]="medicos.value().pagina"
-        [totalPaginas]="medicos.value().totalPaginas"
-        [total]="medicos.value().total"
-        [limite]="medicos.value().limite"
-          (cambiar)="paginaMedicos.set($event)" />
-      </div>
-    } @else {
-      <app-empty-state icon="briefcase" title="Sin resultados" description="Prueba con otro nombre." />
-    }
-  </section>
+  <app-servicios-medicos-tabla
+    [medicos]="medicos.value()"
+    [isLoading]="medicos.isLoading()"
+    [error]="medicos.error()"
+    [busqueda]="busquedaMedicos()"
+    (busquedaChange)="busquedaMedicos.set($event)"
+    (paginaChange)="paginaMedicos.set($event)" />
 }
 
 <!-- ══════════════ HISTORIAL DEL PACIENTE ══════════════ -->
 @if (historial(); as h) {
-  <div
-    class="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 animate-fade-in"
-    (click)="cerrarHistorial()"></div>
-
-  <aside
-    class="fixed top-0 right-0 h-full w-full sm:max-w-2xl bg-white shadow-lifted z-50
-           flex flex-col animate-fade-scale">
-    <header class="flex items-start justify-between gap-3 p-5 border-b border-border">
-      <div>
-        <h2 class="text-lg font-bold text-text-dark">{{ h.nombre }}</h2>
-        <p class="text-xs text-text-muted font-mono mt-0.5">{{ h.pac }}</p>
-      </div>
-      <app-button variant="ghost" size="sm" icon="x" [circle]="true" (clicked)="cerrarHistorial()" />
-    </header>
-
-    <div class="flex-1 overflow-y-auto p-5">
-      <!-- Resumen -->
-      <section class="grid-kpis-modern">
-        @for (item of resumenHistorial(); track item.label; let i = $index) {
-          <div [style.--indice]="i" class="aparecer kpi-card" [class.kpi-card-destacado]="item.destacado">
-            <div class="kpi-cabecera">
-              <span class="kpi-label">{{ item.label }}</span>
-              <div [class]="'kpi-icono kpi-icono-' + item.tono">
-                <app-icon [name]="item.icon" [size]="18" />
-              </div>
-            </div>
-            <span class="kpi-valor">{{ item.valor }}</span>
-            <span class="kpi-pie">{{ item.pie }}</span>
-          </div>
-        }
-      </section>
-
-      <!-- Ficha, si existe -->
-      @if (h.ficha; as f) {
-        <div class="mb-5">
-          <h3 class="text-sm font-bold text-text-dark mb-2">Ficha del paciente</h3>
-          <div class="grid-ficha">
-            @if (f.edad !== null) {
-              <div class="dato"><span class="dato-label">Edad</span><span class="dato-valor">{{ f.edad }} años</span></div>
-            }
-            @if (f.sexo) {
-              <div class="dato"><span class="dato-label">Sexo</span><span class="dato-valor">{{ f.sexo }}</span></div>
-            }
-            @if (f.ocupacion) {
-              <div class="dato"><span class="dato-label">Ocupación</span><span class="dato-valor">{{ f.ocupacion }}</span></div>
-            }
-            @if (f.ciLugar) {
-              <div class="dato"><span class="dato-label">CI emitido en</span><span class="dato-valor">{{ f.ciLugar }}</span></div>
-            }
-            @if (f.nacionalidad) {
-              <div class="dato"><span class="dato-label">Nacionalidad</span><span class="dato-valor">{{ f.nacionalidad }}</span></div>
-            }
-            @if (f.estadoCivil) {
-              <div class="dato"><span class="dato-label">Estado civil</span><span class="dato-valor">{{ f.estadoCivil }}</span></div>
-            }
-            @if (f.telefono) {
-              <div class="dato"><span class="dato-label">Teléfono</span><span class="dato-valor">{{ f.telefono }}</span></div>
-            }
-            @if (f.empresaTrabajo) {
-              <div class="dato"><span class="dato-label">Empresa</span><span class="dato-valor">{{ f.empresaTrabajo }}</span></div>
-            }
-            @if (f.visitasPrevias !== null) {
-              <div class="dato"><span class="dato-label">Visitas previas</span><span class="dato-valor">{{ f.visitasPrevias }}</span></div>
-            }
-            @if (f.agente) {
-              <div class="dato"><span class="dato-label">Agente</span><span class="dato-valor">{{ f.agente.nombre }}</span></div>
-            }
-          </div>
-          @if (f.direccion) {
-            <p class="text-xs text-text-muted mt-3">
-              <app-icon name="map-pin" [size]="12" /> {{ f.direccion }}
-            </p>
-          }
-        </div>
-      } @else {
-        <div class="mb-5 p-3 rounded-xl border border-border bg-bg-workspace">
-          <p class="text-xs text-text-muted">
-            Este paciente <strong>aún no tiene ficha en el CRM</strong>. Su historial se muestra con
-            los datos que trae el Excel. Al completar la importación de pacientes desde FileMaker
-            aparecerán aquí su edad, procedencia y contacto.
-          </p>
-        </div>
-      }
-
-      <!-- Línea de tiempo -->
-      <h3 class="text-sm font-bold text-text-dark mb-2">
-        Línea de tiempo
-        <span class="text-xs font-medium text-text-muted">
-          — del {{ h.resumen.primeraVisita | date: 'dd/MM/yy' }} al
-          {{ h.resumen.ultimaVisita | date: 'dd/MM/yy' }}
-        </span>
-      </h3>
-
-      <div class="linea-tiempo">
-        @for (s of h.servicios; track s.id) {
-          <article class="evento">
-            <span class="evento-fecha">{{ s.fecha ? (s.fecha | date: 'dd/MM/yy') : '—' }}</span>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold text-text-dark">{{ s.detalle }}</p>
-              <p class="text-xs text-text-muted mt-0.5">
-                @if (s.medico) { {{ s.medico }} · }
-                {{ s.modulo }}
-                @if (s.seguro) { · {{ s.seguro }} }
-              </p>
-            </div>
-            <span class="text-sm font-semibold text-primary whitespace-nowrap">
-              {{ s.precio | moneda }}
-            </span>
-          </article>
-        } @empty {
-          <app-empty-state icon="inbox" title="Sin servicios registrados" />
-        }
-      </div>
-    </div>
-  </aside>
+  <app-servicios-historial-drawer
+    [historial]="h"
+    [resumenHistorial]="resumenHistorial()"
+    (cerrar)="cerrarHistorial()" />
 }

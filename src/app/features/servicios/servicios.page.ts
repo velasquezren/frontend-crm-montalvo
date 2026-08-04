@@ -1,4 +1,4 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 
@@ -7,17 +7,14 @@ import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model'
 import { ToastService } from '../../core/toast/toast.service';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
-import { CardComponent } from '../../shared/components/card/card.component';
 import { BarChartComponent, ChartItem } from '../../shared/components/charts/bar-chart.component';
 import { DonutChartComponent } from '../../shared/components/charts/donut-chart.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InfoHintComponent } from '../../shared/components/info-hint/info-hint.component';
-import { InputComponent } from '../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
-import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 import { formatearBs, MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import {
@@ -26,6 +23,11 @@ import {
   PeriodoComision,
 } from '../planilla-comisiones/planilla.model';
 import { ServiciosService } from './servicios.service';
+import { ServiciosHistorialDrawerComponent } from './components/servicios-historial-drawer/servicios-historial-drawer.component';
+import { ServiciosKpisComponent } from './components/servicios-kpis/servicios-kpis.component';
+import { ServiciosMedicosTablaComponent } from './components/servicios-medicos-tabla/servicios-medicos-tabla.component';
+import { ServiciosModulosComponent } from './components/servicios-modulos/servicios-modulos.component';
+import { ServiciosPacientesTablaComponent } from './components/servicios-pacientes-tabla/servicios-pacientes-tabla.component';
 import {
   DashboardServicios,
   Demografia,
@@ -45,23 +47,24 @@ type Pestana = 'DASHBOARD' | 'PACIENTES' | 'MEDICOS';
 @Component({
   selector: 'app-servicios',
   imports: [
-    DatePipe,
     DecimalPipe,
     MonedaPipe,
     BadgeComponent,
     BarChartComponent,
     ButtonComponent,
-    CardComponent,
     DonutChartComponent,
     EmptyStateComponent,
     FilterChipComponent,
     IconComponent,
     InfoHintComponent,
-    InputComponent,
     LoadingSkeletonComponent,
     PageHeaderComponent,
-    PaginatorComponent,
     TableComponent,
+    ServiciosKpisComponent,
+    ServiciosModulosComponent,
+    ServiciosPacientesTablaComponent,
+    ServiciosMedicosTablaComponent,
+    ServiciosHistorialDrawerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './servicios.page.html',
