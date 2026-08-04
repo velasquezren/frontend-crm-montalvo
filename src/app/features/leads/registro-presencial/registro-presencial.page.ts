@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { mensajeDeError } from '../../../core/api/http-error';
@@ -18,6 +18,7 @@ import { LeadsService } from '../leads.service';
  * el interés; el agente y la fecha salen del JWT en el servidor.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-registro-presencial',
   imports: [
     PageHeaderComponent,
