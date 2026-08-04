@@ -164,6 +164,94 @@ function verificarRoles(skill, texto) {
   }
 }
 
+// ── 7. El CÓDIGO obedece al sistema de diseño ─────────────────────────────────
+// Las seis comprobaciones anteriores validan una sola dirección: que el skill no
+// mienta sobre el código. Esta valida la contraria —que el código no rompa lo que
+// el skill declara ley— y es la que faltaba: el inbox había acumulado 17
+// desviaciones (una escala ámbar completa donde la paleta excluye ámbares a
+// propósito, cinco sombras ajenas, ocho radios distintos) sin que nada avisara.
+//
+// DEUDA: las vistas que ya venían sucias no tumban el build, pero su número está
+// congelado y **solo puede bajar**. Si un archivo mejora, el check falla pidiendo
+// que actualices la cifra; si empeora o aparece uno nuevo, falla también. Así la
+// regla es ley desde hoy sin obligar a un refactor de golpe, y la deuda no puede
+// quedarse quieta fingiendo que no existe.
+
+const COLOR_AJENO =
+  /\b(?:bg|text|border|from|to|via|ring|divide|outline|decoration|shadow|accent|caret|fill|stroke)-(?:amber|yellow|red|orange|rose|slate|gray|zinc|neutral|stone|green|blue|indigo|purple|pink|emerald|teal|sky|lime|cyan|violet|fuchsia)-\d{2,3}\b/g;
+
+const SOMBRA_AJENA = /\bshadow-(?:2xs|xs|sm|md|lg|xl|2xl|inner)\b/g;
+
+/** El sistema define tres radios: inputs 12px, tarjetas 16px, píldoras redondas. */
+const RADIO_AJENO = /border-radius:\s*(?!12px|16px|9999px|50%|0)[0-9]+(?:px|rem)/g;
+
+/**
+ * Violaciones toleradas por archivo, congeladas al 2026-08-04. **Bajar, nunca
+ * subir.** Los colores de estas vistas son estados (lead nuevo/contactado/…)
+ * pintados a mano: ya existe el mapa canónico `shared/models/estados.model.ts`
+ * con las variantes del sistema, así que la migración es sustituir el color
+ * crudo por `<app-badge [variant]="ESTADO_LEAD_BADGE[x]">`.
+ *
+ * Nada de esto rompe el build hoy; lo que rompe el build es empeorarlo.
+ */
+const DEUDA = {
+  'features/agentes/agentes.page.html': { color: 8 },
+  'features/auth/login.page.html': { color: 1 },
+  'features/leads/leads.page.css': { radio: 3 },
+  'features/leads/leads.page.html': { color: 12 },
+  'features/perfil/perfil.page.html': { color: 4 },
+  'features/planilla-comisiones/planilla-comisiones.page.css': { radio: 12 },
+  'features/planilla-comisiones/planilla-comisiones.page.html': { color: 3 },
+  'features/reportes/reportes.page.css': { radio: 11 },
+  'features/servicios/components/servicios-historial-drawer/servicios-historial-drawer.component.css':
+    { radio: 3 },
+  'features/servicios/components/servicios-kpis/servicios-kpis.component.css': { radio: 3 },
+  'features/servicios/components/servicios-modulos/servicios-modulos.component.css': { radio: 1 },
+  'features/servicios/servicios.page.css': { radio: 6 },
+  'shared/components/layout/layout.component.css': { radio: 1 },
+};
+
+const REGLAS = [
+  { clave: 'color', patron: COLOR_AJENO, ext: /\.html$/, que: 'color(es) fuera de la paleta cerrada' },
+  { clave: 'sombra', patron: SOMBRA_AJENA, ext: /\.html$/, que: 'sombra(s) fuera de shadow-subtle/lifted' },
+  { clave: 'radio', patron: RADIO_AJENO, ext: /\.css$/, que: 'radio(s) fuera de 12px/16px/píldora' },
+];
+
+function verificarCodigo() {
+  const base = resolve(RAIZ, 'src', 'app');
+  const señalaCodigo = mensaje => problemas.push({ skill: 'crm-design-system', mensaje });
+
+  for (const ruta of indexar(base)) {
+    const rel = relative(base, ruta);
+    for (const { clave, patron, ext, que } of REGLAS) {
+      if (!ext.test(ruta)) continue;
+      const hallados = (readFileSync(ruta, 'utf8').match(patron) ?? []).length;
+      const tolerado = DEUDA[rel]?.[clave] ?? 0;
+
+      if (hallados > tolerado) {
+        señalaCodigo(
+          `${rel}: ${hallados} ${que}` +
+            (tolerado ? ` (la deuda congelada era ${tolerado}; no debe subir)` : ''),
+        );
+      } else if (hallados < tolerado) {
+        señalaCodigo(
+          `${rel}: mejoró a ${hallados} ${que} — baja la deuda a ${hallados}` +
+            (hallados === 0 ? ' (o borra la entrada) ' : ' ') +
+            'en DEUDA de tools/verificar-skills.mjs.',
+        );
+      }
+    }
+  }
+
+  /* Una entrada que ya no corresponde a ningún archivo es deuda fantasma:
+     alguien borró o renombró la vista y la cifra se quedó mintiendo. */
+  for (const rel of Object.keys(DEUDA)) {
+    if (!existsSync(resolve(base, rel))) {
+      señalaCodigo(`DEUDA menciona ${rel}, que ya no existe — bórrala.`);
+    }
+  }
+}
+
 // ── Ejecución ─────────────────────────────────────────────────────────────────
 if (!existsSync(SKILLS)) {
   console.log('· No hay .claude/skills/ — nada que verificar.');
@@ -188,6 +276,9 @@ for (const nombre of readdirSync(SKILLS)) {
   verificarAnimaciones(nombre, texto);
   verificarRoles(nombre, texto);
 }
+
+/* Global, no por skill: mira el código, no la documentación. */
+verificarCodigo();
 
 if (problemas.length === 0) {
   console.log('✓ Los skills coinciden con el código.');

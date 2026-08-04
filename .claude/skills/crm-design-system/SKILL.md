@@ -196,5 +196,30 @@ Contrasta este archivo con el código: hexadecimales contra los tokens de `style
 `input`/`output` de la tabla de inventario contra el `.component.ts` del átomo, los selectores
 `<app-…>`, las clases `animate-…` y las rutas citadas. Va encadenado a `npm run build`.
 
+### Tres reglas dejaron de ser recomendación: el build falla si las rompes
+
+Desde el 2026-08-04 el validador mira también en la dirección contraria — **que el código no
+rompa lo que este archivo declara ley**:
+
+| Regla | Qué rechaza |
+|---|---|
+| Paleta cerrada | cualquier utilidad `bg-/text-/border-…-{amber,red,slate,emerald,…}-NNN` en un `.html` |
+| Sombras | cualquier `shadow-{xs,sm,md,lg,xl,2xl,inner}`; solo valen `subtle` y `lifted` |
+| Radios | cualquier `border-radius` que no sea 12px (inputs), 16px (tarjetas) o píldora |
+
+Existe porque el inbox había acumulado **17 desviaciones** —una escala ámbar completa donde la
+paleta excluye ámbares a propósito, cinco sombras ajenas, ocho radios distintos— sin que nada
+avisara. Una vista no se sale del sistema de golpe: se sale de una clase en una clase.
+
+**Deuda congelada.** Las vistas que ya venían sucias no tumban el build: su número está anotado
+en `DEUDA` dentro de `tools/verificar-skills.mjs` y **solo puede bajar**. Si arreglas una, el
+check falla pidiendo que actualices la cifra; si empeoras una o ensucias un archivo nuevo, falla
+igual. Así la regla rige desde hoy sin exigir un refactor de golpe, y la deuda no puede quedarse
+quieta fingiendo que no existe.
+
+Casi toda esa deuda son **estados pintados a mano** (lead nuevo/contactado/…) cuando ya existe
+`shared/models/estados.model.ts` con su variante de badge: migrarlos es cambiar el color crudo
+por `<app-badge [variant]="ESTADO_LEAD_BADGE[lead.estado]">`.
+
 Verifica **datos, no criterio**: si añades una regla o cambias un patrón, este archivo se
 actualiza a mano. Cuando el validador te contradiga, corrige el skill — el código es la verdad.

@@ -13,7 +13,7 @@
       class="px-5 py-2.5 text-xs font-bold rounded-xl transition-all duration-200 flex items-center gap-2 cursor-pointer select-none"
       [class.bg-primary]="tabActiva() === 'perfil'"
       [class.text-white]="tabActiva() === 'perfil'"
-      [class.shadow-md]="tabActiva() === 'perfil'"
+      [class.shadow-lifted]="tabActiva() === 'perfil'"
       [class.text-text-muted]="tabActiva() !== 'perfil'"
       [class.hover:bg-bg-light]="tabActiva() !== 'perfil'">
       <app-icon name="users" [size]="16" />
@@ -26,7 +26,7 @@
       class="px-5 py-2.5 text-xs font-bold rounded-xl transition-all duration-200 flex items-center gap-2 cursor-pointer select-none"
       [class.bg-primary]="tabActiva() === 'memoria'"
       [class.text-white]="tabActiva() === 'memoria'"
-      [class.shadow-md]="tabActiva() === 'memoria'"
+      [class.shadow-lifted]="tabActiva() === 'memoria'"
       [class.text-text-muted]="tabActiva() !== 'memoria'"
       [class.hover:bg-bg-light]="tabActiva() !== 'memoria'">
       <app-icon name="database" [size]="16" />
@@ -151,7 +151,7 @@
         <div class="bg-gradient-to-r from-primary/5 via-bg-light to-white rounded-2xl border border-border/80 p-6 shadow-subtle space-y-4">
           <div class="flex items-center justify-between flex-wrap gap-4">
             <div class="flex items-center gap-3.5">
-              <div class="p-3 rounded-2xl bg-primary text-white shadow-sm">
+              <div class="p-3 rounded-2xl bg-primary text-white shadow-subtle">
                 <app-icon name="hard-drive" [size]="26" />
               </div>
               <div>
@@ -170,7 +170,7 @@
           </div>
 
           <!-- Barra de progreso -->
-          <div class="w-full h-3 bg-white rounded-full overflow-hidden border border-border/60 shadow-inner">
+          <div class="w-full h-3 bg-white rounded-full overflow-hidden border border-border/60 shadow-subtle">
             <div
               class="h-full transition-all duration-500 rounded-full"
               [class.bg-primary]="cuota.porcentajeUsado < 75"
@@ -198,8 +198,8 @@
               </div>
             </div>
 
-            <label class="group border-2 border-dashed border-primary/30 hover:border-primary bg-bg-light/50 hover:bg-bg-light rounded-2xl p-6 text-center block cursor-pointer transition-all duration-200 shadow-xs">
-              <div class="p-3 bg-white rounded-full w-12 h-12 mx-auto flex items-center justify-center shadow-xs border border-border group-hover:scale-105 transition-transform">
+            <label class="group border-2 border-dashed border-primary/30 hover:border-primary bg-bg-light/50 hover:bg-bg-light rounded-2xl p-6 text-center block cursor-pointer transition-all duration-200 shadow-subtle">
+              <div class="p-3 bg-white rounded-full w-12 h-12 mx-auto flex items-center justify-center shadow-subtle border border-border group-hover:scale-105 transition-transform">
                 <app-icon name="plus" [size]="20" class="text-primary" />
               </div>
               <span class="text-xs font-extrabold text-primary block mt-3">Haz clic para seleccionar archivo</span>
@@ -265,7 +265,7 @@
                 class="px-3.5 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer select-none shrink-0 whitespace-nowrap"
                 [class.bg-primary]="filtroTipoMemoria() === ''"
                 [class.text-white]="filtroTipoMemoria() === ''"
-                [class.shadow-xs]="filtroTipoMemoria() === ''"
+                [class.shadow-subtle]="filtroTipoMemoria() === ''"
                 [class.text-text-muted]="filtroTipoMemoria() !== ''">
                 Todos
               </button>
@@ -275,7 +275,7 @@
                 class="px-3.5 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer select-none shrink-0 whitespace-nowrap"
                 [class.bg-primary]="filtroTipoMemoria() === 'TEXTO'"
                 [class.text-white]="filtroTipoMemoria() === 'TEXTO'"
-                [class.shadow-xs]="filtroTipoMemoria() === 'TEXTO'"
+                [class.shadow-subtle]="filtroTipoMemoria() === 'TEXTO'"
                 [class.text-text-muted]="filtroTipoMemoria() !== 'TEXTO'">
                 Notas
               </button>
@@ -285,7 +285,7 @@
                 class="px-3.5 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer select-none shrink-0 whitespace-nowrap"
                 [class.bg-primary]="filtroTipoMemoria() === 'IMAGEN'"
                 [class.text-white]="filtroTipoMemoria() === 'IMAGEN'"
-                [class.shadow-xs]="filtroTipoMemoria() === 'IMAGEN'"
+                [class.shadow-subtle]="filtroTipoMemoria() === 'IMAGEN'"
                 [class.text-text-muted]="filtroTipoMemoria() !== 'IMAGEN'">
                 Imágenes
               </button>
@@ -295,7 +295,7 @@
                 class="px-3.5 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer select-none shrink-0 whitespace-nowrap"
                 [class.bg-primary]="filtroTipoMemoria() === 'DOCUMENTO'"
                 [class.text-white]="filtroTipoMemoria() === 'DOCUMENTO'"
-                [class.shadow-xs]="filtroTipoMemoria() === 'DOCUMENTO'"
+                [class.shadow-subtle]="filtroTipoMemoria() === 'DOCUMENTO'"
                 [class.text-text-muted]="filtroTipoMemoria() !== 'DOCUMENTO'">
                 Documentos
               </button>
@@ -307,7 +307,7 @@
           <!-- Grid de Tarjetas de Recursos -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             @for (item of recursosMemoria(); track item.id) {
-              <div class="bg-white rounded-2xl border border-border p-4 shadow-subtle hover:shadow-md transition-all duration-200 flex flex-col justify-between space-y-3 group">
+              <div class="bg-white rounded-2xl border border-border p-4 shadow-subtle hover:shadow-lifted transition-all duration-200 flex flex-col justify-between space-y-3 group">
                 <div class="space-y-2.5">
                   <div class="flex items-start justify-between gap-2">
                     <div class="flex items-center gap-2 flex-wrap min-w-0">
@@ -332,7 +332,7 @@
                   @if (item.mediaUrl) {
                     <div class="mt-2">
                       @if (item.tipo === 'IMAGEN') {
-                        <img [src]="item.mediaUrl" alt="Banner" class="w-full h-36 rounded-xl object-cover border border-border shadow-xs" />
+                        <img [src]="item.mediaUrl" alt="Banner" class="w-full h-36 rounded-xl object-cover border border-border shadow-subtle" />
                       }
                       <a [href]="item.mediaUrl" target="_blank" rel="noopener" class="mt-2 text-xs text-primary font-bold hover:underline flex items-center gap-1.5 truncate">
                         <app-icon name="external-link" [size]="14" />

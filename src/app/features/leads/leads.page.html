@@ -3,12 +3,12 @@
     title="Leads & Prospectos"
     subtitle="Gestiona el flujo de captación de pacientes desde redes sociales, WhatsApp y ventanilla.">
     <!-- Toggle de vistas -->
-    <div class="inline-flex p-1 bg-bg-workspace border border-border rounded-xl shadow-xs">
+    <div class="inline-flex p-1 bg-bg-workspace border border-border rounded-xl shadow-subtle">
       <button
         type="button"
         (click)="setVista('PIPELINE')"
         class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-        [class]="modoVista() === 'PIPELINE' ? 'bg-white text-primary shadow-sm' : 'text-text-muted hover:text-text-dark'">
+        [class]="modoVista() === 'PIPELINE' ? 'bg-white text-primary shadow-subtle' : 'text-text-muted hover:text-text-dark'">
         <app-icon name="dashboard" [size]="14" />
         Pipeline Kanban
       </button>
@@ -16,7 +16,7 @@
         type="button"
         (click)="setVista('LISTA')"
         class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-        [class]="modoVista() === 'LISTA' ? 'bg-white text-primary shadow-sm' : 'text-text-muted hover:text-text-dark'">
+        [class]="modoVista() === 'LISTA' ? 'bg-white text-primary shadow-subtle' : 'text-text-muted hover:text-text-dark'">
         <app-icon name="menu" [size]="14" />
         Vista Tabla
       </button>

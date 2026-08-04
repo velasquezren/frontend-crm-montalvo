@@ -64,7 +64,7 @@
         @for (etapa of funnelData(); track etapa.id; let idx = $index) {
           <div
             (click)="navegarAEtapa(etapa.id)"
-            class="relative bg-bg-workspace border border-border/70 rounded-xl p-4 flex flex-col justify-between hover:border-primary/50 hover:shadow-sm transition-all cursor-pointer group">
+            class="relative bg-bg-workspace border border-border/70 rounded-xl p-4 flex flex-col justify-between hover:border-primary/50 hover:shadow-subtle transition-all cursor-pointer group">
 
             <!-- Acceso directo indicador -->
             <div class="flex items-center justify-between mb-3">
@@ -136,7 +136,7 @@
                 type="button"
                 (click)="setVistaGrafico('DONUT')"
                 class="px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer flex items-center gap-1"
-                [class]="vistaGrafico() === 'DONUT' ? 'bg-white text-primary shadow-xs' : 'text-text-muted hover:text-text-dark'">
+                [class]="vistaGrafico() === 'DONUT' ? 'bg-white text-primary shadow-subtle' : 'text-text-muted hover:text-text-dark'">
                 <app-icon name="pie-chart" [size]="14" />
                 <span>Torta</span>
               </button>
@@ -144,7 +144,7 @@
                 type="button"
                 (click)="setVistaGrafico('BARRAS')"
                 class="px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer flex items-center gap-1"
-                [class]="vistaGrafico() === 'BARRAS' ? 'bg-white text-primary shadow-xs' : 'text-text-muted hover:text-text-dark'">
+                [class]="vistaGrafico() === 'BARRAS' ? 'bg-white text-primary shadow-subtle' : 'text-text-muted hover:text-text-dark'">
                 <app-icon name="bar-chart" [size]="14" />
                 <span>Barras</span>
               </button>
@@ -158,7 +158,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
               <!-- SVG Donut Vectorial -->
               <div class="relative flex items-center justify-center p-2">
-                <svg class="w-56 h-56 transform -rotate-90 drop-shadow-sm" viewBox="0 0 100 100">
+                <svg class="w-56 h-56 transform -rotate-90 drop-shadow-subtle" viewBox="0 0 100 100">
                   <circle
                     cx="50"
                     cy="50"
@@ -223,7 +223,7 @@
                     (mouseleave)="hoveredCanal.set(null)"
                     (click)="navegarACanal(canal.origen)">
                     <div class="flex items-center gap-2.5 min-w-0">
-                      <span class="w-3.5 h-3.5 rounded-full shrink-0 shadow-xs" [style.background-color]="canal.color"></span>
+                      <span class="w-3.5 h-3.5 rounded-full shrink-0 shadow-subtle" [style.background-color]="canal.color"></span>
                       <div class="min-w-0">
                         <p class="text-xs font-bold text-text-dark group-hover:text-primary transition-colors truncate">
                           {{ canal.nombre }}
@@ -301,7 +301,7 @@
                     size="sm"
                     [variant]="posicion === 0 ? 'solid' : 'light'" />
                   @if (agente.rankBadge; as badge) {
-                    <span class="absolute -top-1.5 -right-1.5 text-[9px] px-1 rounded-full border shadow-2xs font-extrabold" [class]="badge.colorClass">
+                    <span class="absolute -top-1.5 -right-1.5 text-[9px] px-1 rounded-full border shadow-subtle font-extrabold" [class]="badge.colorClass">
                       {{ badge.label }}
                     </span>
                   }
