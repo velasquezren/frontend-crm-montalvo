@@ -49,76 +49,63 @@
 
   <!-- ══ 1. Cifras del mes (KPI Cards) ══ -->
   <section class="grid-kpis-modern">
-    <div style="--indice: 0" class="aparecer kpi-card kpi-card-destacado">
-      <div class="kpi-cabecera">
-        <span class="kpi-label">Facturado</span>
-        <div class="kpi-icono kpi-icono-primary">
-          <app-icon name="wallet" [size]="18" />
-        </div>
-      </div>
-      <span class="kpi-valor">{{ a.resumen.montoVendido | moneda }}</span>
-      <span class="kpi-pie font-medium">
-        <app-icon name="check-circle" [size]="12" class="inline text-primary mr-1" />
-        {{ a.resumen.filasComisionables }} ventas comisionables
-      </span>
-    </div>
+    <app-kpi-card
+      style="--indice: 0"
+      class="aparecer"
+      label="Facturado"
+      [valor]="a.resumen.montoVendido | moneda"
+      icon="wallet"
+      tono="primary"
+      [destacado]="true"
+      pieIcono="check-circle"
+      [pie]="a.resumen.filasComisionables + ' ventas comisionables'" />
 
-    <div style="--indice: 1" class="aparecer kpi-card">
-      <div class="kpi-cabecera">
-        <span class="kpi-label">Base de cálculo</span>
-        <div class="kpi-icono kpi-icono-neutral">
-          <app-icon name="activity" [size]="18" />
-        </div>
-      </div>
-      <span class="kpi-valor">{{ a.resumen.baseCalculo | moneda }}</span>
-      <span class="kpi-pie">tras descontar {{ a.resumen.impuestosDescontados | moneda }} de impuestos</span>
-    </div>
+    <app-kpi-card
+      style="--indice: 1"
+      class="aparecer"
+      label="Base de cálculo"
+      [valor]="a.resumen.baseCalculo | moneda"
+      icon="activity"
+      [pie]="'tras descontar ' + (a.resumen.impuestosDescontados | moneda) + ' de impuestos'" />
 
-    <div style="--indice: 2" class="aparecer kpi-card">
-      <div class="kpi-cabecera">
-        <span class="kpi-label">Comisión total</span>
-        <div class="kpi-icono kpi-icono-secondary">
-          <app-icon name="trending-up" [size]="18" />
-        </div>
-      </div>
-      <span class="kpi-valor text-secondary">${{ a.resumen.comisionTotalUsd | number: '1.2-2' }}</span>
-      <span class="kpi-pie font-medium">{{ a.resumen.comisionTotalBob | moneda }} · TC {{ a.resumen.tipoCambio }}</span>
-    </div>
+    <app-kpi-card
+      style="--indice: 2"
+      class="aparecer"
+      label="Comisión total"
+      [valor]="'$' + (a.resumen.comisionTotalUsd | number: '1.2-2')"
+      icon="trending-up"
+      tono="secondary"
+      tonoValor="secondary"
+      [pie]="(a.resumen.comisionTotalBob | moneda) + ' · TC ' + a.resumen.tipoCambio" />
 
-    <div style="--indice: 3" class="aparecer kpi-card">
-      <div class="kpi-cabecera">
-        <span class="kpi-label">Ticket promedio</span>
-        <div class="kpi-icono kpi-icono-neutral">
-          <app-icon name="shopping-bag" [size]="18" />
-        </div>
-      </div>
-      <span class="kpi-valor">{{ a.resumen.ticketPromedio | moneda }}</span>
-      <span class="kpi-pie">venta mayor {{ a.resumen.ventaMayor | moneda }}</span>
-    </div>
+    <app-kpi-card
+      style="--indice: 3"
+      class="aparecer"
+      label="Ticket promedio"
+      [valor]="a.resumen.ticketPromedio | moneda"
+      icon="shopping-bag"
+      [pie]="'venta mayor ' + (a.resumen.ventaMayor | moneda)" />
 
-    <div style="--indice: 4" class="aparecer kpi-card">
-      <div class="kpi-cabecera">
-        <span class="kpi-label">Pacientes atendidos</span>
-        <div class="kpi-icono kpi-icono-neutral">
-          <app-icon name="users" [size]="18" />
-        </div>
-      </div>
-      <span class="kpi-valor">{{ a.resumen.pacientesUnicos }}</span>
-      <span class="kpi-pie">{{ a.resumen.serviciosDistintos }} servicios distintos</span>
-    </div>
+    <app-kpi-card
+      style="--indice: 4"
+      class="aparecer"
+      label="Pacientes atendidos"
+      [valor]="a.resumen.pacientesUnicos"
+      icon="users"
+      [pie]="a.resumen.serviciosDistintos + ' servicios distintos'" />
 
-    <div style="--indice: 5" class="aparecer kpi-card">
-      <div class="kpi-cabecera">
-        <span class="kpi-label">Excluidas del cálculo</span>
-        <div class="kpi-icono" [class.kpi-icono-critical]="a.resumen.filasExcluidas > 0" [class.kpi-icono-neutral]="a.resumen.filasExcluidas === 0">
-          <app-icon name="file-x" [size]="18" />
-        </div>
-      </div>
-      <span class="kpi-valor" [class.text-critical]="a.resumen.filasExcluidas > 0">
-        {{ a.resumen.filasExcluidas }}
-      </span>
-      <span class="kpi-pie">precio 0 o plan sin aprobar</span>
-    </div>
+    <!-- El tono salta a `critical` (negro) solo si hay filas fuera del cálculo:
+         un cero no es una alarma. -->
+    <app-kpi-card
+      style="--indice: 5"
+      class="aparecer"
+      label="Excluidas del cálculo"
+      [valor]="a.resumen.filasExcluidas"
+      icon="file-x"
+      [tono]="a.resumen.filasExcluidas > 0 ? 'critical' : 'neutral'"
+      [tonoValor]="a.resumen.filasExcluidas > 0 ? 'critical' : ''"
+      pie="precio 0 o plan sin aprobar" />
+
   </section>
 
   <!-- ══ 2. Reparto de la comisión por tipo ══ -->

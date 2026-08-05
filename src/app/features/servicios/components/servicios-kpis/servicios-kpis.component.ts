@@ -8,7 +8,8 @@ import { KpiCardComponent, KpiTono } from '../../../../shared/components/kpi-car
 
 export interface KpiItem {
   label: string;
-  valor: string;
+  /** Número (lo formatea <app-kpi-card>) o texto ya compuesto. */
+  valor: string | number;
   icon: IconName;
   tono: KpiTono;
   destacado: boolean;

@@ -11,6 +11,7 @@ import { BarChartComponent, ChartItem } from '../../shared/components/charts/bar
 import { DonutChartComponent } from '../../shared/components/charts/donut-chart.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { TableComponent } from '../../shared/components/table/table.component';
@@ -55,6 +56,7 @@ type ColRanking = 'etiqueta' | 'cantidad' | 'montoVendido' | 'pctMonto';
     DonutChartComponent,
     EmptyStateComponent,
     IconComponent,
+    KpiCardComponent,
     LoadingSkeletonComponent,
     PageHeaderComponent,
     TableComponent,

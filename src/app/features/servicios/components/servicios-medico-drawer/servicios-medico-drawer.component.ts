@@ -48,7 +48,7 @@ export class ServiciosMedicoDrawerComponent {
     return [
       {
         label: 'Servicios',
-        valor: String(r.servicios),
+        valor: r.servicios,
         icon: 'activity' as const,
         tono: 'secondary' as const,
         destacado: false,
@@ -56,7 +56,7 @@ export class ServiciosMedicoDrawerComponent {
       },
       {
         label: 'Pacientes',
-        valor: String(r.pacientes),
+        valor: r.pacientes,
         icon: 'users' as const,
         tono: 'neutral' as const,
         destacado: false,

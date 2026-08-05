@@ -1,9 +1,13 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
 import { IconComponent, IconName } from '../icon/icon.component';
 
-/** Tono del ícono. Los tres salen de la paleta cerrada; no hay más. */
-export type KpiTono = 'primary' | 'secondary' | 'neutral';
+/**
+ * Tono de un indicador. Los cuatro salen de la paleta cerrada; no hay más.
+ * `critical` es **negro**, no rojo — ver los estados semánticos del skill
+ * `crm-design-system`.
+ */
+export type KpiTono = 'primary' | 'secondary' | 'neutral' | 'critical';
 
 /**
  * Tarjeta de indicador: etiqueta, valor grande, ícono y pie.
@@ -30,9 +34,16 @@ export type KpiTono = 'primary' | 'secondary' | 'neutral';
           <app-icon [name]="icon()" [size]="18" />
         </div>
       </div>
-      <span class="kpi-valor">{{ valor() }}</span>
+      <span [class]="tonoValor() ? 'kpi-valor kpi-valor-' + tonoValor() : 'kpi-valor'">
+        {{ valorFormateado() }}
+      </span>
       @if (pie()) {
-        <span class="kpi-pie">{{ pie() }}</span>
+        <span class="kpi-pie">
+          @if (pieIcono(); as ico) {
+            <app-icon [name]="ico" [size]="12" class="kpi-pie-icono" />
+          }
+          {{ pie() }}
+        </span>
       }
       <ng-content />
     </div>
@@ -41,10 +52,36 @@ export type KpiTono = 'primary' | 'secondary' | 'neutral';
 })
 export class KpiCardComponent {
   readonly label = input.required<string>();
-  readonly valor = input.required<string>();
+
+  /**
+   * Acepta número o texto ya formateado (`formatearBs(…)`, un porcentaje…).
+   *
+   * Si llega un número lo formatea el propio átomo, y esa es la gracia: los
+   * conteos se ven igual en todas las vistas sin que cada plantilla se acuerde
+   * de poner `| number`. Antes unas lo hacían y otras no, y "1234 pacientes"
+   * convivía con "1.234 pacientes" en pantallas contiguas.
+   */
+  readonly valor = input.required<string | number>();
   readonly icon = input.required<IconName>();
+  /** Tono del ícono de la cabecera. */
   readonly tono = input<KpiTono>('neutral');
   /** Resalta la tarjeta principal del grupo con el degradado de marca. */
   readonly destacado = input(false);
   readonly pie = input('');
+
+  /**
+   * Tiñe el número. Se usa cuando el propio valor comunica algo —comisión en
+   * `secondary`, filas excluidas en `critical`— y no solo el ícono. Sin valor,
+   * el número va en el color de texto normal.
+   */
+  readonly tonoValor = input<KpiTono | ''>('');
+
+  /** Ícono pequeño delante del pie, para reforzar lo que dice esa línea. */
+  readonly pieIcono = input<IconName | undefined>(undefined);
+
+  /** Mismo locale que el resto del CRM (`es-BO`): separador de miles con punto. */
+  protected readonly valorFormateado = computed(() => {
+    const v = this.valor();
+    return typeof v === 'number' ? v.toLocaleString('es-BO') : v;
+  });
 }

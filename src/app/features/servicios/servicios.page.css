@@ -129,15 +129,6 @@ tr:hover .celda-sticky {
   border-bottom: 2px solid var(--color-primary);
 }
 
-@media (max-width: 640px) {
-  .kpi-card {
-    padding: 14px 16px;
-  }
-
-  .kpi-valor {
-    font-size: 19px;
-  }
-}
 
 /* ── Barra de periodo ─────────────────────────────────────────────────── */
 

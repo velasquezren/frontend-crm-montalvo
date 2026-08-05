@@ -288,7 +288,7 @@ export class ServiciosPage {
     return [
       {
         label: 'Servicios',
-        valor: String(h.resumen.servicios),
+        valor: h.resumen.servicios,
         icon: 'activity' as const,
         tono: 'secondary' as const,
         destacado: false,
@@ -304,7 +304,7 @@ export class ServiciosPage {
       },
       {
         label: 'Médicos',
-        valor: String(h.resumen.medicos),
+        valor: h.resumen.medicos,
         icon: 'briefcase' as const,
         tono: 'neutral' as const,
         destacado: false,

@@ -101,3 +101,23 @@
     font-size: 19px;
   }
 }
+
+/* Cuarto tono. `critical` es NEGRO en este sistema, no rojo: la paleta excluye
+   los rojos de alarma a propósito (CRM_MANIFESTO.md §3). */
+.kpi-icono-critical {
+  background: var(--color-critical-bg);
+  color: var(--color-text-critical);
+}
+
+/* Tinte del número, para cuando el valor comunica por sí mismo. */
+.kpi-valor-primary { color: var(--color-primary); }
+.kpi-valor-secondary { color: var(--color-secondary); }
+.kpi-valor-critical { color: var(--color-text-critical); }
+.kpi-valor-neutral { color: var(--color-text-muted); }
+
+.kpi-pie-icono {
+  display: inline-block;
+  vertical-align: -1px;
+  margin-right: 3px;
+  color: var(--color-primary);
+}
