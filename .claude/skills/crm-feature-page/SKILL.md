@@ -162,6 +162,43 @@ navega a otra vista con el modal abierto sin cerrarlo, el overlay se destruye so
 dos páginas dejaban un fondo oscuro huérfano bloqueando clics en la siguiente vista; ahora es
 imposible que un nuevo modal reintroduzca ese bug, sin importar si la página se acuerda de limpiar.
 
+## Rendimiento: el cuello de botella es la RED, no las consultas
+
+Medido contra producción el 2026-08-05, desde Bolivia:
+
+| | |
+|---|---|
+| Consulta en el servidor | **6-27 ms** |
+| Ida y vuelta con conexión abierta | **~190 ms** |
+| Handshake TLS (primera petición) | **~385 ms** |
+
+O sea que en una navegación **el 97% del tiempo es red**. Antes de optimizar una
+consulta de Prisma, comprueba que sea ella la lenta: casi nunca lo es. Lo que se
+nota es **no hacer la petición**.
+
+De ahí dos decisiones que ya están tomadas y conviene no deshacer:
+
+**1. `provideAppInitializer` no espera a la red.** La sincronización de rol se
+dispara sin `return` (`app.config.ts`): devolver la promesa dejaba la pantalla en
+blanco ~575 ms en cada carga y en cada F5, porque Angular no arranca hasta que el
+initializer resuelve. Ahora pinta de inmediato y la comprobación termina después;
+si el rol cambió, cierra la sesión igual. El medio segundo de menú de más no es
+un agujero: el backend responde 403 igualmente.
+
+**2. Los datos de REFERENCIA se cachean 60 s** en `core/api/cache.interceptor.ts`.
+`/planilla-comisiones/periodos` lo pedían tres servicios distintos, así que cada
+salto a Servicios, Planilla o Reportes lo volvía a traer.
+
+**Solo entra ahí lo que cambia al importar o configurar algo** (periodos,
+configuración, vendedoras, demografía). **Nunca** clientes, leads, ventas,
+conversaciones ni KPIs: una respuesta vieja de esos es un dato equivocado en
+pantalla, y eso vale más que 190 ms. Cualquier escritura (POST/PATCH/PUT/DELETE)
+vacía la caché entera antes de salir, y `logout()` también — en la clínica varias
+agentes comparten el mismo equipo.
+
+Si añades un endpoint a esa lista, pregúntate qué se ve si llega un minuto tarde.
+Si la respuesta incomoda, no va.
+
 ## Tiempo real: `RealtimeService` en vez de polling ciego
 
 Un `setInterval` que recarga todo cada N segundos, siempre, haya o no algo

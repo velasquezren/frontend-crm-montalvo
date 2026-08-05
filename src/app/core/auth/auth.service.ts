@@ -3,6 +3,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import { API_URL } from '../api/api.constants';
+import { limpiarCacheApi } from '../api/cache.interceptor';
 import { cubreRol } from './roles';
 import { generarIniciales, RolUsuario, User } from './user.model';
 
@@ -81,6 +82,9 @@ export class AuthService {
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(USER_KEY);
     this.currentUser.set(null);
+    /* En la clínica varias agentes comparten equipo: sin esto, los datos que
+       cargó una seguirían en memoria para la siguiente. */
+    limpiarCacheApi();
   }
 
   /**
