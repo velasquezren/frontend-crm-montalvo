@@ -28,7 +28,7 @@
 
     <!-- Filtro tabs: Taller vertical stack (Texto arriba, contador abajo) -->
     <div class="sidebar-filters">
-      <div class="flex items-center justify-around py-1.5">
+      <div class="tabs-inbox flex items-center justify-around py-1.5">
         <button
           type="button"
           (click)="setFiltroTab('TODAS'); filtrarPorAgente(null)"
@@ -42,7 +42,7 @@
           </span>
         </button>
 
-        <div class="w-px h-6 bg-border/50 shrink-0"></div>
+        <div class="tab-divisor w-px h-6 bg-border/50 shrink-0"></div>
 
         <!-- Sin responder: el paciente escribió y nadie contestó después.
              Ordenadas por quien lleva más tiempo esperando. -->
@@ -59,7 +59,7 @@
           </span>
         </button>
 
-        <div class="w-px h-6 bg-border/50 shrink-0"></div>
+        <div class="tab-divisor w-px h-6 bg-border/50 shrink-0"></div>
 
         <button
           type="button"
@@ -74,7 +74,7 @@
           </span>
         </button>
 
-        <div class="w-px h-6 bg-border/50 shrink-0"></div>
+        <div class="tab-divisor w-px h-6 bg-border/50 shrink-0"></div>
 
         <button
           type="button"
@@ -266,8 +266,8 @@
   <section class="chat-panel">
     @if (detalle.value(); as chat) {
       <!-- Cabecera del chat -->
-      <header class="chat-header">
-        <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+      <header class="chat-header" [class.chat-header--buscando]="buscandoEnChat()">
+        <div class="chat-header__identidad flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
           <button
             type="button"
             (click)="deseleccionar()"
@@ -293,7 +293,7 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div class="chat-header__acciones flex items-center gap-1.5 sm:gap-2 shrink-0 min-w-0">
           <!-- Buscar dentro de esta conversación (sobre el hilo ya cargado) -->
           @if (buscandoEnChat()) {
             <div class="chat-search-box">
@@ -331,7 +331,7 @@
           <!-- Acciones Rápidas del Agente -->
           <a
             routerLink="/ventas"
-            class="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer"
+            class="accion-venta inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer"
             title="Registrar Venta para este paciente">
             <app-icon name="shopping-bag" [size]="14" />
             <span class="hidden sm:inline">+ Venta</span>
