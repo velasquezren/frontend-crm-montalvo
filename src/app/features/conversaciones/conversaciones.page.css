@@ -1306,9 +1306,12 @@
     height: 100%;
   }
 
+  /* Deja ver una franja del chat por detrás. A pantalla completa la ficha
+     parecía otra pantalla —sin pista de dónde estabas ni de cómo volver— y el
+     fondo oscuro, que es lo que se pulsa para cerrar, quedaba tapado. */
   .panel-open .client-panel {
-    width: 100%;
-    max-width: 100%;
+    width: 92%;
+    max-width: 92%;
   }
 
   .chat-header {

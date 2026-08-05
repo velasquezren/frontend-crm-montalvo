@@ -132,7 +132,20 @@ export class ConversacionesPage implements AfterViewInit {
   protected readonly filtroAgenteId = signal<string | null>(null);
   protected readonly asignando = signal(false);
   protected readonly dropdownAgenteAbierto = signal(false);
-  protected readonly panelAbierto = signal(true);
+  /**
+   * A partir de 1280px la ficha del paciente cabe como tercera columna junto al
+   * chat. Por debajo deja de ser una columna y pasa a ser un cajón fijo que
+   * cubre la pantalla entera.
+   */
+  private readonly consultaAncha = window.matchMedia('(min-width: 1280px)');
+  protected readonly pantallaAncha = signal(this.consultaAncha.matches);
+
+  /**
+   * Arranca abierto SOLO donde es una columna. Estaba en `true` fijo, así que en
+   * el móvil bastaba con abrir un chat para que la ficha lo tapara entero antes
+   * de leer un mensaje: el agente tenía que cerrarla cada vez.
+   */
+  protected readonly panelAbierto = signal(this.consultaAncha.matches);
 
   protected readonly editandoFicha = signal(false);
   protected readonly editNombre = signal('');
@@ -628,7 +641,18 @@ export class ConversacionesPage implements AfterViewInit {
     });
 
     // Conecta el socket del inbox; se desconecta solo al destruir la página.
-    this.realtimeService.conectar(inject(DestroyRef));
+    const destroyRef = inject(DestroyRef);
+    this.realtimeService.conectar(destroyRef);
+
+    /* Al estrechar la ventana (o girar el teléfono) la ficha deja de ser una
+       columna y pasa a ser un cajón a pantalla completa. Si se quedara abierta,
+       taparía el chat sin que nadie lo hubiera pedido. */
+    const alCambiarAncho = (evento: MediaQueryListEvent): void => {
+      this.pantallaAncha.set(evento.matches);
+      if (!evento.matches) this.panelAbierto.set(false);
+    };
+    this.consultaAncha.addEventListener('change', alCambiarAncho);
+    destroyRef.onDestroy(() => this.consultaAncha.removeEventListener('change', alCambiarAncho));
 
     /* Reload dirigido debounced: evita múltiples reloads seguidos si llegan varios eventos de socket */
     let timerReload: ReturnType<typeof setTimeout> | null = null;
@@ -697,6 +721,10 @@ export class ConversacionesPage implements AfterViewInit {
     this.mensajesAntiguos.set([]);
     this.quedaHistorial.set(true);
     this.cerrarBusquedaChat();
+    /* En móvil la ficha cubre la pantalla entera: abrir un chat no puede
+       significar taparlo. En escritorio es una columna y se respeta lo que el
+       agente haya elegido. */
+    if (!this.pantallaAncha()) this.panelAbierto.set(false);
     /* Al abrir un chat siempre queremos ver lo último: forzar que el próximo
        render baje al fondo, sin importar dónde estaba el scroll del chat previo. */
     this.estaCercaDelFondo = true;
