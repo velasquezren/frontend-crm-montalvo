@@ -114,3 +114,44 @@ export interface MedicoConServicios {
   ingreso: number;
   ultimaAtencion: string | null;
 }
+
+/** Un paciente dentro del perfil de un médico. */
+export interface PacienteDelMedico {
+  pac: string | null;
+  paciente: string | null;
+  servicios: number;
+  gastado: number;
+  /** null = ese paciente aún no tiene ficha en el CRM. */
+  clienteId: string | null;
+}
+
+/** Actividad de un mes, para la evolución del médico. */
+export interface MesDelMedico {
+  anio: number;
+  mes: number;
+  total: number;
+  ingreso: number;
+}
+
+/**
+ * Perfil de un médico — espejo de `HistorialPaciente`.
+ *
+ * El listado de médicos era un callejón sin salida: se veía el total de cada
+ * uno y no se podía entrar a ver de qué se componía.
+ */
+export interface PerfilMedico {
+  codigo: string;
+  nombre: string;
+  resumen: {
+    servicios: number;
+    pacientes: number;
+    ingreso: number;
+    ticketPromedio: number;
+    primeraAtencion: string | null;
+    ultimaAtencion: string | null;
+  };
+  porModulo: ConteoConIngreso[];
+  topServicios: ConteoConIngreso[];
+  porMes: MesDelMedico[];
+  topPacientes: PacienteDelMedico[];
+}

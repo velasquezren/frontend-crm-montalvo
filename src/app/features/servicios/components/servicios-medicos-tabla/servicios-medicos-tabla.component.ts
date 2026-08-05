@@ -35,6 +35,8 @@ export class ServiciosMedicosTablaComponent {
   readonly busquedaChange = output<string>();
 
   readonly paginaChange = output<number>();
+  /** Abre el perfil del médico. Emite el código, no el nombre: es la clave. */
+  readonly abrirMedico = output<string>();
 
   protected onBusquedaInput(val: string): void {
     this.busquedaChange.emit(val);

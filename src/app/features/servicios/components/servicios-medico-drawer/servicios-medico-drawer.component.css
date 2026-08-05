@@ -1,0 +1,161 @@
+/* Perfil del médico.
+   La línea de tiempo (.linea-tiempo/.evento) está copiada del cajón del
+   historial: con encapsulación Emulated el CSS del otro componente no llega
+   hasta aquí. Ahora la necesitan DOS plantillas, que es justo el umbral que el
+   skill crm-design-system marca para extraer un átomo — siguiente candidato,
+   después de <app-kpi-card>. */
+
+.linea-tiempo {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 46vh;
+  overflow-y: auto;
+  padding: 2px 4px 2px 26px;
+}
+
+.linea-tiempo::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 7px;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--color-secondary),
+    color-mix(in srgb, var(--color-secondary) 25%, white)
+  );
+  border-radius: 9999px;
+}
+
+.evento {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  transition:
+    border-color 0.2s var(--ease-spring-smooth),
+    box-shadow 0.2s var(--ease-spring-smooth);
+}
+
+.evento:hover {
+  border-color: var(--color-secondary);
+  box-shadow: var(--shadow-subtle);
+}
+
+.evento::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: -23px;
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+  background: white;
+  border: 2px solid var(--color-secondary);
+}
+
+.evento-fecha {
+  min-width: 74px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+  padding-top: 2px;
+}
+
+.evento-fecha {
+  min-width: 74px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+  padding-top: 2px;
+}
+
+/* Fila del evento como botón: hereda la caja de .evento y añade el afford. */
+.evento-clicable {
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.evento-clicable:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+  transform: translateX(2px);
+}
+
+.evento-clicable:disabled {
+  cursor: default;
+}
+
+/* ── Actividad por mes ──────────────────────────────────────── */
+.meses {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mes-fila {
+  display: grid;
+  grid-template-columns: 52px 1fr 44px 84px;
+  align-items: center;
+  gap: 10px;
+}
+
+.mes-etiqueta {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: capitalize;
+}
+
+.mes-barra-pista {
+  height: 8px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-text-muted) 14%, white);
+  overflow: hidden;
+}
+
+.mes-barra {
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  transition: width 0.5s var(--ease-spring-smooth);
+}
+
+.mes-total {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  text-align: right;
+}
+
+.mes-ingreso {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  text-align: right;
+}
+
+/* ── Reparto por módulo ─────────────────────────────────────── */
+.modulo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
+.modulo-chip-peso {
+  color: var(--color-primary);
+  font-weight: 700;
+}

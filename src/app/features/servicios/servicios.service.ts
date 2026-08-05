@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
-import { HistorialPaciente } from './servicios.model';
+import { HistorialPaciente, PerfilMedico } from './servicios.model';
 
 /** Filtros del dashboard. Sin ninguno, mira todo el historial cargado. */
 export interface FiltroServicios {
@@ -47,5 +47,10 @@ export class ServiciosService {
   /** Ficha y línea de tiempo. Se pide al abrir el detalle, no en el listado. */
   historialPaciente(pac: string): Promise<HistorialPaciente> {
     return this.api.get<HistorialPaciente>(`/servicios/pacientes/${encodeURIComponent(pac)}`);
+  }
+
+  /** Perfil del médico. Igual que el historial: se pide al abrirlo, no en el listado. */
+  perfilMedico(codigo: string): Promise<PerfilMedico> {
+    return this.api.get<PerfilMedico>(`/servicios/medicos/${encodeURIComponent(codigo)}`);
   }
 }

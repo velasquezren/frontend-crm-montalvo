@@ -77,13 +77,6 @@
 }
 
 /* ── Cifras del Mes (Modern KPI Grid) ──────────────────────────────── */
-.grid-kpis-modern {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 14px;
-  margin-bottom: 20px;
-}
-
 .kpi-card {
   display: flex;
   flex-direction: column;

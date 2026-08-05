@@ -203,11 +203,7 @@ const DEUDA = {
   'features/planilla-comisiones/planilla-comisiones.page.css': { radio: 12 },
   'features/planilla-comisiones/planilla-comisiones.page.html': { color: 3 },
   'features/reportes/reportes.page.css': { radio: 11 },
-  'features/servicios/components/servicios-historial-drawer/servicios-historial-drawer.component.css':
-    { radio: 3 },
-  'features/servicios/components/servicios-kpis/servicios-kpis.component.css': { radio: 3 },
   'features/servicios/components/servicios-modulos/servicios-modulos.component.css': { radio: 1 },
-  'features/servicios/servicios.page.css': { radio: 6 },
   'shared/components/layout/layout.component.css': { radio: 1 },
 };
 

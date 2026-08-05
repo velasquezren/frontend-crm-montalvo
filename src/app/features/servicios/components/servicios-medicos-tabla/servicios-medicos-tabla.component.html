@@ -28,7 +28,15 @@
       </thead>
       <tbody>
         @for (m of medicos().datos; track m.codigo) {
-          <tr>
+          <!-- Toda la fila abre el perfil: antes la tabla no llevaba a ningún sitio. -->
+          <tr
+            class="fila-clicable"
+            [attr.tabindex]="m.codigo ? 0 : null"
+            [attr.role]="m.codigo ? 'button' : null"
+            [attr.aria-label]="m.codigo ? 'Ver perfil de ' + (m.nombre || m.codigo) : null"
+            (click)="m.codigo && abrirMedico.emit(m.codigo)"
+            (keydown.enter)="m.codigo && abrirMedico.emit(m.codigo)"
+            (keydown.space)="m.codigo && abrirMedico.emit(m.codigo)">
             <td class="text-left font-semibold text-text-dark celda-sticky">{{ m.nombre || '—' }}</td>
             <td class="text-left text-xs text-text-muted font-mono">{{ m.codigo }}</td>
             <td class="text-right font-medium">{{ m.servicios | number }}</td>

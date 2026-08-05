@@ -1,25 +1,25 @@
 <section class="grid-kpis-modern">
   @for (item of resumen(); track item.label; let i = $index) {
-    <div [style.--indice]="i" class="aparecer kpi-card" [class.kpi-card-destacado]="item.destacado">
-      <div class="kpi-cabecera">
-        <span class="kpi-label">{{ item.label }}</span>
-        <div class="kpi-icono" [class]="'kpi-icono kpi-icono-' + item.tono">
-          <app-icon [name]="item.icon" [size]="18" />
-        </div>
-      </div>
-      <span class="kpi-valor">{{ item.valor }}</span>
-      <span class="kpi-pie">{{ item.pie }}</span>
-    </div>
+    <app-kpi-card
+      [style.--indice]="i"
+      class="aparecer"
+      [label]="item.label"
+      [valor]="item.valor"
+      [icon]="item.icon"
+      [tono]="item.tono"
+      [destacado]="item.destacado"
+      [pie]="item.pie" />
   }
 
-  <div [style.--indice]="4" class="aparecer kpi-card">
-    <div class="kpi-cabecera">
-      <span class="kpi-label">Enlazado a ficha</span>
-      <div class="kpi-icono" [class.kpi-icono-primary]="pctCobertura() >= 80" [class.kpi-icono-neutral]="pctCobertura() < 80">
-        <app-icon [name]="pctCobertura() >= 80 ? 'check-circle' : 'alert-circle'" [size]="18" />
-      </div>
-    </div>
-    <span class="kpi-valor">{{ pctCobertura() }}%</span>
+  <!-- La cobertura lleva barra de progreso y una nota explicativa, así que
+       proyecta su contenido dentro del átomo en vez de pasar solo `pie`. -->
+  <app-kpi-card
+    [style.--indice]="4"
+    class="aparecer"
+    label="Enlazado a ficha"
+    [valor]="pctCobertura() + '%'"
+    [icon]="pctCobertura() >= 80 ? 'check-circle' : 'alert-circle'"
+    [tono]="pctCobertura() >= 80 ? 'primary' : 'neutral'">
     <span class="kpi-barra" [class.kpi-barra-incompleta]="pctCobertura() < 80">
       <span [style.width.%]="pctCobertura()"></span>
     </span>
@@ -39,5 +39,5 @@
         <p>Se arregla completando la importación de pacientes desde FileMaker.</p>
       </app-info-hint>
     </span>
-  </div>
+  </app-kpi-card>
 </section>

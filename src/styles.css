@@ -252,3 +252,12 @@
     animation: none;
   }
 }
+
+/* Rejilla de tarjetas de indicador. Global porque la usan cuatro vistas y es
+   layout puro: la tarjeta en sí es el átomo <app-kpi-card>. */
+.grid-kpis-modern {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}

@@ -17,16 +17,15 @@
     <!-- Resumen -->
     <section class="grid-kpis-modern">
       @for (item of resumenHistorial(); track item.label; let i = $index) {
-        <div [style.--indice]="i" class="aparecer kpi-card" [class.kpi-card-destacado]="item.destacado">
-          <div class="kpi-cabecera">
-            <span class="kpi-label">{{ item.label }}</span>
-            <div [class]="'kpi-icono kpi-icono-' + item.tono">
-              <app-icon [name]="item.icon" [size]="18" />
-            </div>
-          </div>
-          <span class="kpi-valor">{{ item.valor }}</span>
-          <span class="kpi-pie">{{ item.pie }}</span>
-        </div>
+        <app-kpi-card
+          [style.--indice]="i"
+          class="aparecer"
+          [label]="item.label"
+          [valor]="item.valor"
+          [icon]="item.icon"
+          [tono]="item.tono"
+          [destacado]="item.destacado"
+          [pie]="item.pie" />
       }
     </section>
 

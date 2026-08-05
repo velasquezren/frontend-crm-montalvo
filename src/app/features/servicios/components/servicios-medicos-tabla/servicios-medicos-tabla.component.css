@@ -19,3 +19,15 @@
 tr:hover .celda-sticky {
   background: var(--color-bg-workspace);
 }
+
+/* Fila que abre el perfil del médico. */
+.fila-clicable {
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.fila-clicable:hover,
+.fila-clicable:focus-visible {
+  background: var(--color-bg-light);
+  outline: none;
+}

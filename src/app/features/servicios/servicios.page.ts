@@ -24,6 +24,8 @@ import {
 } from '../planilla-comisiones/planilla.model';
 import { ServiciosService } from './servicios.service';
 import { ServiciosHistorialDrawerComponent } from './components/servicios-historial-drawer/servicios-historial-drawer.component';
+import { ServiciosMedicoDrawerComponent } from './components/servicios-medico-drawer/servicios-medico-drawer.component';
+import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.component';
 import { ServiciosKpisComponent } from './components/servicios-kpis/servicios-kpis.component';
 import { ServiciosMedicosTablaComponent } from './components/servicios-medicos-tabla/servicios-medicos-tabla.component';
 import { ServiciosModulosComponent } from './components/servicios-modulos/servicios-modulos.component';
@@ -32,6 +34,7 @@ import {
   DashboardServicios,
   Demografia,
   HistorialPaciente,
+  PerfilMedico,
   MedicoConServicios,
   PacienteConServicios,
 } from './servicios.model';
@@ -65,6 +68,8 @@ type Pestana = 'DASHBOARD' | 'PACIENTES' | 'MEDICOS';
     ServiciosPacientesTablaComponent,
     ServiciosMedicosTablaComponent,
     ServiciosHistorialDrawerComponent,
+    ServiciosMedicoDrawerComponent,
+    KpiCardComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './servicios.page.html',
@@ -94,7 +99,9 @@ export class ServiciosPage {
   private readonly medicosDebounced = signal('');
 
   protected readonly historial = signal<HistorialPaciente | null>(null);
+  protected readonly perfilMedico = signal<PerfilMedico | null>(null);
   protected readonly cargandoHistorial = signal(false);
+  protected readonly cargandoMedico = signal(false);
 
   constructor() {
     effect(onCleanup => {
@@ -380,10 +387,33 @@ export class ServiciosPage {
     this.historial.set(null);
   }
 
-  /** Lleva el listado de pacientes a un médico concreto. */
-  protected verPacientesDe(nombre: string | null): void {
-    if (!nombre) return;
-    this.busquedaMedicos.set('');
-    this.pestana.set('PACIENTES');
+  /**
+   * Abre el perfil del médico. Antes la tabla de médicos era un callejón sin
+   * salida: se veía el total de cada uno y no había forma de ver de qué se
+   * componía.
+   */
+  protected async abrirMedico(codigo: string | null): Promise<void> {
+    if (!codigo) return;
+    this.cargandoMedico.set(true);
+    try {
+      this.perfilMedico.set(await this.service.perfilMedico(codigo));
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo cargar el perfil del médico.'), 'Error');
+    } finally {
+      this.cargandoMedico.set(false);
+    }
+  }
+
+  protected cerrarMedico(): void {
+    this.perfilMedico.set(null);
+  }
+
+  /**
+   * Salta del perfil del médico al historial de uno de sus pacientes. Se cierra
+   * el primero para no apilar dos cajones sobre el mismo fondo.
+   */
+  protected async verPacienteDelMedico(pac: string): Promise<void> {
+    this.cerrarMedico();
+    await this.abrirHistorial(pac);
   }
 }

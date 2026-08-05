@@ -1,0 +1,116 @@
+<div
+  class="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 animate-fade-in"
+  (click)="cerrar.emit()"></div>
+
+<aside
+  class="fixed top-0 right-0 h-full w-full sm:max-w-2xl bg-white shadow-lifted z-50
+         flex flex-col animate-fade-scale">
+  <header class="flex items-start justify-between gap-3 p-5 border-b border-border">
+    <div class="min-w-0">
+      <h2 class="text-lg font-bold text-text-dark truncate">{{ perfil().nombre }}</h2>
+      <p class="text-xs text-text-muted font-mono mt-0.5">{{ perfil().codigo }}</p>
+    </div>
+    <app-button variant="ghost" size="sm" icon="x" [circle]="true" (clicked)="cerrar.emit()" />
+  </header>
+
+  <div class="flex-1 overflow-y-auto p-5">
+    <!-- Resumen -->
+    <section class="grid-kpis-modern">
+      @for (item of resumen(); track item.label; let i = $index) {
+        <app-kpi-card
+          [style.--indice]="i"
+          class="aparecer"
+          [label]="item.label"
+          [valor]="item.valor"
+          [icon]="item.icon"
+          [tono]="item.tono"
+          [destacado]="item.destacado"
+          [pie]="item.pie" />
+      }
+    </section>
+
+    <p class="text-xs text-text-muted mb-5">
+      <app-icon name="calendar" [size]="12" />
+      Atendiendo desde el {{ perfil().resumen.primeraAtencion | date: 'dd/MM/yy' }}
+      · última atención el {{ perfil().resumen.ultimaAtencion | date: 'dd/MM/yy' }}
+    </p>
+
+    <!-- Evolución por mes -->
+    @if (meses().length > 0) {
+      <h3 class="text-sm font-bold text-text-dark mb-2">Actividad por mes</h3>
+      <div class="meses mb-5">
+        @for (m of meses(); track m.etiqueta) {
+          <div class="mes-fila">
+            <span class="mes-etiqueta">{{ m.etiqueta }}</span>
+            <div class="mes-barra-pista">
+              <div class="mes-barra" [style.width.%]="m.porcentaje"></div>
+            </div>
+            <span class="mes-total tabular-nums">{{ m.total | number }}</span>
+            <span class="mes-ingreso tabular-nums">{{ m.ingreso | moneda }}</span>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Reparto por módulo -->
+    @if (modulos().length > 0) {
+      <h3 class="text-sm font-bold text-text-dark mb-2">En qué trabaja</h3>
+      <div class="flex flex-wrap gap-2 mb-5">
+        @for (m of modulos(); track m.etiqueta) {
+          <span class="modulo-chip">
+            {{ m.etiqueta }}
+            <span class="modulo-chip-peso tabular-nums">{{ m.porcentaje }}%</span>
+          </span>
+        }
+      </div>
+    }
+
+    <!-- Servicios más frecuentes -->
+    <h3 class="text-sm font-bold text-text-dark mb-2">Servicios más frecuentes</h3>
+    <div class="linea-tiempo mb-5">
+      @for (s of perfil().topServicios; track s.etiqueta) {
+        <article class="evento">
+          <span class="evento-fecha tabular-nums">{{ s.total | number }}×</span>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-text-dark truncate">{{ s.etiqueta }}</p>
+          </div>
+          <span class="text-sm font-semibold text-primary whitespace-nowrap">
+            {{ s.ingreso | moneda }}
+          </span>
+        </article>
+      } @empty {
+        <app-empty-state icon="inbox" title="Sin servicios registrados" />
+      }
+    </div>
+
+    <!-- Sus pacientes -->
+    <h3 class="text-sm font-bold text-text-dark mb-2">Pacientes más frecuentes</h3>
+    <div class="linea-tiempo">
+      @for (p of perfil().topPacientes; track p.pac) {
+        <!-- Clicable solo si tiene código: sin él no hay historial que abrir. -->
+        <button
+          type="button"
+          class="evento evento-clicable w-full text-left"
+          [disabled]="!p.pac"
+          (click)="p.pac && verPaciente.emit(p.pac)">
+          <span class="evento-fecha tabular-nums">{{ p.servicios | number }}×</span>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-text-dark truncate">{{ p.paciente || p.pac }}</p>
+            <p class="text-xs text-text-muted mt-0.5 font-mono">
+              {{ p.pac }}
+              @if (!p.clienteId) { · sin ficha en el CRM }
+            </p>
+          </div>
+          <span class="text-sm font-semibold text-primary whitespace-nowrap">
+            {{ p.gastado | moneda }}
+          </span>
+        </button>
+      } @empty {
+        <app-empty-state
+          icon="users"
+          title="Sin pacientes identificados"
+          description="Sus servicios no traen código de paciente en el Excel." />
+      }
+    </div>
+  </div>
+</aside>
