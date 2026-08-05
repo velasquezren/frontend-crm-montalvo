@@ -1212,7 +1212,11 @@
 
   /* La lista de chats gana ancho útil: en escritorio el margen lateral de
      20px enmarca; en 375px es ancho que le falta al nombre del paciente. */
-  .chat-item {
+  .chat-item,
+  /* El esqueleto DEBE medir igual que la fila real, también en móvil: si no,
+     la lista da un salto al llegar los datos, que es justo lo que el
+     esqueleto existe para evitar. */
+  .chat-item-skeleton {
     padding: 13px 14px;
   }
 
@@ -1225,6 +1229,44 @@
   .sidebar-search {
     padding-left: 12px;
     padding-right: 12px;
+  }
+
+  /* ── Barra de escritura ─────────────────────────────────────────
+     Es lo que más usa el agente y era lo más estrecho. Cuatro botones fijos
+     (adjuntar, memoria, plantillas, enviar) dejaban ~183px al campo de
+     texto: con la letra a 16px, unos once caracteres visibles. Escribir una
+     respuesta ahí era mirar por una rendija.
+
+     En móvil el campo se lleva su propia fila completa y los botones bajan a
+     una segunda. Cuesta ~36px de alto y a cambio el agente escribe con los
+     351px de ancho de la pantalla. */
+  .chat-input-bar {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .composer-wrap {
+    flex: 1 0 100%;
+    order: -1;
+  }
+
+  /* ── Respuestas rápidas ─────────────────────────────────────────
+     "Mis respuestas:" ocupaba ~90px fijos de una fila de 375px, robándoselos
+     justo a los chips, que son lo útil. Los chips ya se explican solos. */
+  .quick-reply-label {
+    display: none;
+  }
+
+  .quick-replies-bar {
+    padding: 6px 12px;
+  }
+
+  /* ── Aviso clínico fijado ───────────────────────────────────────
+     Al editarlo son campo + Guardar + Cancelar en una fila: no caben. */
+  .pinned-note-banner {
+    flex-wrap: wrap;
+    row-gap: 6px;
+    padding: 8px 12px;
   }
 
   /* ── Teclado de iOS ─────────────────────────────────────────────

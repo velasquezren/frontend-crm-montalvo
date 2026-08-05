@@ -506,7 +506,7 @@
                 @if (item.mensaje.contenido) {
                   @if (esUrlImagen(item.mensaje.contenido)) {
                     <button type="button" (click)="abrirLightbox(item.mensaje.contenido)" class="block my-1 cursor-zoom-in text-left">
-                      <img [src]="item.mensaje.contenido" alt="Imagen adjunta" loading="lazy" decoding="async" class="max-w-xs max-h-72 rounded-xl object-cover border border-border shadow-subtle hover:opacity-95 transition-opacity" />
+                      <img [src]="item.mensaje.contenido" alt="Imagen adjunta" loading="lazy" decoding="async" class="max-w-full sm:max-w-xs max-h-72 rounded-xl object-cover border border-border shadow-subtle hover:opacity-95 transition-opacity" />
                     </button>
                   } @else if (esUrlPdf(item.mensaje.contenido)) {
                     <a [href]="item.mensaje.contenido" target="_blank" rel="noopener" class="flex items-center gap-2 p-2.5 rounded-xl bg-black/5 hover:bg-black/10 transition-colors my-1 border border-border/50">
@@ -676,7 +676,7 @@
           <app-button type="button" variant="secondary" icon="file-text" [circle]="true"
             (clicked)="abrirPlantillas()" aria-label="Enviar plantilla"
             title="Enviar plantilla de WhatsApp (para escribir fuera de las 24h)" />
-          <div class="flex-1">
+          <div class="composer-wrap flex-1">
             <textarea
               #composer
               rows="1"
@@ -1105,7 +1105,7 @@
 
 <!-- ── Modal: selector de plantillas de WhatsApp ────────────────────── -->
 <ng-template #modalPlantillas>
-  <div class="pointer-events-auto w-full max-w-lg max-h-[85vh] flex flex-col bg-white rounded-2xl shadow-lifted overflow-hidden">
+  <div class="pointer-events-auto w-full max-w-lg max-h-[85dvh] flex flex-col bg-white rounded-2xl shadow-lifted overflow-hidden">
     <!-- Cabecera -->
     <div class="flex items-center justify-between px-5 py-4 border-b border-border">
       <div class="flex items-center gap-2.5">
@@ -1204,7 +1204,7 @@
 
 <!-- Modal para personalizar/gestionar Respuestas Rápidas del Agente -->
 <ng-template #modalGestionPlantillas>
-  <div class="w-full max-w-lg bg-white rounded-2xl shadow-lifted border border-border overflow-hidden">
+  <div class="w-full max-w-lg max-h-[85dvh] flex flex-col bg-white rounded-2xl shadow-lifted border border-border overflow-hidden">
     <div class="flex items-center justify-between px-5 py-4 border-b border-border bg-bg-light">
       <div>
         <h2 class="text-sm font-bold text-text-dark">Mis Respuestas Rápidas</h2>
@@ -1216,7 +1216,7 @@
       </button>
     </div>
 
-    <div class="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+    <div class="p-5 space-y-4 max-h-[75dvh] overflow-y-auto">
       <!-- Formulario para crear / editar -->
       <div class="p-4 rounded-xl bg-bg-light border border-border space-y-3">
         <h3 class="text-xs font-bold text-text-dark uppercase tracking-wider">
