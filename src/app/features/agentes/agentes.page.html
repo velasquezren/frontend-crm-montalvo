@@ -142,17 +142,11 @@
                 }
               </td>
               <td class="py-4 px-6">
-                @if (agente.activo) {
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                    Activo
-                  </span>
-                } @else {
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-100 text-neutral-500 text-xs font-medium border border-neutral-200">
-                    <span class="w-1.5 h-1.5 rounded-full bg-neutral-400"></span>
-                    Inactivo
-                  </span>
-                }
+                <!-- Átomo del sistema en vez de una píldora a mano: hereda
+                     colores, forma y tamaño del resto de insignias del CRM. -->
+                <app-badge [variant]="agente.activo ? 'success' : 'neutral'" icon="circle">
+                  {{ agente.activo ? 'Activo' : 'Inactivo' }}
+                </app-badge>
               </td>
               <td class="py-4 px-6 text-right">
                 <div class="flex items-center justify-end gap-2">

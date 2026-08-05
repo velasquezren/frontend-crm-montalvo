@@ -34,7 +34,7 @@
 .lead-card {
   background: white;
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 14px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
   cursor: grab;
@@ -55,7 +55,7 @@
 .cdk-drag-preview {
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12) !important;
   transform: rotate(2deg) scale(1.02);
-  border-radius: 14px;
+  border-radius: 16px;
   background: white;
   border: 1px solid var(--color-primary);
   opacity: 0.95;
@@ -67,7 +67,7 @@
   border: 2px dashed var(--color-primary);
   background: color-mix(in srgb, var(--color-primary) 4%, transparent);
   min-height: 90px;
-  border-radius: 14px;
+  border-radius: 16px;
 }
 
 .cdk-drag-animating {
@@ -77,3 +77,33 @@
 .lead-drag-list.cdk-drop-list-receiving .lead-card {
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
+
+/* ── Cabecera de columna del pipeline ─────────────────────────
+   El punto y el contador toman el MISMO color que la insignia de esa fila en
+   la tabla de abajo (ESTADO_LEAD_BADGE). Antes la columna usaba una escala
+   inventada —sky, amber, emerald— así que un lead "Convertido" era verde
+   esmeralda arriba y del verde de marca abajo, en la misma pantalla. */
+.punto-estado {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.punto-estado-info { background: var(--color-info); }
+.punto-estado-neutral { background: var(--color-neutral); }
+.punto-estado-success { background: var(--color-success); }
+.punto-estado-critical { background: var(--color-critical); }
+
+.contador-estado {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-variant-numeric: tabular-nums;
+}
+
+.contador-estado-info { background: var(--color-info-bg); color: var(--color-info); }
+.contador-estado-neutral { background: var(--color-neutral-bg); color: var(--color-neutral); }
+.contador-estado-success { background: var(--color-success-bg); color: var(--color-success); }
+.contador-estado-critical { background: var(--color-critical-bg); color: var(--color-critical); }

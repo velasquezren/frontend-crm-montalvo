@@ -71,6 +71,6 @@
   color: var(--color-primary);
   background: color-mix(in srgb, var(--color-primary) 10%, white);
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: 9999px;
   font-variant-numeric: tabular-nums;
 }

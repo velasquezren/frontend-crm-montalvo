@@ -141,7 +141,7 @@
   transform: translateY(-50%);
   width: 3px;
   height: 50%;
-  border-radius: 999px;
+  border-radius: 9999px;
   background-color: var(--color-primary);
 }
 

@@ -180,36 +180,34 @@ function verificarRoles(skill, texto) {
 const COLOR_AJENO =
   /\b(?:bg|text|border|from|to|via|ring|divide|outline|decoration|shadow|accent|caret|fill|stroke)-(?:amber|yellow|red|orange|rose|slate|gray|zinc|neutral|stone|green|blue|indigo|purple|pink|emerald|teal|sky|lime|cyan|violet|fuchsia)-\d{2,3}\b/g;
 
+
+/** Hexadecimales sueltos en CSS: la paleta es cerrada y todo tono se deriva con
+    `color-mix()` sobre un token, nunca con un hex nuevo. Los nueve de la paleta
+    se admiten como fallback de `var(--token, #hex)`. */
+const HEX_AJENO =
+  /#(?!006156|39ADA3|FFFFFF|EAF7F5|1F2937|6B7280|000000|F8F9FA|E5E7EB)[0-9a-f]{6}\b/gi;
+
 const SOMBRA_AJENA = /\bshadow-(?:2xs|xs|sm|md|lg|xl|2xl|inner)\b/g;
 
 /** El sistema define tres radios: inputs 12px, tarjetas 16px, píldoras redondas. */
 const RADIO_AJENO = /border-radius:\s*(?!12px|16px|9999px|50%|0)[0-9]+(?:px|rem)/g;
 
 /**
- * Violaciones toleradas por archivo, congeladas al 2026-08-04. **Bajar, nunca
- * subir.** Los colores de estas vistas son estados (lead nuevo/contactado/…)
- * pintados a mano: ya existe el mapa canónico `shared/models/estados.model.ts`
- * con las variantes del sistema, así que la migración es sustituir el color
- * crudo por `<app-badge [variant]="ESTADO_LEAD_BADGE[x]">`.
- *
- * Nada de esto rompe el build hoy; lo que rompe el build es empeorarlo.
+ * Violaciones toleradas por archivo. **Vacío desde el 2026-08-05: la deuda se
+ * pagó entera.** Se deja el mecanismo porque su gracia es no volver a
+ * necesitarlo: si algún día hay que congelar algo, se anota aquí y a partir de
+ * ese número **solo puede bajar** —arreglar obliga a actualizar la cifra,
+ * empeorar rompe el build—. Lo que no se puede es añadir una entrada y
+ * olvidarla: una que ya no corresponda a ningún archivo también falla.
  */
 const DEUDA = {
-  'features/agentes/agentes.page.html': { color: 8 },
-  'features/auth/login.page.html': { color: 1 },
-  'features/leads/leads.page.css': { radio: 3 },
-  'features/leads/leads.page.html': { color: 12 },
-  'features/perfil/perfil.page.html': { color: 4 },
-  'features/planilla-comisiones/planilla-comisiones.page.css': { radio: 12 },
-  'features/planilla-comisiones/planilla-comisiones.page.html': { color: 3 },
-  'features/servicios/components/servicios-modulos/servicios-modulos.component.css': { radio: 1 },
-  'shared/components/layout/layout.component.css': { radio: 1 },
 };
 
 const REGLAS = [
   { clave: 'color', patron: COLOR_AJENO, ext: /\.html$/, que: 'color(es) fuera de la paleta cerrada' },
   { clave: 'sombra', patron: SOMBRA_AJENA, ext: /\.html$/, que: 'sombra(s) fuera de shadow-subtle/lifted' },
   { clave: 'radio', patron: RADIO_AJENO, ext: /\.css$/, que: 'radio(s) fuera de 12px/16px/píldora' },
+  { clave: 'hex', patron: HEX_AJENO, ext: /\.css$/, que: 'hexadecimal(es) fuera de la paleta cerrada' },
 ];
 
 function verificarCodigo() {

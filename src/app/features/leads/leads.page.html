@@ -87,10 +87,10 @@
         <div class="pipeline-column">
           <div class="pipeline-column-header">
             <span class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-text-muted">
-              <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+              <span class="punto-estado punto-estado-info"></span>
               Nuevos
             </span>
-            <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700">
+            <span class="contador-estado contador-estado-info">
               {{ resumen.value().porEstado.NUEVO }}
             </span>
           </div>
@@ -140,10 +140,10 @@
         <div class="pipeline-column">
           <div class="pipeline-column-header">
             <span class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-text-muted">
-              <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+              <span class="punto-estado punto-estado-neutral"></span>
               Contactados
             </span>
-            <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+            <span class="contador-estado contador-estado-neutral">
               {{ resumen.value().porEstado.CONTACTADO }}
             </span>
           </div>
@@ -193,10 +193,10 @@
         <div class="pipeline-column">
           <div class="pipeline-column-header">
             <span class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-text-muted">
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <span class="punto-estado punto-estado-success"></span>
               Convertidos
             </span>
-            <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
+            <span class="contador-estado contador-estado-success">
               {{ resumen.value().porEstado.CONVERTIDO }}
             </span>
           </div>
@@ -246,10 +246,10 @@
         <div class="pipeline-column">
           <div class="pipeline-column-header">
             <span class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-text-muted">
-              <span class="w-2.5 h-2.5 rounded-full bg-neutral-400"></span>
+              <span class="punto-estado punto-estado-critical"></span>
               Perdidos
             </span>
-            <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700">
+            <span class="contador-estado contador-estado-critical">
               {{ resumen.value().porEstado.PERDIDO }}
             </span>
           </div>

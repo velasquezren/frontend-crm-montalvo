@@ -171,11 +171,13 @@
 }
 
 .tipo-badge-c {
-  background: #4B5563;
+  background: var(--color-text-muted);
 }
 
 .tipo-badge-bono {
-  background: linear-gradient(135deg, #F59E0B, #D97706);
+  /* `critical` (negro) en vez del ámbar que tenía: la paleta no lo incluye, y
+     el bono necesita destacar, no alarmar. */
+  background: var(--color-text-critical);
 }
 
 .tipo-info {

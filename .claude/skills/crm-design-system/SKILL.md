@@ -91,6 +91,7 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 | Input | `<app-input>` | `label`, `type` (incl. password con toggle), `placeholder`, `autocomplete`, `error`, `disabled` · `[(value)]` |
 | Badge | `<app-badge>` | `variant` (success/info/neutral/critical), `icon` |
 | Card | `<app-card>` | `padding` (sm/md/lg), `hoverable` |
+| KpiCard | `<app-kpi-card>` | `label`, `valor` (requeridos; número → lo formatea el átomo), `icon`, `tono` (primary/secondary/neutral/critical), `tonoValor`, `destacado`, `pie`, `pieIcono` + contenido proyectado |
 | Avatar | `<app-avatar>` | `initials` (requerido), `size`, `variant` (light/solid), `imageUrl` |
 | Icon | `<app-icon>` | `name` (catálogo cerrado), `size`, `strokeWidth` |
 | EmptyState | `<app-empty-state>` | `icon`, `title` (requerido), `description` + contenido proyectado |
@@ -211,15 +212,16 @@ Existe porque el inbox había acumulado **17 desviaciones** —una escala ámbar
 paleta excluye ámbares a propósito, cinco sombras ajenas, ocho radios distintos— sin que nada
 avisara. Una vista no se sale del sistema de golpe: se sale de una clase en una clase.
 
-**Deuda congelada.** Las vistas que ya venían sucias no tumban el build: su número está anotado
-en `DEUDA` dentro de `tools/verificar-skills.mjs` y **solo puede bajar**. Si arreglas una, el
-check falla pidiendo que actualices la cifra; si empeoras una o ensucias un archivo nuevo, falla
-igual. Así la regla rige desde hoy sin exigir un refactor de golpe, y la deuda no puede quedarse
-quieta fingiendo que no existe.
+**La deuda está pagada: `DEUDA` en `tools/verificar-skills.mjs` está vacío.** Toda la app
+respeta la paleta, las dos sombras y los tres radios. El mecanismo se queda por si algún día
+hay que congelar algo: se anota el número por archivo y a partir de ahí **solo puede bajar**
+—arreglar obliga a actualizar la cifra, empeorar rompe el build—.
 
-Casi toda esa deuda son **estados pintados a mano** (lead nuevo/contactado/…) cuando ya existe
-`shared/models/estados.model.ts` con su variante de badge: migrarlos es cambiar el color crudo
-por `<app-badge [variant]="ESTADO_LEAD_BADGE[lead.estado]">`.
+Lo que se arregló, por si sirve de guía: los estados de lead estaban pintados a mano con
+escalas inventadas (sky/amber/emerald) mientras la tabla de la misma pantalla usaba
+`ESTADO_LEAD_BADGE`, así que un lead "Convertido" era de dos verdes distintos a la vez. La
+regla práctica: **si estás eligiendo un color para un estado, ya existe su variante** en
+`shared/models/estados.model.ts`.
 
 Verifica **datos, no criterio**: si añades una regla o cambias un patrón, este archivo se
 actualiza a mano. Cuando el validador te contradiga, corrige el skill — el código es la verdad.

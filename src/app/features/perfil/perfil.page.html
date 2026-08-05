@@ -174,8 +174,8 @@
             <div
               class="h-full transition-all duration-500 rounded-full"
               [class.bg-primary]="cuota.porcentajeUsado < 75"
-              [class.bg-amber-500]="cuota.porcentajeUsado >= 75 && cuota.porcentajeUsado < 90"
-              [class.bg-rose-500]="cuota.porcentajeUsado >= 90"
+              [class.bg-secondary]="cuota.porcentajeUsado >= 75 && cuota.porcentajeUsado < 90"
+              [class.bg-text-critical]="cuota.porcentajeUsado >= 90"
               [style.width.%]="cuota.porcentajeUsado"></div>
           </div>
         </div>
@@ -355,7 +355,7 @@
                   <button
                     type="button"
                     (click)="eliminarRecursoMemoria(item.id)"
-                    class="p-2 rounded-xl text-text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                    class="p-2 rounded-xl text-text-muted hover:text-text-critical hover:bg-bg-light transition-colors cursor-pointer"
                     title="Eliminar recurso">
                     <app-icon name="trash" [size]="16" />
                   </button>

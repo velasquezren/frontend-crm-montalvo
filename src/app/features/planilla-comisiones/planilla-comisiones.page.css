@@ -58,7 +58,7 @@
   color: var(--color-text-muted);
   border: 1px solid transparent;
   border-bottom: 2px solid transparent;
-  border-radius: 10px 10px 0 0;
+  border-radius: 12px 12px 0 0;
   margin-bottom: -1px;
   white-space: nowrap;
   cursor: pointer;
@@ -88,7 +88,7 @@
   font-weight: 800;
   color: white;
   background: var(--color-critical);
-  border-radius: 999px;
+  border-radius: 9999px;
   line-height: 1;
 }
 
@@ -144,7 +144,7 @@
   font-weight: 700;
   color: white;
   background: var(--color-primary);
-  border-radius: 999px;
+  border-radius: 9999px;
   cursor: pointer;
   box-shadow: var(--shadow-subtle);
   transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
@@ -162,7 +162,7 @@
   padding: 20px;
   background: var(--color-bg-workspace);
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: 16px;
 }
 
 .grid-metricas {
@@ -220,7 +220,7 @@
   color: var(--color-text-muted);
   background: var(--color-bg-workspace);
   border: 1px solid var(--color-border);
-  border-radius: 999px;
+  border-radius: 9999px;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s ease;
@@ -245,7 +245,7 @@
   color: var(--color-text-muted);
   background: var(--color-bg-workspace);
   border: 1px solid var(--color-border);
-  border-radius: 999px;
+  border-radius: 9999px;
 }
 
 /* ── Controles de formulario ──────────────────────────────────────── */
@@ -256,7 +256,7 @@
   color: var(--color-text-dark);
   background: white;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   max-width: 100%;
   transition: border-color 0.15s ease;
@@ -271,7 +271,7 @@
 .select-mini {
   padding: 4px 8px;
   font-size: 12px;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .input-mini {
@@ -282,7 +282,7 @@
   color: var(--color-text-dark);
   background: white;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: 12px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -330,7 +330,7 @@
   color: var(--color-primary);
   background: var(--color-bg-light);
   border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 /* ── Móvil ────────────────────────────────────────────────────────── */
@@ -348,7 +348,7 @@
 
   .panel {
     padding: 14px;
-    border-radius: 14px;
+    border-radius: 16px;
   }
 
   .filtros > * {
@@ -365,7 +365,7 @@
 /* ── Planes que comisionan ────────────────────────────────────────── */
 .grupo-planes {
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: 16px;
   overflow: hidden;
   background: white;
   box-shadow: var(--shadow-subtle);
