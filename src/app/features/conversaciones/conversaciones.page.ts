@@ -130,7 +130,7 @@ export class ConversacionesPage implements AfterViewInit {
   protected readonly seleccionadaId = signal<string | null>(null);
   protected readonly filtroTab = signal<FiltroInbox>('TODAS');
   protected readonly filtroAgenteId = signal<string | null>(null);
-  protected readonly mostrarFiltroAgentes = signal(true);
+  protected readonly mostrarFiltroAgentes = signal(false);
   protected readonly asignando = signal(false);
 
   protected toggleMostrarFiltroAgente(): void {
