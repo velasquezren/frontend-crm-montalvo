@@ -773,14 +773,15 @@
 }
 
 .edit-form-section {
-  padding: 14px;
-  border-radius: 12px;
-  background: var(--color-bg-workspace);
-  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  padding: 0;
+  background: transparent;
+  border: none;
 }
 
 .edit-form-section + .edit-form-section {
-  margin-top: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
 }
 
 .edit-form-section-title {
