@@ -1293,13 +1293,16 @@
 <!-- Modal Lightbox para imágenes en pantalla completa -->
 @if (lightboxImagenUrl(); as imgUrl) {
   <div class="lightbox-overlay" (click)="cerrarLightbox()">
-    <div class="lightbox-content" (click)="$event.stopPropagation()">
-      <button type="button" (click)="cerrarLightbox()" class="lightbox-close-btn" title="Cerrar (Esc)">
-        <app-icon name="x" [size]="20" />
-      </button>
-      <a [href]="imgUrl" target="_blank" download class="lightbox-download-btn" title="Descargar imagen">
+    <div class="lightbox-toolbar" (click)="$event.stopPropagation()">
+      <a [href]="imgUrl" target="_blank" download class="lightbox-action-btn" title="Descargar imagen">
         <app-icon name="download" [size]="18" />
       </a>
+      <button type="button" (click)="cerrarLightbox()" class="lightbox-action-btn" title="Cerrar (Esc)">
+        <app-icon name="x" [size]="20" />
+      </button>
+    </div>
+
+    <div class="lightbox-content" (click)="$event.stopPropagation()">
       <img [src]="imgUrl" alt="Previsualización de foto" class="lightbox-image" />
     </div>
   </div>
