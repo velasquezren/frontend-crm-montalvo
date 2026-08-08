@@ -95,6 +95,7 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 | Avatar | `<app-avatar>` | `initials` (requerido), `size`, `variant` (light/solid), `imageUrl` |
 | Icon | `<app-icon>` | `name` (catálogo cerrado), `size`, `strokeWidth` |
 | EmptyState | `<app-empty-state>` | `icon`, `title` (requerido), `description` + contenido proyectado |
+| ErrorCarga | `<app-error-carga>` | `que` ("los clientes"), `titulo`, `descripcion` · `(reintentar)` — estado de error de una vista con datos remotos |
 | LoadingSkeleton | `<app-loading-skeleton>` | `shape`, `width`, `height` |
 | PageHeader | `<app-page-header>` | `title` (requerido), **`subtitle`** + acciones proyectadas |
 | FilterChip | `<app-filter-chip>` | `active`, `count`, `size` · `(clicked)` |

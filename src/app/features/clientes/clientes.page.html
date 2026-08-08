@@ -47,6 +47,8 @@
       <app-loading-skeleton height="48px" />
       <app-loading-skeleton height="48px" />
     </div>
+  } @else if (clientes.error()) {
+    <app-error-carga que="los clientes" (reintentar)="clientes.reload()" />
   } @else if (clientes.value().datos.length > 0) {
     <app-table>
       <thead>

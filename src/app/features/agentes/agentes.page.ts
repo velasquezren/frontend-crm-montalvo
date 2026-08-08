@@ -9,6 +9,7 @@ import { AvatarComponent } from '../../shared/components/avatar/avatar.component
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { CardComponent } from '../../shared/components/card/card.component';
+import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InputComponent } from '../../shared/components/input/input.component';
@@ -41,6 +42,7 @@ export type FiltroRolAgentes = 'TODOS' | 'SUPER_ADMIN' | 'ADMIN' | 'AGENTE';
     ButtonComponent,
     CardComponent,
     EmptyStateComponent,
+    ErrorCargaComponent,
     IconComponent,
     InputComponent,
     DatePipe,

@@ -9,6 +9,7 @@ import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { BarChartComponent, ChartItem } from '../../shared/components/charts/bar-chart.component';
 import { DonutChartComponent } from '../../shared/components/charts/donut-chart.component';
+import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.component';
@@ -55,6 +56,7 @@ type ColRanking = 'etiqueta' | 'cantidad' | 'montoVendido' | 'pctMonto';
     BarChartComponent,
     DonutChartComponent,
     EmptyStateComponent,
+    ErrorCargaComponent,
     IconComponent,
     KpiCardComponent,
     LoadingSkeletonComponent,

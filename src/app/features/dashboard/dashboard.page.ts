@@ -8,6 +8,7 @@ import { generarIniciales } from '../../core/auth/user.model';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent, BadgeVariant } from '../../shared/components/badge/badge.component';
 import { CardComponent } from '../../shared/components/card/card.component';
+import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { IconComponent, IconName } from '../../shared/components/icon/icon.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
@@ -108,6 +109,7 @@ const ORIGEN_COLOR: Record<string, string> = {
     IconComponent,
     AvatarComponent,
     EmptyStateComponent,
+    ErrorCargaComponent,
     LoadingSkeletonComponent,
   ],
   templateUrl: './dashboard.page.html',

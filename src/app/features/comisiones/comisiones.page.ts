@@ -11,6 +11,7 @@ import { AvatarComponent } from '../../shared/components/avatar/avatar.component
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { CardComponent } from '../../shared/components/card/card.component';
+import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent, IconName } from '../../shared/components/icon/icon.component';
@@ -47,6 +48,7 @@ type FiltroComision = EstadoComision | 'TODAS';
     AvatarComponent,
     BadgeComponent,
     EmptyStateComponent,
+    ErrorCargaComponent,
     LoadingSkeletonComponent,
     PaginatorComponent,
     MonedaPipe,

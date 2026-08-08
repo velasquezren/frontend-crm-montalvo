@@ -362,6 +362,11 @@
                 </div>
               </div>
             } @empty {
+              @if (recursosMemoriaError()) {
+                <div class="sm:col-span-2">
+                  <app-error-carga que="tus recursos" (reintentar)="recargarRecursosMemoria()" />
+                </div>
+              } @else {
               <div class="sm:col-span-2 text-center py-12 px-4 bg-white rounded-2xl border border-dashed border-border space-y-2">
                 <div class="p-3 bg-bg-light rounded-full w-12 h-12 mx-auto flex items-center justify-center border border-border">
                   <app-icon name="database" [size]="24" class="text-text-muted" />
@@ -369,6 +374,7 @@
                 <p class="text-xs font-extrabold text-text-dark">No se encontraron recursos en tu memoria.</p>
                 <p class="text-[11px] text-text-muted">Agrega notas, banners o documentos desde la columna izquierda.</p>
               </div>
+              }
             }
           </div>
 

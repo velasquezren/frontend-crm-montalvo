@@ -236,6 +236,29 @@ function verificarCodigo() {
     }
   }
 
+  /* ── Toda vista con datos remotos declara su estado de error ──────────────
+     No es una regla de estilo: sin esa rama, un backend caído cae en el estado
+     vacío y la pantalla afirma "no hay clientes" o "no hay comisiones". El
+     agente lo lee como un dato —"hoy no hay nada"— y cierra. Faltaba en seis de
+     las doce vistas y nadie lo había notado, porque en desarrollo el servidor
+     siempre responde. */
+  for (const ruta of indexar(base).filter(r => r.endsWith('.page.ts'))) {
+    const codigo = readFileSync(ruta, 'utf8');
+    if (!codigo.includes('httpResource')) continue;
+
+    const plantilla = ruta.replace(/\.ts$/, '.html');
+    if (!existsSync(plantilla)) continue;
+
+    const html = readFileSync(plantilla, 'utf8');
+    if (!/\.error\(\)|app-error-carga/.test(html)) {
+      señalaCodigo(
+        `${relative(base, plantilla)}: la vista pide datos con httpResource pero no ` +
+          'declara estado de error. Sin él, un servidor caído se muestra como "no hay datos". ' +
+          'Usa <app-error-carga>.',
+      );
+    }
+  }
+
   /* Una entrada que ya no corresponde a ningún archivo es deuda fantasma:
      alguien borró o renombró la vista y la cifra se quedó mintiendo. */
   for (const rel of Object.keys(DEUDA)) {

@@ -10,6 +10,7 @@ import { AvatarComponent } from '../../shared/components/avatar/avatar.component
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { IconComponent, IconName } from '../../shared/components/icon/icon.component';
+import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { InputComponent } from '../../shared/components/input/input.component';
@@ -55,6 +56,7 @@ type PestanaModal = 'EXPEDIENTE' | 'CONTACTO' | 'NOTAS';
     ButtonComponent,
     IconComponent,
     EmptyStateComponent,
+    ErrorCargaComponent,
     LoadingSkeletonComponent,
     PaginatorComponent,
     DatePipe,

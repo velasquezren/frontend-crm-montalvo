@@ -192,10 +192,16 @@
           } @empty {
             <tr>
               <td colspan="5" class="py-12">
-                <app-empty-state
-                  icon="users"
-                  title="Sin usuarios registrados"
-                  description="No se encontraron cuentas que coincidan con los criterios." />
+                <!-- Sin lista puede ser "no hay" o "no se pudo traer": son cosas
+                     distintas y decir la primera cuando pasa la segunda engaña. -->
+                @if (agentes.error()) {
+                  <app-error-carga que="los usuarios" (reintentar)="agentes.reload()" />
+                } @else {
+                  <app-empty-state
+                    icon="users"
+                    title="Sin usuarios registrados"
+                    description="No se encontraron cuentas que coincidan con los criterios." />
+                }
               </td>
             </tr>
           }

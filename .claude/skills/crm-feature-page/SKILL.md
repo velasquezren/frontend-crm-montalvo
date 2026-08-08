@@ -111,6 +111,31 @@ Toda vista con datos remotos cubre carga, error, vacío y contenido:
 }
 ```
 
+**El estado de error no es opcional, y el build lo comprueba.** Faltaba en seis de las doce
+vistas, y su ausencia no se veía como un hueco sino como una **mentira**: sin esa rama, un
+backend caído cae en el `@empty` y la pantalla afirma "no hay clientes" o "no hay comisiones".
+El agente lo lee como un dato —"hoy no hay nada"— y cierra. En desarrollo no se nota porque el
+servidor siempre responde.
+
+Se resuelve con el átomo, no maquetando el bloque en cada vista:
+
+```html
+@if (clientes.isLoading()) {
+  <app-loading-skeleton … />
+} @else if (clientes.error()) {
+  <app-error-carga que="los clientes" (reintentar)="clientes.reload()" />
+} @else if (clientes.value().datos.length > 0) {
+  …
+} @else {
+  <app-empty-state … />
+}
+```
+
+El orden importa: el error va **antes** de comprobar si hay datos, porque cuando la petición
+falla el recurso devuelve su `defaultValue` —una página vacía— y caería en el estado vacío.
+
+`npm run check:skills` falla si una vista usa `httpResource` y su plantilla no declara error.
+
 Todo listado paginado llega envuelto en `RespuestaPaginada<T>` (`core/api/pagination.model.ts`):
 usa `.value().datos`, nunca `.value()` a secas — ya no es un array plano. Cambiar de filtro o de
 búsqueda vuelve la página a 1 (si no, el usuario queda "atrapado" en una página que ya no existe

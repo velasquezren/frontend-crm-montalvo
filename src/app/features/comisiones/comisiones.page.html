@@ -37,6 +37,8 @@
   @defer (on viewport) {
     @if (comisiones.isLoading()) {
       <app-loading-skeleton shape="card" height="200px" />
+    } @else if (comisiones.error()) {
+      <app-error-carga que="las comisiones" (reintentar)="comisiones.reload()" />
     } @else if (filtradas().length > 0) {
       <app-table>
         <thead>

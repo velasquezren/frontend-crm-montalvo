@@ -19,6 +19,8 @@
       <app-loading-skeleton shape="card" height="120px" />
       <app-loading-skeleton shape="card" height="120px" />
     </div>
+  } @else if (kpiData.error()) {
+    <app-error-carga que="los indicadores" (reintentar)="kpiData.reload()" />
   } @else {
     <!-- ── KPIs (RF-16) con Sparklines ─────────────────────────────── -->
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">

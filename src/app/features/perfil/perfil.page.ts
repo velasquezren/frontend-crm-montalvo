@@ -6,6 +6,7 @@ import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model'
 import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales, UsuarioApi } from '../../core/auth/user.model';
 import { ToastService } from '../../core/toast/toast.service';
+import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
@@ -26,6 +27,7 @@ import { ActivatedRoute } from '@angular/router';
   imports: [
     ReactiveFormsModule,
     PageHeaderComponent,
+    ErrorCargaComponent,
     AvatarComponent,
     ButtonComponent,
     IconComponent,
@@ -75,6 +77,14 @@ export class PerfilPage {
 
   /** Proyección: la vista solo necesita la lista, no la envoltura de paginación. */
   protected readonly recursosMemoria = computed(() => this.recursosMemoriaRecurso.value().datos);
+
+  /* El recurso es privado, así que la plantilla necesita estos dos para poder
+     distinguir "no tienes recursos" de "no se pudieron traer". */
+  protected readonly recursosMemoriaError = computed(() => !!this.recursosMemoriaRecurso.error());
+
+  protected recargarRecursosMemoria(): void {
+    this.recursosMemoriaRecurso.reload();
+  }
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
