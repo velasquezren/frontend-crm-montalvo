@@ -136,11 +136,6 @@ export class ConversacionesPage implements AfterViewInit {
   protected toggleMostrarFiltroAgente(): void {
     this.mostrarFiltroAgentes.set(!this.mostrarFiltroAgentes());
   }
-
-  protected obtenerNombreAgenteFiltro(id: string): string {
-    const ag = this.agentesConChats().find(a => a.id === id);
-    return ag ? ag.nombre.split(' ')[0] : 'Agente';
-  }
   protected readonly dropdownAgenteAbierto = signal(false);
   /**
    * A partir de 1280px la ficha del paciente cabe como tercera columna junto al

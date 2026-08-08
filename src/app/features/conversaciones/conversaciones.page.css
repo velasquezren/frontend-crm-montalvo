@@ -82,14 +82,9 @@
 
 /* ── Agent filter chips (admin) ──────────────────────────────── */
 .agent-filter-row {
-  margin-top: 8px;
-  padding-top: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
-}
-
-.agent-chips-strip {
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
 }
 
 .agent-chip {
@@ -104,8 +99,6 @@
   color: var(--color-text-muted);
   background: white;
   transition: all 0.2s;
-  flex-shrink: 0;
-  white-space: nowrap;
 }
 
 .agent-chip:hover {
@@ -117,7 +110,6 @@
   border-color: var(--color-primary);
   background: var(--color-bg-light);
   color: var(--color-primary);
-  font-weight: 600;
 }
 
 .agent-chip-count {
@@ -132,7 +124,6 @@
   font-size: 9px;
   font-weight: 700;
   line-height: 1;
-  font-variant-numeric: tabular-nums;
 }
 
 .agent-chip-active .agent-chip-count {
