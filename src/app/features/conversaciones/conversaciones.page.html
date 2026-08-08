@@ -1292,18 +1292,16 @@
 
 <!-- Modal Lightbox para imágenes en pantalla completa -->
 @if (lightboxImagenUrl(); as imgUrl) {
-  <div class="lightbox-overlay" (click)="cerrarLightbox()">
-    <div class="lightbox-toolbar" (click)="$event.stopPropagation()">
-      <a [href]="imgUrl" target="_blank" download class="lightbox-action-btn" title="Descargar imagen">
+  <div class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4" (click)="cerrarLightbox()">
+    <div class="fixed top-4 right-4 z-50 flex items-center gap-2" (click)="$event.stopPropagation()">
+      <a [href]="imgUrl" target="_blank" download class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center cursor-pointer transition-transform hover:scale-105" title="Descargar imagen">
         <app-icon name="download" [size]="18" />
       </a>
-      <button type="button" (click)="cerrarLightbox()" class="lightbox-action-btn" title="Cerrar (Esc)">
+      <button type="button" (click)="cerrarLightbox()" class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center cursor-pointer transition-transform hover:scale-105" title="Cerrar (Esc)">
         <app-icon name="x" [size]="20" />
       </button>
     </div>
 
-    <div class="lightbox-content" (click)="$event.stopPropagation()">
-      <img [src]="imgUrl" alt="Previsualización de foto" class="lightbox-image" />
-    </div>
+    <img [src]="imgUrl" (click)="$event.stopPropagation()" alt="Previsualización de foto" class="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl shadow-lifted" />
   </div>
 }
