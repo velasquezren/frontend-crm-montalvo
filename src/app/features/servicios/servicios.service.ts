@@ -36,12 +36,12 @@ export class ServiciosService {
     return this.api.request('/servicios/demografia');
   }
 
-  pacientesRequest(pagina: number, busqueda?: string): ResourceRequest {
-    return this.api.request('/servicios/pacientes', { pagina, busqueda });
+  pacientesRequest(pagina: number, busqueda?: string, orden?: string, direccion?: string): ResourceRequest {
+    return this.api.request('/servicios/pacientes', { pagina, busqueda, orden, direccion });
   }
 
-  medicosRequest(pagina: number, busqueda?: string): ResourceRequest {
-    return this.api.request('/servicios/medicos', { pagina, busqueda });
+  medicosRequest(pagina: number, busqueda?: string, orden?: string, direccion?: string): ResourceRequest {
+    return this.api.request('/servicios/medicos', { pagina, busqueda, orden, direccion });
   }
 
   /** Ficha y línea de tiempo. Se pide al abrir el detalle, no en el listado. */

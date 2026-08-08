@@ -4,6 +4,10 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 import { RespuestaPaginada } from '../../../../core/api/pagination.model';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { InputComponent } from '../../../../shared/components/input/input.component';
+import {
+  DireccionOrden,
+  ThOrdenableComponent,
+} from '../../../../shared/components/table/th-ordenable.component';
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PaginatorComponent } from '../../../../shared/components/paginator/paginator.component';
 import { TableComponent } from '../../../../shared/components/table/table.component';
@@ -18,6 +22,7 @@ import { MedicoConServicios } from '../../servicios.model';
     MonedaPipe,
     EmptyStateComponent,
     InputComponent,
+    ThOrdenableComponent,
     LoadingSkeletonComponent,
     PaginatorComponent,
     TableComponent,
@@ -35,6 +40,11 @@ export class ServiciosMedicosTablaComponent {
   readonly busquedaChange = output<string>();
 
   readonly paginaChange = output<number>();
+
+  /** Orden vigente; lo decide la página, que es quien pide los datos. */
+  readonly orden = input<string | undefined>(undefined);
+  readonly direccion = input<DireccionOrden>('asc');
+  readonly ordenar = output<{ orden: string; direccion: DireccionOrden }>();
   /** Abre el perfil del médico. Emite el código, no el nombre: es la clave. */
   readonly abrirMedico = output<string>();
 

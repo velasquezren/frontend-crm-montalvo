@@ -245,6 +245,9 @@
     [busqueda]="busquedaPacientes()"
     (busquedaChange)="busquedaPacientes.set($event)"
     (paginaChange)="paginaPacientes.set($event)"
+    [orden]="ordenPacientes()"
+    [direccion]="direccionPacientes()"
+    (ordenar)="ordenarPacientes($event)"
     (abrirHistorial)="abrirHistorial($event)" />
 }
 
@@ -257,6 +260,9 @@
     [busqueda]="busquedaMedicos()"
     (busquedaChange)="busquedaMedicos.set($event)"
     (paginaChange)="paginaMedicos.set($event)"
+    [orden]="ordenMedicos()"
+    [direccion]="direccionMedicos()"
+    (ordenar)="ordenarMedicos($event)"
     (abrirMedico)="abrirMedico($event)" />
 }
 

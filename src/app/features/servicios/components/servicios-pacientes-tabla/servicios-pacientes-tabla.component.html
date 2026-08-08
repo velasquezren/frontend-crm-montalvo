@@ -18,11 +18,22 @@
     <app-table [dense]="true">
       <thead>
         <tr>
-          <th class="text-left celda-sticky">Paciente</th>
+          <th class="text-left celda-sticky" appOrdenable="paciente"
+              [orden]="orden()" [direccion]="direccion()"
+              (ordenar)="ordenar.emit($event)">Paciente</th>
           <th class="text-left">Código</th>
-          <th class="text-right">Servicios</th>
-          <th class="text-right">Gastado</th>
-          <th class="text-left">Última visita</th>
+          <th class="text-right" appOrdenable="servicios"
+              [orden]="orden()" [direccion]="direccion()"
+              direccionInicial="desc"
+              (ordenar)="ordenar.emit($event)">Servicios</th>
+          <th class="text-right" appOrdenable="gastado"
+              [orden]="orden()" [direccion]="direccion()"
+              direccionInicial="desc"
+              (ordenar)="ordenar.emit($event)">Gastado</th>
+          <th class="text-left" appOrdenable="ultima"
+              [orden]="orden()" [direccion]="direccion()"
+              direccionInicial="desc"
+              (ordenar)="ordenar.emit($event)">Última visita</th>
           <th class="text-right">Historial</th>
         </tr>
       </thead>

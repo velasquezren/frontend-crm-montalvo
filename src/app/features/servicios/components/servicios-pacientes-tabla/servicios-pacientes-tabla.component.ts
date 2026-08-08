@@ -6,6 +6,10 @@ import { BadgeComponent } from '../../../../shared/components/badge/badge.compon
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { InputComponent } from '../../../../shared/components/input/input.component';
+import {
+  DireccionOrden,
+  ThOrdenableComponent,
+} from '../../../../shared/components/table/th-ordenable.component';
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PaginatorComponent } from '../../../../shared/components/paginator/paginator.component';
 import { TableComponent } from '../../../../shared/components/table/table.component';
@@ -22,6 +26,7 @@ import { PacienteConServicios } from '../../servicios.model';
     ButtonComponent,
     EmptyStateComponent,
     InputComponent,
+    ThOrdenableComponent,
     LoadingSkeletonComponent,
     PaginatorComponent,
     TableComponent,
@@ -40,6 +45,11 @@ export class ServiciosPacientesTablaComponent {
   readonly busquedaChange = output<string>();
 
   readonly paginaChange = output<number>();
+
+  /** Orden vigente; lo decide la página, que es quien pide los datos. */
+  readonly orden = input<string | undefined>(undefined);
+  readonly direccion = input<DireccionOrden>('asc');
+  readonly ordenar = output<{ orden: string; direccion: DireccionOrden }>();
   readonly abrirHistorial = output<string | null>();
 
   protected onBusquedaInput(val: string): void {

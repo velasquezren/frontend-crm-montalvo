@@ -26,6 +26,7 @@ import { ServiciosService } from './servicios.service';
 import { ServiciosHistorialDrawerComponent } from './components/servicios-historial-drawer/servicios-historial-drawer.component';
 import { ServiciosMedicoDrawerComponent } from './components/servicios-medico-drawer/servicios-medico-drawer.component';
 import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.component';
+import { DireccionOrden } from '../../shared/components/table/th-ordenable.component';
 import { ServiciosKpisComponent } from './components/servicios-kpis/servicios-kpis.component';
 import { ServiciosMedicosTablaComponent } from './components/servicios-medicos-tabla/servicios-medicos-tabla.component';
 import { ServiciosModulosComponent } from './components/servicios-modulos/servicios-modulos.component';
@@ -98,6 +99,13 @@ export class ServiciosPage {
   private readonly pacientesDebounced = signal('');
   private readonly medicosDebounced = signal('');
 
+  /* Un orden por listado: el de pacientes y el de médicos son tablas distintas
+     y compartirlo haría que ordenar una descolocara la otra. */
+  protected readonly ordenPacientes = signal<string | undefined>(undefined);
+  protected readonly direccionPacientes = signal<DireccionOrden>('desc');
+  protected readonly ordenMedicos = signal<string | undefined>(undefined);
+  protected readonly direccionMedicos = signal<DireccionOrden>('desc');
+
   protected readonly historial = signal<HistorialPaciente | null>(null);
   protected readonly perfilMedico = signal<PerfilMedico | null>(null);
   protected readonly cargandoHistorial = signal(false);
@@ -146,12 +154,24 @@ export class ServiciosPage {
   );
 
   protected readonly pacientes = httpResource<RespuestaPaginada<PacienteConServicios>>(
-    () => this.service.pacientesRequest(this.paginaPacientes(), this.pacientesDebounced() || undefined),
+    () =>
+      this.service.pacientesRequest(
+        this.paginaPacientes(),
+        this.pacientesDebounced() || undefined,
+        this.ordenPacientes(),
+        this.direccionPacientes(),
+      ),
     { defaultValue: paginaVacia<PacienteConServicios>() },
   );
 
   protected readonly medicos = httpResource<RespuestaPaginada<MedicoConServicios>>(
-    () => this.service.medicosRequest(this.paginaMedicos(), this.medicosDebounced() || undefined),
+    () =>
+      this.service.medicosRequest(
+        this.paginaMedicos(),
+        this.medicosDebounced() || undefined,
+        this.ordenMedicos(),
+        this.direccionMedicos(),
+      ),
     { defaultValue: paginaVacia<MedicoConServicios>() },
   );
 
@@ -381,6 +401,18 @@ export class ServiciosPage {
     } finally {
       this.cargandoHistorial.set(false);
     }
+  }
+
+  protected ordenarPacientes(e: { orden: string; direccion: DireccionOrden }): void {
+    this.ordenPacientes.set(e.orden);
+    this.direccionPacientes.set(e.direccion);
+    this.paginaPacientes.set(1);
+  }
+
+  protected ordenarMedicos(e: { orden: string; direccion: DireccionOrden }): void {
+    this.ordenMedicos.set(e.orden);
+    this.direccionMedicos.set(e.direccion);
+    this.paginaMedicos.set(1);
   }
 
   protected cerrarHistorial(): void {
