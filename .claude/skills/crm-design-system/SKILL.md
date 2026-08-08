@@ -99,6 +99,7 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 | PageHeader | `<app-page-header>` | `title` (requerido), **`subtitle`** + acciones proyectadas |
 | FilterChip | `<app-filter-chip>` | `active`, `count`, `size` · `(clicked)` |
 | Table | `<app-table>` | `dense`, `maxHeight` — proyecta `<thead>`/`<tbody>` nativos |
+| ThOrdenable | `th[appOrdenable]` | `appOrdenable` (columna, requerido), `orden`, `direccion`, `direccionInicial` · `(ordenar)` — cabecera ordenable; **ordena el servidor**, no el cliente |
 | Paginator | `<app-paginator>` | `pagina`, `totalPaginas`, `total` (requeridos), `limite` · `(cambiar)` |
 | BarChart | `<app-bar-chart>` | `items`, `mode` (BAR/COLUMN), `title`, `subtitle`, `height`, `formatType` |
 | DonutChart | `<app-donut-chart>` | `items`, `title`, `subtitle`, `etiquetaTotal`, `formatType` |

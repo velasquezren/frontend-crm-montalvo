@@ -17,6 +17,10 @@ import { LoadingSkeletonComponent } from '../../shared/components/loading-skelet
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { TableComponent } from '../../shared/components/table/table.component';
+import {
+  DireccionOrden,
+  ThOrdenableComponent,
+} from '../../shared/components/table/th-ordenable.component';
 import { ToastService } from '../../core/toast/toast.service';
 import {
   CATEGORIA_BADGE,
@@ -25,7 +29,7 @@ import {
   CategoriaCliente,
 } from '../../shared/models/cliente-categoria.model';
 import { Cliente } from './cliente.model';
-import { ClientesService } from './clientes.service';
+import { ClientesService, OrdenCliente } from './clientes.service';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { OverlayRef } from '@angular/cdk/overlay';
 import { TemplateRef, ViewContainerRef } from '@angular/core';
@@ -45,6 +49,7 @@ type PestanaModal = 'EXPEDIENTE' | 'CONTACTO' | 'NOTAS';
     InputComponent,
     FilterChipComponent,
     TableComponent,
+    ThOrdenableComponent,
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,
@@ -87,6 +92,11 @@ export class ClientesPage {
 
   protected readonly pagina = signal(1);
 
+  /* Sin orden explícito manda el del servidor (lo recién tocado primero), que
+     es lo que quiere ver un agente al abrir la vista. */
+  protected readonly orden = signal<OrdenCliente | undefined>(undefined);
+  protected readonly direccion = signal<DireccionOrden>('asc');
+
   protected readonly clientes = httpResource<RespuestaPaginada<Cliente>>(
     () => {
       const filtro = this.filtro();
@@ -94,10 +104,22 @@ export class ClientesPage {
         busqueda: this.busquedaAplicada(),
         categoria: filtro === 'TODOS' ? undefined : filtro,
         pagina: this.pagina(),
+        orden: this.orden(),
+        direccion: this.direccion(),
       });
     },
     { defaultValue: paginaVacia<Cliente>() },
   );
+
+  /**
+   * Cambiar el orden vuelve a la primera página: seguir en la 7 tras reordenar
+   * deja al usuario en un tramo que ya no significa nada.
+   */
+  protected ordenarPor(evento: { orden: string; direccion: DireccionOrden }): void {
+    this.orden.set(evento.orden as OrdenCliente);
+    this.direccion.set(evento.direccion);
+    this.pagina.set(1);
+  }
 
   /** Al cambiar filtro o búsqueda se vuelve a la primera página. */
   protected cambiarFiltro(nuevo: FiltroCategoria): void {

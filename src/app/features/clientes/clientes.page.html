@@ -51,13 +51,18 @@
     <app-table>
       <thead>
         <tr>
-          <th>Cliente / Empresa</th>
+          <th appOrdenable="nombre" [orden]="orden()" [direccion]="direccion()"
+              (ordenar)="ordenarPor($event)">Cliente / Empresa</th>
           <th>Teléfono</th>
-          <th>Categoría</th>
+          <th appOrdenable="categoria" [orden]="orden()" [direccion]="direccion()"
+              direccionInicial="desc"
+              (ordenar)="ordenarPor($event)">Categoría</th>
           <th>Edad / Origen</th>
           <th>Agente</th>
           <th>Intereses</th>
-          <th>Última actualización</th>
+          <th appOrdenable="updatedAt" [orden]="orden()" [direccion]="direccion()"
+              direccionInicial="desc"
+              (ordenar)="ordenarPor($event)">Última actualización</th>
         </tr>
       </thead>
       <tbody>

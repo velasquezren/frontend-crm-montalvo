@@ -3,6 +3,7 @@ import { DatosExtra } from '../../core/api/datos-extra';
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
+import { DireccionOrden } from '../../shared/components/table/th-ordenable.component';
 import { CategoriaCliente } from '../../shared/models/cliente-categoria.model';
 import { Cliente, HistorialPaciente } from './cliente.model';
 
@@ -11,7 +12,13 @@ export interface FiltroClientes {
   categoria?: CategoriaCliente;
   pagina?: number;
   limite?: number;
+  /** Columna por la que ordena el SERVIDOR. Lista cerrada en `QueryClienteDto`. */
+  orden?: OrdenCliente;
+  direccion?: DireccionOrden;
 }
+
+/** Las mismas columnas que acepta el backend; ordenar por otra da 400. */
+export type OrdenCliente = 'nombre' | 'categoria' | 'updatedAt';
 
 /**
  * Campos editables de la ficha de cliente (RF-01).
@@ -50,6 +57,8 @@ export class ClientesService {
       categoria: filtro.categoria,
       pagina: filtro.pagina,
       limite: filtro.limite,
+      orden: filtro.orden,
+      direccion: filtro.direccion,
     });
   }
 
