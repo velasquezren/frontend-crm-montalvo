@@ -93,20 +93,62 @@
       <!-- Filtro por agente (solo admin con chats activos) -->
       @if (isAdmin() && agentesConChats().length > 0) {
         <div class="agent-filter-row">
-          <span class="text-[10px] text-text-muted uppercase font-semibold tracking-wider">Por agente</span>
-          <div class="flex flex-wrap gap-1.5 mt-1.5">
-            @for (ag of agentesConChats(); track ag.id) {
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] text-text-muted uppercase font-semibold tracking-wider">Por agente</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-text-muted/10 font-bold text-text-muted tabular-nums">
+                {{ agentesConChats().length }}
+              </span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              @if (filtroAgenteId()) {
+                <button
+                  type="button"
+                  (click)="filtrarPorAgente(null)"
+                  class="text-[10px] font-semibold text-primary hover:underline cursor-pointer">
+                  Todos
+                </button>
+              }
               <button
                 type="button"
-                (click)="filtrarPorAgente(filtroAgenteId() === ag.id ? null : ag.id)"
-                class="agent-chip cursor-pointer"
-                [class.agent-chip-active]="filtroAgenteId() === ag.id">
-                <app-avatar [initials]="iniciales(ag.nombre)" size="sm" />
-                <span>{{ ag.nombre.split(' ')[0] }}</span>
-                <span class="agent-chip-count">{{ ag.count }}</span>
+                (click)="toggleMostrarFiltroAgente()"
+                class="p-1 text-text-muted hover:text-text-dark rounded-lg hover:bg-black/5 transition-colors cursor-pointer"
+                [title]="mostrarFiltroAgentes() ? 'Ocultar filtro por agente' : 'Mostrar filtro por agente'">
+                <app-icon name="chevron-down" [size]="14" class="transition-transform duration-200 inline-block" [class.rotate-180]="mostrarFiltroAgentes()" />
               </button>
-            }
+            </div>
           </div>
+
+          @if (mostrarFiltroAgentes()) {
+            <div class="agent-chips-strip flex items-center gap-1.5 mt-1.5 overflow-x-auto scrollbar-hide py-1">
+              <button
+                type="button"
+                (click)="filtrarPorAgente(null)"
+                class="agent-chip cursor-pointer shrink-0"
+                [class.agent-chip-active]="!filtroAgenteId()">
+                <span>Todos</span>
+              </button>
+              @for (ag of agentesConChats(); track ag.id) {
+                <button
+                  type="button"
+                  (click)="filtrarPorAgente(filtroAgenteId() === ag.id ? null : ag.id)"
+                  class="agent-chip cursor-pointer shrink-0"
+                  [class.agent-chip-active]="filtroAgenteId() === ag.id">
+                  <app-avatar [initials]="iniciales(ag.nombre)" size="sm" />
+                  <span class="truncate max-w-[90px]">{{ ag.nombre.split(' ')[0] }}</span>
+                  <span class="agent-chip-count tabular-nums">{{ ag.count }}</span>
+                </button>
+              }
+            </div>
+          } @else if (filtroAgenteId(); as agId) {
+            <div class="mt-1 flex items-center gap-1.5 text-[11px] text-primary bg-primary/10 px-2.5 py-1 rounded-full w-fit">
+              <app-icon name="user" [size]="12" />
+              <span class="font-bold">Agente: {{ obtenerNombreAgenteFiltro(agId) }}</span>
+              <button type="button" (click)="filtrarPorAgente(null)" class="hover:text-critical cursor-pointer ml-1" title="Quitar filtro">
+                <app-icon name="x" [size]="12" />
+              </button>
+            </div>
+          }
         </div>
       }
     </div>
