@@ -674,10 +674,10 @@
   position: relative;
 }
 
-/* ── Detail sections — Premium cards ─────────────────────────── */
+/* ── Detail sections — Minimalist Enterprise style ────────────── */
 .client-details {
-  padding: 14px 20px;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+  padding: 12px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
 }
 
 .detail-section-title {
@@ -686,41 +686,19 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-text-muted);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
-.detail-row {
+.detail-row-clean {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 4px 0;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 35%, transparent);
 }
 
-/* ── Detail card for extended profile items ───────────────────── */
-.detail-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 16px;
-  background: var(--color-bg-workspace);
-  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
-  transition: all 0.2s;
-}
-
-.detail-card:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
-  background: var(--color-bg-light);
-}
-
-.detail-card-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+.detail-row-clean:last-child {
+  border-bottom: none;
 }
 
 /* ── Agent card ──────────────────────────────────────────────── */
