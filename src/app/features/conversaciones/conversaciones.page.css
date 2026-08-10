@@ -1277,3 +1277,20 @@
   padding: 14px 20px;
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
 }
+
+/* Distintivo del mensaje que mandó el sistema. Discreto a propósito: informa al
+   agente sin competir con el contenido, que es lo que el paciente leyó. */
+.marca-automatico {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-right: 5px;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: 1px;
+}

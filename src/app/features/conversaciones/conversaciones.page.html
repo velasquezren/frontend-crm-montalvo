@@ -529,6 +529,15 @@
                 }
 
                 <span class="bubble-time">
+                  <!-- Sin esto, el acuse fuera de horario se lee igual que un
+                       mensaje de una compañera y el agente puede dar por
+                       atendida una conversación que nadie ha atendido. -->
+                  @if (item.mensaje.automatico) {
+                    <span class="marca-automatico" title="Enviado por el sistema fuera de horario">
+                      <app-icon name="loader" [size]="10" />
+                      automático
+                    </span>
+                  }
                   {{ item.mensaje.createdAt | date: 'HH:mm' }}
                   @if (item.mensaje.direccion === 'SALIENTE') {
                     @switch (item.mensaje.estadoEnvio) {
