@@ -633,16 +633,6 @@
 }
 
 /* ── Agent card ──────────────────────────────────────────────── */
-.assigned-agent-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: var(--color-bg-light);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 15%, transparent);
-}
-
 .no-agent-banner {
   display: flex;
   align-items: center;
@@ -800,21 +790,6 @@
 }
 
 /* ── Notes display card ──────────────────────────────────────── */
-.notes-card {
-  padding: 12px 14px;
-  border-radius: 16px;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--color-secondary) 6%, white) 0%,
-    var(--color-bg-workspace) 100%
-  );
-  border: 1px solid color-mix(in srgb, var(--color-secondary) 15%, transparent);
-  font-size: 12px;
-  color: var(--color-text-dark);
-  white-space: pre-wrap;
-  line-height: 1.6;
-}
-
 /* ── Tags display ────────────────────────────────────────────── */
 .tag-pill {
   display: inline-flex;
@@ -840,20 +815,6 @@
   padding: 14px 20px;
   border-top: 1px solid var(--color-border);
   background: var(--color-bg-workspace);
-}
-
-.conv-stat-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border-radius: 12px;
-  background: white;
-  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
-}
-
-.conv-stat-item + .conv-stat-item {
-  margin-top: 6px;
 }
 
 /* ── Agent dropdown ──────────────────────────────────────────── */

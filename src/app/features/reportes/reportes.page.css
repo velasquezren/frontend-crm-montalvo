@@ -125,13 +125,6 @@
 }
 
 /* ── Comisión por Tipo ────────────────────────────────────────────── */
-.grid-tipos-modern {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 12px;
-  margin-top: 14px;
-}
-
 .tipo-card {
   display: flex;
   align-items: center;
@@ -149,41 +142,6 @@
   border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
 }
 
-.tipo-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  font-size: 16px;
-  font-weight: 800;
-  color: white;
-  border-radius: 12px;
-  flex-shrink: 0;
-}
-
-.tipo-badge-a {
-  background: var(--color-primary);
-}
-
-.tipo-badge-b {
-  background: var(--color-secondary);
-}
-
-.tipo-badge-c {
-  background: var(--color-text-muted);
-}
-
-.tipo-badge-bono {
-  /* `critical` (negro) en vez del ámbar que tenía: la paleta no lo incluye, y
-     el bono necesita destacar, no alarmar. */
-  background: var(--color-text-critical);
-}
-
-.tipo-info {
-  min-width: 0;
-}
-
 .tipo-monto {
   display: block;
   font-size: 18px;
@@ -191,15 +149,6 @@
   line-height: 1.15;
   color: var(--color-text-dark);
   font-variant-numeric: tabular-nums;
-}
-
-.tipo-desc {
-  display: block;
-  font-size: 11px;
-  color: var(--color-text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* ── Split Panel: Categorías de Servicio ──────────────────────────── */
@@ -297,8 +246,6 @@ tfoot .celda-sticky {
     padding: 16px;
     border-radius: 16px;
   }
-
-
 
   .grid-dos-equitativo {
     grid-template-columns: 1fr;
