@@ -682,6 +682,23 @@
 
       <!-- Caja de texto -->
       @if (ventana24hActiva()) {
+        <!-- Adjunto pendiente: el agente ve qué va a mandar y puede quitarlo
+             antes de enviar. La vista previa es efímera, no se guarda. -->
+        @if (adjuntoPendiente(); as adj) {
+          <div class="adjunto-pendiente">
+            @if (adj.vistaPrevia) {
+              <img [src]="adj.vistaPrevia" alt="" class="adjunto-miniatura" />
+            } @else {
+              <app-icon name="file-text" [size]="18" class="text-primary shrink-0" />
+            }
+            <span class="adjunto-nombre">{{ adj.mediaNombre }}</span>
+            <app-button
+              variant="ghost" size="sm" icon="x" [circle]="true"
+              aria-label="Quitar adjunto"
+              (clicked)="quitarAdjunto()" />
+          </div>
+        }
+
         <form (submit)="enviar($event)" class="chat-input-bar">
           <!-- Botón Adjuntar Imagen / Documento -->
           <label class="p-2.5 rounded-full text-text-muted hover:text-primary hover:bg-bg-light cursor-pointer transition-colors shrink-0 flex items-center justify-center border border-border/80" title="Adjuntar imagen o documento">

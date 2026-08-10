@@ -289,6 +289,26 @@ export class ConversacionesPage implements AfterViewInit {
     this.mostrarPopoverMemoria.set(!estadoActual);
   }
 
+  /**
+   * Adjunto pendiente de enviar.
+   *
+   * Se guarda la CLAVE de R2, no la URL. Antes se pegaba en el texto la URL
+   * firmada que devuelve la subida, y esa firma caduca a los 15 minutos: el
+   * paciente recibía bien la foto —WhatsApp la descarga al instante— pero en el
+   * CRM la burbuja se rompía un cuarto de hora después y el agente solo veía el
+   * texto alternativo "Imagen adjunta".
+   */
+  protected readonly adjuntoPendiente = signal<{
+    mediaKey: string;
+    mediaMime: string | null;
+    mediaNombre: string | null;
+    vistaPrevia: string | null;
+  } | null>(null);
+
+  protected quitarAdjunto(): void {
+    this.adjuntoPendiente.set(null);
+  }
+
   protected async adjuntarMediaChat(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -297,9 +317,15 @@ export class ConversacionesPage implements AfterViewInit {
     try {
       this.toastService.info(`Subiendo "${file.name}"...`, 'Procesando archivo');
       const recurso = await this.memoriaService.subirBinario(file, { titulo: file.name });
-      if (recurso.mediaUrl) {
-        const previo = this.mensajeNuevo();
-        this.mensajeNuevo.set(previo ? `${previo}\n${recurso.mediaUrl}` : recurso.mediaUrl);
+      if (recurso.mediaKey) {
+        this.adjuntoPendiente.set({
+          mediaKey: recurso.mediaKey,
+          mediaMime: recurso.mediaMime,
+          mediaNombre: file.name,
+          /* Solo para que el agente vea qué va a mandar antes de enviarlo; se
+             descarta al enviar y no se guarda en ningún sitio. */
+          vistaPrevia: recurso.mediaUrl,
+        });
         this.toastService.success('Archivo adjuntado al mensaje', 'Éxito');
       }
       input.value = '';
@@ -1038,7 +1064,9 @@ export class ConversacionesPage implements AfterViewInit {
     event.preventDefault();
     const texto = this.mensajeNuevo().trim();
     const id = this.seleccionadaId();
-    if (!texto || !id || this.enviando()) {
+    /* Con adjunto se puede enviar sin texto: la foto es el mensaje y el texto,
+       si lo hay, hace de pie de foto. */
+    if ((!texto && !this.adjuntoPendiente()) || !id || this.enviando()) {
       return;
     }
 
@@ -1140,7 +1168,19 @@ export class ConversacionesPage implements AfterViewInit {
 
     this.enviando.set(true);
     try {
-      await this.conversacionesService.enviarMensaje(id, texto);
+      const adjunto = this.adjuntoPendiente();
+      await this.conversacionesService.enviarMensaje(
+        id,
+        texto,
+        adjunto
+          ? {
+              mediaKey: adjunto.mediaKey,
+              mediaMime: adjunto.mediaMime,
+              mediaNombre: adjunto.mediaNombre,
+            }
+          : undefined,
+      );
+      this.adjuntoPendiente.set(null);
       this.toastService.success('Mensaje enviado al paciente', 'WhatsApp');
       this.detalle.reload();
       this.conversacionesRecurso.reload();

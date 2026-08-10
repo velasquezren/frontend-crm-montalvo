@@ -78,8 +78,22 @@ export class ConversacionesService {
     return this.api.request('/conversaciones/meta/agentes');
   }
 
-  enviarMensaje(conversacionId: string, contenido: string): Promise<MensajeApi> {
-    return this.api.post<MensajeApi>(`/conversaciones/${conversacionId}/mensajes`, { contenido });
+  /**
+   * `adjunto` viaja como CLAVE de R2, no como URL. La URL que devuelve la subida
+   * está firmada y caduca a los 15 minutos: guardarla en el texto hacía que la
+   * burbuja se rompiera en el CRM un cuarto de hora después de enviarla.
+   */
+  enviarMensaje(
+    conversacionId: string,
+    contenido: string,
+    adjunto?: { mediaKey: string; mediaMime: string | null; mediaNombre: string | null },
+  ): Promise<MensajeApi> {
+    return this.api.post<MensajeApi>(`/conversaciones/${conversacionId}/mensajes`, {
+      contenido,
+      mediaKey: adjunto?.mediaKey,
+      mediaMime: adjunto?.mediaMime ?? undefined,
+      mediaNombre: adjunto?.mediaNombre ?? undefined,
+    });
   }
 
   /** Asignar/reasignar agente — solo ADMIN (bloqueado también en el backend). */

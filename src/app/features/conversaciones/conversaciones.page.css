@@ -1294,3 +1294,32 @@
   letter-spacing: 0.04em;
   vertical-align: 1px;
 }
+
+/* ── Adjunto pendiente de enviar ──────────────────────────────── */
+.adjunto-pendiente {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-light);
+}
+
+.adjunto-miniatura {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.adjunto-nombre {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
