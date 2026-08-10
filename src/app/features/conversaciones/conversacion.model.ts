@@ -17,6 +17,8 @@ export interface MensajeApi {
   readonly contenido: string;
   readonly createdAt: string;
   readonly estadoEnvio?: EstadoEnvioMensaje | null;
+  /** true = lo mandó el sistema (acuse fuera de horario), no una persona. */
+  readonly automatico?: boolean;
   readonly tipo?: TipoMensaje;
   /** URL firmada (15 min) del archivo en R2; null mientras se descarga o si es solo texto. */
   readonly mediaUrl?: string | null;
@@ -94,10 +96,18 @@ export type FiltroInbox = 'TODAS' | 'SIN_RESPONDER' | 'SIN_ASIGNAR' | 'MIS_CHATS
  * ni un byte extra.
  */
 export function estaSinResponder(c: ConversacionResumen): boolean {
-  return c.mensajes[0]?.direccion === 'ENTRANTE';
+  const ultimo = c.mensajes[0];
+  if (!ultimo) return false;
+  /* Un acuse automático NO es una respuesta: si lo último que pasó es que el
+     sistema dijo "estamos cerrados", el paciente sigue esperando a una persona.
+     Sin esta línea, todo lo que entra un fin de semana desaparecería de la
+     pestaña y el lunes nadie sabría quién escribió. */
+  return ultimo.direccion === 'ENTRANTE' || ultimo.automatico === true;
 }
 
 /** Momento en que el paciente quedó esperando, o null si ya se le respondió. */
 export function esperandoDesde(c: ConversacionResumen): Date | null {
+  /* Si lo último es el acuse, su hora sirve igual: sale segundos después del
+     mensaje del paciente, así que la espera que se muestra no se desvía. */
   return estaSinResponder(c) ? new Date(c.mensajes[0].createdAt) : null;
 }
