@@ -23,6 +23,7 @@ import {
 import { mensajeDeError } from '../../core/api/http-error';
 import { AuthService } from '../../core/auth/auth.service';
 import { RealtimeService } from '../../core/realtime/realtime.service';
+import { NotificacionNativaService } from '../../core/notification/notificacion-nativa.service';
 import { ToastService } from '../../core/toast/toast.service';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { generarIniciales } from '../../core/auth/user.model';
@@ -104,6 +105,7 @@ export class ConversacionesPage implements AfterViewInit {
   private readonly authService = inject(AuthService);
   private readonly toastService = inject(ToastService);
   private readonly realtimeService = inject(RealtimeService);
+  private readonly notificacionNativa = inject(NotificacionNativaService);
   private readonly dialogService = inject(DialogService);
   private readonly vcr = inject(ViewContainerRef);
 
@@ -685,6 +687,9 @@ export class ConversacionesPage implements AfterViewInit {
     this.consultaAncha.addEventListener('change', alCambiarAncho);
     destroyRef.onDestroy(() => this.consultaAncha.removeEventListener('change', alCambiarAncho));
 
+    // Solicita permiso explícito de notificaciones nativas si el agente no lo ha decidido aún
+    void this.notificacionNativa.solicitarPermiso();
+
     /* Reload dirigido debounced: evita múltiples reloads seguidos si llegan varios eventos de socket */
     let timerReload: ReturnType<typeof setTimeout> | null = null;
     effect(() => {
@@ -697,10 +702,22 @@ export class ConversacionesPage implements AfterViewInit {
         /* Requisito 2: Actualizar mapa de caché para CUALQUIER conversación (abierta o no) */
         void this.conversacionesService.actualizarCachePorRealtime(aviso.conversacionId);
 
-        if (this.seleccionadaId() === aviso.conversacionId) {
+        const chatSeleccionado = this.seleccionadaId() === aviso.conversacionId;
+
+        if (chatSeleccionado) {
           this.detalle.reload();
           /* El chat está abierto y llegó algo nuevo: marcarlo leído al instante. */
           void this.conversacionesService.marcarLeido(aviso.conversacionId, false).catch(() => {});
+        }
+
+        // Si la pestaña no está activa o el mensaje es de otra conversación, avisar con notificación nativa + chime
+        if (document.hidden || !chatSeleccionado) {
+          this.notificacionNativa.mostrar({
+            titulo: 'Nuevo mensaje en WhatsApp',
+            mensaje: 'Tienes un nuevo mensaje entrante en Montalvo CRM.',
+            tag: `conv-${aviso.conversacionId}`,
+            alHacerClic: () => this.seleccionar(aviso.conversacionId),
+          });
         }
       }, 100);
     });
