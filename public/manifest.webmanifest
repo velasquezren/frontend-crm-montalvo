@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "Clínica Montalvo CRM",
   "short_name": "Montalvo CRM",
   "description": "Sistema de gestión y seguimiento de pacientes en tiempo real para Clínica Montalvo",
@@ -8,6 +9,7 @@
   "background_color": "#ffffff",
   "theme_color": "#006156",
   "orientation": "portrait",
+  "categories": ["medical", "business", "productivity"],
   "icons": [
     {
       "src": "/favicon-96x96.png",
@@ -26,6 +28,22 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Conversaciones",
+      "short_name": "Inbox",
+      "description": "Abrir el inbox de conversaciones de WhatsApp",
+      "url": "/conversaciones",
+      "icons": [{ "src": "/favicon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Oportunidades",
+      "short_name": "Leads",
+      "description": "Ver el tablero de oportunidades",
+      "url": "/leads",
+      "icons": [{ "src": "/favicon-96x96.png", "sizes": "96x96" }]
     }
   ]
 }

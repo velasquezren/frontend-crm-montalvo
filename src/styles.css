@@ -57,13 +57,17 @@
     background-color: var(--color-background);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Red de seguridad global: ningún componente puede provocar scroll
-       horizontal de la página entera en móvil (el desborde se recorta). */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
     overflow-x: hidden;
+    overscroll-behavior-y: contain;
   }
 
   body {
     overflow-x: hidden;
+    -webkit-touch-callout: none;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   /* Utilidad global: oculta la barra de scroll pero mantiene el scroll
