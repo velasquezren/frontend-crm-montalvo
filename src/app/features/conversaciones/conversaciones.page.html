@@ -19,22 +19,9 @@
             <p class="text-[11px] text-text-muted leading-tight">WhatsApp Business</p>
           </div>
         </div>
-        <div class="flex items-center gap-2">
-          @if (isAdmin()) {
-            <button
-              type="button"
-              (click)="toggleSoloMisChatsAdmin()"
-              [class]="soloMisChatsAdmin() ? 'bg-primary text-white border-primary shadow-subtle' : 'bg-white text-text-muted hover:text-text-dark border-border hover:bg-bg-workspace'"
-              class="inline-flex items-center gap-1.5 px-2 py-1 text-[11px] font-semibold rounded-lg border transition-all cursor-pointer"
-              [title]="soloMisChatsAdmin() ? 'Mostrando solo mis chats y el pool de sin asignar' : 'Mostrando todas las conversaciones del equipo'">
-              <app-icon [name]="soloMisChatsAdmin() ? 'user' : 'users'" [size]="13" />
-              <span>{{ soloMisChatsAdmin() ? 'Mis chats' : 'Ver todo' }}</span>
-            </button>
-          }
-          <div class="stat-pill">
-            <span class="stat-dot"></span>
-            {{ stats().total }} chat{{ stats().total === 1 ? '' : 's' }}
-          </div>
+        <div class="stat-pill">
+          <span class="stat-dot"></span>
+          {{ stats().total }} chat{{ stats().total === 1 ? '' : 's' }}
         </div>
       </div>
     </div>
@@ -134,9 +121,22 @@
       }
     </div>
 
-    <!-- Búsqueda -->
-    <div class="sidebar-search">
-      <app-input type="search" placeholder="Buscar por nombre o teléfono…" [(value)]="busqueda" />
+    <!-- Búsqueda y selector de alcance Super Admin -->
+    <div class="sidebar-search flex items-center gap-2">
+      <div class="flex-1">
+        <app-input type="search" placeholder="Buscar por nombre o teléfono…" [(value)]="busqueda" />
+      </div>
+      @if (isAdmin()) {
+        <button
+          type="button"
+          (click)="toggleSoloMisChatsAdmin()"
+          [class]="soloMisChatsAdmin() ? 'bg-primary text-white border-primary shadow-subtle' : 'bg-white text-text-muted hover:text-text-dark border-border hover:bg-bg-workspace'"
+          class="h-9 px-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-semibold shrink-0 cursor-pointer transition-all"
+          [title]="soloMisChatsAdmin() ? 'Mostrando solo mis chats y pool sin asignar. Clic para ver todo el equipo.' : 'Mostrando todo el equipo. Clic para filtrar solo mis chats.'">
+          <app-icon [name]="soloMisChatsAdmin() ? 'user' : 'users'" [size]="14" />
+          <span class="text-[11px] font-semibold">{{ soloMisChatsAdmin() ? 'Míos' : 'Todo' }}</span>
+        </button>
+      }
     </div>
 
     <!-- Lista de conversaciones -->
