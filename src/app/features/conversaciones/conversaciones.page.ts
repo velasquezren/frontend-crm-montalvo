@@ -356,9 +356,19 @@ export class ConversacionesPage implements AfterViewInit {
     this.toastService.success('Recurso insertado en el chat', 'Memoria Personal');
   }
 
+  /* ── Filtro Super Admin (Mis Chats + Pool) ───────────────────────── */
+  protected readonly soloMisChatsAdmin = signal(false);
+
+  protected toggleSoloMisChatsAdmin(): void {
+    this.soloMisChatsAdmin.set(!this.soloMisChatsAdmin());
+  }
+
   /* ── Datos del servidor ────────────────────────────────────────── */
   private readonly conversacionesRecurso = httpResource<ConversacionResumen[]>(
-    () => this.conversacionesService.listarRequest(),
+    () => {
+      const soloMios = this.isAdmin() && this.soloMisChatsAdmin();
+      return this.conversacionesService.listarRequest(soloMios);
+    },
     { defaultValue: [] },
   );
 

@@ -15,8 +15,8 @@ export class ConversacionesService {
   private readonly api = inject(ApiService);
   private readonly cacheDetalles = new Map<string, ConversacionDetalle>();
 
-  listarRequest(): ResourceRequest {
-    return this.api.request('/conversaciones');
+  listarRequest(soloMios = false): ResourceRequest {
+    return this.api.request('/conversaciones', { soloMios: soloMios ? 'true' : undefined });
   }
 
   detalleRequest(id: string): ResourceRequest {
