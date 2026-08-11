@@ -19,9 +19,17 @@ export interface FabMenuItem {
 }
 
 /**
- * FAB Menu Premium — Speed-dial flotante con animaciones de resorte,
- * glassmorphism, indicador de pulso y posicionamiento adaptativo para
- * la bottom-bar de móvil.
+ * FAB Menu — Speed-dial flotante con posicionamiento adaptativo para la
+ * bottom-bar de móvil.
+ *
+ * Las duraciones de aquí están deliberadamente por debajo de las del resto del
+ * sistema (modales, toasts). Un modal aparece una vez y se lee; este menú se
+ * abre y se cierra decenas de veces al día sobre una pantalla que ya está
+ * cargada, y ahí una animación "bonita" se convierte en un peaje.
+ *
+ * No se van a cero: una transición de ~180 ms no es latencia, es la señal de
+ * que el toque respondió. Quitarla del todo se probó (033a5c6) y se revirtió
+ * porque el menú aparecía de golpe y se sentía roto, no rápido.
  */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,7 +50,7 @@ export interface FabMenuItem {
             @for (item of filteredItems(); track item.path; let i = $index) {
               <li
                 class="fab-list-item"
-                [style.--delay]="(filteredItems().length - 1 - i) * 50 + 'ms'">
+                [style.--delay]="(filteredItems().length - 1 - i) * 20 + 'ms'">
                 <a
                   [routerLink]="item.path"
                   role="menuitem"
@@ -68,10 +76,6 @@ export interface FabMenuItem {
           [attr.aria-expanded]="abierto()"
           aria-label="Acciones rápidas"
           (click)="toggle()">
-          <!-- Anillo de pulso cuando está cerrado -->
-          @if (!abierto()) {
-            <span class="fab-pulse-ring"></span>
-          }
           <app-icon name="plus" [size]="24" [strokeWidth]="2.5" />
         </button>
 
@@ -89,7 +93,7 @@ export interface FabMenuItem {
       background: rgba(15, 23, 42, 0.18);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
-      animation: fab-overlay-in 0.25s ease-out both;
+      animation: fab-overlay-in 0.15s ease-out both;
     }
 
     @keyframes fab-overlay-in {
@@ -132,15 +136,18 @@ export interface FabMenuItem {
       list-style: none;
     }
 
+    /* --ease-spring-smooth arranca rápido y frena al final: da sensación de
+       respuesta inmediata sin el rebote de --ease-spring-bounce, que a esta
+       duración solo se percibe como titubeo. */
     .fab-list-item {
-      animation: fab-item-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      animation: fab-item-in 0.18s var(--ease-spring-smooth) both;
       animation-delay: var(--delay, 0ms);
     }
 
     @keyframes fab-item-in {
       from {
         opacity: 0;
-        transform: translateY(16px) scale(0.8);
+        transform: translateY(8px) scale(0.94);
       }
       to {
         opacity: 1;
@@ -174,7 +181,9 @@ export interface FabMenuItem {
         0 2px 8px rgba(0, 0, 0, 0.08),
         0 0 0 1px rgba(0, 0, 0, 0.04);
       white-space: nowrap;
-      transition: all 0.2s ease;
+      /* Propiedades explícitas en vez del comodín: con él, el navegador vigila
+         cada propiedad calculada del elemento, incluidas las que nadie anima. */
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
 
     .fab-item:hover .fab-item-label {
@@ -196,7 +205,7 @@ export interface FabMenuItem {
       box-shadow:
         0 2px 8px rgba(0, 0, 0, 0.08),
         0 0 0 1px rgba(0, 0, 0, 0.04);
-      transition: all 0.2s ease;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
     }
 
     .fab-item:hover .fab-item-icon {
@@ -229,8 +238,9 @@ export interface FabMenuItem {
       box-shadow:
         0 4px 14px color-mix(in srgb, var(--color-primary) 35%, transparent),
         0 1px 3px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-                  box-shadow 0.3s ease;
+      transition: transform 0.16s var(--ease-spring-smooth),
+                  box-shadow 0.16s ease,
+                  background 0.16s ease;
     }
 
     .fab-main:hover {
@@ -259,40 +269,21 @@ export interface FabMenuItem {
         0 2px 6px rgba(0, 0, 0, 0.15);
     }
 
-    /* ═══════════════════════════════════════════════════════════
-       PULSE RING — Atrae atención cuando está cerrado (idle)
-       ═══════════════════════════════════════════════════════════ */
-    .fab-pulse-ring {
-      position: absolute;
-      inset: -4px;
-      border-radius: 50%;
-      border: 2px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
-      animation: fab-pulse 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-      pointer-events: none;
-    }
-
-    @keyframes fab-pulse {
-      0% {
-        transform: scale(1);
-        opacity: 0.6;
-      }
-      70% {
-        transform: scale(1.35);
-        opacity: 0;
-      }
-      100% {
-        transform: scale(1.35);
-        opacity: 0;
-      }
-    }
+    /* El anillo de pulso se eliminó: era una animación INFINITA de 2,5 s
+       corriendo en todas las pantallas mientras el botón estaba cerrado, o sea
+       siempre. Aparte del trabajo continuo de composición que no paraba nunca,
+       era lo que hacía que este ícono se percibiera lento —2,5 s por ciclo es
+       lento— y un "mírame" permanente sobre un botón de navegación es ruido,
+       no información: la clínica ya sabe dónde está el botón. */
 
     /* Reducir motion para accesibilidad */
     @media (prefers-reduced-motion: reduce) {
-      .fab-pulse-ring {
-        animation: none;
-      }
       .fab-list-item {
         animation-duration: 0.01ms;
+        animation-delay: 0ms;
+      }
+      .fab-main {
+        transition: none;
       }
     }
   `,
