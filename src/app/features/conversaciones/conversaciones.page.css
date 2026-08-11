@@ -450,68 +450,42 @@
 }
 
 /* Botón toggle del panel derecho en el header del chat — Minimalista */
+/**
+ * Interruptor de la ficha.
+ *
+ * Sin rótulo, sin borde y sin relleno: exactamente el mismo peso visual que el
+ * botón de búsqueda que tiene al lado (`variant="ghost" circle size="sm"`, o
+ * sea 36px transparente con el icono apagado). Es un control secundario de
+ * cabecera y no puede pedir más atención que la conversación.
+ *
+ * Lo que lo hace entendible NO es el énfasis, es el glifo: `panel-right-open` /
+ * `panel-right-close` dibujan un panel lateral con una flecha que apunta a
+ * donde va a ir. El estado abierto se marca solo tiñendo el icono de teal.
+ */
 .panel-toggle-btn {
   display: none; /* solo visible en XL */
   align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   border-radius: 9999px;
-  border: 1px solid var(--color-border);
-  background: white;
+  border: none;
+  background: transparent;
   color: var(--color-text-muted);
-  font-size: 11px;
-  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
   flex-shrink: 0;
 }
 
 .panel-toggle-btn:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
   color: var(--color-primary);
   background: var(--color-bg-light);
 }
 
-/**
- * Abierto: relleno macizo en teal.
- *
- * Antes los dos estados se separaban por un tinte de borde al 30% y el mismo
- * fondo gris — a un metro de la pantalla eran el mismo botón, así que no había
- * forma de saber si la ficha estaba desplegada sin mirar el resto de la
- * pantalla. Un interruptor tiene que decir en qué posición está.
- */
 .panel-toggle-btn.panel-active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: white;
-}
-
-.panel-toggle-btn.panel-active:hover {
-  background: color-mix(in srgb, var(--color-primary) 88%, black);
-  border-color: color-mix(in srgb, var(--color-primary) 88%, black);
-  color: white;
-}
-
-/* El icono cambia de glifo al abrir/cerrar (panel-right-open ↔ close). El
-   pequeño desplazamiento acompaña ese cambio para que se lea como un
-   movimiento del panel y no como un icono distinto puesto de golpe. */
-.panel-toggle-btn app-icon {
-  display: inline-flex;
-  transition: transform 0.18s ease;
-}
-
-.panel-toggle-btn:hover app-icon {
-  transform: translateX(-1px);
-}
-
-.panel-toggle-btn.panel-active:hover app-icon {
-  transform: translateX(1px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .panel-toggle-btn app-icon {
-    transition: none;
-  }
+  color: var(--color-primary);
 }
 
 /* ── Aviso clínico fijado ─────────────────────────────────────
