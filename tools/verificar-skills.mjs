@@ -268,6 +268,90 @@ function verificarCodigo() {
   }
 }
 
+// ── 8. Rendimiento: las tres decisiones medidas siguen en pie ─────────────────
+// El skill crm-rendimiento existe porque tres commits `perf` seguidos dejaron el
+// archivo con el mismo hash con el que empezó: sin medición no hay dirección. Lo
+// que se puede automatizar no es "¿mediste?" —eso es criterio— sino que las tres
+// decisiones que SÍ están medidas no se deshagan por descuido.
+function verificarRendimiento() {
+  const skill = 'crm-rendimiento';
+  const archivo = join(SKILLS, skill, 'SKILL.md');
+  if (!existsSync(archivo)) return;
+  const texto = readFileSync(archivo, 'utf8');
+
+  /* a) La lista de endpoints cacheados del skill contra la del código. Es la
+     comprobación que más importa: ampliar la caché a un endpoint de la operación
+     del día (clientes, ventas, conversaciones) no rompe nada visible, solo hace
+     que la pantalla muestre datos de hace un minuto como si fueran de ahora. Si
+     el skill y el código tienen que coincidir, ampliarla obliga a escribir aquí
+     por qué, que es justo la pregunta que hay que hacerse. */
+  const interceptor = resolve(RAIZ, 'src', 'app', 'core', 'api', 'cache.interceptor.ts');
+  if (existsSync(interceptor)) {
+    const codigo = readFileSync(interceptor, 'utf8');
+    const bloque = codigo.match(/const REFERENCIA\s*=\s*\[([\s\S]*?)\]/);
+    const enCodigo = new Set(
+      [...(bloque?.[1] ?? '').matchAll(/'([^']+)'/g)].map(m => m[1]),
+    );
+    /* Una línea que es SOLO una ruta de endpoint. No se intenta localizar el
+       bloque ``` que la contiene: emparejar fences es frágil cuando el archivo
+       ya tiene otros bloques (el cierre de uno parece la apertura del siguiente),
+       y una línea suelta con esta forma no aparece en prosa. */
+    const enSkill = new Set(
+      texto
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => /^\/[a-z0-9-]+(\/[a-z0-9-]+)*$/.test(l)),
+    );
+
+    for (const ruta of enCodigo) {
+      if (!enSkill.has(ruta)) {
+        señala(
+          skill,
+          `cache.interceptor.ts cachea \`${ruta}\` y el skill no lo documenta. ` +
+            'Añádelo a la lista y escribe qué se ve si ese dato llega un minuto tarde.',
+        );
+      }
+    }
+    for (const ruta of enSkill) {
+      if (!enCodigo.has(ruta)) {
+        señala(skill, `el skill documenta \`${ruta}\` como cacheado, pero el código ya no lo cachea.`);
+      }
+    }
+  }
+
+  /* b) `provideAppInitializer` bloquea el arranque si se le devuelve la promesa:
+     ~575 ms de pantalla en blanco en cada carga y en cada F5. Se dispara con
+     `void` a propósito, y es un `return` de una línea lo que lo revierte. */
+  const config = resolve(RAIZ, 'src', 'app', 'app.config.ts');
+  if (existsSync(config)) {
+    const cuerpo = readFileSync(config, 'utf8').match(
+      /provideAppInitializer\(\s*\(\)\s*=>\s*\{([\s\S]*?)\}\s*\)/,
+    )?.[1];
+    if (cuerpo && /\breturn\b/.test(cuerpo)) {
+      señala(
+        skill,
+        'app.config.ts: provideAppInitializer devuelve su promesa y eso bloquea el ' +
+          'primer pintado ~575 ms en cada carga. Dispárala con `void` (ver el skill).',
+      );
+    }
+  }
+
+  /* c) Polling ciego. El mecanismo de tiempo real es el WebSocket; el intervalo
+     es solo la red de seguridad por si el socket se cae. Solo se miran literales
+     numéricos: un intervalo extraído a constante se da por deliberado. */
+  for (const ruta of indexar(resolve(RAIZ, 'src')).filter(r => r.endsWith('.ts'))) {
+    for (const [, ms] of readFileSync(ruta, 'utf8').matchAll(/setInterval\([\s\S]*?,\s*(\d+)\s*\)/g)) {
+      if (Number(ms) < 60_000) {
+        señala(
+          skill,
+          `${relative(RAIZ, ruta)}: setInterval de ${ms} ms. El polling de respaldo es de ` +
+            '60 s; para reaccionar antes usa RealtimeService, no un intervalo más corto.',
+        );
+      }
+    }
+  }
+}
+
 // ── Ejecución ─────────────────────────────────────────────────────────────────
 if (!existsSync(SKILLS)) {
   console.log('· No hay .claude/skills/ — nada que verificar.');
@@ -293,8 +377,9 @@ for (const nombre of readdirSync(SKILLS)) {
   verificarRoles(nombre, texto);
 }
 
-/* Global, no por skill: mira el código, no la documentación. */
+/* Globales, no por skill: miran el código, no la documentación. */
 verificarCodigo();
+verificarRendimiento();
 
 if (problemas.length === 0) {
   console.log('✓ Los skills coinciden con el código.');
