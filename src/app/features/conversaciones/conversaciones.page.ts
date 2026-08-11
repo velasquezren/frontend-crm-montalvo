@@ -159,19 +159,11 @@ export class ConversacionesPage implements AfterViewInit {
   protected readonly pantallaAncha = signal(this.consultaAncha.matches);
 
   /**
-   * **Arranca cerrada siempre, también en escritorio.** La ficha se abre a
-   * mano y no se abre sola nunca.
-   *
-   * Antes nacía abierta en pantallas anchas. Al entrar al inbox lo primero que
-   * quiere leerse es la conversación, no los datos de la paciente: la ficha
-   * robaba una tercera parte del ancho para algo que casi siempre se consulta
-   * después, si es que se consulta.
-   *
-   * Una vez abierta a mano en escritorio se respeta al cambiar de chat — es
-   * una elección del agente, y deshacerla cada vez sería igual de intrusivo
-   * que abrirla sin permiso.
+   * Arranca abierto SOLO donde es una columna. Estaba en `true` fijo, así que en
+   * el móvil bastaba con abrir un chat para que la ficha lo tapara entero antes
+   * de leer un mensaje: el agente tenía que cerrarla cada vez.
    */
-  protected readonly panelAbierto = signal(false);
+  protected readonly panelAbierto = signal(this.consultaAncha.matches);
 
   protected readonly editandoFicha = signal(false);
   protected readonly editNombre = signal('');
