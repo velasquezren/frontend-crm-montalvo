@@ -53,6 +53,37 @@ Medidos contra producción desde Bolivia el 2026-08-05:
 que sigue: si un cambio no reduce el número de peticiones, su tamaño o el momento en
 que se hacen, no va a notarse aunque el perfilador diga que algo mejoró.
 
+### Auditoría de base de datos del 2026-08-11
+
+Se midió con `EXPLAIN ANALYZE` contra producción para descartar N+1 y consultas sin
+índice. **No se encontró nada que arreglar**, y conviene no repetir el trabajo:
+
+| Consulta | Plan | Tiempo |
+|---|---|---|
+| Búsqueda de paciente, término común | Index Scan en `updatedAt` | 2,2 ms |
+| Búsqueda de paciente, **sin coincidencias** (peor caso) | BitmapOr sobre los 3 GIN trgm | 4,6 ms |
+| Listado de leads filtrado por estado | Index Scan en `createdAt` | 0,2 ms |
+| Agregado `GROUP BY origen, estado` sobre 15.398 leads | Index **Only** Scan | 5,8 ms |
+
+Tamaños reales: `Cliente` 15.394 · `Lead` 15.398 · `VentaImportada` 1.287 ·
+**`Mensaje` 401 · `Conversacion` 102**.
+
+Dos conclusiones que ahorran tiempo:
+
+1. **Solo `Cliente` y `Lead` son grandes.** Optimizar consultas de conversaciones o
+   mensajes es optimizar sobre cientos de filas: no hay nada que ganar ahí por mucho
+   que el módulo sea el más complejo del proyecto.
+2. **El `ILIKE '%texto%'` de la búsqueda de pacientes NO es un problema**, aunque lo
+   parezca: los índices GIN trigram (`Cliente_nombre_trgm_idx` y sus dos hermanos) lo
+   resuelven en 4,6 ms en el peor caso. Si alguna vez desaparece `pg_trgm` o esos
+   índices, esa consulta pasa a Seq Scan sobre 15.000 filas — son ellos los que la
+   sostienen, no la forma de la query.
+
+También se verificó y está correcto: `Promise.all` en los 8 agregados del dashboard,
+los nombres de agentes resueltos con un `findMany({ id: { in: [...] } })` + `Map` en
+memoria (el patrón anti-N+1), cero `await` dentro de bucles en todo `src/`, y las
+firmas de R2 son HMAC local (`aws4fetch`), no viajes de red.
+
 ## Cómo se mide aquí (sin navegador)
 
 Este proyecto **prohíbe usar el navegador** (ver `crm-feature-page` y
