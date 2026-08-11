@@ -632,6 +632,63 @@
   border-bottom: none;
 }
 
+/* ── Acciones sobre el teléfono ──────────────────────────────────
+   Tres accesos directos sobre el número: abrirlo en el WhatsApp
+   personal de la agente, llamar, o copiarlo.
+
+   El de WhatsApp NO va en el verde corporativo de WhatsApp: la paleta
+   del CRM es cerrada y el validador la impone. Se distingue por peso
+   —relleno suave en teal de marca— en vez de por un color prestado,
+   que además chocaría con todo lo demás de la ficha. */
+.acciones-telefono {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.accion-telefono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.accion-telefono:hover {
+  color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+/* El acceso a WhatsApp es el que más se va a usar: arranca ya teñido
+   para que se encuentre sin buscarlo entre tres iconos grises. */
+.accion-telefono--whatsapp {
+  color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.accion-telefono--whatsapp:hover {
+  background-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+/* Objetivo táctil de 44px en el móvil sin agrandar el icono: el área
+   crece por fuera con un pseudo-elemento. */
+@media (max-width: 768px) {
+  .accion-telefono {
+    position: relative;
+  }
+
+  .accion-telefono::after {
+    content: '';
+    position: absolute;
+    inset: -9px;
+  }
+}
+
 /* ── Agent card ──────────────────────────────────────────────── */
 .no-agent-banner {
   display: flex;

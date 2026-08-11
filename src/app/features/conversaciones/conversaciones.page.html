@@ -460,8 +460,13 @@
                   @case ('IMAGEN') {
                     @if (item.mensaje.mediaUrl) {
                       <button type="button" (click)="abrirLightbox(item.mensaje.mediaUrl)" class="block mb-1 cursor-zoom-in text-left">
-                        <img [src]="item.mensaje.mediaUrl" alt="Imagen" loading="lazy" decoding="async"
-                          class="rounded-lg max-w-full max-h-72 object-cover hover:opacity-90 transition-opacity" />
+                        <!-- `object-contain`, no `object-cover`: recortaba por
+                             el centro toda foto de más de 288 px de alto. En una
+                             clínica estética eso corta justo la zona que la
+                             paciente está mandando. -->
+                        <img [src]="item.mensaje.mediaUrl" alt="Imagen enviada en la conversación"
+                          loading="lazy" decoding="async"
+                          class="rounded-lg max-w-full max-h-72 object-contain hover:opacity-90 transition-opacity" />
                       </button>
                     } @else {
                       <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando imagen…</div>
@@ -733,6 +738,7 @@
               placeholder="Escribe un mensaje o '/' para usar tus respuestas rápidas…"
               [value]="mensajeNuevo()"
               (input)="mensajeNuevo.set(composer.value)"
+              (paste)="pegarEnComposer($event)"
               (keydown)="onComposerKeydown($event)"></textarea>
           </div>
           <app-button type="submit" icon="send" [circle]="true" [loading]="enviando()"
@@ -948,13 +954,35 @@
                   <span class="text-xs text-text-muted shrink-0">Teléfono:</span>
                   <span class="text-xs font-medium text-text-dark truncate tabular-nums">{{ chat.cliente.telefono }}</span>
                 </div>
-                <button
-                  type="button"
-                  (click)="copiarTexto(chat.cliente.telefono, 'Teléfono')"
-                  class="p-1 text-text-muted hover:text-primary transition-colors cursor-pointer rounded-lg hover:bg-black/5"
-                  title="Copiar teléfono">
-                  <app-icon name="copy" [size]="12" />
-                </button>
+                <div class="acciones-telefono">
+                  <!-- Salta al WhatsApp personal de la agente. Lo que se hable
+                       ahí no queda registrado en el CRM: es para el trato
+                       directo puntual, no para atender. -->
+                  <a
+                    [href]="enlaceWhatsApp(chat.cliente.telefono)"
+                    target="_blank"
+                    rel="noopener"
+                    class="accion-telefono accion-telefono--whatsapp"
+                    title="Abrir en mi WhatsApp (fuera del CRM)"
+                    aria-label="Abrir esta conversación en mi WhatsApp personal">
+                    <app-icon name="message-circle" [size]="13" />
+                  </a>
+                  <a
+                    [href]="enlaceLlamada(chat.cliente.telefono)"
+                    class="accion-telefono"
+                    title="Llamar por teléfono"
+                    aria-label="Llamar a este paciente">
+                    <app-icon name="phone" [size]="13" />
+                  </a>
+                  <button
+                    type="button"
+                    (click)="copiarTexto(chat.cliente.telefono, 'Teléfono')"
+                    class="accion-telefono"
+                    title="Copiar teléfono"
+                    aria-label="Copiar el teléfono">
+                    <app-icon name="copy" [size]="13" />
+                  </button>
+                </div>
               </div>
               @if (chat.cliente.email) {
                 <div class="detail-row-clean">
@@ -1331,7 +1359,12 @@
 
 <!-- Modal Lightbox para imágenes en pantalla completa -->
 @if (lightboxImagenUrl(); as imgUrl) {
-  <div class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4" (click)="cerrarLightbox()">
+  <!-- `document:keydown.escape` y no un atajo global: solo escucha mientras el
+       visor está abierto, que es lo que el botón de cerrar ya prometía en su
+       tooltip sin que nadie lo hubiera implementado. -->
+  <div class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+    (click)="cerrarLightbox()"
+    (document:keydown.escape)="cerrarLightbox()">
     <div class="fixed top-4 right-4 z-50 flex items-center gap-2" (click)="$event.stopPropagation()">
       <a [href]="imgUrl" target="_blank" download class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center cursor-pointer transition-transform hover:scale-105" title="Descargar imagen">
         <app-icon name="download" [size]="18" />

@@ -81,6 +81,17 @@ const LOTE_HISTORIAL = 50;
 /** Distancia al techo (px) a la que se dispara la carga del lote anterior. */
 const UMBRAL_CARGA_HISTORIAL = 120;
 
+/**
+ * Deja solo los dígitos de un teléfono para `wa.me` y `tel:`.
+ *
+ * Los números llegan como `+591 7 123 4567` y ninguno de los dos esquemas
+ * acepta espacios ni el `+` en la ruta. Es el mismo criterio que usa el backend
+ * al hablar con la Cloud API.
+ */
+function soloDigitos(telefono: string): string {
+  return telefono.replace(/\D/g, '');
+}
+
 @Component({
   selector: 'app-conversaciones',
   imports: [
@@ -326,11 +337,47 @@ export class ConversacionesPage implements AfterViewInit {
     this.adjuntoPendiente.set(null);
   }
 
+  /**
+   * Pegar una imagen en el campo de texto la adjunta.
+   *
+   * Es como llega la mayoría del material que manda la clínica: una captura de
+   * una lista de precios, una promo recortada de otra pantalla. Sin esto había
+   * que guardarla a disco primero y luego buscarla con el selector de archivos.
+   *
+   * Solo intercepta cuando el portapapeles trae un archivo de imagen; pegar
+   * texto sigue funcionando igual.
+   */
+  protected async pegarEnComposer(event: ClipboardEvent): Promise<void> {
+    const imagen = Array.from(event.clipboardData?.items ?? []).find(i =>
+      i.type.startsWith('image/'),
+    );
+    if (!imagen) return;
+
+    const file = imagen.getAsFile();
+    if (!file) return;
+
+    /* Se evita que además pegue la ruta o el marcado de la imagen como texto. */
+    event.preventDefault();
+
+    /* Lo pegado no trae nombre: se le pone uno legible para la vista previa y
+       para el `filename` que verá la paciente si acaba yendo como documento. */
+    const extension = file.type.split('/')[1] ?? 'png';
+    await this.subirAdjunto(
+      new File([file], `captura-${Date.now()}.${extension}`, { type: file.type }),
+    );
+  }
+
   protected async adjuntarMediaChat(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
 
+    await this.subirAdjunto(file);
+    input.value = '';
+  }
+
+  /** Sube el archivo y lo deja pendiente de envío. Lo comparten el selector y el pegado. */
+  private async subirAdjunto(file: File): Promise<void> {
     try {
       this.toastService.info(`Subiendo "${file.name}"...`, 'Procesando archivo');
       const recurso = await this.memoriaService.subirBinario(file, { titulo: file.name });
@@ -345,7 +392,6 @@ export class ConversacionesPage implements AfterViewInit {
         });
         this.toastService.success('Archivo adjuntado al mensaje', 'Éxito');
       }
-      input.value = '';
     } catch (err) {
       this.toastService.error(mensajeDeError(err, 'No se pudo adjuntar el archivo'), 'Error');
     }
@@ -1012,6 +1058,25 @@ export class ConversacionesPage implements AfterViewInit {
   }
 
   /* ── Perfil del paciente (columna real primero, JSON heredado después) ── */
+  /**
+   * Abre el chat con esta paciente en el WhatsApp personal de la agente.
+   *
+   * `wa.me` resuelve solo el destino: en el escritorio abre WhatsApp Web y en
+   * el móvil la app instalada, sin que haya que detectar el dispositivo.
+   *
+   * Ojo con lo que implica: lo que se hable por ahí **no queda en el CRM** —ni
+   * en el hilo, ni en la auditoría, ni disponible para quien tome el relevo si
+   * esa agente no está—. Es para el trato personal puntual, no para atender.
+   */
+  protected enlaceWhatsApp(telefono: string): string {
+    return `https://wa.me/${soloDigitos(telefono)}`;
+  }
+
+  /** `tel:` — en el móvil llama y en el escritorio abre el marcador del sistema. */
+  protected enlaceLlamada(telefono: string): string {
+    return `tel:+${soloDigitos(telefono)}`;
+  }
+
   protected empresaDe(cliente: ClienteChat): string {
     return cliente.empresaTrabajo || textoExtra(cliente.datosExtra, 'empresa');
   }
