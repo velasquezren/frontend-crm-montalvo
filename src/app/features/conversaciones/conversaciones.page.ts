@@ -496,7 +496,16 @@ export class ConversacionesPage implements AfterViewInit {
       lista = lista.filter(c => c.agente?.id === userId);
     }
 
-    // Filtro alcance admin ("Míos": solo mis chats + sin asignar)
+    /* "Míos" del admin: mis chats + los del pool.
+
+       Se filtra en memoria porque la lista entera ya está cargada y el
+       interruptor debe responder al instante (ver skill `crm-rendimiento`).
+       La MISMA regla existe en el backend como `whereSoloMios()`, que es la que
+       se aplica cuando se pide `?soloMios=true`: si cambias una, cambia la otra.
+
+       Ojo: es una preferencia de VISTA, no un permiso. Lo que el usuario tiene
+       derecho a ver ya viene acotado por el servidor. Y como el listado llega
+       capado a 100, esto filtra dentro de esa ventana. */
     if (this.isAdmin() && this.soloMisChatsAdmin()) {
       lista = lista.filter(c => !c.agente || c.agente.id === userId);
     }
