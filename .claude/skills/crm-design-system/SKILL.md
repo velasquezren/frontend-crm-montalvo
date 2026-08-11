@@ -209,15 +209,24 @@ rompa lo que este archivo declara ley**:
 | Paleta cerrada | cualquier utilidad `bg-/text-/border-…-{amber,red,slate,emerald,…}-NNN` en un `.html` |
 | Sombras | cualquier `shadow-{xs,sm,md,lg,xl,2xl,inner}`; solo valen `subtle` y `lifted` |
 | Radios | cualquier `border-radius` que no sea 12px (inputs), 16px (tarjetas) o píldora |
+| Hexadecimales | cualquier `#rrggbb` ajeno a los nueve de la paleta, en `.css` **y en `.ts`** |
 
 Existe porque el inbox había acumulado **17 desviaciones** —una escala ámbar completa donde la
 paleta excluye ámbares a propósito, cinco sombras ajenas, ocho radios distintos— sin que nada
 avisara. Una vista no se sale del sistema de golpe: se sale de una clase en una clase.
 
-**La deuda está pagada: `DEUDA` en `tools/verificar-skills.mjs` está vacío.** Toda la app
-respeta la paleta, las dos sombras y los tres radios. El mecanismo se queda por si algún día
-hay que congelar algo: se anota el número por archivo y a partir de ahí **solo puede bajar**
-—arreglar obliga a actualizar la cifra, empeorar rompe el build—.
+La deuda de utilidades, sombras y radios está pagada: toda la app respeta la paleta, las dos
+sombras y los tres radios. El mecanismo de `DEUDA` en `tools/verificar-skills.mjs` congela lo
+que aún no se puede arreglar: se anota el número por archivo y a partir de ahí **solo puede
+bajar** —arreglar obliga a actualizar la cifra, empeorar rompe el build—.
+
+**Hay una entrada abierta**, desde que la regla de hexadecimales se extendió a los `.ts`
+(2026-08-11): `ORIGEN_COLOR` en `dashboard.page.ts` pinta cada canal con su color de marca
+—teal de WhatsApp, azul de Facebook, violeta de Instagram— para distinguir nueve orígenes en
+un gráfico. No es descuido: la paleta cerrada ofrece tres tonos usables y con tres ese gráfico
+deja de leerse. Resolverlo es una decisión de identidad visual (aceptar los colores de canal
+como excepción, o distinguir por etiqueta directa en vez de por color), no una limpieza, y
+está pendiente de decidir. Mientras tanto la cifra está congelada en 12.
 
 Lo que se arregló, por si sirve de guía: los estados de lead estaban pintados a mano con
 escalas inventadas (sky/amber/emerald) mientras la tabla de la misma pantalla usaba

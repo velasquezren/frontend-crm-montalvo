@@ -110,12 +110,18 @@ export class LayoutComponent {
     }
   }
 
-  /* Acciones rápidas del FAB — el ítem más usado va último (más cerca del botón) */
+  /* Acciones rápidas del FAB — el ítem más usado va último (más cerca del botón).
+     Los acentos salen de la paleta cerrada, no de hexadecimales sueltos: antes
+     eran un índigo, un esmeralda y un ámbar, justo los tonos que el sistema
+     excluye a propósito para sostener la línea "premium médico". El validador
+     no los veía porque solo revisaba las plantillas .html. */
   protected readonly fabItems: readonly FabMenuItem[] = [
-    { icon: 'users',        label: 'Gestionar Agentes',   path: '/agentes',                  rolMinimo: 'SUPER_ADMIN', accent: '#6366f1' },
-    { icon: 'message-circle', label: 'Abrir WhatsApp',    path: '/conversaciones',            accent: '#10b981' },
-    { icon: 'shopping-bag', label: 'Registrar Venta',     path: '/ventas',                    accent: '#f59e0b' },
-    { icon: 'user-plus',    label: 'Registro Presencial', path: '/leads/registro-presencial', accent: 'var(--color-primary)' },
+    /* Administración, no operación del día: gris, se distingue sin competir. */
+    { icon: 'users',          label: 'Gestionar Agentes',   path: '/agentes',                   rolMinimo: 'SUPER_ADMIN', accent: 'var(--color-neutral)' },
+    { icon: 'message-circle', label: 'Abrir WhatsApp',      path: '/conversaciones',            accent: 'var(--color-secondary)' },
+    { icon: 'shopping-bag',   label: 'Registrar Venta',     path: '/ventas',                    accent: 'var(--color-primary)' },
+    /* Sin accent: cae en var(--color-primary), que es el fallback del átomo. */
+    { icon: 'user-plus',      label: 'Registro Presencial', path: '/leads/registro-presencial' },
   ];
 
   logout(): void {

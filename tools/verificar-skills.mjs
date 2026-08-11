@@ -201,6 +201,19 @@ const RADIO_AJENO = /border-radius:\s*(?!12px|16px|9999px|50%|0)[0-9]+(?:px|rem)
  * olvidarla: una que ya no corresponda a ningún archivo también falla.
  */
 const DEUDA = {
+  /* Aparecida el 2026-08-11 al extender la regla `hex` a los .ts: no es deuda
+     nueva, es deuda que llevaba tiempo siendo invisible. Y no es descuido —
+     ORIGEN_COLOR asigna un color de MARCA a cada canal (teal de WhatsApp, azul
+     de Facebook, violeta de Instagram) para distinguir nueve orígenes en el
+     gráfico de leads. La paleta cerrada ofrece tres tonos usables; con tres, ese
+     gráfico deja de leerse.
+
+     Se congela en vez de arreglarse porque resolverlo es una decisión de
+     identidad visual, no una limpieza: o se aceptan los colores de canal como
+     excepción documentada, o se derivan nueve tonos de la marca y el gráfico
+     pasa a distinguirse por otra cosa (patrón, etiqueta directa). Esa decisión
+     es del dueño del producto. Mientras tanto la cifra solo puede bajar. */
+  'features/dashboard/dashboard.page.ts': { hex: 12 },
 };
 
 const REGLAS = [
@@ -208,6 +221,12 @@ const REGLAS = [
   { clave: 'sombra', patron: SOMBRA_AJENA, ext: /\.html$/, que: 'sombra(s) fuera de shadow-subtle/lifted' },
   { clave: 'radio', patron: RADIO_AJENO, ext: /\.css$/, que: 'radio(s) fuera de 12px/16px/píldora' },
   { clave: 'hex', patron: HEX_AJENO, ext: /\.css$/, que: 'hexadecimal(es) fuera de la paleta cerrada' },
+  /* Los componentes llevan su CSS en un `styles:` dentro del .ts, y hay datos de
+     configuración que también eligen color (los `accent` del FAB). Mirar solo
+     .css dejaba esa puerta abierta: el menú flotante acumuló un índigo, un
+     esmeralda y un ámbar —#6366f1, #10b981, #f59e0b— en layout.component.ts sin
+     que nada avisara, justo los tonos que la paleta excluye a propósito. */
+  { clave: 'hex', patron: HEX_AJENO, ext: /\.ts$/, que: 'hexadecimal(es) fuera de la paleta cerrada' },
 ];
 
 function verificarCodigo() {
