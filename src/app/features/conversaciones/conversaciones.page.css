@@ -632,6 +632,78 @@
   border-bottom: none;
 }
 
+/* ── Acceso a WhatsApp Web desde la cabecera ─────────────────────
+   El problema a resolver era de descubrimiento: el mismo acceso vive
+   en la ficha, pero la ficha es un cajón cerrado por debajo de 1280px,
+   así que la mayoría de agentes no llegaría nunca a él.
+
+   Solución: píldora que en reposo mide lo que un icono y al acercarse
+   se abre y se nombra. Ni oculta ni permanente. El ancho se anima con
+   `grid-template-columns: 0fr → 1fr`, que interpola de verdad sin
+   fijar un ancho a mano ni medir el texto.
+
+   El texto solo aparece en escritorio: es donde WhatsApp Web tiene
+   sentido, y en el móvil no hay hover que lo dispare. */
+.accion-wa {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  height: 30px;
+  padding: 0 7px;
+  border-radius: 9999px;
+  color: var(--color-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    gap 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.accion-wa:hover,
+.accion-wa:focus-visible {
+  gap: 5px;
+  background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.accion-wa__texto {
+  display: grid;
+  grid-template-columns: 0fr;
+  transition: grid-template-columns 0.18s ease;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.accion-wa__texto > span {
+  overflow: hidden;
+}
+
+.accion-wa:hover .accion-wa__texto,
+.accion-wa:focus-visible .accion-wa__texto {
+  grid-template-columns: 1fr;
+}
+
+/* Sin hover en táctil, el rótulo no se abriría nunca: se retira y queda
+   el icono, con su `aria-label` y su `title` intactos. */
+@media (max-width: 768px) {
+  .accion-wa__texto {
+    display: none;
+  }
+
+  .accion-wa {
+    min-width: 40px;
+    min-height: 40px;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .accion-wa,
+  .accion-wa__texto {
+    transition: none;
+  }
+}
+
 /* ── Acciones sobre el teléfono ──────────────────────────────────
    Tres accesos directos sobre el número: abrirlo en el WhatsApp
    personal de la agente, llamar, o copiarlo.
@@ -1102,9 +1174,10 @@
   /* ── Cabecera del chat al buscar ────────────────────────────────
      El buscador vive en el grupo de acciones, que es `shrink-0`: al
      abrirlo empujaba la cabecera más allá del ancho de la pantalla. En
-     móvil ocupa la fila entera y se aparta el nombre, que se recupera
-     al cerrar la búsqueda. */
-  .chat-header--buscando .chat-header__identidad {
+     móvil ocupa la fila entera y se apartan el nombre y el acceso a
+     WhatsApp, que se recuperan al cerrar la búsqueda. */
+  .chat-header--buscando .chat-header__identidad,
+  .chat-header--buscando .accion-wa {
     display: none;
   }
 

@@ -351,6 +351,22 @@
               (clicked)="abrirBusquedaChat()" />
           }
 
+          <!-- Acceso al WhatsApp personal de la agente.
+               En reposo es solo el icono; al acercar el ratón (o al llegar con
+               el tabulador) se despliega y se nombra. Así se descubre sin
+               ocupar sitio permanente: la cabecera ya compite con la búsqueda,
+               el agente asignado y el toggle de la ficha. -->
+          <a
+            [href]="enlaceWhatsApp(chat.cliente.telefono)"
+            target="_blank"
+            rel="noopener"
+            class="accion-wa"
+            title="Abrir esta conversación en WhatsApp Web (fuera del CRM)"
+            aria-label="Abrir esta conversación en mi WhatsApp Web">
+            <app-icon name="message-circle" [size]="15" />
+            <span class="accion-wa__texto"><span>WhatsApp Web</span></span>
+          </a>
+
           @if (chat.agente) {
             <div class="hidden lg:flex items-center gap-1.5 bg-bg-light rounded-full px-2.5 py-1">
               <app-avatar [initials]="iniciales(chat.agente.nombre)" size="sm" variant="solid" />
