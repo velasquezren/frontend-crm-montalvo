@@ -664,15 +664,12 @@
   background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
-/* El acceso a WhatsApp es el que más se va a usar: arranca ya teñido
-   para que se encuentre sin buscarlo entre tres iconos grises. */
+/* El acceso a WhatsApp es el que más se va a usar. Se distingue solo
+   por el color del icono —sin píldora de fondo—: en una fila de tres
+   controles de 26px, un relleno permanente pesa más que la propia
+   acción y compite con el badge de categoría que tiene justo encima. */
 .accion-telefono--whatsapp {
   color: var(--color-primary);
-  background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
-}
-
-.accion-telefono--whatsapp:hover {
-  background-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
 }
 
 /* Objetivo táctil de 44px en el móvil sin agrandar el icono: el área
@@ -1105,10 +1102,9 @@
   /* ── Cabecera del chat al buscar ────────────────────────────────
      El buscador vive en el grupo de acciones, que es `shrink-0`: al
      abrirlo empujaba la cabecera más allá del ancho de la pantalla. En
-     móvil ocupa la fila entera y se apartan el nombre y el acceso a
-     Ventas, que se recuperan al cerrar la búsqueda. */
-  .chat-header--buscando .chat-header__identidad,
-  .chat-header--buscando .accion-venta {
+     móvil ocupa la fila entera y se aparta el nombre, que se recupera
+     al cerrar la búsqueda. */
+  .chat-header--buscando .chat-header__identidad {
     display: none;
   }
 

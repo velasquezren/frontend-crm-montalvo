@@ -351,15 +351,6 @@
               (clicked)="abrirBusquedaChat()" />
           }
 
-          <!-- Acciones Rápidas del Agente -->
-          <a
-            routerLink="/ventas"
-            class="accion-venta inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer"
-            title="Registrar Venta para este paciente">
-            <app-icon name="shopping-bag" [size]="14" />
-            <span class="hidden sm:inline">+ Venta</span>
-          </a>
-
           @if (chat.agente) {
             <div class="hidden lg:flex items-center gap-1.5 bg-bg-light rounded-full px-2.5 py-1">
               <app-avatar [initials]="iniciales(chat.agente.nombre)" size="sm" variant="solid" />
