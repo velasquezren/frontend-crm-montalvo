@@ -48,8 +48,10 @@ export class LayoutComponent {
     event.preventDefault();
     // Save the event so it can be triggered later
     this.deferredPrompt = event;
-    // Show our custom banner
-    this.showInstallBanner.set(true);
+    // Show banner if not dismissed during current session
+    if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('crm_pwa_dismissed') !== 'true') {
+      this.showInstallBanner.set(true);
+    }
   }
 
   @HostListener('window:appinstalled')
@@ -70,6 +72,9 @@ export class LayoutComponent {
   }
 
   protected dismissInstallBanner(): void {
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('crm_pwa_dismissed', 'true');
+    }
     this.showInstallBanner.set(false);
   }
 
