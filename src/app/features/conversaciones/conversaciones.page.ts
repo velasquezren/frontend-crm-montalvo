@@ -499,6 +499,11 @@ export class ConversacionesPage implements AfterViewInit {
       lista = lista.filter(c => c.agente?.id === userId);
     }
 
+    // Filtro alcance admin ("Míos": solo mis chats + sin asignar)
+    if (this.isAdmin() && this.soloMisChatsAdmin()) {
+      lista = lista.filter(c => !c.agente || c.agente.id === userId);
+    }
+
     // Filtro por agente (admin)
     if (agenteFilter) {
       lista = lista.filter(c => c.agente?.id === agenteFilter);
@@ -697,8 +702,14 @@ export class ConversacionesPage implements AfterViewInit {
     this.consultaAncha.addEventListener('change', alCambiarAncho);
     destroyRef.onDestroy(() => this.consultaAncha.removeEventListener('change', alCambiarAncho));
 
-    // Solicita permiso explícito de notificaciones nativas si el agente no lo ha decidido aún
+    // Solicita permiso explícito de notificaciones nativas y VAPID Web Push
     void this.notificacionNativa.solicitarPermiso();
+
+    /* Actualiza el globo/icono rojo de la PWA según las conversaciones sin responder */
+    effect(() => {
+      const sinResponder = this.stats().sinResponder;
+      this.notificacionNativa.actualizarBadge(sinResponder);
+    });
 
     /* Reload dirigido debounced: evita múltiples reloads seguidos si llegan varios eventos de socket */
     let timerReload: ReturnType<typeof setTimeout> | null = null;
