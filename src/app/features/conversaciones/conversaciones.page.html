@@ -376,15 +376,21 @@
             <app-badge variant="neutral" icon="alert-circle" class="hidden sm:inline-flex">Sin asignar</app-badge>
           }
 
-          <!-- Toggle panel derecho minimalista -->
+          <!-- Interruptor de la ficha.
+               El icono dibuja un panel lateral con una flecha que apunta a
+               donde va a ir: hacia dentro para abrirlo, hacia fuera para
+               cerrarlo. Antes era un icono de "persona", que dice de QUÉ trata
+               el panel pero no que sea algo que se despliega. -->
           <button
             type="button"
             (click)="togglePanel()"
             class="panel-toggle-btn cursor-pointer"
             [class.panel-active]="panelAbierto()"
+            [attr.aria-expanded]="panelAbierto()"
+            aria-controls="ficha-paciente"
             [title]="panelAbierto() ? 'Ocultar ficha del paciente' : 'Mostrar ficha del paciente'">
-            <app-icon name="user" [size]="13" />
-            <span class="hidden xs:inline">Ficha</span>
+            <app-icon [name]="panelAbierto() ? 'panel-right-close' : 'panel-right-open'" [size]="14" />
+            <span>Ficha</span>
           </button>
         </div>
       </header>
@@ -791,7 +797,7 @@
 
   <!-- ── Panel derecho: ficha del cliente + asignación ─────────────── -->
   @if (detalle.value(); as chat) {
-    <aside class="client-panel">
+    <aside class="client-panel" id="ficha-paciente">
       <!-- Top header del Drawer para cerrar en pantallas < 1280px -->
       <div class="xl:hidden flex items-center justify-between p-3.5 border-b border-border bg-white shrink-0">
         <div class="flex items-center gap-2">

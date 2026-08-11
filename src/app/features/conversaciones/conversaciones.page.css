@@ -472,10 +472,46 @@
   background: var(--color-bg-light);
 }
 
+/**
+ * Abierto: relleno macizo en teal.
+ *
+ * Antes los dos estados se separaban por un tinte de borde al 30% y el mismo
+ * fondo gris — a un metro de la pantalla eran el mismo botón, así que no había
+ * forma de saber si la ficha estaba desplegada sin mirar el resto de la
+ * pantalla. Un interruptor tiene que decir en qué posición está.
+ */
 .panel-toggle-btn.panel-active {
-  background: var(--color-bg-light);
-  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
-  color: var(--color-primary);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.panel-toggle-btn.panel-active:hover {
+  background: color-mix(in srgb, var(--color-primary) 88%, black);
+  border-color: color-mix(in srgb, var(--color-primary) 88%, black);
+  color: white;
+}
+
+/* El icono cambia de glifo al abrir/cerrar (panel-right-open ↔ close). El
+   pequeño desplazamiento acompaña ese cambio para que se lea como un
+   movimiento del panel y no como un icono distinto puesto de golpe. */
+.panel-toggle-btn app-icon {
+  display: inline-flex;
+  transition: transform 0.18s ease;
+}
+
+.panel-toggle-btn:hover app-icon {
+  transform: translateX(-1px);
+}
+
+.panel-toggle-btn.panel-active:hover app-icon {
+  transform: translateX(1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel-toggle-btn app-icon {
+    transition: none;
+  }
 }
 
 /* ── Aviso clínico fijado ─────────────────────────────────────
