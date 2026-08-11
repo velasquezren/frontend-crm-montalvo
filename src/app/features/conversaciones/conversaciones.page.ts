@@ -173,8 +173,16 @@ export class ConversacionesPage implements AfterViewInit {
   protected readonly guardandoNotaFijada = signal(false);
 
   /* ── Respuestas Rápidas Personalizadas del Agente ────────────────── */
+  /**
+   * Se pide al abrir un chat, no al abrir el inbox.
+   *
+   * La barra "Mis respuestas" vive dentro de `@if (detalle.value())`, así que
+   * con la lista de conversaciones en pantalla no se ve ni se usa. Pedirla
+   * antes la ponía a competir con la única petición que el agente sí está
+   * esperando —y en un servidor de un solo núcleo eso se nota—.
+   */
   protected readonly plantillasAgente = httpResource<PlantillaAgente[]>(
-    () => this.conversacionesService.plantillasAgenteRequest(),
+    () => (this.seleccionadaId() ? this.conversacionesService.plantillasAgenteRequest() : undefined),
     { defaultValue: [] },
   );
 
@@ -272,23 +280,30 @@ export class ConversacionesPage implements AfterViewInit {
   protected readonly mostrarPopoverMemoria = signal(false);
   protected readonly busquedaMemoria = signal('');
 
+  /**
+   * Se pide al abrir el popover, no al abrir el inbox.
+   *
+   * Se renderiza dentro del popover, que arranca cerrado — y `togglePopoverMemoria`
+   * ya forzaba un `reload()` al abrirlo, así que la carga inicial se tiraba a la
+   * basura y se volvía a pedir igual. Atarla a `mostrarPopoverMemoria` quita esa
+   * petición del arranque y deja el `reload()` de más sin razón de existir.
+   */
   private readonly recursosMemoriaRecurso = httpResource<RespuestaPaginada<RecursoMemoria>>(
     () =>
-      this.memoriaService.listarRequest({
-        busqueda: this.busquedaMemoria(),
-      }),
+      this.mostrarPopoverMemoria()
+        ? this.memoriaService.listarRequest({ busqueda: this.busquedaMemoria() })
+        : undefined,
     { defaultValue: paginaVacia<RecursoMemoria>() },
   );
 
   /** Proyección: la vista solo necesita la lista, no la envoltura de paginación. */
   protected readonly recursosMemoria = computed(() => this.recursosMemoriaRecurso.value().datos);
 
+  /* Abrir el popover ya dispara la petición por sí solo: el recurso depende de
+     `mostrarPopoverMemoria`. El `reload()` que había aquí provocaba una segunda
+     llamada idéntica. */
   protected togglePopoverMemoria(): void {
-    const estadoActual = this.mostrarPopoverMemoria();
-    if (!estadoActual) {
-      this.recursosMemoriaRecurso.reload();
-    }
-    this.mostrarPopoverMemoria.set(!estadoActual);
+    this.mostrarPopoverMemoria.set(!this.mostrarPopoverMemoria());
   }
 
   /**

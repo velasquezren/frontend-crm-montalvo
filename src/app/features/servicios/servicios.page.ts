@@ -153,25 +153,39 @@ export class ServiciosPage {
     { defaultValue: null },
   );
 
+  /*
+   * Las listas de pestaña se piden al entrar EN su pestaña, no al entrar en la
+   * vista. La página abre en DASHBOARD, así que pedir las otras dos por
+   * adelantado eran dos peticiones que nadie estaba mirando —y la de pacientes
+   * pagina sobre 15.000 fichas—, compitiendo por el único núcleo del servidor
+   * justo mientras se cargan los gráficos que sí se ven.
+   *
+   * Al cambiar de pestaña la petición sale en ese momento: es un viaje de red,
+   * y el componente ya tiene su estado de carga.
+   */
   protected readonly pacientes = httpResource<RespuestaPaginada<PacienteConServicios>>(
     () =>
-      this.service.pacientesRequest(
-        this.paginaPacientes(),
-        this.pacientesDebounced() || undefined,
-        this.ordenPacientes(),
-        this.direccionPacientes(),
-      ),
+      this.pestana() === 'PACIENTES'
+        ? this.service.pacientesRequest(
+            this.paginaPacientes(),
+            this.pacientesDebounced() || undefined,
+            this.ordenPacientes(),
+            this.direccionPacientes(),
+          )
+        : undefined,
     { defaultValue: paginaVacia<PacienteConServicios>() },
   );
 
   protected readonly medicos = httpResource<RespuestaPaginada<MedicoConServicios>>(
     () =>
-      this.service.medicosRequest(
-        this.paginaMedicos(),
-        this.medicosDebounced() || undefined,
-        this.ordenMedicos(),
-        this.direccionMedicos(),
-      ),
+      this.pestana() === 'MEDICOS'
+        ? this.service.medicosRequest(
+            this.paginaMedicos(),
+            this.medicosDebounced() || undefined,
+            this.ordenMedicos(),
+            this.direccionMedicos(),
+          )
+        : undefined,
     { defaultValue: paginaVacia<MedicoConServicios>() },
   );
 
