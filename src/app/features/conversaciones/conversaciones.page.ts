@@ -365,10 +365,7 @@ export class ConversacionesPage implements AfterViewInit {
 
   /* ── Datos del servidor ────────────────────────────────────────── */
   private readonly conversacionesRecurso = httpResource<ConversacionResumen[]>(
-    () => {
-      const soloMios = this.isAdmin() && this.soloMisChatsAdmin();
-      return this.conversacionesService.listarRequest(soloMios);
-    },
+    () => this.conversacionesService.listarRequest(),
     { defaultValue: [] },
   );
 
