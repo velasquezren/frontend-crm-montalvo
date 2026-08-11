@@ -74,10 +74,13 @@ export class NotificacionNativaService {
       if (subExistente) {
         // Enviar suscripción existente al backend
         const subJson = subExistente.toJSON();
-        if (subJson.endpoint && subJson.keys?.p256dh && subJson.keys?.auth) {
+        const keys = subJson.keys as Record<string, string> | undefined;
+        const p256dh = keys?.['p256dh'];
+        const auth = keys?.['auth'];
+        if (subJson.endpoint && p256dh && auth) {
           await this.api.post('push/suscribir', {
             endpoint: subJson.endpoint,
-            keys: { p256dh: subJson.keys.p256dh, auth: subJson.keys.auth },
+            keys: { p256dh, auth },
           });
         }
         return;
@@ -90,10 +93,13 @@ export class NotificacionNativaService {
       });
 
       const nuevaSubJson = nuevaSub.toJSON();
-      if (nuevaSubJson.endpoint && nuevaSubJson.keys?.p256dh && nuevaSubJson.keys?.auth) {
+      const nKeys = nuevaSubJson.keys as Record<string, string> | undefined;
+      const nP256dh = nKeys?.['p256dh'];
+      const nAuth = nKeys?.['auth'];
+      if (nuevaSubJson.endpoint && nP256dh && nAuth) {
         await this.api.post('push/suscribir', {
           endpoint: nuevaSubJson.endpoint,
-          keys: { p256dh: nuevaSubJson.keys.p256dh, auth: nuevaSubJson.keys.auth },
+          keys: { p256dh: nP256dh, auth: nAuth },
         });
       }
     } catch {
@@ -181,8 +187,8 @@ export class NotificacionNativaService {
   }
 }
 
-/** Auxiliar para convertir llaves VAPID base64url a Uint8Array */
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
+/** Auxiliar para convertir llaves VAPID base64url a Uint8Array / BufferSource */
+function urlBase64ToUint8Array(base64String: string): BufferSource {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = window.atob(base64);
@@ -190,5 +196,5 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
-  return outputArray;
+  return outputArray.buffer as ArrayBuffer;
 }
