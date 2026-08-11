@@ -14,14 +14,13 @@ export interface FabMenuItem {
   readonly path: string;
   /** Nivel mínimo para ver la acción; sin él, la ve todo el mundo. */
   readonly rolMinimo?: RolUsuario;
-  /** Color de acento del ícono (CSS custom property o hex). Fallback: --color-primary */
+  /** Color de acento del ícono. Fallback: --color-primary */
   readonly accent?: string;
 }
 
 /**
- * FAB Menu Premium — Speed-dial flotante con animaciones de resorte,
- * glassmorphism, indicador de pulso y posicionamiento adaptativo para
- * la bottom-bar de móvil.
+ * FAB Menu Ultra-Optimizado (60 FPS) — Speed-dial flotante ultra fluido
+ * con aceleración por hardware (GPU), aislamiento de layout y animaciones de resorte.
  */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,20 +28,20 @@ export interface FabMenuItem {
   imports: [RouterLink, IconComponent],
   template: `
     @if (visible()) {
-      <!-- ── Overlay con blur ──────────────────────────────── -->
+      <!-- ── Overlay con blur acelerado ──────────────────────── -->
       @if (abierto()) {
         <div class="fab-overlay" (click)="cerrar()" aria-hidden="true"></div>
       }
 
       <div class="fab-container" [class.fab-container--open]="abierto()">
 
-        <!-- ── Menú de items ──────────────────────────────── -->
+        <!-- ── Menú de ítems ──────────────────────────────────── -->
         @if (abierto()) {
           <ul class="fab-list" role="menu">
             @for (item of filteredItems(); track item.path; let i = $index) {
               <li
                 class="fab-list-item"
-                [style.--delay]="(filteredItems().length - 1 - i) * 50 + 'ms'">
+                [style.--delay]="(filteredItems().length - 1 - i) * 35 + 'ms'">
                 <a
                   [routerLink]="item.path"
                   role="menuitem"
@@ -80,16 +79,18 @@ export interface FabMenuItem {
   `,
   styles: `
     /* ═══════════════════════════════════════════════════════════
-       OVERLAY — Glassmorphism backdrop
+       OVERLAY — Glassmorphism con Aceleración por GPU
        ═══════════════════════════════════════════════════════════ */
     .fab-overlay {
       position: fixed;
       inset: 0;
       z-index: 90;
-      background: rgba(15, 23, 42, 0.18);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      animation: fab-overlay-in 0.25s ease-out both;
+      background: rgba(15, 23, 42, 0.22);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      transform: translateZ(0);
+      will-change: opacity;
+      animation: fab-overlay-in 0.18s cubic-bezier(0, 0, 0.2, 1) both;
     }
 
     @keyframes fab-overlay-in {
@@ -98,7 +99,7 @@ export interface FabMenuItem {
     }
 
     /* ═══════════════════════════════════════════════════════════
-       CONTENEDOR — Posición fija adaptativa (desktop vs. móvil)
+       CONTENEDOR — Aislamiento de Layout & Capa GPU
        ═══════════════════════════════════════════════════════════ */
     .fab-container {
       position: fixed;
@@ -109,9 +110,10 @@ export interface FabMenuItem {
       flex-direction: column;
       align-items: flex-end;
       gap: 0.75rem;
+      contain: layout style;
+      transform: translateZ(0);
     }
 
-    /* En móvil: subir por encima de la bottom bar (3.8rem + safe area) */
     @media (max-width: 768px) {
       .fab-container {
         right: 1.25rem;
@@ -120,7 +122,7 @@ export interface FabMenuItem {
     }
 
     /* ═══════════════════════════════════════════════════════════
-       LISTA DE ITEMS — Staggered spring animation
+       LISTA DE ITEMS — Spring Animation Optimizada
        ═══════════════════════════════════════════════════════════ */
     .fab-list {
       display: flex;
@@ -133,14 +135,16 @@ export interface FabMenuItem {
     }
 
     .fab-list-item {
-      animation: fab-item-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      will-change: transform, opacity;
+      transform: translateZ(0);
+      animation: fab-item-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
       animation-delay: var(--delay, 0ms);
     }
 
     @keyframes fab-item-in {
       from {
         opacity: 0;
-        transform: translateY(16px) scale(0.8);
+        transform: translateY(12px) scale(0.88);
       }
       to {
         opacity: 1;
@@ -149,23 +153,24 @@ export interface FabMenuItem {
     }
 
     /* ═══════════════════════════════════════════════════════════
-       ITEM — Pill label + ícono circular con color de acento
+       ITEM — Pill Label + Ícono con Transiciones Ultra Rápida
        ═══════════════════════════════════════════════════════════ */
     .fab-item {
       display: flex;
       align-items: center;
       gap: 0.625rem;
       text-decoration: none;
-      transition: transform 0.15s ease;
+      will-change: transform;
+      transition: transform 0.12s ease-out;
     }
 
     .fab-item:active {
-      transform: scale(0.95);
+      transform: scale(0.94);
     }
 
     .fab-item-label {
-      background: white;
-      color: var(--color-text-dark);
+      background: #ffffff;
+      color: #1f2937;
       font-size: 0.8125rem;
       font-weight: 600;
       padding: 0.5rem 0.875rem;
@@ -174,119 +179,119 @@ export interface FabMenuItem {
         0 2px 8px rgba(0, 0, 0, 0.08),
         0 0 0 1px rgba(0, 0, 0, 0.04);
       white-space: nowrap;
-      transition: all 0.2s ease;
+      will-change: transform, box-shadow;
+      transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
     }
 
     .fab-item:hover .fab-item-label {
       box-shadow:
         0 4px 14px rgba(0, 0, 0, 0.12),
         0 0 0 1px rgba(0, 0, 0, 0.06);
-      transform: translateX(-4px);
+      transform: translateX(-3px);
     }
 
     .fab-item-icon {
       width: 2.75rem;
       height: 2.75rem;
       border-radius: 50%;
-      background: white;
-      color: var(--accent, var(--color-primary));
+      background: #ffffff;
+      color: var(--accent, #006156);
       display: flex;
       align-items: center;
       justify-content: center;
       box-shadow:
         0 2px 8px rgba(0, 0, 0, 0.08),
         0 0 0 1px rgba(0, 0, 0, 0.04);
-      transition: all 0.2s ease;
+      will-change: transform, background-color;
+      transition: transform 0.15s ease-out, background-color 0.15s ease-out;
     }
 
     .fab-item:hover .fab-item-icon {
-      background: color-mix(in srgb, var(--accent, var(--color-primary)) 10%, white);
-      transform: scale(1.08);
+      background: #eaf7f5;
+      transform: scale(1.06);
       box-shadow:
-        0 4px 16px color-mix(in srgb, var(--accent, var(--color-primary)) 25%, transparent),
-        0 0 0 1px color-mix(in srgb, var(--accent, var(--color-primary)) 20%, transparent);
+        0 4px 14px rgba(0, 97, 86, 0.2),
+        0 0 0 1px rgba(0, 97, 86, 0.1);
     }
 
     /* ═══════════════════════════════════════════════════════════
-       BOTÓN PRINCIPAL — Gradiente premium + sombra de color
+       BOTÓN PRINCIPAL — Acelerado por GPU
        ═══════════════════════════════════════════════════════════ */
     .fab-main {
       position: relative;
       width: 3.5rem;
       height: 3.5rem;
       border-radius: 50%;
-      background: linear-gradient(
-        135deg,
-        var(--color-primary) 0%,
-        color-mix(in srgb, var(--color-primary) 80%, var(--color-secondary)) 100%
-      );
-      color: white;
+      background: linear-gradient(135deg, #006156 0%, #39ada3 100%);
+      color: #ffffff;
       display: flex;
       align-items: center;
       justify-content: center;
       border: none;
       cursor: pointer;
       box-shadow:
-        0 4px 14px color-mix(in srgb, var(--color-primary) 35%, transparent),
+        0 4px 14px rgba(0, 97, 86, 0.35),
         0 1px 3px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-                  box-shadow 0.3s ease;
+      transform: translateZ(0);
+      will-change: transform, background-color, box-shadow;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease-out, background 0.2s ease;
     }
 
     .fab-main:hover {
       box-shadow:
-        0 6px 22px color-mix(in srgb, var(--color-primary) 45%, transparent),
+        0 6px 20px rgba(0, 97, 86, 0.45),
         0 2px 6px rgba(0, 0, 0, 0.12);
-      transform: scale(1.06);
+      transform: scale(1.05) translateZ(0);
     }
 
     .fab-main:active {
-      transform: scale(0.94);
+      transform: scale(0.92) translateZ(0);
     }
 
     .fab-main--open {
-      transform: rotate(45deg);
-      background: var(--color-text-dark);
+      transform: rotate(45deg) translateZ(0);
+      background: #1f2937;
       box-shadow:
         0 4px 14px rgba(0, 0, 0, 0.25),
         0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
     .fab-main--open:hover {
-      transform: rotate(45deg) scale(1.06);
+      transform: rotate(45deg) scale(1.05) translateZ(0);
       box-shadow:
-        0 6px 22px rgba(0, 0, 0, 0.3),
+        0 6px 20px rgba(0, 0, 0, 0.3),
         0 2px 6px rgba(0, 0, 0, 0.15);
     }
 
     /* ═══════════════════════════════════════════════════════════
-       PULSE RING — Atrae atención cuando está cerrado (idle)
+       PULSE RING — Animación de Baja Carga CPU/GPU
        ═══════════════════════════════════════════════════════════ */
     .fab-pulse-ring {
       position: absolute;
       inset: -4px;
       border-radius: 50%;
-      border: 2px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
+      border: 2px solid rgba(0, 97, 86, 0.4);
+      transform: translateZ(0);
+      will-change: transform, opacity;
       animation: fab-pulse 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
       pointer-events: none;
     }
 
     @keyframes fab-pulse {
       0% {
-        transform: scale(1);
+        transform: scale(1) translateZ(0);
         opacity: 0.6;
       }
       70% {
-        transform: scale(1.35);
+        transform: scale(1.32) translateZ(0);
         opacity: 0;
       }
       100% {
-        transform: scale(1.35);
+        transform: scale(1.32) translateZ(0);
         opacity: 0;
       }
     }
 
-    /* Reducir motion para accesibilidad */
     @media (prefers-reduced-motion: reduce) {
       .fab-pulse-ring {
         animation: none;
@@ -320,7 +325,7 @@ export class FabMenuComponent {
     return !url.includes('/conversaciones') && !url.includes('/login');
   });
 
-  /** Oculta las acciones que el rol actual no alcanza (mismo criterio que el menú lateral). */
+  /** Oculta las acciones que el rol actual no alcanza. */
   protected readonly filteredItems = computed(() => {
     const rol = this.authService.user()?.rol;
     return this.items().filter(item => !item.rolMinimo || cubreRol(rol, item.rolMinimo));
