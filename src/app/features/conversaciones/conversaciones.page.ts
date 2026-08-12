@@ -20,6 +20,9 @@ import {
   viewChild,
 } from '@angular/core';
 
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
+
 import { mensajeDeError } from '../../core/api/http-error';
 import { AuthService } from '../../core/auth/auth.service';
 import { RealtimeService } from '../../core/realtime/realtime.service';
@@ -71,7 +74,7 @@ import { ConversacionesService } from './conversaciones.service';
  *
  * Visibilidad por rol resuelta en el servidor.
  */
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 /** El paciente tal y como lo entrega el detalle de la conversación. */
 type ClienteChat = ConversacionResumen['cliente'];
@@ -127,6 +130,14 @@ export class ConversacionesPage implements AfterViewInit {
   private readonly notificacionNativa = inject(NotificacionNativaService);
   private readonly dialogService = inject(DialogService);
   private readonly vcr = inject(ViewContainerRef);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+
+  /** Chat abierto según la URL. Es la fuente de verdad de la selección. */
+  private readonly idEnRuta = toSignal(
+    this.route.queryParamMap.pipe(map(p => p.get('id'))),
+    { initialValue: null },
+  );
 
   /* ── Refs de template ──────────────────────────────────────────── */
   private readonly messagesContainer = viewChild<ElementRef<HTMLElement>>('messagesScroll');
@@ -860,6 +871,30 @@ export class ConversacionesPage implements AfterViewInit {
       }
     });
 
+    /**
+     * La URL manda. Un único sitio donde se abre y se cierra un chat, venga de
+     * donde venga: tocar la lista, el botón atrás de Android, el gesto de
+     * deslizar, o una notificación push con `?id=<id>`.
+     *
+     * Sin este efecto el parámetro de las notificaciones se ignoraba: el aviso
+     * llevaba al inbox y el agente tenía que buscar a mano el chat que acababa
+     * de sonar.
+     */
+    effect(() => {
+      const id = this.idEnRuta();
+      if (id === this.seleccionadaId()) return;
+
+      if (id) {
+        this.aplicarSeleccion(id);
+      } else {
+        this.seleccionadaId.set(null);
+        this.editandoFicha.set(false);
+        /* La entrada que habíamos empujado ya no está: la deshizo el atrás del
+           sistema o nuestra propia llamada. */
+        this.entradaPropia = false;
+      }
+    });
+
     /* Con un chat abierto, el layout se aparta: en el teléfono se apilaban la
        topbar de la app, la cabecera del chat, el compositor y la navegación
        inferior. Al volver a la lista reaparece todo — el efecto sigue a
@@ -897,7 +932,69 @@ export class ConversacionesPage implements AfterViewInit {
     this.conversacionesRecurso.reload();
   }
 
+  /**
+   * Abrir un chat es **navegar**: el id viaja en la URL (`?id=…`).
+   *
+   * Con eso el botón atrás de Android —y el gesto de deslizar, y el atrás del
+   * navegador— cierran el chat y devuelven al inbox en vez de sacar de la app,
+   * que es lo que espera cualquiera que use un teléfono. No hace falta escuchar
+   * `popstate`: el historial ya lo hace, y la vista solo reacciona a la ruta.
+   *
+   * Y de paso arregla los enlaces de las notificaciones: el push ya mandaba
+   * `/conversaciones?id=<id>` desde el primer día, pero esta vista nunca leyó
+   * ese parámetro, así que tocar el aviso abría el inbox y había que buscar a
+   * mano el chat que acababa de avisar.
+   *
+   * `replaceUrl` cuando ya hay uno abierto: saltar entre diez conversaciones no
+   * debe dejar diez entradas que haya que deshacer una por una. Desde cualquier
+   * chat, un solo atrás vuelve al inbox.
+   */
   protected seleccionar(id: string): void {
+    const veniaDeOtroChat = !!this.seleccionadaId();
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { id },
+      replaceUrl: veniaDeOtroChat,
+    });
+    if (!veniaDeOtroChat) this.entradaPropia = true;
+  }
+
+  /**
+   * ¿La entrada del historial del chat abierto la creamos nosotros?
+   *
+   * Distingue "abrí este chat desde el inbox" de "aterricé aquí desde una
+   * notificación con la app cerrada". En el primer caso hay a dónde volver; en
+   * el segundo, `history.back()` sacaría de la aplicación.
+   */
+  private entradaPropia = false;
+
+  /** Vuelve al inbox. Mismo camino que el botón atrás del teléfono. */
+  protected deseleccionar(): void {
+    if (!this.seleccionadaId()) return;
+
+    if (this.entradaPropia) {
+      /* `history.back()` y no una navegación nueva: quitar el parámetro
+         navegando añadiría otra entrada, y entonces el atrás del sistema
+         volvería a ABRIR el chat que se acaba de cerrar. */
+      history.back();
+      return;
+    }
+
+    /* Se llegó directo a `?id=…`: se reemplaza esa entrada para no dejar el
+       chat detrás del botón atrás. */
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {},
+      replaceUrl: true,
+    });
+  }
+
+  /**
+   * Aplica lo que dice la ruta. Lo dispara el efecto de la URL, así que corre
+   * igual si el chat se abrió tocando la lista, llegando por una notificación o
+   * pulsando atrás.
+   */
+  private aplicarSeleccion(id: string): void {
     this.seleccionadaId.set(id);
     this.editandoFicha.set(false);
     /* El historial traído por scroll es de la conversación anterior: si no se
@@ -1004,11 +1101,6 @@ export class ConversacionesPage implements AfterViewInit {
       event.preventDefault();
       void this.enviar(event);
     }
-  }
-
-  protected deseleccionar(): void {
-    this.seleccionadaId.set(null);
-    this.editandoFicha.set(false);
   }
 
   protected copiarTexto(texto: string, etiqueta: string): void {

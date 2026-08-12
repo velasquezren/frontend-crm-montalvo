@@ -794,6 +794,19 @@
           </app-button>
         </div>
       }
+    } @else if (seleccionadaId()) {
+      <!-- Elegido pero todavía sin datos: pasa al entrar desde una notificación
+           con la app cerrada, cuando ni el listado ni el detalle han contestado
+           aún. Sin esta rama se leía "Selecciona una conversación" teniendo un
+           chat seleccionado — y en el móvil, con la lista ya oculta, era una
+           pantalla sin salida. -->
+      <div class="chat-messages">
+        <div class="hilo-esqueleto">
+          <app-loading-skeleton shape="text" height="2.5rem" width="55%" />
+          <app-loading-skeleton shape="text" height="2rem" width="40%" />
+          <app-loading-skeleton shape="text" height="3rem" width="65%" />
+        </div>
+      </div>
     } @else {
       <!-- Estado vacío: ningún chat seleccionado -->
       <div class="chat-empty-state">
