@@ -2,7 +2,12 @@
      WhatsApp Inbox Premium — Vista rediseñada para CRM
      Tres paneles: lista filtrable · chat con separadores · ficha + asignación
      ═══════════════════════════════════════════════════════════════ -->
-<div class="inbox-wrapper" [class.has-details]="!!detalle.value()" [class.panel-open]="!!detalle.value() && panelAbierto()" [class.panel-collapsed]="!!detalle.value() && !panelAbierto()">
+<!-- `has-details` va con la SELECCIÓN: en el móvil es lo que aparta la lista, y
+     atado al detalle no se movía nada hasta que respondía el servidor.
+     `panel-open` / `panel-collapsed` siguen con el DETALLE: gobiernan la tercera
+     columna de la ficha en escritorio, y adelantarlos reservaría 340px vacíos
+     —con su transición de 0,35s— durante todo el viaje de red. -->
+<div class="inbox-wrapper" [class.has-details]="!!seleccionadaId()" [class.panel-open]="!!detalle.value() && panelAbierto()" [class.panel-collapsed]="!!detalle.value() && !panelAbierto()">
 
   <!-- ── Panel izquierdo: lista de chats ──────────────────────────── -->
   <aside class="inbox-sidebar">
@@ -287,7 +292,7 @@
 
   <!-- ── Panel central: conversación activa ───────────────────────── -->
   <section class="chat-panel">
-    @if (detalle.value(); as chat) {
+    @if (chatActivo(); as chat) {
       <!-- Cabecera del chat -->
       <header class="chat-header" [class.chat-header--buscando]="buscandoEnChat()">
         <div class="chat-header__identidad flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
@@ -600,8 +605,20 @@
             </div>
           }
         } @empty {
-          <app-empty-state icon="message-circle" title="Sin mensajes todavía"
-            description="Envía un mensaje para iniciar la conversación." />
+          @if (cargandoHilo()) {
+            <!-- La cabecera ya se pintó con los datos del listado; lo único que
+                 falta es el hilo. Sin esto se leería "Sin mensajes todavía"
+                 durante el viaje de red, que es falso y además alarma: parece
+                 que se perdió la conversación. -->
+            <div class="hilo-esqueleto">
+              <app-loading-skeleton shape="text" height="2.5rem" width="55%" />
+              <app-loading-skeleton shape="text" height="2rem" width="40%" />
+              <app-loading-skeleton shape="text" height="3rem" width="65%" />
+            </div>
+          } @else {
+            <app-empty-state icon="message-circle" title="Sin mensajes todavía"
+              description="Envía un mensaje para iniciar la conversación." />
+          }
         }
       </div>
 

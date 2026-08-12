@@ -626,6 +626,34 @@ export class ConversacionesPage implements AfterViewInit {
   private readonly quedaHistorial = signal(true);
 
   /** Hilo completo: lo traído por scroll + lo que vino en el detalle. */
+  /**
+   * El chat que se está mirando, pintable **desde el toque**.
+   *
+   * Mientras el detalle viaja por la red se devuelve la fila que ya tiene el
+   * listado: nombre, teléfono, categoría y agente son los mismos datos, y con
+   * ellos la cabecera se dibuja entera sin esperar a nadie. Solo el hilo de
+   * mensajes queda pendiente, y ese muestra su propio esqueleto.
+   *
+   * Antes todo el panel colgaba de `detalle.value()`. En el móvil eso se notaba
+   * como un tirón: la lista no se apartaba hasta que respondía el servidor
+   * —unos 222 ms con la conexión caliente y 674 en frío—, así que tocar un chat
+   * no producía ningún efecto visible durante ese rato. En escritorio no se veía
+   * porque la lista se queda en su sitio y solo se rellena el panel derecho.
+   */
+  protected readonly chatActivo = computed<ConversacionDetalle | ConversacionResumen | null>(() => {
+    const cargado = this.detalle.value();
+    if (cargado) return cargado;
+
+    const id = this.seleccionadaId();
+    if (!id) return null;
+    return this.conversaciones().find(c => c.id === id) ?? null;
+  });
+
+  /** Hay chat elegido pero su hilo todavía no llegó. */
+  protected readonly cargandoHilo = computed(
+    () => !!this.seleccionadaId() && !this.detalle.value(),
+  );
+
   private readonly mensajesDelHilo = computed<readonly MensajeApi[]>(() => {
     const chat = this.detalle.value();
     if (!chat) return [];

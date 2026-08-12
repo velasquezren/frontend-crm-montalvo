@@ -257,6 +257,16 @@
   min-height: 64px;
 }
 
+/* Esqueleto del hilo mientras llega el detalle.
+   Los anchos son desiguales a propósito: imitan burbujas de distinto
+   largo, así el salto al contenido real no reacomoda toda la columna. */
+.hilo-esqueleto {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 8px;
+}
+
 .chat-messages {
   flex: 1;
   overflow-y: auto;
