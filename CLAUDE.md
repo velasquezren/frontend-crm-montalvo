@@ -75,6 +75,15 @@ Regla corta: **un cambio de rendimiento sin medición antes y después no se com
   `npm run sync:tipos` o el build falla.
 - **Moneda del sistema: Bs (es-BO)**, siempre vía el pipe `moneda`. Nunca a mano.
   (Las comisiones se calculan en dólares dentro del backend; aquí llegan ya en Bs.)
+- **Una URL firmada NUNCA se guarda: se guarda la clave.** `mediaUrl` viene
+  firmada y caduca (1 h), así que meterla en un campo que se persiste —el texto de
+  un mensaje, una nota— deja la imagen rota para siempre, mostrando su texto
+  alternativo ("Imagen adjunta"). Lo que se guarda es `mediaKey`, y el servidor
+  firma de nuevo en cada lectura.
+  **Ya entró dos veces por puertas distintas**: primero al adjuntar (agosto) y
+  después al insertar un recurso de Mi Memoria en el chat, que pegaba
+  `recurso.mediaUrl` en el cuerpo del mensaje. Si añades un tercer camino que
+  mande archivos, adjunta por `mediaKey` — nunca pegues la URL.
 - **Al partir una plantilla en subcomponentes, el CSS no viaja solo.** La
   encapsulación `Emulated` deja la vista sin estilos y **ningún validador lo
   detecta**. Es el único fallo del proyecto que hay que revisar a ojo.

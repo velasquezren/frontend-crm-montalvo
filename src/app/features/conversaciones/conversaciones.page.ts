@@ -428,11 +428,40 @@ export class ConversacionesPage implements AfterViewInit {
     return (t.startsWith('http://') || t.startsWith('https://')) && /\.pdf(\?.*)?$/i.test(t);
   }
 
+  /**
+   * Trae un recurso de la biblioteca al mensaje que se está escribiendo.
+   *
+   * Si el recurso es un archivo se adjunta **por su clave de R2**, igual que el
+   * botón de adjuntar. Antes se pegaba `recurso.mediaUrl` como TEXTO del
+   * mensaje, y ahí estaba el fallo que dejaba fotos rotas: esa URL va firmada y
+   * caduca, pero el texto del mensaje se guarda tal cual y para siempre. El
+   * paciente recibía bien la imagen —WhatsApp la descarga al instante— y en el
+   * CRM, pasado el plazo, la burbuja se quedaba como una imagen rota con su
+   * texto alternativo, "Imagen adjunta".
+   *
+   * Adjuntando por clave se firma una URL nueva en cada lectura y no vuelve a
+   * caducar nunca. Es la misma regla que ya seguían las fotos entrantes.
+   */
   protected insertarRecursoEnChat(recurso: RecursoMemoria): void {
-    const texto = recurso.mediaUrl || recurso.contenido || recurso.titulo;
+    this.mostrarPopoverMemoria.set(false);
+
+    if (recurso.mediaKey) {
+      this.adjuntoPendiente.set({
+        mediaKey: recurso.mediaKey,
+        mediaMime: recurso.mediaMime,
+        mediaNombre: recurso.mediaNombre ?? recurso.titulo,
+        /* Solo para la vista previa de aquí al envío; no se guarda. */
+        vistaPrevia: recurso.mediaUrl,
+      });
+      this.toastService.success('Archivo adjuntado al mensaje', 'Memoria Personal');
+      return;
+    }
+
+    /* Recurso de solo texto (una nota, una lista de precios escrita): va al
+       cuerpo del mensaje, que es lo que se espera de él. */
+    const texto = recurso.contenido || recurso.titulo;
     const previo = this.mensajeNuevo();
     this.mensajeNuevo.set(previo ? `${previo}\n${texto}` : texto);
-    this.mostrarPopoverMemoria.set(false);
     this.toastService.success('Recurso insertado en el chat', 'Memoria Personal');
   }
 
