@@ -816,6 +816,25 @@ export class ConversacionesPage implements AfterViewInit {
     this.consultaAncha.addEventListener('change', alCambiarAncho);
     destroyRef.onDestroy(() => this.consultaAncha.removeEventListener('change', alCambiarAncho));
 
+    /**
+     * Al volver a primer plano se recarga.
+     *
+     * Con la pestaña oculta —teléfono bloqueado, o el agente en otra app— el
+     * navegador congela el `setInterval` del polling. Mientras tanto caducan las
+     * URLs firmadas de las fotos ya pintadas, así que al volver aparecía el
+     * icono de imagen rota aunque el archivo siguiera intacto en R2.
+     *
+     * Recargar aquí las devuelve al instante en vez de esperar hasta 60 s al
+     * siguiente poll, y de paso trae lo que haya entrado mientras tanto.
+     */
+    const alVolver = (): void => {
+      if (document.hidden) return;
+      this.conversacionesRecurso.reload();
+      if (this.seleccionadaId()) this.detalle.reload();
+    };
+    document.addEventListener('visibilitychange', alVolver);
+    destroyRef.onDestroy(() => document.removeEventListener('visibilitychange', alVolver));
+
     // Solicita permiso explícito de notificaciones nativas y VAPID Web Push
     void this.notificacionNativa.solicitarPermiso();
 
