@@ -23,6 +23,7 @@ import {
 import { mensajeDeError } from '../../core/api/http-error';
 import { AuthService } from '../../core/auth/auth.service';
 import { RealtimeService } from '../../core/realtime/realtime.service';
+import { ModoInmersivoService } from '../../core/ui/modo-inmersivo.service';
 import { NotificacionNativaService } from '../../core/notification/notificacion-nativa.service';
 import { ToastService } from '../../core/toast/toast.service';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
@@ -106,6 +107,12 @@ function soloDigitos(telefono: string): string {
     DatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  /* Con un chat abierto el layout esconde sus dos barras en el móvil, así que
+     la altura de esta vista —que las descuenta— deja de valer. Va atada a
+     `seleccionadaId` y no a `detalle.value()` para que cambie en el mismo
+     instante que el layout: con el detalle, entre el toque y la respuesta del
+     servidor quedaría un salto visible. */
+  host: { '[class.chat-inmersivo]': 'seleccionadaId()' },
   templateUrl: './conversaciones.page.html',
   styleUrl: './conversaciones.page.css',
 })
@@ -116,6 +123,7 @@ export class ConversacionesPage implements AfterViewInit {
   private readonly authService = inject(AuthService);
   private readonly toastService = inject(ToastService);
   private readonly realtimeService = inject(RealtimeService);
+  private readonly modoInmersivo = inject(ModoInmersivoService);
   private readonly notificacionNativa = inject(NotificacionNativaService);
   private readonly dialogService = inject(DialogService);
   private readonly vcr = inject(ViewContainerRef);
@@ -824,6 +832,18 @@ export class ConversacionesPage implements AfterViewInit {
       }
     });
 
+    /* Con un chat abierto, el layout se aparta: en el teléfono se apilaban la
+       topbar de la app, la cabecera del chat, el compositor y la navegación
+       inferior. Al volver a la lista reaparece todo — el efecto sigue a
+       `seleccionadaId`, así que la flecha de volver lo deshace sola. */
+    effect(() => {
+      if (this.seleccionadaId()) {
+        this.modoInmersivo.activar();
+      } else {
+        this.modoInmersivo.desactivar();
+      }
+    });
+
     /* Indicador "escribiendo…" para el paciente mientras el agente redacta.
        Debounce ~1s tras la última tecla; WhatsApp lo mantiene 25s o hasta que
        se envía, así que refrescarlo al pausar alcanza. Se autolimpia el timer. */
@@ -1413,5 +1433,8 @@ export class ConversacionesPage implements AfterViewInit {
     if (this.pollingInterval) {
       clearInterval(this.pollingInterval);
     }
+    /* Salir de la vista con un chat abierto no puede dejar al resto de la app
+       sin barras: el servicio es global y nadie más lo apagaría. */
+    this.modoInmersivo.desactivar();
   }
 }

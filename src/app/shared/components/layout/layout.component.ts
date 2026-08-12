@@ -4,6 +4,7 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { AuthService } from '../../../core/auth/auth.service';
 import { cubreRol } from '../../../core/auth/roles';
 import { ToastContainerComponent } from '../../../core/toast/toast-container.component';
+import { ModoInmersivoService } from '../../../core/ui/modo-inmersivo.service';
 import { AvatarComponent } from '../avatar/avatar.component';
 import { FabMenuComponent, FabMenuItem } from '../fab-menu/fab-menu.component';
 import { IconComponent } from '../icon/icon.component';
@@ -34,6 +35,10 @@ export class LayoutComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly elementRef = inject(ElementRef);
+
+  /** Con un chat abierto en el teléfono, las barras se apartan. Solo aplica
+   *  por debajo de 768px: en escritorio el CSS lo ignora. */
+  protected readonly inmersivo = inject(ModoInmersivoService).activo;
 
   protected readonly user = this.authService.user;
   protected readonly sidebarExpanded = signal(false);

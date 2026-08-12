@@ -214,6 +214,45 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   MODO INMERSIVO — el chat abierto se queda con toda la pantalla
+
+   En el teléfono se apilaban cuatro barras sobre la conversación:
+   topbar de la app (64px), cabecera del chat, compositor y
+   navegación inferior (61px + área segura). Solo las dos del
+   layout se comían ~125px, un 15% de una pantalla de 812px, en la
+   única vista donde lo que importa es leer y escribir.
+
+   Se apartan **solo mientras hay un chat abierto**, y solo aquí
+   abajo. No de forma permanente: la topbar es lo único que abre el
+   menú lateral en el móvil, y ahí viven las vistas que la barra
+   inferior no lista. Dentro del chat sí sobra, porque su cabecera
+   ya trae la flecha de volver — y al volver, todo reaparece.
+
+   Es el patrón de cualquier app de mensajería: la conversación
+   toma la pantalla completa.
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .layout-grid--inmersivo {
+    grid-template-rows: 1fr;
+    grid-template-areas: 'workspace';
+  }
+
+  .layout-grid--inmersivo .topbar {
+    display: none;
+  }
+
+  /* El cajón del menú colgaba de los 64px de la topbar; sin ella,
+     desde arriba del todo. */
+  .layout-grid--inmersivo .sidebar {
+    top: 0;
+  }
+
+  .mobile-bottom-bar--oculta {
+    display: none;
+  }
+}
+
 .mobile-nav-item {
   display: flex;
   flex-direction: column;

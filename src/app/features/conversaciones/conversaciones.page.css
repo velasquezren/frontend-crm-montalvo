@@ -1138,6 +1138,15 @@
     height: calc(100dvh - 64px - 3.8rem);
   }
 
+  /* Con el chat abierto, el layout retira la topbar (64px) y la barra
+     inferior (3,8rem): si se siguieran descontando quedaría un hueco
+     muerto de unos 125px bajo el compositor. Los márgenes negativos NO
+     cambian — siguen cancelando el `p-6 pb-28` del workspace, que existe
+     igual. */
+  :host(.chat-inmersivo) {
+    height: 100dvh;
+  }
+
   /* ── Burbujas ───────────────────────────────────────────────────
      Era el peor problema de la vista en móvil: `max-width: 72%` es
      razonable en un panel de escritorio de 900px, pero en una pantalla de
