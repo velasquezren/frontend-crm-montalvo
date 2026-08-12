@@ -563,8 +563,13 @@
                        mensaje de una compañera y el agente puede dar por
                        atendida una conversación que nadie ha atendido. -->
                   @if (item.mensaje.automatico) {
+                    <!-- `clock` y no `loader`: el componente de icono hace girar
+                         SIEMPRE lo que se llame `loader`, así que esta marca
+                         decorativa giraba eternamente y el acuse parecía estar
+                         enviándose para siempre — cuando ya había salido. Un
+                         reloj además dice lo que es: fuera de horario. -->
                     <span class="marca-automatico" title="Enviado por el sistema fuera de horario">
-                      <app-icon name="loader" [size]="10" />
+                      <app-icon name="clock" [size]="10" />
                       automático
                     </span>
                   }

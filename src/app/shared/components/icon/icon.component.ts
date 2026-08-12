@@ -58,6 +58,18 @@ export type IconName =
   | 'download'
   | 'volume-2';
 
+/**
+ * Icono SVG del sistema.
+ *
+ * **`loader` gira SIEMPRE, se use donde se use** (`[class.animate-spin]` en el
+ * `<svg>`). La regla existe para el estado de carga de `app-button`, pero no
+ * distingue si de verdad hay algo cargando: usar `loader` como adorno lo condena
+ * a girar eternamente.
+ *
+ * Pasó con la marca "automático" del acuse fuera de horario — el mensaje ya
+ * había salido y el icono seguía dando vueltas, así que parecía enviándose para
+ * siempre. Si necesitas un icono quieto, elige otro nombre (`clock`, `check`…).
+ */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-icon',
