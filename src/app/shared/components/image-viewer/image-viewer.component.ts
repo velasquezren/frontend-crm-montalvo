@@ -323,8 +323,6 @@ export class ImageViewerComponent {
     });
   }
 
-
-
   private extraerNombreArchivo(url: string): string {
     try {
       const parsed = new URL(url);
