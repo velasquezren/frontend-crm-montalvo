@@ -124,33 +124,6 @@
   border-radius: 16px;
 }
 
-/* ── Comisión por Tipo ────────────────────────────────────────────── */
-.tipo-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--color-bg-workspace);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.tipo-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-subtle);
-  border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
-}
-
-.tipo-monto {
-  display: block;
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 1.15;
-  color: var(--color-text-dark);
-  font-variant-numeric: tabular-nums;
-}
-
 /* ── Split Panel: Categorías de Servicio ──────────────────────────── */
 .grid-split-categorias {
   display: grid;
@@ -210,28 +183,6 @@
   width: 100%;
   overflow-x: auto;
   border-radius: 12px;
-}
-
-.celda-sticky {
-  position: sticky;
-  left: 0;
-  background: white;
-  z-index: 2;
-  border-right: 1px solid var(--color-border);
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.02);
-}
-
-tr:hover .celda-sticky {
-  background: var(--color-bg-workspace);
-}
-
-tfoot .celda-sticky {
-  background: color-mix(in srgb, var(--color-primary) 5%, white);
-}
-
-.fila-totales {
-  background: color-mix(in srgb, var(--color-primary) 5%, white);
-  font-weight: 700;
 }
 
 /* ── Responsividad Móvil ──────────────────────────────────────────── */
