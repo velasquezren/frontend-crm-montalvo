@@ -457,12 +457,12 @@
         </h3>
         <div class="grid-metricas">
           <div class="metrica">
-            <span class="metrica-valor">{{ rep.totales['montoVendido'] | moneda }}</span>
-            <span class="metrica-label">total vendido</span>
+            <span class="metrica-valor">${{ rep.totales['montoVendido'] | number: '1.2-2' }}</span>
+            <span class="metrica-label">total vendido (USD)</span>
           </div>
           <div class="metrica">
-            <span class="metrica-valor">{{ rep.totales['baseCalculo'] | moneda }}</span>
-            <span class="metrica-label">base de cálculo</span>
+            <span class="metrica-valor">${{ rep.totales['baseCalculo'] | number: '1.2-2' }}</span>
+            <span class="metrica-label">base de cálculo (USD)</span>
           </div>
           <div class="metrica">
             <span class="metrica-valor text-primary">${{ rep.totales['totalUsd'] | number: '1.2-2' }}</span>
@@ -575,6 +575,21 @@
                   </p>
                 </app-info-hint>
               </th>
+              <th class="text-right min-w-[110px]">
+                Bono trimestral
+                <app-info-hint titulo="Bono trimestral">
+                  <p>
+                    <strong>0,5 % del PROMEDIO</strong> de lo facturado en los tres meses del
+                    trimestre, no del mes que se liquida.
+                  </p>
+                  <p>
+                    Solo lo cobra quien promedia más de <strong>15.000 USD</strong>, y ese umbral
+                    es el mismo para todas — también para quien tiene objetivo mensual de 12.000.
+                  </p>
+                  <p>Se paga en el mes que cierra el trimestre: marzo, junio, septiembre y diciembre.</p>
+                </app-info-hint>
+              </th>
+              <th class="text-right min-w-[100px]">Otros bonos</th>
               <th class="text-right min-w-[100px]">Total USD</th>
               <th class="text-right min-w-[110px]">Total Bs</th>
               <th class="text-right min-w-[100px]">Sueldo Base</th>
@@ -614,7 +629,18 @@
                 <td class="text-right whitespace-nowrap">${{ f.comisionA | number: '1.2-2' }}</td>
                 <td class="text-right whitespace-nowrap">${{ f.comisionB | number: '1.2-2' }}</td>
                 <td class="text-right whitespace-nowrap">${{ f.comisionC | number: '1.2-2' }}</td>
-                <td class="text-right whitespace-nowrap">${{ f.totalBonos | number: '1.2-2' }}</td>
+                <!-- El trimestral va aparte: es el que administración cuadra
+                     contra su tabla de promedios, y sumado a los otros dos se
+                     volvía imposible de cotejar. -->
+                <td class="text-right whitespace-nowrap">
+                  <span class="font-medium text-text-dark">${{ f.bonoTrimestral | number: '1.2-2' }}</span>
+                  @if (f.bonoTrimestral) {
+                    <span class="text-[10px] text-text-muted block text-right">{{ f.bonoTrimestral * +rep.periodo.tipoCambio | moneda }}</span>
+                  }
+                </td>
+                <td class="text-right whitespace-nowrap">
+                  ${{ f.bonoJefatura + f.bonoPublicidad | number: '1.2-2' }}
+                </td>
                 <td class="text-right font-semibold text-primary whitespace-nowrap">${{ f.totalUsd | number: '1.2-2' }}</td>
                 <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ f.totalBob | moneda }}</td>
                 <td class="text-right text-text-muted whitespace-nowrap">{{ f.sueldoBase | moneda }}</td>
