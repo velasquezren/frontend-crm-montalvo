@@ -558,23 +558,6 @@
                   <p>No dependen del objetivo de planes: se pagan igual.</p>
                 </app-info-hint>
               </th>
-              <th class="text-right min-w-[85px]">
-                Bonos
-                <app-info-hint titulo="Bonos">
-                  <p>
-                    <strong>Trimestral:</strong> promedio de ventas del trimestre. Si supera el objetivo,
-                    paga un porcentaje de ese promedio.
-                  </p>
-                  <p>
-                    <strong>Jefatura:</strong> cada vendedora que supera su objetivo de monto aporta un
-                    porcentaje de su base a una bolsa común.
-                  </p>
-                  <p>
-                    Esa bolsa <strong>no la cobra la jefa</strong>: se reparte en partes iguales entre el
-                    equipo de publicidad.
-                  </p>
-                </app-info-hint>
-              </th>
               <th class="text-right min-w-[110px]">
                 Bono trimestral
                 <app-info-hint titulo="Bono trimestral">
@@ -648,6 +631,27 @@
               </tr>
             }
           </tbody>
+          <tfoot>
+            <!-- Mismo criterio que el resto de la fila: lo que está en dólares se
+                 rotula con $, lo convertido con Bs. Las columnas sin total
+                 agregable (planes, cirugías, sueldo) quedan vacías a propósito
+                 en vez de mostrar un cero que no significa nada. -->
+            <tr class="fila-totales">
+              <td class="text-left font-bold">TOTALES</td>
+              <td class="text-right font-bold whitespace-nowrap">${{ rep.totales['montoVendido'] | number: '1.2-2' }}</td>
+              <td></td>
+              <td></td>
+              <td class="text-right font-bold whitespace-nowrap">${{ rep.totales['comisionA'] | number: '1.2-2' }}</td>
+              <td class="text-right font-bold whitespace-nowrap">${{ rep.totales['comisionB'] | number: '1.2-2' }}</td>
+              <td class="text-right font-bold whitespace-nowrap">${{ rep.totales['comisionC'] | number: '1.2-2' }}</td>
+              <td class="text-right font-bold whitespace-nowrap">${{ rep.totales['bonoTrimestral'] | number: '1.2-2' }}</td>
+              <td class="text-right font-bold whitespace-nowrap">${{ rep.totales['bonos'] - rep.totales['bonoTrimestral'] | number: '1.2-2' }}</td>
+              <td class="text-right font-bold text-primary whitespace-nowrap">${{ rep.totales['totalUsd'] | number: '1.2-2' }}</td>
+              <td class="text-right font-bold whitespace-nowrap">{{ rep.totales['totalBob'] | moneda }}</td>
+              <td></td>
+              <td class="text-right font-extrabold text-secondary text-base whitespace-nowrap">{{ rep.totales['totalGanado'] | moneda }}</td>
+            </tr>
+          </tfoot>
         </app-table>
       </section>
     }

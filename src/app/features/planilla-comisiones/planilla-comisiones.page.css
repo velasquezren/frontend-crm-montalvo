@@ -415,3 +415,11 @@
     transition: none;
   }
 }
+
+/* Pie de totales de la planilla. Mismo tratamiento que en Reportes: un tinte de
+   marca al 5 % separa el agregado de las filas sin usar un borde más, que en una
+   tabla de 13 columnas ya sería ruido. */
+.fila-totales {
+  background: color-mix(in srgb, var(--color-primary) 5%, white);
+  font-weight: 700;
+}
