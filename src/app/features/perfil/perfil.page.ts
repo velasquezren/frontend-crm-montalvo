@@ -20,6 +20,7 @@ import { CuotaMemoria, RecursoMemoria } from '../memoria-agente/memoria-agente.m
 import { MemoriaAgenteService } from '../memoria-agente/memoria-agente.service';
 
 import { ActivatedRoute } from '@angular/router';
+import { ImageViewerComponent } from '../../shared/components/image-viewer/image-viewer.component';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,6 +34,7 @@ import { ActivatedRoute } from '@angular/router';
     IconComponent,
     BadgeComponent,
     InputComponent,
+    ImageViewerComponent,
   ],
   templateUrl: './perfil.page.html',
   styleUrl: './perfil.page.css',
@@ -61,6 +63,15 @@ export class PerfilPage {
   protected readonly contenidoNuevoMemoria = signal('');
   protected readonly atajoNuevoMemoria = signal('');
   protected readonly subiendoMemoria = signal(false);
+  protected readonly lightboxImagenUrl = signal<string | null>(null);
+
+  protected abrirLightbox(url: string): void {
+    if (url) this.lightboxImagenUrl.set(url);
+  }
+
+  protected cerrarLightbox(): void {
+    this.lightboxImagenUrl.set(null);
+  }
 
   protected readonly cuotaMemoria = httpResource<CuotaMemoria>(
     () => this.memoriaService.cuotaRequest(),

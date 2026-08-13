@@ -332,7 +332,9 @@
                   @if (item.mediaUrl) {
                     <div class="mt-2">
                       @if (item.tipo === 'IMAGEN') {
-                        <img [src]="item.mediaUrl" alt="Banner" class="w-full h-36 rounded-xl object-cover border border-border shadow-subtle" />
+                        <button type="button" (click)="abrirLightbox(item.mediaUrl)" class="block w-full text-left cursor-zoom-in group/img">
+                          <img [src]="item.mediaUrl" alt="Banner" class="w-full h-36 rounded-xl object-cover border border-border shadow-subtle group-hover/img:opacity-90 transition-opacity" />
+                        </button>
                       }
                       <a [href]="item.mediaUrl" target="_blank" rel="noopener" class="mt-2 text-xs text-primary font-bold hover:underline flex items-center gap-1.5 truncate">
                         <app-icon name="external-link" [size]="14" />
@@ -386,3 +388,10 @@
   }
 
 </div>
+
+<!-- Visor de Imágenes para Memoria del Agente -->
+<app-image-viewer
+  [imageUrl]="lightboxImagenUrl()"
+  title="Recurso de Memoria del Agente"
+  (closed)="cerrarLightbox()" />
+

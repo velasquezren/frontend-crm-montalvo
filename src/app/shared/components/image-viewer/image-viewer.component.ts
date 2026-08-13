@@ -202,15 +202,15 @@ export class ImageViewerComponent {
 
   /* ── Descarga Directa vía Proxy del Backend (Evita CORS de R2) ────── */
   protected async descargarImagen(): Promise<void> {
-    const key = this.mediaKey();
     const url = this.imageUrl();
+    const key = this.mediaKey() || this.extraerMediaKey(url);
     if (!key && !url) return;
 
     this.descargando.set(true);
     try {
       const nombreArchivo = this.extraerNombreArchivo(url ?? key ?? '');
 
-      // 1. Si hay mediaKey, usar el proxy del backend (evita CORS con R2)
+      // 1. Si hay mediaKey (explícito o extraído de la URL), usar el proxy del backend (evita CORS con R2)
       if (key) {
         const proxyUrl = `${API_URL}/conversaciones/media/descargar?key=${encodeURIComponent(key)}`;
         try {
@@ -221,7 +221,7 @@ export class ImageViewerComponent {
             return;
           }
         } catch {
-          // Si el proxy falla, intentar directamente con la URL
+          // Si el proxy falla, intentar con la URL directa
         }
       }
 
@@ -244,6 +244,37 @@ export class ImageViewerComponent {
     } finally {
       this.descargando.set(false);
     }
+  }
+
+  private extraerMediaKey(url: string | null): string | null {
+    if (!url) return null;
+    try {
+      const parsed = new URL(url);
+
+      // 1. URLs de Cloudflare R2: https://<account>.r2.cloudflarestorage.com/<bucket>/<key>
+      if (parsed.hostname.includes('r2.cloudflarestorage.com') || parsed.hostname.includes('r2.dev')) {
+        const segments = parsed.pathname.split('/').filter(Boolean);
+        if (segments.length >= 2) {
+          // El primer segmento es el nombre del bucket (ej. 'crm-montalvo-media'), los siguientes forman la key
+          if (segments[0] === 'crm-montalvo-media' || (!segments[0].includes('wa') && !segments[0].includes('memoria'))) {
+            return segments.slice(1).join('/');
+          }
+          return segments.join('/');
+        }
+      }
+
+      // 2. Si contiene rutas conocidas en el path: /wa/... o /memoria/...
+      const path = parsed.pathname;
+      for (const prefijo of ['/wa/', '/memoria/']) {
+        const idx = path.indexOf(prefijo);
+        if (idx !== -1) {
+          return path.substring(idx + 1);
+        }
+      }
+    } catch {
+      // url invalida o relativa
+    }
+    return null;
   }
 
   private ejecutarDescargaDirecta(href: string, filename: string, esBlobUrl: boolean): void {
