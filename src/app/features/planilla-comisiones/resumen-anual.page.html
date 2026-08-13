@@ -26,7 +26,7 @@
       <span class="pill-meta">{{ mesesConDatos() }} de 12 meses importados</span>
       <span class="pill-meta">{{ res.filas.length }} vendedoras</span>
       <span class="pill-meta bg-primary/10 text-primary font-bold border-primary/20">
-        ${{ totalAnual() | number: '1.2-2' }} USD
+        ${{ totalAnual() | number: '1.0-0' }} USD
       </span>
     </div>
   }
@@ -48,7 +48,7 @@
   <section class="grid-kpis-modern mb-6">
     <app-kpi-card
       label="Facturado Anual"
-      [valor]="'$' + (totalAnual() | number: '1.2-2')"
+      [valor]="'$' + (totalAnual() | number: '1.0-0')"
       icon="wallet"
       tono="primary"
       [destacado]="true"
@@ -64,7 +64,7 @@
 
     <app-kpi-card
       label="Bonos Trimestrales"
-      [valor]="'$' + (totalBonosAnualUsd() | number: '1.2-2')"
+      [valor]="'$' + (totalBonosAnualUsd() | number: '1.0-0')"
       icon="award"
       tono="secondary"
       [pie]="vendedorasQueCobranBono() + ' vendedora(s) alcanzaron la meta'" />
@@ -128,7 +128,7 @@
             <p>Un mes sin importar se muestra con un guion (<span class="font-mono">—</span>), no con un cero.</p>
           </app-info-hint>
         </h3>
-        <p class="subtitulo-seccion">Detalle mensual en dólares USD de cada vendedora</p>
+        <p class="subtitulo-seccion">Detalle mensual en dólares USD (valores en USD sin decimales para lectura limpia)</p>
       </div>
 
       <!-- Buscador & Filtros -->
@@ -177,7 +177,7 @@
       </div>
     </div>
 
-    <!-- Tabla Compacta de Matriz Anual (Ajustada al ancho sin scroll innecesario) -->
+    <!-- Tabla Compacta de Matriz Anual (Optimizada para 14 columnas sin deformación) -->
     <div class="contenedor-matriz-compacta">
       <app-table [dense]="true">
         <thead>
@@ -186,7 +186,7 @@
             @for (m of mesesCortos; track m) {
               <th class="text-right col-mes">{{ m }}</th>
             }
-            <th class="text-right col-total">Total Año</th>
+            <th class="text-right col-total">Total (USD)</th>
           </tr>
         </thead>
         <tbody>
@@ -199,12 +199,12 @@
 
               @for (mes of f.meses; track mes.mes) {
                 <td
-                  class="text-right col-mes font-mono text-[11px]"
+                  class="text-right col-mes font-mono text-[11px] whitespace-nowrap"
                   [class.celda-sin-datos]="!mes.importado"
                   [class.celda-sin-liquidar]="mes.importado && !mes.liquidado">
                   @if (mes.importado) {
                     <span [class.font-semibold]="mes.montoVendido > 0">
-                      ${{ mes.montoVendido | number: '1.0-0' }}
+                      {{ mes.montoVendido | number: '1.0-0' }}
                     </span>
                   } @else {
                     <span class="text-text-muted/60">—</span>
@@ -212,8 +212,8 @@
                 </td>
               }
 
-              <td class="text-right col-total font-mono text-xs font-bold text-primary">
-                ${{ f.totalVendido | number: '1.2-2' }}
+              <td class="text-right col-total font-mono text-xs font-bold text-primary whitespace-nowrap">
+                ${{ f.totalVendido | number: '1.0-0' }}
               </td>
             </tr>
           } @empty {
@@ -230,16 +230,16 @@
               TOTALES (USD)
             </td>
             @for (t of resumen.value().totalesPorMes; track $index) {
-              <td class="text-right col-mes font-mono font-bold text-[11px]">
+              <td class="text-right col-mes font-mono font-bold text-[11px] whitespace-nowrap">
                 @if (t > 0) {
-                  ${{ t | number: '1.0-0' }}
+                  {{ t | number: '1.0-0' }}
                 } @else {
                   <span class="text-text-muted/60">—</span>
                 }
               </td>
             }
-            <td class="text-right col-total font-mono font-extrabold text-xs text-primary">
-              ${{ totalAnual() | number: '1.2-2' }}
+            <td class="text-right col-total font-mono font-extrabold text-xs text-primary whitespace-nowrap">
+              ${{ totalAnual() | number: '1.0-0' }}
             </td>
           </tr>
         </tfoot>
