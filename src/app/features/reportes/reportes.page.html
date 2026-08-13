@@ -55,7 +55,7 @@
       style="--indice: 0"
       class="aparecer"
       label="Facturado"
-      [valor]="a.resumen.montoVendido | moneda"
+      [valor]="'$' + (a.resumen.montoVendido | number: '1.2-2')"
       icon="wallet"
       tono="primary"
       [destacado]="true"
@@ -251,7 +251,7 @@
               <tr>
                 <td class="text-left font-semibold text-text-dark">{{ c.etiqueta }}</td>
                 <td class="text-right font-medium">{{ c.cantidad }}</td>
-                <td class="text-right font-semibold text-text-dark">{{ c.montoVendido | moneda }}</td>
+                <td class="text-right font-semibold text-text-dark">${{ c.montoVendido | number: '1.2-2' }}</td>
                 <td class="text-right text-text-muted">{{ c.baseCalculo | moneda }}</td>
                 <td class="text-right">
                   <span class="badge-pct">{{ c.pctMonto }}%</span>
@@ -381,7 +381,7 @@
               </td>
               <td class="text-left text-sm font-medium text-text-dark">{{ s.etiqueta }}</td>
               <td class="text-right font-medium">{{ s.cantidad }}</td>
-              <td class="text-right font-semibold text-text-dark">{{ s.montoVendido | moneda }}</td>
+              <td class="text-right font-semibold text-text-dark">${{ s.montoVendido | number: '1.2-2' }}</td>
               <td class="text-right text-text-muted font-medium">{{ s.pctMonto }}%</td>
             </tr>
           }
@@ -433,7 +433,7 @@
               </td>
               <td class="text-left text-sm font-medium text-text-dark">{{ m.etiqueta }}</td>
               <td class="text-right font-medium">{{ m.cantidad }}</td>
-              <td class="text-right font-semibold text-text-dark">{{ m.montoVendido | moneda }}</td>
+              <td class="text-right font-semibold text-text-dark">${{ m.montoVendido | number: '1.2-2' }}</td>
               <td class="text-right text-text-muted font-medium">{{ m.pctMonto }}%</td>
             </tr>
           }
@@ -477,7 +477,7 @@
                     <span class="font-semibold text-sm text-text-dark block">{{ f.nombre }}</span>
                     <span class="block text-[11px] text-text-muted font-normal">{{ f.tipo }} · {{ f.area }}</span>
                   </td>
-                  <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ f.montoVendido | moneda }}</td>
+                  <td class="text-right font-medium text-text-dark whitespace-nowrap">${{ f.montoVendido | number: '1.2-2' }}</td>
                   <td class="text-right whitespace-nowrap">
                     <span class="font-medium text-text-dark">{{ f.planesVendidos }}</span>
                     @if (f.planpaqComisionables + f.planninComisionables; as comisionables) {

@@ -588,7 +588,11 @@
                   <span class="font-semibold text-sm text-text-dark block">{{ f.nombre }}</span>
                   <span class="block text-[11px] text-text-muted">{{ f.tipo }} · {{ f.area }}</span>
                 </td>
-                <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ f.montoVendido | moneda }}</td>
+                <!-- USD, no Bs: `montoVendido` sale del Excel de FileMaker, que
+                     viene en dólares. Rotularlo en bolivianos mostraba a Viviana
+                     facturando "Bs 26.641" cuando vendió $26.641 — siete veces
+                     menos de lo real. -->
+                <td class="text-right font-medium text-text-dark whitespace-nowrap">${{ f.montoVendido | number: '1.2-2' }}</td>
                 <td class="text-right whitespace-nowrap">
                   <span class="font-medium text-text-dark">{{ f.planesVendidos }}</span>
                   @if (f.planpaqComisionables + f.planninComisionables; as comisionables) {
@@ -597,12 +601,12 @@
                       {{ comisionables }} comisiona{{ comisionables === 1 ? '' : 'n' }}
                     </span>
                   } @else {
-                    <span class="text-[10px] text-critical font-semibold block text-right"
-                      title="No superó el objetivo: ningún plan comisiona Tipo A">sin objetivo</span>
+                    <span class="text-[10px] text-text-muted font-semibold block text-right"
+                      title="El objetivo de planes es una franquicia: solo comisionan los que lo SUPERAN. Igualarlo paga cero.">no supera el objetivo</span>
                   }
                 </td>
                 <td class="text-right whitespace-nowrap">
-                  <span class="font-medium text-text-dark">{{ f.acumuladoCirugias | moneda }}</span>
+                  <span class="font-medium text-text-dark">${{ f.acumuladoCirugias | number: '1.2-2' }}</span>
                   @if (f.nivelCirugia) {
                     <span class="text-[10px] text-text-muted font-medium block text-right">nivel {{ f.nivelCirugia }}</span>
                   }
