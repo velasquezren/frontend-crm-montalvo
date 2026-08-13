@@ -454,80 +454,11 @@
         </div>
 
         <div class="contenedor-tabla-scroll">
-          <app-table [dense]="true" [maxHeight]="'calc(100dvh - 220px)'">
-            <thead>
-              <tr>
-                <th class="text-left celda-sticky">Vendedora</th>
-                <th class="text-right">Facturado</th>
-                <th class="text-right">Planes</th>
-                <th class="text-right">Tipo A</th>
-                <th class="text-right">Tipo B</th>
-                <th class="text-right">Tipo C</th>
-                <th class="text-right">Bono trimestral</th>
-                <th class="text-right">Otros bonos</th>
-                <th class="text-right">Total USD</th>
-                <th class="text-right">Total Bs</th>
-                <th class="text-right">Sueldo</th>
-                <th class="text-right">A pagar</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (f of rep.filas; track f.vendedoraId) {
-                <tr>
-                  <td class="celda-sticky">
-                    <span class="font-semibold text-sm text-text-dark block">{{ f.nombre }}</span>
-                    <span class="block text-[11px] text-text-muted font-normal">{{ f.tipo }} · {{ f.area }}</span>
-                  </td>
-                  <td class="text-right font-medium text-text-dark whitespace-nowrap">${{ f.montoVendido | number: '1.2-2' }}</td>
-                  <td class="text-right whitespace-nowrap">
-                    <span class="font-medium text-text-dark">{{ f.planesVendidos }}</span>
-                    @if (f.planpaqComisionables + f.planninComisionables; as comisionables) {
-                      <span class="text-[10px] text-primary font-semibold block text-right"
-                        title="Solo los planes por encima del objetivo comisionan Tipo A">
-                        {{ comisionables }} comisiona{{ comisionables === 1 ? '' : 'n' }}
-                      </span>
-                    } @else {
-                      <span class="text-[10px] text-text-muted font-semibold block text-right"
-                        title="El objetivo de planes es una franquicia: solo comisionan los que lo SUPERAN. Igualarlo paga cero.">no supera el objetivo</span>
-                    }
-                  </td>
-                  <td class="text-right whitespace-nowrap">${{ f.comisionA | number: '1.2-2' }}</td>
-                  <td class="text-right whitespace-nowrap">${{ f.comisionB | number: '1.2-2' }}</td>
-                  <td class="text-right whitespace-nowrap">${{ f.comisionC | number: '1.2-2' }}</td>
-                  <!-- El trimestral aparte: es el que administración cuadra contra
-                       su tabla de promedios. Sumado a los otros dos era imposible
-                       de cotejar. -->
-                  <td class="text-right whitespace-nowrap">
-                    <span class="font-medium text-text-dark">${{ f.bonoTrimestral | number: '1.2-2' }}</span>
-                    @if (f.bonoTrimestral) {
-                      <span class="text-[10px] text-text-muted block text-right">{{ f.bonoTrimestral * +rep.periodo.tipoCambio | moneda }}</span>
-                    }
-                  </td>
-                  <td class="text-right whitespace-nowrap">${{ f.bonoJefatura + f.bonoPublicidad | number: '1.2-2' }}</td>
-                  <td class="text-right font-semibold text-primary whitespace-nowrap">${{ f.totalUsd | number: '1.2-2' }}</td>
-                  <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ f.totalBob | moneda }}</td>
-                  <td class="text-right text-text-muted whitespace-nowrap">{{ f.sueldoBase | moneda }}</td>
-                  <td class="text-right font-bold text-secondary text-base whitespace-nowrap">{{ f.totalGanado | moneda }}</td>
-                </tr>
-              }
-            </tbody>
-            <tfoot>
-              <tr class="fila-totales">
-                <td class="text-left font-bold celda-sticky">TOTALES</td>
-                <td class="text-right font-bold">${{ rep.totales['montoVendido'] | number: '1.2-2' }}</td>
-                <td class="text-right"></td>
-                <td class="text-right font-bold">${{ rep.totales['comisionA'] | number: '1.2-2' }}</td>
-                <td class="text-right font-bold">${{ rep.totales['comisionB'] | number: '1.2-2' }}</td>
-                <td class="text-right font-bold">${{ rep.totales['comisionC'] | number: '1.2-2' }}</td>
-                <td class="text-right font-bold">${{ rep.totales['bonoTrimestral'] | number: '1.2-2' }}</td>
-                <td class="text-right font-bold">${{ rep.totales['bonos'] - rep.totales['bonoTrimestral'] | number: '1.2-2' }}</td>
-                <td class="text-right font-bold text-primary">${{ rep.totales['totalUsd'] | number: '1.2-2' }}</td>
-                <td class="text-right font-bold">{{ rep.totales['totalBob'] | moneda }}</td>
-                <td class="text-right"></td>
-                <td class="text-right font-extrabold text-secondary text-base">{{ rep.totales['totalGanado'] | moneda }}</td>
-              </tr>
-            </tfoot>
-          </app-table>
+          <app-tabla-liquidacion
+            [filas]="rep.filas"
+            [totales]="rep.totales"
+            [tipoCambio]="+rep.periodo.tipoCambio"
+            maxHeight="calc(100dvh - 220px)" />
         </div>
       </section>
     }

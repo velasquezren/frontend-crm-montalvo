@@ -25,6 +25,7 @@ import {
 } from '../planilla-comisiones/planilla.model';
 import { ReportesService } from './reportes.service';
 import { AnaliticaPeriodo, FilaRanking, Porcion } from './reportes.model';
+import { TablaLiquidacionComponent } from '../planilla-comisiones/components/tabla-liquidacion.component';
 
 /** Paleta de las series — tokens de la paleta cerrada, no hex sueltos. */
 const COLORES = [
@@ -49,6 +50,7 @@ type ColRanking = 'etiqueta' | 'cantidad' | 'montoVendido' | 'pctMonto';
 @Component({
   selector: 'app-reportes',
   imports: [
+    TablaLiquidacionComponent,
     DecimalPipe,
     MonedaPipe,
     BadgeComponent,

@@ -19,6 +19,7 @@ import { PaginatorComponent } from '../../shared/components/paginator/paginator.
 import { TableComponent } from '../../shared/components/table/table.component';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import { PlanillaComisionesService } from './planilla-comisiones.service';
+import { TablaLiquidacionComponent } from './components/tabla-liquidacion.component';
 import {
   Alertas,
   ClasifComision,
@@ -65,6 +66,7 @@ interface GrupoPlanes {
 @Component({
   selector: 'app-planilla-comisiones',
   imports: [
+    TablaLiquidacionComponent,
     DatePipe,
     DecimalPipe,
     MonedaPipe,
