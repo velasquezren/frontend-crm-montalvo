@@ -1,0 +1,15 @@
+:host {
+  display: block;
+}
+
+/* Prevenir selección accidental de texto/elementos durante gestos */
+.select-none {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Optimización de toque y gestos nativos */
+img {
+  touch-action: none;
+  -webkit-touch-callout: none;
+}

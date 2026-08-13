@@ -1,0 +1,156 @@
+@if (imageUrl(); as url) {
+  <div
+    class="fixed inset-0 z-[9999] bg-black/92 backdrop-blur-md flex flex-col select-none animate-fade-scale"
+    (click)="cerrar()"
+    aria-modal="true"
+    role="dialog"
+    aria-label="Visor de imágenes">
+
+    <!-- ── Encabezado & Barra de Herramientas Minimalista ────────────────────── -->
+    <div
+      class="px-4 py-3 sm:px-6 flex items-center justify-between z-20 bg-gradient-to-b from-black/80 to-transparent"
+      (click)="$event.stopPropagation()">
+
+      <!-- Título / Etiqueta -->
+      <div class="flex items-center gap-2 min-w-0 pr-2">
+        <span class="w-2 h-2 rounded-full bg-secondary shrink-0"></span>
+        <span class="text-xs sm:text-sm font-semibold text-white/90 truncate">
+          {{ title() || 'Visor de Imagen' }}
+        </span>
+      </div>
+
+      <!-- Barra de Herramientas (Controles con touch targets de 44px) -->
+      <div class="flex items-center gap-1 sm:gap-2">
+
+        <!-- Grupo Zoom -->
+        <div class="flex items-center bg-white/10 backdrop-blur-md rounded-xl p-0.5 border border-white/15">
+          <button
+            type="button"
+            (click)="zoomOut()"
+            [disabled]="zoom() <= 0.5"
+            class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center text-white/80 hover:text-white hover:bg-white/15 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+            title="Reducir zoom (-)"
+            aria-label="Reducir zoom">
+            <app-icon name="zoom-out" [size]="18" />
+          </button>
+
+          <button
+            type="button"
+            (click)="resetTransform()"
+            class="px-2 h-9 sm:h-10 text-[11px] font-mono font-semibold text-white/90 hover:text-white hover:bg-white/15 rounded-lg transition-all cursor-pointer min-w-[42px] flex items-center justify-center gap-1"
+            title="Restablecer tamaño (100%)"
+            aria-label="Restablecer tamaño">
+            {{ (zoom() * 100).toFixed(0) }}%
+          </button>
+
+          <button
+            type="button"
+            (click)="zoomIn()"
+            [disabled]="zoom() >= 4"
+            class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center text-white/80 hover:text-white hover:bg-white/15 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+            title="Aumentar zoom (+)"
+            aria-label="Aumentar zoom">
+            <app-icon name="zoom-in" [size]="18" />
+          </button>
+        </div>
+
+        <!-- Rotar 90° -->
+        <button
+          type="button"
+          (click)="rotateRight()"
+          class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white/90 hover:text-white border border-white/15 flex items-center justify-center transition-all cursor-pointer"
+          title="Girar 90° a la derecha"
+          aria-label="Girar 90 grados">
+          <app-icon name="rotate-cw" [size]="18" />
+        </button>
+
+        <div class="w-px h-6 bg-white/20 my-auto hidden xs:block"></div>
+
+        <!-- Descargar -->
+        <button
+          type="button"
+          (click)="descargarImagen()"
+          [disabled]="downloading()"
+          class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white/90 hover:text-white border border-white/15 flex items-center justify-center transition-all cursor-pointer disabled:opacity-50"
+          title="Descargar imagen"
+          aria-label="Descargar imagen">
+          @if (downloading()) {
+            <app-icon name="loader" [size]="18" class="animate-spin text-white" />
+          } @else {
+            <app-icon name="download" [size]="18" />
+          }
+        </button>
+
+        <!-- Compartir (WhatsApp / Nativo) -->
+        <button
+          type="button"
+          (click)="compartirImagen()"
+          class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white/90 hover:text-white border border-white/15 flex items-center justify-center transition-all cursor-pointer"
+          title="Compartir (WhatsApp / Móvil)"
+          aria-label="Compartir imagen">
+          <app-icon name="share-2" [size]="18" />
+        </button>
+
+        <div class="w-px h-6 bg-white/20 my-auto"></div>
+
+        <!-- Botón Cerrar -->
+        <button
+          type="button"
+          (click)="cerrar()"
+          class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/15 hover:bg-white/30 text-white border border-white/20 flex items-center justify-center transition-all cursor-pointer"
+          title="Cerrar visor"
+          aria-label="Cerrar visor">
+          <app-icon name="x" [size]="20" />
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ── Lienzo Principal de la Imagen ───────────────────────────────────── -->
+    <div
+      class="flex-1 relative overflow-hidden flex items-center justify-center p-4 sm:p-8 cursor-grab active:cursor-grabbing"
+      (click)="cerrar()">
+
+      <!-- Indicador de Carga -->
+      @if (loading()) {
+        <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 text-white/70 pointer-events-none">
+          <app-icon name="loader" [size]="32" class="animate-spin text-secondary" />
+          <span class="text-xs font-medium tracking-wide">Cargando imagen…</span>
+        </div>
+      }
+
+      <!-- Fallback Error de Carga -->
+      @if (hasError()) {
+        <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 text-center max-w-sm text-white space-y-3" (click)="$event.stopPropagation()">
+          <app-icon name="alert-circle" [size]="36" class="mx-auto text-white/60" />
+          <p class="text-sm font-semibold">No se pudo cargar la imagen</p>
+          <p class="text-xs text-white/70">Es posible que el enlace haya expirado o no esté disponible.</p>
+        </div>
+      }
+
+      <!-- Imagen Interactiva -->
+      <img
+        #imageRef
+        [src]="url"
+        alt="Previsualización de la imagen"
+        (click)="$event.stopPropagation()"
+        (dblclick)="toggleZoom($event)"
+        (wheel)="onWheel($event)"
+        (mousedown)="onMouseDown($event)"
+        (mousemove)="onMouseMove($event)"
+        (mouseup)="onMouseUp()"
+        (mouseleave)="onMouseUp()"
+        (touchstart)="onTouchStart($event)"
+        (touchmove)="onTouchMove($event)"
+        (touchend)="onTouchEnd($event)"
+        (load)="onImageLoad()"
+        (error)="onImageError()"
+        [class.opacity-0]="loading() || hasError()"
+        [class.opacity-100]="!loading() && !hasError()"
+        [style.transform]="'translate(' + pan().x + 'px, ' + pan().y + 'px) scale(' + zoom() + ') rotate(' + rotation() + 'deg)'"
+        class="max-w-[92vw] max-h-[82vh] object-contain transition-transform duration-150 ease-out select-none shadow-lifted rounded-xl will-change-transform" />
+
+    </div>
+
+  </div>
+}

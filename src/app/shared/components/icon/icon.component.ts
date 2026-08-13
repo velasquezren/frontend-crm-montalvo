@@ -56,7 +56,12 @@ export type IconName =
   | 'map-pin'
   | 'pin'
   | 'download'
-  | 'volume-2';
+  | 'volume-2'
+  | 'zoom-in'
+  | 'zoom-out'
+  | 'rotate-cw'
+  | 'share-2'
+  | 'maximize';
 
 /**
  * Icono SVG del sistema.
@@ -319,6 +324,34 @@ export type IconName =
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
           <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
           <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+        }
+        @case ('zoom-in') {
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" x2="16.65" y1="21" y2="16.65" />
+          <line x1="11" x2="11" y1="8" y2="14" />
+          <line x1="8" x2="14" y1="11" y2="11" />
+        }
+        @case ('zoom-out') {
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" x2="16.65" y1="21" y2="16.65" />
+          <line x1="8" x2="14" y1="11" y2="11" />
+        }
+        @case ('rotate-cw') {
+          <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+          <path d="M21 3v5h-5" />
+        }
+        @case ('share-2') {
+          <circle cx="18" cy="5" r="3" />
+          <circle cx="6" cy="12" r="3" />
+          <circle cx="18" cy="19" r="3" />
+          <line x1="8.59" x2="15.42" y1="13.51" y2="17.49" />
+          <line x1="15.41" x2="8.59" y1="6.51" y2="10.49" />
+        }
+        @case ('maximize') {
+          <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+          <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+          <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+          <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
         }
       }
     </svg>

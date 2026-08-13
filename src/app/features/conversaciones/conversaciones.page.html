@@ -1404,23 +1404,8 @@
   </div>
 </ng-template>
 
-<!-- Modal Lightbox para imágenes en pantalla completa -->
-@if (lightboxImagenUrl(); as imgUrl) {
-  <!-- `document:keydown.escape` y no un atajo global: solo escucha mientras el
-       visor está abierto, que es lo que el botón de cerrar ya prometía en su
-       tooltip sin que nadie lo hubiera implementado. -->
-  <div class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
-    (click)="cerrarLightbox()"
-    (document:keydown.escape)="cerrarLightbox()">
-    <div class="fixed top-4 right-4 z-50 flex items-center gap-2" (click)="$event.stopPropagation()">
-      <a [href]="imgUrl" target="_blank" download class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center cursor-pointer transition-transform hover:scale-105" title="Descargar imagen">
-        <app-icon name="download" [size]="18" />
-      </a>
-      <button type="button" (click)="cerrarLightbox()" class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center cursor-pointer transition-transform hover:scale-105" title="Cerrar (Esc)">
-        <app-icon name="x" [size]="20" />
-      </button>
-    </div>
-
-    <img [src]="imgUrl" (click)="$event.stopPropagation()" alt="Previsualización de foto" class="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl shadow-lifted" />
-  </div>
-}
+<!-- Visor de Imágenes (Lightbox) profesional y responsivo -->
+<app-image-viewer
+  [imageUrl]="lightboxImagenUrl()"
+  [title]="detalle.value()?.cliente?.nombre ? ('Foto de ' + detalle.value()?.cliente?.nombre) : 'Imagen de la conversación'"
+  (closed)="cerrarLightbox()" />

@@ -39,6 +39,7 @@ import { FilterChipComponent } from '../../shared/components/filter-chip/filter-
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InputComponent } from '../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
+import { ImageViewerComponent } from '../../shared/components/image-viewer/image-viewer.component';
 import {
   CATEGORIA_BADGE,
   CATEGORIA_ICON,
@@ -107,6 +108,7 @@ function soloDigitos(telefono: string): string {
     InputComponent,
     EmptyStateComponent,
     LoadingSkeletonComponent,
+    ImageViewerComponent,
     DatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
