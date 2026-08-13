@@ -39,7 +39,6 @@ import { FilterChipComponent } from '../../shared/components/filter-chip/filter-
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InputComponent } from '../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
-import { ImageViewerComponent } from '../../shared/components/image-viewer/image-viewer.component';
 import {
   CATEGORIA_BADGE,
   CATEGORIA_ICON,
@@ -108,7 +107,6 @@ function soloDigitos(telefono: string): string {
     InputComponent,
     EmptyStateComponent,
     LoadingSkeletonComponent,
-    ImageViewerComponent,
     DatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -146,6 +144,7 @@ export class ConversacionesPage implements AfterViewInit {
   private readonly modalPlantillas = viewChild<TemplateRef<unknown>>('modalPlantillas');
   private readonly modalGestionPlantillas = viewChild<TemplateRef<unknown>>('modalGestionPlantillas');
   private readonly modalMemoria = viewChild<TemplateRef<unknown>>('modalMemoria');
+  private readonly modalLightbox = viewChild<TemplateRef<unknown>>('modalLightbox');
 
   /* ── Helpers reutilizados ──────────────────────────────────────── */
   protected readonly categoriaLabel = CATEGORIA_LABEL;
@@ -199,6 +198,10 @@ export class ConversacionesPage implements AfterViewInit {
 
   /* ── Lightbox & Audio Speed & Pinned Notes ──────────────────────── */
   protected readonly lightboxImagenUrl = signal<string | null>(null);
+  protected readonly lightboxZoom = signal<number>(1);
+  protected readonly lightboxRotation = signal<number>(0);
+  protected readonly descargandoLightbox = signal<boolean>(false);
+  private lightboxOverlay: OverlayRef | null = null;
 
   protected readonly editandoNotaFijada = signal(false);
   protected readonly editNotaFijada = signal('');
@@ -1226,15 +1229,89 @@ export class ConversacionesPage implements AfterViewInit {
     }
   }
 
-  /* ── Lightbox de Imágenes ─────────────────────────────────────── */
+  /* ── Lightbox de Imágenes (CDK Overlay para Superposición Absoluta) ── */
   protected abrirLightbox(url: string): void {
-    if (url) {
-      this.lightboxImagenUrl.set(url);
+    if (!url) return;
+    this.lightboxImagenUrl.set(url);
+    this.lightboxZoom.set(1);
+    this.lightboxRotation.set(0);
+
+    const tpl = this.modalLightbox();
+    if (tpl) {
+      if (this.lightboxOverlay) {
+        this.lightboxOverlay.dispose();
+      }
+      this.lightboxOverlay = this.dialogService.openTemplate(tpl, this.vcr, {
+        panelClass: ['fixed', 'inset-0', 'z-[99999]', 'pointer-events-auto'],
+        backdropClass: ['fixed', 'inset-0', 'bg-black/90', 'backdrop-blur-md', 'z-[99998]'],
+      });
     }
   }
 
   protected cerrarLightbox(): void {
+    if (this.lightboxOverlay) {
+      this.lightboxOverlay.dispose();
+      this.lightboxOverlay = null;
+    }
     this.lightboxImagenUrl.set(null);
+    this.lightboxZoom.set(1);
+    this.lightboxRotation.set(0);
+  }
+
+  protected zoomInLightbox(): void {
+    this.lightboxZoom.update((z) => Math.min(3, +(z + 0.25).toFixed(2)));
+  }
+
+  protected zoomOutLightbox(): void {
+    this.lightboxZoom.update((z) => Math.max(0.5, +(z - 0.25).toFixed(2)));
+  }
+
+  protected resetLightbox(): void {
+    this.lightboxZoom.set(1);
+    this.lightboxRotation.set(0);
+  }
+
+  protected rotateLightbox(): void {
+    this.lightboxRotation.update((r) => (r + 90) % 360);
+  }
+
+  protected async descargarImagenLightbox(): Promise<void> {
+    const url = this.lightboxImagenUrl();
+    if (!url) return;
+
+    this.descargandoLightbox.set(true);
+    try {
+      const response = await fetch(url, { mode: 'cors' });
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = `imagen-montalvo-${Date.now()}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.download = `imagen-montalvo-${Date.now()}.jpg`;
+      a.click();
+    } finally {
+      this.descargandoLightbox.set(false);
+    }
+  }
+
+  protected compartirLightbox(): void {
+    const url = this.lightboxImagenUrl();
+    if (!url) return;
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({ title: 'Imagen CRM Montalvo', url }).catch(() => {});
+    } else {
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+    }
   }
 
   /* ── Control de Velocidad de Audio ───────────────────────────── */
