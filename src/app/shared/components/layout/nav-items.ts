@@ -24,5 +24,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { path: '/ventas', label: 'Ventas', icon: 'shopping-bag' },
   { path: '/comisiones', label: 'Comisiones', icon: 'wallet' },
   { path: '/planilla-comisiones', label: 'Planilla', icon: 'pie-chart', rolMinimo: 'ADMIN' },
+  { path: '/comisiones-anual', label: 'Resumen Anual', icon: 'trending-up', rolMinimo: 'ADMIN' },
   { path: '/usuarios', label: 'Usuarios', icon: 'shield', rolMinimo: 'SUPER_ADMIN' },
 ];

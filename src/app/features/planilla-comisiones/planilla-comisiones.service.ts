@@ -72,6 +72,11 @@ export class PlanillaComisionesService {
     return this.api.request(`/planilla-comisiones/periodos/${periodoId}/reporte/consolidado`);
   }
 
+  /** Resumen anual por vendedora: doce meses y cuatro trimestres. Solo ADMIN. */
+  resumenAnualRequest(anio: number): ResourceRequest {
+    return this.api.request('/planilla-comisiones/anual', { anio: String(anio) });
+  }
+
   vendedorasRequest(): ResourceRequest {
     return this.api.request('/planilla-comisiones/vendedoras');
   }

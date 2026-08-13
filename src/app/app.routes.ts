@@ -107,6 +107,16 @@ export const routes: Routes = [
           ),
       },
       {
+        /* La única vista que cruza periodos: doce meses y cuatro trimestres por
+           vendedora. Mismo rol que la planilla — son datos de remuneración. */
+        path: 'comisiones-anual',
+        canActivate: [exigeRol('ADMIN')],
+        loadComponent: () =>
+          import('./features/planilla-comisiones/resumen-anual.page').then(
+            m => m.ResumenAnualPage,
+          ),
+      },
+      {
         /* Gestión de agentes: solo super admin — es donde se asignan los códigos
            de empresa de los que depende toda la planilla de comisiones. */
         path: 'usuarios',

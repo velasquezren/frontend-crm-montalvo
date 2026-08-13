@@ -1,0 +1,197 @@
+<app-page-header
+  title="Resumen anual de comisiones"
+  [subtitle]="'Cada vendedora, sus doce meses y sus cuatro trimestres — ' + anio()">
+  <label class="selector-anio">
+    <span class="selector-anio__etiqueta">Año</span>
+    <select class="selector-anio__campo" [value]="anio()" (change)="cambiarAnio($any($event.target).value)">
+      @for (a of anios(); track a) {
+        <option [value]="a">{{ a }}</option>
+      }
+    </select>
+  </label>
+</app-page-header>
+
+@if (resumen.isLoading()) {
+  <div class="panel space-y-2">
+    <app-loading-skeleton shape="text" height="2.5rem" />
+    <app-loading-skeleton shape="text" height="2rem" />
+    <app-loading-skeleton shape="text" height="2rem" />
+  </div>
+} @else if (resumen.error()) {
+  <!-- El error va ANTES de comprobar si hay filas: al fallar, el recurso
+       devuelve su valor por defecto —cero vendedoras— y caería en el estado
+       vacío, que diría "no hay datos" cuando lo que hay es un servidor caído. -->
+  <app-error-carga que="el resumen anual" (reintentar)="resumen.reload()" />
+} @else if (resumen.value().filas.length > 0) {
+
+  <!-- ══ Resumen del año ══ -->
+  <section class="panel mb-4">
+    <div class="grid-metricas">
+      <div class="metrica">
+        <span class="metrica-valor">${{ totalAnual() | number: '1.2-2' }}</span>
+        <span class="metrica-label">vendido en {{ anio() }} (USD)</span>
+      </div>
+      <div class="metrica">
+        <span class="metrica-valor text-primary">{{ resumen.value().filas.length }}</span>
+        <span class="metrica-label">vendedoras liquidadas</span>
+      </div>
+      <div class="metrica">
+        <span class="metrica-valor text-secondary">{{ mesesConDatos() }}</span>
+        <span class="metrica-label">meses con datos</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ Matriz de doce meses ══ -->
+  <section class="panel mb-4">
+    <h3 class="text-sm font-bold text-text-dark mb-3 flex items-center gap-1.5">
+      Facturación mes a mes
+      <app-info-hint titulo="Facturación mensual">
+        <p>Lo <strong>vendido en bruto</strong>, en dólares, tal como llega del Excel de FileMaker.</p>
+        <p>
+          Un mes puede estar importado y todavía sin liquidar: el vendido ya es correcto, pero su
+          comisión aún no existe. Esos meses salen en gris.
+        </p>
+        <p>Un mes sin importar se muestra con un guion, no con un cero — no es lo mismo.</p>
+      </app-info-hint>
+    </h3>
+
+    <div class="contenedor-tabla-scroll">
+      <app-table [dense]="true">
+        <thead>
+          <tr>
+            <th class="text-left celda-sticky">Vendedora</th>
+            @for (m of mesesCortos; track m) {
+              <th class="text-right">{{ m }}</th>
+            }
+            <th class="text-right">Total año</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (f of resumen.value().filas; track f.vendedoraId) {
+            <tr>
+              <td class="celda-sticky">
+                <span class="font-semibold text-sm text-text-dark block">{{ f.nombre }}</span>
+                <span class="block text-[11px] text-text-muted font-normal">{{ f.tipo }} · {{ f.area }}</span>
+              </td>
+              @for (mes of f.meses; track mes.mes) {
+                <td class="text-right whitespace-nowrap"
+                    [class.celda-sin-datos]="!mes.importado"
+                    [class.celda-sin-liquidar]="mes.importado && !mes.liquidado">
+                  @if (mes.importado) {
+                    {{ mes.montoVendido | number: '1.0-0' }}
+                  } @else {
+                    <span class="text-text-muted">—</span>
+                  }
+                </td>
+              }
+              <td class="text-right font-bold text-primary whitespace-nowrap">
+                ${{ f.totalVendido | number: '1.2-2' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr class="fila-totales">
+            <td class="text-left font-bold celda-sticky">TOTALES</td>
+            @for (t of resumen.value().totalesPorMes; track $index) {
+              <td class="text-right font-bold whitespace-nowrap">
+                @if (t > 0) {
+                  {{ t | number: '1.0-0' }}
+                } @else {
+                  <span class="text-text-muted">—</span>
+                }
+              </td>
+            }
+            <td class="text-right font-extrabold text-primary whitespace-nowrap">
+              ${{ totalAnual() | number: '1.2-2' }}
+            </td>
+          </tr>
+        </tfoot>
+      </app-table>
+    </div>
+  </section>
+
+  <!-- ══ Los cuatro trimestres ══ -->
+  <section class="panel">
+    <h3 class="text-sm font-bold text-text-dark mb-3 flex items-center gap-1.5">
+      Bono trimestral
+      <app-info-hint titulo="Cómo se gana el bono trimestral">
+        <p>
+          Se paga el <strong>0,5 % del PROMEDIO</strong> de lo facturado en los tres meses del
+          trimestre — no del último mes.
+        </p>
+        <p>
+          Solo lo cobra quien promedia más de <strong>15.000 USD</strong>, y ese umbral es el mismo
+          para todas: también para quien tiene objetivo mensual de 12.000.
+        </p>
+        <p>Se liquida en el mes que cierra el trimestre: marzo, junio, septiembre y diciembre.</p>
+        <p>
+          Un trimestre <strong>incompleto</strong> se marca como parcial: su promedio no es
+          comparable con uno de tres meses, porque puede estar alto por tener solo el mejor mes.
+        </p>
+      </app-info-hint>
+    </h3>
+
+    @for (f of resumen.value().filas; track f.vendedoraId) {
+      <div class="bloque-vendedora">
+        <button type="button" class="bloque-vendedora__cabecera" (click)="alternarDetalle(f.vendedoraId)">
+          <span class="text-left">
+            <span class="font-semibold text-sm text-text-dark block">{{ f.nombre }}</span>
+            <span class="text-[11px] text-text-muted">{{ f.tipo }} · {{ f.area }}</span>
+          </span>
+          <span class="text-right text-xs text-text-muted">
+            bono del año
+            <strong class="block text-sm text-secondary">
+              ${{ f.totalBonoTrimestralUsd | number: '1.2-2' }}
+            </strong>
+          </span>
+        </button>
+
+        <div class="rejilla-trimestres">
+          @for (t of f.trimestres; track t.trimestre) {
+            <div class="tarjeta-trimestre" [class.tarjeta-trimestre--cumple]="t.cumple">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[11px] font-bold text-text-dark">T{{ t.trimestre }}</span>
+                @if (t.mesesConDatos === 0) {
+                  <app-badge variant="neutral">sin datos</app-badge>
+                } @else if (t.cumple) {
+                  <app-badge variant="success" icon="check-circle">cobra</app-badge>
+                } @else {
+                  <app-badge variant="neutral">no alcanza</app-badge>
+                }
+              </div>
+
+              <p class="text-[10px] text-text-muted leading-tight">promedio</p>
+              <p class="text-sm font-bold text-text-dark tabular-nums">
+                ${{ t.promedio | number: '1.0-0' }}
+              </p>
+              <p class="text-[10px] text-text-muted leading-tight">
+                objetivo ${{ t.objetivoUsd | number: '1.0-0' }}
+              </p>
+
+              @if (leyendaTrimestre(t); as leyenda) {
+                <p class="text-[10px] text-text-muted italic mt-1">{{ leyenda }}</p>
+              }
+
+              @if (t.bonoUsd > 0) {
+                <p class="text-xs font-bold text-secondary mt-1.5 tabular-nums">
+                  ${{ t.bonoUsd | number: '1.2-2' }}
+                  <span class="block text-[10px] text-text-muted font-normal">
+                    {{ t.bonoBob | moneda }}
+                  </span>
+                </p>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </section>
+
+} @else {
+  <app-empty-state
+    icon="bar-chart"
+    title="Sin datos para {{ anio() }}"
+    description="No hay ninguna planilla importada de ese año. Importa un mes desde Planilla de Comisiones." />
+}

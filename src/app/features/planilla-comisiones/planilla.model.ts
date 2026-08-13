@@ -270,3 +270,59 @@ export const MESES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ] as const;
+
+/* ── Resumen anual (GET /planilla-comisiones/anual) ─────────────────────────
+   Espejo de `ResumenAnualService` del backend. Es la única vista que cruza
+   periodos: doce meses y cuatro trimestres por vendedora. */
+
+export interface MesVendedora {
+  readonly mes: number;
+  /** Bruto en USD, tal como viene del Excel de FileMaker. */
+  readonly montoVendido: number;
+  readonly comisionUsd: number;
+  readonly bonoTrimestralUsd: number;
+  readonly totalBob: number;
+  /** false = ese mes todavía no se importó. */
+  readonly importado: boolean;
+  /** false = importado pero sin liquidar; el vendido sí es fiable. */
+  readonly liquidado: boolean;
+}
+
+export interface TrimestreVendedora {
+  readonly trimestre: 1 | 2 | 3 | 4;
+  readonly meses: readonly number[];
+  readonly vendido: number;
+  /** Promedio sobre los meses IMPORTADOS, no sobre 3 fijo. */
+  readonly promedio: number;
+  readonly mesesConDatos: number;
+  readonly objetivoUsd: number;
+  readonly cumple: boolean;
+  readonly bonoUsd: number;
+  readonly bonoBob: number;
+}
+
+export interface FilaAnual {
+  readonly vendedoraId: string;
+  readonly codigo: string;
+  readonly nombre: string;
+  readonly tipo: string;
+  readonly area: string;
+  readonly meses: readonly MesVendedora[];
+  readonly trimestres: readonly TrimestreVendedora[];
+  readonly totalVendido: number;
+  readonly totalComisionUsd: number;
+  readonly totalBonoTrimestralUsd: number;
+  readonly totalBob: number;
+}
+
+export interface ResumenAnual {
+  readonly anio: number;
+  readonly filas: readonly FilaAnual[];
+  readonly totalesPorMes: readonly number[];
+}
+
+/** Abreviaturas para las cabeceras de doce columnas. */
+export const MESES_CORTOS = [
+  'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+  'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
+] as const;

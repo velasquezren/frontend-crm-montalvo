@@ -1,0 +1,149 @@
+/* ── Selector de año, en las acciones del encabezado ─────────────── */
+.selector-anio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.selector-anio__etiqueta {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.selector-anio__campo {
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-text-dark);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+
+.selector-anio__campo:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* ── Superficies ─────────────────────────────────────────────────── */
+.panel {
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.grid-metricas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.metrica {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metrica-valor {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.metrica-label {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* La matriz son 14 columnas: se desplaza en horizontal con el nombre fijo. */
+.contenedor-tabla-scroll {
+  overflow-x: auto;
+}
+
+.celda-sticky {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--color-background);
+}
+
+.fila-totales {
+  background: color-mix(in srgb, var(--color-primary) 5%, white);
+  font-weight: 700;
+}
+
+.fila-totales .celda-sticky {
+  background: color-mix(in srgb, var(--color-primary) 5%, white);
+}
+
+/* Un mes sin importar y uno importado pero sin liquidar NO son lo mismo, y
+   confundirlos lleva a leer un cero como "no vendió". El primero va con guion;
+   el segundo, con el número atenuado. */
+.celda-sin-datos {
+  background: color-mix(in srgb, var(--color-border) 22%, transparent);
+}
+
+.celda-sin-liquidar {
+  color: var(--color-text-muted);
+}
+
+/* ── Trimestres ──────────────────────────────────────────────────── */
+.bloque-vendedora {
+  border-top: 1px solid var(--color-border);
+  padding: 14px 0;
+}
+
+.bloque-vendedora:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.bloque-vendedora__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0 0 10px 0;
+  text-align: left;
+}
+
+.rejilla-trimestres {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.tarjeta-trimestre {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--color-background);
+}
+
+/* El trimestre que cobra se tiñe: es la lectura que se busca de un vistazo. */
+.tarjeta-trimestre--cumple {
+  border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 4%, white);
+}
+
+@media (max-width: 768px) {
+  .panel {
+    padding: 14px;
+  }
+
+  .rejilla-trimestres {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
