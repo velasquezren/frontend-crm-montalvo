@@ -14,6 +14,7 @@ import {
 import { OverlayRef } from '@angular/cdk/overlay';
 import { IconComponent } from '../icon/icon.component';
 import { DialogService } from '../dialog/dialog.service';
+import { API_URL } from '../../../core/api/api.constants';
 
 /**
  * Visor de Imágenes (Lightbox) profesional, responsivo y modular.
@@ -30,6 +31,7 @@ import { DialogService } from '../dialog/dialog.service';
 })
 export class ImageViewerComponent {
   readonly imageUrl = input<string | null>(null);
+  readonly mediaKey = input<string | null>(null);
   readonly title = input<string | undefined>(undefined);
   readonly closed = output<void>();
 
@@ -198,40 +200,47 @@ export class ImageViewerComponent {
     return Math.hypot(dx, dy);
   }
 
-  /* ── Descarga Directa de Imagen (Sin abrir nuevas pestañas) ──────── */
+  /* ── Descarga Directa vía Proxy del Backend (Evita CORS de R2) ────── */
   protected async descargarImagen(): Promise<void> {
+    const key = this.mediaKey();
     const url = this.imageUrl();
-    if (!url) return;
+    if (!key && !url) return;
 
     this.descargando.set(true);
     try {
-      const nombreArchivo = this.extraerNombreArchivo(url);
+      const nombreArchivo = this.extraerNombreArchivo(url ?? key ?? '');
 
-      // 1. Intentar obtener Blob vía Fetch / XHR (Mismo origen o CORS permitido)
-      try {
-        const blob = await this.obtenerBlob(url);
-        if (blob && blob.size > 0) {
-          const blobUrl = URL.createObjectURL(blob);
-          this.ejecutarDescargaDirecta(blobUrl, nombreArchivo, true);
-          return;
+      // 1. Si hay mediaKey, usar el proxy del backend (evita CORS con R2)
+      if (key) {
+        const proxyUrl = `${API_URL}/conversaciones/media/descargar?key=${encodeURIComponent(key)}`;
+        try {
+          const blob = await this.obtenerBlob(proxyUrl);
+          if (blob && blob.size > 0) {
+            const blobUrl = URL.createObjectURL(blob);
+            this.ejecutarDescargaDirecta(blobUrl, nombreArchivo, true);
+            return;
+          }
+        } catch {
+          // Si el proxy falla, intentar directamente con la URL
         }
-      } catch {
-        // Pasar al plan B si falla XHR/Fetch
       }
 
-      // 2. Intentar conversión a Data URL mediante Canvas HTML5
-      try {
-        const dataUrl = await this.obtenerDataUrl(url);
-        if (dataUrl) {
-          this.ejecutarDescargaDirecta(dataUrl, nombreArchivo, false);
-          return;
+      // 2. Fallback: intentar directamente con la URL firmada
+      if (url) {
+        try {
+          const blob = await this.obtenerBlob(url);
+          if (blob && blob.size > 0) {
+            const blobUrl = URL.createObjectURL(blob);
+            this.ejecutarDescargaDirecta(blobUrl, nombreArchivo, true);
+            return;
+          }
+        } catch {
+          // Pasar al fallback directo
         }
-      } catch {
-        // Pasar al plan C
-      }
 
-      // 3. Fallback directo: enlace de descarga en la misma ventana (sin target="_blank")
-      this.ejecutarDescargaDirecta(url, nombreArchivo, false);
+        // 3. Enlace de descarga directo (sin nueva pestaña)
+        this.ejecutarDescargaDirecta(url, nombreArchivo, false);
+      }
     } finally {
       this.descargando.set(false);
     }
@@ -256,6 +265,17 @@ export class ImageViewerComponent {
       const xhr = new XMLHttpRequest();
       xhr.open('GET', url, true);
       xhr.responseType = 'blob';
+
+      /* Si la URL apunta al backend (proxy de descarga), adjuntar el JWT
+         que normalmente agrega el tokenInterceptor de Angular HttpClient.
+         XHR nativo no pasa por ese interceptor, así que se lee directamente. */
+      if (url.startsWith(API_URL)) {
+        const token = localStorage.getItem('crm_token') || sessionStorage.getItem('crm_token');
+        if (token) {
+          xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        }
+      }
+
       xhr.onload = () => {
         if (xhr.status === 200 || xhr.status === 0) {
           if (xhr.response && (xhr.response as Blob).size > 0) {
@@ -272,29 +292,7 @@ export class ImageViewerComponent {
     });
   }
 
-  private obtenerDataUrl(url: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.naturalWidth || img.width;
-          canvas.height = img.naturalHeight || img.height;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) return reject(new Error('Sin contexto Canvas 2d'));
-          ctx.drawImage(img, 0, 0);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-          if (dataUrl && dataUrl.length > 100) resolve(dataUrl);
-          else reject(new Error('DataURL demasiado corto'));
-        } catch (e) {
-          reject(e);
-        }
-      };
-      img.onerror = (e) => reject(e);
-      img.src = url;
-    });
-  }
+
 
   private extraerNombreArchivo(url: string): string {
     try {

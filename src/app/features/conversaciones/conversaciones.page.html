@@ -476,7 +476,7 @@
                 @switch (item.mensaje.tipo) {
                   @case ('IMAGEN') {
                     @if (item.mensaje.mediaUrl) {
-                      <button type="button" (click)="abrirLightbox(item.mensaje.mediaUrl)" class="block mb-1 cursor-zoom-in text-left">
+                      <button type="button" (click)="abrirLightbox(item.mensaje.mediaUrl, item.mensaje.mediaKey)" class="block mb-1 cursor-zoom-in text-left">
                         <!-- `object-contain`, no `object-cover`: recortaba por
                              el centro toda foto de más de 288 px de alto. En una
                              clínica estética eso corta justo la zona que la
@@ -491,7 +491,7 @@
                   }
                   @case ('STICKER') {
                     @if (item.mensaje.mediaUrl) {
-                      <button type="button" (click)="abrirLightbox(item.mensaje.mediaUrl)" class="block mb-1 cursor-zoom-in text-left">
+                      <button type="button" (click)="abrirLightbox(item.mensaje.mediaUrl, item.mensaje.mediaKey)" class="block mb-1 cursor-zoom-in text-left">
                         <img [src]="item.mensaje.mediaUrl" alt="Sticker" loading="lazy" decoding="async" class="w-28 h-28 object-contain hover:opacity-90 transition-opacity" />
                       </button>
                     } @else {
@@ -550,7 +550,7 @@
                 <!-- Texto / pie de foto / URL de media -->
                 @if (item.mensaje.contenido) {
                   @if (esUrlImagen(item.mensaje.contenido)) {
-                    <button type="button" (click)="abrirLightbox(item.mensaje.contenido)" class="block my-1 cursor-zoom-in text-left">
+                    <button type="button" (click)="abrirLightbox(item.mensaje.contenido, item.mensaje.mediaKey)" class="block my-1 cursor-zoom-in text-left">
                       <img [src]="item.mensaje.contenido" alt="Imagen adjunta" loading="lazy" decoding="async" class="max-w-full sm:max-w-xs max-h-72 rounded-xl object-cover border border-border shadow-subtle hover:opacity-95 transition-opacity" />
                     </button>
                   } @else if (esUrlPdf(item.mensaje.contenido)) {
@@ -1407,5 +1407,6 @@
 <!-- Visor de Imágenes (Lightbox) profesional y responsivo -->
 <app-image-viewer
   [imageUrl]="lightboxImagenUrl()"
+  [mediaKey]="lightboxMediaKey()"
   [title]="detalle.value()?.cliente?.nombre ? ('Foto de ' + detalle.value()?.cliente?.nombre) : 'Imagen de la conversación'"
   (closed)="cerrarLightbox()" />

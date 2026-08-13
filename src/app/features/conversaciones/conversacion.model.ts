@@ -20,6 +20,8 @@ export interface MensajeApi {
   /** true = lo mandó el sistema (acuse fuera de horario), no una persona. */
   readonly automatico?: boolean;
   readonly tipo?: TipoMensaje;
+  /** Clave interna del archivo en R2 (e.g. `wa/<convId>/<msgId>`); la usa el proxy de descarga. */
+  readonly mediaKey?: string | null;
   /** URL firmada (15 min) del archivo en R2; null mientras se descarga o si es solo texto. */
   readonly mediaUrl?: string | null;
   readonly mediaMime?: string | null;
