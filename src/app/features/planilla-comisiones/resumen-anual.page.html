@@ -1,36 +1,42 @@
 <app-page-header
   title="Resumen Anual de Comisiones"
-  [subtitle]="'Evolución comercial, matriz mensual de ventas y bono trimestral — Gestión ' + anio()">
-  <div class="flex items-center gap-2">
-    <!-- Selector de Año con Ícono -->
-    <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-border shadow-subtle">
-      <app-icon name="calendar" [size]="16" class="text-primary shrink-0" />
-      <span class="text-xs font-bold text-text-muted uppercase tracking-wider hidden sm:inline">Año</span>
+  [subtitle]="'Cada vendedora, sus doce meses y sus cuatro trimestres — Gestión ' + anio()" />
+
+<!-- ── Toolbar de Periodo ───────────────────────────────────────────── -->
+<div class="barra-periodo">
+  <div class="flex items-center gap-3 min-w-0">
+    <div class="icono-periodo">
+      <app-icon name="calendar" [size]="18" />
+    </div>
+    <div class="contenedor-select-periodo">
       <select
-        class="bg-transparent text-xs font-bold text-text-dark focus:outline-none cursor-pointer pr-1"
+        class="select-periodo"
         [value]="anio()"
         (change)="cambiarAnio($any($event.target).value)">
         @for (a of anios(); track a) {
           <option [value]="a">{{ a }}</option>
         }
       </select>
+      <app-icon name="chevron-down" [size]="16" class="select-icono-flecha" />
     </div>
-
-    <!-- Botón Recargar -->
-    <button
-      type="button"
-      (click)="resumen.reload()"
-      class="w-9 h-9 rounded-xl bg-white hover:bg-bg-light border border-border text-text-muted hover:text-primary flex items-center justify-center transition-all cursor-pointer shadow-subtle"
-      title="Recargar datos">
-      <app-icon name="rotate-cw" [size]="16" />
-    </button>
   </div>
-</app-page-header>
+
+  @if (resumen.value(); as res) {
+    <div class="flex items-center gap-2 flex-wrap">
+      <span class="pill-meta">{{ mesesConDatos() }} de 12 meses importados</span>
+      <span class="pill-meta">{{ res.filas.length }} vendedoras</span>
+      <span class="pill-meta bg-primary/10 text-primary font-bold border-primary/20">
+        ${{ totalAnual() | number: '1.2-2' }} USD
+      </span>
+    </div>
+  }
+</div>
 
 @if (resumen.isLoading()) {
-  <div class="panel space-y-4">
-    <app-loading-skeleton shape="card" height="120px" />
-    <app-loading-skeleton shape="text" height="2.5rem" />
+  <div class="grid-kpis-modern mb-6">
+    @for (n of [1,2,3,4]; track n) { <app-loading-skeleton height="100px" shape="card" /> }
+  </div>
+  <div class="panel space-y-3">
     <app-loading-skeleton shape="text" height="2rem" />
     <app-loading-skeleton shape="text" height="2rem" />
   </div>
@@ -38,89 +44,57 @@
   <app-error-carga que="el resumen anual de comisiones" (reintentar)="resumen.reload()" />
 } @else if (resumen.value().filas.length > 0) {
 
-  <!-- ══ KPI Executive Metric Cards ══ -->
-  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-    <!-- Card 1: Total Facturado -->
-    <div class="panel flex items-center gap-4 hover:border-primary/30 transition-all duration-200 shadow-subtle">
-      <div class="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
-        <app-icon name="dollar-sign" [size]="22" />
-      </div>
-      <div class="min-w-0 flex-1">
-        <p class="text-[11px] font-bold uppercase tracking-wider text-text-muted truncate">Facturado Anual (USD)</p>
-        <p class="text-xl sm:text-2xl font-extrabold text-text-dark font-mono leading-tight truncate">
-          ${{ totalAnual() | number: '1.2-2' }}
-        </p>
-        <p class="text-[11px] text-text-muted mt-0.5 truncate">
-          En los {{ mesesConDatos() }} meses liquidados
-        </p>
-      </div>
-    </div>
+  <!-- ══ 1. Cifras del Año (KPI Cards) ══ -->
+  <section class="grid-kpis-modern mb-6">
+    <app-kpi-card
+      label="Facturado Anual"
+      [valor]="'$' + (totalAnual() | number: '1.2-2')"
+      icon="wallet"
+      tono="primary"
+      [destacado]="true"
+      [pie]="'Total acumulado en ' + mesesConDatos() + ' meses importados'" />
 
-    <!-- Card 2: Promedio Mensual -->
-    <div class="panel flex items-center gap-4 hover:border-secondary/30 transition-all duration-200 shadow-subtle">
-      <div class="w-12 h-12 rounded-2xl bg-secondary/10 border border-secondary/20 flex items-center justify-center text-secondary shrink-0">
-        <app-icon name="trending-up" [size]="22" />
-      </div>
-      <div class="min-w-0 flex-1">
-        <p class="text-[11px] font-bold uppercase tracking-wider text-text-muted truncate">Promedio Mensual</p>
-        <p class="text-xl sm:text-2xl font-extrabold text-text-dark font-mono leading-tight truncate">
-          ${{ promedioMensual() | number: '1.0-0' }}
-        </p>
-        <p class="text-[11px] text-text-muted mt-0.5 truncate">
-          Facturación promedio por mes
-        </p>
-      </div>
-    </div>
+    <app-kpi-card
+      label="Promedio Mensual"
+      [valor]="'$' + (promedioMensual() | number: '1.0-0')"
+      icon="trending-up"
+      tono="secondary"
+      tonoValor="secondary"
+      [pie]="'Promedio mensual facturado'" />
 
-    <!-- Card 3: Bonos Trimestrales -->
-    <div class="panel flex items-center gap-4 hover:border-secondary/30 transition-all duration-200 shadow-subtle">
-      <div class="w-12 h-12 rounded-2xl bg-secondary/10 border border-secondary/20 flex items-center justify-center text-secondary shrink-0">
-        <app-icon name="award" [size]="22" />
-      </div>
-      <div class="min-w-0 flex-1">
-        <p class="text-[11px] font-bold uppercase tracking-wider text-text-muted truncate">Bonos Trimestrales</p>
-        <p class="text-xl sm:text-2xl font-extrabold text-secondary font-mono leading-tight truncate">
-          ${{ totalBonosAnualUsd() | number: '1.2-2' }}
-        </p>
-        <p class="text-[11px] text-text-muted mt-0.5 truncate">
-          {{ vendedorasQueCobranBono() }} vendedora(s) alcanzaron meta
-        </p>
-      </div>
-    </div>
+    <app-kpi-card
+      label="Bonos Trimestrales"
+      [valor]="'$' + (totalBonosAnualUsd() | number: '1.2-2')"
+      icon="award"
+      tono="secondary"
+      [pie]="vendedorasQueCobranBono() + ' vendedora(s) alcanzaron la meta'" />
 
-    <!-- Card 4: Vendedoras Liquidadas -->
-    <div class="panel flex items-center gap-4 hover:border-primary/30 transition-all duration-200 shadow-subtle">
-      <div class="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
-        <app-icon name="users" [size]="22" />
-      </div>
-      <div class="min-w-0 flex-1">
-        <p class="text-[11px] font-bold uppercase tracking-wider text-text-muted truncate">Vendedoras Registradas</p>
-        <p class="text-xl sm:text-2xl font-extrabold text-text-dark font-mono leading-tight truncate">
-          {{ resumen.value().filas.length }}
-        </p>
-        <p class="text-[11px] text-text-muted mt-0.5 truncate">
-          {{ totalComisionAnualUsd() | moneda }} en comisiones netas
-        </p>
-      </div>
-    </div>
+    <app-kpi-card
+      label="Vendedoras Liquidadas"
+      [valor]="resumen.value().filas.length"
+      icon="users"
+      tono="neutral"
+      [pie]="(totalComisionAnualUsd() | moneda) + ' en comisiones netas'" />
   </section>
 
-  <!-- ══ Interactive Visual Chart Section ══ -->
+  <!-- ══ 2. Gráfico de Evolución Mensual ══ -->
   <section class="panel mb-6">
     <div class="flex items-center justify-between gap-4 mb-4 flex-wrap">
-      <div class="flex items-center gap-2">
-        <app-icon name="bar-chart" [size]="18" class="text-primary shrink-0" />
-        <h3 class="text-sm font-bold text-text-dark tracking-tight">Evolución de Facturación Mensual</h3>
-        <app-info-hint titulo="Facturación Mensual del Equipo">
-          <p>Muestra el total facturado en dólares por todo el equipo comercial en cada mes del año {{ anio() }}.</p>
-          <p>Meses sin datos importados se muestran atenuados en el gráfico.</p>
-        </app-info-hint>
+      <div>
+        <h3 class="titulo-seccion flex items-center gap-1.5">
+          Evolución Mensual de Facturación
+          <app-info-hint titulo="Facturación Mensual del Equipo">
+            <p>Muestra el total facturado en dólares por todo el equipo comercial en cada mes del año {{ anio() }}.</p>
+            <p>Meses sin datos importados se muestran atenuados en el gráfico.</p>
+          </app-info-hint>
+        </h3>
+        <p class="subtitulo-seccion">Facturación acumulada en cada mes del año {{ anio() }}</p>
       </div>
 
       <button
         type="button"
         (click)="toggleGrafico()"
-        class="text-xs font-semibold text-text-muted hover:text-primary transition-colors flex items-center gap-1.5 cursor-pointer">
+        class="text-xs font-semibold text-text-muted hover:text-primary transition-colors flex items-center gap-1 cursor-pointer">
         <app-icon [name]="mostrarGrafico() ? 'chevron-up' : 'chevron-down'" [size]="14" />
         <span>{{ mostrarGrafico() ? 'Ocultar gráfico' : 'Mostrar gráfico' }}</span>
       </button>
@@ -131,53 +105,53 @@
         <app-bar-chart
           [items]="datosGraficoMensual()"
           mode="COLUMN"
-          height="220px"
+          height="200px"
           formatType="currency" />
       } @placeholder {
-        <app-loading-skeleton shape="card" height="220px" />
+        <app-loading-skeleton shape="card" height="200px" />
       }
     }
   </section>
 
-  <!-- ══ Matriz de Doce Meses ══ -->
+  <!-- ══ 3. Matriz de Doce Meses ══ -->
   <section class="panel mb-6">
     <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-      <div class="flex items-center gap-2">
-        <app-icon name="file-text" [size]="18" class="text-primary shrink-0" />
-        <h3 class="text-sm font-bold text-text-dark tracking-tight">Facturación por Vendedora (Mes a Mes)</h3>
-        <app-info-hint titulo="Matriz Anual de Ventas">
-          <p>Lo <strong>vendido en bruto</strong>, en dólares, tal como llega del Excel de FileMaker.</p>
-          <p>
-            Un mes puede estar importado y todavía sin liquidar: el vendido ya es correcto, pero su
-            comisión aún no existe. Esos meses salen en gris.
-          </p>
-          <p>Un mes sin importar se muestra con un guion (<span class="font-mono">—</span>), no con un cero.</p>
-        </app-info-hint>
+      <div>
+        <h3 class="titulo-seccion flex items-center gap-1.5">
+          Facturación por Vendedora (Mes a Mes)
+          <app-info-hint titulo="Matriz Anual de Ventas">
+            <p>Lo <strong>vendido en bruto</strong>, en dólares, tal como llega del Excel de FileMaker.</p>
+            <p>
+              Un mes puede estar importado y todavía sin liquidar: el vendido ya es correcto, pero su
+              comisión aún no existe. Esos meses salen en gris.
+            </p>
+            <p>Un mes sin importar se muestra con un guion (<span class="font-mono">—</span>), no con un cero.</p>
+          </app-info-hint>
+        </h3>
+        <p class="subtitulo-seccion">Detalle mensual en dólares USD de cada vendedora</p>
       </div>
 
-      <!-- Search & Filters Bar -->
-      <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-        <!-- Input de Búsqueda -->
-        <div class="relative min-w-[200px] flex-1 sm:flex-initial">
-          <app-icon name="search" [size]="15" class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+      <!-- Buscador & Filtros -->
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="relative min-w-[180px]">
+          <app-icon name="search" [size]="14" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
           <input
             type="text"
             [value]="busqueda()"
             (input)="busqueda.set($any($event.target).value)"
-            placeholder="Buscar vendedora o área…"
-            class="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-border bg-white text-text-dark focus:outline-none focus:border-primary transition-all shadow-subtle" />
+            placeholder="Buscar vendedora…"
+            class="w-full pl-8 pr-7 py-1 text-xs rounded-lg border border-border bg-white text-text-dark focus:outline-none focus:border-primary transition-colors" />
           @if (busqueda()) {
             <button
               type="button"
               (click)="busqueda.set('')"
-              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-dark cursor-pointer">
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-dark cursor-pointer">
               <app-icon name="x" [size]="12" />
             </button>
           }
         </div>
 
-        <!-- Filter Chips -->
-        <div class="flex items-center gap-1.5 overflow-x-auto py-0.5">
+        <div class="flex items-center gap-1">
           <app-filter-chip
             [active]="filtroBono() === 'TODAS'"
             size="sm"
@@ -203,40 +177,29 @@
       </div>
     </div>
 
-    <!-- Tabla Matriz con Sticky Column -->
-    <div class="contenedor-tabla-scroll border border-border/60 rounded-xl overflow-hidden shadow-subtle">
+    <!-- Tabla Compacta de Matriz Anual (Ajustada al ancho sin scroll innecesario) -->
+    <div class="contenedor-matriz-compacta">
       <app-table [dense]="true">
         <thead>
           <tr>
-            <th class="text-left celda-sticky min-w-[200px]">Vendedora</th>
+            <th class="text-left celda-sticky col-vendedora">Vendedora</th>
             @for (m of mesesCortos; track m) {
-              <th class="text-right font-mono text-[11px] uppercase tracking-wider min-w-[75px]">{{ m }}</th>
+              <th class="text-right col-mes">{{ m }}</th>
             }
-            <th class="text-right min-w-[110px]">Total Año (USD)</th>
+            <th class="text-right col-total">Total Año</th>
           </tr>
         </thead>
         <tbody>
           @for (f of filasFiltradas(); track f.vendedoraId) {
-            <tr class="hover:bg-bg-light/60 transition-colors group">
-              <td class="celda-sticky">
-                <div class="flex items-center gap-2.5 py-0.5">
-                  <div class="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold text-xs flex items-center justify-center shrink-0">
-                    {{ obtenerIniciales(f.nombre) }}
-                  </div>
-                  <div class="min-w-0">
-                    <span class="font-bold text-xs text-text-dark block truncate group-hover:text-primary transition-colors">
-                      {{ f.nombre }}
-                    </span>
-                    <span class="block text-[10px] text-text-muted font-normal truncate">
-                      {{ f.tipo }} · {{ f.area }}
-                    </span>
-                  </div>
-                </div>
+            <tr class="hover:bg-bg-light/60 transition-colors">
+              <td class="celda-sticky col-vendedora">
+                <span class="font-semibold text-xs text-text-dark block truncate">{{ f.nombre }}</span>
+                <span class="block text-[10px] text-text-muted font-normal truncate">{{ f.tipo }} · {{ f.area }}</span>
               </td>
 
               @for (mes of f.meses; track mes.mes) {
                 <td
-                  class="text-right font-mono text-xs whitespace-nowrap"
+                  class="text-right col-mes font-mono text-[11px]"
                   [class.celda-sin-datos]="!mes.importado"
                   [class.celda-sin-liquidar]="mes.importado && !mes.liquidado">
                   @if (mes.importado) {
@@ -249,25 +212,25 @@
                 </td>
               }
 
-              <td class="text-right font-mono text-xs font-bold text-primary whitespace-nowrap bg-primary/5">
+              <td class="text-right col-total font-mono text-xs font-bold text-primary">
                 ${{ f.totalVendido | number: '1.2-2' }}
               </td>
             </tr>
           } @empty {
             <tr>
-              <td [attr.colspan]="14" class="text-center py-8 text-text-muted text-xs">
-                No se encontraron vendedoras que coincidan con la búsqueda o filtro.
+              <td [attr.colspan]="14" class="text-center py-6 text-text-muted text-xs">
+                No se encontraron vendedoras que coincidan con el filtro.
               </td>
             </tr>
           }
         </tbody>
         <tfoot>
           <tr class="fila-totales">
-            <td class="text-left font-bold celda-sticky text-xs">
-              TOTAL GENERAL (USD)
+            <td class="text-left font-bold celda-sticky col-vendedora text-xs">
+              TOTALES (USD)
             </td>
             @for (t of resumen.value().totalesPorMes; track $index) {
-              <td class="text-right font-mono font-bold text-xs whitespace-nowrap">
+              <td class="text-right col-mes font-mono font-bold text-[11px]">
                 @if (t > 0) {
                   ${{ t | number: '1.0-0' }}
                 } @else {
@@ -275,7 +238,7 @@
                 }
               </td>
             }
-            <td class="text-right font-mono font-extrabold text-xs text-primary whitespace-nowrap">
+            <td class="text-right col-total font-mono font-extrabold text-xs text-primary">
               ${{ totalAnual() | number: '1.2-2' }}
             </td>
           </tr>
@@ -284,151 +247,113 @@
     </div>
   </section>
 
-  <!-- ══ Los Cuatro Trimestres y Bonos ══ -->
+  <!-- ══ 4. Liquidación de Bono Trimestral ══ -->
   <section class="panel">
-    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
-      <div class="flex items-center gap-2">
-        <app-icon name="award" [size]="18" class="text-secondary shrink-0" />
-        <div>
-          <h3 class="text-sm font-bold text-text-dark tracking-tight">Liquidación de Bono Trimestral</h3>
-          <p class="text-xs text-text-muted">Desempeño y bonificación por vendedora en los 4 trimestres del año</p>
-        </div>
-        <app-info-hint titulo="Reglas del Bono Trimestral">
-          <p>
-            Se paga el <strong>0,5 % del PROMEDIO</strong> de lo facturado en los tres meses del
-            trimestre — no del último mes.
-          </p>
-          <p>
-            Solo lo cobra quien promedia más de <strong>15.000 USD</strong> en el trimestre.
-          </p>
-          <p>Se liquida en el mes que cierra el trimestre: marzo, junio, septiembre y diciembre.</p>
-          <p>
-            Un trimestre <strong>incompleto</strong> se marca como parcial: su promedio no es
-            comparable con uno de tres meses.
-          </p>
-        </app-info-hint>
+    <div class="flex items-center justify-between gap-3 mb-4 flex-wrap">
+      <div>
+        <h3 class="titulo-seccion flex items-center gap-1.5">
+          Bono Trimestral por Vendedora
+          <app-info-hint titulo="Reglas del Bono Trimestral">
+            <p>
+              Se paga el <strong>0,5 % del PROMEDIO</strong> de lo facturado en los tres meses del
+              trimestre — no del último mes.
+            </p>
+            <p>
+              Solo lo cobra quien promedia más de <strong>15.000 USD</strong> en el trimestre.
+            </p>
+            <p>Se liquida en el mes que cierra el trimestre: marzo, junio, septiembre y diciembre.</p>
+            <p>
+              Un trimestre <strong>incompleto</strong> se marca como parcial: su promedio no es
+              comparable con uno de tres meses.
+            </p>
+          </app-info-hint>
+        </h3>
+        <p class="subtitulo-seccion">Liquidación del 0,5 % por superar 15.000 USD de promedio mensual</p>
       </div>
 
-      <div class="flex items-center gap-2">
-        <button
-          type="button"
-          (click)="expandida.set(null)"
-          class="px-2.5 py-1 text-xs font-medium text-text-muted hover:text-text-dark bg-white border border-border rounded-lg transition-colors cursor-pointer shadow-subtle">
-          Colapsar detalles
-        </button>
-      </div>
+      <button
+        type="button"
+        (click)="expandida.set(null)"
+        class="text-xs text-text-muted hover:text-text-dark font-medium cursor-pointer">
+        Colapsar todos
+      </button>
     </div>
 
-    <div class="space-y-4">
+    <div class="space-y-3">
       @for (f of filasFiltradas(); track f.vendedoraId) {
-        <div class="bloque-vendedora-tarjeta border border-border/80 rounded-2xl bg-white overflow-hidden transition-all duration-200 hover:border-primary/30 shadow-subtle">
-          <!-- Cabecera de Vendedora (Desplegable) -->
+        <div class="bloque-vendedora">
           <button
             type="button"
-            class="w-full flex items-center justify-between p-4 bg-white hover:bg-bg-light/50 transition-colors text-left cursor-pointer border-b border-border/40"
+            class="bloque-vendedora__cabecera"
             (click)="alternarDetalle(f.vendedoraId)">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 text-primary font-extrabold text-sm flex items-center justify-center shrink-0">
-                {{ obtenerIniciales(f.nombre) }}
-              </div>
-              <div>
-                <div class="flex items-center gap-2">
-                  <h4 class="font-bold text-sm text-text-dark">{{ f.nombre }}</h4>
-                  @if (f.totalBonoTrimestralUsd > 0) {
-                    <app-badge variant="success" icon="check-circle">
-                      Cobra Bono
-                    </app-badge>
-                  }
-                </div>
-                <p class="text-xs text-text-muted mt-0.5">
-                  {{ f.tipo }} · {{ f.area }}
-                </p>
-              </div>
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-sm text-text-dark">{{ f.nombre }}</span>
+              <span class="text-xs text-text-muted">({{ f.tipo }} · {{ f.area }})</span>
+              @if (f.totalBonoTrimestralUsd > 0) {
+                <app-badge variant="success" icon="check-circle">cobra bono</app-badge>
+              }
             </div>
 
-            <div class="flex items-center gap-4 text-right">
-              <div>
-                <span class="text-[10px] font-bold text-text-muted uppercase tracking-wider block">Bono Acumulado Año</span>
-                <span class="text-sm font-extrabold text-secondary font-mono block">
-                  ${{ f.totalBonoTrimestralUsd | number: '1.2-2' }}
-                </span>
-              </div>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-text-muted">
+                bono del año:
+                <strong class="text-sm font-bold text-secondary font-mono">${{ f.totalBonoTrimestralUsd | number: '1.2-2' }}</strong>
+              </span>
               <app-icon
                 [name]="expandida() === f.vendedoraId ? 'chevron-up' : 'chevron-down'"
-                [size]="18"
-                class="text-text-muted transition-transform duration-200" />
+                [size]="16"
+                class="text-text-muted" />
             </div>
           </button>
 
-          <!-- Rejilla de 4 Trimestres -->
-          <div class="p-4 bg-bg-workspace/40">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              @for (t of f.trimestres; track t.trimestre) {
-                <div
-                  class="tarjeta-trimestre p-3.5 rounded-xl border transition-all duration-200 bg-white"
-                  [class.tarjeta-trimestre--cumple]="t.cumple"
-                  [class.border-secondary/40]="t.cumple"
-                  [class.shadow-subtle]="t.cumple">
-                  
-                  <!-- Top Trimestre & Status -->
-                  <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-extrabold text-text-dark tracking-wider">Trimestre {{ t.trimestre }} (T{{ t.trimestre }})</span>
-                    @if (t.mesesConDatos === 0) {
-                      <app-badge variant="neutral">sin datos</app-badge>
-                    } @else if (t.cumple) {
-                      <app-badge variant="success" icon="check-circle">cobra</app-badge>
-                    } @else {
-                      <app-badge variant="neutral">no alcanza</app-badge>
-                    }
-                  </div>
-
-                  <!-- Promedio Venta Mensual -->
-                  <div class="my-2">
-                    <div class="flex items-baseline justify-between">
-                      <span class="text-[11px] text-text-muted">Promedio mensual:</span>
-                      <span class="text-sm font-bold text-text-dark font-mono">${{ t.promedio | number: '1.0-0' }}</span>
-                    </div>
-                    
-                    <!-- Progress Bar hacia $15,000 -->
-                    <div class="w-full h-2 bg-bg-light rounded-full overflow-hidden mt-1.5 border border-border/40">
-                      <div
-                        class="h-full rounded-full transition-all duration-500"
-                        [class.bg-secondary]="t.cumple"
-                        [class.bg-primary/50]="!t.cumple && t.promedio > 0"
-                        [style.width.%]="calcularPctMetaTrimestral(t.promedio, t.objetivoUsd)"></div>
-                    </div>
-                    <div class="flex justify-between text-[10px] text-text-muted mt-1 font-mono">
-                      <span>Meta: ${{ t.objetivoUsd | number: '1.0-0' }}</span>
-                      <span>{{ calcularPctMetaTrimestral(t.promedio, t.objetivoUsd) }}%</span>
-                    </div>
-                  </div>
-
-                  <!-- Leyenda & Detalle de Bono -->
-                  @if (leyendaTrimestre(t); as leyenda) {
-                    <p class="text-[10px] text-text-muted font-mono italic mt-1 bg-bg-light px-2 py-0.5 rounded border border-border/60">
-                      {{ leyenda }}
-                    </p>
-                  }
-
-                  @if (t.bonoUsd > 0) {
-                    <div class="mt-2.5 pt-2 border-t border-border/40 flex items-center justify-between">
-                      <span class="text-[11px] font-bold text-text-dark">Bono Ganado:</span>
-                      <div class="text-right">
-                        <span class="text-xs font-bold text-secondary font-mono block">${{ t.bonoUsd | number: '1.2-2' }}</span>
-                        <span class="text-[10px] text-text-muted font-mono block">{{ t.bonoBob | moneda }}</span>
-                      </div>
-                    </div>
+          <div class="rejilla-trimestres">
+            @for (t of f.trimestres; track t.trimestre) {
+              <div class="tarjeta-trimestre" [class.tarjeta-trimestre--cumple]="t.cumple">
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-xs font-bold text-text-dark">T{{ t.trimestre }}</span>
+                  @if (t.mesesConDatos === 0) {
+                    <app-badge variant="neutral">sin datos</app-badge>
+                  } @else if (t.cumple) {
+                    <app-badge variant="success" icon="check-circle">cobra</app-badge>
+                  } @else {
+                    <app-badge variant="neutral">no alcanza</app-badge>
                   }
                 </div>
-              }
-            </div>
+
+                <div class="flex items-baseline justify-between text-xs my-1">
+                  <span class="text-text-muted text-[11px]">Promedio:</span>
+                  <span class="font-bold text-text-dark font-mono">${{ t.promedio | number: '1.0-0' }}</span>
+                </div>
+
+                <div class="w-full h-1.5 bg-bg-light rounded-full overflow-hidden mb-1">
+                  <div
+                    class="h-full rounded-full transition-all duration-300"
+                    [class.bg-secondary]="t.cumple"
+                    [class.bg-primary/50]="!t.cumple && t.promedio > 0"
+                    [style.width.%]="calcularPctMetaTrimestral(t.promedio, t.objetivoUsd)"></div>
+                </div>
+
+                <p class="text-[10px] text-text-muted leading-tight font-mono">
+                  meta ${{ t.objetivoUsd | number: '1.0-0' }}
+                </p>
+
+                @if (leyendaTrimestre(t); as leyenda) {
+                  <p class="text-[10px] text-text-muted italic mt-1">{{ leyenda }}</p>
+                }
+
+                @if (t.bonoUsd > 0) {
+                  <div class="mt-2 pt-1.5 border-t border-border/40 flex items-center justify-between">
+                    <span class="text-[10px] font-bold text-text-dark">Bono:</span>
+                    <span class="text-xs font-bold text-secondary font-mono">${{ t.bonoUsd | number: '1.2-2' }}</span>
+                  </div>
+                }
+              </div>
+            }
           </div>
         </div>
       } @empty {
-        <div class="text-center py-10 bg-white rounded-2xl border border-border">
-          <app-icon name="users" [size]="28" class="text-text-muted mx-auto mb-2" />
-          <p class="text-xs font-bold text-text-dark">No hay vendedoras para mostrar</p>
-          <p class="text-[11px] text-text-muted">Ajusta los filtros de búsqueda o cambia el año seleccionado.</p>
+        <div class="text-center py-8 text-text-muted text-xs">
+          No hay vendedoras para mostrar con el filtro actual.
         </div>
       }
     </div>
@@ -438,5 +363,5 @@
   <app-empty-state
     icon="bar-chart"
     title="Sin datos para {{ anio() }}"
-    description="No hay ninguna planilla importada de ese año. Importa un mes desde la sección Planilla de Comisiones." />
+    description="No hay ninguna planilla importada de ese año. Importa un mes desde Planilla de Comisiones." />
 }

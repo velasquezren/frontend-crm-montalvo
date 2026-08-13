@@ -10,6 +10,7 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
 import { TableComponent } from '../../shared/components/table/table.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { BarChartComponent, ChartItem } from '../../shared/components/charts/bar-chart.component';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
@@ -37,6 +38,7 @@ export type FiltroBonoResumen = 'TODAS' | 'CON_BONO' | 'SIN_BONO';
     TableComponent,
     BadgeComponent,
     IconComponent,
+    KpiCardComponent,
     FilterChipComponent,
     BarChartComponent,
     InfoHintComponent,
@@ -82,14 +84,6 @@ export class ResumenAnualPage {
   /** Total bonos trimestrales en USD */
   protected readonly totalBonosAnualUsd = computed(() =>
     this.resumen.value().filas.reduce((suma, f) => suma + f.totalBonoTrimestralUsd, 0),
-  );
-
-  /** Total bonos trimestrales en BOB */
-  protected readonly totalBonosAnualBob = computed(() =>
-    this.resumen.value().filas.reduce((suma, f) => {
-      const bonoBobFila = f.trimestres.reduce((s, t) => s + t.bonoBob, 0);
-      return suma + bonoBobFila;
-    }, 0),
   );
 
   /** Cuántos meses del año tienen datos. */
@@ -160,15 +154,6 @@ export class ResumenAnualPage {
 
   protected toggleGrafico(): void {
     this.mostrarGrafico.update(v => !v);
-  }
-
-  protected obtenerIniciales(nombre: string): string {
-    if (!nombre) return 'VN';
-    const partes = nombre.trim().split(/\s+/);
-    if (partes.length >= 2) {
-      return (partes[0][0] + partes[1][0]).toUpperCase();
-    }
-    return nombre.substring(0, 2).toUpperCase();
   }
 
   protected calcularPctMetaTrimestral(promedio: number, objetivoUsd: number): number {
