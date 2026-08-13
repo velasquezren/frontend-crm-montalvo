@@ -271,12 +271,21 @@
         <p class="subtitulo-seccion">Liquidación del 0,5 % por superar 15.000 USD de promedio mensual</p>
       </div>
 
-      <button
-        type="button"
-        (click)="expandida.set(null)"
-        class="text-xs text-text-muted hover:text-text-dark font-medium cursor-pointer">
-        Colapsar todos
-      </button>
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          (click)="expandirTodas()"
+          class="text-xs text-primary hover:text-primary/80 font-semibold cursor-pointer">
+          Expandir todos
+        </button>
+        <span class="text-text-muted text-xs">·</span>
+        <button
+          type="button"
+          (click)="colapsarTodas()"
+          class="text-xs text-text-muted hover:text-text-dark font-medium cursor-pointer">
+          Colapsar todos
+        </button>
+      </div>
     </div>
 
     <div class="space-y-3">
@@ -300,56 +309,58 @@
                 <strong class="text-sm font-bold text-secondary font-mono">${{ f.totalBonoTrimestralUsd | number: '1.2-2' }}</strong>
               </span>
               <app-icon
-                [name]="expandida() === f.vendedoraId ? 'chevron-up' : 'chevron-down'"
+                [name]="esExpandida(f.vendedoraId) ? 'chevron-up' : 'chevron-down'"
                 [size]="16"
-                class="text-text-muted" />
+                class="text-text-muted transition-transform" />
             </div>
           </button>
 
-          <div class="rejilla-trimestres">
-            @for (t of f.trimestres; track t.trimestre) {
-              <div class="tarjeta-trimestre" [class.tarjeta-trimestre--cumple]="t.cumple">
-                <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-xs font-bold text-text-dark">T{{ t.trimestre }}</span>
-                  @if (t.mesesConDatos === 0) {
-                    <app-badge variant="neutral">sin datos</app-badge>
-                  } @else if (t.cumple) {
-                    <app-badge variant="success" icon="check-circle">cobra</app-badge>
-                  } @else {
-                    <app-badge variant="neutral">no alcanza</app-badge>
+          @if (esExpandida(f.vendedoraId)) {
+            <div class="rejilla-trimestres">
+              @for (t of f.trimestres; track t.trimestre) {
+                <div class="tarjeta-trimestre" [class.tarjeta-trimestre--cumple]="t.cumple">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-xs font-bold text-text-dark">T{{ t.trimestre }}</span>
+                    @if (t.mesesConDatos === 0) {
+                      <app-badge variant="neutral">sin datos</app-badge>
+                    } @else if (t.cumple) {
+                      <app-badge variant="success" icon="check-circle">cobra</app-badge>
+                    } @else {
+                      <app-badge variant="neutral">no alcanza</app-badge>
+                    }
+                  </div>
+
+                  <div class="flex items-baseline justify-between text-xs my-1">
+                    <span class="text-text-muted text-[11px]">Promedio:</span>
+                    <span class="font-bold text-text-dark font-mono">${{ t.promedio | number: '1.0-0' }}</span>
+                  </div>
+
+                  <div class="w-full h-1.5 bg-bg-light rounded-full overflow-hidden mb-1">
+                    <div
+                      class="h-full rounded-full transition-all duration-300"
+                      [class.bg-secondary]="t.cumple"
+                      [class.bg-primary/50]="!t.cumple && t.promedio > 0"
+                      [style.width.%]="calcularPctMetaTrimestral(t.promedio, t.objetivoUsd)"></div>
+                  </div>
+
+                  <p class="text-[10px] text-text-muted leading-tight font-mono">
+                    meta ${{ t.objetivoUsd | number: '1.0-0' }}
+                  </p>
+
+                  @if (leyendaTrimestre(t); as leyenda) {
+                    <p class="text-[10px] text-text-muted italic mt-1">{{ leyenda }}</p>
+                  }
+
+                  @if (t.bonoUsd > 0) {
+                    <div class="mt-2 pt-1.5 border-t border-border/40 flex items-center justify-between">
+                      <span class="text-[10px] font-bold text-text-dark">Bono:</span>
+                      <span class="text-xs font-bold text-secondary font-mono">${{ t.bonoUsd | number: '1.2-2' }}</span>
+                    </div>
                   }
                 </div>
-
-                <div class="flex items-baseline justify-between text-xs my-1">
-                  <span class="text-text-muted text-[11px]">Promedio:</span>
-                  <span class="font-bold text-text-dark font-mono">${{ t.promedio | number: '1.0-0' }}</span>
-                </div>
-
-                <div class="w-full h-1.5 bg-bg-light rounded-full overflow-hidden mb-1">
-                  <div
-                    class="h-full rounded-full transition-all duration-300"
-                    [class.bg-secondary]="t.cumple"
-                    [class.bg-primary/50]="!t.cumple && t.promedio > 0"
-                    [style.width.%]="calcularPctMetaTrimestral(t.promedio, t.objetivoUsd)"></div>
-                </div>
-
-                <p class="text-[10px] text-text-muted leading-tight font-mono">
-                  meta ${{ t.objetivoUsd | number: '1.0-0' }}
-                </p>
-
-                @if (leyendaTrimestre(t); as leyenda) {
-                  <p class="text-[10px] text-text-muted italic mt-1">{{ leyenda }}</p>
-                }
-
-                @if (t.bonoUsd > 0) {
-                  <div class="mt-2 pt-1.5 border-t border-border/40 flex items-center justify-between">
-                    <span class="text-[10px] font-bold text-text-dark">Bono:</span>
-                    <span class="text-xs font-bold text-secondary font-mono">${{ t.bonoUsd | number: '1.2-2' }}</span>
-                  </div>
-                }
-              </div>
-            }
-          </div>
+              }
+            </div>
+          }
         </div>
       } @empty {
         <div class="text-center py-8 text-text-muted text-xs">

@@ -57,8 +57,10 @@ export class ResumenAnualPage {
   protected readonly anio = signal(new Date().getFullYear());
   protected readonly busqueda = signal('');
   protected readonly filtroBono = signal<FiltroBonoResumen>('TODAS');
-  protected readonly expandida = signal<string | null>(null);
   protected readonly mostrarGrafico = signal(true);
+
+  /** IDs de vendedoras cuyos detalles trimestrales están desplegados. */
+  protected readonly vendedorasExpandidas = signal<Set<string>>(new Set());
 
   /** Años ofrecidos en el selector, del actual hacia atrás. */
   protected readonly anios = computed(() => {
@@ -144,12 +146,33 @@ export class ResumenAnualPage {
     const n = Number(valor);
     if (Number.isFinite(n)) {
       this.anio.set(n);
-      this.expandida.set(null);
+      this.vendedorasExpandidas.set(new Set());
     }
   }
 
+  protected esExpandida(vendedoraId: string): boolean {
+    return this.vendedorasExpandidas().has(vendedoraId);
+  }
+
   protected alternarDetalle(vendedoraId: string): void {
-    this.expandida.update(actual => (actual === vendedoraId ? null : vendedoraId));
+    this.vendedorasExpandidas.update(set => {
+      const nuevo = new Set(set);
+      if (nuevo.has(vendedoraId)) {
+        nuevo.delete(vendedoraId);
+      } else {
+        nuevo.add(vendedoraId);
+      }
+      return nuevo;
+    });
+  }
+
+  protected expandirTodas(): void {
+    const todas = new Set(this.resumen.value().filas.map(f => f.vendedoraId));
+    this.vendedorasExpandidas.set(todas);
+  }
+
+  protected colapsarTodas(): void {
+    this.vendedorasExpandidas.set(new Set());
   }
 
   protected toggleGrafico(): void {
