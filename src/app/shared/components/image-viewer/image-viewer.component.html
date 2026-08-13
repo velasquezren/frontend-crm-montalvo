@@ -32,7 +32,7 @@
           type="button"
           (click)="resetTransform()"
           class="px-2.5 h-9 sm:h-10 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-mono font-bold text-white flex items-center justify-center cursor-pointer transition-all border border-white/10"
-          title="Restablecer tamaño (100%)">
+          title="Restablecer (100%)">
           {{ (zoom() * 100).toFixed(0) }}%
         </button>
 
@@ -93,17 +93,28 @@
       </div>
     </div>
 
-    <!-- Contenedor Central de Imagen -->
+    <!-- Contenedor Central de Imagen con Arrastre (Panning & Zoom) -->
     <div
-      class="flex-1 flex items-center justify-center overflow-hidden my-3 cursor-zoom-out"
-      (click)="cerrar()">
+      class="flex-1 flex items-center justify-center overflow-hidden my-3 select-none"
+      (click)="cerrar()"
+      (wheel)="onWheel($event)">
       @if (imageUrl(); as imgUrl) {
         <img
           [src]="imgUrl"
           (click)="$event.stopPropagation()"
+          (dblclick)="toggleZoom($event)"
+          (mousedown)="onMouseDown($event)"
+          (mousemove)="onMouseMove($event)"
+          (mouseup)="onMouseUp()"
+          (mouseleave)="onMouseUp()"
+          (touchstart)="onTouchStart($event)"
+          (touchmove)="onTouchMove($event)"
+          (touchend)="onTouchEnd($event)"
           alt="Vista previa de foto"
-          [style.transform]="'scale(' + zoom() + ') rotate(' + rotation() + 'deg)'"
-          class="max-w-[94vw] max-h-[82vh] object-contain rounded-2xl shadow-lifted transition-transform duration-200 ease-out select-none" />
+          [style.transform]="'translate(' + pan().x + 'px, ' + pan().y + 'px) scale(' + zoom() + ') rotate(' + rotation() + 'deg)'"
+          [class.cursor-grab]="!isDragging()"
+          [class.cursor-grabbing]="isDragging()"
+          class="max-w-[94vw] max-h-[82vh] object-contain rounded-2xl shadow-lifted transition-transform duration-75 ease-out select-none will-change-transform touch-none" />
       }
     </div>
   </div>
