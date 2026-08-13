@@ -61,7 +61,11 @@ export type IconName =
   | 'zoom-out'
   | 'rotate-cw'
   | 'share-2'
-  | 'maximize';
+  | 'maximize'
+  | 'dollar-sign'
+  | 'award'
+  | 'chevron-up'
+  | 'filter';
 
 /**
  * Icono SVG del sistema.
@@ -352,6 +356,20 @@ export type IconName =
           <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
           <path d="M3 16v3a2 2 0 0 0 2 2h3" />
           <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+        }
+        @case ('dollar-sign') {
+          <line x1="12" x2="12" y1="2" y2="22" />
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        }
+        @case ('award') {
+          <circle cx="12" cy="8" r="7" />
+          <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+        }
+        @case ('chevron-up') {
+          <path d="m18 15-6-6-6 6" />
+        }
+        @case ('filter') {
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
         }
       }
     </svg>
