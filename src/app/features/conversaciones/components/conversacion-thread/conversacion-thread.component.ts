@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  effect,
   ElementRef,
   inject,
   signal,
@@ -57,6 +58,20 @@ export class ConversacionThreadComponent {
   protected readonly mostrarBotonBajar = signal(false);
   protected readonly lightboxUrl = signal<string | null>(null);
   protected readonly velocidades = signal<Record<string, number>>({});
+
+  constructor() {
+    effect(() => {
+      const chat = this.state.detalle.value();
+      if (!chat) return;
+
+      setTimeout(() => {
+        const el = this.messagesContainer()?.nativeElement;
+        if (el && !this.mostrarBotonBajar()) {
+          el.scrollTop = el.scrollHeight;
+        }
+      }, 50);
+    });
+  }
 
   /* ── Helpers ───────────────────────────────────────────────────── */
   protected enlaceWhatsApp(telefono: string): string {

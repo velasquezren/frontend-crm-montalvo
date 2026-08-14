@@ -292,6 +292,7 @@ export class ConversacionesStateService {
       const actualizado = await this.conversacionesService.asignarAgente(id, agenteId);
       this.detalle.set(actualizado);
       this.conversacionesRecurso.reload();
+      this.dropdownAgenteAbierto.set(false);
       const agente = this.agentes.value().find(a => a.id === agenteId);
       this.toastService.success(
         agenteId ? `Conversación asignada a ${agente?.nombre ?? 'agente'}.` : 'Conversación movida a sin asignar.',
@@ -363,17 +364,21 @@ export class ConversacionesStateService {
         .map(t => t.trim())
         .filter(Boolean);
 
+      const datosExtraPrevios = (chat.cliente.datosExtra as Record<string, unknown>) ?? {};
+      const nuevosDatosExtra = {
+        ...datosExtraPrevios,
+        empresa: this.editEmpresa().trim() || null,
+        lugarNacimiento: this.editLugarNacimiento().trim() || null,
+        fechaNacimiento: this.editFechaNacimiento() || null,
+        notas: this.editNotas().trim() || null,
+        tags: tagsArray,
+      };
+
       const payload = {
         nombre,
         email: this.editEmail().trim() || null,
         categoria: this.editCategoria(),
-        empresa: this.editEmpresa().trim(),
-        fechaNacimiento: this.editFechaNacimiento() || undefined,
-        lugarNacimiento: this.editLugarNacimiento().trim(),
-        datosExtra: {
-          notas: this.editNotas().trim() || null,
-          tags: tagsArray,
-        },
+        datosExtra: nuevosDatosExtra,
       };
 
       await this.clientesService.actualizar(chat.cliente.id, payload);
