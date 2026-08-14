@@ -59,18 +59,47 @@ export class ConversacionThreadComponent {
   /* ── Estado Local de Scroll & Lightbox ─────────────────────────── */
   protected readonly lightboxUrl = signal<string | null>(null);
   protected readonly velocidades = signal<Record<string, number>>({});
+  private scrollInicialListo = false;
+  private chatActualId = '';
 
   constructor() {
     effect(() => {
       const chat = this.state.detalle.value();
-      if (!chat) return;
+      if (!chat) {
+        this.scrollInicialListo = false;
+        this.chatActualId = '';
+        return;
+      }
 
+      const esNuevoChat = this.chatActualId !== chat.id;
+      this.chatActualId = chat.id;
+
+      if (esNuevoChat) {
+        this.scrollInicialListo = false;
+      }
+
+      this.scrollAlFondoInmediato();
+    });
+  }
+
+  private scrollAlFondoInmediato(): void {
+    const hacerScroll = () => {
+      const el = this.messagesContainer()?.nativeElement;
+      if (el) {
+        el.scrollTop = el.scrollHeight;
+      }
+    };
+
+    hacerScroll();
+    requestAnimationFrame(() => {
+      hacerScroll();
       setTimeout(() => {
-        const el = this.messagesContainer()?.nativeElement;
-        if (el) {
-          el.scrollTop = el.scrollHeight;
-        }
+        hacerScroll();
+        this.scrollInicialListo = true;
       }, 50);
+      setTimeout(() => {
+        hacerScroll();
+      }, 150);
     });
   }
 
@@ -164,10 +193,10 @@ export class ConversacionThreadComponent {
   /* ── Scroll Inteligente ────────────────────────────────────────── */
   protected onMessagesScroll(): void {
     const el = this.messagesContainer()?.nativeElement;
-    if (!el) return;
+    if (!el || !this.scrollInicialListo) return;
 
     // Detectar si está cerca del top para cargar mensajes antiguos
-    if (el.scrollTop <= 50 && !this.state.cargandoHistorial() && this.state.hayMasHistorial()) {
+    if (el.scrollTop <= 40 && el.scrollHeight > el.clientHeight && !this.state.cargandoHistorial() && this.state.hayMasHistorial()) {
       const prevScrollHeight = el.scrollHeight;
       void this.state.cargarHistorialAnterior().then(cargados => {
         if (cargados > 0) {
