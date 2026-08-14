@@ -11,11 +11,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  /* Sin separación arriba: la cabecera del año y su primer servicio forman un
-     solo bloque. Con hueco, el año parecía flotar sobre la lista en vez de
-     encabezarla. El sangrado izquierdo es para el raíl y sus puntos. */
-  padding: 12px 4px 4px 26px;
+  gap: 10px;
+  padding: 8px 4px 6px 26px;
 }
 
 /**
@@ -35,23 +32,24 @@
  * por debajo, se entiende que encabeza lo que estás mirando.
  */
 .anio-cabecera {
-  position: sticky;
-  top: 0;
-  z-index: 2;
   display: flex;
   align-items: baseline;
+  justify-content: space-between;
   gap: 10px;
-  padding: 9px 14px;
+  padding: 8px 14px;
   background: var(--color-bg-light);
-  border-radius: 12px 12px 0 0;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  margin-top: 14px;
+  margin-bottom: 6px;
 }
 
-/* Aire ENTRE años, no entre el año y sus servicios. Se selecciona por hermano
-   adyacente y no con `:first-child`, porque el primer hijo del contenedor es el
-   <h3> del bloque: así el margen cae en todas las cabeceras menos la primera,
-   que es justo lo que hace falta. */
+.anio-cabecera:first-of-type {
+  margin-top: 0;
+}
+
 .linea-tiempo + .anio-cabecera {
-  margin-top: 18px;
+  margin-top: 14px;
 }
 
 .anio-etiqueta {
