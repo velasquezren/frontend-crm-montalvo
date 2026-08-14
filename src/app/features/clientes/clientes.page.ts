@@ -110,6 +110,19 @@ export class ClientesPage {
     { defaultValue: [] },
   );
 
+  /**
+   * Garantiza que el agente asignado al cliente actual siempre figure en la lista,
+   * incluso si el catálogo de agentes está cargando o el agente pertenece al historial.
+   */
+  protected readonly listaAgentes = computed(() => {
+    const list = [...(this.agentes.value() || [])];
+    const clienteAgente = this.clienteSeleccionado()?.agente;
+    if (clienteAgente && !list.some(a => a.id === clienteAgente.id)) {
+      list.unshift({ id: clienteAgente.id, nombre: clienteAgente.nombre, rol: 'AGENTE' });
+    }
+    return list;
+  });
+
   protected readonly clientes = httpResource<RespuestaPaginada<Cliente>>(
     () => {
       const filtro = this.filtro();

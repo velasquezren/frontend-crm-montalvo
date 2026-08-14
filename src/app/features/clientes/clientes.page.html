@@ -397,11 +397,18 @@
                   [value]="editAgenteId() || ''"
                   (change)="editAgenteId.set($any($event.target).value || null)"
                   class="w-full h-11 px-4 rounded-xl border border-border bg-white text-sm text-text-dark font-medium transition-all duration-200 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10">
-                  <option value="">Sin Asignar (Pool General)</option>
-                  @for (ag of agentes.value(); track ag.id) {
-                    <option [value]="ag.id">{{ ag.nombre }} ({{ ag.rol }})</option>
+                  <option value="" [selected]="!editAgenteId()">Sin Asignar (Pool General)</option>
+                  @for (ag of listaAgentes(); track ag.id) {
+                    <option [value]="ag.id" [selected]="editAgenteId() === ag.id">
+                      {{ ag.nombre }} ({{ ag.rol }})
+                    </option>
                   }
                 </select>
+                @if (clienteSeleccionado()?.agente; as ag) {
+                  <p class="text-[11px] text-text-muted">
+                    Atendido actualmente por: <strong class="font-semibold text-text-dark">{{ ag.nombre }}</strong>
+                  </p>
+                }
               </div>
             </div>
 
