@@ -228,8 +228,14 @@
           <tr class="fila-totales">
             <td class="text-left font-bold celda-sticky col-vendedora text-xs">
               TOTALES (USD)
+              <!-- Con un filtro activo el pie suma SOLO lo visible, para que
+                   cuadre con las filas de encima. Se dice, o parece que el año
+                   entero vendió menos. -->
+              @if (hayFiltro()) {
+                <span class="block text-[10px] font-normal text-text-muted">solo lo filtrado</span>
+              }
             </td>
-            @for (t of resumen.value().totalesPorMes; track $index) {
+            @for (t of totalesPorMesFiltrados(); track $index) {
               <td class="text-right col-mes font-mono font-bold text-[11px] whitespace-nowrap">
                 @if (t > 0) {
                   {{ t | number: '1.0-0' }}
@@ -239,7 +245,7 @@
               </td>
             }
             <td class="text-right col-total font-mono font-extrabold text-xs text-primary whitespace-nowrap">
-              ${{ totalAnual() | number: '1.0-0' }}
+              ${{ totalFiltrado() | number: '1.0-0' }}
             </td>
           </tr>
         </tfoot>

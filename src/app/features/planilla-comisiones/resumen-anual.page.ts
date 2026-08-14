@@ -142,6 +142,31 @@ export class ResumenAnualPage {
     return lista;
   });
 
+  /**
+   * Totales de lo que se está VIENDO, no del año entero.
+   *
+   * El cuerpo de la tabla pinta `filasFiltradas()`, así que un pie con los
+   * totales completos no cuadra con las filas de encima: al filtrar por "Con
+   * Bono" se veían dos vendedoras y un total de cuatro. En una tabla de
+   * remuneración eso se lee como un error de cálculo, no como un filtro.
+   */
+  protected readonly totalesPorMesFiltrados = computed(() => {
+    const meses = Array.from({ length: 12 }, () => 0);
+    for (const fila of this.filasFiltradas()) {
+      fila.meses.forEach((m, i) => (meses[i] += m.montoVendido));
+    }
+    return meses;
+  });
+
+  protected readonly totalFiltrado = computed(() =>
+    this.filasFiltradas().reduce((suma, f) => suma + f.totalVendido, 0),
+  );
+
+  /** ¿Hay algún filtro activo? Sirve para avisarlo en el pie. */
+  protected readonly hayFiltro = computed(
+    () => this.busqueda().trim().length > 0 || this.filtroBono() !== 'TODAS',
+  );
+
   protected cambiarAnio(valor: string): void {
     const n = Number(valor);
     if (Number.isFinite(n)) {
