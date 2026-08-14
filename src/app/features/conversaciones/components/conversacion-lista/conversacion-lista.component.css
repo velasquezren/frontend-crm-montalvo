@@ -1,3 +1,10 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
 /* ── Sidebar (panel izquierdo) ───────────────────────────────── */
 .inbox-sidebar {
   display: flex;
@@ -101,6 +108,7 @@
 /* ── Chat list ───────────────────────────────────────────────── */
 .sidebar-list {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
