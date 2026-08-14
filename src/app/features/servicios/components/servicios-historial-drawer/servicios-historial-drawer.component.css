@@ -36,31 +36,25 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  padding: 8px 14px;
-  background: var(--color-bg-light);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  margin-top: 14px;
-  margin-bottom: 6px;
-}
-
-.anio-cabecera:first-of-type {
-  margin-top: 0;
+  padding: 10px 2px 6px;
+  background: transparent;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 8px;
 }
 
 .linea-tiempo + .anio-cabecera {
-  margin-top: 14px;
+  margin-top: 22px;
 }
 
 .anio-etiqueta {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--color-primary);
   font-variant-numeric: tabular-nums;
 }
 
 .anio-meta {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
