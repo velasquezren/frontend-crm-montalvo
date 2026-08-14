@@ -199,7 +199,6 @@ export class ConversacionesPage implements AfterViewInit {
 
   /* ── Lightbox & Audio Speed & Pinned Notes ──────────────────────── */
   protected readonly lightboxImagenUrl = signal<string | null>(null);
-  protected readonly lightboxMediaKey = signal<string | null>(null);
 
   protected readonly editandoNotaFijada = signal(false);
   protected readonly editNotaFijada = signal('');
@@ -1228,16 +1227,14 @@ export class ConversacionesPage implements AfterViewInit {
   }
 
   /* ── Lightbox de Imágenes ─────────────────────────────────────── */
-  protected abrirLightbox(url: string, mediaKey?: string | null): void {
+  protected abrirLightbox(url: string): void {
     if (url) {
       this.lightboxImagenUrl.set(url);
-      this.lightboxMediaKey.set(mediaKey ?? null);
     }
   }
 
   protected cerrarLightbox(): void {
     this.lightboxImagenUrl.set(null);
-    this.lightboxMediaKey.set(null);
   }
 
   /* ── Control de Velocidad de Audio ───────────────────────────── */

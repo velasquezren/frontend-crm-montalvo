@@ -55,20 +55,9 @@
 
         <div class="w-px h-6 bg-white/20 my-auto hidden xs:block"></div>
 
-        <!-- Descargar -->
-        <button
-          type="button"
-          (click)="descargarImagen()"
-          [disabled]="descargando()"
-          class="px-3.5 h-9 sm:h-10 rounded-xl bg-primary hover:opacity-90 text-white text-xs font-bold flex items-center gap-1.5 shadow-subtle cursor-pointer transition-all disabled:opacity-50"
-          title="Descargar imagen">
-          @if (descargando()) {
-            <app-icon name="loader" [size]="16" class="animate-spin text-white" />
-          } @else {
-            <app-icon name="download" [size]="16" />
-          }
-          <span class="hidden sm:inline">Descargar</span>
-        </button>
+        <!-- Sin botón de descargar: se delega en el navegador (clic derecho →
+             "Guardar imagen como…", pulsación larga en móvil). El porqué, en la
+             cabecera del .component.ts. -->
 
         <!-- Compartir por WhatsApp -->
         <button
@@ -114,8 +103,17 @@
           [style.transform]="'translate(' + pan().x + 'px, ' + pan().y + 'px) scale(' + zoom() + ') rotate(' + rotation() + 'deg)'"
           [class.cursor-grab]="!isDragging()"
           [class.cursor-grabbing]="isDragging()"
-          class="max-w-[94vw] max-h-[82vh] object-contain rounded-2xl shadow-lifted transition-transform duration-75 ease-out select-none will-change-transform touch-none" />
+          class="imagen-guardable max-w-[94vw] max-h-[82vh] object-contain rounded-2xl shadow-lifted transition-transform duration-75 ease-out will-change-transform touch-none" />
       }
+    </div>
+
+    <!-- Cómo guardar. Solo en móvil: en escritorio el clic derecho se da por
+         sabido, pero la pulsación larga no es evidente y desde que no hay botón
+         de descargar es la única vía. -->
+    <div class="sm:hidden text-center pb-1" (click)="$event.stopPropagation()">
+      <span class="text-xs text-white/70">
+        Mantén pulsada la imagen para guardarla
+      </span>
     </div>
   </div>
 </ng-template>

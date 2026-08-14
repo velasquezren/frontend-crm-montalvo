@@ -14,13 +14,24 @@ import {
 import { OverlayRef } from '@angular/cdk/overlay';
 import { IconComponent } from '../icon/icon.component';
 import { DialogService } from '../dialog/dialog.service';
-import { API_URL } from '../../../core/api/api.constants';
 
 /**
  * Visor de Imágenes (Lightbox) profesional, responsivo y modular.
  * Proyecta la vista en document.body mediante CDK Overlay para garantizar
  * superposición perfecta sobre header, sidebar y navegación móvil.
- * Soporta arrastre/panning, zoom dinámico, rotación y descarga limpia.
+ * Soporta arrastre/panning, zoom dinámico y rotación.
+ *
+ * **No lleva botón de descargar, y es una decisión, no un olvido.** Se intentó
+ * cinco veces (d303e7a, 79c2c73, 5cce674, a00504c, 75c2cce): descarga directa,
+ * blob por XHR, proxy del backend para esquivar el CORS de R2, extracción de la
+ * `mediaKey` desde la URL firmada… y seguía sin bajar el archivo de forma
+ * fiable. La descarga se delega al navegador: clic derecho → "Guardar imagen
+ * como…" en escritorio, pulsación larga en móvil. Es el mecanismo nativo, no
+ * tiene CORS que esquivar ni token que adjuntar, y las agentes ya lo conocen.
+ *
+ * Por eso `onMouseDown` ignora todo lo que no sea el botón primario: hacía
+ * `preventDefault()` con cualquier botón, y eso se comía el menú contextual —
+ * justo el que ahora sostiene la única vía de descarga.
  */
 @Component({
   selector: 'app-image-viewer',
@@ -28,10 +39,26 @@ import { API_URL } from '../../../core/api/api.constants';
   imports: [IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './image-viewer.component.html',
+  styles: `
+    /**
+     * La pulsación larga es la ÚNICA vía de guardado en móvil, así que la
+     * imagen tiene que quedar fuera de las reglas que la anulan.
+     *
+     * El contenedor lleva select-none —correcto: no se quiere seleccionar el
+     * texto de la barra al arrastrar— pero en iOS Safari 'user-select: none'
+     * también suprime el menú de "Guardar imagen" de la pulsación larga, y
+     * '-webkit-touch-callout' es lo único que lo gobierna explícitamente. Sin
+     * estas tres líneas, el aviso de abajo prometería algo que no ocurre.
+     */
+    .imagen-guardable {
+      -webkit-touch-callout: default;
+      -webkit-user-select: auto;
+      user-select: auto;
+    }
+  `,
 })
 export class ImageViewerComponent {
   readonly imageUrl = input<string | null>(null);
-  readonly mediaKey = input<string | null>(null);
   readonly title = input<string | undefined>(undefined);
   readonly closed = output<void>();
 
@@ -44,7 +71,6 @@ export class ImageViewerComponent {
   protected readonly rotation = signal<number>(0);
   protected readonly pan = signal<{ x: number; y: number }>({ x: 0, y: 0 });
   protected readonly isDragging = signal<boolean>(false);
-  protected readonly descargando = signal<boolean>(false);
 
   private overlayRef: OverlayRef | null = null;
   private dragStartPos = { x: 0, y: 0 };
@@ -132,6 +158,11 @@ export class ImageViewerComponent {
 
   /* ── Arrastre / Panning con Mouse ───────────────────────────── */
   protected onMouseDown(event: MouseEvent): void {
+    /* Solo el botón primario arrastra. Sin esto, el clic derecho también
+       entraba aquí y su `preventDefault()` bloqueaba el menú contextual, que es
+       de donde sale "Guardar imagen como…" — la única vía de descarga. */
+    if (event.button !== 0) return;
+
     event.preventDefault();
     event.stopPropagation();
     this.isDragging.set(true);
@@ -198,143 +229,6 @@ export class ImageViewerComponent {
     const dx = touches[0].clientX - touches[1].clientX;
     const dy = touches[0].clientY - touches[1].clientY;
     return Math.hypot(dx, dy);
-  }
-
-  /* ── Descarga Directa vía Proxy del Backend (Evita CORS de R2) ────── */
-  protected async descargarImagen(): Promise<void> {
-    const url = this.imageUrl();
-    const key = this.mediaKey() || this.extraerMediaKey(url);
-    if (!key && !url) return;
-
-    this.descargando.set(true);
-    try {
-      const nombreArchivo = this.extraerNombreArchivo(url ?? key ?? '');
-
-      // 1. Si hay mediaKey (explícito o extraído de la URL), usar el proxy del backend (evita CORS con R2)
-      if (key) {
-        const proxyUrl = `${API_URL}/conversaciones/media/descargar?key=${encodeURIComponent(key)}`;
-        try {
-          const blob = await this.obtenerBlob(proxyUrl);
-          if (blob && blob.size > 0) {
-            const blobUrl = URL.createObjectURL(blob);
-            this.ejecutarDescargaDirecta(blobUrl, nombreArchivo, true);
-            return;
-          }
-        } catch {
-          // Si el proxy falla, intentar con la URL directa
-        }
-      }
-
-      // 2. Fallback: intentar directamente con la URL firmada
-      if (url) {
-        try {
-          const blob = await this.obtenerBlob(url);
-          if (blob && blob.size > 0) {
-            const blobUrl = URL.createObjectURL(blob);
-            this.ejecutarDescargaDirecta(blobUrl, nombreArchivo, true);
-            return;
-          }
-        } catch {
-          // Pasar al fallback directo
-        }
-
-        // 3. Enlace de descarga directo (sin nueva pestaña)
-        this.ejecutarDescargaDirecta(url, nombreArchivo, false);
-      }
-    } finally {
-      this.descargando.set(false);
-    }
-  }
-
-  private extraerMediaKey(url: string | null): string | null {
-    if (!url) return null;
-    try {
-      const parsed = new URL(url);
-
-      // 1. URLs de Cloudflare R2: https://<account>.r2.cloudflarestorage.com/<bucket>/<key>
-      if (parsed.hostname.includes('r2.cloudflarestorage.com') || parsed.hostname.includes('r2.dev')) {
-        const segments = parsed.pathname.split('/').filter(Boolean);
-        if (segments.length >= 2) {
-          // El primer segmento es el nombre del bucket (ej. 'crm-montalvo-media'), los siguientes forman la key
-          if (segments[0] === 'crm-montalvo-media' || (!segments[0].includes('wa') && !segments[0].includes('memoria'))) {
-            return segments.slice(1).join('/');
-          }
-          return segments.join('/');
-        }
-      }
-
-      // 2. Si contiene rutas conocidas en el path: /wa/... o /memoria/...
-      const path = parsed.pathname;
-      for (const prefijo of ['/wa/', '/memoria/']) {
-        const idx = path.indexOf(prefijo);
-        if (idx !== -1) {
-          return path.substring(idx + 1);
-        }
-      }
-    } catch {
-      // url invalida o relativa
-    }
-    return null;
-  }
-
-  private ejecutarDescargaDirecta(href: string, filename: string, esBlobUrl: boolean): void {
-    const a = document.createElement('a');
-    a.href = href;
-    a.download = filename;
-    // NUNCA asignar target="_blank" para evitar abrir pestañas secundarias
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    if (esBlobUrl) {
-      setTimeout(() => URL.revokeObjectURL(href), 2000);
-    }
-  }
-
-  private obtenerBlob(url: string): Promise<Blob> {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open('GET', url, true);
-      xhr.responseType = 'blob';
-
-      /* Si la URL apunta al backend (proxy de descarga), adjuntar el JWT
-         que normalmente agrega el tokenInterceptor de Angular HttpClient.
-         XHR nativo no pasa por ese interceptor, así que se lee directamente. */
-      if (url.startsWith(API_URL)) {
-        const token = localStorage.getItem('crm_token') || sessionStorage.getItem('crm_token');
-        if (token) {
-          xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-        }
-      }
-
-      xhr.onload = () => {
-        if (xhr.status === 200 || xhr.status === 0) {
-          if (xhr.response && (xhr.response as Blob).size > 0) {
-            resolve(xhr.response as Blob);
-          } else {
-            reject(new Error('Blob de tamaño 0'));
-          }
-        } else {
-          reject(new Error(`HTTP Error ${xhr.status}`));
-        }
-      };
-      xhr.onerror = () => reject(new Error('Error XHR'));
-      xhr.send();
-    });
-  }
-
-  private extraerNombreArchivo(url: string): string {
-    try {
-      const parsed = new URL(url);
-      const pathname = parsed.pathname;
-      const filename = pathname.substring(pathname.lastIndexOf('/') + 1);
-      if (filename && filename.includes('.')) {
-        return filename;
-      }
-    } catch {
-      // url relativa
-    }
-    return `imagen-montalvo-${Date.now()}.jpg`;
   }
 
   protected compartirImagen(): void {
