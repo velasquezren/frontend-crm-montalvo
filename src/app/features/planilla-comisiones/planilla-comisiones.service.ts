@@ -13,6 +13,7 @@ import {
   ReporteConsolidado,
   RespuestaImportacion,
   ResultadoCalculo,
+  CambiosVendedora,
   TipoVendedora,
   Vendedora,
 } from './planilla.model';
@@ -126,7 +127,7 @@ export class PlanillaComisionesService {
     );
   }
 
-  actualizarVendedora(id: string, cambios: Partial<Vendedora>): Promise<Vendedora> {
+  actualizarVendedora(id: string, cambios: CambiosVendedora): Promise<Vendedora> {
     return this.api.patch<Vendedora>(`/planilla-comisiones/vendedoras/${id}`, cambios);
   }
 

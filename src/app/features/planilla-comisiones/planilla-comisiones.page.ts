@@ -33,6 +33,7 @@ import {
   ReporteConsolidado,
   ResumenImportacion,
   TIPO_LABEL,
+  CambiosVendedora,
   TipoVendedora,
   Vendedora,
   VentaImportada,
@@ -306,11 +307,34 @@ export class PlanillaComisionesPage implements OnDestroy {
      */
     const actual = plan.comisionaPlan ?? null;
     const siguiente = actual === null ? true : actual ? false : null;
+
+    /*
+     * Optimista, y aquí no es un lujo: `reload()` de los dos recursos ponía
+     * `isLoading()` en true y la plantilla sustituye la lista ENTERA por un
+     * esqueleto mientras carga. Cada toque hacía parpadear toda la sección —
+     * dos veces, una por recurso— para cambiar una insignia de una fila.
+     *
+     * No hace falta ir al servidor para saber el resultado: `gruposDePlanes()`
+     * ya reproduce en memoria el mismo criterio de cupo que aplica el motor al
+     * liquidar, así que con actualizar el valor local la vista queda idéntica a
+     * lo que devolvería la recarga, y al instante.
+     */
+    const previoPaq = this.planesPaq.value();
+    const previoNin = this.planesNin.value();
+
+    const parchear = (pagina: RespuestaPaginada<VentaImportada>) => ({
+      ...pagina,
+      datos: pagina.datos.map(v => (v.id === plan.id ? { ...v, comisionaPlan: siguiente } : v)),
+    });
+    this.planesPaq.set(parchear(previoPaq));
+    this.planesNin.set(parchear(previoNin));
+
     try {
       await this.service.marcarPlanComisiona(plan.id, siguiente);
-      this.planesPaq.reload();
-      this.planesNin.reload();
     } catch (err) {
+      /* Rollback: la insignia vuelve sola a donde estaba. */
+      this.planesPaq.set(previoPaq);
+      this.planesNin.set(previoNin);
       this.toast.error(mensajeDeError(err, 'No se pudo cambiar el plan.'), 'Planes');
     }
   }
@@ -456,7 +480,7 @@ export class PlanillaComisionesPage implements OnDestroy {
 
   protected async guardarVendedora(
     vendedora: Vendedora,
-    cambios: Partial<Vendedora>,
+    cambios: CambiosVendedora,
   ): Promise<void> {
     try {
       await this.service.actualizarVendedora(vendedora.id, cambios);
@@ -483,7 +507,10 @@ export class PlanillaComisionesPage implements OnDestroy {
       this.toast.error('El sueldo base debe ser un número positivo.', 'Dato inválido');
       return;
     }
-    void this.guardarVendedora(vendedora, { sueldoBase: String(sueldoBase) });
+    /* Como NÚMERO. Iba como texto —`sueldoBase` se lee así, porque es un
+       Decimal— y el DTO lo rechazaba con 400: el sueldo no se guardaba y la
+       planilla liquidaba con cero. Ahora el tipo `CambiosVendedora` lo impide. */
+    void this.guardarVendedora(vendedora, { sueldoBase });
   }
 
   protected async eliminarPeriodo(periodo: PeriodoComision): Promise<void> {

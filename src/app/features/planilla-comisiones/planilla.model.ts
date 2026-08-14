@@ -100,10 +100,29 @@ export interface Vendedora {
   nombre: string;
   tipo: TipoVendedora;
   area: AreaVendedora;
+  /** Llega como TEXTO: es un `Decimal` de Prisma y así se serializa a JSON. */
   sueldoBase: string;
   activa: boolean;
   configurada: boolean;
   agente: AgenteDelCrm | null;
+}
+
+/**
+ * Lo que acepta `PATCH /planilla-comisiones/vendedoras/:id`.
+ *
+ * **No es `Partial<Vendedora>`**, y la diferencia importa: al leer, `sueldoBase`
+ * llega como texto, pero el DTO del backend lo valida con `@IsNumber()`. Enviarlo
+ * como texto —que es lo que salía de reusar el tipo de lectura— hacía que el
+ * PATCH respondiera 400 y el sueldo no se guardara nunca, sin que la interfaz lo
+ * mostrara. Un tipo propio para la escritura hace que el compilador lo impida.
+ */
+export interface CambiosVendedora {
+  nombre?: string;
+  tipo?: TipoVendedora;
+  area?: AreaVendedora;
+  sueldoBase?: number;
+  activa?: boolean;
+  configurada?: boolean;
 }
 
 export interface AgenteDelCrm {
