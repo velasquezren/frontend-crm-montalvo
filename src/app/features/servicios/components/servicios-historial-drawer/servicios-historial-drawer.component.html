@@ -1,10 +1,10 @@
-<div
-  class="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 animate-fade-in"
-  (click)="cerrar.emit()"></div>
-
+<!-- Sin backdrop ni `fixed` propios: este cajón se proyecta a document.body con
+     DialogService (CDK Overlay), que pone el fondo y el apilado. Tenerlos aquí
+     lo dejaba dentro del árbol de la página peleando por z-index contra el
+     header, el sidebar y el FAB — y perdiendo. -->
 <aside
-  class="fixed top-0 right-0 h-full w-full sm:max-w-2xl bg-white shadow-lifted z-50
-         flex flex-col animate-fade-scale">
+  class="h-full w-full sm:max-w-2xl bg-background shadow-lifted
+         flex flex-col pointer-events-auto animate-drawer-in">
   <header class="flex items-start justify-between gap-3 p-5 border-b border-border">
     <div>
       <h2 class="text-lg font-bold text-text-dark">{{ historial().nombre }}</h2>
@@ -29,8 +29,15 @@
       }
     </section>
 
-    <!-- Ficha, si existe -->
-    @if (historial().ficha; as f) {
+    <!-- Ficha, si existe. Mientras carga no se afirma nada sobre ella: decir
+         "aún no tiene ficha" y desmentirlo medio segundo después es peor que
+         esperar. -->
+    @if (cargando()) {
+      <div class="mb-5 space-y-2">
+        <app-loading-skeleton shape="text" height="1rem" width="40%" />
+        <app-loading-skeleton shape="text" height="4.5rem" />
+      </div>
+    } @else if (historial().ficha; as f) {
       <div class="mb-5">
         <h3 class="text-sm font-bold text-text-dark mb-2">Ficha del paciente</h3>
         <div class="grid-ficha">
@@ -84,12 +91,21 @@
     <!-- Línea de tiempo -->
     <h3 class="text-sm font-bold text-text-dark mb-2">
       Línea de tiempo
-      <span class="text-xs font-medium text-text-muted">
-        — del {{ historial().resumen.primeraVisita | date: 'dd/MM/yy' }} al
-        {{ historial().resumen.ultimaVisita | date: 'dd/MM/yy' }}
-      </span>
+      @if (!cargando()) {
+        <span class="text-xs font-medium text-text-muted">
+          — del {{ historial().resumen.primeraVisita | date: 'dd/MM/yy' }} al
+          {{ historial().resumen.ultimaVisita | date: 'dd/MM/yy' }}
+        </span>
+      }
     </h3>
 
+    @if (cargando()) {
+      <div class="space-y-2">
+        @for (fila of [1, 2, 3, 4, 5]; track fila) {
+          <app-loading-skeleton shape="text" height="3.25rem" />
+        }
+      </div>
+    } @else {
     <div class="linea-tiempo">
       @for (s of historial().servicios; track s.id) {
         <article class="evento">
@@ -110,5 +126,6 @@
         <app-empty-state icon="inbox" title="Sin servicios registrados" />
       }
     </div>
+    }
   </div>
 </aside>

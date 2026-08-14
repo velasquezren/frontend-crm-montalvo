@@ -1,10 +1,8 @@
-<div
-  class="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 animate-fade-in"
-  (click)="cerrar.emit()"></div>
-
+<!-- Ver la nota del cajón de historial: el fondo y el apilado los pone
+     DialogService, no esta plantilla. -->
 <aside
-  class="fixed top-0 right-0 h-full w-full sm:max-w-2xl bg-white shadow-lifted z-50
-         flex flex-col animate-fade-scale">
+  class="h-full w-full sm:max-w-2xl bg-background shadow-lifted
+         flex flex-col pointer-events-auto animate-drawer-in">
   <header class="flex items-start justify-between gap-3 p-5 border-b border-border">
     <div class="min-w-0">
       <h2 class="text-lg font-bold text-text-dark truncate">{{ perfil().nombre }}</h2>
@@ -67,6 +65,13 @@
 
     <!-- Servicios más frecuentes -->
     <h3 class="text-sm font-bold text-text-dark mb-2">Servicios más frecuentes</h3>
+    @if (cargando()) {
+      <div class="space-y-2 mb-5">
+        @for (fila of [1, 2, 3]; track fila) {
+          <app-loading-skeleton shape="text" height="2.75rem" />
+        }
+      </div>
+    } @else {
     <div class="linea-tiempo mb-5">
       @for (s of perfil().topServicios; track s.etiqueta) {
         <article class="evento">
@@ -82,9 +87,17 @@
         <app-empty-state icon="inbox" title="Sin servicios registrados" />
       }
     </div>
+    }
 
     <!-- Sus pacientes -->
     <h3 class="text-sm font-bold text-text-dark mb-2">Pacientes más frecuentes</h3>
+    @if (cargando()) {
+      <div class="space-y-2">
+        @for (fila of [1, 2, 3, 4]; track fila) {
+          <app-loading-skeleton shape="text" height="3.25rem" />
+        }
+      </div>
+    } @else {
     <div class="linea-tiempo">
       @for (p of perfil().topPacientes; track p.pac) {
         <!-- Clicable solo si tiene código: sin él no hay historial que abrir. -->
@@ -112,5 +125,6 @@
           description="Sus servicios no traen código de paciente en el Excel." />
       }
     </div>
+    }
   </div>
 </aside>

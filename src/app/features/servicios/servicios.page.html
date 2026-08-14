@@ -266,18 +266,27 @@
     (abrirMedico)="abrirMedico($event)" />
 }
 
-<!-- ══════════════ HISTORIAL DEL PACIENTE ══════════════ -->
-@if (historial(); as h) {
-  <app-servicios-historial-drawer
-    [historial]="h"
-    [resumenHistorial]="resumenHistorial()"
-    (cerrar)="cerrarHistorial()" />
-}
+<!-- ══════════════ CAJONES LATERALES ══════════════
+     Van en <ng-template> y los proyecta DialogService a document.body. Con un
+     `@if` suelto quedaban dentro del árbol de la página y el header, el sidebar
+     y el FAB se dibujaban encima. Ver la nota en servicios.page.ts. -->
 
-<!-- ══════════════ PERFIL DEL MÉDICO ══════════════ -->
-@if (perfilMedico(); as m) {
-  <app-servicios-medico-drawer
-    [perfil]="m"
-    (cerrar)="cerrarMedico()"
-    (verPaciente)="verPacienteDelMedico($event)" />
-}
+<ng-template #cajonHistorial>
+  @if (historial(); as h) {
+    <app-servicios-historial-drawer
+      [historial]="h"
+      [resumenHistorial]="resumenHistorial()"
+      [cargando]="cargandoHistorial()"
+      (cerrar)="cerrarHistorial()" />
+  }
+</ng-template>
+
+<ng-template #cajonMedico>
+  @if (perfilMedico(); as m) {
+    <app-servicios-medico-drawer
+      [perfil]="m"
+      [cargando]="cargandoMedico()"
+      (cerrar)="cerrarMedico()"
+      (verPaciente)="verPacienteDelMedico($event)" />
+  }
+</ng-template>

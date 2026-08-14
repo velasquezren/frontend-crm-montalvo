@@ -1,8 +1,20 @@
+import { OverlayRef } from '@angular/cdk/overlay';
 import { DecimalPipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+  TemplateRef,
+  ViewContainerRef,
+  viewChild,
+} from '@angular/core';
 
 import { mensajeDeError } from '../../core/api/http-error';
+import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { ToastService } from '../../core/toast/toast.service';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
@@ -110,6 +122,22 @@ export class ServiciosPage {
   protected readonly perfilMedico = signal<PerfilMedico | null>(null);
   protected readonly cargandoHistorial = signal(false);
   protected readonly cargandoMedico = signal(false);
+
+  /* ── Cajones laterales ──────────────────────────────────────────────────
+   *
+   * Van por DialogService (CDK Overlay), que los proyecta a document.body.
+   * Antes eran un `@if` con `fixed inset-0 z-40` dentro de la plantilla, y por
+   * eso el header (z-30), el sidebar (z-40), la barra inferior de móvil (z-60)
+   * y el FAB (z-100) se dibujaban ENCIMA del cajón: nunca fue un z-index mal
+   * elegido, era un cajón atrapado en el árbol de la página. Es exactamente lo
+   * que el skill crm-feature-page prohíbe.
+   */
+  private readonly dialogService = inject(DialogService);
+  private readonly vcr = inject(ViewContainerRef);
+  private readonly plantillaHistorial = viewChild<TemplateRef<unknown>>('cajonHistorial');
+  private readonly plantillaMedico = viewChild<TemplateRef<unknown>>('cajonMedico');
+  private overlayHistorial: OverlayRef | null = null;
+  private overlayMedico: OverlayRef | null = null;
 
   constructor() {
     effect(onCleanup => {
@@ -337,8 +365,11 @@ export class ServiciosPage {
         pie: `${formatearBs(ticket)} por servicio`,
       },
       {
+        /* Mientras carga, la tabla no sabe cuántos médicos lo atendieron: un 0
+           sería un dato falso durante medio segundo, y además parpadearía al
+           corregirse. Un guion dice "todavía no lo sé", que es la verdad. */
         label: 'Médicos',
-        valor: h.resumen.medicos,
+        valor: this.cargandoHistorial() ? '—' : h.resumen.medicos,
         icon: 'briefcase' as const,
         tono: 'neutral' as const,
         destacado: false,
@@ -405,16 +436,87 @@ export class ServiciosPage {
     this.filtroModulo.update(actual => (actual === modulo ? null : modulo));
   }
 
+  /**
+   * Abre el cajón AL INSTANTE y pide el detalle después.
+   *
+   * Antes se esperaba la respuesta para abrir: tocar un paciente no producía
+   * nada visible durante todo el viaje al servidor (~190 ms desde Bolivia, más
+   * en móvil), y ni siquiera había spinner —`cargandoHistorial` se ponía a true
+   * pero no se pintaba en ninguna parte—. Se sentía como que el clic no había
+   * funcionado, y la reacción natural es volver a tocar.
+   *
+   * La tabla ya tiene en memoria el nombre, el código, el número de servicios y
+   * lo gastado: con eso la cabecera y los KPIs salen completos de entrada, y
+   * solo la ficha y la línea de tiempo esperan al servidor, ya dentro del cajón
+   * abierto. Es la regla de `crm-feature-page`: derivar en memoria lo que ya
+   * tienes y reservar la petición para lo que de verdad no está.
+   */
   protected async abrirHistorial(pac: string | null): Promise<void> {
     if (!pac) return;
+
+    const fila = this.pacientes.value().datos.find(p => p.pac === pac);
+    this.historial.set(this.historialProvisional(pac, fila));
     this.cargandoHistorial.set(true);
+    this.overlayHistorial = this.abrirCajon(this.plantillaHistorial(), this.overlayHistorial, () =>
+      this.cerrarHistorial(),
+    );
+
     try {
       this.historial.set(await this.service.historialPaciente(pac));
     } catch (err) {
+      this.cerrarHistorial();
       this.toast.error(mensajeDeError(err, 'No se pudo cargar el historial.'), 'Error');
     } finally {
       this.cargandoHistorial.set(false);
     }
+  }
+
+  /**
+   * Historial "de mentira" con lo que la fila ya sabe, para pintar el cajón sin
+   * esperar. `medicos` queda en 0 porque la tabla no lo trae; mientras
+   * `cargandoHistorial` esté activo, `resumenHistorial` lo muestra como «—» en
+   * vez de afirmar que no le atendió nadie.
+   *
+   * Si el paciente no está en la página cargada —se llega desde el perfil de un
+   * médico— se abre igual, solo que con la cabecera más pobre.
+   */
+  private historialProvisional(
+    pac: string,
+    fila: PacienteConServicios | undefined,
+  ): HistorialPaciente {
+    return {
+      pac,
+      nombre: fila?.paciente ?? pac,
+      ficha: null,
+      resumen: {
+        servicios: fila?.servicios ?? 0,
+        gastado: fila?.gastado ?? 0,
+        primeraVisita: null,
+        ultimaVisita: fila?.ultimaVisita ?? null,
+        medicos: 0,
+      },
+      servicios: [],
+    };
+  }
+
+  /** Abre un cajón lateral, reemplazando el que hubiera abierto. */
+  private abrirCajon(
+    plantilla: TemplateRef<unknown> | undefined,
+    anterior: OverlayRef | null,
+    alCerrar: () => void,
+  ): OverlayRef | null {
+    if (!plantilla) return anterior;
+    anterior?.dispose();
+
+    const ref = this.dialogService.openTemplate(plantilla, this.vcr, {
+      /* `justify-end` lo pega al borde derecho; `pointer-events-none` deja que
+         el clic atraviese hasta el backdrop, y el <aside> lo reactiva. */
+      panelClass: ['fixed', 'inset-0', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'],
+    });
+    /* `openTemplate` ya destruye el overlay al tocar el fondo; esto además
+       limpia la señal, que es lo que decide si el cajón debe existir. */
+    ref.backdropClick().subscribe(() => alCerrar());
+    return ref;
   }
 
   protected ordenarPacientes(e: { orden: string; direccion: DireccionOrden }): void {
@@ -431,6 +533,8 @@ export class ServiciosPage {
 
   protected cerrarHistorial(): void {
     this.historial.set(null);
+    this.overlayHistorial?.dispose();
+    this.overlayHistorial = null;
   }
 
   /**
@@ -440,18 +544,59 @@ export class ServiciosPage {
    */
   protected async abrirMedico(codigo: string | null): Promise<void> {
     if (!codigo) return;
+
+    const fila = this.medicos.value().datos.find(m => m.codigo === codigo);
+    this.perfilMedico.set(this.perfilProvisional(codigo, fila));
     this.cargandoMedico.set(true);
+    this.overlayMedico = this.abrirCajon(this.plantillaMedico(), this.overlayMedico, () =>
+      this.cerrarMedico(),
+    );
+
     try {
       this.perfilMedico.set(await this.service.perfilMedico(codigo));
     } catch (err) {
+      this.cerrarMedico();
       this.toast.error(mensajeDeError(err, 'No se pudo cargar el perfil del médico.'), 'Error');
     } finally {
       this.cargandoMedico.set(false);
     }
   }
 
+  /**
+   * Perfil provisional con lo que la fila del médico ya trae. Aquí los tres KPI
+   * salen completos —incluido el ticket promedio, que es facturado ÷ servicios—
+   * así que la cabecera del cajón no cambia cuando llega la respuesta: solo se
+   * rellenan las listas de abajo.
+   */
+  private perfilProvisional(
+    codigo: string,
+    fila: MedicoConServicios | undefined,
+  ): PerfilMedico {
+    const servicios = fila?.servicios ?? 0;
+    const ingreso = fila?.ingreso ?? 0;
+
+    return {
+      codigo,
+      nombre: fila?.nombre ?? codigo,
+      resumen: {
+        servicios,
+        pacientes: fila?.pacientes ?? 0,
+        ingreso,
+        ticketPromedio: servicios > 0 ? ingreso / servicios : 0,
+        primeraAtencion: null,
+        ultimaAtencion: fila?.ultimaAtencion ?? null,
+      },
+      porModulo: [],
+      topServicios: [],
+      porMes: [],
+      topPacientes: [],
+    };
+  }
+
   protected cerrarMedico(): void {
     this.perfilMedico.set(null);
+    this.overlayMedico?.dispose();
+    this.overlayMedico = null;
   }
 
   /**

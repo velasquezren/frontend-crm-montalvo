@@ -5,6 +5,7 @@ import { ButtonComponent } from '../../../../shared/components/button/button.com
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { KpiCardComponent } from '../../../../shared/components/kpi-card/kpi-card.component';
+import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { formatearBs, MonedaPipe } from '../../../../shared/pipes/moneda.pipe';
 import { PerfilMedico } from '../../servicios.model';
 import { KpiItem } from '../servicios-kpis/servicios-kpis.component';
@@ -31,6 +32,7 @@ const MESES = [
     EmptyStateComponent,
     IconComponent,
     KpiCardComponent,
+    LoadingSkeletonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './servicios-medico-drawer.component.html',
@@ -38,6 +40,14 @@ const MESES = [
 })
 export class ServiciosMedicoDrawerComponent {
   readonly perfil = input.required<PerfilMedico>();
+
+  /**
+   * Igual que en el cajón del historial: se abre con lo que la tabla ya sabe y
+   * el detalle llega después. Sin esta bandera, los dos `@empty` afirmarían
+   * "sin servicios" y "sin pacientes identificados" durante el viaje de red —
+   * de un médico que está en la tabla precisamente porque tiene ambos.
+   */
+  readonly cargando = input<boolean>(false);
 
   readonly cerrar = output<void>();
   /** Abre el historial de uno de sus pacientes, sin salir de la vista. */

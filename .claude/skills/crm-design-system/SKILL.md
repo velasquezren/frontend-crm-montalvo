@@ -74,6 +74,10 @@ Clases utilitarias definidas en `styles.css` — úsalas en vez de escribir `@ke
 | `animate-modal-pop` | Apertura de modales y popovers |
 | `animate-fade-scale` | Aparición suave de paneles |
 | `animate-toast-slide` | Entrada del toast |
+| `animate-drawer-in` | Entrada de un cajón lateral (historial, perfil del médico) |
+
+Un cajón entra **desde su borde**, no desde el centro: `animate-fade-scale` lo hacía
+brotar del medio de la pantalla, que no dice de dónde viene ni hacia dónde se cierra.
 
 Curvas: `--ease-spring-smooth`, `--ease-spring-bounce`, `--ease-press`. Para hover y transiciones
 simples, `transition-all duration-200`.
