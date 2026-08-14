@@ -328,7 +328,11 @@ export class VentasPage {
         comprobanteMime: subido?.comprobanteMime,
         comprobanteNombre: subido?.comprobanteNombre,
         medico: this.medico().trim() || undefined,
-        modulo: mod?.label || undefined,
+        /* El identificador, no la etiqueta. Guardar "Cirugía Plástica" en la
+           base la ata al texto de la interfaz: el día que se reformule esa
+           etiqueta o se le quite un acento, las ventas viejas dejan de agrupar
+           con las nuevas. El id es estable y la etiqueta se resuelve al pintar. */
+        modulo: mod?.id || undefined,
         notas: this.notas().trim() || undefined,
       });
 
