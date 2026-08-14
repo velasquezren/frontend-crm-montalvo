@@ -7,6 +7,7 @@
 /* ── Contenedor del Composer ─────────────────────────────────── */
 .composer-container {
   padding: 8px 16px 12px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
   background: white;
   border-top: 1px solid var(--color-border);
   position: relative;
