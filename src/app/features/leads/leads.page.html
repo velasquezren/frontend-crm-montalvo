@@ -103,23 +103,38 @@
             @for (lead of nuevos(); track lead.id) {
               <div cdkDrag class="lead-card select-none">
                 <div class="flex items-start justify-between gap-2">
-                  <p class="text-xs font-bold text-text-dark leading-tight">{{ lead.cliente.nombre }}</p>
-                  <span class="text-[9px] font-semibold text-text-muted bg-bg-light px-1.5 py-0.5 rounded">
-                    {{ lead.origen === 'WHATSAPP_DIRECTO' ? 'WhatsApp' : lead.origen === 'PRESENCIAL' ? 'Presencial' : 'Meta' }}
-                  </span>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-xs font-bold text-text-dark leading-tight truncate">{{ lead.cliente.nombre }}</p>
+                    <p class="text-[10px] text-text-muted mt-0.5 font-mono">{{ lead.cliente.telefono }}</p>
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <a
+                      [routerLink]="['/conversaciones']"
+                      [queryParams]="{ busqueda: lead.cliente.telefono }"
+                      (click)="$event.stopPropagation()"
+                      class="p-1 rounded-lg text-text-muted hover:text-primary hover:bg-bg-light transition-colors inline-flex"
+                      title="Abrir chat en WhatsApp">
+                      <app-icon name="message-circle" [size]="13" />
+                    </a>
+                    <span class="text-[9px] font-semibold text-text-muted bg-bg-light px-1.5 py-0.5 rounded">
+                      {{ lead.origen === 'WHATSAPP_DIRECTO' ? 'WhatsApp' : lead.origen === 'PRESENCIAL' ? 'Presencial' : 'Meta' }}
+                    </span>
+                  </div>
                 </div>
-                <p class="text-[10px] text-text-muted mt-1">{{ lead.cliente.telefono }}</p>
-                <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-border/40">
-                  <span class="text-[9px] text-text-muted">
+                <div class="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-border/40">
+                  <span class="text-[9px] text-text-muted whitespace-nowrap">
                     {{ lead.createdAt | date: 'dd/MM HH:mm' }}
                   </span>
-                  @if (lead.agente || lead.cliente.agente) {
-                    <span class="text-[9px] font-semibold text-primary/80 flex items-center gap-1">
-                      <app-icon name="users" [size]="10" />
-                      <span>{{ (lead.agente?.nombre || lead.cliente.agente?.nombre || '').split(' ')[0] }}</span>
+                  @if (lead.agente || lead.cliente.agente; as ag) {
+                    <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20 truncate max-w-[130px]" [title]="ag.nombre">
+                      <app-icon name="users" [size]="10" class="shrink-0" />
+                      <span class="truncate">{{ ag.nombre }}</span>
                     </span>
                   } @else {
-                    <span class="text-[9px] italic text-text-muted">Sin agente</span>
+                    <span class="inline-flex items-center gap-1 text-[10px] text-text-muted bg-neutral-bg px-2 py-0.5 rounded-full border border-border font-medium">
+                      <app-icon name="alert-circle" [size]="10" />
+                      Sin asignar
+                    </span>
                   }
                 </div>
               </div>
@@ -156,23 +171,38 @@
             @for (lead of contactados(); track lead.id) {
               <div cdkDrag class="lead-card select-none">
                 <div class="flex items-start justify-between gap-2">
-                  <p class="text-xs font-bold text-text-dark leading-tight">{{ lead.cliente.nombre }}</p>
-                  <span class="text-[9px] font-semibold text-text-muted bg-bg-light px-1.5 py-0.5 rounded">
-                    {{ lead.origen === 'WHATSAPP_DIRECTO' ? 'WhatsApp' : lead.origen === 'PRESENCIAL' ? 'Presencial' : 'Meta' }}
-                  </span>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-xs font-bold text-text-dark leading-tight truncate">{{ lead.cliente.nombre }}</p>
+                    <p class="text-[10px] text-text-muted mt-0.5 font-mono">{{ lead.cliente.telefono }}</p>
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <a
+                      [routerLink]="['/conversaciones']"
+                      [queryParams]="{ busqueda: lead.cliente.telefono }"
+                      (click)="$event.stopPropagation()"
+                      class="p-1 rounded-lg text-text-muted hover:text-primary hover:bg-bg-light transition-colors inline-flex"
+                      title="Abrir chat en WhatsApp">
+                      <app-icon name="message-circle" [size]="13" />
+                    </a>
+                    <span class="text-[9px] font-semibold text-text-muted bg-bg-light px-1.5 py-0.5 rounded">
+                      {{ lead.origen === 'WHATSAPP_DIRECTO' ? 'WhatsApp' : lead.origen === 'PRESENCIAL' ? 'Presencial' : 'Meta' }}
+                    </span>
+                  </div>
                 </div>
-                <p class="text-[10px] text-text-muted mt-1">{{ lead.cliente.telefono }}</p>
-                <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-border/40">
-                  <span class="text-[9px] text-text-muted">
+                <div class="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-border/40">
+                  <span class="text-[9px] text-text-muted whitespace-nowrap">
                     {{ lead.createdAt | date: 'dd/MM HH:mm' }}
                   </span>
-                  @if (lead.agente || lead.cliente.agente) {
-                    <span class="text-[9px] font-semibold text-primary/80 flex items-center gap-1">
-                      <app-icon name="users" [size]="10" />
-                      <span>{{ (lead.agente?.nombre || lead.cliente.agente?.nombre || '').split(' ')[0] }}</span>
+                  @if (lead.agente || lead.cliente.agente; as ag) {
+                    <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20 truncate max-w-[130px]" [title]="ag.nombre">
+                      <app-icon name="users" [size]="10" class="shrink-0" />
+                      <span class="truncate">{{ ag.nombre }}</span>
                     </span>
                   } @else {
-                    <span class="text-[9px] italic text-text-muted">Sin agente</span>
+                    <span class="inline-flex items-center gap-1 text-[10px] text-text-muted bg-neutral-bg px-2 py-0.5 rounded-full border border-border font-medium">
+                      <app-icon name="alert-circle" [size]="10" />
+                      Sin asignar
+                    </span>
                   }
                 </div>
               </div>
@@ -209,23 +239,38 @@
             @for (lead of convertidos(); track lead.id) {
               <div cdkDrag class="lead-card select-none">
                 <div class="flex items-start justify-between gap-2">
-                  <p class="text-xs font-bold text-text-dark leading-tight">{{ lead.cliente.nombre }}</p>
-                  <span class="text-[9px] font-semibold text-text-muted bg-bg-light px-1.5 py-0.5 rounded">
-                    {{ lead.origen === 'WHATSAPP_DIRECTO' ? 'WhatsApp' : lead.origen === 'PRESENCIAL' ? 'Presencial' : 'Meta' }}
-                  </span>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-xs font-bold text-text-dark leading-tight truncate">{{ lead.cliente.nombre }}</p>
+                    <p class="text-[10px] text-text-muted mt-0.5 font-mono">{{ lead.cliente.telefono }}</p>
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <a
+                      [routerLink]="['/conversaciones']"
+                      [queryParams]="{ busqueda: lead.cliente.telefono }"
+                      (click)="$event.stopPropagation()"
+                      class="p-1 rounded-lg text-text-muted hover:text-primary hover:bg-bg-light transition-colors inline-flex"
+                      title="Abrir chat en WhatsApp">
+                      <app-icon name="message-circle" [size]="13" />
+                    </a>
+                    <span class="text-[9px] font-semibold text-text-muted bg-bg-light px-1.5 py-0.5 rounded">
+                      {{ lead.origen === 'WHATSAPP_DIRECTO' ? 'WhatsApp' : lead.origen === 'PRESENCIAL' ? 'Presencial' : 'Meta' }}
+                    </span>
+                  </div>
                 </div>
-                <p class="text-[10px] text-text-muted mt-1">{{ lead.cliente.telefono }}</p>
-                <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-border/40">
-                  <span class="text-[9px] text-text-muted">
+                <div class="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-border/40">
+                  <span class="text-[9px] text-text-muted whitespace-nowrap">
                     {{ lead.createdAt | date: 'dd/MM HH:mm' }}
                   </span>
-                  @if (lead.agente || lead.cliente.agente) {
-                    <span class="text-[9px] font-semibold text-primary/80 flex items-center gap-1">
-                      <app-icon name="users" [size]="10" />
-                      <span>{{ (lead.agente?.nombre || lead.cliente.agente?.nombre || '').split(' ')[0] }}</span>
+                  @if (lead.agente || lead.cliente.agente; as ag) {
+                    <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20 truncate max-w-[130px]" [title]="ag.nombre">
+                      <app-icon name="users" [size]="10" class="shrink-0" />
+                      <span class="truncate">{{ ag.nombre }}</span>
                     </span>
                   } @else {
-                    <span class="text-[9px] italic text-text-muted">Sin agente</span>
+                    <span class="inline-flex items-center gap-1 text-[10px] text-text-muted bg-neutral-bg px-2 py-0.5 rounded-full border border-border font-medium">
+                      <app-icon name="alert-circle" [size]="10" />
+                      Sin asignar
+                    </span>
                   }
                 </div>
               </div>
@@ -262,23 +307,38 @@
             @for (lead of perdidos(); track lead.id) {
               <div cdkDrag class="lead-card select-none">
                 <div class="flex items-start justify-between gap-2">
-                  <p class="text-xs font-bold text-text-dark leading-tight">{{ lead.cliente.nombre }}</p>
-                  <span class="text-[9px] font-semibold text-text-muted bg-bg-light px-1.5 py-0.5 rounded">
-                    {{ lead.origen === 'WHATSAPP_DIRECTO' ? 'WhatsApp' : lead.origen === 'PRESENCIAL' ? 'Presencial' : 'Meta' }}
-                  </span>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-xs font-bold text-text-dark leading-tight truncate">{{ lead.cliente.nombre }}</p>
+                    <p class="text-[10px] text-text-muted mt-0.5 font-mono">{{ lead.cliente.telefono }}</p>
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <a
+                      [routerLink]="['/conversaciones']"
+                      [queryParams]="{ busqueda: lead.cliente.telefono }"
+                      (click)="$event.stopPropagation()"
+                      class="p-1 rounded-lg text-text-muted hover:text-primary hover:bg-bg-light transition-colors inline-flex"
+                      title="Abrir chat en WhatsApp">
+                      <app-icon name="message-circle" [size]="13" />
+                    </a>
+                    <span class="text-[9px] font-semibold text-text-muted bg-bg-light px-1.5 py-0.5 rounded">
+                      {{ lead.origen === 'WHATSAPP_DIRECTO' ? 'WhatsApp' : lead.origen === 'PRESENCIAL' ? 'Presencial' : 'Meta' }}
+                    </span>
+                  </div>
                 </div>
-                <p class="text-[10px] text-text-muted mt-1">{{ lead.cliente.telefono }}</p>
-                <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-border/40">
-                  <span class="text-[9px] text-text-muted">
+                <div class="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-border/40">
+                  <span class="text-[9px] text-text-muted whitespace-nowrap">
                     {{ lead.createdAt | date: 'dd/MM HH:mm' }}
                   </span>
-                  @if (lead.agente || lead.cliente.agente) {
-                    <span class="text-[9px] font-semibold text-primary/80 flex items-center gap-1">
-                      <app-icon name="users" [size]="10" />
-                      <span>{{ (lead.agente?.nombre || lead.cliente.agente?.nombre || '').split(' ')[0] }}</span>
+                  @if (lead.agente || lead.cliente.agente; as ag) {
+                    <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20 truncate max-w-[130px]" [title]="ag.nombre">
+                      <app-icon name="users" [size]="10" class="shrink-0" />
+                      <span class="truncate">{{ ag.nombre }}</span>
                     </span>
                   } @else {
-                    <span class="text-[9px] italic text-text-muted">Sin agente</span>
+                    <span class="inline-flex items-center gap-1 text-[10px] text-text-muted bg-neutral-bg px-2 py-0.5 rounded-full border border-border font-medium">
+                      <app-icon name="alert-circle" [size]="10" />
+                      Sin asignar
+                    </span>
                   }
                 </div>
               </div>
