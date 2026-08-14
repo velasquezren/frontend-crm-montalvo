@@ -1,0 +1,406 @@
+/* ── Chat Header ─────────────────────────────────────────────── */
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: white;
+  min-height: 56px;
+  position: relative;
+  z-index: 10;
+}
+
+.chat-header__identidad {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.chat-header__acciones {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Buscador en el Chat ─────────────────────────────────────── */
+.chat-search-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  padding: 2px 8px;
+  animation: fadeIn 0.15s ease;
+}
+
+.chat-search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 12px;
+  color: var(--color-text-dark);
+  width: 140px;
+  font-family: inherit;
+}
+
+.chat-search-count {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  padding: 1px 6px;
+  border-radius: 9999px;
+}
+
+/* ── Botón toggle del panel derecho ──────────────────────────── */
+.panel-toggle-btn {
+  display: none; /* visible en XL */
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+@media (min-width: 1280px) {
+  .panel-toggle-btn {
+    display: inline-flex;
+  }
+}
+
+.panel-toggle-btn:hover {
+  color: var(--color-primary);
+  background: var(--color-bg-light);
+}
+
+.panel-toggle-btn.panel-active {
+  color: var(--color-primary);
+}
+
+/* ── Acceso a WhatsApp Web desde la cabecera ───────────────────── */
+.accion-wa {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  height: 30px;
+  padding: 0 7px;
+  border-radius: 9999px;
+  color: var(--color-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: gap 0.18s ease, background-color 0.18s ease;
+}
+
+.accion-wa:hover,
+.accion-wa:focus-visible {
+  gap: 5px;
+  background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.accion-wa__texto {
+  display: grid;
+  grid-template-columns: 0fr;
+  transition: grid-template-columns 0.18s ease;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.accion-wa__texto > span {
+  overflow: hidden;
+}
+
+.accion-wa:hover .accion-wa__texto,
+.accion-wa:focus-visible .accion-wa__texto {
+  grid-template-columns: 1fr;
+}
+
+@media (max-width: 768px) {
+  .accion-wa__texto {
+    display: none;
+  }
+
+  .accion-wa {
+    min-width: 40px;
+    min-height: 40px;
+    justify-content: center;
+  }
+
+  .chat-header--buscando .chat-header__identidad,
+  .chat-header--buscando .accion-wa {
+    display: none;
+  }
+
+  .chat-header--buscando .chat-search-box {
+    width: 100%;
+  }
+
+  .chat-header--buscando .chat-search-input {
+    flex: 1;
+    width: auto;
+  }
+}
+
+/* ── Aviso clínico fijado ───────────────────────────────────── */
+.pinned-note-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--color-bg-light);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  border-left: 3px solid var(--color-primary);
+  font-size: 12px;
+  color: var(--color-text-dark);
+  z-index: 10;
+}
+
+.pinned-note-text {
+  font-size: 12px;
+  color: var(--color-text-dark);
+  line-height: 1.4;
+}
+
+.edit-pinned-input {
+  flex: 1;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+  outline: none;
+  background: var(--color-background);
+  color: var(--color-text-dark);
+  transition: border-color 0.2s;
+}
+
+.edit-pinned-input:focus {
+  border-color: var(--color-primary);
+}
+
+.btn-add-pin-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  padding: 4px 16px;
+  background: var(--color-bg-workspace);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.15s;
+}
+
+.btn-add-pin-trigger:hover {
+  color: var(--color-primary);
+  background: var(--color-bg-light);
+}
+
+/* ── Hilo de Mensajes ────────────────────────────────────────── */
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: linear-gradient(180deg, var(--color-bg-workspace) 0%, white 100%);
+}
+
+.date-separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 12px 0 6px;
+}
+
+.date-separator-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-text-muted) 12%, white);
+  color: var(--color-text-muted);
+}
+
+.bubble-row {
+  display: flex;
+  width: 100%;
+}
+
+.bubble-row-out {
+  justify-content: flex-end;
+}
+
+.bubble-row-in {
+  justify-content: flex-start;
+}
+
+.bubble {
+  max-width: 75%;
+  min-width: 80px;
+  padding: 8px 12px 6px;
+  border-radius: 16px;
+  position: relative;
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: break-word;
+  transition: box-shadow 0.2s;
+}
+
+.bubble-in {
+  background: white;
+  color: var(--color-text-dark);
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+}
+
+.bubble-out {
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
+  color: var(--color-text-dark);
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.bubble-text {
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.bubble-time {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  font-size: 10px;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+.bubble-match {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 40%, transparent);
+}
+
+.bubble-match-active {
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.media-cargando {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  background: color-mix(in srgb, var(--color-text-muted) 8%, white);
+  border-radius: 12px;
+}
+
+/* ── Audio Player ────────────────────────────────────────────── */
+.audio-player-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-text-muted) 8%, white);
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  margin-bottom: 4px;
+}
+
+.speed-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 9999px;
+  background: white;
+  border: 1px solid var(--color-border);
+}
+
+.speed-btn {
+  padding: 2px 6px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: all 0.15s;
+}
+
+.speed-btn:hover {
+  color: var(--color-primary);
+  background: var(--color-bg-light);
+}
+
+.speed-btn.active-speed {
+  background: var(--color-primary);
+  color: white;
+  font-weight: 700;
+}
+
+/* ── Marca Automático ────────────────────────────────────────── */
+.marca-automatico {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-right: 5px;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: 1px;
+}
+
+.hilo-esqueleto {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 0;
+}
+
+/* ── Scroll Bottom Floating Button ───────────────────────────── */
+.scroll-bottom-btn {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 140px;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  color: white;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
+  cursor: pointer;
+  border: none;
+  transition: transform 0.15s, opacity 0.15s;
+}
+
+.scroll-bottom-btn:hover {
+  transform: translateX(-50%) translateY(-2px);
+}

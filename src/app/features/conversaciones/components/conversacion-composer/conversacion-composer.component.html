@@ -1,0 +1,379 @@
+<div
+  class="composer-container relative"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (drop)="onDrop($event)">
+
+  <!-- ── Drag & Drop Zone Overlay (Nueva funcionalidad A) ───────────── -->
+  @if (arrastrandoSobre()) {
+    <div class="drag-drop-overlay animate-fade-in">
+      <div class="drag-drop-box">
+        <app-icon name="image" [size]="28" class="text-primary animate-bounce" />
+        <p class="text-xs font-bold text-primary">Suelta tu archivo aquí</p>
+        <p class="text-[10px] text-text-muted">Se adjuntará automáticamente al mensaje</p>
+      </div>
+    </div>
+  }
+
+  <!-- Sugerencias de atajo por comando '/' -->
+  @if (state.sugerenciasAtajo().length > 0) {
+    <div class="bg-white border border-border shadow-lifted rounded-xl p-2 mb-2 max-h-48 overflow-y-auto space-y-1">
+      <p class="text-[10px] font-bold text-text-muted uppercase px-2 py-0.5">Respuestas rápidas disponibles:</p>
+      @for (sug of state.sugerenciasAtajo(); track sug.id) {
+        <button
+          type="button"
+          (click)="insertarPlantillaAgente(sug.contenido)"
+          class="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-primary/10 transition-colors flex items-center justify-between text-xs cursor-pointer">
+          <span class="font-semibold text-primary">{{ sug.atajo || sug.titulo }}</span>
+          <span class="text-text-muted truncate max-w-[240px] ml-2">{{ sug.contenido }}</span>
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Barra de Plantillas de Respuestas Rápidas -->
+  <div class="quick-replies-bar flex items-center justify-between gap-2">
+    <div class="flex items-center gap-2 min-w-0 flex-1">
+      <span class="quick-reply-label shrink-0">Mis respuestas:</span>
+      <div class="quick-reply-chips scrollbar-hide flex-1">
+        @for (plantilla of state.plantillasAgente.value(); track plantilla.id) {
+          <button
+            type="button"
+            (click)="insertarPlantillaAgente(plantilla.contenido)"
+            class="quick-reply-chip cursor-pointer"
+            [title]="plantilla.contenido">
+            @if (plantilla.atajo) {
+              <span class="font-bold text-primary mr-1">{{ plantilla.atajo }}</span>
+            }
+            {{ plantilla.titulo }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Botón para gestionar respuestas rápidas -->
+    <button
+      type="button"
+      (click)="abrirGestionPlantillas()"
+      class="px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
+      title="Personalizar mis respuestas rápidas">
+      <app-icon name="plus" [size]="12" />
+      <span>Personalizar</span>
+    </button>
+  </div>
+
+  <!-- Popover Flotante de Memoria Personal del Agente -->
+  @if (mostrarPopoverMemoria()) {
+    <div class="absolute bottom-20 left-4 w-84 max-w-[calc(100%-2rem)] bg-white rounded-2xl shadow-lifted border border-border p-3.5 z-50 animate-modal-pop space-y-2.5">
+      <div class="flex items-center justify-between border-b border-border pb-2">
+        <span class="text-xs font-bold text-text-dark flex items-center gap-1.5">
+          <app-icon name="database" [size]="14" class="text-primary" />
+          Mi Memoria Personal
+        </span>
+        <div class="flex items-center gap-2">
+          <a routerLink="/perfil" [queryParams]="{ tab: 'memoria' }" class="text-[10px] text-primary font-extrabold hover:underline flex items-center gap-0.5 cursor-pointer">
+            <span>Gestionar</span>
+            <app-icon name="external-link" [size]="10" />
+          </a>
+          <button type="button" (click)="togglePopoverMemoria()" class="p-1 text-text-muted hover:text-text-dark cursor-pointer rounded-lg hover:bg-black/5"
+            aria-label="Cerrar">
+            <app-icon name="x" [size]="14" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Buscador en popover -->
+      <app-input type="search" placeholder="Buscar nota, precio o archivo..." [(value)]="busquedaMemoria" />
+
+      <!-- Lista de recursos en popover -->
+      <div class="max-h-60 overflow-y-auto space-y-1.5">
+        @for (item of state.plantillasAgente.value(); track item.id) {
+          <button
+            type="button"
+            (click)="insertarPlantillaAgente(item.contenido)"
+            class="w-full text-left p-2.5 rounded-xl border border-border/60 hover:border-primary/40 hover:bg-bg-light transition-all cursor-pointer block group">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-xs font-bold text-text-dark group-hover:text-primary transition-colors truncate">{{ item.titulo }}</span>
+              @if (item.atajo) {
+                <span class="text-[9px] font-extrabold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full shrink-0">{{ item.atajo }}</span>
+              }
+            </div>
+            @if (item.contenido) {
+              <p class="text-[11px] text-text-muted truncate mt-0.5 leading-tight">{{ item.contenido }}</p>
+            }
+          </button>
+        } @empty {
+          <div class="text-center py-5 space-y-1">
+            <p class="text-xs text-text-muted">Sin recursos guardados.</p>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ── Caja de Entrada de Mensajes ───────────────────────────────── -->
+  @if (!state.fueraDeVentana24h()) {
+    <!-- Adjunto pendiente -->
+    @if (adjuntoPendiente(); as adj) {
+      <div class="adjunto-pendiente">
+        @if (adj.vistaPrevia) {
+          <img [src]="adj.vistaPrevia" alt="" class="adjunto-miniatura" />
+        } @else {
+          <app-icon name="file-text" [size]="18" class="text-primary shrink-0" />
+        }
+        <span class="adjunto-nombre">{{ adj.mediaNombre }}</span>
+        <app-button
+          variant="ghost" size="sm" icon="x" [circle]="true"
+          aria-label="Quitar adjunto"
+          (clicked)="quitarAdjunto()" />
+      </div>
+    }
+
+    <!-- Modo Grabación de Audio en Tiempo Real (Nueva funcionalidad B) -->
+    @if (grabandoAudio()) {
+      <div class="voice-recorder-bar flex items-center justify-between gap-3 p-3 rounded-2xl bg-bg-light border border-primary/30 animate-fade-in">
+        <div class="flex items-center gap-2.5">
+          <span class="recording-pulse-dot"></span>
+          <span class="text-xs font-bold text-primary font-mono tabular-nums">
+            {{ formatearTiempoAudio(segundosGrabacion()) }}
+          </span>
+          <span class="text-xs text-text-muted">Grabando mensaje de voz…</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            (click)="cancelarGrabacionAudio()"
+            class="px-3 py-1.5 rounded-xl text-xs font-medium text-text-muted hover:text-critical hover:bg-critical/10 transition-colors cursor-pointer"
+            title="Cancelar grabación">
+            Cancelar
+          </button>
+          <app-button
+            variant="primary"
+            size="sm"
+            icon="send"
+            (clicked)="enviarAudioGrabado()">
+            Enviar audio
+          </app-button>
+        </div>
+      </div>
+    } @else {
+      <!-- Modo Escritura Estándar -->
+      <form (submit)="enviar($event)" class="chat-input-bar">
+        <!-- Botón Adjuntar Imagen / Documento -->
+        <label class="p-2.5 rounded-full text-text-muted hover:text-primary hover:bg-bg-light cursor-pointer transition-colors shrink-0 flex items-center justify-center border border-border/80" title="Adjuntar archivo o imagen">
+          <app-icon name="image" [size]="18" />
+          <input type="file" (change)="adjuntarMediaChat($event)" accept="image/*,application/pdf" class="hidden" />
+        </label>
+
+        <!-- Botón Grabadora de Audio -->
+        <button
+          type="button"
+          (click)="iniciarGrabacionAudio()"
+          class="p-2.5 rounded-full text-text-muted hover:text-primary hover:bg-bg-light cursor-pointer transition-colors shrink-0 flex items-center justify-center border border-border/80"
+          title="Grabar mensaje de voz">
+          <app-icon name="volume-2" [size]="18" />
+        </button>
+
+        <!-- Textarea inteligente multilínea -->
+        <textarea
+          #txtComposer
+          [value]="state.mensajeNuevo()"
+          (input)="state.mensajeNuevo.set(txtComposer.value)"
+          (keydown.enter)="$any($event).shiftKey ? null : enviar($event)"
+          (paste)="pegarEnComposer($event)"
+          rows="1"
+          placeholder="Escribe un mensaje, '/' para respuestas rápidas o arrastra un archivo..."
+          class="chat-composer"></textarea>
+
+        <!-- Botón Enviar -->
+        <button
+          type="submit"
+          [disabled]="(!state.mensajeNuevo().trim() && !adjuntoPendiente()) || state.enviando()"
+          class="chat-send-btn"
+          title="Enviar mensaje (Enter)">
+          <app-icon [name]="state.enviando() ? 'clock' : 'send'" [size]="16" />
+        </button>
+      </form>
+    }
+  } @else {
+    <!-- Bloqueo Ventana 24h Meta -->
+    <div class="window-expired-alert flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-bg-light border border-border">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <app-icon name="clock" [size]="18" class="text-primary shrink-0" />
+        <div class="min-w-0">
+          <p class="text-xs font-bold text-text-dark leading-tight">Ventana de 24 horas inactiva</p>
+          <p class="text-[11px] text-text-muted leading-tight truncate">Para contactar al paciente debes enviar una Plantilla Oficial de WhatsApp.</p>
+        </div>
+      </div>
+      <app-button variant="primary" size="sm" (clicked)="abrirPlantillas()">
+        Elegir plantilla
+      </app-button>
+    </div>
+  }
+</div>
+
+<!-- ── Modal: selector de plantillas de WhatsApp ────────────────────── -->
+<ng-template #modalPlantillas>
+  <div class="pointer-events-auto w-full max-w-lg max-h-[85dvh] flex flex-col bg-white rounded-2xl shadow-lifted overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+          <app-icon name="file-text" [size]="18" class="text-primary" />
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-text-dark leading-tight">Enviar plantilla</h2>
+          <p class="text-[11px] text-text-muted leading-tight">Para escribir fuera de la ventana de 24h</p>
+        </div>
+      </div>
+      <button type="button" (click)="cerrarPlantillas()"
+        class="text-text-muted hover:text-text-dark cursor-pointer" aria-label="Cerrar">
+        <app-icon name="x" [size]="18" />
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-5">
+      @if (plantillaSeleccionada(); as p) {
+        <button type="button" (click)="volverAListaPlantillas()"
+          class="inline-flex items-center gap-1 text-xs text-text-muted hover:text-primary cursor-pointer mb-3">
+          <app-icon name="chevron-left" [size]="14" /> Volver a la lista
+        </button>
+
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-sm font-semibold text-text-dark">{{ p.nombre }}</span>
+          <app-badge [variant]="p.categoria === 'MARKETING' ? 'info' : 'success'">
+            {{ p.categoria === 'MARKETING' ? 'Marketing' : 'Utilidad' }}
+          </app-badge>
+        </div>
+
+        @if (p.variables > 0) {
+          <div class="space-y-3 mb-4">
+            @for (valor of variablesPlantilla(); track $index) {
+              <app-input
+                [label]="'Variable ' + ($index + 1)"
+                placeholder="Escribe el valor…"
+                [value]="valor"
+                (valueChange)="setVariablePlantilla($index, $event)" />
+            }
+          </div>
+        }
+
+        <p class="text-[11px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Vista previa</p>
+        <div class="p-3 rounded-xl bg-bg-light border border-border text-sm text-text-dark whitespace-pre-wrap leading-relaxed">
+          {{ previsualizarCuerpo(p.cuerpo, variablesPlantilla()) }}
+        </div>
+      } @else {
+        <div class="space-y-2">
+          @for (p of state.plantillasWhatsApp.value(); track p.nombre) {
+            <button
+              type="button"
+              (click)="seleccionarPlantilla(p)"
+              class="w-full text-left p-3.5 rounded-xl border border-border hover:border-primary/50 hover:bg-bg-light transition-all cursor-pointer block group">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-bold text-text-dark text-sm group-hover:text-primary transition-colors">{{ p.nombre }}</span>
+                <app-badge [variant]="p.categoria === 'MARKETING' ? 'info' : 'success'">
+                  {{ p.categoria === 'MARKETING' ? 'Marketing' : 'Utilidad' }}
+                </app-badge>
+              </div>
+              <p class="text-xs text-text-muted line-clamp-2">{{ p.cuerpo }}</p>
+            </button>
+          } @empty {
+            <p class="text-xs text-text-muted text-center py-6">No hay plantillas aprobadas disponibles.</p>
+          }
+        </div>
+      }
+    </div>
+
+    @if (plantillaSeleccionada()) {
+      <div class="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-border bg-bg-workspace">
+        <app-button variant="ghost" (clicked)="volverAListaPlantillas()">Atrás</app-button>
+        <app-button variant="primary" [loading]="enviandoPlantilla()" (clicked)="enviarPlantilla()">
+          Enviar por WhatsApp
+        </app-button>
+      </div>
+    }
+  </div>
+</ng-template>
+
+<!-- ── Modal: gestión de respuestas rápidas ──────────────────────────── -->
+<ng-template #modalGestionPlantillas>
+  <div class="pointer-events-auto w-full max-w-lg max-h-[85dvh] flex flex-col bg-white rounded-2xl shadow-lifted overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+          <app-icon name="file-text" [size]="18" class="text-primary" />
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-text-dark leading-tight">Respuestas Rápidas</h2>
+          <p class="text-[11px] text-text-muted leading-tight">Atajos con '/' para escribir más rápido</p>
+        </div>
+      </div>
+      <button type="button" (click)="cerrarGestionPlantillas()"
+        class="text-text-muted hover:text-text-dark cursor-pointer" aria-label="Cerrar">
+        <app-icon name="x" [size]="18" />
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-5 space-y-4">
+      <!-- Formulario de creación / edición -->
+      <div class="p-4 rounded-xl bg-bg-light border border-border space-y-3">
+        <p class="text-xs font-bold text-primary uppercase tracking-wider">
+          {{ editandoPlantillaId() ? 'Editar respuesta rápida' : 'Nueva respuesta rápida' }}
+        </p>
+        <app-input label="Título descriptivo" placeholder="Ej: Saludo inicial" [(value)]="formPlantillaTitulo" />
+        <app-input label="Atajo (opcional)" placeholder="Ej: /saludo" [(value)]="formPlantillaAtajo" />
+        <div>
+          <label class="edit-label">Texto de la respuesta</label>
+          <textarea
+            #txtContenido
+            [value]="formPlantillaContenido()"
+            (input)="formPlantillaContenido.set(txtContenido.value)"
+            placeholder="Hola, un gusto saludarte..."
+            rows="3"
+            class="edit-textarea"></textarea>
+        </div>
+        <div class="flex justify-end gap-2">
+          @if (editandoPlantillaId()) {
+            <app-button variant="ghost" size="sm" (clicked)="limpiarFormPlantilla()">Cancelar</app-button>
+          }
+          <app-button variant="primary" size="sm" [loading]="guardandoPlantilla()" (clicked)="guardarPlantillaAgente()">
+            {{ editandoPlantillaId() ? 'Guardar cambios' : 'Crear respuesta' }}
+          </app-button>
+        </div>
+      </div>
+
+      <!-- Lista de respuestas existentes -->
+      <div class="space-y-2">
+        @for (item of state.plantillasAgente.value(); track item.id) {
+          <div class="p-3 rounded-xl border border-border hover:border-primary/40 transition-colors flex items-start justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-bold text-text-dark truncate">{{ item.titulo }}</span>
+                @if (item.atajo) {
+                  <span class="text-[9px] font-extrabold text-primary bg-primary/10 px-1.5 py-0.2 rounded-full">{{ item.atajo }}</span>
+                }
+              </div>
+              <p class="text-xs text-text-muted mt-1 whitespace-pre-wrap leading-relaxed">{{ item.contenido }}</p>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                (click)="editarPlantilla(item.id, item.titulo, item.atajo, item.contenido)"
+                class="p-1 text-text-muted hover:text-primary rounded-lg hover:bg-black/5 cursor-pointer"
+                title="Editar">
+                <app-icon name="edit" [size]="14" />
+              </button>
+              <button
+                type="button"
+                (click)="eliminarPlantillaAgente(item.id)"
+                class="p-1 text-text-muted hover:text-critical rounded-lg hover:bg-black/5 cursor-pointer"
+                title="Eliminar">
+                <app-icon name="trash" [size]="14" />
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</ng-template>

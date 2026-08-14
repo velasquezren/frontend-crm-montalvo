@@ -1,0 +1,192 @@
+/* ── Sidebar (panel izquierdo) ───────────────────────────────── */
+.inbox-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-right: 1px solid var(--color-border);
+  overflow: hidden;
+  background: white;
+}
+
+.sidebar-header {
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: var(--color-bg-light);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.stat-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-secondary);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.sidebar-filters {
+  padding: 4px 16px 8px;
+}
+
+.sidebar-search {
+  padding: 4px 16px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* ── Agent filter chips (admin) ──────────────────────────────── */
+.agent-filter-row {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+}
+
+.agent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 3px;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: white;
+  transition: all 0.2s;
+}
+
+.agent-chip:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+  color: var(--color-primary);
+}
+
+.agent-chip-active {
+  border-color: var(--color-primary);
+  background: var(--color-bg-light);
+  color: var(--color-primary);
+}
+
+.agent-chip-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-text-muted) 10%, transparent);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.agent-chip-active .agent-chip-count {
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+  color: var(--color-primary);
+}
+
+/* ── Chat list ───────────────────────────────────────────────── */
+.sidebar-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.chat-item {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 20px;
+  text-align: left;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+  cursor: pointer;
+  transition: background-color 0.15s;
+  background: transparent;
+}
+
+.chat-item:hover {
+  background: color-mix(in srgb, var(--color-bg-light) 50%, transparent);
+}
+
+.chat-item-selected {
+  background: var(--color-bg-light);
+  border-left: 3px solid var(--color-primary);
+  padding-left: 17px;
+}
+
+.chat-item-selected:hover {
+  background: var(--color-bg-light);
+}
+
+.unassigned-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-secondary);
+  border: 2px solid white;
+}
+
+.msg-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.chat-item-skeleton {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+}
+
+@media (max-width: 768px) {
+  .tabs-inbox {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    justify-content: stretch;
+  }
+
+  .tabs-inbox > button {
+    padding-left: 2px;
+    padding-right: 2px;
+    justify-content: flex-end;
+  }
+
+  .tabs-inbox > button > span:first-child {
+    font-size: 10px;
+    line-height: 1.15;
+    text-align: center;
+  }
+
+  .tab-divisor {
+    display: none;
+  }
+}
+

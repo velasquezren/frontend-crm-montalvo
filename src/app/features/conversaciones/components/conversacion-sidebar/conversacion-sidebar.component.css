@@ -1,0 +1,339 @@
+/* ── Client panel (derecho) — Ficha del Paciente ──────────────── */
+.client-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-left: 1px solid var(--color-border);
+  overflow: hidden;
+  background: white;
+}
+
+/* ── Client Profile Header — Premium gradient ────────────────── */
+.client-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 20px 20px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary) 4%, white) 0%,
+    white 100%
+  );
+  border-bottom: 1px solid var(--color-border);
+  position: relative;
+}
+
+/* ── Detail sections — Minimalist Enterprise style ────────────── */
+.client-details {
+  padding: 12px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+}
+
+.detail-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+}
+
+.detail-row-clean {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 35%, transparent);
+}
+
+.detail-row-clean:last-child {
+  border-bottom: none;
+}
+
+/* ── Acciones sobre el teléfono ────────────────────────────────── */
+.acciones-telefono {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.accion-telefono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.accion-telefono:hover {
+  color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.accion-telefono--whatsapp {
+  color: var(--color-primary);
+}
+
+@media (max-width: 768px) {
+  .accion-telefono {
+    position: relative;
+  }
+
+  .accion-telefono::after {
+    content: '';
+    position: absolute;
+    inset: -9px;
+  }
+}
+
+/* ── Agent card ──────────────────────────────────────────────── */
+.no-agent-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-text-muted) 6%, white);
+  border: 1px dashed var(--color-border);
+}
+
+/* ── Edit form — Premium redesign ────────────────────────────── */
+.edit-form-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.edit-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 6%, white) 0%,
+    white 100%
+  );
+  border-bottom: 1px solid var(--color-border);
+}
+
+.edit-form-header-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.edit-form-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.edit-form-section {
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.edit-form-section + .edit-form-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+}
+
+.edit-form-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-primary);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-form-footer {
+  display: flex;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--color-border);
+  background: white;
+}
+
+/* Custom select for the edit form */
+.edit-select {
+  width: 100%;
+  font-size: 13px;
+  padding: 9px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  outline: none;
+  background: white;
+  color: var(--color-text-dark);
+  font-weight: 500;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 4 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+.edit-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+/* Custom textarea for the edit form */
+.edit-textarea {
+  width: 100%;
+  font-size: 13px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  outline: none;
+  background: white;
+  color: var(--color-text-dark);
+  font-family: inherit;
+  min-height: 70px;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  line-height: 1.5;
+}
+
+.edit-textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+/* Label for edit form fields */
+.edit-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  margin-bottom: 4px;
+}
+
+.edit-label-required::after {
+  content: ' *';
+  color: var(--color-text-critical);
+  font-weight: 700;
+}
+
+/* ── Tags display ────────────────────────────────────────────── */
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-primary) 8%, white);
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 1.3;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  transition: all 0.15s;
+}
+
+.tag-pill:hover {
+  background: color-mix(in srgb, var(--color-primary) 14%, white);
+}
+
+/* ── Conversation stats footer ───────────────────────────────── */
+.conv-stats-footer {
+  margin-top: auto;
+  padding: 14px 20px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-workspace);
+}
+
+/* ── Agent dropdown ──────────────────────────────────────────── */
+.agent-dropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 8px);
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  z-index: 50;
+  overflow: hidden;
+  animation: dropdown-in 0.15s ease-out;
+}
+
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.agent-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.agent-dropdown-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.agent-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  text-align: left;
+  background: transparent;
+  transition: background-color 0.15s;
+}
+
+.agent-dropdown-item:hover {
+  background: var(--color-bg-light);
+}
+
+.agent-dropdown-item-active {
+  background: color-mix(in srgb, var(--color-primary) 5%, white);
+}
+
+.agent-dropdown-footer {
+  display: flex;
+  justify-content: center;
+  padding: 8px 14px;
+  border-top: 1px solid var(--color-border);
+}

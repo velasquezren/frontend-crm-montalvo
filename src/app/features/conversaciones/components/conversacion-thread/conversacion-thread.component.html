@@ -1,0 +1,332 @@
+@if (state.detalle.value(); as chat) {
+  <!-- Cabecera del chat -->
+  <header class="chat-header" [class.chat-header--buscando]="state.buscadorAbierto()">
+    <div class="chat-header__identidad flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+      <button
+        type="button"
+        (click)="deseleccionar()"
+        class="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-bg-light cursor-pointer shrink-0"
+        title="Volver a la lista de chats">
+        <app-icon name="chevron-left" [size]="20" />
+      </button>
+      <app-avatar [initials]="iniciales(chat.cliente.nombre)" class="shrink-0" />
+      <div class="min-w-0 flex-1">
+        <p class="font-semibold text-text-dark text-xs sm:text-sm leading-tight truncate">
+          {{ chat.cliente.nombre }}
+        </p>
+        <div class="flex items-center gap-1.5 mt-0.5 min-w-0">
+          <span class="text-[11px] sm:text-xs text-text-muted leading-tight truncate max-w-[120px] sm:max-w-none">{{ chat.cliente.telefono }}</span>
+          <button
+            type="button"
+            (click)="copiarTexto(chat.cliente.telefono, 'Teléfono')"
+            class="text-text-muted hover:text-primary transition-colors cursor-pointer shrink-0"
+            title="Copiar número de teléfono">
+            <app-icon name="copy" [size]="12" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-header__acciones flex items-center gap-1.5 sm:gap-2 shrink-0 min-w-0">
+      <!-- Buscar dentro de esta conversación -->
+      @if (state.buscadorAbierto()) {
+        <div class="chat-search-box">
+          <app-icon name="search" [size]="14" class="text-text-muted shrink-0" />
+          <input
+            type="search"
+            #inputBuscarChat
+            autofocus
+            [value]="state.busquedaChat()"
+            (input)="state.busquedaChat.set(inputBuscarChat.value)"
+            (keydown.enter)="irACoincidencia(1)"
+            (keydown.escape)="cerrarBusquedaChat()"
+            placeholder="Buscar en el chat…"
+            aria-label="Buscar dentro de esta conversación"
+            class="chat-search-input" />
+          @if (state.busquedaChat().trim().length > 1) {
+            <span class="chat-search-count tabular-nums">{{ state.coincidenciasChat().length }}</span>
+          }
+          <app-button
+            variant="ghost" size="sm" icon="chevron-down" [circle]="true"
+            aria-label="Coincidencia siguiente"
+            (clicked)="irACoincidencia(1)" />
+          <app-button
+            variant="ghost" size="sm" icon="x" [circle]="true"
+            aria-label="Cerrar búsqueda"
+            (clicked)="cerrarBusquedaChat()" />
+        </div>
+      } @else {
+        <app-button
+          variant="ghost" size="sm" icon="search" [circle]="true"
+          aria-label="Buscar en esta conversación"
+          (clicked)="abrirBusquedaChat()" />
+      }
+
+      <!-- Acceso a WhatsApp Web de la agente -->
+      <a
+        [href]="enlaceWhatsApp(chat.cliente.telefono)"
+        target="_blank"
+        rel="noopener"
+        class="accion-wa"
+        title="Abrir esta conversación en WhatsApp Web (fuera del CRM)"
+        aria-label="Abrir esta conversación en mi WhatsApp Web">
+        <app-icon name="message-circle" [size]="15" />
+        <span class="accion-wa__texto"><span>WhatsApp Web</span></span>
+      </a>
+
+      @if (chat.agente) {
+        <div class="hidden lg:flex items-center gap-1.5 bg-bg-light rounded-full px-2.5 py-1">
+          <app-avatar [initials]="iniciales(chat.agente.nombre)" size="sm" variant="solid" />
+          <span class="text-xs font-medium text-text-dark max-w-[80px] truncate">{{ chat.agente.nombre.split(' ')[0] }}</span>
+        </div>
+      } @else {
+        <app-badge variant="neutral" icon="alert-circle" class="hidden sm:inline-flex">Sin asignar</app-badge>
+      }
+
+      <!-- Interruptor de la ficha -->
+      <button
+        type="button"
+        (click)="togglePanel()"
+        class="panel-toggle-btn cursor-pointer"
+        [class.panel-active]="state.panelAbierto()"
+        [attr.aria-expanded]="state.panelAbierto()"
+        aria-controls="ficha-paciente"
+        [title]="state.panelAbierto() ? 'Ocultar ficha del paciente' : 'Mostrar ficha del paciente'">
+        <app-icon [name]="state.panelAbierto() ? 'panel-right-close' : 'panel-right-open'" [size]="17" />
+      </button>
+    </div>
+  </header>
+
+  <!-- Banner de Aviso Clínico Fijado (Pinned Note) -->
+  @if (notaFijadaDe(chat.cliente) || state.editandoNotaFijada()) {
+    <div class="pinned-note-banner">
+      <div class="flex items-center gap-2 min-w-0 flex-1">
+        <app-icon name="pin" [size]="14" class="text-primary shrink-0" />
+        @if (state.editandoNotaFijada()) {
+          <div class="flex items-center gap-2 flex-1 min-w-0">
+            <input
+              type="text"
+              #inputNotaFijada
+              [value]="state.editNotaFijada()"
+              (input)="state.editNotaFijada.set(inputNotaFijada.value)"
+              (keydown.enter)="guardarNotaFijada()"
+              placeholder="Ej: Interesada en Rinoplastia - Paciente VIP (Alergia a Penicilina)"
+              class="edit-pinned-input" />
+            <app-button
+              size="sm"
+              [loading]="state.guardandoNotaFijada()"
+              (clicked)="guardarNotaFijada()">Guardar</app-button>
+            <app-button
+              variant="ghost"
+              size="sm"
+              (clicked)="cancelarEdicionNotaFijada()">Cancelar</app-button>
+          </div>
+        } @else {
+          <p class="pinned-note-text truncate">
+            <span class="font-bold text-primary">Aviso Fijado:</span> {{ notaFijadaDe(chat.cliente) }}
+          </p>
+        }
+      </div>
+      @if (!state.editandoNotaFijada()) {
+        <div class="flex items-center gap-1 shrink-0 ml-2">
+          <app-button
+            variant="ghost"
+            size="sm"
+            icon="edit"
+            [circle]="true"
+            (clicked)="iniciarEdicionNotaFijada(notaFijadaDe(chat.cliente))" />
+        </div>
+      }
+    </div>
+  } @else {
+    <button
+      type="button"
+      (click)="iniciarEdicionNotaFijada()"
+      class="btn-add-pin-trigger cursor-pointer">
+      <app-icon name="pin" [size]="12" />
+      <span>+ Fijar nota o aviso médico importante</span>
+    </button>
+  }
+
+  <!-- Mensajes con separadores de fecha -->
+  <div class="chat-messages" #messagesScroll (scroll)="onMessagesScroll()">
+    <!-- Historial anterior: se carga al llegar arriba del hilo -->
+    @if (state.cargandoHistorial()) {
+      <div class="py-2">
+        <app-loading-skeleton shape="text" height="2rem" />
+      </div>
+    }
+
+    @for (item of state.mensajesConFecha(); track (item.tipo === 'separador-fecha' ? item.fecha : item.mensaje.id)) {
+      @if (item.tipo === 'separador-fecha') {
+        <div class="date-separator">
+          <span class="date-separator-label">{{ item.fecha }}</span>
+        </div>
+      } @else {
+        <div class="bubble-row"
+             [attr.data-mensaje-id]="item.mensaje.id"
+             [class.bubble-row-out]="item.mensaje.direccion === 'SALIENTE'"
+             [class.bubble-row-in]="item.mensaje.direccion === 'ENTRANTE'">
+          <div class="bubble"
+               [class.bubble-out]="item.mensaje.direccion === 'SALIENTE'"
+               [class.bubble-in]="item.mensaje.direccion === 'ENTRANTE'"
+               [class.bubble-match]="state.coincidenciasChat().includes(item.mensaje.id)"
+               [class.bubble-match-active]="state.coincidenciasChat()[state.indiceCoincidencia()] === item.mensaje.id">
+
+            <!-- Media (foto / video / audio / documento) -->
+            @switch (item.mensaje.tipo) {
+              @case ('IMAGEN') {
+                @if (item.mensaje.mediaUrl) {
+                  <button type="button" (click)="abrirLightbox(item.mensaje.mediaUrl)" class="block mb-1 cursor-zoom-in text-left">
+                    <img [src]="item.mensaje.mediaUrl" alt="Imagen enviada en la conversación"
+                      loading="lazy" decoding="async"
+                      class="rounded-lg max-w-full max-h-72 object-contain hover:opacity-90 transition-opacity" />
+                  </button>
+                } @else {
+                  <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando imagen…</div>
+                }
+              }
+              @case ('STICKER') {
+                @if (item.mensaje.mediaUrl) {
+                  <button type="button" (click)="abrirLightbox(item.mensaje.mediaUrl)" class="block mb-1 cursor-zoom-in text-left">
+                    <img [src]="item.mensaje.mediaUrl" alt="Sticker" loading="lazy" decoding="async" class="w-28 h-28 object-contain hover:opacity-90 transition-opacity" />
+                  </button>
+                } @else {
+                  <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando…</div>
+                }
+              }
+              @case ('VIDEO') {
+                @if (item.mensaje.mediaUrl) {
+                  <video [src]="item.mensaje.mediaUrl" controls preload="none" class="rounded-lg max-w-full max-h-72 mb-1"></video>
+                } @else {
+                  <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando video…</div>
+                }
+              }
+              @case ('AUDIO') {
+                @if (item.mensaje.mediaUrl) {
+                  <div class="audio-player-container">
+                    <audio #voiceAudio [src]="item.mensaje.mediaUrl" controls preload="none" class="max-w-full h-8 flex-1"></audio>
+                    <div class="speed-btn-group">
+                      <button
+                        type="button"
+                        (click)="cambiarVelocidadAudio(voiceAudio, 1)"
+                        [class.active-speed]="obtenerVelocidadAudio(voiceAudio) === 1"
+                        class="speed-btn"
+                        title="Velocidad normal (1x)">1x</button>
+                      <button
+                        type="button"
+                        (click)="cambiarVelocidadAudio(voiceAudio, 1.5)"
+                        [class.active-speed]="obtenerVelocidadAudio(voiceAudio) === 1.5"
+                        class="speed-btn"
+                        title="Velocidad 1.5x">1.5x</button>
+                      <button
+                        type="button"
+                        (click)="cambiarVelocidadAudio(voiceAudio, 2)"
+                        [class.active-speed]="obtenerVelocidadAudio(voiceAudio) === 2"
+                        class="speed-btn"
+                        title="Velocidad doble (2x)">2x</button>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando audio…</div>
+                }
+              }
+              @case ('DOCUMENTO') {
+                @if (item.mensaje.mediaUrl) {
+                  <a [href]="item.mensaje.mediaUrl" target="_blank" rel="noopener"
+                    class="flex items-center gap-2 p-2 rounded-lg bg-black/5 hover:bg-black/10 transition-colors mb-1">
+                    <app-icon name="file-text" [size]="20" class="shrink-0 text-primary" />
+                    <span class="text-xs font-medium truncate">{{ item.mensaje.mediaNombre || 'Documento' }}</span>
+                  </a>
+                } @else {
+                  <div class="media-cargando"><app-icon name="file-text" [size]="16" /> Descargando documento…</div>
+                }
+              }
+            }
+
+            <!-- Texto / pie de foto / URL de media -->
+            @if (item.mensaje.contenido) {
+              @if (esUrlImagen(item.mensaje.contenido)) {
+                <button type="button" (click)="abrirLightbox(item.mensaje.contenido)" class="block my-1 cursor-zoom-in text-left">
+                  <img [src]="item.mensaje.contenido" alt="Imagen adjunta" loading="lazy" decoding="async" class="max-w-full sm:max-w-xs max-h-72 rounded-xl object-cover border border-border shadow-subtle hover:opacity-95 transition-opacity" />
+                </button>
+              } @else if (esUrlPdf(item.mensaje.contenido)) {
+                <a [href]="item.mensaje.contenido" target="_blank" rel="noopener" class="flex items-center gap-2 p-2.5 rounded-xl bg-black/5 hover:bg-black/10 transition-colors my-1 border border-border/50">
+                  <app-icon name="file-text" [size]="20" class="shrink-0 text-primary" />
+                  <span class="text-xs font-bold truncate flex items-center gap-1">Ver Documento PDF <app-icon name="external-link" [size]="12" /></span>
+                </a>
+              } @else {
+                <p class="bubble-text">{{ item.mensaje.contenido }}</p>
+              }
+            }
+
+            <span class="bubble-time">
+              @if (item.mensaje.automatico) {
+                <span class="marca-automatico" title="Enviado por el sistema fuera de horario">
+                  <app-icon name="clock" [size]="10" />
+                  automático
+                </span>
+              }
+              {{ item.mensaje.createdAt | date: 'HH:mm' }}
+              @if (item.mensaje.direccion === 'SALIENTE') {
+                @switch (item.mensaje.estadoEnvio) {
+                  @case ('LEIDO') {
+                    <app-icon name="check-check" [size]="12" class="inline-block ml-0.5 -mt-px text-secondary" title="Leído" />
+                  }
+                  @case ('ENTREGADO') {
+                    <app-icon name="check-check" [size]="12" class="inline-block ml-0.5 -mt-px" title="Entregado" />
+                  }
+                  @case ('FALLIDO') {
+                    <span
+                      class="inline-flex items-center gap-0.5 ml-1 text-critical"
+                      title="No se pudo enviar. Fuera de la ventana de 24h solo se pueden enviar Plantillas Aprobadas de WhatsApp.">
+                      <app-icon name="alert-circle" [size]="12" />
+                      <span class="text-[10px] font-semibold">No enviado</span>
+                    </span>
+                  }
+                  @default {
+                    <app-icon name="check" [size]="12" class="inline-block ml-0.5 -mt-px" title="Enviado" />
+                  }
+                }
+              }
+            </span>
+          </div>
+        </div>
+      }
+    } @empty {
+      @if (state.detalle.isLoading()) {
+        <div class="hilo-esqueleto">
+          <app-loading-skeleton shape="text" height="2.5rem" width="55%" />
+          <app-loading-skeleton shape="text" height="2rem" width="40%" />
+          <app-loading-skeleton shape="text" height="3rem" width="65%" />
+        </div>
+      } @else {
+        <app-empty-state icon="message-circle" title="Sin mensajes todavía"
+          description="Envía un mensaje para iniciar la conversación." />
+      }
+    }
+  </div>
+
+  <!-- Botón flotante: bajar al último mensaje -->
+  @if (mostrarBotonBajar()) {
+    <button type="button" (click)="bajarAlFondo()" class="scroll-bottom-btn" aria-label="Ir al último mensaje">
+      <app-icon name="chevron-down" [size]="18" />
+      <span class="text-xs font-semibold">Nuevos mensajes</span>
+    </button>
+  }
+} @else {
+  <div class="flex-1 flex items-center justify-center p-6 bg-bg-workspace/40">
+    <app-empty-state
+      icon="message-circle"
+      title="Ninguna conversación seleccionada"
+      description="Selecciona una conversación del panel lateral para leer y enviar mensajes de WhatsApp." />
+  </div>
+}
+
+<!-- Lightbox Modal -->
+@if (lightboxUrl(); as url) {
+  <app-image-viewer
+    [imageUrl]="url"
+    [title]="'Archivo adjunto'"
+    (closed)="cerrarLightbox()" />
+}

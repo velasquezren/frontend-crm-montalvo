@@ -113,3 +113,9 @@ export function esperandoDesde(c: ConversacionResumen): Date | null {
      mensaje del paciente, así que la espera que se muestra no se desvía. */
   return estaSinResponder(c) ? new Date(c.mensajes[0].createdAt) : null;
 }
+
+/** Elemento del hilo: mensaje real o separador de fecha. */
+export type ItemHilo =
+  | { readonly tipo: 'separador-fecha'; readonly fecha: string }
+  | { readonly tipo: 'mensaje'; readonly mensaje: MensajeApi };
+

@@ -1,0 +1,264 @@
+<!-- ── Panel izquierdo: lista de chats ──────────────────────────── -->
+<aside class="inbox-sidebar">
+
+  <!-- Cabecera con título y estadísticas -->
+  <div class="sidebar-header">
+    <div class="flex items-center justify-between mb-1">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+          <app-icon name="message-circle" [size]="18" class="text-primary" />
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-text-dark leading-tight">Inbox</h1>
+          <p class="text-[11px] text-text-muted leading-tight">WhatsApp Business</p>
+        </div>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-dot"></span>
+        {{ state.stats().total }} chat{{ state.stats().total === 1 ? '' : 's' }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtro tabs: Taller vertical stack (Texto arriba, contador abajo) -->
+  <div class="sidebar-filters">
+    <div class="tabs-inbox flex items-center justify-around py-1.5">
+      <button
+        type="button"
+        (click)="setFiltroTab('TODAS'); filtrarPorAgente(null)"
+        [class]="state.filtroTab() === 'TODAS' && !state.filtroAgenteId() ? 'text-primary font-bold border-b-2 border-primary -mb-[11px] pb-2' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent -mb-[11px] pb-2'"
+        class="flex flex-col items-center gap-1 px-3 transition-all cursor-pointer">
+        <span class="text-xs leading-tight">Todas</span>
+        <span
+          [class]="state.filtroTab() === 'TODAS' && !state.filtroAgenteId() ? 'text-primary bg-primary/10 font-bold' : 'text-text-muted bg-text-muted/10 font-semibold'"
+          class="text-[10px] px-2 py-0.5 rounded-full leading-none">
+          {{ state.stats().total }}
+        </span>
+      </button>
+
+      <div class="tab-divisor w-px h-6 bg-border/50 shrink-0"></div>
+
+      <!-- Sin responder: el paciente escribió y nadie contestó después -->
+      <button
+        type="button"
+        (click)="setFiltroTab('SIN_RESPONDER')"
+        [class]="state.filtroTab() === 'SIN_RESPONDER' ? 'text-primary font-bold border-b-2 border-primary -mb-[11px] pb-2' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent -mb-[11px] pb-2'"
+        class="flex flex-col items-center gap-1 px-3 transition-all cursor-pointer">
+        <span class="text-xs leading-tight">Sin responder</span>
+        <span
+          [class]="state.filtroTab() === 'SIN_RESPONDER' ? 'text-primary bg-primary/10 font-bold' : 'text-text-muted bg-text-muted/10 font-semibold'"
+          class="text-[10px] px-2 py-0.5 rounded-full leading-none">
+          {{ state.stats().sinResponder }}
+        </span>
+      </button>
+
+      <div class="tab-divisor w-px h-6 bg-border/50 shrink-0"></div>
+
+      <button
+        type="button"
+        (click)="setFiltroTab('SIN_ASIGNAR')"
+        [class]="state.filtroTab() === 'SIN_ASIGNAR' ? 'text-primary font-bold border-b-2 border-primary -mb-[11px] pb-2' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent -mb-[11px] pb-2'"
+        class="flex flex-col items-center gap-1 px-3 transition-all cursor-pointer">
+        <span class="text-xs leading-tight">Sin asignar</span>
+        <span
+          [class]="state.filtroTab() === 'SIN_ASIGNAR' ? 'text-primary bg-primary/10 font-bold' : 'text-text-muted bg-text-muted/10 font-semibold'"
+          class="text-[10px] px-2 py-0.5 rounded-full leading-none">
+          {{ state.stats().sinAsignar }}
+        </span>
+      </button>
+
+      <div class="tab-divisor w-px h-6 bg-border/50 shrink-0"></div>
+
+      <button
+        type="button"
+        (click)="setFiltroTab('MIS_CHATS')"
+        [class]="state.filtroTab() === 'MIS_CHATS' ? 'text-primary font-bold border-b-2 border-primary -mb-[11px] pb-2' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent -mb-[11px] pb-2'"
+        class="flex flex-col items-center gap-1 px-3 transition-all cursor-pointer">
+        <span class="text-xs leading-tight">Mis chats</span>
+        <span
+          [class]="state.filtroTab() === 'MIS_CHATS' ? 'text-primary bg-primary/10 font-bold' : 'text-text-muted bg-text-muted/10 font-semibold'"
+          class="text-[10px] px-2 py-0.5 rounded-full leading-none">
+          {{ state.stats().misChats }}
+        </span>
+      </button>
+    </div>
+
+    <!-- Filtro por agente (solo admin con chats activos) -->
+    @if (state.isAdmin() && agentesConChats().length > 0) {
+      <div class="agent-filter-row">
+        <div class="flex items-center justify-between cursor-pointer" (click)="toggleMostrarFiltroAgente()">
+          <span class="text-[10px] text-text-muted uppercase font-semibold tracking-wider">Por agente</span>
+          <button
+            type="button"
+            class="p-0.5 text-text-muted hover:text-text-dark transition-colors cursor-pointer"
+            [title]="state.mostrarFiltroAgentes() ? 'Ocultar filtro por agente' : 'Mostrar filtro por agente'">
+            <app-icon name="chevron-down" [size]="14" class="transition-transform duration-200 inline-block" [class.rotate-180]="state.mostrarFiltroAgentes()" />
+          </button>
+        </div>
+        @if (state.mostrarFiltroAgentes()) {
+          <div class="flex flex-wrap gap-1.5 mt-1.5">
+            @for (ag of agentesConChats(); track ag.id) {
+              <button
+                type="button"
+                (click)="filtrarPorAgente(state.filtroAgenteId() === ag.id ? null : ag.id)"
+                class="agent-chip cursor-pointer"
+                [class.agent-chip-active]="state.filtroAgenteId() === ag.id">
+                <app-avatar [initials]="iniciales(ag.nombre)" size="sm" />
+                <span>{{ ag.nombre.split(' ')[0] }}</span>
+                <span class="agent-chip-count">{{ ag.count }}</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Búsqueda -->
+  <div class="sidebar-search">
+    <app-input type="search" placeholder="Buscar por nombre o teléfono…" [(value)]="state.busqueda" />
+  </div>
+
+  <!-- Lista de conversaciones -->
+  <div class="sidebar-list">
+    @if (state.conversacionesRecurso.isLoading()) {
+      @for (n of [1, 2, 3, 4, 5, 6]; track n) {
+        <div class="chat-item-skeleton">
+          <app-loading-skeleton shape="circle" width="40px" height="40px" />
+          <div class="flex-1 space-y-2">
+            <app-loading-skeleton shape="text" height="0.9rem" width="60%" />
+            <app-loading-skeleton shape="text" height="0.75rem" width="85%" />
+          </div>
+        </div>
+      }
+    } @else if (state.conversacionesRecurso.error()) {
+      <app-empty-state
+        icon="alert-circle"
+        title="No se pudo cargar el inbox"
+        description="No hay respuesta del servidor. Revisa tu conexión e inténtalo de nuevo.">
+        <app-button icon="loader" (clicked)="recargarInbox()">Reintentar</app-button>
+      </app-empty-state>
+    } @else {
+      @for (chat of state.conversacionesFiltradas(); track chat.id) {
+        <button
+          type="button"
+          (click)="seleccionar(chat.id)"
+          class="chat-item"
+          [class.chat-item-selected]="state.seleccionadaId() === chat.id">
+
+          <!-- Avatar con indicador de sin asignar -->
+          <div class="relative">
+            <app-avatar [initials]="iniciales(chat.cliente.nombre)" />
+            @if (!chat.agente) {
+              <span class="unassigned-dot" title="Sin agente asignado"></span>
+            }
+          </div>
+
+          <!-- Info del chat -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-2">
+              <p class="font-medium text-text-dark text-sm truncate leading-tight">
+                {{ chat.cliente.nombre }}
+              </p>
+              <span class="text-[10px] text-text-muted shrink-0 leading-none">
+                {{ tiempoRelativo(chat.updatedAt) }}
+              </span>
+            </div>
+
+            <!-- Último mensaje + badge de agente -->
+            <div class="flex items-center justify-between gap-2 mt-1">
+              <div class="flex-1 min-w-0">
+                @if (chat.mensajes[0]; as ultimo) {
+                  <p class="text-xs text-text-muted truncate leading-snug flex items-center gap-1">
+                    @if (ultimo.direccion === 'SALIENTE') {
+                      @switch (ultimo.estadoEnvio) {
+                        @case ('LEIDO') {
+                          <app-icon name="check-check" [size]="14" class="text-secondary shrink-0" title="Leído" />
+                        }
+                        @case ('ENTREGADO') {
+                          <app-icon name="check-check" [size]="14" class="text-text-muted/70 shrink-0" title="Entregado" />
+                        }
+                        @case ('FALLIDO') {
+                          <span class="text-text-critical font-semibold text-[11px] shrink-0 leading-none" title="Falló el envío">No enviado</span>
+                        }
+                        @default {
+                          <app-icon name="check" [size]="14" class="text-text-muted/70 shrink-0" title="Enviado" />
+                        }
+                      }
+                    }
+                    @switch (ultimo.tipo) {
+                      @case ('IMAGEN') {
+                        <span class="inline-flex items-center gap-1 font-medium text-text-dark truncate">
+                          <app-icon name="image" [size]="12" class="text-primary shrink-0" />
+                          <span>Foto</span>
+                          @if (ultimo.contenido) {
+                            <span class="text-text-muted font-normal truncate">· {{ ultimo.contenido }}</span>
+                          }
+                        </span>
+                      }
+                      @case ('STICKER') {
+                        <span class="inline-flex items-center gap-1 font-medium text-text-dark truncate">
+                          <app-icon name="image" [size]="12" class="text-primary shrink-0" />
+                          <span>Sticker</span>
+                        </span>
+                      }
+                      @case ('VIDEO') {
+                        <span class="inline-flex items-center gap-1 font-medium text-text-dark truncate">
+                          <app-icon name="file-text" [size]="12" class="text-primary shrink-0" />
+                          <span>Video</span>
+                          @if (ultimo.contenido) {
+                            <span class="text-text-muted font-normal truncate">· {{ ultimo.contenido }}</span>
+                          }
+                        </span>
+                      }
+                      @case ('AUDIO') {
+                        <span class="inline-flex items-center gap-1 font-medium text-text-dark truncate">
+                          <app-icon name="file-text" [size]="12" class="text-primary shrink-0" />
+                          <span>Mensaje de voz</span>
+                        </span>
+                      }
+                      @case ('DOCUMENTO') {
+                        <span class="inline-flex items-center gap-1 font-medium text-text-dark truncate">
+                          <app-icon name="file-text" [size]="12" class="text-primary shrink-0" />
+                          <span class="truncate">{{ ultimo.mediaNombre || ultimo.contenido || 'Documento' }}</span>
+                        </span>
+                      }
+                      @default {
+                        <span class="truncate">{{ ultimo.contenido }}</span>
+                      }
+                    }
+                  </p>
+                } @else {
+                  <p class="text-xs text-text-muted/50 italic truncate">Sin mensajes</p>
+                }
+              </div>
+
+              <!-- Tiempo esperando respuesta + conteo de NO LEÍDOS -->
+              <div class="flex items-center gap-1.5 shrink-0">
+                @if (tiempoEsperando(chat); as espera) {
+                  <app-badge
+                    [variant]="esperaLarga(chat) ? 'critical' : 'info'"
+                    icon="clock">{{ espera }}</app-badge>
+                }
+                @if ((chat.noLeidosCount ?? 0) > 0) {
+                  <span class="msg-count-badge">{{ chat.noLeidosCount }}</span>
+                }
+              </div>
+            </div>
+
+            <!-- Agente asignado (si hay) — sutil debajo del mensaje -->
+            @if (chat.agente && state.isAdmin()) {
+              <p class="text-[10px] text-secondary mt-1 truncate leading-none">
+                <app-icon name="users" [size]="10" class="inline-block -mt-px mr-0.5" />
+                {{ chat.agente.nombre }}
+              </p>
+            }
+          </div>
+        </button>
+      } @empty {
+        <app-empty-state icon="message-circle" title="Sin resultados"
+          description="No hay conversaciones que coincidan con tu filtro." />
+      }
+    }
+  </div>
+</aside>

@@ -73,6 +73,11 @@ export class ConversacionesService {
     return this.api.get<MensajeApi[]>(`/conversaciones/${id}/mensajes-anteriores`, { antesDe, limit });
   }
 
+  /** Búsqueda histórica de mensajes en el servidor. */
+  buscarMensajes(id: string, query: string, limit = 20, skip = 0): Promise<{ total: number; items: MensajeApi[] }> {
+    return this.api.get<{ total: number; items: MensajeApi[] }>(`/conversaciones/${id}/buscar-mensajes`, { query, limit, skip });
+  }
+
   /** Agentes activos — alimenta el desplegable de asignación del admin. */
   agentesRequest(): ResourceRequest {
     return this.api.request('/conversaciones/meta/agentes');
