@@ -252,6 +252,12 @@
                     {{ codigo }}
                   </span>
                 }
+                @if (cli.agente; as ag) {
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium text-text-dark bg-bg-light border border-border">
+                    <app-icon name="user" [size]="11" class="text-primary" />
+                    <span>Agente: <strong class="font-semibold">{{ ag.nombre }}</strong></span>
+                  </span>
+                }
                 <a
                   [routerLink]="['/conversaciones']"
                   [queryParams]="{ clienteId: cli.id }"

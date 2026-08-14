@@ -228,7 +228,7 @@ export class ClientesPage {
     this.editNombre.set(cliente.nombre);
     this.editEmail.set(cliente.email || '');
     this.editTelefono.set(cliente.telefono);
-    this.editAgenteId.set(cliente.agenteId || null);
+    this.editAgenteId.set(cliente.agente?.id || cliente.agenteId || null);
     const datosExtra = cliente.datosExtra;
     this.editEmpresa.set(cliente.empresaTrabajo || textoExtra(datosExtra, 'empresa'));
     const fn = cliente.fechaNacimiento || textoExtra(datosExtra, 'fechaNacimiento', 'fn');
