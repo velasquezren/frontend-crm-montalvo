@@ -309,6 +309,7 @@
               <th>Agente Asignado</th>
               <th>Fecha Registro</th>
               <th>Estado Actual</th>
+              <th class="text-right">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -336,6 +337,17 @@
                   <app-badge [variant]="estadoBadge[lead.estado]">
                     {{ estadoLabel[lead.estado] }}
                   </app-badge>
+                </td>
+                <td>
+                  <div class="flex items-center justify-end gap-1">
+                    <a
+                      [routerLink]="['/conversaciones']"
+                      [queryParams]="{ busqueda: lead.cliente.telefono }"
+                      class="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-bg-light transition-colors inline-flex items-center justify-center"
+                      title="Abrir chat en WhatsApp">
+                      <app-icon name="message-circle" [size]="16" />
+                    </a>
+                  </div>
                 </td>
               </tr>
             }

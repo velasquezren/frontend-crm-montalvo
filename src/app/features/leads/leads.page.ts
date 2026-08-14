@@ -27,7 +27,7 @@ import {
 } from '../../shared/models/estados.model';
 import { Lead, ORIGEN_LABEL, OrigenLeadApi } from './lead.model';
 import { FiltroLeads, LeadsService, ResumenLeads } from './leads.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 type FiltroOrigen = OrigenLeadApi | 'TODOS';
 
@@ -49,6 +49,7 @@ type FiltroOrigen = OrigenLeadApi | 'TODOS';
     PaginatorComponent,
     DatePipe,
     DragDropModule,
+    RouterLink,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './leads.page.html',

@@ -62,6 +62,12 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
     { initialValue: null },
   );
 
+  /** Búsqueda o teléfono pasado por URL desde otros módulos. */
+  private readonly busquedaEnRuta = toSignal(
+    this.route.queryParamMap.pipe(map(p => p.get('busqueda') || p.get('telefono'))),
+    { initialValue: null },
+  );
+
   constructor() {
     void this.notificacionNativa.solicitarPermiso();
 
@@ -125,6 +131,25 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
         this.state.seleccionadaId.set(null);
         this.state.editandoFicha.set(false);
         this.entradaPropia = false;
+      }
+    });
+
+    /* Búsqueda o teléfono pasado por queryParams (desde Clientes o Leads) */
+    effect(() => {
+      const q = this.busquedaEnRuta();
+      if (!q) return;
+
+      this.state.busqueda.set(q);
+
+      const chats = this.state.conversacionesRecurso.value();
+      if (chats.length > 0) {
+        const queryNorm = q.trim().toLowerCase();
+        const coincidencia = chats.find(
+          c => c.cliente.telefono.includes(queryNorm) || c.cliente.nombre.toLowerCase().includes(queryNorm),
+        );
+        if (coincidencia && this.state.seleccionadaId() !== coincidencia.id) {
+          this.state.seleccionar(coincidencia.id);
+        }
       }
     });
 
