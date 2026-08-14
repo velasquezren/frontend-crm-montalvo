@@ -10,6 +10,22 @@ export interface CrearVentaDto {
   producto: string;
   /** Monto en bolivianos (Bs). */
   monto: number;
+  estado?: EstadoVenta;
+  metodoPago?: string;
+  comprobante?: string;
+  comprobanteKey?: string;
+  comprobanteMime?: string;
+  comprobanteNombre?: string;
+  medico?: string;
+  modulo?: string;
+  notas?: string;
+}
+
+export interface ComprobanteSubido {
+  comprobanteKey: string;
+  comprobanteMime: string;
+  comprobanteNombre: string;
+  comprobanteUrl: string;
 }
 
 /**
@@ -26,5 +42,11 @@ export class VentasService {
 
   crear(venta: CrearVentaDto): Promise<Venta> {
     return this.api.post<Venta>('/ventas', venta);
+  }
+
+  subirComprobante(file: File): Promise<ComprobanteSubido> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.api.post<ComprobanteSubido>('/ventas/comprobante', formData);
   }
 }

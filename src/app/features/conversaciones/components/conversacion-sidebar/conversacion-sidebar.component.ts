@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
 import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
@@ -14,7 +14,11 @@ import {
 import { generarIniciales } from '../../../../core/auth/user.model';
 import { calcularEdad } from '../../../../core/api/edad';
 import { listaExtra, textoExtra } from '../../../../core/api/datos-extra';
+import { mensajeDeError } from '../../../../core/api/http-error';
 import { ToastService } from '../../../../core/toast/toast.service';
+import { ComprobanteSubido, MetodoPagoVenta } from '../../../ventas/venta.model';
+import { VentasService } from '../../../ventas/ventas.service';
+import { METODOS_PAGO, MODULOS_MONTALVO } from '../../../ventas/ventas.page';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
 import { ConversacionResumen } from '../../conversacion.model';
 
@@ -105,6 +109,119 @@ export class ConversacionSidebarComponent {
     const dias = Math.floor(horas / 24);
     if (dias < 7) return `${dias}d`;
     return new Date(fecha).toLocaleDateString('es-BO', { day: '2-digit', month: 'short' });
+  }
+
+  protected readonly modulos = MODULOS_MONTALVO;
+  protected readonly metodosPago = METODOS_PAGO;
+
+  /* ── Modal de Venta Rápida desde el Chat ───────────────────────── */
+  private readonly ventasService = inject(VentasService);
+  protected readonly modalVentaAbierto = signal(false);
+  protected readonly moduloVenta = signal<string>('CIRUGIA');
+  protected readonly productoVenta = signal<string>('');
+  protected readonly montoVenta = signal<string>('');
+  protected readonly metodoPagoVenta = signal<MetodoPagoVenta>('QR');
+  protected readonly comprobanteVenta = signal<string>('');
+  protected readonly medicoVenta = signal<string>('');
+  protected readonly notasVenta = signal<string>('');
+  protected readonly guardandoVenta = signal(false);
+  protected readonly errorVenta = signal('');
+
+  protected readonly subiendoComprobante = signal(false);
+  protected readonly comprobanteSubido = signal<ComprobanteSubido | null>(null);
+  protected readonly archivoNombre = signal<string | null>(null);
+
+  protected readonly sugerenciasModulo = computed(() => {
+    const mod = this.modulos.find(m => m.id === this.moduloVenta());
+    return mod?.servicios ?? [];
+  });
+
+  protected abrirModalVenta(): void {
+    this.productoVenta.set('');
+    this.montoVenta.set('');
+    this.comprobanteVenta.set('');
+    this.medicoVenta.set('');
+    this.notasVenta.set('');
+    this.errorVenta.set('');
+    this.archivoNombre.set(null);
+    this.comprobanteSubido.set(null);
+    this.modalVentaAbierto.set(true);
+  }
+
+  protected cerrarModalVenta(): void {
+    this.modalVentaAbierto.set(false);
+  }
+
+  protected seleccionarSugerenciaVenta(sug: string): void {
+    this.productoVenta.set(sug);
+  }
+
+  protected async onArchivoComprobante(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+    this.archivoNombre.set(file.name);
+    this.subiendoComprobante.set(true);
+    this.errorVenta.set('');
+
+    try {
+      const res = await this.ventasService.subirComprobante(file);
+      this.comprobanteSubido.set(res);
+    } catch (err) {
+      this.errorVenta.set(mensajeDeError(err, 'No se pudo subir el comprobante'));
+      this.archivoNombre.set(null);
+      this.comprobanteSubido.set(null);
+    } finally {
+      this.subiendoComprobante.set(false);
+    }
+  }
+
+  protected quitarComprobante(): void {
+    this.archivoNombre.set(null);
+    this.comprobanteSubido.set(null);
+  }
+
+  protected async guardarVenta(event: Event, clienteId: string): Promise<void> {
+    event.preventDefault();
+    this.errorVenta.set('');
+
+    const monto = Number(this.montoVenta());
+    if (!this.productoVenta().trim()) {
+      this.errorVenta.set('Indica el procedimiento o servicio vendido.');
+      return;
+    }
+    if (!monto || monto <= 0) {
+      this.errorVenta.set('Ingresa un monto válido en Bs.');
+      return;
+    }
+
+    const subido = this.comprobanteSubido();
+    const mod = this.modulos.find(m => m.id === this.moduloVenta());
+
+    this.guardandoVenta.set(true);
+    try {
+      await this.ventasService.crear({
+        clienteId,
+        producto: this.productoVenta().trim(),
+        monto,
+        metodoPago: this.metodoPagoVenta(),
+        comprobante: this.comprobanteVenta().trim() || undefined,
+        comprobanteKey: subido?.comprobanteKey,
+        comprobanteMime: subido?.comprobanteMime,
+        comprobanteNombre: subido?.comprobanteNombre,
+        medico: this.medicoVenta().trim() || undefined,
+        modulo: mod?.label || undefined,
+        notas: this.notasVenta().trim() || undefined,
+      });
+
+      this.toast.success(`Venta de ${this.productoVenta()} (Bs ${monto}) registrada con éxito.`);
+      this.cerrarModalVenta();
+    } catch (err) {
+      this.errorVenta.set(mensajeDeError(err, 'No se pudo registrar la venta.'));
+    } finally {
+      this.guardandoVenta.set(false);
+    }
   }
 
   protected togglePanel(): void {

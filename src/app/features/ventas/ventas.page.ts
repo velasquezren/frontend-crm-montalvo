@@ -25,10 +25,114 @@ import {
   EstadoVenta,
 } from '../../shared/models/estados.model';
 import { formatearBs, MonedaPipe } from '../../shared/pipes/moneda.pipe';
-import { Venta } from './venta.model';
+import { ComprobanteSubido, MetodoPagoVenta, Venta } from './venta.model';
 import { VentasService } from './ventas.service';
 
 type FiltroVenta = EstadoVenta | 'TODAS';
+
+export interface ModuloInfo {
+  readonly id: string;
+  readonly label: string;
+  readonly icon: IconName;
+  readonly servicios: readonly string[];
+}
+
+export const MODULOS_MONTALVO: readonly ModuloInfo[] = [
+  {
+    id: 'CIRUGIA',
+    label: 'Cirugía Plástica',
+    icon: 'activity',
+    servicios: [
+      'Rinoplastia Ultrasónica',
+      'Lipoescultura HD',
+      'Aumento Mamario',
+      'Blefaroplastia',
+      'Abdominoplastia',
+      'Bichectomía',
+      'Lifting Facial',
+      'Mastopexia',
+    ],
+  },
+  {
+    id: 'ESTETICA',
+    label: 'Estética / Spa',
+    icon: 'star',
+    servicios: [
+      'Toxina Botulínica (Botox)',
+      'Ácido Hialurónico (Relleno)',
+      'Limpieza Facial Profunda',
+      'Plasma Rico en Plaquetas (PRP)',
+      'Peeling Químico',
+      'Bioestimulador de Colágeno',
+      'Hilos Tensores',
+    ],
+  },
+  {
+    id: 'DERMATOLOGIA',
+    label: 'Dermatología',
+    icon: 'shield',
+    servicios: [
+      'Consulta Dermatológica',
+      'Tratamiento Integral de Acné',
+      'Extirpación de Lesión Cutánea',
+      'Crioterapia Dermatológica',
+    ],
+  },
+  {
+    id: 'MATERNIDAD',
+    label: 'Maternidad / Parto',
+    icon: 'users',
+    servicios: [
+      'Plan Parto Natural Gold',
+      'Plan Parto Cesárea Gold',
+      'Plan Silver Parto',
+      'Plan Bronce Maternidad',
+    ],
+  },
+  {
+    id: 'GINECOLOGIA',
+    label: 'Ginecología',
+    icon: 'user',
+    servicios: [
+      'Consulta Ginecológica',
+      'Papanicolaou + Colposcopia',
+      'Ecografía Ginecológica / Obstétrica',
+    ],
+  },
+  {
+    id: 'CONSULTA',
+    label: 'Consulta Médica',
+    icon: 'file-text',
+    servicios: [
+      'Consulta Médica Especializada',
+      'Evaluación Pre-Quirúrgica',
+      'Reconsulta de Control',
+    ],
+  },
+  {
+    id: 'LABORATORIO',
+    label: 'Laboratorio y Diagnóstico',
+    icon: 'database',
+    servicios: [
+      'Perfil Pre-Operatorio Completo',
+      'Laboratorio Clínico General',
+      'Ecografía Diagnóstica',
+    ],
+  },
+  {
+    id: 'OTRO',
+    label: 'Otro Procedimiento',
+    icon: 'plus',
+    servicios: [],
+  },
+] as const;
+
+export const METODOS_PAGO: readonly { id: MetodoPagoVenta; label: string; icon: IconName }[] = [
+  { id: 'QR', label: 'Pago QR', icon: 'dollar-sign' },
+  { id: 'TRANSFERENCIA', label: 'Transferencia', icon: 'wallet' },
+  { id: 'TARJETA', label: 'Tarjeta Déb./Créd.', icon: 'wallet' },
+  { id: 'EFECTIVO', label: 'Efectivo en Caja', icon: 'dollar-sign' },
+];
 
 /**
  * Ventas — datos reales (RF-11/RF-12). El agente que registra queda fijado
@@ -64,6 +168,9 @@ export class VentasPage {
   protected readonly estadoLabel = ESTADO_VENTA_LABEL;
   protected readonly iniciales = generarIniciales;
 
+  protected readonly modulos = MODULOS_MONTALVO;
+  protected readonly metodosPago = METODOS_PAGO;
+
   protected readonly filtro = signal<FiltroVenta>('TODAS');
   protected readonly filtros: readonly FiltroVenta[] = ['TODAS', 'GANADA', 'EN_PROCESO', 'PERDIDA'];
 
@@ -89,10 +196,30 @@ export class VentasPage {
   protected readonly formularioAbierto = signal(false);
   protected readonly busquedaCliente = signal('');
   protected readonly clienteElegido = signal<Cliente | null>(null);
+  protected readonly moduloSeleccionado = signal<string>('CIRUGIA');
   protected readonly producto = signal('');
   protected readonly monto = signal('');
+  protected readonly metodoPago = signal<MetodoPagoVenta>('QR');
+  protected readonly comprobante = signal('');
+  protected readonly medico = signal('');
+  protected readonly notas = signal('');
   protected readonly guardando = signal(false);
   protected readonly errorForm = signal('');
+
+  /* Adjunto de Comprobante / Recibo */
+  protected readonly subiendoComprobante = signal(false);
+  protected readonly comprobanteSubido = signal<ComprobanteSubido | null>(null);
+  protected readonly archivoNombre = signal<string | null>(null);
+
+  /* Lightbox visor de comprobante */
+  protected readonly lightboxUrl = signal<string | null>(null);
+  protected readonly lightboxNombre = signal<string | null>(null);
+
+  /* Sugerencias de productos del módulo actual */
+  protected readonly serviciosSugeridos = computed(() => {
+    const mod = this.modulos.find(m => m.id === this.moduloSeleccionado());
+    return mod?.servicios ?? [];
+  });
 
   /* Búsqueda de cliente: solo consulta con 2+ caracteres */
   protected readonly resultadosCliente = httpResource<readonly Cliente[]>(
@@ -127,6 +254,46 @@ export class VentasPage {
     this.busquedaCliente.set('');
   }
 
+  protected seleccionarSugerencia(nombreServicio: string): void {
+    this.producto.set(nombreServicio);
+  }
+
+  protected async onArchivoSeleccionado(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+    this.archivoNombre.set(file.name);
+    this.subiendoComprobante.set(true);
+    this.errorForm.set('');
+
+    try {
+      const res = await this.ventasService.subirComprobante(file);
+      this.comprobanteSubido.set(res);
+    } catch (err) {
+      this.errorForm.set(mensajeDeError(err, 'No se pudo subir el archivo de comprobante'));
+      this.archivoNombre.set(null);
+      this.comprobanteSubido.set(null);
+    } finally {
+      this.subiendoComprobante.set(false);
+    }
+  }
+
+  protected quitarComprobante(): void {
+    this.archivoNombre.set(null);
+    this.comprobanteSubido.set(null);
+  }
+
+  protected abrirLightbox(url: string, nombre?: string | null): void {
+    this.lightboxUrl.set(url);
+    this.lightboxNombre.set(nombre || 'Comprobante de pago');
+  }
+
+  protected cerrarLightbox(): void {
+    this.lightboxUrl.set(null);
+    this.lightboxNombre.set(null);
+  }
+
   protected async guardar(event: Event): Promise<void> {
     event.preventDefault();
     this.errorForm.set('');
@@ -134,11 +301,11 @@ export class VentasPage {
     const cliente = this.clienteElegido();
     const monto = Number(this.monto());
     if (!cliente) {
-      this.errorForm.set('Busca y selecciona un cliente.');
+      this.errorForm.set('Busca y selecciona un cliente o paciente.');
       return;
     }
     if (!this.producto().trim()) {
-      this.errorForm.set('Indica el producto o servicio vendido.');
+      this.errorForm.set('Indica el producto, procedimiento o servicio vendido.');
       return;
     }
     if (!monto || monto <= 0) {
@@ -146,17 +313,33 @@ export class VentasPage {
       return;
     }
 
+    const subido = this.comprobanteSubido();
+    const mod = this.modulos.find(m => m.id === this.moduloSeleccionado());
+
     this.guardando.set(true);
     try {
       await this.ventasService.crear({
         clienteId: cliente.id,
         producto: this.producto().trim(),
         monto,
+        metodoPago: this.metodoPago(),
+        comprobante: this.comprobante().trim() || undefined,
+        comprobanteKey: subido?.comprobanteKey,
+        comprobanteMime: subido?.comprobanteMime,
+        comprobanteNombre: subido?.comprobanteNombre,
+        medico: this.medico().trim() || undefined,
+        modulo: mod?.label || undefined,
+        notas: this.notas().trim() || undefined,
       });
+
       this.formularioAbierto.set(false);
       this.limpiarCliente();
       this.producto.set('');
       this.monto.set('');
+      this.comprobante.set('');
+      this.medico.set('');
+      this.notas.set('');
+      this.quitarComprobante();
       this.ventas.reload();
     } catch (err) {
       this.errorForm.set(mensajeDeError(err, 'No se pudo registrar la venta. Intenta de nuevo.'));
