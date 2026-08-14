@@ -125,7 +125,7 @@
                   <span class="text-[9px] text-text-muted whitespace-nowrap">
                     {{ lead.createdAt | date: 'dd/MM HH:mm' }}
                   </span>
-                  @if (lead.agente || lead.cliente.agente; as ag) {
+                  @if (lead.agente; as ag) {
                     <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20 truncate max-w-[130px]" [title]="ag.nombre">
                       <app-icon name="users" [size]="10" class="shrink-0" />
                       <span class="truncate">{{ ag.nombre }}</span>
@@ -193,7 +193,7 @@
                   <span class="text-[9px] text-text-muted whitespace-nowrap">
                     {{ lead.createdAt | date: 'dd/MM HH:mm' }}
                   </span>
-                  @if (lead.agente || lead.cliente.agente; as ag) {
+                  @if (lead.agente; as ag) {
                     <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20 truncate max-w-[130px]" [title]="ag.nombre">
                       <app-icon name="users" [size]="10" class="shrink-0" />
                       <span class="truncate">{{ ag.nombre }}</span>
@@ -261,7 +261,7 @@
                   <span class="text-[9px] text-text-muted whitespace-nowrap">
                     {{ lead.createdAt | date: 'dd/MM HH:mm' }}
                   </span>
-                  @if (lead.agente || lead.cliente.agente; as ag) {
+                  @if (lead.agente; as ag) {
                     <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20 truncate max-w-[130px]" [title]="ag.nombre">
                       <app-icon name="users" [size]="10" class="shrink-0" />
                       <span class="truncate">{{ ag.nombre }}</span>
@@ -329,7 +329,7 @@
                   <span class="text-[9px] text-text-muted whitespace-nowrap">
                     {{ lead.createdAt | date: 'dd/MM HH:mm' }}
                   </span>
-                  @if (lead.agente || lead.cliente.agente; as ag) {
+                  @if (lead.agente; as ag) {
                     <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20 truncate max-w-[130px]" [title]="ag.nombre">
                       <app-icon name="users" [size]="10" class="shrink-0" />
                       <span class="truncate">{{ ag.nombre }}</span>
@@ -386,8 +386,8 @@
                 </td>
                 <td>{{ origenLabel[lead.origen] }}</td>
                 <td>
-                  @if (lead.agente || lead.cliente.agente) {
-                    {{ lead.agente?.nombre || lead.cliente.agente?.nombre }}
+                  @if (lead.agente) {
+                    {{ lead.agente?.nombre }}
                   } @else {
                     <span class="text-text-muted italic">Sin asignar</span>
                   }
