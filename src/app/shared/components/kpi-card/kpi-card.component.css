@@ -121,3 +121,55 @@
   margin-right: 3px;
   color: var(--color-primary);
 }
+
+/* ── Variante compacta (input `compacto`) ─────────────────────────────────
+   Para cuando el KPI encabeza otra cosa en vez de ser el contenido: dentro de
+   un cajón, tres tarjetas a tamaño de dashboard se comen la columna antes de
+   llegar a lo que se venía a ver. Mismo esqueleto, menos aire. */
+.kpi-card-compacto {
+  padding: 10px 12px;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+/* Sin realce al pasar por encima: no es un elemento sobre el que se actúe, y el
+   salto de 2 px dentro de un panel se lee como un temblor. */
+.kpi-card-compacto:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.kpi-card-compacto .kpi-cabecera {
+  margin-bottom: 4px;
+}
+
+.kpi-card-compacto .kpi-label {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+
+.kpi-card-compacto .kpi-icono {
+  width: 22px;
+  height: 22px;
+  border-radius: 12px;
+}
+
+.kpi-card-compacto .kpi-valor {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.kpi-card-compacto .kpi-pie {
+  font-size: 10px;
+}
+
+@media (max-width: 640px) {
+  .kpi-card-compacto {
+    padding: 10px 12px;
+  }
+
+  .kpi-card-compacto .kpi-valor {
+    font-size: 15px;
+  }
+}

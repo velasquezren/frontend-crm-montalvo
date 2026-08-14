@@ -27,11 +27,14 @@ export type KpiTono = 'primary' | 'secondary' | 'neutral' | 'critical';
   imports: [IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="kpi-card" [class.kpi-card-destacado]="destacado()">
+    <div
+      class="kpi-card"
+      [class.kpi-card-destacado]="destacado()"
+      [class.kpi-card-compacto]="compacto()">
       <div class="kpi-cabecera">
         <span class="kpi-label">{{ label() }}</span>
         <div [class]="'kpi-icono kpi-icono-' + tono()">
-          <app-icon [name]="icon()" [size]="18" />
+          <app-icon [name]="icon()" [size]="compacto() ? 14 : 18" />
         </div>
       </div>
       <span [class]="tonoValor() ? 'kpi-valor kpi-valor-' + tonoValor() : 'kpi-valor'">
@@ -78,6 +81,21 @@ export class KpiCardComponent {
 
   /** Ícono pequeño delante del pie, para reforzar lo que dice esa línea. */
   readonly pieIcono = input<IconName | undefined>(undefined);
+
+  /**
+   * Versión reducida: la mitad de aire, número más chico y sin el realce al
+   * pasar por encima.
+   *
+   * En un dashboard el KPI **es** el contenido y merece su tamaño. Dentro de un
+   * cajón es solo el encabezado de otra cosa —el historial del paciente, el
+   * perfil del médico—, y tres tarjetas grandes se comían la columna antes de
+   * llegar a lo que se venía a ver.
+   *
+   * Es un `input()` del átomo y no una copia con "casi lo mismo": duplicar la
+   * tarjeta es exactamente cómo `.kpi-card` acabó definida a mano en cuatro CSS
+   * distintos, que es el problema que este componente vino a resolver.
+   */
+  readonly compacto = input(false);
 
   /** Mismo locale que el resto del CRM (`es-BO`): separador de miles con punto. */
   protected readonly valorFormateado = computed(() => {

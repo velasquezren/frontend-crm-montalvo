@@ -125,6 +125,24 @@ function verificarInventario(skill, texto) {
     for (const miembro of new Set(miembros)) {
       if (!api.has(miembro)) señala(skill, `<${selector}> no tiene \`${miembro}\``);
     }
+
+    /* La dirección contraria: que el ÁTOMO no crezca sin decirlo.
+       Lo de arriba solo comprueba que el skill no invente miembros; un `input()`
+       nuevo se colaba sin aparecer en el inventario, y el inventario es
+       precisamente lo que se lee para saber si hace falta un componente nuevo o
+       basta una variante. Cuando la tabla envejece, la sesión siguiente no ve la
+       variante y duplica el átomo — que es como `.kpi-card` acabó definida a
+       mano en cuatro CSS distintos. Pasó con `compacto` el 2026-08-14. */
+    const declarados = new Set(miembros);
+    for (const miembro of api) {
+      if (!declarados.has(miembro)) {
+        señala(
+          skill,
+          `<${selector}> expone \`${miembro}\` y el inventario no lo menciona — ` +
+            'añádelo a su fila para que se sepa que existe.',
+        );
+      }
+    }
   }
 }
 

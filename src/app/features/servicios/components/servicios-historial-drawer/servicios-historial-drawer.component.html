@@ -27,6 +27,7 @@
     <section class="grid-kpis-modern">
       @for (item of resumenHistorial(); track item.label; let i = $index) {
         <app-kpi-card
+          [compacto]="true"
           [style.--indice]="i"
           class="aparecer"
           [label]="item.label"
