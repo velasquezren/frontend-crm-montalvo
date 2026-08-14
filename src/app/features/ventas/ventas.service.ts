@@ -40,6 +40,16 @@ export class VentasService {
     return this.api.request('/ventas', { estado, pagina, limite });
   }
 
+  /**
+   * Servicios y médicos que la clínica ya facturó, para autocompletar el modal.
+   *
+   * Se pide una vez al abrirlo y el backend lo cachea una hora: son 246
+   * servicios y 65 médicos, no crecen durante la jornada.
+   */
+  catalogoRequest(): ResourceRequest {
+    return this.api.request('/ventas/catalogo');
+  }
+
   crear(venta: CrearVentaDto): Promise<Venta> {
     return this.api.post<Venta>('/ventas', venta);
   }

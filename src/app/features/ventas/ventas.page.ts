@@ -25,107 +25,11 @@ import {
   EstadoVenta,
 } from '../../shared/models/estados.model';
 import { formatearBs, MonedaPipe } from '../../shared/pipes/moneda.pipe';
-import { ComprobanteSubido, MetodoPagoVenta, Venta } from './venta.model';
+import { CATALOGO_VACIO, filtrarMedicos, filtrarServicios, moduloDeServicio } from './catalogo.util';
+import { CatalogoClinico, ComprobanteSubido, MetodoPagoVenta, Venta } from './venta.model';
 import { VentasService } from './ventas.service';
 
 type FiltroVenta = EstadoVenta | 'TODAS';
-
-export interface ModuloInfo {
-  readonly id: string;
-  readonly label: string;
-  readonly icon: IconName;
-  readonly servicios: readonly string[];
-}
-
-export const MODULOS_MONTALVO: readonly ModuloInfo[] = [
-  {
-    id: 'CIRUGIA',
-    label: 'Cirugía Plástica',
-    icon: 'activity',
-    servicios: [
-      'Rinoplastia Ultrasónica',
-      'Lipoescultura HD',
-      'Aumento Mamario',
-      'Blefaroplastia',
-      'Abdominoplastia',
-      'Bichectomía',
-      'Lifting Facial',
-      'Mastopexia',
-    ],
-  },
-  {
-    id: 'ESTETICA',
-    label: 'Estética / Spa',
-    icon: 'star',
-    servicios: [
-      'Toxina Botulínica (Botox)',
-      'Ácido Hialurónico (Relleno)',
-      'Limpieza Facial Profunda',
-      'Plasma Rico en Plaquetas (PRP)',
-      'Peeling Químico',
-      'Bioestimulador de Colágeno',
-      'Hilos Tensores',
-    ],
-  },
-  {
-    id: 'DERMATOLOGIA',
-    label: 'Dermatología',
-    icon: 'shield',
-    servicios: [
-      'Consulta Dermatológica',
-      'Tratamiento Integral de Acné',
-      'Extirpación de Lesión Cutánea',
-      'Crioterapia Dermatológica',
-    ],
-  },
-  {
-    id: 'MATERNIDAD',
-    label: 'Maternidad / Parto',
-    icon: 'users',
-    servicios: [
-      'Plan Parto Natural Gold',
-      'Plan Parto Cesárea Gold',
-      'Plan Silver Parto',
-      'Plan Bronce Maternidad',
-    ],
-  },
-  {
-    id: 'GINECOLOGIA',
-    label: 'Ginecología',
-    icon: 'user',
-    servicios: [
-      'Consulta Ginecológica',
-      'Papanicolaou + Colposcopia',
-      'Ecografía Ginecológica / Obstétrica',
-    ],
-  },
-  {
-    id: 'CONSULTA',
-    label: 'Consulta Médica',
-    icon: 'file-text',
-    servicios: [
-      'Consulta Médica Especializada',
-      'Evaluación Pre-Quirúrgica',
-      'Reconsulta de Control',
-    ],
-  },
-  {
-    id: 'LABORATORIO',
-    label: 'Laboratorio y Diagnóstico',
-    icon: 'database',
-    servicios: [
-      'Perfil Pre-Operatorio Completo',
-      'Laboratorio Clínico General',
-      'Ecografía Diagnóstica',
-    ],
-  },
-  {
-    id: 'OTRO',
-    label: 'Otro Procedimiento',
-    icon: 'plus',
-    servicios: [],
-  },
-] as const;
 
 export const METODOS_PAGO: readonly { id: MetodoPagoVenta; label: string; icon: IconName }[] = [
   { id: 'QR', label: 'Pago QR', icon: 'dollar-sign' },
@@ -168,7 +72,6 @@ export class VentasPage {
   protected readonly estadoLabel = ESTADO_VENTA_LABEL;
   protected readonly iniciales = generarIniciales;
 
-  protected readonly modulos = MODULOS_MONTALVO;
   protected readonly metodosPago = METODOS_PAGO;
 
   protected readonly filtro = signal<FiltroVenta>('TODAS');
@@ -196,7 +99,6 @@ export class VentasPage {
   protected readonly formularioAbierto = signal(false);
   protected readonly busquedaCliente = signal('');
   protected readonly clienteElegido = signal<Cliente | null>(null);
-  protected readonly moduloSeleccionado = signal<string>('CIRUGIA');
   protected readonly producto = signal('');
   protected readonly monto = signal('');
   protected readonly metodoPago = signal<MetodoPagoVenta>('QR');
@@ -215,11 +117,42 @@ export class VentasPage {
   protected readonly lightboxUrl = signal<string | null>(null);
   protected readonly lightboxNombre = signal<string | null>(null);
 
-  /* Sugerencias de productos del módulo actual */
-  protected readonly serviciosSugeridos = computed(() => {
-    const mod = this.modulos.find(m => m.id === this.moduloSeleccionado());
-    return mod?.servicios ?? [];
-  });
+  /**
+   * Catálogo real de la clínica. Se pide al abrir el formulario y no antes: no
+   * tiene sentido cargarlo al entrar al listado, que es lo que la agente hace
+   * más veces.
+   */
+  protected readonly catalogo = httpResource<CatalogoClinico>(
+    () => (this.formularioAbierto() ? this.ventasService.catalogoRequest() : undefined),
+    { defaultValue: CATALOGO_VACIO },
+  );
+
+  /**
+   * Servicios que coinciden con lo tecleado, los más vendidos primero.
+   *
+   * Sin texto muestra los diez más frecuentes, que es lo que resuelve la mayoría
+   * de los registros sin escribir nada: consulta externa, hemograma, ecografía.
+   */
+  protected readonly serviciosSugeridos = computed(() =>
+    filtrarServicios(this.catalogo.value(), this.producto()),
+  );
+
+  /**
+   * El módulo ya no lo elige nadie: sale del servicio elegido.
+   *
+   * Antes había un selector de ocho "especialidades" escrito a mano que no
+   * existía en FileMaker. Los módulos de verdad son cuatro y son operativos
+   * —LABORATORIO, CONSULTA, PLANES, INTERNACION—, además de ser entrada del
+   * motor de comisiones. Deducirlos del servicio quita un clic y hace que lo
+   * guardado venga del dato, no de lo que alguien supuso.
+   */
+  protected readonly moduloDetectado = computed(() =>
+    moduloDeServicio(this.catalogo.value(), this.producto()),
+  );
+
+  protected readonly medicosSugeridos = computed(() =>
+    filtrarMedicos(this.catalogo.value(), this.medico()),
+  );
 
   /* Búsqueda de cliente: solo consulta con 2+ caracteres */
   protected readonly resultadosCliente = httpResource<readonly Cliente[]>(
@@ -314,7 +247,6 @@ export class VentasPage {
     }
 
     const subido = this.comprobanteSubido();
-    const mod = this.modulos.find(m => m.id === this.moduloSeleccionado());
 
     this.guardando.set(true);
     try {
@@ -328,11 +260,10 @@ export class VentasPage {
         comprobanteMime: subido?.comprobanteMime,
         comprobanteNombre: subido?.comprobanteNombre,
         medico: this.medico().trim() || undefined,
-        /* El identificador, no la etiqueta. Guardar "Cirugía Plástica" en la
-           base la ata al texto de la interfaz: el día que se reformule esa
-           etiqueta o se le quite un acento, las ventas viejas dejan de agrupar
-           con las nuevas. El id es estable y la etiqueta se resuelve al pintar. */
-        modulo: mod?.id || undefined,
+        /* Sale del catálogo, o sea de FileMaker. Si la agente escribió un
+           servicio que aún no existe en el histórico, va vacío en vez de
+           inventar una categoría. */
+        modulo: this.moduloDetectado() || undefined,
         notas: this.notas().trim() || undefined,
       });
 

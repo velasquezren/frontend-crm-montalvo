@@ -18,7 +18,15 @@ import { mensajeDeError } from '../../../../core/api/http-error';
 import { ToastService } from '../../../../core/toast/toast.service';
 import { ComprobanteSubido, MetodoPagoVenta } from '../../../ventas/venta.model';
 import { VentasService } from '../../../ventas/ventas.service';
-import { METODOS_PAGO, MODULOS_MONTALVO } from '../../../ventas/ventas.page';
+import { METODOS_PAGO } from '../../../ventas/ventas.page';
+import {
+  CATALOGO_VACIO,
+  filtrarMedicos,
+  filtrarServicios,
+  moduloDeServicio,
+} from '../../../ventas/catalogo.util';
+import { CatalogoClinico } from '../../../ventas/venta.model';
+import { httpResource } from '@angular/common/http';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
 import { ConversacionResumen } from '../../conversacion.model';
 
@@ -111,13 +119,11 @@ export class ConversacionSidebarComponent {
     return new Date(fecha).toLocaleDateString('es-BO', { day: '2-digit', month: 'short' });
   }
 
-  protected readonly modulos = MODULOS_MONTALVO;
   protected readonly metodosPago = METODOS_PAGO;
 
   /* ── Modal de Venta Rápida desde el Chat ───────────────────────── */
   private readonly ventasService = inject(VentasService);
   protected readonly modalVentaAbierto = signal(false);
-  protected readonly moduloVenta = signal<string>('CIRUGIA');
   protected readonly productoVenta = signal<string>('');
   protected readonly montoVenta = signal<string>('');
   protected readonly metodoPagoVenta = signal<MetodoPagoVenta>('QR');
@@ -131,10 +137,24 @@ export class ConversacionSidebarComponent {
   protected readonly comprobanteSubido = signal<ComprobanteSubido | null>(null);
   protected readonly archivoNombre = signal<string | null>(null);
 
-  protected readonly sugerenciasModulo = computed(() => {
-    const mod = this.modulos.find(m => m.id === this.moduloVenta());
-    return mod?.servicios ?? [];
-  });
+  /* El mismo catálogo real que usa la página de Ventas: se pide al abrir el
+     modal, no al abrir el chat. */
+  protected readonly catalogo = httpResource<CatalogoClinico>(
+    () => (this.modalVentaAbierto() ? this.ventasService.catalogoRequest() : undefined),
+    { defaultValue: CATALOGO_VACIO },
+  );
+
+  protected readonly sugerenciasModulo = computed(() =>
+    filtrarServicios(this.catalogo.value(), this.productoVenta()),
+  );
+
+  protected readonly medicosSugeridos = computed(() =>
+    filtrarMedicos(this.catalogo.value(), this.medicoVenta()),
+  );
+
+  protected readonly moduloDetectado = computed(() =>
+    moduloDeServicio(this.catalogo.value(), this.productoVenta()),
+  );
 
   protected abrirModalVenta(): void {
     this.productoVenta.set('');
@@ -197,7 +217,6 @@ export class ConversacionSidebarComponent {
     }
 
     const subido = this.comprobanteSubido();
-    const mod = this.modulos.find(m => m.id === this.moduloVenta());
 
     this.guardandoVenta.set(true);
     try {
@@ -211,7 +230,7 @@ export class ConversacionSidebarComponent {
         comprobanteMime: subido?.comprobanteMime,
         comprobanteNombre: subido?.comprobanteNombre,
         medico: this.medicoVenta().trim() || undefined,
-        modulo: mod?.label || undefined,
+        modulo: this.moduloDetectado() || undefined,
         notas: this.notasVenta().trim() || undefined,
       });
 

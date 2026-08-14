@@ -95,61 +95,66 @@
             }
           </div>
 
-          <!-- 2. Especialidad / Módulo Clínico -->
-          <div class="flex flex-col gap-2">
-            <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Especialidad / Módulo Clínico</label>
-            <div class="flex flex-wrap gap-2">
-              @for (mod of modulos; track mod.id) {
-                <button
-                  type="button"
-                  (click)="moduloSeleccionado.set(mod.id)"
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border"
-                  [class.bg-primary]="moduloSeleccionado() === mod.id"
-                  [class.text-white]="moduloSeleccionado() === mod.id"
-                  [class.border-primary]="moduloSeleccionado() === mod.id"
-                  [class.bg-bg-light]="moduloSeleccionado() !== mod.id"
-                  [class.text-text-muted]="moduloSeleccionado() !== mod.id"
-                  [class.border-border]="moduloSeleccionado() !== mod.id">
-                  <app-icon [name]="mod.icon" [size]="13" />
-                  <span>{{ mod.label }}</span>
-                </button>
-              }
-            </div>
-          </div>
-
-          <!-- 3. Procedimiento / Servicio + Sugerencias -->
+          <!-- 2. Procedimiento o Servicio (catálogo real de la clínica) -->
           <div class="flex flex-col gap-2">
             <app-input
-              label="Procedimiento o Tratamiento *"
-              placeholder="Ej. Rinoplastia Ultrasónica, Plan Parto Gold, Botox 50U…"
+              label="Procedimiento o Servicio *"
+              placeholder="Escribe para buscar: hemograma, consulta, ecografía…"
               [(value)]="producto" />
 
-            @if (serviciosSugeridos().length > 0) {
+            @if (catalogo.isLoading()) {
+              <span class="text-[11px] text-text-muted">Cargando servicios de la clínica…</span>
+            } @else if (serviciosSugeridos().length > 0) {
               <div class="flex flex-wrap items-center gap-1.5 pt-1">
-                <span class="text-[10px] font-bold text-text-muted uppercase tracking-wider mr-1">Sugerencias:</span>
-                @for (sug of serviciosSugeridos(); track sug) {
+                @for (sug of serviciosSugeridos(); track sug.nombre) {
                   <button
                     type="button"
-                    (click)="seleccionarSugerencia(sug)"
-                    class="text-[11px] px-2.5 py-1 rounded-lg bg-bg-light hover:bg-primary/10 hover:text-primary text-text-dark border border-border transition-colors cursor-pointer">
-                    + {{ sug }}
+                    (click)="seleccionarSugerencia(sug.nombre)"
+                    class="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg bg-bg-light hover:bg-primary/10 hover:text-primary text-text-dark border border-border transition-colors cursor-pointer">
+                    <span>{{ sug.nombre }}</span>
+                    <span class="text-text-muted">·{{ sug.veces }}</span>
                   </button>
                 }
               </div>
+            } @else if (producto().length > 0) {
+              <span class="text-[11px] text-text-muted">
+                Servicio nuevo: no está en el histórico, se guardará tal cual lo escribas.
+              </span>
+            }
+
+            @if (moduloDetectado(); as mod) {
+              <span class="inline-flex w-fit items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20">
+                <app-icon name="check" [size]="11" />
+                Módulo {{ mod }}
+              </span>
             }
           </div>
 
-          <!-- 4. Monto y Médico -->
+          <!-- 3. Monto y Médico -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <app-input
               label="Monto Acordado (Bs) *"
               type="text"
               placeholder="Ej. 4800"
               [(value)]="monto" />
-            <app-input
-              label="Médico Tratante (Opcional)"
-              placeholder="Ej. Dr. Montalvo"
-              [(value)]="medico" />
+            <div class="flex flex-col gap-1.5">
+              <app-input
+                label="Médico Tratante (Opcional)"
+                placeholder="Escribe para buscar entre los médicos de la clínica"
+                [(value)]="medico" />
+              @if (medicosSugeridos().length > 0) {
+                <div class="flex flex-wrap gap-1.5">
+                  @for (med of medicosSugeridos(); track med.nombre) {
+                    <button
+                      type="button"
+                      (click)="medico.set(med.nombre)"
+                      class="text-[11px] px-2.5 py-1 rounded-lg bg-bg-light hover:bg-primary/10 hover:text-primary text-text-dark border border-border transition-colors cursor-pointer">
+                      {{ med.nombre }}
+                    </button>
+                  }
+                </div>
+              }
+            </div>
           </div>
 
           <!-- 5. Método de Pago y Comprobante -->

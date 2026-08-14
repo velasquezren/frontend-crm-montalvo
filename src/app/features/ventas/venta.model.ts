@@ -31,3 +31,30 @@ export interface Venta {
   readonly comision: { id: string; monto: string; estado: string } | null;
   readonly createdAt: string;
 }
+
+/** Un servicio que la clínica ya facturó, según el histórico de FileMaker. */
+export interface ServicioCatalogo {
+  readonly nombre: string;
+  /** Módulo operativo de FileMaker (LABORATORIO, CONSULTA, PLANES, INTERNACION). */
+  readonly modulo: string | null;
+  readonly veces: number;
+}
+
+export interface MedicoCatalogo {
+  readonly nombre: string;
+  readonly veces: number;
+}
+
+/**
+ * Catálogo real de la clínica, servido por `GET /ventas/catalogo`.
+ *
+ * Sustituye a las listas que estaban escritas a mano en la página: sugerían
+ * ocho procedimientos de cirugía plástica cuando el 64% de lo que se factura es
+ * laboratorio, así que la venta más frecuente no encontraba ninguna sugerencia.
+ */
+export interface CatalogoClinico {
+  readonly servicios: readonly ServicioCatalogo[];
+  readonly medicos: readonly MedicoCatalogo[];
+  readonly modulos: readonly string[];
+  readonly ventasAnalizadas: number;
+}

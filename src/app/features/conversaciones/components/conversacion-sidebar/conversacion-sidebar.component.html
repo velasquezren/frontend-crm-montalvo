@@ -432,46 +432,34 @@
             </div>
           }
 
-          <!-- Especialidad / Módulo -->
-          <div>
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1.5">Especialidad</label>
-            <div class="flex flex-wrap gap-1.5">
-              @for (mod of modulos; track mod.id) {
-                <button
-                  type="button"
-                  (click)="moduloVenta.set(mod.id)"
-                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer border"
-                  [class.bg-primary]="moduloVenta() === mod.id"
-                  [class.text-white]="moduloVenta() === mod.id"
-                  [class.border-primary]="moduloVenta() === mod.id"
-                  [class.bg-bg-light]="moduloVenta() !== mod.id"
-                  [class.text-text-muted]="moduloVenta() !== mod.id"
-                  [class.border-border]="moduloVenta() !== mod.id">
-                  <app-icon [name]="mod.icon" [size]="12" />
-                  <span>{{ mod.label }}</span>
-                </button>
-              }
-            </div>
-          </div>
-
-          <!-- Procedimiento / Servicio -->
+          <!-- Procedimiento / Servicio (catálogo real de la clínica) -->
           <div>
             <label class="block text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1">Procedimiento o Servicio *</label>
             <app-input
-              placeholder="Ej. Rinoplastia, Botox, Plan Parto..."
+              placeholder="Escribe para buscar: hemograma, consulta…"
               [(value)]="productoVenta" />
 
-            @if (sugerenciasModulo().length > 0) {
+            @if (catalogo.isLoading()) {
+              <span class="block mt-1.5 text-[10px] text-text-muted">Cargando servicios…</span>
+            } @else if (sugerenciasModulo().length > 0) {
               <div class="flex flex-wrap gap-1 mt-1.5">
-                @for (sug of sugerenciasModulo(); track sug) {
+                @for (sug of sugerenciasModulo(); track sug.nombre) {
                   <button
                     type="button"
-                    (click)="seleccionarSugerenciaVenta(sug)"
-                    class="text-[10px] px-2 py-0.5 rounded bg-bg-light hover:bg-primary/10 hover:text-primary text-text-dark border border-border transition-colors cursor-pointer">
-                    + {{ sug }}
+                    (click)="seleccionarSugerenciaVenta(sug.nombre)"
+                    class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-bg-light hover:bg-primary/10 hover:text-primary text-text-dark border border-border transition-colors cursor-pointer">
+                    <span>{{ sug.nombre }}</span>
+                    <span class="text-text-muted">·{{ sug.veces }}</span>
                   </button>
                 }
               </div>
+            }
+
+            @if (moduloDetectado(); as mod) {
+              <span class="inline-flex w-fit items-center gap-1 mt-1.5 text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                <app-icon name="check" [size]="10" />
+                {{ mod }}
+              </span>
             }
           </div>
 
