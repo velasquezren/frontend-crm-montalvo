@@ -55,6 +55,7 @@ export class ConversacionThreadComponent {
 
   protected readonly iniciales = generarIniciales;
   private readonly messagesContainer = viewChild<ElementRef<HTMLElement>>('messagesScroll');
+  private readonly bottomAnchor = viewChild<ElementRef<HTMLElement>>('bottomAnchor');
 
   /* ── Estado Local de Scroll & Lightbox ─────────────────────────── */
   protected readonly lightboxUrl = signal<string | null>(null);
@@ -64,7 +65,11 @@ export class ConversacionThreadComponent {
 
   constructor() {
     effect(() => {
+      const container = this.messagesContainer()?.nativeElement;
+      const anchor = this.bottomAnchor()?.nativeElement;
+      const items = this.state.mensajesConFecha();
       const chat = this.state.detalle.value();
+
       if (!chat) {
         this.scrollInicialListo = false;
         this.chatActualId = '';
@@ -78,28 +83,23 @@ export class ConversacionThreadComponent {
         this.scrollInicialListo = false;
       }
 
-      this.scrollAlFondoInmediato();
-    });
-  }
+      if (!container || items.length === 0) return;
 
-  private scrollAlFondoInmediato(): void {
-    const hacerScroll = () => {
-      const el = this.messagesContainer()?.nativeElement;
-      if (el) {
-        el.scrollTop = el.scrollHeight;
-      }
-    };
+      const forzarAbajo = () => {
+        container.scrollTop = container.scrollHeight;
+        anchor?.scrollIntoView({ behavior: 'instant', block: 'end' });
+      };
 
-    hacerScroll();
-    requestAnimationFrame(() => {
-      hacerScroll();
-      setTimeout(() => {
-        hacerScroll();
-        this.scrollInicialListo = true;
-      }, 50);
-      setTimeout(() => {
-        hacerScroll();
-      }, 150);
+      forzarAbajo();
+      requestAnimationFrame(() => {
+        forzarAbajo();
+        setTimeout(forzarAbajo, 30);
+        setTimeout(forzarAbajo, 80);
+        setTimeout(() => {
+          forzarAbajo();
+          this.scrollInicialListo = true;
+        }, 180);
+      });
     });
   }
 
