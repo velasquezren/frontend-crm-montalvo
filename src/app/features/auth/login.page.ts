@@ -21,7 +21,10 @@ export class LoginPage {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
-  protected readonly email = signal('');
+  /* Precargado con el último correo que entró marcando "Recordarme". El
+     checkbox arranca marcado si hay uno guardado, para que su estado refleje lo
+     que de verdad está pasando en vez de un valor por defecto fijo. */
+  protected readonly email = signal(this.authService.ultimoEmail);
   protected readonly password = signal('');
   protected readonly rememberMe = signal(true);
   protected readonly isLoading = signal(false);

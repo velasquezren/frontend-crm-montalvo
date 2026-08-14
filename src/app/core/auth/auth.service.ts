@@ -16,6 +16,20 @@ const TOKEN_KEY = 'crm_token';
 const USER_KEY = 'crm_usuario';
 
 /**
+ * Último correo que entró con "Recordarme" marcado.
+ *
+ * Va aparte del token y **sobrevive al logout** a propósito: eso es lo que
+ * significa recordar a alguien. El token se borra al salir; saber quién eras, no.
+ *
+ * Aquí NUNCA va la contraseña. De guardarla se encarga el gestor del navegador,
+ * que para eso el formulario declara `autocomplete="current-password"` sobre un
+ * <form> real con submit — el navegador ofrece guardarla y la rellena solo.
+ * Guardarla nosotros sería ponerla en texto plano en el mismo equipo que
+ * comparten varias agentes.
+ */
+const EMAIL_KEY = 'crm_ultimo_email';
+
+/**
  * AuthService — sesión real contra el backend NestJS (POST /auth/login).
  * Estado en signals; token + usuario persisten en localStorage para
  * restaurar la sesión al recargar. El interceptor adjunta el Bearer.
@@ -35,6 +49,11 @@ export class AuthService {
 
   get token(): string | null {
     return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
+  }
+
+  /** Correo con el que entró la última vez, para precargar el login. */
+  get ultimoEmail(): string {
+    return localStorage.getItem(EMAIL_KEY) ?? '';
   }
 
   async login(email: string, password: string, rememberMe = true): Promise<boolean> {
@@ -60,6 +79,18 @@ export class AuthService {
 
       storage.setItem(TOKEN_KEY, respuesta.access_token);
       storage.setItem(USER_KEY, JSON.stringify(usuario));
+
+      /* "Recordarme" también recuerda QUIÉN eres, no solo la sesión. Sin esto
+         el checkbox no tenía ningún efecto visible al volver: la pantalla salía
+         en blanco y había que teclear el correo entero otra vez.
+         Sin marcar, se borra: en la clínica varias agentes comparten equipo y
+         dejar el correo de otra en el campo no es recordar, es estorbar. */
+      if (rememberMe) {
+        localStorage.setItem(EMAIL_KEY, email.trim());
+      } else {
+        localStorage.removeItem(EMAIL_KEY);
+      }
+
       this.currentUser.set(usuario);
       return true;
     } catch {
