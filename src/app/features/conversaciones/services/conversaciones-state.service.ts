@@ -50,6 +50,7 @@ export class ConversacionesStateService {
   readonly filtroAgenteId = signal<string | null>(null);
   readonly mostrarFiltroAgentes = signal(false);
   readonly dropdownAgenteAbierto = signal(false);
+  readonly soloMisChatsAdmin = signal(false);
 
   readonly conversacionesRecurso = httpResource<ConversacionResumen[]>(
     () => this.conversacionesService.listarRequest(),
@@ -162,6 +163,11 @@ export class ConversacionesStateService {
 
     if (agente && tab === 'TODAS') {
       lista = lista.filter(c => c.agente?.id === agente);
+    }
+
+    /* Filtro Míos del Super Admin: mis chats + pool sin asignar */
+    if (this.isAdmin() && this.soloMisChatsAdmin()) {
+      lista = lista.filter(c => !c.agente || c.agente.id === myId);
     }
 
     if (query) {

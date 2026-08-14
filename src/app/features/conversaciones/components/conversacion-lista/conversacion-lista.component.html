@@ -114,9 +114,22 @@
     }
   </div>
 
-  <!-- Búsqueda -->
-  <div class="sidebar-search">
-    <app-input type="search" placeholder="Buscar por nombre o teléfono…" [(value)]="state.busqueda" />
+  <!-- Búsqueda y selector de alcance Super Admin -->
+  <div class="sidebar-search flex items-center gap-2">
+    <div class="flex-1 min-w-0">
+      <app-input type="search" placeholder="Buscar por nombre o teléfono…" [(value)]="state.busqueda" />
+    </div>
+    @if (state.isAdmin()) {
+      <button
+        type="button"
+        (click)="state.soloMisChatsAdmin.set(!state.soloMisChatsAdmin())"
+        [class]="state.soloMisChatsAdmin() ? 'bg-primary text-white border-primary shadow-subtle' : 'bg-white text-text-muted hover:text-text-dark border-border hover:bg-bg-light'"
+        class="h-9 px-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-semibold shrink-0 cursor-pointer transition-all"
+        [title]="state.soloMisChatsAdmin() ? 'Mostrando solo mis chats y pool sin asignar. Clic para ver todo el equipo.' : 'Mostrando todo el equipo. Clic para filtrar solo mis chats.'">
+        <app-icon [name]="state.soloMisChatsAdmin() ? 'user' : 'users'" [size]="14" />
+        <span class="text-[11px] font-semibold">{{ state.soloMisChatsAdmin() ? 'Míos' : 'Todo' }}</span>
+      </button>
+    }
   </div>
 
   <!-- Lista de conversaciones -->
