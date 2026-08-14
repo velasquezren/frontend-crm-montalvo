@@ -305,7 +305,73 @@ function verificarCodigo() {
   }
 }
 
-// ── 8. Rendimiento: las tres decisiones medidas siguen en pie ─────────────────
+// ── 8. El CSS viaja con su HTML al partir una plantilla ──────────────────────
+// Con encapsulación `Emulated`, mover un bloque de HTML a un subcomponente y
+// dejar su CSS en el padre no rompe nada que se pueda compilar: `ng build` pasa,
+// los tipos pasan, y la vista sale sin estilos. Era el único fallo del proyecto
+// que había que revisar a ojo, y a ojo es justo lo que no escala cuando se parte
+// una plantilla de 1.400 líneas en cuatro.
+//
+// La regla no intenta adivinar qué es una utilidad de Tailwind y qué es una
+// clase nuestra: lo deduce del propio repo. Si algún .css define `.chat-header`,
+// esa clase es del proyecto y tiene dueño; si aparece en el HTML de OTRO
+// componente, el estilo no la va a alcanzar. Las que no define nadie son
+// utilidades y se ignoran solas.
+function verificarCssEncapsulado() {
+  const base = resolve(RAIZ, 'src', 'app');
+  const sinKeyframes = css => css.replace(/@keyframes[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, '');
+  const clasesDe = css =>
+    [...sinKeyframes(css).matchAll(/\.(-?[a-zA-Z_][\w-]*)/g)].map(coincidencia => coincidencia[1]);
+  /* Un componente son sus tres archivos hermanos (.ts/.html/.css) bajo el mismo
+     nombre; el .css puede además venir inline en `styles:` dentro del .ts. */
+  const clave = ruta => ruta.replace(/\.(css|html|ts)$/, '');
+
+  const globales = new Set(
+    existsSync(resolve(RAIZ, 'src/styles.css'))
+      ? clasesDe(readFileSync(resolve(RAIZ, 'src/styles.css'), 'utf8'))
+      : [],
+  );
+
+  const dueños = new Map();
+  const propiasDe = new Map();
+  for (const ruta of indexar(base)) {
+    let css = '';
+    if (ruta.endsWith('.css')) css = readFileSync(ruta, 'utf8');
+    else if (ruta.endsWith('.ts'))
+      css = readFileSync(ruta, 'utf8').match(/styles:\s*\[([\s\S]*?)\]\s*[,}]/)?.[1] ?? '';
+    if (!css) continue;
+
+    const propias = propiasDe.get(clave(ruta)) ?? new Set();
+    for (const clase of clasesDe(css)) {
+      propias.add(clase);
+      if (!dueños.has(clase)) dueños.set(clase, new Set());
+      dueños.get(clase).add(clave(ruta));
+    }
+    propiasDe.set(clave(ruta), propias);
+  }
+
+  for (const ruta of indexar(base).filter(r => r.endsWith('.html'))) {
+    const propias = propiasDe.get(clave(ruta)) ?? new Set();
+    const usadas = new Set();
+    for (const atributo of readFileSync(ruta, 'utf8').matchAll(/class="([^"]*)"/g))
+      for (const clase of atributo[1].split(/\s+/))
+        if (/^-?[a-zA-Z_][\w-]*$/.test(clase)) usadas.add(clase);
+
+    for (const clase of usadas) {
+      if (propias.has(clase) || globales.has(clase) || !dueños.has(clase)) continue;
+      const donde = [...dueños.get(clase)].map(d => `${relative(base, d)}.css`).join(', ');
+      problemas.push({
+        skill: 'crm-design-system',
+        mensaje:
+          `${relative(base, ruta)}: usa .${clase} pero su CSS vive en ${donde}. ` +
+          'Con encapsulación Emulated no lo alcanza: mueve esas reglas al CSS de ' +
+          'este componente (o a src/styles.css si de verdad es compartida).',
+      });
+    }
+  }
+}
+
+// ── 9. Rendimiento: las tres decisiones medidas siguen en pie ─────────────────
 // El skill crm-rendimiento existe porque tres commits `perf` seguidos dejaron el
 // archivo con el mismo hash con el que empezó: sin medición no hay dirección. Lo
 // que se puede automatizar no es "¿mediste?" —eso es criterio— sino que las tres
@@ -416,6 +482,7 @@ for (const nombre of readdirSync(SKILLS)) {
 
 /* Globales, no por skill: miran el código, no la documentación. */
 verificarCodigo();
+verificarCssEncapsulado();
 verificarRendimiento();
 
 if (problemas.length === 0) {

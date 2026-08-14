@@ -85,5 +85,9 @@ Regla corta: **un cambio de rendimiento sin medición antes y después no se com
   `recurso.mediaUrl` en el cuerpo del mensaje. Si añades un tercer camino que
   mande archivos, adjunta por `mediaKey` — nunca pegues la URL.
 - **Al partir una plantilla en subcomponentes, el CSS no viaja solo.** La
-  encapsulación `Emulated` deja la vista sin estilos y **ningún validador lo
-  detecta**. Es el único fallo del proyecto que hay que revisar a ojo.
+  encapsulación `Emulated` deja la vista sin estilos, y ni `ng build` ni los tipos
+  se quejan. Esto **ya lo detecta `check:skills`**: si un HTML usa una clase cuyo
+  CSS quedó en otro componente, el build falla y dice dónde vive la regla. Era el
+  único fallo que había que revisar a ojo; dejó de serlo antes de partir
+  Conversaciones. Lo que el validador **no** ve son las clases construidas al
+  vuelo (`'chat-item--' + estado()`): esas siguen siendo cosa tuya.
