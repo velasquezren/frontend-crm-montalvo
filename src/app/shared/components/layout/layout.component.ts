@@ -8,7 +8,7 @@ import { ModoInmersivoService } from '../../../core/ui/modo-inmersivo.service';
 import { AvatarComponent } from '../avatar/avatar.component';
 import { FabMenuComponent, FabMenuItem } from '../fab-menu/fab-menu.component';
 import { IconComponent } from '../icon/icon.component';
-import { NAV_ITEMS } from './nav-items';
+import { NAV_GROUPS, NAV_ITEMS } from './nav-items';
 
 /**
  * Layout Shell — Estructura maestra del CRM
@@ -84,6 +84,16 @@ export class LayoutComponent {
   }
 
   /* Se ocultan los módulos que el rol no alcanza (el backend los bloquea igual con @Roles) */
+  protected readonly navGroups = computed(() => {
+    const rol = this.authService.user()?.rol;
+    return NAV_GROUPS
+      .map(group => ({
+        ...group,
+        items: group.items.filter(item => !item.rolMinimo || cubreRol(rol, item.rolMinimo)),
+      }))
+      .filter(group => group.items.length > 0);
+  });
+
   protected readonly navItems = computed(() => {
     const rol = this.authService.user()?.rol;
     return NAV_ITEMS.filter(item => !item.rolMinimo || cubreRol(rol, item.rolMinimo));

@@ -2,10 +2,8 @@ import { RolUsuario } from '../../../core/auth/user.model';
 import { IconName } from '../icon/icon.component';
 
 /**
- * Navegación principal del CRM
- * Ref: CRM_MANIFESTO.md §1.2 (Dominios: dashboard, clientes, leads, conversaciones, ventas, comisiones)
- * `rolMinimo` oculta el ítem a quien no llegue a ese nivel; sin él, lo ve todo
- * el mundo. Es solo cosmético: el backend bloquea igual con @Roles.
+ * Navegación principal del CRM — Estructurada en 3 módulos lógicos
+ * Ref: CRM_MANIFESTO.md §1.2 & §3.2 (Diseño Atómico)
  */
 export interface NavItem {
   readonly path: string;
@@ -14,16 +12,39 @@ export interface NavItem {
   readonly rolMinimo?: RolUsuario;
 }
 
-export const NAV_ITEMS: readonly NavItem[] = [
-  { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
-  { path: '/servicios', label: 'Historial Clínico', icon: 'activity', rolMinimo: 'ADMIN' },
-  { path: '/reportes', label: 'Reportes y Gráficos', icon: 'bar-chart', rolMinimo: 'ADMIN' },
-  { path: '/clientes', label: 'Clientes', icon: 'users' },
-  { path: '/leads', label: 'Leads', icon: 'user-plus' },
-  { path: '/conversaciones', label: 'WhatsApp', icon: 'message-circle' },
-  { path: '/ventas', label: 'Ventas', icon: 'shopping-bag' },
-  { path: '/comisiones', label: 'Comisiones', icon: 'wallet' },
-  { path: '/planilla-comisiones', label: 'Planilla', icon: 'pie-chart', rolMinimo: 'ADMIN' },
-  { path: '/comisiones-anual', label: 'Resumen Anual', icon: 'trending-up', rolMinimo: 'ADMIN' },
-  { path: '/usuarios', label: 'Usuarios', icon: 'shield', rolMinimo: 'SUPER_ADMIN' },
+export interface NavGroup {
+  readonly titulo: string;
+  readonly items: readonly NavItem[];
+}
+
+export const NAV_GROUPS: readonly NavGroup[] = [
+  {
+    titulo: 'Atención & Pacientes',
+    items: [
+      { path: '/conversaciones', label: 'WhatsApp', icon: 'message-circle' },
+      { path: '/clientes', label: 'Clientes y Pacientes', icon: 'users' },
+      { path: '/leads', label: 'Leads y Prospectos', icon: 'user-plus' },
+    ],
+  },
+  {
+    titulo: 'Ventas & Finanzas',
+    items: [
+      { path: '/ventas', label: 'Ventas', icon: 'shopping-bag' },
+      { path: '/comisiones', label: 'Mis Comisiones', icon: 'wallet' },
+      { path: '/planilla-comisiones', label: 'Planilla', icon: 'pie-chart', rolMinimo: 'ADMIN' },
+      { path: '/comisiones-anual', label: 'Resumen Anual', icon: 'trending-up', rolMinimo: 'ADMIN' },
+    ],
+  },
+  {
+    titulo: 'Gestión & Clínica',
+    items: [
+      { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
+      { path: '/servicios', label: 'Historial Clínico', icon: 'activity', rolMinimo: 'ADMIN' },
+      { path: '/reportes', label: 'Reportes y Métricas', icon: 'bar-chart', rolMinimo: 'ADMIN' },
+      { path: '/usuarios', label: 'Usuarios y Accesos', icon: 'shield', rolMinimo: 'SUPER_ADMIN' },
+    ],
+  },
 ];
+
+/* Compatibilidad plana para componentes o utilitarios que consulten la lista completa */
+export const NAV_ITEMS: readonly NavItem[] = NAV_GROUPS.flatMap(g => g.items);

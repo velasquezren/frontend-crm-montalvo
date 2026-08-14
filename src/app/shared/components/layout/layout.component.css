@@ -107,6 +107,39 @@
   flex-shrink: 0;
 }
 
+.sidebar-divider {
+  height: 1px;
+  background-color: var(--color-border);
+  margin: 6px 6px;
+  opacity: 0.8;
+}
+
+.nav-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-group-title {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  padding: 4px 12px;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity 0.2s, max-height 0.2s;
+  white-space: nowrap;
+}
+
+.sidebar-inner-expanded .nav-group-title {
+  opacity: 0.75;
+  max-height: 24px;
+  margin-bottom: 2px;
+}
+
 /* Label: hidden en rail, visible al expandir mediante clic */
 .nav-label {
   opacity: 0;

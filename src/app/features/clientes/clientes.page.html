@@ -5,7 +5,7 @@
 
 <app-page-header
   title="Clientes y Pacientes"
-  description="Gestión integral de pacientes y clientes potenciales.">
+  subtitle="Gestión integral de pacientes y clientes potenciales.">
 
   <!-- Acción principal de cabecera -->
   <app-button
@@ -14,6 +14,34 @@
     Nuevo Cliente
   </app-button>
 </app-page-header>
+
+<!-- ── KPIs Clínicos / Resumen de Pacientes ──────────────────────── -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mb-6">
+  <app-kpi-card
+    label="Total Pacientes"
+    [valor]="totalPacientes()"
+    icon="users"
+    tono="primary"
+    [compacto]="true" />
+  <app-kpi-card
+    label="Pacientes Gold (VIP)"
+    [valor]="totalGold()"
+    icon="star"
+    tono="primary"
+    [compacto]="true" />
+  <app-kpi-card
+    label="Prospectos"
+    [valor]="totalProspectos()"
+    icon="user-plus"
+    tono="secondary"
+    [compacto]="true" />
+  <app-kpi-card
+    label="Sin Asignar (Pool)"
+    [valor]="totalSinAsignar()"
+    icon="alert-circle"
+    tono="neutral"
+    [compacto]="true" />
+</div>
 
 <!-- ── Barra de herramientas: Búsqueda y Filtros de Categoría ───────── -->
 <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6">
@@ -65,6 +93,7 @@
           <th appOrdenable="updatedAt" [orden]="orden()" [direccion]="direccion()"
               direccionInicial="desc"
               (ordenar)="ordenarPor($event)">Última actualización</th>
+          <th class="text-right">Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -128,6 +157,31 @@
               </div>
             </td>
             <td class="text-text-muted text-xs whitespace-nowrap">{{ cliente.updatedAt | date: 'dd/MM/yy HH:mm' }}</td>
+            <td>
+              <div class="flex items-center justify-end gap-1" (click)="$event.stopPropagation()">
+                <a
+                  [routerLink]="['/conversaciones']"
+                  [queryParams]="{ busqueda: cliente.telefono }"
+                  class="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-bg-light transition-colors inline-flex items-center justify-center"
+                  title="Abrir chat en WhatsApp">
+                  <app-icon name="message-circle" [size]="16" />
+                </a>
+                <button
+                  type="button"
+                  (click)="copiarTelefono($event, cliente.telefono)"
+                  class="p-1.5 rounded-lg text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
+                  title="Copiar teléfono">
+                  <app-icon name="copy" [size]="15" />
+                </button>
+                <button
+                  type="button"
+                  (click)="abrirEdicion(cliente, modalFicha)"
+                  class="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-bg-light transition-colors cursor-pointer"
+                  title="Ver / Editar ficha">
+                  <app-icon name="edit" [size]="15" />
+                </button>
+              </div>
+            </td>
           </tr>
         }
       </tbody>

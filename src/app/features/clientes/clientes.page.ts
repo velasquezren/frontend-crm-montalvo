@@ -18,6 +18,7 @@ import { LoadingSkeletonComponent } from '../../shared/components/loading-skelet
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { TableComponent } from '../../shared/components/table/table.component';
+import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.component';
 import {
   DireccionOrden,
   ThOrdenableComponent,
@@ -55,6 +56,7 @@ type PestanaModal = 'EXPEDIENTE' | 'CONTACTO' | 'NOTAS';
     BadgeComponent,
     ButtonComponent,
     IconComponent,
+    KpiCardComponent,
     EmptyStateComponent,
     ErrorCargaComponent,
     LoadingSkeletonComponent,
@@ -112,6 +114,12 @@ export class ClientesPage {
     },
     { defaultValue: paginaVacia<Cliente>() },
   );
+
+  /* ── Métricas y KPIs Superiores ────────────────────────────────── */
+  protected readonly totalPacientes = computed(() => this.clientes.value().total);
+  protected readonly totalGold = computed(() => this.clientes.value().datos.filter(c => c.categoria === 'GOLD').length);
+  protected readonly totalProspectos = computed(() => this.clientes.value().datos.filter(c => c.categoria === 'PROSPECTO').length);
+  protected readonly totalSinAsignar = computed(() => this.clientes.value().datos.filter(c => !c.agente).length);
 
   /**
    * Cambiar el orden vuelve a la primera página: seguir en la 7 tras reordenar
@@ -226,6 +234,13 @@ export class ClientesPage {
       this.activeOverlayRef?.dispose();
       this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
     }
+  }
+
+  protected copiarTelefono(event: MouseEvent, telefono: string): void {
+    event.stopPropagation();
+    navigator.clipboard.writeText(telefono).then(() => {
+      this.toast.success('Teléfono copiado al portapapeles.');
+    });
   }
 
   protected cerrarEdicion(): void {
