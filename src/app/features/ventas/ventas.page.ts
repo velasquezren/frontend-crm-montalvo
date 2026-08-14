@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, TemplateRef, ViewContainerRef } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
+import { OverlayRef } from '@angular/cdk/overlay';
 
 import { mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
@@ -11,6 +12,7 @@ import { AvatarComponent } from '../../shared/components/avatar/avatar.component
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { CardComponent } from '../../shared/components/card/card.component';
+import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent, IconName } from '../../shared/components/icon/icon.component';
@@ -67,6 +69,10 @@ export const METODOS_PAGO: readonly { id: MetodoPagoVenta; label: string; icon: 
 export class VentasPage {
   private readonly ventasService = inject(VentasService);
   private readonly clientesService = inject(ClientesService);
+  private readonly dialogService = inject(DialogService);
+  private readonly vcr = inject(ViewContainerRef);
+
+  private activeOverlayRef?: OverlayRef;
 
   protected readonly estadoBadge = ESTADO_VENTA_BADGE;
   protected readonly estadoLabel = ESTADO_VENTA_LABEL;
@@ -116,6 +122,17 @@ export class VentasPage {
   /* Lightbox visor de comprobante */
   protected readonly lightboxUrl = signal<string | null>(null);
   protected readonly lightboxNombre = signal<string | null>(null);
+
+  protected abrirFormulario(template: TemplateRef<unknown>): void {
+    this.formularioAbierto.set(true);
+    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+  }
+
+  protected cerrarFormulario(): void {
+    this.formularioAbierto.set(false);
+    this.activeOverlayRef?.dispose();
+    this.activeOverlayRef = undefined;
+  }
 
   /**
    * Catálogo real de la clínica. Se pide al abrir el formulario y no antes: no
@@ -217,14 +234,17 @@ export class VentasPage {
     this.comprobanteSubido.set(null);
   }
 
-  protected abrirLightbox(url: string, nombre?: string | null): void {
+  protected abrirLightbox(template: TemplateRef<unknown>, url: string, nombre?: string | null): void {
     this.lightboxUrl.set(url);
     this.lightboxNombre.set(nombre || 'Comprobante de pago');
+    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
   }
 
   protected cerrarLightbox(): void {
     this.lightboxUrl.set(null);
     this.lightboxNombre.set(null);
+    this.activeOverlayRef?.dispose();
+    this.activeOverlayRef = undefined;
   }
 
   protected async guardar(event: Event): Promise<void> {
@@ -260,14 +280,11 @@ export class VentasPage {
         comprobanteMime: subido?.comprobanteMime,
         comprobanteNombre: subido?.comprobanteNombre,
         medico: this.medico().trim() || undefined,
-        /* Sale del catálogo, o sea de FileMaker. Si la agente escribió un
-           servicio que aún no existe en el histórico, va vacío en vez de
-           inventar una categoría. */
         modulo: this.moduloDetectado() || undefined,
         notas: this.notas().trim() || undefined,
       });
 
-      this.formularioAbierto.set(false);
+      this.cerrarFormulario();
       this.limpiarCliente();
       this.producto.set('');
       this.monto.set('');

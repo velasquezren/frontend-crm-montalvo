@@ -3,239 +3,10 @@
   <app-page-header
     title="Ventas"
     subtitle="Cierres registrados por agente — el agente responsable es inalterable">
-    <app-button icon="plus" (clicked)="formularioAbierto.set(!formularioAbierto())">
+    <app-button icon="plus" (clicked)="abrirFormulario(modalVentaTemplate)">
       Registrar venta
     </app-button>
   </app-page-header>
-
-  <!-- ── Modal de registro de venta (Full-Screen Overlay) ──────────── -->
-  @if (formularioAbierto()) {
-    <div
-      class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"
-      (click)="formularioAbierto.set(false)">
-      <div
-        class="bg-white rounded-2xl shadow-lifted max-w-2xl w-full max-h-[92vh] overflow-y-auto p-6 pointer-events-auto border border-border"
-        (click)="$event.stopPropagation()">
-        <form (submit)="guardar($event)" class="flex flex-col gap-6">
-          <div class="flex items-center justify-between border-b border-border pb-4">
-            <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                <app-icon name="shopping-bag" [size]="18" />
-              </div>
-              <div>
-                <h2 class="text-base font-bold text-text-dark">Registrar Cierre de Venta</h2>
-                <p class="text-xs text-text-muted">Ingresa los datos del servicio acordado con el paciente</p>
-              </div>
-            </div>
-            <button type="button" (click)="formularioAbierto.set(false)"
-              class="text-text-muted hover:text-text-dark p-1 rounded-lg hover:bg-bg-light transition-colors cursor-pointer"
-              aria-label="Cerrar formulario">
-              <app-icon name="x" [size]="18" />
-            </button>
-          </div>
-
-          @if (errorForm()) {
-            <div class="px-4 py-3 rounded-xl bg-critical-bg text-sm text-text-dark font-medium
-                        flex items-center gap-2 border border-border">
-              <app-icon name="alert-circle" [size]="16" class="text-critical shrink-0" />
-              {{ errorForm() }}
-            </div>
-          }
-
-          <!-- 1. Selección de cliente por búsqueda -->
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Paciente / Cliente *</label>
-            @if (clienteElegido(); as elegido) {
-              <div class="flex items-center justify-between gap-3 bg-bg-light rounded-xl px-4 py-3 border border-border">
-                <div class="flex items-center gap-3">
-                  <app-avatar [initials]="iniciales(elegido.nombre)" size="sm" />
-                  <div>
-                    <div class="flex items-center gap-2">
-                      <p class="text-sm font-semibold text-text-dark leading-tight">{{ elegido.nombre }}</p>
-                      @if (elegido.pac) {
-                        <span class="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary">
-                          {{ elegido.pac }}
-                        </span>
-                      }
-                    </div>
-                    <p class="text-xs text-text-muted leading-tight mt-0.5">{{ elegido.telefono }}</p>
-                  </div>
-                </div>
-                <button type="button" (click)="limpiarCliente()"
-                  class="text-text-muted hover:text-critical transition-colors cursor-pointer p-1 rounded-lg hover:bg-white"
-                  aria-label="Quitar cliente">
-                  <app-icon name="x" [size]="18" />
-                </button>
-              </div>
-            } @else {
-              <app-input type="search" placeholder="Buscar por nombre, teléfono, CI o PAC…"
-                [(value)]="busquedaCliente" />
-              @if (resultadosCliente.value().length > 0) {
-                <div class="border border-border rounded-xl divide-y divide-border max-h-56 overflow-y-auto shadow-subtle bg-white">
-                  @for (cliente of resultadosCliente.value(); track cliente.id) {
-                    <button type="button" (click)="elegirCliente(cliente)"
-                      class="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left cursor-pointer
-                             hover:bg-bg-light transition-colors">
-                      <div class="flex items-center gap-3 min-w-0">
-                        <app-avatar [initials]="iniciales(cliente.nombre)" size="sm" />
-                        <div class="min-w-0">
-                          <p class="text-sm font-medium text-text-dark leading-tight truncate">{{ cliente.nombre }}</p>
-                          <p class="text-xs text-text-muted leading-tight mt-0.5 font-mono">{{ cliente.telefono }}</p>
-                        </div>
-                      </div>
-                      @if (cliente.pac) {
-                        <span class="text-[10px] font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">
-                          {{ cliente.pac }}
-                        </span>
-                      }
-                    </button>
-                  }
-                </div>
-              }
-            }
-          </div>
-
-          <!-- 2. Procedimiento o Servicio (catálogo real de la clínica) -->
-          <div class="flex flex-col gap-2">
-            <app-input
-              label="Procedimiento o Servicio *"
-              placeholder="Escribe para buscar: hemograma, consulta, ecografía…"
-              [(value)]="producto" />
-
-            @if (catalogo.isLoading()) {
-              <span class="text-[11px] text-text-muted">Cargando servicios de la clínica…</span>
-            } @else if (serviciosSugeridos().length > 0) {
-              <div class="flex flex-wrap items-center gap-1.5 pt-1">
-                @for (sug of serviciosSugeridos(); track sug.nombre) {
-                  <button
-                    type="button"
-                    (click)="seleccionarSugerencia(sug.nombre)"
-                    class="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg bg-bg-light hover:bg-primary/10 hover:text-primary text-text-dark border border-border transition-colors cursor-pointer">
-                    <span>{{ sug.nombre }}</span>
-                    <span class="text-text-muted">·{{ sug.veces }}</span>
-                  </button>
-                }
-              </div>
-            } @else if (producto().length > 0) {
-              <span class="text-[11px] text-text-muted">
-                Servicio nuevo: no está en el histórico, se guardará tal cual lo escribas.
-              </span>
-            }
-
-            @if (moduloDetectado(); as mod) {
-              <span class="inline-flex w-fit items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20">
-                <app-icon name="check" [size]="11" />
-                Módulo {{ mod }}
-              </span>
-            }
-          </div>
-
-          <!-- 3. Monto y Médico -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <app-input
-              label="Monto Acordado (Bs) *"
-              type="text"
-              placeholder="Ej. 4800"
-              [(value)]="monto" />
-            <div class="flex flex-col gap-1.5">
-              <app-input
-                label="Médico Tratante (Opcional)"
-                placeholder="Escribe para buscar entre los médicos de la clínica"
-                [(value)]="medico" />
-              @if (medicosSugeridos().length > 0) {
-                <div class="flex flex-wrap gap-1.5">
-                  @for (med of medicosSugeridos(); track med.nombre) {
-                    <button
-                      type="button"
-                      (click)="medico.set(med.nombre)"
-                      class="text-[11px] px-2.5 py-1 rounded-lg bg-bg-light hover:bg-primary/10 hover:text-primary text-text-dark border border-border transition-colors cursor-pointer">
-                      {{ med.nombre }}
-                    </button>
-                  }
-                </div>
-              }
-            </div>
-          </div>
-
-          <!-- 5. Método de Pago y Comprobante -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-xl bg-bg-workspace border border-border">
-            <!-- Método de pago -->
-            <div class="flex flex-col gap-2">
-              <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Método de Pago</label>
-              <div class="grid grid-cols-2 gap-2">
-                @for (mp of metodosPago; track mp.id) {
-                  <button
-                    type="button"
-                    (click)="metodoPago.set(mp.id)"
-                    class="flex items-center gap-2 p-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer"
-                    [class.bg-primary]="metodoPago() === mp.id"
-                    [class.text-white]="metodoPago() === mp.id"
-                    [class.border-primary]="metodoPago() === mp.id"
-                    [class.bg-white]="metodoPago() !== mp.id"
-                    [class.text-text-dark]="metodoPago() !== mp.id"
-                    [class.border-border]="metodoPago() !== mp.id">
-                    <app-icon [name]="mp.icon" [size]="14" />
-                    <span class="truncate">{{ mp.label }}</span>
-                  </button>
-                }
-              </div>
-            </div>
-
-            <!-- Comprobante / Recibo -->
-            <div class="flex flex-col gap-2">
-              <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Comprobante de Pago (Opcional)</label>
-              <app-input
-                placeholder="Nº Recibo, código QR o ref. transferencia"
-                [(value)]="comprobante" />
-
-              <!-- Subida de archivo/foto de comprobante -->
-              <div class="mt-1">
-                @if (comprobanteSubido(); as adj) {
-                  <div class="flex items-center justify-between gap-2 p-2 rounded-xl bg-success-bg border border-border text-xs text-text-dark">
-                    <div class="flex items-center gap-2 min-w-0">
-                      <app-icon name="check-circle" [size]="14" class="text-success shrink-0" />
-                      <span class="truncate font-medium">{{ adj.comprobanteNombre }}</span>
-                    </div>
-                    <button
-                      type="button"
-                      (click)="quitarComprobante()"
-                      class="text-text-muted hover:text-critical p-1 transition-colors cursor-pointer"
-                      title="Eliminar archivo">
-                      <app-icon name="trash" [size]="14" />
-                    </button>
-                  </div>
-                } @else {
-                  <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-dashed border-border bg-white hover:bg-bg-light text-xs text-text-muted cursor-pointer transition-colors">
-                    <app-icon name="image" [size]="14" class="text-primary" />
-                    <span>{{ subiendoComprobante() ? 'Subiendo archivo…' : 'Adjuntar foto o PDF del comprobante' }}</span>
-                    <input
-                      type="file"
-                      accept="image/*,application/pdf"
-                      class="hidden"
-                      [disabled]="subiendoComprobante()"
-                      (change)="onArchivoSeleccionado($event)" />
-                  </label>
-                }
-              </div>
-            </div>
-          </div>
-
-          <!-- 6. Notas adicionales -->
-          <app-input
-            label="Observaciones o Notas Comerciales (Opcional)"
-            placeholder="Condiciones del paquete, fecha tentativa de procedimiento, anticipo..."
-            [(value)]="notas" />
-
-          <div class="flex items-center justify-end gap-3 pt-2 border-t border-border">
-            <app-button variant="ghost" (clicked)="formularioAbierto.set(false)">Cancelar</app-button>
-            <app-button type="submit" [loading]="guardando()">
-              {{ guardando() ? 'Registrando venta…' : 'Confirmar y Guardar Venta' }}
-            </app-button>
-          </div>
-        </form>
-      </div>
-    </div>
-  }
 
   <!-- ── Resumen del periodo ──────────────────────────────────────── -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -335,7 +106,7 @@
                   @if (venta.comprobanteUrl) {
                     <button
                       type="button"
-                      (click)="abrirLightbox(venta.comprobanteUrl, venta.comprobanteNombre || venta.comprobante)"
+                      (click)="abrirLightbox(lightboxTemplate, venta.comprobanteUrl, venta.comprobanteNombre || venta.comprobante)"
                       class="text-[10px] font-medium text-primary hover:underline inline-flex items-center gap-1 cursor-pointer w-fit"
                       title="Ver comprobante adjunto">
                       <app-icon name="image" [size]="11" />
@@ -381,30 +152,244 @@
     <app-loading-skeleton shape="card" height="240px" />
   }
 
-  <!-- ── Lightbox para visualización de comprobante ────────────────── -->
-  @if (lightboxUrl(); as url) {
-    <div
-      class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
-      (click)="cerrarLightbox()">
-      <div
-        class="bg-white rounded-2xl shadow-lifted max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto"
-        (click)="$event.stopPropagation()">
-        <div class="flex items-center justify-between p-4 border-b border-border">
-          <div class="flex items-center gap-2">
-            <app-icon name="image" [size]="18" class="text-primary" />
-            <h3 class="text-sm font-bold text-text-dark truncate">{{ lightboxNombre() }}</h3>
+  <!-- ── Modal Template: Registro de Venta (CDK Overlay) ─────────── -->
+  <ng-template #modalVentaTemplate>
+    <div class="bg-white rounded-2xl shadow-lifted border border-border max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto">
+      
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4.5 border-b border-border bg-white shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+            <app-icon name="shopping-bag" [size]="18" />
           </div>
-          <button
-            type="button"
-            (click)="cerrarLightbox()"
-            class="p-1 rounded-lg hover:bg-bg-light text-text-muted hover:text-text-dark cursor-pointer transition-colors">
-            <app-icon name="x" [size]="18" />
-          </button>
+          <div>
+            <h2 class="text-sm font-bold text-text-dark tracking-tight leading-tight">Registrar Cierre de Venta</h2>
+            <p class="text-xs text-text-muted leading-tight mt-0.5">Ingresa los datos del servicio y comprobante acordado</p>
+          </div>
         </div>
-        <div class="p-4 flex items-center justify-center bg-bg-workspace overflow-auto max-h-[70vh]">
+        <button
+          type="button"
+          (click)="cerrarFormulario()"
+          class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
+          aria-label="Cerrar modal">
+          <app-icon name="x" [size]="18" />
+        </button>
+      </div>
+
+      <!-- Form Body -->
+      <form (submit)="guardar($event)" class="p-6 overflow-y-auto space-y-4.5 flex-1">
+        @if (errorForm()) {
+          <div class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
+            <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
+            <span>{{ errorForm() }}</span>
+          </div>
+        }
+
+        <!-- 1. Selección de cliente -->
+        <div class="space-y-1.5">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Paciente / Cliente *</label>
+          @if (clienteElegido(); as elegido) {
+            <div class="flex items-center justify-between gap-3 bg-bg-light/70 rounded-xl px-3.5 py-2.5 border border-border">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <app-avatar [initials]="iniciales(elegido.nombre)" size="sm" />
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <p class="text-xs font-semibold text-text-dark truncate">{{ elegido.nombre }}</p>
+                    @if (elegido.pac) {
+                      <span class="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded bg-primary/10 text-primary">
+                        {{ elegido.pac }}
+                      </span>
+                    }
+                  </div>
+                  <p class="text-[11px] text-text-muted font-mono leading-tight mt-0.5">{{ elegido.telefono }}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                (click)="limpiarCliente()"
+                class="text-text-muted hover:text-critical p-1 rounded-lg hover:bg-white transition-colors cursor-pointer shrink-0"
+                title="Cambiar paciente">
+                <app-icon name="x" [size]="16" />
+              </button>
+            </div>
+          } @else {
+            <app-input
+              type="search"
+              placeholder="Buscar por nombre, teléfono, CI o PAC…"
+              [(value)]="busquedaCliente" />
+            @if (resultadosCliente.value().length > 0) {
+              <div class="border border-border rounded-xl divide-y divide-border max-h-48 overflow-y-auto shadow-subtle bg-white mt-1">
+                @for (cliente of resultadosCliente.value(); track cliente.id) {
+                  <button
+                    type="button"
+                    (click)="elegirCliente(cliente)"
+                    class="w-full flex items-center justify-between gap-3 px-3.5 py-2 text-left cursor-pointer hover:bg-bg-light transition-colors">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      <app-avatar [initials]="iniciales(cliente.nombre)" size="sm" />
+                      <div class="min-w-0">
+                        <p class="text-xs font-medium text-text-dark truncate">{{ cliente.nombre }}</p>
+                        <p class="text-[10px] text-text-muted font-mono leading-tight">{{ cliente.telefono }}</p>
+                      </div>
+                    </div>
+                    @if (cliente.pac) {
+                      <span class="text-[9px] font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">
+                        {{ cliente.pac }}
+                      </span>
+                    }
+                  </button>
+                }
+              </div>
+            }
+          }
+        </div>
+
+        <!-- 2. Procedimiento / Tratamiento -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Procedimiento / Servicio *</label>
+            @if (moduloDetectado(); as mod) {
+              <span class="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                Módulo {{ mod }}
+              </span>
+            }
+          </div>
+          <app-input
+            placeholder="Ej. Rinoplastia, Botox 50U, Plan Parto Gold…"
+            [(value)]="producto" />
+
+          @if (serviciosSugeridos().length > 0) {
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              @for (sug of serviciosSugeridos().slice(0, 8); track sug.nombre) {
+                <button
+                  type="button"
+                  (click)="seleccionarSugerencia(sug.nombre)"
+                  class="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-bg-light/80 hover:bg-primary/10 hover:text-primary text-text-dark border border-border transition-colors cursor-pointer">
+                  + {{ sug.nombre }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- 3. Monto y Médico -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div class="space-y-1">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Monto Acordado (Bs) *</label>
+            <app-input
+              type="text"
+              placeholder="Ej. 4800"
+              [(value)]="monto" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Médico Tratante</label>
+            <app-input
+              placeholder="Ej. Dr. Montalvo"
+              [(value)]="medico" />
+          </div>
+        </div>
+
+        <!-- 4. Método de Pago -->
+        <div class="space-y-1.5">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Método de Pago</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            @for (mp of metodosPago; track mp.id) {
+              <button
+                type="button"
+                (click)="metodoPago.set(mp.id)"
+                class="flex items-center justify-center gap-1.5 p-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer"
+                [class.bg-primary]="metodoPago() === mp.id"
+                [class.text-white]="metodoPago() === mp.id"
+                [class.border-primary]="metodoPago() === mp.id"
+                [class.bg-bg-workspace]="metodoPago() !== mp.id"
+                [class.text-text-dark]="metodoPago() !== mp.id"
+                [class.border-border]="metodoPago() !== mp.id">
+                <app-icon [name]="mp.icon" [size]="13" />
+                <span class="truncate">{{ mp.label }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- 5. Comprobante / Recibo de Pago -->
+        <div class="space-y-1.5">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Comprobante de Pago (Opcional)</label>
+          <app-input
+            placeholder="Nº Recibo, código QR o ref. transferencia"
+            [(value)]="comprobante" />
+
+          <div class="mt-1.5">
+            @if (comprobanteSubido(); as adj) {
+              <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-success-bg border border-border text-xs text-text-dark">
+                <div class="flex items-center gap-2 min-w-0">
+                  <app-icon name="check-circle" [size]="14" class="text-success shrink-0" />
+                  <span class="truncate font-medium">{{ adj.comprobanteNombre }}</span>
+                </div>
+                <button
+                  type="button"
+                  (click)="quitarComprobante()"
+                  class="text-text-muted hover:text-critical p-1 transition-colors cursor-pointer shrink-0"
+                  title="Eliminar archivo">
+                  <app-icon name="trash" [size]="14" />
+                </button>
+              </div>
+            } @else {
+              <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-dashed border-border bg-bg-workspace hover:bg-bg-light text-xs text-text-muted cursor-pointer transition-colors">
+                <app-icon name="image" [size]="14" class="text-primary" />
+                <span>{{ subiendoComprobante() ? 'Subiendo comprobante…' : 'Adjuntar foto o PDF del comprobante' }}</span>
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  class="hidden"
+                  [disabled]="subiendoComprobante()"
+                  (change)="onArchivoSeleccionado($event)" />
+              </label>
+            }
+          </div>
+        </div>
+
+        <!-- 6. Notas adicionales -->
+        <div class="space-y-1">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Observaciones / Notas (Opcional)</label>
+          <app-input
+            placeholder="Condiciones del paquete, fecha tentativa, etc."
+            [(value)]="notas" />
+        </div>
+
+        <!-- Footer botones -->
+        <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
+          <app-button variant="ghost" size="sm" (clicked)="cerrarFormulario()">Cancelar</app-button>
+          <app-button type="submit" size="sm" [loading]="guardando()">
+            {{ guardando() ? 'Guardando…' : 'Confirmar Venta' }}
+          </app-button>
+        </div>
+      </form>
+    </div>
+  </ng-template>
+
+  <!-- ── Lightbox Template (CDK Overlay) ──────────────────────────── -->
+  <ng-template #lightboxTemplate>
+    <div
+      class="bg-white rounded-2xl shadow-lifted max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto border border-border"
+      (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between p-4 border-b border-border bg-white">
+        <div class="flex items-center gap-2 min-w-0">
+          <app-icon name="image" [size]="18" class="text-primary" />
+          <h3 class="text-xs font-bold text-text-dark truncate">{{ lightboxNombre() }}</h3>
+        </div>
+        <button
+          type="button"
+          (click)="cerrarLightbox()"
+          class="w-8 h-8 rounded-lg hover:bg-bg-light text-text-muted hover:text-text-dark flex items-center justify-center cursor-pointer transition-colors">
+          <app-icon name="x" [size]="18" />
+        </button>
+      </div>
+      <div class="p-4 flex items-center justify-center bg-bg-workspace overflow-auto max-h-[70vh]">
+        @if (lightboxUrl(); as url) {
           <img [src]="url" [alt]="lightboxNombre()" class="max-w-full max-h-[65vh] object-contain rounded-lg shadow-subtle" />
-        </div>
-        <div class="flex items-center justify-end gap-2 p-3 border-t border-border bg-white">
+        }
+      </div>
+      <div class="flex items-center justify-end gap-2 p-3 border-t border-border bg-white">
+        @if (lightboxUrl(); as url) {
           <a
             [href]="url"
             target="_blank"
@@ -413,10 +398,11 @@
             <app-icon name="download" [size]="14" />
             <span>Descargar comprobante</span>
           </a>
-          <app-button variant="ghost" size="sm" (clicked)="cerrarLightbox()">Cerrar</app-button>
-        </div>
+        }
+        <app-button variant="ghost" size="sm" (clicked)="cerrarLightbox()">Cerrar</app-button>
       </div>
     </div>
-  }
+  </ng-template>
+
 </div>
 

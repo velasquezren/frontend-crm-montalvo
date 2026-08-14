@@ -165,7 +165,7 @@
               size="sm"
               icon="shopping-bag"
               [fullWidth]="true"
-              (clicked)="abrirModalVenta()">
+              (clicked)="abrirModalVenta(modalVentaChatTemplate)">
               + Registrar Venta
             </app-button>
           </div>
@@ -394,169 +394,159 @@
     }
   </aside>
 
-  <!-- ═══ Modal de Registro de Venta Rápida desde el Chat ═══ -->
-  @if (modalVentaAbierto()) {
-    <div
-      class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
-      (click)="cerrarModalVenta()">
-      <div
-        class="bg-white rounded-2xl shadow-lifted max-w-xl w-full max-h-[92vh] overflow-hidden flex flex-col pointer-events-auto border border-border"
-        (click)="$event.stopPropagation()">
+  <!-- ═══ Modal Template: Registro de Venta Rápida (CDK Overlay) ═══ -->
+  <ng-template #modalVentaChatTemplate>
+    <div class="bg-white rounded-2xl shadow-lifted border border-border max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto">
 
-        <!-- Header -->
-        <div class="flex items-center justify-between p-4 border-b border-border bg-bg-light shrink-0">
-          <div class="flex items-center gap-2.5 min-w-0">
-            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
-              <app-icon name="shopping-bag" [size]="18" />
-            </div>
-            <div class="min-w-0">
-              <h3 class="text-sm font-bold text-text-dark leading-tight truncate">Registrar Venta</h3>
-              <p class="text-xs text-text-muted leading-tight truncate mt-0.5">{{ chat.cliente.nombre }}</p>
-            </div>
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4.5 border-b border-border bg-white shrink-0">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+            <app-icon name="shopping-bag" [size]="18" />
           </div>
-          <button
-            type="button"
-            (click)="cerrarModalVenta()"
-            class="p-1 rounded-lg hover:bg-white text-text-muted hover:text-text-dark cursor-pointer transition-colors"
-            aria-label="Cerrar modal">
-            <app-icon name="x" [size]="18" />
-          </button>
+          <div class="min-w-0">
+            <h3 class="text-sm font-bold text-text-dark tracking-tight leading-tight truncate">Registrar Venta</h3>
+            <p class="text-xs text-text-muted leading-tight truncate mt-0.5">{{ chat.cliente.nombre }}</p>
+          </div>
         </div>
+        <button
+          type="button"
+          (click)="cerrarModalVenta()"
+          class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
+          aria-label="Cerrar modal">
+          <app-icon name="x" [size]="18" />
+        </button>
+      </div>
 
-        <!-- Body -->
-        <form (submit)="guardarVenta($event, chat.cliente.id)" class="flex-1 overflow-y-auto p-5 space-y-4">
-          @if (errorVenta()) {
-            <div class="p-3 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
-              <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
-              {{ errorVenta() }}
-            </div>
-          }
+      <!-- Form Body -->
+      <form (submit)="guardarVenta($event, chat.cliente.id)" class="p-6 overflow-y-auto space-y-4.5 flex-1">
+        @if (errorVenta()) {
+          <div class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
+            <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
+            <span>{{ errorVenta() }}</span>
+          </div>
+        }
 
-          <!-- Procedimiento / Servicio (catálogo real de la clínica) -->
-          <div>
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1">Procedimiento o Servicio *</label>
-            <app-input
-              placeholder="Escribe para buscar: hemograma, consulta…"
-              [(value)]="productoVenta" />
-
-            @if (catalogo.isLoading()) {
-              <span class="block mt-1.5 text-[10px] text-text-muted">Cargando servicios…</span>
-            } @else if (sugerenciasModulo().length > 0) {
-              <div class="flex flex-wrap gap-1 mt-1.5">
-                @for (sug of sugerenciasModulo(); track sug.nombre) {
-                  <button
-                    type="button"
-                    (click)="seleccionarSugerenciaVenta(sug.nombre)"
-                    class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-bg-light hover:bg-primary/10 hover:text-primary text-text-dark border border-border transition-colors cursor-pointer">
-                    <span>{{ sug.nombre }}</span>
-                    <span class="text-text-muted">·{{ sug.veces }}</span>
-                  </button>
-                }
-              </div>
-            }
-
+        <!-- 1. Procedimiento / Tratamiento -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Procedimiento / Servicio *</label>
             @if (moduloDetectado(); as mod) {
-              <span class="inline-flex w-fit items-center gap-1 mt-1.5 text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
-                <app-icon name="check" [size]="10" />
-                {{ mod }}
+              <span class="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                Módulo {{ mod }}
               </span>
             }
           </div>
+          <app-input
+            placeholder="Ej. Rinoplastia, Botox 50U, Plan Parto Gold…"
+            [(value)]="productoVenta" />
 
-          <!-- Monto y Médico -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1">Monto en Bs *</label>
-              <app-input
-                placeholder="Ej. 4500"
-                type="text"
-                [(value)]="montoVenta" />
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1">Médico Tratante</label>
-              <app-input
-                placeholder="Ej. Dr. Montalvo"
-                [(value)]="medicoVenta" />
-            </div>
-          </div>
-
-          <!-- Método de pago -->
-          <div>
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1.5">Método de Pago</label>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-              @for (mp of metodosPago; track mp.id) {
+          @if (sugerenciasModulo().length > 0) {
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              @for (sug of sugerenciasModulo().slice(0, 8); track sug.nombre) {
                 <button
                   type="button"
-                  (click)="metodoPagoVenta.set(mp.id)"
-                  class="flex items-center justify-center gap-1.5 p-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer"
-                  [class.bg-primary]="metodoPagoVenta() === mp.id"
-                  [class.text-white]="metodoPagoVenta() === mp.id"
-                  [class.border-primary]="metodoPagoVenta() === mp.id"
-                  [class.bg-bg-light]="metodoPagoVenta() !== mp.id"
-                  [class.text-text-dark]="metodoPagoVenta() !== mp.id"
-                  [class.border-border]="metodoPagoVenta() !== mp.id">
-                  <app-icon [name]="mp.icon" [size]="13" />
-                  <span class="truncate">{{ mp.label }}</span>
+                  (click)="seleccionarSugerenciaVenta(sug.nombre)"
+                  class="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-bg-light/80 hover:bg-primary/10 hover:text-primary text-text-dark border border-border transition-colors cursor-pointer">
+                  + {{ sug.nombre }}
                 </button>
               }
             </div>
-          </div>
+          }
+        </div>
 
-          <!-- Comprobante / Recibo -->
-          <div>
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1">Nº Comprobante / Recibo</label>
+        <!-- 2. Monto y Médico -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div class="space-y-1">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Monto Acordado (Bs) *</label>
             <app-input
-              placeholder="Ref. transferencia, nº recibo o código QR"
-              [(value)]="comprobanteVenta" />
+              type="text"
+              placeholder="Ej. 4500"
+              [(value)]="montoVenta" />
+          </div>
+          <div class="space-y-1">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Médico Tratante</label>
+            <app-input
+              placeholder="Ej. Dr. Montalvo"
+              [(value)]="medicoVenta" />
+          </div>
+        </div>
 
-            <!-- Adjunto opcional -->
-            <div class="mt-2">
-              @if (comprobanteSubido(); as adj) {
-                <div class="flex items-center justify-between gap-2 p-2 rounded-xl bg-success-bg border border-border text-xs text-text-dark">
-                  <div class="flex items-center gap-2 min-w-0">
-                    <app-icon name="check-circle" [size]="14" class="text-success shrink-0" />
-                    <span class="truncate font-medium">{{ adj.comprobanteNombre }}</span>
-                  </div>
-                  <button
-                    type="button"
-                    (click)="quitarComprobante()"
-                    class="text-text-muted hover:text-critical p-1 transition-colors cursor-pointer"
-                    title="Eliminar archivo">
-                    <app-icon name="trash" [size]="14" />
-                  </button>
+        <!-- 3. Método de Pago -->
+        <div class="space-y-1.5">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Método de Pago</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            @for (mp of metodosPago; track mp.id) {
+              <button
+                type="button"
+                (click)="metodoPagoVenta.set(mp.id)"
+                class="flex items-center justify-center gap-1.5 p-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer"
+                [class.bg-primary]="metodoPagoVenta() === mp.id"
+                [class.text-white]="metodoPagoVenta() === mp.id"
+                [class.border-primary]="metodoPagoVenta() === mp.id"
+                [class.bg-bg-workspace]="metodoPagoVenta() !== mp.id"
+                [class.text-text-dark]="metodoPagoVenta() !== mp.id"
+                [class.border-border]="metodoPagoVenta() !== mp.id">
+                <app-icon [name]="mp.icon" [size]="13" />
+                <span class="truncate">{{ mp.label }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- 4. Comprobante / Recibo de Pago -->
+        <div class="space-y-1.5">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Comprobante de Pago (Opcional)</label>
+          <app-input
+            placeholder="Nº Recibo, código QR o ref. transferencia"
+            [(value)]="comprobanteVenta" />
+
+          <div class="mt-1.5">
+            @if (comprobanteSubido(); as adj) {
+              <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-success-bg border border-border text-xs text-text-dark">
+                <div class="flex items-center gap-2 min-w-0">
+                  <app-icon name="check-circle" [size]="14" class="text-success shrink-0" />
+                  <span class="truncate font-medium">{{ adj.comprobanteNombre }}</span>
                 </div>
-              } @else {
-                <label class="flex items-center justify-center gap-2 p-2 rounded-xl border border-dashed border-border bg-bg-light hover:bg-white text-xs text-text-muted cursor-pointer transition-colors">
-                  <app-icon name="image" [size]="14" class="text-primary" />
-                  <span>{{ subiendoComprobante() ? 'Subiendo comprobante…' : 'Adjuntar foto de comprobante (opcional)' }}</span>
-                  <input
-                    type="file"
-                    accept="image/*,application/pdf"
-                    class="hidden"
-                    [disabled]="subiendoComprobante()"
-                    (change)="onArchivoComprobante($event)" />
-                </label>
-              }
-            </div>
+                <button
+                  type="button"
+                  (click)="quitarComprobante()"
+                  class="text-text-muted hover:text-critical p-1 transition-colors cursor-pointer shrink-0"
+                  title="Eliminar archivo">
+                  <app-icon name="trash" [size]="14" />
+                </button>
+              </div>
+            } @else {
+              <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-dashed border-border bg-bg-workspace hover:bg-bg-light text-xs text-text-muted cursor-pointer transition-colors">
+                <app-icon name="image" [size]="14" class="text-primary" />
+                <span>{{ subiendoComprobante() ? 'Subiendo comprobante…' : 'Adjuntar foto o PDF del comprobante' }}</span>
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  class="hidden"
+                  [disabled]="subiendoComprobante()"
+                  (change)="onArchivoComprobante($event)" />
+              </label>
+            }
           </div>
+        </div>
 
-          <!-- Observaciones -->
-          <div>
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1">Notas / Observaciones</label>
-            <app-input
-              placeholder="Notas comerciales o condiciones del paquete..."
-              [(value)]="notasVenta" />
-          </div>
+        <!-- 5. Notas adicionales -->
+        <div class="space-y-1">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Observaciones / Notas (Opcional)</label>
+          <app-input
+            placeholder="Condiciones del paquete, fecha tentativa, etc."
+            [(value)]="notasVenta" />
+        </div>
 
-          <!-- Footer acciones -->
-          <div class="flex items-center justify-end gap-2 pt-3 border-t border-border">
-            <app-button variant="ghost" size="sm" (clicked)="cerrarModalVenta()">Cancelar</app-button>
-            <app-button type="submit" size="sm" [loading]="guardandoVenta()">
-              {{ guardandoVenta() ? 'Guardando…' : 'Confirmar Venta' }}
-            </app-button>
-          </div>
-        </form>
-      </div>
+        <!-- Footer botones -->
+        <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
+          <app-button variant="ghost" size="sm" (clicked)="cerrarModalVenta()">Cancelar</app-button>
+          <app-button type="submit" size="sm" [loading]="guardandoVenta()">
+            {{ guardandoVenta() ? 'Guardando…' : 'Confirmar Venta' }}
+          </app-button>
+        </div>
+      </form>
     </div>
-  }
+  </ng-template>
 }

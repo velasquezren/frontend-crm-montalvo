@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, TemplateRef, ViewContainerRef } from '@angular/core';
+import { OverlayRef } from '@angular/cdk/overlay';
 
 import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { DialogService } from '../../../../shared/components/dialog/dialog.service';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { InputComponent } from '../../../../shared/components/input/input.component';
 import {
@@ -123,6 +125,11 @@ export class ConversacionSidebarComponent {
 
   /* ── Modal de Venta Rápida desde el Chat ───────────────────────── */
   private readonly ventasService = inject(VentasService);
+  private readonly dialogService = inject(DialogService);
+  private readonly vcr = inject(ViewContainerRef);
+
+  private activeOverlayRef?: OverlayRef;
+
   protected readonly modalVentaAbierto = signal(false);
   protected readonly productoVenta = signal<string>('');
   protected readonly montoVenta = signal<string>('');
@@ -156,7 +163,7 @@ export class ConversacionSidebarComponent {
     moduloDeServicio(this.catalogo.value(), this.productoVenta()),
   );
 
-  protected abrirModalVenta(): void {
+  protected abrirModalVenta(template: TemplateRef<unknown>): void {
     this.productoVenta.set('');
     this.montoVenta.set('');
     this.comprobanteVenta.set('');
@@ -166,10 +173,13 @@ export class ConversacionSidebarComponent {
     this.archivoNombre.set(null);
     this.comprobanteSubido.set(null);
     this.modalVentaAbierto.set(true);
+    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
   }
 
   protected cerrarModalVenta(): void {
     this.modalVentaAbierto.set(false);
+    this.activeOverlayRef?.dispose();
+    this.activeOverlayRef = undefined;
   }
 
   protected seleccionarSugerenciaVenta(sug: string): void {
