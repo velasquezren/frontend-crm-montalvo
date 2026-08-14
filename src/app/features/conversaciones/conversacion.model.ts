@@ -43,6 +43,7 @@ export interface ConversacionResumen {
     empresaTrabajo?: string | null;
     ciLugar?: string | null;
     datosExtra?: DatosExtra | null;
+    intereses?: readonly { id: string; descripcion: string }[];
   };
   readonly agente: { id: string; nombre: string } | null;
   /** El listado incluye solo el último mensaje (take: 1, desc). */
@@ -61,7 +62,7 @@ export interface ConversacionDetalle extends Omit<ConversacionResumen, 'mensajes
 export interface AgenteResumen {
   readonly id: string;
   readonly nombre: string;
-  readonly rol: 'ADMIN' | 'AGENTE';
+  readonly rol: 'SUPER_ADMIN' | 'ADMIN' | 'AGENTE';
 }
 
 /** Plantilla de WhatsApp aprobada (GET /conversaciones/meta/plantillas). */

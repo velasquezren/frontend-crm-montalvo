@@ -30,6 +30,10 @@ export interface ActualizarClienteDto {
   telefono?: string;
   email?: string | null;
   categoria?: CategoriaCliente;
+  agenteId?: string | null;
+  empresa?: string;
+  fechaNacimiento?: string;
+  lugarNacimiento?: string;
   datosExtra?: DatosExtra;
 }
 
@@ -38,7 +42,10 @@ export interface CrearClienteDto {
   telefono: string;
   email?: string | null;
   categoria?: CategoriaCliente;
-  agenteId?: string;
+  agenteId?: string | null;
+  empresa?: string;
+  fechaNacimiento?: string;
+  lugarNacimiento?: string;
   datosExtra?: DatosExtra;
 }
 

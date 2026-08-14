@@ -32,6 +32,8 @@ import {
 } from '../../shared/models/cliente-categoria.model';
 import { Cliente } from './cliente.model';
 import { ClientesService, OrdenCliente } from './clientes.service';
+import { ConversacionesService } from '../conversaciones/conversaciones.service';
+import { AgenteResumen } from '../conversaciones/conversacion.model';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { OverlayRef } from '@angular/cdk/overlay';
 import { TemplateRef, ViewContainerRef } from '@angular/core';
@@ -69,6 +71,7 @@ type PestanaModal = 'EXPEDIENTE' | 'CONTACTO' | 'NOTAS';
 })
 export class ClientesPage {
   private readonly clientesService = inject(ClientesService);
+  private readonly conversacionesService = inject(ConversacionesService);
   private readonly toast = inject(ToastService);
   private readonly dialogService = inject(DialogService);
   private readonly vcr = inject(ViewContainerRef);
@@ -100,6 +103,12 @@ export class ClientesPage {
      es lo que quiere ver un agente al abrir la vista. */
   protected readonly orden = signal<OrdenCliente | undefined>(undefined);
   protected readonly direccion = signal<DireccionOrden>('asc');
+
+  /* Lista de agentes / administradores para asignación */
+  protected readonly agentes = httpResource<AgenteResumen[]>(
+    () => this.conversacionesService.agentesRequest(),
+    { defaultValue: [] },
+  );
 
   protected readonly clientes = httpResource<RespuestaPaginada<Cliente>>(
     () => {
@@ -150,6 +159,7 @@ export class ClientesPage {
   protected readonly editFechaNacimiento = signal('');
   protected readonly editLugarNacimiento = signal('');
   protected readonly editCategoria = signal<CategoriaCliente>('PROSPECTO');
+  protected readonly editAgenteId = signal<string | null>(null);
   protected readonly editNotas = signal('');
   protected readonly editTags = signal('');
   protected readonly guardando = signal(false);
@@ -175,12 +185,11 @@ export class ClientesPage {
       .filter(Boolean),
   );
 
-  /** Etiquetas/intereses combinados para la columna de la tabla */
+  /** Etiquetas e intereses combinados para la columna de la tabla y ficha */
   protected obtenerEtiquetas(cliente: Cliente): string[] {
-    if (cliente.intereses && cliente.intereses.length > 0) {
-      return cliente.intereses.map(i => i.descripcion);
-    }
-    return listaExtra(cliente.datosExtra, 'tags');
+    const directIntereses = cliente.intereses?.map(i => i.descripcion) ?? [];
+    const tagsExtra = listaExtra(cliente.datosExtra, 'tags', 'intereses');
+    return [...new Set([...directIntereses, ...tagsExtra])];
   }
 
   /** Cerrar con Escape: comportamiento esperado en cualquier modal. */
@@ -202,6 +211,7 @@ export class ClientesPage {
     this.editFechaNacimiento.set('');
     this.editLugarNacimiento.set('');
     this.editCategoria.set('PROSPECTO');
+    this.editAgenteId.set(null);
     this.editNotas.set('');
     this.editTags.set('');
     this.modalEditarAbierto.set(true);
@@ -218,6 +228,7 @@ export class ClientesPage {
     this.editNombre.set(cliente.nombre);
     this.editEmail.set(cliente.email || '');
     this.editTelefono.set(cliente.telefono);
+    this.editAgenteId.set(cliente.agenteId || null);
     const datosExtra = cliente.datosExtra;
     this.editEmpresa.set(cliente.empresaTrabajo || textoExtra(datosExtra, 'empresa'));
     const fn = cliente.fechaNacimiento || textoExtra(datosExtra, 'fechaNacimiento', 'fn');
@@ -228,7 +239,9 @@ export class ClientesPage {
     this.editCategoria.set(cliente.categoria || 'PROSPECTO');
     this.editNotas.set(textoExtra(datosExtra, 'notas'));
     const tags = datosExtra?.['tags'];
-    this.editTags.set(Array.isArray(tags) ? tags.join(', ') : '');
+    const directTags = cliente.intereses?.map(i => i.descripcion) ?? [];
+    const combinedTags = [...new Set([...(Array.isArray(tags) ? tags : []), ...directTags])];
+    this.editTags.set(combinedTags.join(', '));
     this.modalEditarAbierto.set(true);
     if (template) {
       this.activeOverlayRef?.dispose();
@@ -273,6 +286,7 @@ export class ClientesPage {
         telefono,
         email: this.editEmail().trim() || null,
         categoria: this.editCategoria(),
+        agenteId: this.editAgenteId() || null,
         /* Con columna propia: van al primer nivel para que el backend
            los guarde donde la ficha luego los lee. */
         empresa: this.editEmpresa().trim(),
@@ -286,12 +300,18 @@ export class ClientesPage {
       };
 
       if (this.esCreacion()) {
-        await this.clientesService.crear(payload);
+        await this.clientesService.crear({
+          ...payload,
+          agenteId: this.editAgenteId() || undefined,
+        });
         this.toast.success('Cliente o prospecto creado exitosamente', 'Guardado');
       } else {
         const cliente = this.clienteSeleccionado();
         if (!cliente) return;
-        await this.clientesService.actualizar(cliente.id, payload);
+        await this.clientesService.actualizar(cliente.id, {
+          ...payload,
+          agenteId: this.editAgenteId() || null,
+        });
         this.toast.success('Ficha de cliente actualizada', 'Guardado');
       }
 

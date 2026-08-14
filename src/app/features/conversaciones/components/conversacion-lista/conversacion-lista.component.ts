@@ -44,6 +44,24 @@ export class ConversacionListaComponent {
   /* ── Agentes con chats para filtro rápido de Admin ──────────────── */
   protected readonly agentesConChats = computed(() => {
     const lista = this.state.conversacionesRecurso.value();
+    const todosAgentes = this.state.agentes.value();
+    const conteos = new Map<string, number>();
+
+    for (const c of lista) {
+      if (c.agente) {
+        conteos.set(c.agente.id, (conteos.get(c.agente.id) ?? 0) + 1);
+      }
+    }
+
+    if (todosAgentes.length > 0) {
+      return todosAgentes.map(ag => ({
+        id: ag.id,
+        nombre: ag.nombre,
+        rol: ag.rol,
+        count: conteos.get(ag.id) ?? 0,
+      })).sort((a, b) => b.count - a.count || a.nombre.localeCompare(b.nombre));
+    }
+
     const map = new Map<string, { id: string; nombre: string; count: number }>();
     for (const c of lista) {
       if (c.agente) {

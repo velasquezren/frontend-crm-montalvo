@@ -78,7 +78,9 @@ export class ConversacionSidebarComponent {
   }
 
   protected tagsDe(cliente: ClienteChat): string[] {
-    return listaExtra(cliente.datosExtra, 'tags');
+    const directIntereses = cliente.intereses?.map(i => i.descripcion) ?? [];
+    const tagsExtra = listaExtra(cliente.datosExtra, 'tags', 'intereses');
+    return [...new Set([...directIntereses, ...tagsExtra])];
   }
 
   protected edadDe(cliente: ClienteChat): string | null {

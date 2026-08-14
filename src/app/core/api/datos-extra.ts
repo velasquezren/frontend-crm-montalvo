@@ -33,8 +33,17 @@ export function textoExtraOpcional(
   return textoExtra(datos, ...claves) || null;
 }
 
-/** Lista de textos guardada bajo una clave (p. ej. `tags`), o vacía. */
-export function listaExtra(datos: DatosExtra | null | undefined, clave: string): string[] {
-  const valor = datos?.[clave];
-  return Array.isArray(valor) ? valor.map(item => String(item)).filter(Boolean) : [];
+/** Lista de textos guardada bajo las claves dadas (p. ej. `tags`, `intereses`), o vacía. */
+export function listaExtra(datos: DatosExtra | null | undefined, ...claves: string[]): string[] {
+  if (!datos) return [];
+  const resultados: string[] = [];
+  for (const clave of claves) {
+    const valor = datos[clave];
+    if (Array.isArray(valor)) {
+      resultados.push(...valor.map(item => String(item).trim()).filter(Boolean));
+    } else if (typeof valor === 'string' && valor.trim() !== '') {
+      resultados.push(...valor.split(',').map(s => s.trim()).filter(Boolean));
+    }
+  }
+  return [...new Set(resultados)];
 }

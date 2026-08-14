@@ -365,7 +365,7 @@
                 [(value)]="editTelefono" />
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <app-input
                 label="Correo electrónico"
                 type="email"
@@ -382,6 +382,19 @@
                   <option value="SILVER">Silver</option>
                   <option value="BRONZE">Bronze</option>
                   <option value="PROSPECTO">Prospecto</option>
+                </select>
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <label class="text-sm font-medium text-text-dark">Agente Asignado</label>
+                <select
+                  [value]="editAgenteId() || ''"
+                  (change)="editAgenteId.set($any($event.target).value || null)"
+                  class="w-full h-11 px-4 rounded-xl border border-border bg-white text-sm text-text-dark font-medium transition-all duration-200 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10">
+                  <option value="">Sin Asignar (Pool General)</option>
+                  @for (ag of agentes.value(); track ag.id) {
+                    <option [value]="ag.id">{{ ag.nombre }} ({{ ag.rol }})</option>
+                  }
                 </select>
               </div>
             </div>
