@@ -1,7 +1,7 @@
 <!-- Ver la nota del cajón de historial: el fondo y el apilado los pone
      DialogService, no esta plantilla. -->
 <aside
-  class="h-full w-full sm:max-w-2xl bg-background shadow-lifted
+  class="h-full w-full lg:w-[min(72rem,94vw)] bg-background shadow-lifted
          flex flex-col pointer-events-auto animate-drawer-in">
   <header class="flex items-start justify-between gap-3 p-5 border-b border-border">
     <div class="min-w-0">
@@ -11,7 +11,10 @@
     <app-button variant="ghost" size="sm" icon="x" [circle]="true" (clicked)="cerrar.emit()" />
   </header>
 
-  <div class="flex-1 overflow-y-auto p-5">
+  <!-- Mismo reparto que la ficha del paciente: quién es y cómo trabaja a la
+       izquierda, qué hizo y a quién a la derecha. Un scroll por columna. -->
+  <div class="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
+    <div class="p-5 lg:w-[24rem] lg:shrink-0 lg:overflow-y-auto lg:border-r lg:border-border">
     <!-- Resumen -->
     <section class="grid-kpis-modern">
       @for (item of resumen(); track item.label; let i = $index) {
@@ -63,6 +66,10 @@
       </div>
     }
 
+    </div>
+
+    <!-- ── Columna derecha: qué hizo y a quién ─────────────────────────── -->
+    <div class="p-5 lg:flex-1 lg:min-w-0 lg:overflow-y-auto">
     <!-- Servicios más frecuentes -->
     <h3 class="text-sm font-bold text-text-dark mb-2">Servicios más frecuentes</h3>
     @if (cargando()) {
@@ -126,5 +133,6 @@
       }
     </div>
     }
+    </div>
   </div>
 </aside>
