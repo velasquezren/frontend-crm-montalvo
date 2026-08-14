@@ -33,6 +33,41 @@ interface AdjuntoLocal {
 
 const TICK_GRABACION_MS = 1000;
 
+/* Espejo de lo que acepta `memoria-agente`, que es quien manda. Se repite aquí
+   solo para poder avisar ANTES de subir: sin esto, soltar un vídeo en el chat
+   gasta la subida entera para terminar en un error del servidor, y con la
+   conexión que tienen las agentes eso es medio minuto tirado. Si allá cambia el
+   límite, cambia aquí. */
+const TAMANO_MAXIMO_ADJUNTO = 5 * 1024 * 1024;
+const TIPOS_ADJUNTO_ACEPTADOS = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'audio/ogg',
+  'audio/webm',
+  'audio/mp4',
+  'audio/mpeg',
+];
+
+/** `audio/ogg;codecs=opus` → `audio/ogg`. */
+function tipoBase(mime: string): string {
+  return mime.split(';')[0].trim().toLowerCase();
+}
+
+/** Extensión que le corresponde al contenedor que haya elegido MediaRecorder,
+ *  que no es el mismo en todos los navegadores (Safari entrega mp4). */
+function extensionDeAudio(mime: string): string {
+  const base = tipoBase(mime);
+  if (base === 'audio/webm') return 'webm';
+  if (base === 'audio/mp4') return 'm4a';
+  if (base === 'audio/mpeg') return 'mp3';
+  return 'ogg';
+}
+
 /**
  * Componente de entrada y composición de mensajes para el Inbox de WhatsApp.
  * Soporta:
@@ -198,8 +233,9 @@ export class ConversacionComposerComponent implements OnDestroy {
       try {
         const mime = this.mediaRecorder?.mimeType || 'audio/ogg';
         const blob = new Blob(this.audioChunks, { type: mime });
-        const extension = mime.includes('webm') ? 'webm' : 'ogg';
-        const file = new File([blob], `audio-${Date.now()}.${extension}`, { type: mime });
+        const file = new File([blob], `audio-${Date.now()}.${extensionDeAudio(mime)}`, {
+          type: mime,
+        });
 
         if (this.audioStream) {
           this.audioStream.getTracks().forEach(track => track.stop());
@@ -266,6 +302,16 @@ export class ConversacionComposerComponent implements OnDestroy {
   }
 
   protected async subirAdjunto(file: File): Promise<void> {
+    if (!TIPOS_ADJUNTO_ACEPTADOS.includes(tipoBase(file.type))) {
+      this.toast.error('Solo se pueden enviar imágenes, PDF, Word y notas de voz.');
+      return;
+    }
+    if (file.size > TAMANO_MAXIMO_ADJUNTO) {
+      const mb = (file.size / 1024 / 1024).toFixed(1);
+      this.toast.error(`"${file.name}" pesa ${mb} MB y el máximo son 5 MB.`);
+      return;
+    }
+
     try {
       this.toast.info(`Subiendo "${file.name}"...`);
       const recurso = await this.memoriaService.subirBinario(file, { titulo: file.name });
