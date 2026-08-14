@@ -8,222 +8,228 @@
     </app-button>
   </app-page-header>
 
-  <!-- ── Formulario de registro (colapsable) ──────────────────────── -->
+  <!-- ── Modal de registro de venta (Full-Screen Overlay) ──────────── -->
   @if (formularioAbierto()) {
-    <app-card padding="lg">
-      <form (submit)="guardar($event)" class="flex flex-col gap-6">
-        <div class="flex items-center justify-between border-b border-border pb-4">
-          <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-              <app-icon name="shopping-bag" [size]="18" />
-            </div>
-            <div>
-              <h2 class="text-base font-bold text-text-dark">Registrar Cierre de Venta</h2>
-              <p class="text-xs text-text-muted">Ingresa los datos del servicio acordado con el paciente</p>
-            </div>
-          </div>
-          <button type="button" (click)="formularioAbierto.set(false)"
-            class="text-text-muted hover:text-text-dark p-1 rounded-lg hover:bg-bg-light transition-colors cursor-pointer"
-            aria-label="Cerrar formulario">
-            <app-icon name="x" [size]="18" />
-          </button>
-        </div>
-
-        @if (errorForm()) {
-          <div class="px-4 py-3 rounded-xl bg-critical-bg text-sm text-text-dark font-medium
-                      flex items-center gap-2 border border-border">
-            <app-icon name="alert-circle" [size]="16" class="text-critical shrink-0" />
-            {{ errorForm() }}
-          </div>
-        }
-
-        <!-- 1. Selección de cliente por búsqueda -->
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Paciente / Cliente *</label>
-          @if (clienteElegido(); as elegido) {
-            <div class="flex items-center justify-between gap-3 bg-bg-light rounded-xl px-4 py-3 border border-border">
-              <div class="flex items-center gap-3">
-                <app-avatar [initials]="iniciales(elegido.nombre)" size="sm" />
-                <div>
-                  <div class="flex items-center gap-2">
-                    <p class="text-sm font-semibold text-text-dark leading-tight">{{ elegido.nombre }}</p>
-                    @if (elegido.pac) {
-                      <span class="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary">
-                        {{ elegido.pac }}
-                      </span>
-                    }
-                  </div>
-                  <p class="text-xs text-text-muted leading-tight mt-0.5">{{ elegido.telefono }}</p>
-                </div>
+    <div
+      class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"
+      (click)="formularioAbierto.set(false)">
+      <div
+        class="bg-white rounded-2xl shadow-lifted max-w-2xl w-full max-h-[92vh] overflow-y-auto p-6 pointer-events-auto border border-border"
+        (click)="$event.stopPropagation()">
+        <form (submit)="guardar($event)" class="flex flex-col gap-6">
+          <div class="flex items-center justify-between border-b border-border pb-4">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                <app-icon name="shopping-bag" [size]="18" />
               </div>
-              <button type="button" (click)="limpiarCliente()"
-                class="text-text-muted hover:text-critical transition-colors cursor-pointer p-1 rounded-lg hover:bg-white"
-                aria-label="Quitar cliente">
-                <app-icon name="x" [size]="18" />
-              </button>
+              <div>
+                <h2 class="text-base font-bold text-text-dark">Registrar Cierre de Venta</h2>
+                <p class="text-xs text-text-muted">Ingresa los datos del servicio acordado con el paciente</p>
+              </div>
             </div>
-          } @else {
-            <app-input type="search" placeholder="Buscar por nombre, teléfono, CI o PAC…"
-              [(value)]="busquedaCliente" />
-            @if (resultadosCliente.value().length > 0) {
-              <div class="border border-border rounded-xl divide-y divide-border max-h-56 overflow-y-auto shadow-subtle bg-white">
-                @for (cliente of resultadosCliente.value(); track cliente.id) {
-                  <button type="button" (click)="elegirCliente(cliente)"
-                    class="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left cursor-pointer
-                           hover:bg-bg-light transition-colors">
-                    <div class="flex items-center gap-3 min-w-0">
-                      <app-avatar [initials]="iniciales(cliente.nombre)" size="sm" />
-                      <div class="min-w-0">
-                        <p class="text-sm font-medium text-text-dark leading-tight truncate">{{ cliente.nombre }}</p>
-                        <p class="text-xs text-text-muted leading-tight mt-0.5 font-mono">{{ cliente.telefono }}</p>
-                      </div>
+            <button type="button" (click)="formularioAbierto.set(false)"
+              class="text-text-muted hover:text-text-dark p-1 rounded-lg hover:bg-bg-light transition-colors cursor-pointer"
+              aria-label="Cerrar formulario">
+              <app-icon name="x" [size]="18" />
+            </button>
+          </div>
+
+          @if (errorForm()) {
+            <div class="px-4 py-3 rounded-xl bg-critical-bg text-sm text-text-dark font-medium
+                        flex items-center gap-2 border border-border">
+              <app-icon name="alert-circle" [size]="16" class="text-critical shrink-0" />
+              {{ errorForm() }}
+            </div>
+          }
+
+          <!-- 1. Selección de cliente por búsqueda -->
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Paciente / Cliente *</label>
+            @if (clienteElegido(); as elegido) {
+              <div class="flex items-center justify-between gap-3 bg-bg-light rounded-xl px-4 py-3 border border-border">
+                <div class="flex items-center gap-3">
+                  <app-avatar [initials]="iniciales(elegido.nombre)" size="sm" />
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <p class="text-sm font-semibold text-text-dark leading-tight">{{ elegido.nombre }}</p>
+                      @if (elegido.pac) {
+                        <span class="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                          {{ elegido.pac }}
+                        </span>
+                      }
                     </div>
-                    @if (cliente.pac) {
-                      <span class="text-[10px] font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">
-                        {{ cliente.pac }}
-                      </span>
-                    }
+                    <p class="text-xs text-text-muted leading-tight mt-0.5">{{ elegido.telefono }}</p>
+                  </div>
+                </div>
+                <button type="button" (click)="limpiarCliente()"
+                  class="text-text-muted hover:text-critical transition-colors cursor-pointer p-1 rounded-lg hover:bg-white"
+                  aria-label="Quitar cliente">
+                  <app-icon name="x" [size]="18" />
+                </button>
+              </div>
+            } @else {
+              <app-input type="search" placeholder="Buscar por nombre, teléfono, CI o PAC…"
+                [(value)]="busquedaCliente" />
+              @if (resultadosCliente.value().length > 0) {
+                <div class="border border-border rounded-xl divide-y divide-border max-h-56 overflow-y-auto shadow-subtle bg-white">
+                  @for (cliente of resultadosCliente.value(); track cliente.id) {
+                    <button type="button" (click)="elegirCliente(cliente)"
+                      class="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left cursor-pointer
+                             hover:bg-bg-light transition-colors">
+                      <div class="flex items-center gap-3 min-w-0">
+                        <app-avatar [initials]="iniciales(cliente.nombre)" size="sm" />
+                        <div class="min-w-0">
+                          <p class="text-sm font-medium text-text-dark leading-tight truncate">{{ cliente.nombre }}</p>
+                          <p class="text-xs text-text-muted leading-tight mt-0.5 font-mono">{{ cliente.telefono }}</p>
+                        </div>
+                      </div>
+                      @if (cliente.pac) {
+                        <span class="text-[10px] font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">
+                          {{ cliente.pac }}
+                        </span>
+                      }
+                    </button>
+                  }
+                </div>
+              }
+            }
+          </div>
+
+          <!-- 2. Especialidad / Módulo Clínico -->
+          <div class="flex flex-col gap-2">
+            <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Especialidad / Módulo Clínico</label>
+            <div class="flex flex-wrap gap-2">
+              @for (mod of modulos; track mod.id) {
+                <button
+                  type="button"
+                  (click)="moduloSeleccionado.set(mod.id)"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border"
+                  [class.bg-primary]="moduloSeleccionado() === mod.id"
+                  [class.text-white]="moduloSeleccionado() === mod.id"
+                  [class.border-primary]="moduloSeleccionado() === mod.id"
+                  [class.bg-bg-light]="moduloSeleccionado() !== mod.id"
+                  [class.text-text-muted]="moduloSeleccionado() !== mod.id"
+                  [class.border-border]="moduloSeleccionado() !== mod.id">
+                  <app-icon [name]="mod.icon" [size]="13" />
+                  <span>{{ mod.label }}</span>
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- 3. Procedimiento / Servicio + Sugerencias -->
+          <div class="flex flex-col gap-2">
+            <app-input
+              label="Procedimiento o Tratamiento *"
+              placeholder="Ej. Rinoplastia Ultrasónica, Plan Parto Gold, Botox 50U…"
+              [(value)]="producto" />
+
+            @if (serviciosSugeridos().length > 0) {
+              <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                <span class="text-[10px] font-bold text-text-muted uppercase tracking-wider mr-1">Sugerencias:</span>
+                @for (sug of serviciosSugeridos(); track sug) {
+                  <button
+                    type="button"
+                    (click)="seleccionarSugerencia(sug)"
+                    class="text-[11px] px-2.5 py-1 rounded-lg bg-bg-light hover:bg-primary/10 hover:text-primary text-text-dark border border-border transition-colors cursor-pointer">
+                    + {{ sug }}
                   </button>
                 }
               </div>
             }
-          }
-        </div>
-
-        <!-- 2. Especialidad / Módulo Clínico -->
-        <div class="flex flex-col gap-2">
-          <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Especialidad / Módulo Clínico</label>
-          <div class="flex flex-wrap gap-2">
-            @for (mod of modulos; track mod.id) {
-              <button
-                type="button"
-                (click)="moduloSeleccionado.set(mod.id)"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border"
-                [class.bg-primary]="moduloSeleccionado() === mod.id"
-                [class.text-white]="moduloSeleccionado() === mod.id"
-                [class.border-primary]="moduloSeleccionado() === mod.id"
-                [class.bg-bg-light]="moduloSeleccionado() !== mod.id"
-                [class.text-text-muted]="moduloSeleccionado() !== mod.id"
-                [class.border-border]="moduloSeleccionado() !== mod.id">
-                <app-icon [name]="mod.icon" [size]="13" />
-                <span>{{ mod.label }}</span>
-              </button>
-            }
-          </div>
-        </div>
-
-        <!-- 3. Procedimiento / Servicio + Sugerencias -->
-        <div class="flex flex-col gap-2">
-          <app-input
-            label="Procedimiento o Tratamiento *"
-            placeholder="Ej. Rinoplastia Ultrasónica, Plan Parto Gold, Botox 50U…"
-            [(value)]="producto" />
-
-          @if (serviciosSugeridos().length > 0) {
-            <div class="flex flex-wrap items-center gap-1.5 pt-1">
-              <span class="text-[10px] font-bold text-text-muted uppercase tracking-wider mr-1">Sugerencias:</span>
-              @for (sug of serviciosSugeridos(); track sug) {
-                <button
-                  type="button"
-                  (click)="seleccionarSugerencia(sug)"
-                  class="text-[11px] px-2.5 py-1 rounded-lg bg-bg-light hover:bg-primary/10 hover:text-primary text-text-dark border border-border transition-colors cursor-pointer">
-                  + {{ sug }}
-                </button>
-              }
-            </div>
-          }
-        </div>
-
-        <!-- 4. Monto y Médico -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <app-input
-            label="Monto Acordado (Bs) *"
-            type="text"
-            placeholder="Ej. 4800"
-            [(value)]="monto" />
-          <app-input
-            label="Médico Tratante (Opcional)"
-            placeholder="Ej. Dr. René Velásquez"
-            [(value)]="medico" />
-        </div>
-
-        <!-- 5. Método de Pago y Comprobante -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-xl bg-bg-workspace border border-border">
-          <!-- Método de pago -->
-          <div class="flex flex-col gap-2">
-            <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Método de Pago</label>
-            <div class="grid grid-cols-2 gap-2">
-              @for (mp of metodosPago; track mp.id) {
-                <button
-                  type="button"
-                  (click)="metodoPago.set(mp.id)"
-                  class="flex items-center gap-2 p-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer"
-                  [class.bg-primary]="metodoPago() === mp.id"
-                  [class.text-white]="metodoPago() === mp.id"
-                  [class.border-primary]="metodoPago() === mp.id"
-                  [class.bg-white]="metodoPago() !== mp.id"
-                  [class.text-text-dark]="metodoPago() !== mp.id"
-                  [class.border-border]="metodoPago() !== mp.id">
-                  <app-icon [name]="mp.icon" [size]="14" />
-                  <span class="truncate">{{ mp.label }}</span>
-                </button>
-              }
-            </div>
           </div>
 
-          <!-- Comprobante / Recibo -->
-          <div class="flex flex-col gap-2">
-            <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Comprobante de Pago (Opcional)</label>
+          <!-- 4. Monto y Médico -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <app-input
-              placeholder="Nº Recibo, código QR o ref. transferencia"
-              [(value)]="comprobante" />
+              label="Monto Acordado (Bs) *"
+              type="text"
+              placeholder="Ej. 4800"
+              [(value)]="monto" />
+            <app-input
+              label="Médico Tratante (Opcional)"
+              placeholder="Ej. Dr. Montalvo"
+              [(value)]="medico" />
+          </div>
 
-            <!-- Subida de archivo/foto de comprobante -->
-            <div class="mt-1">
-              @if (comprobanteSubido(); as adj) {
-                <div class="flex items-center justify-between gap-2 p-2 rounded-xl bg-success-bg border border-border text-xs text-text-dark">
-                  <div class="flex items-center gap-2 min-w-0">
-                    <app-icon name="check-circle" [size]="14" class="text-success shrink-0" />
-                    <span class="truncate font-medium">{{ adj.comprobanteNombre }}</span>
-                  </div>
+          <!-- 5. Método de Pago y Comprobante -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-xl bg-bg-workspace border border-border">
+            <!-- Método de pago -->
+            <div class="flex flex-col gap-2">
+              <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Método de Pago</label>
+              <div class="grid grid-cols-2 gap-2">
+                @for (mp of metodosPago; track mp.id) {
                   <button
                     type="button"
-                    (click)="quitarComprobante()"
-                    class="text-text-muted hover:text-critical p-1 transition-colors cursor-pointer"
-                    title="Eliminar archivo">
-                    <app-icon name="trash" [size]="14" />
+                    (click)="metodoPago.set(mp.id)"
+                    class="flex items-center gap-2 p-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer"
+                    [class.bg-primary]="metodoPago() === mp.id"
+                    [class.text-white]="metodoPago() === mp.id"
+                    [class.border-primary]="metodoPago() === mp.id"
+                    [class.bg-white]="metodoPago() !== mp.id"
+                    [class.text-text-dark]="metodoPago() !== mp.id"
+                    [class.border-border]="metodoPago() !== mp.id">
+                    <app-icon [name]="mp.icon" [size]="14" />
+                    <span class="truncate">{{ mp.label }}</span>
                   </button>
-                </div>
-              } @else {
-                <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-dashed border-border bg-white hover:bg-bg-light text-xs text-text-muted cursor-pointer transition-colors">
-                  <app-icon name="image" [size]="14" class="text-primary" />
-                  <span>{{ subiendoComprobante() ? 'Subiendo archivo…' : 'Adjuntar foto o PDF del comprobante' }}</span>
-                  <input
-                    type="file"
-                    accept="image/*,application/pdf"
-                    class="hidden"
-                    [disabled]="subiendoComprobante()"
-                    (change)="onArchivoSeleccionado($event)" />
-                </label>
-              }
+                }
+              </div>
+            </div>
+
+            <!-- Comprobante / Recibo -->
+            <div class="flex flex-col gap-2">
+              <label class="text-xs font-bold text-text-muted uppercase tracking-wider">Comprobante de Pago (Opcional)</label>
+              <app-input
+                placeholder="Nº Recibo, código QR o ref. transferencia"
+                [(value)]="comprobante" />
+
+              <!-- Subida de archivo/foto de comprobante -->
+              <div class="mt-1">
+                @if (comprobanteSubido(); as adj) {
+                  <div class="flex items-center justify-between gap-2 p-2 rounded-xl bg-success-bg border border-border text-xs text-text-dark">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <app-icon name="check-circle" [size]="14" class="text-success shrink-0" />
+                      <span class="truncate font-medium">{{ adj.comprobanteNombre }}</span>
+                    </div>
+                    <button
+                      type="button"
+                      (click)="quitarComprobante()"
+                      class="text-text-muted hover:text-critical p-1 transition-colors cursor-pointer"
+                      title="Eliminar archivo">
+                      <app-icon name="trash" [size]="14" />
+                    </button>
+                  </div>
+                } @else {
+                  <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-dashed border-border bg-white hover:bg-bg-light text-xs text-text-muted cursor-pointer transition-colors">
+                    <app-icon name="image" [size]="14" class="text-primary" />
+                    <span>{{ subiendoComprobante() ? 'Subiendo archivo…' : 'Adjuntar foto o PDF del comprobante' }}</span>
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      class="hidden"
+                      [disabled]="subiendoComprobante()"
+                      (change)="onArchivoSeleccionado($event)" />
+                  </label>
+                }
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- 6. Notas adicionales -->
-        <app-input
-          label="Observaciones o Notas Comerciales (Opcional)"
-          placeholder="Condiciones del paquete, fecha tentativa de procedimiento, anticipo..."
-          [(value)]="notas" />
+          <!-- 6. Notas adicionales -->
+          <app-input
+            label="Observaciones o Notas Comerciales (Opcional)"
+            placeholder="Condiciones del paquete, fecha tentativa de procedimiento, anticipo..."
+            [(value)]="notas" />
 
-        <div class="flex items-center gap-3 pt-2">
-          <app-button type="submit" [loading]="guardando()">
-            {{ guardando() ? 'Registrando venta…' : 'Confirmar y Guardar Venta' }}
-          </app-button>
-          <app-button variant="ghost" (clicked)="formularioAbierto.set(false)">Cancelar</app-button>
-        </div>
-      </form>
-    </app-card>
+          <div class="flex items-center justify-end gap-3 pt-2 border-t border-border">
+            <app-button variant="ghost" (clicked)="formularioAbierto.set(false)">Cancelar</app-button>
+            <app-button type="submit" [loading]="guardando()">
+              {{ guardando() ? 'Registrando venta…' : 'Confirmar y Guardar Venta' }}
+            </app-button>
+          </div>
+        </form>
+      </div>
+    </div>
   }
 
   <!-- ── Resumen del periodo ──────────────────────────────────────── -->
