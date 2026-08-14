@@ -5,7 +5,7 @@
 <div class="inbox-wrapper"
      [class.has-details]="!!state.seleccionadaId()"
      [class.panel-open]="!!state.detalle.value() && state.panelAbierto()"
-     [class.panel-collapsed]="!!state.detalle.value() && !state.panelAbierto()">
+     [class.panel-collapsed]="!state.detalle.value() || !state.panelAbierto()">
 
   <!-- ── Panel izquierdo: lista de chats ──────────────────────────── -->
   <app-conversacion-lista />
@@ -19,6 +19,8 @@
   </section>
 
   <!-- ── Panel derecho: ficha del cliente + asignación ─────────────── -->
-  <app-conversacion-sidebar />
+  @if (state.detalle.value() && state.panelAbierto()) {
+    <app-conversacion-sidebar />
+  }
 
 </div>

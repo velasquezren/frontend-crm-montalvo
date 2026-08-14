@@ -306,14 +306,6 @@
       }
     }
   </div>
-
-  <!-- Botón flotante: bajar al último mensaje -->
-  @if (mostrarBotonBajar()) {
-    <button type="button" (click)="bajarAlFondo()" class="scroll-bottom-btn" aria-label="Ir al último mensaje">
-      <app-icon name="chevron-down" [size]="18" />
-      <span class="text-xs font-semibold">Nuevos mensajes</span>
-    </button>
-  }
 } @else {
   <div class="flex-1 flex items-center justify-center p-6 bg-bg-workspace/40">
     <app-empty-state

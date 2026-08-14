@@ -57,7 +57,6 @@ export class ConversacionThreadComponent {
   private readonly messagesContainer = viewChild<ElementRef<HTMLElement>>('messagesScroll');
 
   /* ── Estado Local de Scroll & Lightbox ─────────────────────────── */
-  protected readonly mostrarBotonBajar = signal(false);
   protected readonly lightboxUrl = signal<string | null>(null);
   protected readonly velocidades = signal<Record<string, number>>({});
 
@@ -68,7 +67,7 @@ export class ConversacionThreadComponent {
 
       setTimeout(() => {
         const el = this.messagesContainer()?.nativeElement;
-        if (el && !this.mostrarBotonBajar()) {
+        if (el) {
           el.scrollTop = el.scrollHeight;
         }
       }, 50);
@@ -180,10 +179,6 @@ export class ConversacionThreadComponent {
         }
       });
     }
-
-    // Detectar si se alejó del fondo para mostrar botón flotante
-    const distanciaFondo = el.scrollHeight - el.scrollTop - el.clientHeight;
-    this.mostrarBotonBajar.set(distanciaFondo > 200);
   }
 
   protected bajarAlFondo(): void {

@@ -40,6 +40,17 @@
   .inbox-wrapper.has-details.panel-collapsed {
     grid-template-columns: 320px 1fr;
   }
+
+  .inbox-wrapper.has-details.panel-open app-conversacion-sidebar {
+    display: block;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .inbox-wrapper.panel-collapsed app-conversacion-sidebar {
+    display: none !important;
+  }
 }
 
 /* ── Panel central del chat ──────────────────────────────────── */
@@ -106,6 +117,10 @@ app-conversacion-composer {
   }
 
   .inbox-wrapper.panel-open app-conversacion-sidebar {
-    display: block;
+    display: block !important;
+  }
+
+  .inbox-wrapper.panel-collapsed app-conversacion-sidebar {
+    display: none !important;
   }
 }
