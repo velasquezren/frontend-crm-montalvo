@@ -256,7 +256,7 @@
                   <span class="text-xs font-bold truncate flex items-center gap-1">Ver Documento PDF <app-icon name="external-link" [size]="12" /></span>
                 </a>
               } @else {
-                <p class="bubble-text">{{ item.mensaje.contenido }}</p>
+                <p class="bubble-text" [innerHTML]="item.mensaje.contenido | whatsappMarkdown"></p>
               }
             }
 

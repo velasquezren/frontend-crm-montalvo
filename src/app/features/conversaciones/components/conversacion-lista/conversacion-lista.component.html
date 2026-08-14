@@ -121,7 +121,7 @@
 
   <!-- Lista de conversaciones -->
   <div class="sidebar-list">
-    @if (state.conversacionesRecurso.isLoading()) {
+    @if (state.conversacionesRecurso.isLoading() && state.conversacionesRecurso.value().length === 0) {
       @for (n of [1, 2, 3, 4, 5, 6]; track n) {
         <div class="chat-item-skeleton">
           <app-loading-skeleton shape="circle" width="40px" height="40px" />
@@ -131,7 +131,7 @@
           </div>
         </div>
       }
-    } @else if (state.conversacionesRecurso.error()) {
+    } @else if (state.conversacionesRecurso.error() && state.conversacionesRecurso.value().length === 0) {
       <app-empty-state
         icon="alert-circle"
         title="No se pudo cargar el inbox"

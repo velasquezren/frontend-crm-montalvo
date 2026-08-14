@@ -16,6 +16,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { ImageViewerComponent } from '../../../../shared/components/image-viewer/image-viewer.component';
+import { WhatsAppMarkdownPipe } from '../../../../shared/pipes/whatsapp-markdown.pipe';
 import { ToastService } from '../../../../core/toast/toast.service';
 import { generarIniciales } from '../../../../core/auth/user.model';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
@@ -42,6 +43,7 @@ function soloDigitos(telefono: string): string {
     IconComponent,
     ImageViewerComponent,
     LoadingSkeletonComponent,
+    WhatsAppMarkdownPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './conversacion-thread.component.html',

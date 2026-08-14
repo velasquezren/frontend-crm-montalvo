@@ -53,7 +53,18 @@ export class ConversacionesStateService {
 
   readonly conversacionesRecurso = httpResource<ConversacionResumen[]>(
     () => this.conversacionesService.listarRequest(),
-    { defaultValue: [] },
+    {
+      defaultValue: [],
+      equal: (a, b) => {
+        if (a.length !== b.length) return false;
+        for (let i = 0; i < a.length; i++) {
+          if (a[i].id !== b[i].id || a[i].updatedAt !== b[i].updatedAt || a[i].noLeidosCount !== b[i].noLeidosCount) {
+            return false;
+          }
+        }
+        return true;
+      },
+    },
   );
 
   readonly agentes = httpResource<AgenteResumen[]>(
