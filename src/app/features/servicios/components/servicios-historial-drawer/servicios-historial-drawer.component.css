@@ -1,11 +1,51 @@
+/**
+ * Sin `max-height` ni scroll propio, a propósito.
+ *
+ * Tenía `max-height: 46vh; overflow-y: auto` DENTRO de un panel que ya
+ * scrolleaba: dos barras anidadas en una columna estrecha, y la línea de tiempo
+ * encajonada en media pantalla por alta que fuera la ventana. Ahora la columna
+ * de la derecha es la única que scrollea y la línea de tiempo ocupa lo que
+ * necesite.
+ */
 .linea-tiempo {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-height: 46vh;
-  overflow-y: auto;
-  padding: 2px 4px 2px 26px;
+  padding: 2px 4px 14px 26px;
+}
+
+/**
+ * Cabecera de año, pegada al borde superior mientras se recorre el historial.
+ *
+ * En una lista de cincuenta servicios todas las filas se parecen; el año fijo
+ * arriba dice en qué época estás sin tener que leer las fechas una a una, y el
+ * total responde de un vistazo cuánto dejó ese año.
+ */
+.anio-cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 4px 8px;
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.anio-etiqueta {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.anio-meta {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .linea-tiempo::before {
@@ -28,7 +68,7 @@
   display: flex;
   gap: 12px;
   padding: 12px 14px;
-  background: white;
+  background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 12px;
   transition:
@@ -54,7 +94,7 @@
 }
 
 .evento-fecha {
-  min-width: 74px;
+  min-width: 56px;
   font-size: 11px;
   font-weight: 700;
   color: var(--color-primary);

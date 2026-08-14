@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -41,4 +41,31 @@ export class ServiciosHistorialDrawerComponent {
   readonly cargando = input<boolean>(false);
 
   readonly cerrar = output<void>();
+
+  /**
+   * La línea de tiempo, agrupada por año y con el gasto de cada uno.
+   *
+   * Un historial clínico se lee por épocas —"el año que se operó", "cuando vino
+   * seguido"—, no como una lista plana de cincuenta filas iguales. Agrupar da
+   * puntos de referencia al recorrerlo, y el total por año responde de un
+   * vistazo la pregunta que siempre se hace: cuánto dejó y cuándo.
+   *
+   * Los servicios llegan ya ordenados del backend; aquí solo se parten, así que
+   * el orden de los grupos es el mismo que traía la lista.
+   */
+  protected readonly porAnio = computed(() => {
+    const grupos = new Map<string, { anio: string; servicios: HistorialPaciente['servicios']; total: number }>();
+
+    for (const s of this.historial().servicios) {
+      /* Sin fecha van juntos al final en su propio grupo: el Excel no siempre
+         la trae, y esconderlos sería perder servicios que sí ocurrieron. */
+      const anio = s.fecha ? String(new Date(s.fecha).getFullYear()) : 'Sin fecha';
+      const grupo = grupos.get(anio) ?? { anio, servicios: [], total: 0 };
+      grupo.servicios.push(s);
+      grupo.total += Number(s.precio) || 0;
+      grupos.set(anio, grupo);
+    }
+
+    return [...grupos.values()];
+  });
 }

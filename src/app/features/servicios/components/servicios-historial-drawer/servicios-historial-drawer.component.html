@@ -2,8 +2,13 @@
      DialogService (CDK Overlay), que pone el fondo y el apilado. Tenerlos aquí
      lo dejaba dentro del árbol de la página peleando por z-index contra el
      header, el sidebar y el FAB — y perdiendo. -->
+<!-- Ancho: hasta 72rem en vez de las 42rem de antes. Un historial clínico es
+     denso —ficha, KPIs y decenas de servicios— y en un panel estrecho todo
+     quedaba en una columna larguísima con la línea de tiempo encajonada en su
+     propio scroll. Con sitio de verdad cabe en dos columnas y se lee de un
+     vistazo. `94vw` evita que en un portátil quede pegado a los bordes. -->
 <aside
-  class="h-full w-full sm:max-w-2xl bg-background shadow-lifted
+  class="h-full w-full lg:w-[min(72rem,94vw)] bg-background shadow-lifted
          flex flex-col pointer-events-auto animate-drawer-in">
   <header class="flex items-start justify-between gap-3 p-5 border-b border-border">
     <div>
@@ -13,7 +18,11 @@
     <app-button variant="ghost" size="sm" icon="x" [circle]="true" (clicked)="cerrar.emit()" />
   </header>
 
-  <div class="flex-1 overflow-y-auto p-5">
+  <!-- En pantalla ancha, dos columnas con UN scroll cada una: quién es a la
+       izquierda, qué le hicieron a la derecha. En móvil se apilan y scrollea el
+       contenedor. -->
+  <div class="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
+    <div class="p-5 lg:w-[22rem] lg:shrink-0 lg:overflow-y-auto lg:border-r lg:border-border">
     <!-- Resumen -->
     <section class="grid-kpis-modern">
       @for (item of resumenHistorial(); track item.label; let i = $index) {
@@ -87,45 +96,61 @@
         </p>
       </div>
     }
+    </div>
 
-    <!-- Línea de tiempo -->
-    <h3 class="text-sm font-bold text-text-dark mb-2">
-      Línea de tiempo
-      @if (!cargando()) {
-        <span class="text-xs font-medium text-text-muted">
-          — del {{ historial().resumen.primeraVisita | date: 'dd/MM/yy' }} al
-          {{ historial().resumen.ultimaVisita | date: 'dd/MM/yy' }}
-        </span>
-      }
-    </h3>
-
-    @if (cargando()) {
-      <div class="space-y-2">
-        @for (fila of [1, 2, 3, 4, 5]; track fila) {
-          <app-loading-skeleton shape="text" height="3.25rem" />
-        }
-      </div>
-    } @else {
-    <div class="linea-tiempo">
-      @for (s of historial().servicios; track s.id) {
-        <article class="evento">
-          <span class="evento-fecha">{{ s.fecha ? (s.fecha | date: 'dd/MM/yy') : '—' }}</span>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-text-dark">{{ s.detalle }}</p>
-            <p class="text-xs text-text-muted mt-0.5">
-              @if (s.medico) { {{ s.medico }} · }
-              {{ s.modulo }}
-              @if (s.seguro) { · {{ s.seguro }} }
-            </p>
-          </div>
-          <span class="text-sm font-semibold text-primary whitespace-nowrap">
-            {{ s.precio | moneda }}
+    <!-- ── Columna derecha: qué le hicieron ────────────────────────────── -->
+    <div class="p-5 lg:flex-1 lg:min-w-0 lg:overflow-y-auto">
+      <h3 class="text-sm font-bold text-text-dark mb-3">
+        Línea de tiempo
+        @if (!cargando()) {
+          <span class="text-xs font-medium text-text-muted">
+            — del {{ historial().resumen.primeraVisita | date: 'dd/MM/yy' }} al
+            {{ historial().resumen.ultimaVisita | date: 'dd/MM/yy' }}
           </span>
-        </article>
-      } @empty {
+        }
+      </h3>
+
+      @if (cargando()) {
+        <div class="space-y-2">
+          @for (fila of [1, 2, 3, 4, 5]; track fila) {
+            <app-loading-skeleton shape="text" height="3.25rem" />
+          }
+        </div>
+      } @else if (porAnio().length > 0) {
+        @for (grupo of porAnio(); track grupo.anio) {
+          <!-- La cabecera de año queda pegada al hacer scroll: en un historial
+               largo dice siempre en qué época estás mirando. -->
+          <div class="anio-cabecera">
+            <span class="anio-etiqueta">{{ grupo.anio }}</span>
+            <span class="anio-meta">
+              {{ grupo.servicios.length }}
+              {{ grupo.servicios.length === 1 ? 'servicio' : 'servicios' }}
+              · {{ grupo.total | moneda }}
+            </span>
+          </div>
+
+          <div class="linea-tiempo">
+            @for (s of grupo.servicios; track s.id) {
+              <article class="evento">
+                <span class="evento-fecha">{{ s.fecha ? (s.fecha | date: 'dd MMM') : '—' }}</span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-text-dark">{{ s.detalle }}</p>
+                  <p class="text-xs text-text-muted mt-0.5">
+                    @if (s.medico) { {{ s.medico }} · }
+                    {{ s.modulo }}
+                    @if (s.seguro) { · {{ s.seguro }} }
+                  </p>
+                </div>
+                <span class="text-sm font-semibold text-primary whitespace-nowrap tabular-nums">
+                  {{ s.precio | moneda }}
+                </span>
+              </article>
+            }
+          </div>
+        }
+      } @else {
         <app-empty-state icon="inbox" title="Sin servicios registrados" />
       }
     </div>
-    }
   </div>
 </aside>
