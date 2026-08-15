@@ -231,7 +231,7 @@ const DEUDA = {
      excepción documentada, o se derivan nueve tonos de la marca y el gráfico
      pasa a distinguirse por otra cosa (patrón, etiqueta directa). Esa decisión
      es del dueño del producto. Mientras tanto la cifra solo puede bajar. */
-  'features/dashboard/dashboard.page.ts': { hex: 12 },
+  'features/dashboard/dashboard.page.ts': { hex: 11 },
 };
 
 const REGLAS = [

@@ -7,13 +7,14 @@ import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales } from '../../core/auth/user.model';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent, BadgeVariant } from '../../shared/components/badge/badge.component';
+import { ButtonComponent } from '../../shared/components/button/button.component';
 import { CardComponent } from '../../shared/components/card/card.component';
-import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
+import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { IconComponent, IconName } from '../../shared/components/icon/icon.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { formatearBs, MonedaPipe } from '../../shared/pipes/moneda.pipe';
-import { KpiResumen } from './kpis.model';
+import { ActividadItem, KpiResumen, TopServicio } from './kpis.model';
 import { KpisService } from './kpis.service';
 
 interface KpiCard {
@@ -24,6 +25,7 @@ interface KpiCard {
   readonly tendenciaVariant: BadgeVariant;
   readonly tendenciaIcon: IconName;
   readonly sparklinePath: string;
+  readonly tono?: 'primary' | 'secondary' | 'neutral' | 'critical';
 }
 
 interface FunnelStage {
@@ -84,11 +86,11 @@ const ORIGEN_CORTO: Record<string, string> = {
 };
 
 const ORIGEN_COLOR: Record<string, string> = {
-  WHATSAPP_DIRECTO: '#0D9488', // Emerald Teal — elegante y ejecutivo
-  FACEBOOK_LEAD_AD: '#2563EB', // Royal Blue
+  WHATSAPP_DIRECTO: '#006156', // Teal Montalvo
+  FACEBOOK_LEAD_AD: '#1D4ED8', // Royal Blue
   FACEBOOK_COMENTARIO: '#3B82F6',
   FACEBOOK_MENSAJE: '#60A5FA',
-  INSTAGRAM_LEAD_AD: '#7C3AED', // Deep Violet
+  INSTAGRAM_LEAD_AD: '#6D28D9', // Deep Violet
   INSTAGRAM_COMENTARIO: '#8B5CF6',
   INSTAGRAM_MENSAJE: '#A78BFA',
   PRESENCIAL: '#D97706', // Warm Amber
@@ -96,8 +98,8 @@ const ORIGEN_COLOR: Record<string, string> = {
 };
 
 /**
- * Dashboard — Panel de KPIs y métricas en tiempo real.
- * Ref: RF-16/RF-17/RF-18 y CRM_MANIFESTO.md §4 (átomos compartidos).
+ * Dashboard — Panel Operativo y Comercial en Tiempo Real.
+ * Ref: CRM_MANIFESTO.md §4 (átomos compartidos).
  * Conectado a GET /kpis/resumen del backend NestJS.
  */
 @Component({
@@ -106,6 +108,7 @@ const ORIGEN_COLOR: Record<string, string> = {
   imports: [
     CardComponent,
     BadgeComponent,
+    ButtonComponent,
     IconComponent,
     AvatarComponent,
     EmptyStateComponent,
@@ -143,47 +146,56 @@ export class DashboardPage {
     const res = this.kpiData.value();
     if (!res) return [];
 
+    const pulso = res.pulsoHoy;
     const totalVentas = res.ventas.total;
     const cantVentas = res.ventas.cantidad;
+    const ticketProm = res.ventas.ticketPromedio ?? (cantVentas > 0 ? Math.round(totalVentas / cantVentas) : 0);
+
+    const leadsHoy = pulso?.leadsHoy ?? 0;
+    const ventasHoyMonto = pulso?.ventasHoyMonto ?? 0;
+    const ventasHoyCant = pulso?.ventasHoyCantidad ?? 0;
+    const pendientesAtencion = pulso?.leadsNuevosSinAtender ?? 0;
+
     const totalLeads = res.leadsPorOrigen.reduce((s, l) => s + l.cantidad, 0);
     const totalConvertidos = res.leadsPorOrigen.reduce((s, l) => s + l.convertidos, 0);
     const tasaGlobal = totalLeads > 0 ? Math.round((totalConvertidos / totalLeads) * 100) : 0;
 
     return [
       {
-        label: 'Ventas Cerradas',
+        label: 'Ventas Cerradas (Periodo)',
         valor: formatearBs(totalVentas),
-        icon: 'shopping-bag',
-        tendencia: `${cantVentas} venta${cantVentas === 1 ? '' : 's'}`,
+        icon: 'wallet',
+        tendencia: `${cantVentas} ventas · Ticket: ${formatearBs(ticketProm)}`,
         tendenciaVariant: 'success',
         tendenciaIcon: 'trending-up',
         sparklinePath: 'M0,25 Q15,10 30,18 T60,8 T90,22 T120,4',
+        tono: 'primary',
       },
       {
-        label: 'Total Leads Captados',
-        valor: String(totalLeads),
+        label: 'Ventas de Hoy',
+        valor: formatearBs(ventasHoyMonto),
+        icon: 'shopping-bag',
+        tendencia: `${ventasHoyCant} cerradas hoy`,
+        tendenciaVariant: ventasHoyCant > 0 ? 'success' : 'neutral',
+        tendenciaIcon: 'check-circle',
+        sparklinePath: 'M0,22 Q20,15 40,20 T80,8 T120,2',
+      },
+      {
+        label: 'Nuevos Leads de Hoy',
+        valor: String(leadsHoy),
         icon: 'user-plus',
-        tendencia: `${totalConvertidos} convertidos`,
-        tendenciaVariant: 'info',
+        tendencia: `${pendientesAtencion} por contactar`,
+        tendenciaVariant: pendientesAtencion > 0 ? 'info' : 'neutral',
         tendenciaIcon: 'users',
-        sparklinePath: 'M0,22 Q20,5 40,15 T80,10 T120,3',
-      },
-      {
-        label: 'Tasa de Conversión',
-        valor: `${tasaGlobal}%`,
-        icon: 'percent',
-        tendencia: 'Leads → Ventas',
-        tendenciaVariant: tasaGlobal >= 20 ? 'success' : 'info',
-        tendenciaIcon: 'activity',
         sparklinePath: 'M0,20 Q15,25 35,12 T75,18 T120,5',
       },
       {
-        label: 'Comisiones Pendientes',
-        valor: formatearBs(res.comisiones.pendiente),
-        icon: 'wallet',
-        tendencia: `Pagadas: ${formatearBs(res.comisiones.pagada)}`,
-        tendenciaVariant: res.comisiones.pendiente > 0 ? 'info' : 'neutral',
-        tendenciaIcon: 'clock',
+        label: 'Efectividad Comercial',
+        valor: `${tasaGlobal}%`,
+        icon: 'activity',
+        tendencia: `${totalConvertidos} pacientes convertidos`,
+        tendenciaVariant: tasaGlobal >= 15 ? 'success' : 'info',
+        tendenciaIcon: 'trending-up',
         sparklinePath: 'M0,15 Q25,28 50,12 T85,20 T120,8',
       },
     ];
@@ -337,6 +349,27 @@ export class DashboardPage {
       };
     });
   });
+
+  protected readonly topServicios = computed<TopServicio[]>(() => {
+    return this.kpiData.value()?.topServicios ?? [];
+  });
+
+  protected readonly actividadReciente = computed<ActividadItem[]>(() => {
+    return this.kpiData.value()?.actividadReciente ?? [];
+  });
+
+  protected formatearHoraRelativa(fechaIso: string): string {
+    const fecha = new Date(fechaIso);
+    const ahora = new Date();
+    const diffMs = ahora.getTime() - fecha.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+
+    if (diffMin < 1) return 'Hace un momento';
+    if (diffMin < 60) return `Hace ${diffMin} min`;
+    const diffHoras = Math.floor(diffMin / 60);
+    if (diffHoras < 24) return `Hoy, ${fecha.toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })}`;
+    return fecha.toLocaleDateString('es-BO', { day: '2-digit', month: 'short' });
+  }
 
   protected setVistaGrafico(modo: 'DONUT' | 'BARRAS'): void {
     this.vistaGrafico.set(modo);

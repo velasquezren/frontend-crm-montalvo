@@ -1,15 +1,32 @@
 <div class="flex flex-col gap-8">
 
-  <!-- ── Saludo + fecha ───────────────────────────────────────────── -->
-  <div>
-    <h1 class="text-2xl font-bold text-text-dark tracking-tight">
-      @if (firstName()) {
-        Hola, {{ firstName() }}
-      } @else {
-        Dashboard
-      }
-    </h1>
-    <p class="text-text-muted mt-1 text-sm capitalize">{{ fechaHoy }}</p>
+  <!-- ── Saludo + fecha + controles de tiempo real ──────────────────── -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-text-dark tracking-tight">
+        @if (firstName()) {
+          Hola, {{ firstName() }} 👋
+        } @else {
+          Dashboard Comercial
+        }
+      </h1>
+      <p class="text-text-muted mt-1 text-sm capitalize">{{ fechaHoy }} · Panel Operativo en Vivo</p>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <span class="inline-flex items-center gap-1.5 text-xs text-primary bg-primary/10 px-3 py-1.5 rounded-xl font-semibold border border-primary/20">
+        <app-icon name="activity" [size]="14" />
+        <span>Tiempo Real</span>
+      </span>
+      <app-button
+        variant="ghost"
+        size="sm"
+        icon="rotate-cw"
+        (clicked)="kpiData.reload()"
+        title="Actualizar datos">
+        Recargar
+      </app-button>
+    </div>
   </div>
 
   @if (kpiData.isLoading()) {
@@ -22,7 +39,7 @@
   } @else if (kpiData.error()) {
     <app-error-carga que="los indicadores" (reintentar)="kpiData.reload()" />
   } @else {
-    <!-- ── KPIs (RF-16) con Sparklines ─────────────────────────────── -->
+    <!-- ── 1. KPIs Operativos y Comerciales ──────────────────────────── -->
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
       @for (kpi of kpis(); track kpi.label) {
         <app-card [hoverable]="true" class="relative overflow-hidden group">
@@ -38,7 +55,7 @@
             <p class="text-sm text-text-muted font-medium mt-5">{{ kpi.label }}</p>
             <p class="text-3xl font-bold text-text-dark mt-1 tracking-tight">{{ kpi.valor }}</p>
           </div>
-          <!-- Sparkline SVG gráfico lineal de tendencia -->
+          <!-- Sparkline SVG sutil -->
           <div class="absolute bottom-0 left-0 right-0 h-10 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity">
             <svg class="w-full h-full text-primary" viewBox="0 0 120 30" fill="none" preserveAspectRatio="none">
               <path [attr.d]="kpi.sparklinePath" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
@@ -48,17 +65,15 @@
       }
     </div>
 
-    <!-- ── Embudos de Conversión Visual (Funnel) ─────────────────────── -->
-    <!-- ── Embudos de Conversión Visual (Funnel Pipelined UX) ─────────── -->
+    <!-- ── 2. Embudo de Conversión Visual (Pipeline Pipelined UX) ─────── -->
     <app-card>
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h2 class="text-base font-bold text-text-dark">Embudos de Conversión</h2>
-          <p class="text-xs text-text-muted mt-0.5">Seguimiento de etapas de adquisición y ventas</p>
+          <h2 class="text-base font-bold text-text-dark">Embudo de Conversión Comercial</h2>
+          <p class="text-xs text-text-muted mt-0.5">Paso a paso desde la captación del lead hasta la venta ganada</p>
         </div>
-        <span class="inline-flex items-center gap-1.5 text-xs text-primary bg-primary/10 px-3 py-1 rounded-full font-semibold">
-          <app-icon name="activity" [size]="14" />
-          En Tiempo Real
+        <span class="text-xs font-semibold text-text-muted">
+          Haz clic en cualquier etapa para ver los registros
         </span>
       </div>
 
@@ -68,7 +83,6 @@
             (click)="navegarAEtapa(etapa.id)"
             class="relative bg-bg-workspace border border-border/70 rounded-xl p-4 flex flex-col justify-between hover:border-primary/50 hover:shadow-subtle transition-all cursor-pointer group">
 
-            <!-- Acceso directo indicador -->
             <div class="flex items-center justify-between mb-3">
               <span class="text-xs font-bold text-text-dark truncate group-hover:text-primary transition-colors">
                 {{ etapa.label }}
@@ -86,7 +100,6 @@
                 </span>
               </div>
 
-              <!-- Barra visual con gradiente -->
               <div class="h-2 rounded-full bg-bg-light overflow-hidden">
                 <div
                   class="h-full rounded-full transition-all duration-500"
@@ -97,8 +110,8 @@
 
             @if (idx > 0) {
               <div class="mt-3 pt-2.5 border-t border-border/50 flex items-center justify-between text-[11px] text-text-muted">
-                <span>Paso anterior:</span>
-                <span class="font-bold text-text-dark">{{ etapa.tasaPaso }}% conversión</span>
+                <span>Conversión de etapa:</span>
+                <span class="font-bold text-text-dark">{{ etapa.tasaPaso }}%</span>
               </div>
             } @else {
               <div class="mt-3 pt-2.5 border-t border-border/50 flex items-center justify-between text-[11px] text-text-muted">
@@ -111,18 +124,18 @@
       </div>
     </app-card>
 
-    <!-- ── Conversión por canal (RF-17) + Top agentes ───────────────── -->
+    <!-- ── 3. Canales de Adquisición + Ranking de Agentes ─────────────── -->
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
+      <!-- Canales de Origen -->
       <app-card class="xl:col-span-2">
         <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div>
-            <h2 class="text-base font-bold text-text-dark">Conversión por Canal</h2>
-            <p class="text-xs text-text-muted mt-0.5">Origen de prospectos y tasa de conversión (Haz clic para filtrar)</p>
+            <h2 class="text-base font-bold text-text-dark">Rendimiento por Canal de Captación</h2>
+            <p class="text-xs text-text-muted mt-0.5">Leads captados y efectividad por canal (Haz clic para ver leads)</p>
           </div>
 
           <div class="flex items-center gap-2">
-            <!-- Selector de Importación Histórica -->
             <button
               type="button"
               (click)="toggleIncluirImportacion()"
@@ -132,7 +145,6 @@
               <span>{{ incluirImportacion() ? 'Mostrando Histórico' : 'Solo Canales Activos' }}</span>
             </button>
 
-            <!-- Selector de Vista: Donut / Barras -->
             <div class="inline-flex rounded-lg bg-bg-light p-0.5 border border-border">
               <button
                 type="button"
@@ -156,9 +168,7 @@
 
         @if (canales().length > 0) {
           @if (vistaGrafico() === 'DONUT') {
-            <!-- Vista de Torta / Donut Chart interactiva -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-              <!-- SVG Donut Vectorial -->
               <div class="relative flex items-center justify-center p-2">
                 <svg class="w-56 h-56 transform -rotate-90 drop-shadow-subtle" viewBox="0 0 100 100">
                   <circle
@@ -188,7 +198,6 @@
                   }
                 </svg>
 
-                <!-- Centro dinámico del Donut -->
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none p-2">
                   @if (canalActivoInfo(); as activo) {
                     <span class="text-[11px] font-bold text-text-muted uppercase tracking-wider truncate max-w-[110px]">
@@ -246,7 +255,6 @@
               </div>
             </div>
           } @else {
-            <!-- Vista en Barras Tradicional -->
             <div class="flex flex-col gap-3">
               @for (canal of canales(); track canal.origen) {
                 <div
@@ -280,12 +288,12 @@
         }
       </app-card>
 
-      <!-- Top Agentes Ranking -->
+      <!-- Ranking Comercial de Agentes -->
       <app-card>
         <div class="flex items-center justify-between mb-6">
           <div>
-            <h2 class="text-base font-bold text-text-dark">Top Agentes</h2>
-            <p class="text-xs text-text-muted mt-0.5">Ranking por volumen de ventas</p>
+            <h2 class="text-base font-bold text-text-dark">Desempeño del Equipo</h2>
+            <p class="text-xs text-text-muted mt-0.5">Ranking de ventas comerciales</p>
           </div>
           <span class="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full flex items-center gap-1">
             <app-icon name="star" [size]="12" />
@@ -328,6 +336,94 @@
             icon="users"
             title="Sin ventas registradas"
             description="Aquí aparecerán los agentes con ventas en el sistema." />
+        }
+      </app-card>
+    </div>
+
+    <!-- ── 4. Tratamientos Demandados + Feed de Actividad Reciente ──────── -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- Tratamientos / Servicios Más Demandados -->
+      <app-card>
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-base font-bold text-text-dark">Servicios y Tratamientos Más Vendidos</h2>
+            <p class="text-xs text-text-muted mt-0.5">Demanda comercial en el periodo</p>
+          </div>
+          <span class="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+            Top Procedimientos
+          </span>
+        </div>
+
+        @if (topServicios().length > 0) {
+          <div class="space-y-3">
+            @for (srv of topServicios(); track srv.producto; let i = $index) {
+              <div class="flex items-center justify-between p-3 rounded-xl bg-bg-workspace border border-border/60 hover:border-primary/40 transition-colors">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-7 h-7 rounded-lg bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0">
+                    {{ i + 1 }}
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-text-dark truncate">{{ srv.producto }}</p>
+                    <p class="text-[11px] text-text-muted">{{ srv.cantidad }} atenciones cerradas</p>
+                  </div>
+                </div>
+                <div class="text-right shrink-0">
+                  <p class="text-xs font-extrabold text-primary">{{ formatearMonto(srv.monto) }}</p>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <app-empty-state
+            icon="shopping-bag"
+            title="Sin tratamientos registrados"
+            description="Los procedimientos con ventas se agruparán aquí." />
+        }
+      </app-card>
+
+      <!-- Feed de Actividad Reciente (Tiempo Real) -->
+      <app-card>
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-base font-bold text-text-dark">Actividad Reciente en el CRM</h2>
+            <p class="text-xs text-text-muted mt-0.5">Últimos movimientos de ventas y prospectos</p>
+          </div>
+          <span class="inline-flex items-center gap-1 text-xs text-text-muted">
+            <app-icon name="clock" [size]="13" />
+            <span>Últimos registros</span>
+          </span>
+        </div>
+
+        @if (actividadReciente().length > 0) {
+          <div class="space-y-2.5">
+            @for (item of actividadReciente(); track item.id) {
+              <div class="flex items-start justify-between gap-3 p-2.5 rounded-xl border border-border/50 bg-bg-workspace/40 hover:bg-bg-workspace transition-colors">
+                <div class="flex items-start gap-2.5 min-w-0">
+                  <div
+                    class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+                    [class]="item.tipo === 'VENTA' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'">
+                    <app-icon [name]="item.tipo === 'VENTA' ? 'shopping-bag' : 'user-plus'" [size]="14" />
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-text-dark truncate">{{ item.titulo }}</p>
+                    <p class="text-[11px] text-text-muted truncate">{{ item.subtitulo }}</p>
+                  </div>
+                </div>
+                <div class="text-right shrink-0">
+                  @if (item.monto > 0) {
+                    <p class="text-xs font-bold text-primary">{{ formatearMonto(item.monto) }}</p>
+                  }
+                  <p class="text-[10px] text-text-muted">{{ formatearHoraRelativa(item.fecha) }}</p>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <app-empty-state
+            icon="activity"
+            title="Sin actividad reciente"
+            description="Las nuevas ventas y prospectos se mostrarán en vivo aquí." />
         }
       </app-card>
     </div>
