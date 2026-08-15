@@ -71,8 +71,29 @@
 .finanzas-cuerpo {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
   width: 100%;
+}
+
+.finanzas-tab-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  animation: finanzasFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.finanzas-tab-panel[hidden] {
+  display: none !important;
+}
+
+@keyframes finanzasFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 640px) {
@@ -89,6 +110,6 @@
   }
 
   .tab-label {
-    display: none;
+    font-size: 0.6875rem;
   }
 }

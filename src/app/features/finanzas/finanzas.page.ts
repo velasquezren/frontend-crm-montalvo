@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
@@ -39,8 +40,10 @@ const TABS: readonly TabConfig[] = [
 
 /**
  * Finanzas & Comisiones — Módulo unificado para administración y contabilidad médica.
- * Agrupa Liquidación Mensual, Analítica Médica y Resumen Anual en una sola experiencia
- * fluida con pestañas sin recargas innecesarias.
+ * Agrupa Liquidación Mensual, Analítica Médica y Resumen Anual con:
+ * - 0ms de cambio de pestaña (retención instantánea de estado en memoria)
+ * - Sincronización 100% reactiva en URL (?tab=...)
+ * - Diseño segmentado de alta fidelidad sin parpadeos
  */
 @Component({
   selector: 'app-finanzas',
@@ -61,29 +64,29 @@ export class FinanzasPage {
   private readonly router = inject(Router);
 
   protected readonly tabs = TABS;
-  protected readonly tabActiva = signal<TabFinanzas>('liquidacion');
 
-  constructor() {
-    // Sincronización bidireccional limpia con queryParams (?tab=...)
-    this.route.queryParams.subscribe(params => {
-      const qTab = params['tab'] as string;
-      if (qTab === 'analitica' || qTab === 'anual' || qTab === 'liquidacion') {
-        this.tabActiva.set(qTab as TabFinanzas);
-      }
-    });
-  }
+  private readonly queryParams = toSignal(this.route.queryParams);
+
+  /** Pestaña activa derivada reactivamente de la URL */
+  protected readonly tabActiva = computed<TabFinanzas>(() => {
+    const q = this.queryParams()?.['tab'] as string;
+    if (q === 'analitica' || q === 'anual' || q === 'liquidacion') {
+      return q;
+    }
+    return 'liquidacion';
+  });
+
+  protected readonly tabInfoActual = computed<TabConfig>(() => {
+    const activa = this.tabActiva();
+    return this.tabs.find(t => t.id === activa) ?? this.tabs[0];
+  });
 
   protected cambiarTab(nuevaTab: TabFinanzas): void {
     if (this.tabActiva() === nuevaTab) return;
-    this.tabActiva.set(nuevaTab);
     void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { tab: nuevaTab },
       queryParamsHandling: 'merge',
     });
-  }
-
-  protected tabInfoActual(): TabConfig {
-    return this.tabs.find(t => t.id === this.tabActiva()) ?? this.tabs[0];
   }
 }

@@ -1,12 +1,12 @@
 <div class="finanzas-contenedor">
   <!-- ── Encabezado Unificado del Hub ─────────────────────────────────── -->
-  <div class="finanzas-header-wrapper">
+  <header class="finanzas-header-wrapper">
     <app-page-header
       title="Finanzas & Comisiones"
       subtitle="Liquidación mensual de comisiones, analítica de facturación médica y balance anual" />
 
     <!-- ── Barra de Pestañas Segmentadas ──────────────────────────────── -->
-    <div class="finanzas-tabs-bar" role="tablist" aria-label="Secciones de Finanzas">
+    <nav class="finanzas-tabs-bar" role="tablist" aria-label="Secciones de Finanzas">
       @for (t of tabs; track t.id) {
         <button
           type="button"
@@ -19,21 +19,21 @@
           <span class="tab-label">{{ t.label }}</span>
         </button>
       }
-    </div>
-  </div>
+    </nav>
+  </header>
 
-  <!-- ── Vistas Dinámicas Integradas ───────────────────────────────────── -->
+  <!-- ── Vistas Dinámicas con Retención Instantánea de Estado (0ms) ───── -->
   <main class="finanzas-cuerpo">
-    @switch (tabActiva()) {
-      @case ('liquidacion') {
-        <app-planilla-comisiones [embedded]="true" />
-      }
-      @case ('analitica') {
-        <app-reportes [embedded]="true" />
-      }
-      @case ('anual') {
-        <app-resumen-anual [embedded]="true" />
-      }
-    }
+    <div [hidden]="tabActiva() !== 'liquidacion'" class="finanzas-tab-panel" role="tabpanel">
+      <app-planilla-comisiones [embedded]="true" />
+    </div>
+
+    <div [hidden]="tabActiva() !== 'analitica'" class="finanzas-tab-panel" role="tabpanel">
+      <app-reportes [embedded]="true" />
+    </div>
+
+    <div [hidden]="tabActiva() !== 'anual'" class="finanzas-tab-panel" role="tabpanel">
+      <app-resumen-anual [embedded]="true" />
+    </div>
   </main>
 </div>
