@@ -114,6 +114,54 @@ export class ReportesPage {
     { defaultValue: undefined },
   );
 
+  /** Periodo inmediatamente anterior para cálculo de comparativas Month-over-Month. */
+  protected readonly periodoAnterior = computed(() => {
+    const lista = this.periodos.value().datos;
+    const actualId = this.periodoIdEfectivo();
+    const idx = lista.findIndex(p => p.id === actualId);
+    if (idx >= 0 && idx + 1 < lista.length) {
+      return lista[idx + 1];
+    }
+    return null;
+  });
+
+  protected readonly analiticaAnterior = httpResource<AnaliticaPeriodo | undefined>(
+    () => {
+      const prev = this.periodoAnterior();
+      return prev ? this.service.analiticaRequest(prev.id) : undefined;
+    },
+    { defaultValue: undefined },
+  );
+
+  /** Comparativa Month-over-Month del periodo seleccionado vs mes anterior. */
+  protected readonly comparativaMoM = computed(() => {
+    const actual = this.analitica.value()?.resumen;
+    const previo = this.analiticaAnterior.value()?.resumen;
+    if (!actual || !previo) return null;
+
+    const calcDiff = (a: number, b: number) => {
+      if (b === 0) return a > 0 ? '+100%' : '0%';
+      const pct = ((a - b) / b) * 100;
+      const signo = pct > 0 ? '+' : '';
+      return `${signo}${pct.toFixed(1)}%`;
+    };
+
+    const mesPrevio = this.periodoAnterior();
+    const nombrePrevio = mesPrevio ? this.nombreMes(mesPrevio.mes) : 'mes ant.';
+
+    return {
+      facturadoDiff: calcDiff(actual.montoVendido, previo.montoVendido),
+      facturadoPositivo: actual.montoVendido >= previo.montoVendido,
+      comisionDiff: calcDiff(actual.comisionTotalBob, previo.comisionTotalBob),
+      comisionPositivo: actual.comisionTotalBob >= previo.comisionTotalBob,
+      pacientesDiff: calcDiff(actual.pacientesUnicos, previo.pacientesUnicos),
+      pacientesPositivo: actual.pacientesUnicos >= previo.pacientesUnicos,
+      ticketDiff: calcDiff(actual.ticketPromedio, previo.ticketPromedio),
+      ticketPositivo: actual.ticketPromedio >= previo.ticketPromedio,
+      nombrePrevio,
+    };
+  });
+
   /* ── Derivados ──────────────────────────────────────────────────────── */
 
   /** Si nadie eligió mes, se abre el más reciente: el panel nunca arranca vacío. */
@@ -248,6 +296,26 @@ export class ReportesPage {
     } finally {
       this.descargando.set(false);
     }
+  }
+
+  protected copiarRankingServicios(): void {
+    const list = this.topServiciosOrdenados();
+    if (list.length === 0) return;
+    const encabezados = 'Servicio\tCantidad\tMonto (Bs)\t% Total\n';
+    const filas = list.map(s => `${s.etiqueta}\t${s.cantidad}\t${s.montoVendido}\t${s.pctMonto}%`).join('\n');
+    navigator.clipboard.writeText(encabezados + filas).then(() => {
+      this.toast.success('Ranking de servicios copiado al portapapeles.');
+    });
+  }
+
+  protected copiarRankingMedicos(): void {
+    const list = this.topMedicosOrdenados();
+    if (list.length === 0) return;
+    const encabezados = 'Médico\tCantidad\tMonto (Bs)\t% Total\n';
+    const filas = list.map(m => `${m.etiqueta}\t${m.cantidad}\t${m.montoVendido}\t${m.pctMonto}%`).join('\n');
+    navigator.clipboard.writeText(encabezados + filas).then(() => {
+      this.toast.success('Ranking de médicos copiado al portapapeles.');
+    });
   }
 
   protected seleccionarPeriodo(id: string): void {

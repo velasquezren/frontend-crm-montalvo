@@ -65,6 +65,7 @@ export type IconName =
   | 'dollar-sign'
   | 'award'
   | 'chevron-up'
+  | 'chevron-right'
   | 'filter';
 
 /**
@@ -367,6 +368,9 @@ export type IconName =
         }
         @case ('chevron-up') {
           <path d="m18 15-6-6-6 6" />
+        }
+        @case ('chevron-right') {
+          <path d="m9 18 6-6-6-6" />
         }
         @case ('filter') {
           <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
