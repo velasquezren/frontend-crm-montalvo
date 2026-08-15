@@ -20,6 +20,7 @@ import { WhatsAppMarkdownPipe } from '../../../../shared/pipes/whatsapp-markdown
 import { ToastService } from '../../../../core/toast/toast.service';
 import { generarIniciales } from '../../../../core/auth/user.model';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
+import { ConversacionResumen } from '../../conversacion.model';
 import { textoExtra } from '../../../../core/api/datos-extra';
 
 function soloDigitos(telefono: string): string {
@@ -126,6 +127,19 @@ export class ConversacionThreadComponent {
 
   protected notaFijadaDe(cliente: { readonly datosExtra?: Record<string, unknown> | null }): string {
     return textoExtra(cliente?.datosExtra, 'notaFijada');
+  }
+
+  protected campanaDe(cliente: ConversacionResumen['cliente']): { titular?: string; anuncioId?: string } | null {
+    const raw = cliente.datosExtra?.['campanaOrigen'];
+    if (raw && typeof raw === 'object') {
+      const c = raw as Record<string, unknown>;
+      const titular = typeof c['titular'] === 'string' ? c['titular'] : undefined;
+      const anuncioId = typeof c['anuncioId'] === 'string' ? c['anuncioId'] : undefined;
+      if (titular || anuncioId) {
+        return { titular, anuncioId };
+      }
+    }
+    return null;
   }
 
   protected iniciarEdicionNotaFijada(notaActual?: string): void {

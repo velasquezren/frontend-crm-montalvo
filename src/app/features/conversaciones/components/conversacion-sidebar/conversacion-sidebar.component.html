@@ -296,6 +296,33 @@
           }
         }
 
+        <!-- Campaña de Meta Ads / Anuncio de Origen -->
+        @if (campanaDe(chat.cliente); as campana) {
+          <div class="client-details">
+            <h3 class="detail-section-title flex items-center gap-1.5">
+              <app-icon name="volume-2" [size]="12" class="text-primary" />
+              <span>Campaña de Origen</span>
+            </h3>
+            <div class="p-3 rounded-xl bg-primary/5 border border-primary/20 space-y-1.5">
+              @if (campana.titular) {
+                <div class="text-xs font-bold text-text-dark flex items-start gap-1.5">
+                  <span class="text-primary">📢</span>
+                  <span>{{ campana.titular }}</span>
+                </div>
+              }
+              @if (campana.cuerpo) {
+                <p class="text-[11px] text-text-muted leading-tight line-clamp-2">{{ campana.cuerpo }}</p>
+              }
+              <div class="flex items-center justify-between gap-1 pt-1.5 border-t border-primary/10 text-[10px] text-text-muted">
+                <span>Meta Ads</span>
+                @if (campana.anuncioId) {
+                  <span class="font-mono text-primary font-semibold">ID: {{ campana.anuncioId }}</span>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
         <!-- Agente asignado + control de asignación (admin) -->
         <div class="client-details">
           <h3 class="detail-section-title">Agente asignado</h3>

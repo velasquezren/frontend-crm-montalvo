@@ -97,6 +97,23 @@
     </div>
   </header>
 
+  <!-- Banner de Campaña de Origen (Meta Ads / Click-to-WhatsApp) -->
+  @if (campanaDe(chat.cliente); as campana) {
+    <div class="meta-campaign-banner flex items-center justify-between gap-2 px-4 py-2 bg-primary/6 border-b border-primary/15 text-xs text-text-dark shrink-0">
+      <div class="flex items-center gap-2 min-w-0 flex-1">
+        <span class="text-primary font-bold shrink-0 flex items-center gap-1">
+          <app-icon name="volume-2" [size]="13" />
+          Campaña:
+        </span>
+        <span class="font-semibold text-text-dark truncate">{{ campana.titular || 'Anuncio de Meta Ads' }}</span>
+        @if (campana.anuncioId) {
+          <span class="text-[10px] text-text-muted font-mono shrink-0 hidden sm:inline">(ID: {{ campana.anuncioId }})</span>
+        }
+      </div>
+      <app-badge variant="info" class="shrink-0 font-bold">Meta Ads</app-badge>
+    </div>
+  }
+
   <!-- Banner de Aviso Clínico Fijado (Pinned Note) -->
   @if (notaFijadaDe(chat.cliente) || state.editandoNotaFijada()) {
     <div class="pinned-note-banner">

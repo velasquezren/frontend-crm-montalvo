@@ -101,6 +101,21 @@ export class ConversacionSidebarComponent {
     return calcularEdad(cliente.fechaNacimiento);
   }
 
+  protected campanaDe(cliente: ClienteChat): { titular?: string; anuncioId?: string; cuerpo?: string; origenUrl?: string } | null {
+    const raw = cliente.datosExtra?.['campanaOrigen'];
+    if (raw && typeof raw === 'object') {
+      const c = raw as Record<string, unknown>;
+      const titular = typeof c['titular'] === 'string' ? c['titular'] : undefined;
+      const anuncioId = typeof c['anuncioId'] === 'string' ? c['anuncioId'] : undefined;
+      const cuerpo = typeof c['cuerpo'] === 'string' ? c['cuerpo'] : undefined;
+      const origenUrl = typeof c['origenUrl'] === 'string' ? c['origenUrl'] : undefined;
+      if (titular || anuncioId || cuerpo) {
+        return { titular, anuncioId, cuerpo, origenUrl };
+      }
+    }
+    return null;
+  }
+
   protected copiarTexto(texto: string, label: string): void {
     navigator.clipboard.writeText(texto).then(() => {
       this.toast.success(`${label} copiado al portapapeles.`);
