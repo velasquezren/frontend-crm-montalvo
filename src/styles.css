@@ -231,19 +231,9 @@
   }
 }
 
-/* Transiciones de páginas fluidas y consistentes */
+/* Workspace content container */
 .workspace > div > *:not(router-outlet) {
-  animation: pageFadeIn 0.35s var(--ease-spring-smooth) forwards;
   display: block;
-}
-
-@keyframes pageFadeIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
 }
 
 /* Reducción de movimiento por accesibilidad WCAG 2.2 */
@@ -256,37 +246,9 @@
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
-   Entrada de contenido — ritmo compartido por las vistas del workspace.
-
-   Las tarjetas y paneles aparecen con un desplazamiento corto y escalonado
-   en vez de saltar de golpe: da la sensación de que la página se compone,
-   no de que parpadea. Se anima `transform` y `opacity`, las dos únicas
-   propiedades que el navegador resuelve en el compositor sin recalcular
-   layout, así que no cuesta cuadros aunque haya veinte elementos.
-
-   El escalonado se controla por variable para no escribir una regla por
-   posición: `style="--indice: 3"` en la plantilla y listo.
-   ═══════════════════════════════════════════════════════════════════════ */
-
-@keyframes aparecer-suave {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-}
-
+/* Entrada de contenido instantánea sin demoras artificiales */
 .aparecer {
-  animation: aparecer-suave 0.45s cubic-bezier(0.32, 0.72, 0, 1) backwards;
-  animation-delay: calc(var(--indice, 0) * 55ms);
-}
-
-/* Respeta a quien pidió menos movimiento en su sistema operativo: el
-   contenido aparece igual, sin desplazamiento ni retraso. */
-@media (prefers-reduced-motion: reduce) {
-  .aparecer {
-    animation: none;
-  }
+  display: block;
 }
 
 /* Rejilla de tarjetas de indicador. Global porque la usan cuatro vistas y es
