@@ -1,6 +1,6 @@
 import { DecimalPipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 
 import { mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
@@ -70,6 +70,8 @@ type ColRanking = 'etiqueta' | 'cantidad' | 'montoVendido' | 'pctMonto';
   styleUrl: './reportes.page.css',
 })
 export class ReportesPage {
+  readonly embedded = input(false);
+
   private readonly service = inject(ReportesService);
   private readonly toast = inject(ToastService);
 

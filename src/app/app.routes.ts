@@ -55,12 +55,16 @@ export const routes: Routes = [
           import('./features/servicios/servicios.page').then(m => m.ServiciosPage),
       },
       {
-        path: 'reportes',
+        /* Hub Unificado de Finanzas & Comisiones (Liquidación, Analítica Médica y Resumen Anual) */
+        path: 'finanzas',
         canActivate: [exigeRol('ADMIN')],
         loadComponent: () =>
-          import('./features/reportes/reportes.page').then(
-            m => m.ReportesPage,
-          ),
+          import('./features/finanzas/finanzas.page').then(m => m.FinanzasPage),
+      },
+      {
+        path: 'reportes',
+        redirectTo: 'finanzas',
+        pathMatch: 'full',
       },
       {
         path: 'clientes',
@@ -97,24 +101,16 @@ export const routes: Routes = [
           import('./features/comisiones/comisiones.page').then(m => m.ComisionesPage),
       },
       {
-        /* Planilla mensual de comisiones (Excel de FileMaker) — solo admin:
-           son datos de remuneración de todo el equipo. */
+        /* Redirección transparente por compatibilidad con marcadores existentes */
         path: 'planilla-comisiones',
-        canActivate: [exigeRol('ADMIN')],
-        loadComponent: () =>
-          import('./features/planilla-comisiones/planilla-comisiones.page').then(
-            m => m.PlanillaComisionesPage,
-          ),
+        redirectTo: 'finanzas',
+        pathMatch: 'full',
       },
       {
-        /* La única vista que cruza periodos: doce meses y cuatro trimestres por
-           vendedora. Mismo rol que la planilla — son datos de remuneración. */
+        /* Redirección transparente por compatibilidad con marcadores existentes */
         path: 'comisiones-anual',
-        canActivate: [exigeRol('ADMIN')],
-        loadComponent: () =>
-          import('./features/planilla-comisiones/resumen-anual.page').then(
-            m => m.ResumenAnualPage,
-          ),
+        redirectTo: 'finanzas',
+        pathMatch: 'full',
       },
       {
         /* Gestión de agentes: solo super admin — es donde se asignan los códigos

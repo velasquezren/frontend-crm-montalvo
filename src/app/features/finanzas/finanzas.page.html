@@ -1,0 +1,39 @@
+<div class="finanzas-contenedor">
+  <!-- ── Encabezado Unificado del Hub ─────────────────────────────────── -->
+  <div class="finanzas-header-wrapper">
+    <app-page-header
+      title="Finanzas & Comisiones"
+      subtitle="Liquidación mensual de comisiones, analítica de facturación médica y balance anual" />
+
+    <!-- ── Barra de Pestañas Segmentadas ──────────────────────────────── -->
+    <div class="finanzas-tabs-bar" role="tablist" aria-label="Secciones de Finanzas">
+      @for (t of tabs; track t.id) {
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="tabActiva() === t.id"
+          (click)="cambiarTab(t.id)"
+          class="finanzas-tab-btn"
+          [class.finanzas-tab-btn--active]="tabActiva() === t.id">
+          <app-icon [name]="t.icon" [size]="16" class="tab-icono" />
+          <span class="tab-label">{{ t.label }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- ── Vistas Dinámicas Integradas ───────────────────────────────────── -->
+  <main class="finanzas-cuerpo">
+    @switch (tabActiva()) {
+      @case ('liquidacion') {
+        <app-planilla-comisiones [embedded]="true" />
+      }
+      @case ('analitica') {
+        <app-reportes [embedded]="true" />
+      }
+      @case ('anual') {
+        <app-resumen-anual [embedded]="true" />
+      }
+    }
+  </main>
+</div>

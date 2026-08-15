@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { DecimalPipe } from '@angular/common';
 
@@ -51,6 +51,8 @@ export type FiltroBonoResumen = 'TODAS' | 'CON_BONO' | 'SIN_BONO';
   styleUrl: './resumen-anual.page.css',
 })
 export class ResumenAnualPage {
+  readonly embedded = input(false);
+
   private readonly planillaService = inject(PlanillaComisionesService);
 
   protected readonly mesesCortos = MESES_CORTOS;

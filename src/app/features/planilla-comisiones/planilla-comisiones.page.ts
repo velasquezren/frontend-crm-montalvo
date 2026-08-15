@@ -1,6 +1,6 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, OnDestroy, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, OnDestroy, signal } from '@angular/core';
 
 import { mensajeDeError } from '../../core/api/http-error';
 import { AuthService } from '../../core/auth/auth.service';
@@ -88,6 +88,8 @@ interface GrupoPlanes {
   styleUrl: './planilla-comisiones.page.css',
 })
 export class PlanillaComisionesPage implements OnDestroy {
+  readonly embedded = input(false);
+
   private readonly service = inject(PlanillaComisionesService);
   private readonly toast = inject(ToastService);
   private readonly authService = inject(AuthService);

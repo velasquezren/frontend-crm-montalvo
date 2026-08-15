@@ -1,6 +1,8 @@
-<app-page-header
-  title="Planilla de Comisiones"
-  subtitle="Liquidación mensual del equipo comercial desde el Excel de FileMaker" />
+@if (!embedded()) {
+  <app-page-header
+    title="Planilla de Comisiones"
+    subtitle="Liquidación mensual del equipo comercial desde el Excel de FileMaker" />
+}
 
 <!-- ── Selector de periodo + información general ────────────────────── -->
 <div class="planilla-barra">

@@ -1,6 +1,8 @@
-<app-page-header
-  title="Resumen Anual de Comisiones"
-  [subtitle]="'Cada vendedora, sus doce meses y sus cuatro trimestres — Gestión ' + anio()" />
+@if (!embedded()) {
+  <app-page-header
+    title="Resumen Anual de Comisiones"
+    [subtitle]="'Cada vendedora, sus doce meses y sus cuatro trimestres — Gestión ' + anio()" />
+}
 
 <!-- ── Toolbar de Periodo ───────────────────────────────────────────── -->
 <div class="barra-periodo">

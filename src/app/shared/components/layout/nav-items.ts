@@ -21,6 +21,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
   {
     titulo: 'Atención & Pacientes',
     items: [
+      { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
       { path: '/conversaciones', label: 'WhatsApp', icon: 'message-circle' },
       { path: '/clientes', label: 'Clientes y Pacientes', icon: 'users' },
       { path: '/leads', label: 'Leads y Prospectos', icon: 'user-plus' },
@@ -31,16 +32,13 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     items: [
       { path: '/ventas', label: 'Ventas', icon: 'shopping-bag' },
       { path: '/comisiones', label: 'Mis Comisiones', icon: 'wallet' },
-      { path: '/planilla-comisiones', label: 'Planilla', icon: 'pie-chart', rolMinimo: 'ADMIN' },
-      { path: '/comisiones-anual', label: 'Resumen Anual', icon: 'trending-up', rolMinimo: 'ADMIN' },
+      { path: '/finanzas', label: 'Finanzas & Comisiones', icon: 'pie-chart', rolMinimo: 'ADMIN' },
     ],
   },
   {
     titulo: 'Gestión & Clínica',
     items: [
-      { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
       { path: '/servicios', label: 'Historial Clínico', icon: 'activity', rolMinimo: 'ADMIN' },
-      { path: '/reportes', label: 'Reportes y Métricas', icon: 'bar-chart', rolMinimo: 'ADMIN' },
       { path: '/usuarios', label: 'Usuarios y Accesos', icon: 'shield', rolMinimo: 'SUPER_ADMIN' },
     ],
   },

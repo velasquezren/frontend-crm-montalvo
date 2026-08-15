@@ -1,6 +1,8 @@
-<app-page-header
-  title="Informe Mensual de Comisiones"
-  subtitle="Todo lo que llega en el Excel de FileMaker: categorías, servicios, canales y liquidación" />
+@if (!embedded()) {
+  <app-page-header
+    title="Informe Mensual de Comisiones"
+    subtitle="Todo lo que llega en el Excel de FileMaker: categorías, servicios, canales y liquidación" />
+}
 
 <!-- ── Selector de mes y acciones ─────────────────────────────────── -->
 <div class="barra-periodo">
