@@ -194,13 +194,32 @@ export class ConversacionesStateService {
     );
   });
 
+  readonly esLeadMetaAds = computed(() => {
+    const chat = this.detalle.value();
+    if (!chat) return false;
+    const datos = chat.cliente.datosExtra;
+    return Boolean(datos?.['campanaOrigen'] || datos?.['referral']);
+  });
+
+  readonly horasVentanaMeta = computed(() => (this.esLeadMetaAds() ? 72 : 24));
+
   readonly fueraDeVentana24h = computed(() => {
     const chat = this.detalle.value();
     if (!chat) return false;
     const ultimoEntrante = [...chat.mensajes].reverse().find(m => m.direccion === 'ENTRANTE');
     if (!ultimoEntrante) return true;
     const haceHoras = (Date.now() - new Date(ultimoEntrante.createdAt).getTime()) / (1000 * 60 * 60);
-    return haceHoras >= 24;
+    return haceHoras >= this.horasVentanaMeta();
+  });
+
+  readonly horasRestantesVentana = computed(() => {
+    const chat = this.detalle.value();
+    if (!chat) return 0;
+    const ultimoEntrante = [...chat.mensajes].reverse().find(m => m.direccion === 'ENTRANTE');
+    if (!ultimoEntrante) return 0;
+    const haceHoras = (Date.now() - new Date(ultimoEntrante.createdAt).getTime()) / (1000 * 60 * 60);
+    const limite = this.horasVentanaMeta();
+    return Math.max(0, Math.round((limite - haceHoras) * 10) / 10);
   });
 
   readonly notaMedicaFijada = computed(() => {

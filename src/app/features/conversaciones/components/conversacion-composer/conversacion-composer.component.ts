@@ -243,7 +243,8 @@ export class ConversacionComposerComponent implements OnDestroy {
     if ((!texto && !adj) || !id || this.state.enviando()) return;
 
     if (this.state.fueraDeVentana24h()) {
-      this.toast.warning('Han pasado >24h desde el último mensaje del paciente. Usa una Plantilla de WhatsApp.');
+      const horas = this.state.horasVentanaMeta();
+      this.toast.warning(`Han pasado >${horas}h desde el último mensaje del paciente. Usa una Plantilla de WhatsApp.`);
       return;
     }
 

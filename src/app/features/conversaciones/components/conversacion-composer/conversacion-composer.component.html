@@ -166,13 +166,21 @@
       </button>
     </form>
   } @else {
-    <!-- Bloqueo Ventana 24h Meta -->
+    <!-- Bloqueo Ventana Meta (24h estándar / 72h Click-to-WhatsApp) -->
     <div class="window-expired-alert flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-bg-light border border-border">
       <div class="flex items-center gap-2.5 min-w-0">
         <app-icon name="clock" [size]="18" class="text-primary shrink-0" />
         <div class="min-w-0">
-          <p class="text-xs font-bold text-text-dark leading-tight">Ventana de 24 horas inactiva</p>
-          <p class="text-[11px] text-text-muted leading-tight truncate">Para contactar al paciente debes enviar una Plantilla Oficial de WhatsApp.</p>
+          <p class="text-xs font-bold text-text-dark leading-tight">
+            Ventana de atención inactiva ({{ state.horasVentanaMeta() }}h)
+          </p>
+          <p class="text-[11px] text-text-muted leading-tight truncate">
+            @if (state.esLeadMetaAds()) {
+              La ventana de 72h del anuncio ha vencido. Envía una Plantilla Oficial de WhatsApp.
+            } @else {
+              Han pasado más de 24h desde el último mensaje del paciente. Envía una Plantilla Oficial de WhatsApp.
+            }
+          </p>
         </div>
       </div>
       <app-button variant="primary" size="sm" (clicked)="abrirPlantillas()">
