@@ -3,7 +3,6 @@ import {
   Component,
   computed,
   inject,
-  linkedSignal,
   OnDestroy,
   signal,
   TemplateRef,
@@ -88,16 +87,6 @@ export class ConversacionComposerComponent implements OnDestroy {
   /* ── Mi Memoria Personal (Biblioteca Privada del Agente) ───────── */
   protected readonly mostrarPopoverMemoria = signal(false);
   protected readonly busquedaMemoria = signal('');
-
-  /* ── Desbloqueo manual / Forzar modo libre para anuncios (<72h) ─── */
-  protected readonly forzarModoLibre = linkedSignal({
-    source: this.state.seleccionadaId,
-    computation: () => false,
-  });
-
-  protected activarModoLibre(): void {
-    this.forzarModoLibre.set(true);
-  }
 
   private readonly recursosMemoriaRecurso = httpResource<RespuestaPaginada<RecursoMemoria>>(
     () =>
@@ -247,7 +236,7 @@ export class ConversacionComposerComponent implements OnDestroy {
 
     if ((!texto && !adj) || !id || this.state.enviando()) return;
 
-    if (this.state.fueraDeVentana24h() && !this.forzarModoLibre()) {
+    if (this.state.fueraDeVentana24h()) {
       const horas = this.state.horasVentanaMeta();
       this.toast.warning(`Han pasado >${horas}h desde el último mensaje del paciente. Usa una Plantilla de WhatsApp.`);
       return;
