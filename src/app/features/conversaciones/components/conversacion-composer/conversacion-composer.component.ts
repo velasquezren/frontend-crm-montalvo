@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   inject,
+  linkedSignal,
   OnDestroy,
   signal,
   TemplateRef,
@@ -39,13 +40,7 @@ const TIPOS_ADJUNTO_ACEPTADOS = [
   'image/jpg',
   'image/png',
   'image/webp',
-  'image/gif',
   'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'audio/ogg',
-  'audio/webm',
-  'audio/mp4',
-  'audio/mpeg',
 ];
 
 function tipoBase(mime: string): string {
@@ -53,10 +48,10 @@ function tipoBase(mime: string): string {
 }
 
 /**
- * Componente de entrada y composición de mensajes para el Inbox de WhatsApp.
- * Soporta:
- * - Respuestas rápidas / plantillas del agente (atajos con '/')
- * - Inserción de notas, precios y archivos desde Mi Memoria Personal
+ * Compositor de WhatsApp — Caja de texto con:
+ * - Autoresize multilínea
+ * - Barra de chips de respuestas rápidas (`Mis respuestas:`)
+ * - Popover inteligente de Memoria Personal del Agente
  * - Envío de plantillas oficiales aprobadas por Meta fuera de la ventana de 24h
  * - Drag & Drop de imágenes y documentos
  */
@@ -93,6 +88,16 @@ export class ConversacionComposerComponent implements OnDestroy {
   /* ── Mi Memoria Personal (Biblioteca Privada del Agente) ───────── */
   protected readonly mostrarPopoverMemoria = signal(false);
   protected readonly busquedaMemoria = signal('');
+
+  /* ── Desbloqueo manual / Forzar modo libre para anuncios (<72h) ─── */
+  protected readonly forzarModoLibre = linkedSignal({
+    source: this.state.seleccionadaId,
+    computation: () => false,
+  });
+
+  protected activarModoLibre(): void {
+    this.forzarModoLibre.set(true);
+  }
 
   private readonly recursosMemoriaRecurso = httpResource<RespuestaPaginada<RecursoMemoria>>(
     () =>
@@ -242,7 +247,7 @@ export class ConversacionComposerComponent implements OnDestroy {
 
     if ((!texto && !adj) || !id || this.state.enviando()) return;
 
-    if (this.state.fueraDeVentana24h()) {
+    if (this.state.fueraDeVentana24h() && !this.forzarModoLibre()) {
       const horas = this.state.horasVentanaMeta();
       this.toast.warning(`Han pasado >${horas}h desde el último mensaje del paciente. Usa una Plantilla de WhatsApp.`);
       return;

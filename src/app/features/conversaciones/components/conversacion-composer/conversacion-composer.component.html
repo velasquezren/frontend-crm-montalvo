@@ -102,7 +102,19 @@
   }
 
   <!-- ── Caja de Entrada de Mensajes ───────────────────────────────── -->
-  @if (!state.fueraDeVentana24h()) {
+  @if (!state.fueraDeVentana24h() || forzarModoLibre()) {
+    @if (forzarModoLibre()) {
+      <div class="flex items-center justify-between gap-2 px-3 py-1.5 bg-bg-light border border-border rounded-xl text-xs text-text-muted mb-2">
+        <span class="flex items-center gap-1.5 font-semibold text-primary">
+          <app-icon name="alert-circle" [size]="14" />
+          Modo directo activado (Anuncio o ventana en curso). Si Meta rechaza el mensaje, usa una plantilla.
+        </span>
+        <button type="button" (click)="forzarModoLibre.set(false)" class="text-text-muted hover:text-text-dark cursor-pointer text-[11px] underline">
+          Volver a plantillas
+        </button>
+      </div>
+    }
+
     <!-- Adjunto pendiente -->
     @if (adjuntoPendiente(); as adj) {
       <div class="adjunto-pendiente">
@@ -167,25 +179,26 @@
     </form>
   } @else {
     <!-- Bloqueo Ventana Meta (24h estándar / 72h Click-to-WhatsApp) -->
-    <div class="window-expired-alert flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-bg-light border border-border">
-      <div class="flex items-center gap-2.5 min-w-0">
+    <div class="window-expired-alert flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-bg-light border border-border">
+      <div class="flex items-center gap-2.5 min-w-0 flex-1">
         <app-icon name="clock" [size]="18" class="text-primary shrink-0" />
         <div class="min-w-0">
           <p class="text-xs font-bold text-text-dark leading-tight">
-            Ventana de atención inactiva ({{ state.horasVentanaMeta() }}h)
+            Ventana de 24 horas inactiva
           </p>
-          <p class="text-[11px] text-text-muted leading-tight truncate">
-            @if (state.esLeadMetaAds()) {
-              La ventana de 72h del anuncio ha vencido. Envía una Plantilla Oficial de WhatsApp.
-            } @else {
-              Han pasado más de 24h desde el último mensaje del paciente. Envía una Plantilla Oficial de WhatsApp.
-            }
+          <p class="text-[11px] text-text-muted leading-tight">
+            Han pasado >24h desde el último mensaje del paciente. Puedes enviar una Plantilla Oficial o intentar escribir directo si el paciente vino de un Anuncio (&lt;72h).
           </p>
         </div>
       </div>
-      <app-button variant="primary" size="sm" (clicked)="abrirPlantillas()">
-        Elegir plantilla
-      </app-button>
+      <div class="flex items-center gap-2 shrink-0">
+        <app-button variant="ghost" size="sm" (clicked)="activarModoLibre()" title="Intentar enviar mensaje directo">
+          Escribir directo (&lt;72h)
+        </app-button>
+        <app-button variant="primary" size="sm" (clicked)="abrirPlantillas()">
+          Elegir plantilla
+        </app-button>
+      </div>
     </div>
   }
 </div>
