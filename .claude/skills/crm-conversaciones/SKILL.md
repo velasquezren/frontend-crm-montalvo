@@ -9,13 +9,17 @@ Este módulo gestiona la mensajería omnicanal de WhatsApp Cloud API integrada c
 
 ## 1. Reglas Inmutables de WhatsApp Cloud API
 
-### Ventana de 24 Horas
-- **Dentro de la ventana de 24h** (último mensaje del paciente recibido hace menos de 24 horas):
-  - Se permite el envío de texto libre, audios, imágenes y documentos.
-- **Fuera de la ventana de 24h**:
-  - Meta **prohíbe** enviar mensajes de texto libre directo.
-  - Es **obligatorio** utilizar una **Plantilla Aprobada de WhatsApp (HSM / Template)**.
-  - El frontend bloquea el composer libre y despliega el selector de plantillas oficiales con sus variables obligatorias (nombre, fecha, etc.).
+### Ventana de Atención (24 Horas Orgánica / 72 Horas Meta Ads)
+- **Ventana Orgánica Estándar (24 horas)**:
+  - Aplica cuando el paciente escribe directamente al número de la clínica.
+  - Vence a las 24 horas del último mensaje entrante del paciente.
+- **Ventana Extendida de Meta Ads (72 horas / 3 días completos)**:
+  - Aplica automáticamente cuando el paciente contacta desde un anuncio de Facebook/Instagram (`campanaOrigen` / `referral`).
+  - Durante 72 horas, Meta permite el envío 100% gratuito de texto libre, audios, fotos y documentos sin requerir plantillas.
+- **Fuera de la ventana (vencida >24h o >72h)**:
+  - Meta **prohíbe** enviar mensajes de texto libre directo (error `#131047`).
+  - Es **estrictamente obligatorio** utilizar una **Plantilla Aprobada de WhatsApp (HSM / Template)**.
+  - El frontend bloquea de forma automática y estricta la caja de texto y despliega el selector de plantillas oficiales con sus variables obligatorias para evitar que se envíen mensajes anulados/fallidos.
 
 ### Tratamiento Seguro de Medios (R2 Storage)
 - **Las URLs de medios nunca se guardan como enlaces públicos permanentes en la base de datos.**
