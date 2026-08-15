@@ -1,4 +1,4 @@
-<div class="layout-grid" [class.layout-grid--inmersivo]="inmersivo()">
+<div class="layout-grid" [class.layout-grid--inmersivo]="inmersivo()" [class.layout-grid--sidebar-expanded]="sidebarExpanded()">
 
   <!-- ══════════════════════════════════════════════════════════════════════
        TOPBAR — Barra superior compacta (64px)
@@ -80,7 +80,7 @@
                    routerLinkActive="nav-active"
                    class="nav-link"
                    [title]="item.label"
-                   (click)="sidebarExpanded.set(false)">
+                   (click)="onNavClick()">
                   <span class="nav-icon-slot">
                     <app-icon [name]="item.icon" [size]="18" />
                   </span>

@@ -13,17 +13,26 @@
 .layout-grid {
   display: grid;
   grid-template-rows: 4rem 1fr;
-  grid-template-columns: var(--sidebar-width, 72px) 1fr;
+  grid-template-columns: 72px 1fr;
   grid-template-areas:
     "topbar topbar"
     "sidebar workspace";
   height: 100dvh;
   overflow: hidden;
+  transition: grid-template-columns 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.layout-grid--sidebar-expanded {
+  grid-template-columns: 240px 1fr;
 }
 
 .topbar    { grid-area: topbar; }
 .sidebar   { grid-area: sidebar; }
-.workspace { grid-area: workspace; }
+.workspace {
+  grid-area: workspace;
+  min-width: 0;
+  overflow-y: auto;
+}
 
 /* ═══════════════════════════════════════════════════════════════
    TOPBAR — Compacta (64px)
@@ -33,8 +42,8 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   SIDEBAR — Icon Rail colapsable (z-index 40 para deslizar por encima)
-   72px (colapsado) → 240px (expandido al hover/clic)
+   SIDEBAR — Icon Rail / Docked Sidebar
+   72px (colapsado) ↔ 240px (expandido con ajuste fluido de grid)
    ═══════════════════════════════════════════════════════════════ */
 .sidebar {
   width: 72px;
@@ -48,10 +57,6 @@
   width: 240px;
 }
 
-.workspace {
-  grid-area: workspace;
-}
-
 .sidebar-inner {
   position: absolute;
   top: 0;
@@ -61,8 +66,7 @@
   background: white;
   border-right: 1px solid var(--color-border);
   overflow: hidden;
-  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0.25s ease;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   z-index: 40;
@@ -70,7 +74,7 @@
 
 .sidebar-inner-expanded {
   width: 240px;
-  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
 /* ═══════════════════════════════════════════════════════════════

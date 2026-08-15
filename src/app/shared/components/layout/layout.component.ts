@@ -41,7 +41,11 @@ export class LayoutComponent {
   protected readonly inmersivo = inject(ModoInmersivoService).activo;
 
   protected readonly user = this.authService.user;
-  protected readonly sidebarExpanded = signal(false);
+  /** En escritorio el sidebar arranca abierto (240px) y el workspace se adapta fluidamente.
+   *  En móvil arranca cerrado como drawer. */
+  protected readonly sidebarExpanded = signal(
+    typeof window !== 'undefined' ? window.innerWidth >= 768 : true,
+  );
 
   /* PWA Installation state */
   private deferredPrompt: BeforeInstallPromptEvent | null = null;
@@ -106,9 +110,17 @@ export class LayoutComponent {
     this.sidebarExpanded.update(v => !v);
   }
 
+  protected onNavClick(): void {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      this.sidebarExpanded.set(false);
+    }
+  }
+
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     if (!this.sidebarExpanded()) return;
+    // En escritorio el sidebar es parte del layout docked flow, no se cierra al hacer clic en el workspace
+    if (typeof window !== 'undefined' && window.innerWidth >= 768) return;
 
     const target = event.target as HTMLElement | null;
     const sidebarEl = this.elementRef.nativeElement.querySelector('.sidebar-inner');
