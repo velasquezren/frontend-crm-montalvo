@@ -181,7 +181,7 @@ import { FilaConsolidado } from '../planilla.model';
           <td class="text-right font-bold whitespace-nowrap">\${{ otrosBonos() | number: '1.2-2' }}</td>
           <td class="text-right font-bold text-primary whitespace-nowrap">\${{ totales()['totalUsd'] | number: '1.2-2' }}</td>
           <td class="text-right font-bold whitespace-nowrap">{{ totales()['totalBob'] | moneda }}</td>
-          <td></td>
+          <td class="text-right font-bold whitespace-nowrap">{{ totales()['sueldoBase'] | moneda }}</td>
           <td class="text-right font-extrabold text-secondary text-base whitespace-nowrap">
             {{ totales()['totalGanado'] | moneda }}
           </td>
