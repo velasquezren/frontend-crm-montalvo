@@ -1,34 +1,42 @@
 <div class="selector-periodo-vacio">
   @if (cargando()) {
     <!-- ── Estado de Carga / Skeleton ──────────────────────────────────── -->
-    <div class="tarjeta-vacia">
-      <div class="flex flex-col items-center gap-3">
-        <app-loading-skeleton shape="circle" width="56px" height="56px" />
-        <app-loading-skeleton width="240px" height="28px" />
-        <app-loading-skeleton width="380px" height="18px" />
+    <div class="panel-vacio-full">
+      <div class="flex flex-col gap-3">
+        <app-loading-skeleton width="280px" height="28px" />
+        <app-loading-skeleton width="460px" height="18px" />
       </div>
-      <div class="mt-6 w-full max-w-md mx-auto">
-        <app-loading-skeleton height="80px" />
+      <div class="mt-6 w-full">
+        <app-loading-skeleton height="90px" />
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+        <app-loading-skeleton height="110px" />
+        <app-loading-skeleton height="110px" />
+        <app-loading-skeleton height="110px" />
+        <app-loading-skeleton height="110px" />
       </div>
     </div>
   } @else if (periodos().length === 0) {
     <!-- ── Estado 1: No hay ningún periodo en el sistema (Onboarding) ─── -->
-    <div class="tarjeta-vacia">
-      <div class="icono-contenedor icono-contenedor--principal">
-        <app-icon name="hard-drive" [size]="28" />
+    <div class="panel-vacio-full">
+      <div class="encabezado-seccion">
+        <div class="icono-contenedor">
+          <app-icon name="hard-drive" [size]="24" />
+        </div>
+        <div>
+          <h3 class="titulo-seccion">Aún no hay planillas importadas</h3>
+          <p class="descripcion-seccion">
+            Para comenzar a clasificar ventas y liquidar comisiones, exporta el archivo mensual de FileMaker y cárgalo en el sistema.
+          </p>
+        </div>
       </div>
-
-      <h3 class="titulo-vacio">Aún no hay planillas importadas</h3>
-      <p class="descripcion-vacio">
-        Para comenzar a clasificar ventas y liquidar comisiones, exporta el archivo mensual de FileMaker y cárgalo en el sistema.
-      </p>
 
       <div class="pasos-guia">
         <div class="paso-item">
           <div class="paso-numero">1</div>
           <div class="paso-texto">
             <strong>Exportar FileMaker</strong>
-            <span>Genera el reporte mensual en formato .xlsx</span>
+            <span>Genera el reporte mensual de ventas en formato .xlsx</span>
           </div>
         </div>
         <div class="paso-item">
@@ -42,22 +50,22 @@
           <div class="paso-numero">3</div>
           <div class="paso-texto">
             <strong>Liquidación Automática</strong>
-            <span>Revisa reglas, metas y comisiones calculadas</span>
+            <span>Revisa reglas de comisión, metas y reportes calculados</span>
           </div>
         </div>
       </div>
 
       @if (puedeImportar()) {
         <div
-          class="zona-drop-onboarding"
+          class="zona-drop-full"
           [class.zona-drop--active]="isDragging()"
           (dragenter)="onDragEnter($event)"
           (dragover)="onDragOver($event)"
           (dragleave)="onDragLeave($event)"
           (drop)="onDrop($event)">
-          <app-icon name="download" [size]="22" class="text-primary mb-2" />
+          <app-icon name="download" [size]="24" class="text-primary mb-2" />
           <span class="text-sm font-semibold text-text-dark">Arrastra el archivo Excel aquí</span>
-          <span class="text-xs text-text-muted mt-0.5">o utiliza el botón inferior para seleccionarlo</span>
+          <span class="text-xs text-text-muted mt-0.5">o utiliza el botón inferior para seleccionarlo desde tu equipo</span>
 
           <label class="boton-archivo-subir mt-4">
             <app-icon name="download" [size]="16" />
@@ -69,28 +77,29 @@
     </div>
   } @else {
     <!-- ── Estado 2: Hay periodos disponibles pero ninguno seleccionado ── -->
-    <div class="tarjeta-vacia">
-      <!-- Encabezado -->
-      <div class="icono-contenedor icono-contenedor--principal">
-        <app-icon [name]="icono()" [size]="28" />
-      </div>
-
-      <div class="encabezado-textos">
-        <div class="flex items-center justify-center gap-2 mb-1">
-          <span class="pill-badge">
-            <app-icon name="calendar" [size]="13" />
-            {{ periodos().length }} {{ periodos().length === 1 ? 'periodo disponible' : 'periodos disponibles' }}
-          </span>
+    <div class="panel-vacio-full">
+      <!-- Encabezado de la Sección -->
+      <div class="encabezado-seccion">
+        <div class="icono-contenedor">
+          <app-icon [name]="icono()" [size]="24" />
         </div>
-        <h3 class="titulo-vacio">{{ titulo() }}</h3>
-        <p class="descripcion-vacio">{{ descripcion() }}</p>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1">
+            <h3 class="titulo-seccion">{{ titulo() }}</h3>
+            <span class="pill-badge">
+              <app-icon name="calendar" [size]="12" />
+              {{ periodos().length }} {{ periodos().length === 1 ? 'mes registrado' : 'meses registrados' }}
+            </span>
+          </div>
+          <p class="descripcion-seccion">{{ descripcion() }}</p>
+        </div>
       </div>
 
       <!-- ── Acción Rápida: Último Periodo Cargado (1 Click) ───────────── -->
       @if (ultimoPeriodo(); as ultimo) {
         <div class="hero-ultimo-periodo">
           <div class="hero-ultimo-info">
-            <div class="flex items-center gap-2 mb-1">
+            <div class="flex items-center gap-2 mb-1.5">
               <span class="etiqueta-hero">Periodo más reciente</span>
               <app-badge [variant]="ultimo.estado === 'CALCULADO' ? 'success' : ultimo.estado === 'CERRADO' ? 'neutral' : 'info'">
                 {{ estadoLabel[ultimo.estado] }}
@@ -111,7 +120,7 @@
               </span>
               @if (ultimo.archivoNombre) {
                 <span class="detalle-separador">·</span>
-                <span class="detalle-item truncate max-w-[220px]" [title]="ultimo.archivoNombre">
+                <span class="detalle-item truncate max-w-[280px]" [title]="ultimo.archivoNombre">
                   <app-icon name="file-text" [size]="14" />
                   {{ ultimo.archivoNombre }}
                 </span>
@@ -131,12 +140,12 @@
         </div>
       }
 
-      <!-- ── Grilla de Otros Periodos Disponibles ──────────────────────── -->
+      <!-- ── Grilla de Todos los Periodos Disponibles ───────────────────── -->
       @if (periodosRestantes().length > 0) {
         <div class="seccion-periodos-otros">
           <div class="seccion-periodos-header">
-            <span class="seccion-periodos-titulo">Meses anteriores</span>
-            <span class="seccion-periodos-desc">Haz clic en cualquier periodo para abrirlo</span>
+            <span class="seccion-periodos-titulo">Historial de meses</span>
+            <span class="seccion-periodos-desc">Selecciona cualquier periodo para auditar y consultar</span>
           </div>
 
           <div class="grid-periodos-cards">
@@ -163,7 +172,7 @@
 
                 <div class="tarjeta-periodo-footer">
                   <span class="tarjeta-periodo-link">
-                    <span>Revisar</span>
+                    <span>Abrir periodo</span>
                     <app-icon name="chevron-down" [size]="13" class="-rotate-90" />
                   </span>
                 </div>
@@ -188,13 +197,13 @@
 
           <div class="zona-importar-info">
             <strong class="zona-importar-titulo">¿Deseas liquidar un mes nuevo?</strong>
-            <span class="zona-importar-sub">Arrastra tu archivo .xlsx de FileMaker aquí o selecciónalo.</span>
+            <span class="zona-importar-sub">Arrastra tu archivo .xlsx de FileMaker aquí o selecciónalo directamente.</span>
           </div>
 
           <div class="zona-importar-btn">
             <label class="boton-archivo-subir boton-archivo-subir--sm">
               <app-icon name="download" [size]="14" />
-              <span>Subir Excel</span>
+              <span>Importar nuevo Excel</span>
               <input type="file" accept=".xlsx,.xls" class="hidden" (change)="onFileChange($event)" />
             </label>
           </div>

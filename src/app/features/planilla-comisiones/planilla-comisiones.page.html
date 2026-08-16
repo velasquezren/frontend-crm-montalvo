@@ -4,15 +4,11 @@
     subtitle="Liquidación mensual del equipo comercial desde el Excel de FileMaker" />
 }
 
-<!-- ── Selector de periodo + información general ────────────────────── -->
-<div class="planilla-barra">
-  <div class="periodo-selector">
-    <label class="etiqueta-mini">Periodo</label>
-    @if (periodos.isLoading()) {
-      <app-loading-skeleton width="180px" height="38px" />
-    } @else if (periodos.value().datos.length === 0) {
-      <span class="text-sm text-text-muted font-medium">Aún no hay ninguna planilla importada</span>
-    } @else {
+<!-- ── Selector de periodo activo (solo visible cuando hay periodo seleccionado) ── -->
+@if (periodoActual(); as periodo) {
+  <div class="planilla-barra">
+    <div class="periodo-selector">
+      <label class="etiqueta-mini">Periodo</label>
       <select
         class="select-base font-semibold"
         [value]="periodoId() || ''"
@@ -24,10 +20,8 @@
           </option>
         }
       </select>
-    }
-  </div>
+    </div>
 
-  @if (periodoActual(); as periodo) {
     <div class="flex items-center gap-3 flex-wrap">
       <app-badge [variant]="periodo.estado === 'CALCULADO' ? 'success' : periodo.estado === 'CERRADO' ? 'neutral' : 'info'">
         {{ estadoLabel[periodo.estado] }}
@@ -39,8 +33,8 @@
         <app-badge variant="critical" icon="alert-circle">Revisar antes de calcular</app-badge>
       }
     </div>
-  }
-</div>
+  </div>
+}
 
 <!-- ── Pestañas de navegación ──────────────────────────────────────── -->
 <nav class="pestanas">
