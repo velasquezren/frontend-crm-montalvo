@@ -59,6 +59,7 @@ export class PlanillaComisionesService {
     return this.api.request(`/planilla-comisiones/periodos/${periodoId}/ventas`, {
       pagina: filtro.pagina,
       clasif: filtro.clasif,
+      vendedoraId: filtro.vendedoraId,
       buscar: filtro.buscar,
       soloExcluidas: filtro.soloExcluidas ? true : undefined,
       soloSinClasificar: filtro.soloSinClasificar ? true : undefined,

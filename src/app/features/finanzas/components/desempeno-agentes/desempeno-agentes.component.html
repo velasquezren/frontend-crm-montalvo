@@ -184,25 +184,47 @@
             <app-icon name="pie-chart" [size]="15" class="text-primary" />
             Bonos & Estímulos
           </h3>
-          <app-badge [variant]="v.totalBonos > 0 ? 'info' : 'neutral'">
-            {{ v.totalBonos > 0 ? '$ ' + (v.totalBonos | number:'1.2-2') + ' USD' : 'Sin bonos' }}
-          </app-badge>
+          @if (bonoTrimestralDetalle(); as info) {
+            <app-badge [variant]="v.totalBonos > 0 ? 'success' : 'neutral'">
+              {{ v.totalBonos > 0 ? '$ ' + (v.totalBonos | number:'1.2-2') + ' USD' : 'Sin bonos' }}
+            </app-badge>
+          }
         </div>
 
-        <div class="space-y-1.5 text-xs">
-          <div class="flex justify-between py-1 border-b border-border/40">
-            <span class="text-text-muted">Bono Jefatura (Mensual):</span>
-            <strong class="text-text-dark">{{ v.bonoJefatura > 0 ? '$ ' + (v.bonoJefatura | number:'1.2-2') : '—' }}</strong>
+        @if (bonoTrimestralDetalle(); as info) {
+          <div class="space-y-1.5 text-xs">
+            <div class="flex justify-between py-1 border-b border-border/40">
+              <span class="text-text-muted">Bono Jefatura (Mensual):</span>
+              <strong class="text-text-dark">{{ v.bonoJefatura > 0 ? '$ ' + (v.bonoJefatura | number:'1.2-2') : '—' }}</strong>
+            </div>
+            <div class="flex justify-between py-1 border-b border-border/40">
+              <span class="text-text-muted">Bono {{ info.etiquetaTrimestre }}:</span>
+              @if (info.esCierre) {
+                <strong class="text-primary font-semibold">
+                  {{ info.tieneBono ? '$ ' + (info.bonoTrimestral | number:'1.2-2') + ' USD' : 'No superó $15k' }}
+                </strong>
+              } @else {
+                <span class="text-[11px] text-text-muted italic">Se liquida al cierre (Mes 3)</span>
+              }
+            </div>
+            <div class="flex justify-between pt-1">
+              <span class="text-text-muted">Total Bonos en Bs:</span>
+              <strong class="text-text-dark">{{ (v.totalBonos * (periodoActual()?.tipoCambio ? +periodoActual()!.tipoCambio : 6.97)) | moneda }}</strong>
+            </div>
+
+            <p class="text-[10px] text-text-muted leading-tight mt-1">
+              @if (info.esCierre) {
+                @if (info.tieneBono) {
+                  Mes de cierre {{ info.etiquetaTrimestre }}: Aplica 0.5% sobre el promedio trimestral facturado.
+                } @else {
+                  Mes de cierre {{ info.etiquetaTrimestre }}: El promedio trimestral no superó el objetivo de $15,000 USD.
+                }
+              } @else {
+                Mes intermedio de {{ info.etiquetaTrimestre }}. Las ventas acumulan para el promedio del trimestre.
+              }
+            </p>
           </div>
-          <div class="flex justify-between py-1 border-b border-border/40">
-            <span class="text-text-muted">Bono Trimestral (3 meses):</span>
-            <strong class="text-primary font-semibold">{{ v.bonoTrimestral > 0 ? '$ ' + (v.bonoTrimestral | number:'1.2-2') : '—' }}</strong>
-          </div>
-          <div class="flex justify-between pt-1">
-            <span class="text-text-muted">Total Bonos en Bs:</span>
-            <strong class="text-text-dark">{{ (v.totalBonos * (periodoActual()?.tipoCambio ? +periodoActual()!.tipoCambio : 6.97)) | moneda }}</strong>
-          </div>
-        </div>
+        }
       </section>
     </div>
 

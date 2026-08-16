@@ -187,6 +187,34 @@ export class DesempenoAgentesComponent {
     };
   });
 
+  /** Información detallada de bonos y trimestre activo. */
+  readonly bonoTrimestralDetalle = computed(() => {
+    const p = this.periodoActual();
+    const v = this.vendedoraActual();
+    if (!p || !v) return null;
+
+    const mes = p.mes;
+    const trimestreNum = Math.ceil(mes / 3);
+    const esCierre = mes % 3 === 0;
+    const nombresTrimestres: Record<number, string> = {
+      1: 'Q1 (Ene - Mar)',
+      2: 'Q2 (Abr - Jun)',
+      3: 'Q3 (Jul - Sep)',
+      4: 'Q4 (Oct - Dic)',
+    };
+    const etiquetaTrimestre = nombresTrimestres[trimestreNum] ?? `Q${trimestreNum}`;
+
+    return {
+      mes,
+      trimestreNum,
+      etiquetaTrimestre,
+      esCierre,
+      bonoTrimestral: v.bonoTrimestral,
+      tieneBono: v.bonoTrimestral > 0,
+      bonoJefatura: v.bonoJefatura,
+    };
+  });
+
   /** Ventas filtradas reactivamente por búsqueda y canal. */
   readonly ventasFiltradas = computed<VentaImportada[]>(() => {
     const lista = this.ventas.value()?.datos ?? [];
