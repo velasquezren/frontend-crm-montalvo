@@ -57,6 +57,13 @@ hex local.
   los backdrops de overlay. Nunca en tarjetas, tablas ni superficies de contenido, donde compite
   con la legibilidad de los datos clínicos.
 
+## Filosofía de Diseño: Minimalismo y Densidad Fluida (Estilo Conversaciones)
+
+- **Cero íconos gigantes ni cajas decorativas artificiales**: Los íconos en listados, barras de herramientas y estados vacíos miden entre 12px y 16px, integrados con el texto.
+- **Layout fluido a pantalla completa**: Las secciones ocupan el 100% del ancho del layout sin tarjetas estrechas centradas que dejen márgenes vacíos a los lados.
+- **Alta densidad de información**: Filas compactas (padding 10-12px), bordes sutiles `border-border`, badges sobrios y acciones en píldora compacta (`size="sm"`).
+- **Consistencia en Informes y Gráficos**: Las tablas de datos y gráficos analíticos mantienen su diseño limpio y estructurado sin añadir elementos ornamentales de IA.
+
 ## Tipografía y números
 
 Poppins. Jerarquía: H1 48 / H2 36 / H3 28 / base 16 / small 14.

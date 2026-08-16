@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 
 import { BadgeComponent } from '../badge/badge.component';
-import { ButtonComponent } from '../button/button.component';
 import { IconComponent, IconName } from '../icon/icon.component';
 import { LoadingSkeletonComponent } from '../loading-skeleton/loading-skeleton.component';
 import {
@@ -24,7 +23,7 @@ import {
  */
 @Component({
   selector: 'app-selector-periodo-empty',
-  imports: [BadgeComponent, ButtonComponent, IconComponent, LoadingSkeletonComponent],
+  imports: [BadgeComponent, IconComponent, LoadingSkeletonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './selector-periodo-empty.component.html',
   styleUrl: './selector-periodo-empty.component.css',

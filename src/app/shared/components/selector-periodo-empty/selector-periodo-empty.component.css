@@ -1,396 +1,164 @@
-/* ── Contenedor General del Selector Vacío (Full Width) ──────────────── */
-.selector-periodo-vacio {
+/* ── Contenedor Principal Fluido ───────────────────────────────────── */
+.selector-periodo-container {
   width: 100%;
 }
 
-.panel-vacio-full {
+.panel-card {
   width: 100%;
   background-color: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 16px;
-  padding: 1.5rem;
+  overflow: hidden;
   box-shadow: var(--shadow-subtle);
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
 }
 
-@media (min-width: 768px) {
-  .panel-vacio-full {
-    padding: 1.75rem 2rem;
-  }
-}
-
-/* ── Encabezado de Sección ────────────────────────────────────────────── */
-.encabezado-seccion {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.icono-contenedor {
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
-  background-color: var(--color-bg-light);
-  color: var(--color-primary);
+/* ── Toolbar Header ─────────────────────────────────────────────────── */
+.toolbar-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 15%, transparent);
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-background);
 }
 
-.titulo-seccion {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--color-text-dark);
-  letter-spacing: -0.01em;
-}
-
-.descripcion-seccion {
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
-  margin-top: 0.2rem;
-  line-height: 1.4;
-}
-
-.pill-badge {
+.badge-count {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  background-color: var(--color-bg-light);
-  color: var(--color-primary);
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.2rem 0.65rem;
+  padding: 2px 8px;
   border-radius: 9999px;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 15%, transparent);
-  white-space: nowrap;
+  background-color: var(--color-bg-light);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-primary);
 }
 
-/* ── Hero: Último Periodo Disponible ─────────────────────────────────── */
-.hero-ultimo-periodo {
-  width: 100%;
-  background: color-mix(in srgb, var(--color-bg-light) 40%, var(--color-background));
-  border: 1.5px solid color-mix(in srgb, var(--color-secondary) 30%, var(--color-border));
-  border-radius: 16px;
-  padding: 1.25rem 1.5rem;
+.btn-subir-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background-color: var(--color-primary);
+  color: var(--color-background);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.btn-subir-toolbar:hover {
+  opacity: 0.9;
+}
+
+/* ── Lista / Tabla Fluida ───────────────────────────────────────────── */
+.periodos-lista {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@media (min-width: 640px) {
-  .hero-ultimo-periodo {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
+.fila-periodo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-background);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
-.hero-ultimo-periodo:hover {
-  border-color: var(--color-secondary);
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-primary) 8%, transparent);
+.fila-periodo:last-child {
+  border-bottom: none;
 }
 
-.hero-ultimo-info {
-  flex: 1;
-  min-width: 0;
+.fila-periodo:hover {
+  background-color: var(--color-bg-workspace);
 }
 
-.etiqueta-hero {
-  font-size: 0.75rem;
+.fila-periodo--reciente {
+  background-color: color-mix(in srgb, var(--color-bg-light) 40%, var(--color-background));
+}
+
+.fila-periodo--reciente:hover {
+  background-color: color-mix(in srgb, var(--color-bg-light) 70%, var(--color-background));
+}
+
+.pill-reciente {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background-color: var(--color-primary);
+  color: var(--color-background);
+  font-size: 9px;
   font-weight: 700;
-  color: var(--color-primary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.hero-ultimo-mes {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--color-text-dark);
-  margin: 0.1rem 0 0.35rem 0;
-}
-
-.hero-ultimo-detalles {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  font-size: 0.8125rem;
-  color: var(--color-text-muted);
-}
-
-.detalle-item {
+.btn-abrir-fila {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-}
-
-.detalle-separador {
-  color: var(--color-border);
-  font-weight: bold;
-}
-
-.hero-ultimo-accion {
-  flex-shrink: 0;
-}
-
-/* ── Grilla de Periodos Restantes (Full Width Multi-Column) ──────────── */
-.seccion-periodos-otros {
-  width: 100%;
-}
-
-.seccion-periodos-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 0.85rem;
-  padding: 0 0.15rem;
-}
-
-.seccion-periodos-titulo {
-  font-size: 0.8125rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-text-muted);
-}
-
-.seccion-periodos-desc {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-}
-
-.grid-periodos-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 0.85rem;
-  width: 100%;
-}
-
-.tarjeta-periodo-item {
-  background-color: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 1rem 1.1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  width: 100%;
-}
-
-.tarjeta-periodo-item:hover {
-  border-color: var(--color-primary);
-  background-color: color-mix(in srgb, var(--color-bg-light) 25%, var(--color-background));
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-subtle);
-}
-
-.tarjeta-periodo-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.tarjeta-periodo-mes {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--color-text-dark);
-}
-
-.tarjeta-periodo-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-}
-
-.tarjeta-periodo-footer {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 0.25rem;
-}
-
-.tarjeta-periodo-link {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-primary);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-/* ── Zona de Importación Rápida ──────────────────────────────────────── */
-.zona-importar-compacta {
-  width: 100%;
-  background-color: var(--color-bg-workspace);
-  border: 1.5px dashed var(--color-border);
-  border-radius: 16px;
-  padding: 1rem 1.25rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  text-align: center;
-  transition: all 0.2s ease;
-}
-
-@media (min-width: 640px) {
-  .zona-importar-compacta {
-    flex-direction: row;
-    text-align: left;
-    gap: 1.25rem;
-  }
-}
-
-.zona-importar--active {
-  border-color: var(--color-primary);
-  background-color: var(--color-bg-light);
-  transform: scale(1.005);
-}
-
-.zona-importar-icono {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background-color: var(--color-bg-light);
-  color: var(--color-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.zona-importar-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.zona-importar-titulo {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--color-text-dark);
-}
-
-.zona-importar-sub {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-}
-
-.zona-importar-btn {
-  flex-shrink: 0;
-}
-
-.boton-archivo-subir {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  background-color: var(--color-background);
-  color: var(--color-primary);
-  border: 1.5px solid var(--color-primary);
+  gap: 4px;
+  padding: 4px 10px;
   border-radius: 9999px;
-  font-size: 0.8125rem;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-background);
+  color: var(--color-primary);
+  font-size: 11px;
   font-weight: 600;
-  padding: 0.45rem 1.1rem;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.boton-archivo-subir:hover {
+.btn-abrir-fila:hover {
   background-color: var(--color-primary);
   color: var(--color-background);
-}
-
-.boton-archivo-subir--sm {
-  padding: 0.35rem 0.9rem;
-  font-size: 0.75rem;
-}
-
-/* ── Guía de Onboarding (Sin periodos en BD) ─────────────────────────── */
-.pasos-guia {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.85rem;
-  width: 100%;
-  text-align: left;
-}
-
-@media (min-width: 640px) {
-  .pasos-guia {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.paso-item {
-  background-color: var(--color-bg-workspace);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 1rem;
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
-}
-
-.paso-numero {
-  width: 24px;
-  height: 24px;
-  border-radius: 9999px;
-  background-color: var(--color-primary);
-  color: var(--color-background);
-  font-size: 0.75rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.paso-texto {
-  display: flex;
-  flex-direction: column;
-}
-
-.paso-texto strong {
-  font-size: 0.8125rem;
-  color: var(--color-text-dark);
-}
-
-.paso-texto span {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  line-height: 1.25;
-  margin-top: 0.15rem;
-}
-
-.zona-drop-full {
-  width: 100%;
-  border: 2px dashed var(--color-border);
-  background-color: var(--color-bg-workspace);
-  border-radius: 16px;
-  padding: 2rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.zona-drop--active {
   border-color: var(--color-primary);
-  background-color: var(--color-bg-light);
-  transform: scale(1.005);
+}
+
+/* ── Zona de Arrastre Footer ────────────────────────────────────────── */
+.zona-drop-footer {
+  padding: 10px 16px;
+  background-color: var(--color-bg-workspace);
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+  transition: background-color 0.15s ease;
+}
+
+.zona-drop-minimal {
+  padding: 16px;
+  border: 1.5px dashed var(--color-border);
+  border-radius: 12px;
+  background-color: var(--color-bg-workspace);
+  text-align: center;
+  transition: border-color 0.15s ease;
+}
+
+.btn-importar-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  border: 1px solid var(--color-primary);
+  background-color: var(--color-background);
+  transition: all 0.15s ease;
+}
+
+.btn-importar-link:hover {
+  background-color: var(--color-primary);
+  color: var(--color-background);
+}
+
+.zona-drop-active {
+  background-color: var(--color-bg-light) !important;
+  border-color: var(--color-primary) !important;
 }
