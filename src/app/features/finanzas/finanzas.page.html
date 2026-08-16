@@ -28,6 +28,10 @@
       <app-planilla-comisiones [embedded]="true" />
     </div>
 
+    <div [hidden]="tabActiva() !== 'agentes'" class="finanzas-tab-panel" role="tabpanel">
+      <app-desempeno-agentes />
+    </div>
+
     <div [hidden]="tabActiva() !== 'analitica'" class="finanzas-tab-panel" role="tabpanel">
       <app-reportes [embedded]="true" />
     </div>

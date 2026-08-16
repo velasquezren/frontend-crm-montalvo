@@ -1,0 +1,299 @@
+<!-- ── Barra de Control Superior: Selector de Periodo y Agentes ────── -->
+<div class="desempeno-toolbar">
+  <div class="flex items-center gap-3 min-w-0 flex-wrap">
+    <div class="icono-periodo">
+      <app-icon name="calendar" [size]="18" />
+    </div>
+
+    @if (periodos.isLoading()) {
+      <app-loading-skeleton width="180px" height="36px" />
+    } @else {
+      <div class="contenedor-select-periodo">
+        <select
+          class="select-periodo"
+          [value]="periodoIdEfectivo() || ''"
+          (change)="seleccionarPeriodo($any($event.target).value)">
+          @for (p of periodos.value()?.datos ?? []; track p.id) {
+            <option [value]="p.id" [selected]="p.id === periodoIdEfectivo()">
+              {{ nombreMes(p.mes) }} {{ p.anio }} — {{ obtenerEstadoLabel(p.estado) }}
+            </option>
+          }
+        </select>
+        <app-icon name="chevron-down" [size]="16" class="select-icono-flecha" />
+      </div>
+    }
+
+    @if (periodoActual(); as p) {
+      <span class="badge-tc">TC {{ p.tipoCambio }}</span>
+    }
+  </div>
+
+  <!-- Selector de Vendedoras con Chips -->
+  @if (vendedoras().length > 0) {
+    <div class="chips-vendedoras" role="tablist" aria-label="Elegir ejecutiva">
+      @for (v of vendedoras(); track v.vendedoraId) {
+        <button
+          type="button"
+          class="chip-agente"
+          [class.chip-agente--activo]="vendedoraActual()?.vendedoraId === v.vendedoraId"
+          (click)="seleccionarVendedora(v.vendedoraId)">
+          <span class="chip-agente-nombre">{{ v.nombre }}</span>
+          <span class="chip-agente-rol">{{ v.tipo }}</span>
+        </button>
+      }
+    </div>
+  }
+</div>
+
+@if (consolidado.isLoading()) {
+  <div class="mt-4 flex flex-col gap-3">
+    <app-loading-skeleton height="90px" />
+    <app-loading-skeleton height="200px" />
+    <app-loading-skeleton height="280px" />
+  </div>
+} @else if (!vendedoraActual()) {
+  <div class="mt-6">
+    <app-empty-state
+      icon="users"
+      title="Sin liquidación calculada"
+      description="Calcula la planilla del periodo seleccionado para ver el desempeño de las ejecutivas." />
+  </div>
+} @else {
+  @let v = vendedoraActual()!;
+  
+  <div class="desempeno-contenido aparecer">
+    <!-- ── 1. Ficha / Banner Principal de la Ejecutiva ──────────────────── -->
+    <section class="tarjeta-perfil-ejecutiva">
+      <div class="flex items-center gap-4 flex-wrap">
+        <app-avatar [initials]="obtenerIniciales(v.nombre)" size="lg" />
+        
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h2 class="text-base font-bold text-text-dark tracking-tight">{{ v.nombre }}</h2>
+            <app-badge [variant]="v.tipo === 'JEFA' ? 'info' : 'neutral'">{{ v.tipo }}</app-badge>
+            <span class="badge-area">{{ v.area }}</span>
+            <span class="codigo-pk">{{ v.codigo }}</span>
+          </div>
+          <p class="text-xs text-text-muted mt-0.5">
+            Sueldo Base mensual: <strong class="text-text-dark">{{ v.sueldoBase | moneda }}</strong>
+          </p>
+        </div>
+
+        <div class="tarjeta-total-destacado">
+          <span class="total-label">Total a Transferir (BOB)</span>
+          <span class="total-monto">{{ v.totalGanado | moneda }}</span>
+          <span class="total-subtexto">Comisiones ($ {{ v.totalUsd | number:'1.2-2' }} USD) + Sueldo</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 2. Termómetros de Rendimiento y Metas ───────────────────────── -->
+    <div class="grilla-termometros">
+      <!-- Termómetro Maternidad -->
+      <section class="tarjeta-termometro">
+        <div class="termometro-header">
+          <div class="flex items-center gap-2">
+            <app-icon name="shopping-bag" [size]="16" class="icono-acento-a" />
+            <h3 class="termometro-titulo">Meta de Maternidad (Tipo A)</h3>
+          </div>
+          @if (metaMaternidadInfo(); as meta) {
+            <app-badge [variant]="meta.supera ? 'success' : meta.iguala ? 'info' : 'neutral'">
+              {{ meta.supera ? 'Superada' : meta.iguala ? 'Meta alcanzada' : 'En progreso' }}
+            </app-badge>
+          }
+        </div>
+
+        @if (metaMaternidadInfo(); as meta) {
+          <div class="mt-3">
+            <div class="flex items-baseline justify-between text-xs mb-1">
+              <span class="text-text-muted">Planes vendidos</span>
+              <strong class="text-sm font-bold text-text-dark">{{ meta.vendidos }} / {{ meta.metaMinima }} planes</strong>
+            </div>
+            
+            <div class="barra-progreso-track">
+              <div
+                class="barra-progreso-fill barra-fill-a"
+                [style.width.%]="meta.porcentaje > 100 ? 100 : meta.porcentaje">
+              </div>
+            </div>
+
+            <p class="text-[11px] text-text-muted mt-2 leading-relaxed">
+              @if (meta.supera) {
+                Superó el objetivo por <strong class="text-primary">{{ meta.comisionables }} planes</strong> que comisionan en Tipo A (franquicia).
+              } @else if (meta.iguala) {
+                Igualó la meta de {{ meta.metaMinima }} planes. La regla de franquicia requiere superarla para comisionar Tipo A.
+              } @else {
+                Faltaron {{ meta.metaMinima - meta.vendidos }} planes para alcanzar el umbral mínimo de comisión.
+              }
+            </p>
+          </div>
+        }
+      </section>
+
+      <!-- Termómetro Cirugías -->
+      <section class="tarjeta-termometro">
+        <div class="termometro-header">
+          <div class="flex items-center gap-2">
+            <app-icon name="activity" [size]="16" class="icono-acento-b" />
+            <h3 class="termometro-titulo">Volumen Quirúrgico (Tipo B)</h3>
+          </div>
+          @if (nivelCirugiaInfo(); as cir) {
+            <app-badge [variant]="cir.nivel > 0 ? 'success' : 'neutral'">
+              {{ cir.nivel > 0 ? 'Nivel ' + cir.nivel + ' (' + cir.pctActual + '%)' : 'Sin nivel' }}
+            </app-badge>
+          }
+        </div>
+
+        @if (nivelCirugiaInfo(); as cir) {
+          <div class="mt-3">
+            <div class="flex items-baseline justify-between text-xs mb-1">
+              <span class="text-text-muted">Acumulado del mes</span>
+              <strong class="text-sm font-bold text-text-dark">$ {{ cir.acumulado | number:'1.2-2' }} USD</strong>
+            </div>
+
+            <div class="barra-progreso-track">
+              <div
+                class="barra-progreso-fill barra-fill-b"
+                [style.width.%]="cir.nivel === 0 ? 15 : (cir.nivel / 6) * 100">
+              </div>
+            </div>
+
+            <p class="text-[11px] text-text-muted mt-2 leading-relaxed">
+              @if (cir.nivel > 0) {
+                Aplica tarifa de <strong class="text-text-dark">{{ cir.pctActual }}%</strong> a todas sus cirugías del mes.
+                @if (cir.siguienteNivel) {
+                  A $ {{ cir.faltaParaSiguiente | number:'1.2-2' }} USD de alcanzar el Nivel {{ cir.siguienteNivel }}.
+                }
+              } @else {
+                No acumuló el mínimo de $1,000 USD para activar el Nivel 1.
+              }
+            </p>
+          </div>
+        }
+      </section>
+
+      <!-- Tarjeta Bonos -->
+      <section class="tarjeta-termometro">
+        <div class="termometro-header">
+          <div class="flex items-center gap-2">
+            <app-icon name="pie-chart" [size]="16" class="icono-acento-c" />
+            <h3 class="termometro-titulo">Bonos & Incentivos</h3>
+          </div>
+          <app-badge [variant]="v.totalBonos > 0 ? 'info' : 'neutral'">
+            {{ v.totalBonos > 0 ? '$ ' + (v.totalBonos | number:'1.2-2') + ' USD' : 'Sin bonos' }}
+          </app-badge>
+        </div>
+
+        <div class="mt-3 space-y-2 text-xs">
+          <div class="flex justify-between py-1 border-b border-border/50">
+            <span class="text-text-muted">Bono Mensual Jefatura:</span>
+            <strong class="text-text-dark">{{ v.bonoJefatura > 0 ? '$ ' + (v.bonoJefatura | number:'1.2-2') : '—' }}</strong>
+          </div>
+          <div class="flex justify-between py-1 border-b border-border/50">
+            <span class="text-text-muted">Bono Trimestral (3 meses):</span>
+            <strong class="text-primary font-semibold">{{ v.bonoTrimestral > 0 ? '$ ' + (v.bonoTrimestral | number:'1.2-2') : '—' }}</strong>
+          </div>
+          <div class="flex justify-between pt-0.5">
+            <span class="text-text-muted">Total Bonos en Bs:</span>
+            <strong class="text-text-dark">{{ (v.totalBonos * (periodoActual()?.tipoCambio ? +periodoActual()!.tipoCambio : 6.97)) | moneda }}</strong>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ── 3. Desglose Contable de Liquidación ─────────────────────────── -->
+    <section class="tarjeta-liquidacion-desglose">
+      <h3 class="text-xs font-bold uppercase tracking-wider text-text-muted mb-3">
+        Desglose de Haberes del Mes — {{ v.nombre }}
+      </h3>
+
+      <div class="grilla-haberes">
+        <div class="item-haber">
+          <span class="item-haber-label">Sueldo Base (Fijo)</span>
+          <span class="item-haber-valor">{{ v.sueldoBase | moneda }}</span>
+          <span class="item-haber-detalle">Haber Básico</span>
+        </div>
+
+        <div class="item-haber">
+          <span class="item-haber-label">Comisión Tipo A (Planes)</span>
+          <span class="item-haber-valor">{{ (v.comisionA * (periodoActual()?.tipoCambio ? +periodoActual()!.tipoCambio : 6.97)) | moneda }}</span>
+          <span class="item-haber-detalle">$ {{ v.comisionA | number:'1.2-2' }} USD</span>
+        </div>
+
+        <div class="item-haber">
+          <span class="item-haber-label">Comisión Tipo B (Cirugías)</span>
+          <span class="item-haber-valor">{{ (v.comisionB * (periodoActual()?.tipoCambio ? +periodoActual()!.tipoCambio : 6.97)) | moneda }}</span>
+          <span class="item-haber-detalle">$ {{ v.comisionB | number:'1.2-2' }} USD</span>
+        </div>
+
+        <div class="item-haber">
+          <span class="item-haber-label">Comisión Tipo C (Servicios)</span>
+          <span class="item-haber-valor">{{ (v.comisionC * (periodoActual()?.tipoCambio ? +periodoActual()!.tipoCambio : 6.97)) | moneda }}</span>
+          <span class="item-haber-detalle">$ {{ v.comisionC | number:'1.2-2' }} USD</span>
+        </div>
+
+        <div class="item-haber item-haber--total">
+          <span class="item-haber-label">Total a Pagar (BOB)</span>
+          <span class="item-haber-valor text-primary font-bold">{{ v.totalGanado | moneda }}</span>
+          <span class="item-haber-detalle">Comisiones + Bonos + Sueldo</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 4. Detalle de Ventas del Mes de esta Ejecutiva ──────────────── -->
+    <section class="tarjeta-ventas-agente">
+      <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+        <div>
+          <h3 class="text-sm font-bold text-text-dark">Ventas Registradas en el Mes</h3>
+          <p class="text-xs text-text-muted">Servicios facturados bajo el código {{ v.codigo }}</p>
+        </div>
+        <span class="text-xs font-semibold text-text-muted bg-bg-light px-2.5 py-1 rounded-full border border-border">
+          {{ ventas.value()?.total ?? 0 }} ventas
+        </span>
+      </div>
+
+      @if (ventas.isLoading()) {
+        <div class="flex flex-col gap-2">
+          @for (n of [1,2,3,4]; track n) { <app-loading-skeleton height="36px" /> }
+        </div>
+      } @else if ((ventas.value()?.datos ?? []).length === 0) {
+        <p class="text-xs text-text-muted py-4 text-center">No hay ventas registradas para esta ejecutiva en este periodo.</p>
+      } @else {
+        <app-table [dense]="true">
+          <thead>
+            <tr>
+              <th class="text-left w-[80px]">Fecha</th>
+              <th class="text-left">Servicio / Procedimiento</th>
+              <th class="text-left">Paciente</th>
+              <th class="text-center w-[85px]">Canal</th>
+              <th class="text-right w-[100px]">Precio</th>
+              <th class="text-right w-[100px]">Base Neta</th>
+              <th class="text-left w-[120px]">Clasificación</th>
+              <th class="text-center w-[60px]">Tipo</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (venta of ventas.value()?.datos ?? []; track venta.id) {
+              <tr [class.fila-excluida]="!venta.comisionable">
+                <td class="text-left text-xs whitespace-nowrap text-text-muted">
+                  {{ venta.fecha ? (venta.fecha | date: 'dd/MM/yyyy') : '—' }}
+                </td>
+                <td class="text-left font-semibold text-xs text-text-dark">{{ venta.detalle }}</td>
+                <td class="text-left text-xs text-text-muted truncate max-w-[180px]">{{ venta.paciente ?? '—' }}</td>
+                <td class="text-center">
+                  <app-badge [variant]="venta.canal === 'PROPIO' ? 'info' : 'neutral'">{{ venta.canal }}</app-badge>
+                </td>
+                <td class="text-right font-medium text-text-dark text-xs whitespace-nowrap">{{ venta.precio | moneda }}</td>
+                <td class="text-right text-xs text-text-muted whitespace-nowrap">{{ venta.ingresoNeto | moneda }}</td>
+                <td class="text-left text-xs font-medium text-text-dark">{{ obtenerClasifLabel(venta.clasif) }}</td>
+                <td class="text-center">
+                  <span class="tipo-pill" [title]="obtenerTipoLabel(venta.tipo)">{{ venta.tipo }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </app-table>
+      }
+    </section>
+  </div>
+}

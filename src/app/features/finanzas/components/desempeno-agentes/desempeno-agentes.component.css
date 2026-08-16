@@ -1,0 +1,311 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.desempeno-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  margin-bottom: 1.25rem;
+}
+
+.icono-periodo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  background-color: var(--color-bg-light);
+  color: var(--color-primary);
+}
+
+.contenedor-select-periodo {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.select-periodo {
+  appearance: none;
+  background-color: var(--color-bg-workspace);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 0.45rem 2rem 0.45rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.select-periodo:hover {
+  border-color: var(--color-secondary);
+}
+
+.select-icono-flecha {
+  position: absolute;
+  right: 0.6rem;
+  pointer-events: none;
+  color: var(--color-text-muted);
+}
+
+.badge-tc {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  background-color: var(--color-bg-light);
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+}
+
+/* Chips de selección de Vendedoras */
+.chips-vendedoras {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.chip-agente {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background-color: var(--color-bg-workspace);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.8125rem;
+}
+
+.chip-agente-nombre {
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
+.chip-agente-rol {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.chip-agente:hover {
+  border-color: var(--color-secondary);
+  background-color: var(--color-bg-light);
+}
+
+.chip-agente--activo {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.chip-agente--activo .chip-agente-nombre {
+  color: var(--color-background, #FFFFFF);
+}
+
+.chip-agente--activo .chip-agente-rol {
+  color: var(--color-bg-light, #EAF7F5);
+  opacity: 0.85;
+}
+
+/* Tarjeta Perfil Ejecutiva */
+.tarjeta-perfil-ejecutiva {
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.badge-area {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  background-color: var(--color-bg-workspace);
+  border: 1px solid var(--color-border);
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+}
+
+.codigo-pk {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.tarjeta-total-destacado {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0.6rem 1rem;
+  background-color: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.total-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-primary);
+}
+
+.total-monto {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-text-dark);
+}
+
+.total-subtexto {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+}
+
+/* Grilla de Termómetros */
+.grilla-termometros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.tarjeta-termometro {
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 1.15rem;
+}
+
+.termometro-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.termometro-titulo {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.icono-acento-a { color: var(--color-primary); }
+.icono-acento-b { color: var(--color-secondary); }
+.icono-acento-c { color: var(--color-primary); }
+
+.barra-progreso-track {
+  width: 100%;
+  height: 6px;
+  background-color: var(--color-bg-workspace);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.barra-progreso-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+}
+
+.barra-fill-a { background-color: var(--color-primary); }
+.barra-fill-b { background-color: var(--color-secondary); }
+
+/* Desglose de Haberes */
+.tarjeta-liquidacion-desglose {
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.grilla-haberes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.item-haber {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.75rem;
+  background-color: var(--color-bg-workspace);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.item-haber-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.item-haber-valor {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.item-haber-detalle {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+}
+
+.item-haber--total {
+  background-color: var(--color-bg-light);
+  border-color: var(--color-primary);
+}
+
+/* Tabla Ventas Agente */
+.tarjeta-ventas-agente {
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 1.25rem;
+}
+
+.tipo-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  background-color: var(--color-bg-workspace);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-dark);
+}
+
+.fila-excluida {
+  opacity: 0.45;
+  background-color: var(--color-bg-workspace);
+}
+
+.aparecer {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

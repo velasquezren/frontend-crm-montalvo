@@ -34,6 +34,7 @@ export interface AjusteVenta {
 export interface FiltroVentas {
   pagina?: number;
   clasif?: ClasifComision;
+  vendedoraId?: string;
   buscar?: string;
   soloExcluidas?: boolean;
   soloSinClasificar?: boolean;

@@ -4,25 +4,32 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { DesempenoAgentesComponent } from './components/desempeno-agentes/desempeno-agentes.component';
 import { PlanillaComisionesPage } from '../planilla-comisiones/planilla-comisiones.page';
 import { ReportesPage } from '../reportes/reportes.page';
 import { ResumenAnualPage } from '../planilla-comisiones/resumen-anual.page';
 
-export type TabFinanzas = 'liquidacion' | 'analitica' | 'anual';
+export type TabFinanzas = 'liquidacion' | 'agentes' | 'analitica' | 'anual';
 
 interface TabConfig {
   readonly id: TabFinanzas;
   readonly label: string;
-  readonly icon: 'file-text' | 'bar-chart' | 'trending-up';
+  readonly icon: 'file-text' | 'users' | 'bar-chart' | 'trending-up';
   readonly descripcion: string;
 }
 
 const TABS: readonly TabConfig[] = [
   {
     id: 'liquidacion',
-    label: 'Liquidación Mensual',
+    label: 'Planilla & Liquidación',
     icon: 'file-text',
-    descripcion: 'Planilla mensual de comisiones y objetivos por vendedora',
+    descripcion: 'Planilla mensual de comisiones y matriz contable por periodo',
+  },
+  {
+    id: 'agentes',
+    label: 'Desempeño de Agentes',
+    icon: 'users',
+    descripcion: 'Ficha 360° individual, progreso de metas de maternidad y tramos de cirugía',
   },
   {
     id: 'analitica',
@@ -40,7 +47,7 @@ const TABS: readonly TabConfig[] = [
 
 /**
  * Finanzas & Comisiones — Módulo unificado para administración y contabilidad médica.
- * Agrupa Liquidación Mensual, Analítica Médica y Resumen Anual con:
+ * Agrupa Liquidación Mensual, Desempeño de Agentes, Analítica Médica y Resumen Anual con:
  * - 0ms de cambio de pestaña (retención instantánea de estado en memoria)
  * - Sincronización 100% reactiva en URL (?tab=...)
  * - Diseño segmentado de alta fidelidad sin parpadeos
@@ -52,6 +59,7 @@ const TABS: readonly TabConfig[] = [
     PageHeaderComponent,
     IconComponent,
     PlanillaComisionesPage,
+    DesempenoAgentesComponent,
     ReportesPage,
     ResumenAnualPage,
   ],
@@ -70,7 +78,7 @@ export class FinanzasPage {
   /** Pestaña activa derivada reactivamente de la URL */
   protected readonly tabActiva = computed<TabFinanzas>(() => {
     const q = this.queryParams()?.['tab'] as string;
-    if (q === 'analitica' || q === 'anual' || q === 'liquidacion') {
+    if (q === 'agentes' || q === 'analitica' || q === 'anual' || q === 'liquidacion') {
       return q;
     }
     return 'liquidacion';
