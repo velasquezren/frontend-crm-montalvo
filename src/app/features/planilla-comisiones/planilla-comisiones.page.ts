@@ -16,6 +16,7 @@ import { InputComponent } from '../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
+import { SelectorPeriodoEmptyComponent } from '../../shared/components/selector-periodo-empty/selector-periodo-empty.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import { PlanillaComisionesService } from './planilla-comisiones.service';
@@ -81,6 +82,7 @@ interface GrupoPlanes {
     LoadingSkeletonComponent,
     PageHeaderComponent,
     PaginatorComponent,
+    SelectorPeriodoEmptyComponent,
     TableComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -404,7 +406,7 @@ export class PlanillaComisionesPage implements OnDestroy {
   }
 
   /** Procesa la importación del archivo cargado o arrastrado. */
-  private async procesarArchivo(archivo: File): Promise<void> {
+  protected async procesarArchivo(archivo: File): Promise<void> {
     if (!archivo.name.endsWith('.xlsx') && !archivo.name.endsWith('.xls')) {
       this.toast.error('Por favor selecciona o arrastra un archivo de Excel (.xlsx o .xls).', 'Formato no válido');
       return;

@@ -41,6 +41,7 @@ export class LayoutComponent {
   protected readonly inmersivo = inject(ModoInmersivoService).activo;
 
   protected readonly user = this.authService.user;
+  protected readonly isAdmin = this.authService.isAdmin;
   /** En escritorio el sidebar arranca abierto (240px) y el workspace se adapta fluidamente.
    *  En móvil arranca cerrado como drawer. */
   protected readonly sidebarExpanded = signal(

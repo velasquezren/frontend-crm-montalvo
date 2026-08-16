@@ -1,0 +1,205 @@
+<div class="selector-periodo-vacio">
+  @if (cargando()) {
+    <!-- ── Estado de Carga / Skeleton ──────────────────────────────────── -->
+    <div class="tarjeta-vacia">
+      <div class="flex flex-col items-center gap-3">
+        <app-loading-skeleton shape="circle" width="56px" height="56px" />
+        <app-loading-skeleton width="240px" height="28px" />
+        <app-loading-skeleton width="380px" height="18px" />
+      </div>
+      <div class="mt-6 w-full max-w-md mx-auto">
+        <app-loading-skeleton height="80px" />
+      </div>
+    </div>
+  } @else if (periodos().length === 0) {
+    <!-- ── Estado 1: No hay ningún periodo en el sistema (Onboarding) ─── -->
+    <div class="tarjeta-vacia">
+      <div class="icono-contenedor icono-contenedor--principal">
+        <app-icon name="hard-drive" [size]="28" />
+      </div>
+
+      <h3 class="titulo-vacio">Aún no hay planillas importadas</h3>
+      <p class="descripcion-vacio">
+        Para comenzar a clasificar ventas y liquidar comisiones, exporta el archivo mensual de FileMaker y cárgalo en el sistema.
+      </p>
+
+      <div class="pasos-guia">
+        <div class="paso-item">
+          <div class="paso-numero">1</div>
+          <div class="paso-texto">
+            <strong>Exportar FileMaker</strong>
+            <span>Genera el reporte mensual en formato .xlsx</span>
+          </div>
+        </div>
+        <div class="paso-item">
+          <div class="paso-numero">2</div>
+          <div class="paso-texto">
+            <strong>Cargar Archivo</strong>
+            <span>Sube o arrastra el archivo Excel en el CRM</span>
+          </div>
+        </div>
+        <div class="paso-item">
+          <div class="paso-numero">3</div>
+          <div class="paso-texto">
+            <strong>Liquidación Automática</strong>
+            <span>Revisa reglas, metas y comisiones calculadas</span>
+          </div>
+        </div>
+      </div>
+
+      @if (puedeImportar()) {
+        <div
+          class="zona-drop-onboarding"
+          [class.zona-drop--active]="isDragging()"
+          (dragenter)="onDragEnter($event)"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave($event)"
+          (drop)="onDrop($event)">
+          <app-icon name="download" [size]="22" class="text-primary mb-2" />
+          <span class="text-sm font-semibold text-text-dark">Arrastra el archivo Excel aquí</span>
+          <span class="text-xs text-text-muted mt-0.5">o utiliza el botón inferior para seleccionarlo</span>
+
+          <label class="boton-archivo-subir mt-4">
+            <app-icon name="download" [size]="16" />
+            <span>Seleccionar archivo .xlsx</span>
+            <input type="file" accept=".xlsx,.xls" class="hidden" (change)="onFileChange($event)" />
+          </label>
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- ── Estado 2: Hay periodos disponibles pero ninguno seleccionado ── -->
+    <div class="tarjeta-vacia">
+      <!-- Encabezado -->
+      <div class="icono-contenedor icono-contenedor--principal">
+        <app-icon [name]="icono()" [size]="28" />
+      </div>
+
+      <div class="encabezado-textos">
+        <div class="flex items-center justify-center gap-2 mb-1">
+          <span class="pill-badge">
+            <app-icon name="calendar" [size]="13" />
+            {{ periodos().length }} {{ periodos().length === 1 ? 'periodo disponible' : 'periodos disponibles' }}
+          </span>
+        </div>
+        <h3 class="titulo-vacio">{{ titulo() }}</h3>
+        <p class="descripcion-vacio">{{ descripcion() }}</p>
+      </div>
+
+      <!-- ── Acción Rápida: Último Periodo Cargado (1 Click) ───────────── -->
+      @if (ultimoPeriodo(); as ultimo) {
+        <div class="hero-ultimo-periodo">
+          <div class="hero-ultimo-info">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="etiqueta-hero">⚡ Periodo más reciente</span>
+              <app-badge [variant]="ultimo.estado === 'CALCULADO' ? 'success' : ultimo.estado === 'CERRADO' ? 'neutral' : 'info'">
+                {{ estadoLabel[ultimo.estado] }}
+              </app-badge>
+            </div>
+            <h4 class="hero-ultimo-mes">
+              {{ nombreMes(ultimo.mes) }} {{ ultimo.anio }}
+            </h4>
+            <div class="hero-ultimo-detalles">
+              <span class="detalle-item">
+                <app-icon name="shopping-bag" [size]="14" />
+                {{ ultimo.filasTotales }} filas
+              </span>
+              <span class="detalle-separador">·</span>
+              <span class="detalle-item">
+                <app-icon name="wallet" [size]="14" />
+                TC {{ ultimo.tipoCambio }}
+              </span>
+              @if (ultimo.archivoNombre) {
+                <span class="detalle-separador">·</span>
+                <span class="detalle-item truncate max-w-[220px]" [title]="ultimo.archivoNombre">
+                  <app-icon name="file-text" [size]="14" />
+                  {{ ultimo.archivoNombre }}
+                </span>
+              }
+            </div>
+          </div>
+
+          <div class="hero-ultimo-accion">
+            <app-button
+              variant="primary"
+              size="md"
+              icon="eye"
+              (clicked)="seleccionar(ultimo.id)">
+              Abrir {{ nombreMes(ultimo.mes) }} {{ ultimo.anio }}
+            </app-button>
+          </div>
+        </div>
+      }
+
+      <!-- ── Grilla de Otros Periodos Disponibles ──────────────────────── -->
+      @if (periodosRestantes().length > 0) {
+        <div class="seccion-periodos-otros">
+          <div class="seccion-periodos-header">
+            <span class="seccion-periodos-titulo">Meses anteriores</span>
+            <span class="seccion-periodos-desc">Haz clic en cualquier periodo para abrirlo</span>
+          </div>
+
+          <div class="grid-periodos-cards">
+            @for (p of periodosRestantes(); track p.id) {
+              <button
+                type="button"
+                class="tarjeta-periodo-item"
+                (click)="seleccionar(p.id)">
+                <div class="tarjeta-periodo-top">
+                  <div class="tarjeta-periodo-mes">
+                    <app-icon name="calendar" [size]="15" class="text-secondary" />
+                    <span>{{ nombreMes(p.mes) }} {{ p.anio }}</span>
+                  </div>
+                  <app-badge [variant]="p.estado === 'CALCULADO' ? 'success' : p.estado === 'CERRADO' ? 'neutral' : 'info'">
+                    {{ estadoLabel[p.estado] }}
+                  </app-badge>
+                </div>
+
+                <div class="tarjeta-periodo-meta">
+                  <span>{{ p.filasTotales }} filas</span>
+                  <span class="detalle-separador">·</span>
+                  <span>TC {{ p.tipoCambio }}</span>
+                </div>
+
+                <div class="tarjeta-periodo-footer">
+                  <span class="tarjeta-periodo-link">
+                    <span>Revisar</span>
+                    <app-icon name="chevron-down" [size]="13" class="-rotate-90" />
+                  </span>
+                </div>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ── Zona Rápida de Importación / Subida de Archivos ───────────── -->
+      @if (puedeImportar()) {
+        <div
+          class="zona-importar-compacta"
+          [class.zona-importar--active]="isDragging()"
+          (dragenter)="onDragEnter($event)"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave($event)"
+          (drop)="onDrop($event)">
+          <div class="zona-importar-icono">
+            <app-icon name="download" [size]="20" />
+          </div>
+
+          <div class="zona-importar-info">
+            <strong class="zona-importar-titulo">¿Deseas liquidar un mes nuevo?</strong>
+            <span class="zona-importar-sub">Arrastra tu archivo .xlsx de FileMaker aquí o selecciónalo.</span>
+          </div>
+
+          <div class="zona-importar-btn">
+            <label class="boton-archivo-subir boton-archivo-subir--sm">
+              <app-icon name="download" [size]="14" />
+              <span>Subir Excel</span>
+              <input type="file" accept=".xlsx,.xls" class="hidden" (change)="onFileChange($event)" />
+            </label>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -5,15 +5,23 @@
   "description": "Sistema de gestión y seguimiento de pacientes en tiempo real para Clínica Montalvo",
   "lang": "es",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#ffffff",
   "theme_color": "#006156",
-  "orientation": "portrait",
+  "orientation": "any",
   "categories": ["medical", "business", "productivity"],
   "icons": [
     {
       "src": "/favicon-96x96.png",
       "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
     },
@@ -33,7 +41,7 @@
   "shortcuts": [
     {
       "name": "Conversaciones",
-      "short_name": "Inbox",
+      "short_name": "Chats",
       "description": "Abrir el inbox de conversaciones de WhatsApp",
       "url": "/conversaciones",
       "icons": [{ "src": "/favicon-96x96.png", "sizes": "96x96" }]
@@ -41,8 +49,22 @@
     {
       "name": "Oportunidades",
       "short_name": "Leads",
-      "description": "Ver el tablero de oportunidades",
+      "description": "Ver el tablero de oportunidades y prospectos",
       "url": "/leads",
+      "icons": [{ "src": "/favicon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Clientes y Pacientes",
+      "short_name": "Pacientes",
+      "description": "Ver directorio de pacientes y expedientes",
+      "url": "/clientes",
+      "icons": [{ "src": "/favicon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Finanzas & Comisiones",
+      "short_name": "Finanzas",
+      "description": "Liquidación mensual y analítica de facturación",
+      "url": "/finanzas",
       "icons": [{ "src": "/favicon-96x96.png", "sizes": "96x96" }]
     }
   ]

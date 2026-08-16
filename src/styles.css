@@ -62,13 +62,15 @@
     touch-action: manipulation;
     overflow-x: hidden;
     overscroll-behavior-y: contain;
+    height: 100%;
   }
 
   body {
     overflow-x: hidden;
     -webkit-touch-callout: none;
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    margin: 0;
+    padding: 0;
+    height: 100%;
   }
 
   /* Utilidad global: oculta la barra de scroll pero mantiene el scroll
