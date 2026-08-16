@@ -326,6 +326,7 @@
           <thead>
             <tr>
               <th class="text-left w-[85px]">Fecha</th>
+              <th class="text-left w-[95px]">Código</th>
               <th class="text-left">Servicio / Procedimiento</th>
               <th class="text-left">Paciente</th>
               <th class="text-center w-[80px]">Canal</th>
@@ -340,6 +341,9 @@
               <tr [class.fila-excluida]="!venta.comisionable">
                 <td class="text-left text-xs whitespace-nowrap text-text-muted">
                   {{ venta.fecha ? (venta.fecha | date: 'dd/MM/yyyy') : '—' }}
+                </td>
+                <td class="text-left text-xs font-mono font-medium text-text-muted whitespace-nowrap">
+                  {{ obtenerCodigoVenta(venta) }}
                 </td>
                 <td class="text-left font-semibold text-xs text-text-dark">{{ venta.detalle }}</td>
                 <td class="text-left text-xs text-text-muted truncate max-w-[180px]">{{ venta.paciente ?? '—' }}</td>

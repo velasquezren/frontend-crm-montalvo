@@ -51,6 +51,8 @@ export interface RespuestaImportacion {
 
 export interface VentaImportada {
   id: string;
+  codOrigen?: string | null;
+  codItem?: string | null;
   fecha: string | null;
   modulo: string | null;
   detalle: string;

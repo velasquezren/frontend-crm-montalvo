@@ -224,16 +224,21 @@ export class DesempenoAgentesComponent {
     return lista.filter(v => {
       if (canal !== 'TODOS' && v.canal !== canal) return false;
       if (busq) {
+        const codigoMatch = this.obtenerCodigoVenta(v).toLowerCase().includes(busq);
         const detalleMatch = v.detalle.toLowerCase().includes(busq);
         const pacienteMatch = (v.paciente ?? '').toLowerCase().includes(busq);
         const clasifMatch = (this.clasifLabel[v.clasif] ?? '').toLowerCase().includes(busq);
-        if (!detalleMatch && !pacienteMatch && !clasifMatch) return false;
+        if (!detalleMatch && !pacienteMatch && !clasifMatch && !codigoMatch) return false;
       }
       return true;
     });
   });
 
   /* ── Acciones de Usuario ─────────────────────────────────────────────── */
+
+  obtenerCodigoVenta(v: VentaImportada): string {
+    return v.codOrigen || v.codItem || v.id.slice(0, 8);
+  }
 
   seleccionarPeriodo(id: string): void {
     this.periodoId.set(id);
