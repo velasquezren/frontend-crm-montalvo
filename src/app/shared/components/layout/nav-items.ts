@@ -31,8 +31,10 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     titulo: 'Ventas & Finanzas',
     items: [
       { path: '/ventas', label: 'Ventas', icon: 'shopping-bag' },
-      { path: '/comisiones', label: 'Mis Comisiones', icon: 'wallet' },
-      { path: '/finanzas', label: 'Finanzas & Comisiones', icon: 'pie-chart', rolMinimo: 'ADMIN' },
+      { path: '/planilla', label: 'Planilla de Liquidación', icon: 'file-text', rolMinimo: 'ADMIN' },
+      { path: '/desempeno-agentes', label: 'Desempeño de Agentes', icon: 'users' },
+      { path: '/analitica', label: 'Analítica Médica', icon: 'bar-chart', rolMinimo: 'ADMIN' },
+      { path: '/resumen-anual', label: 'Resumen Anual', icon: 'trending-up', rolMinimo: 'ADMIN' },
     ],
   },
   {

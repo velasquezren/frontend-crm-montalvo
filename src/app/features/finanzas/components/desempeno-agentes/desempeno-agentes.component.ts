@@ -8,6 +8,7 @@ import { BadgeComponent } from '../../../../shared/components/badge/badge.compon
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { TableComponent } from '../../../../shared/components/table/table.component';
 import { MonedaPipe } from '../../../../shared/pipes/moneda.pipe';
 import {
@@ -40,6 +41,7 @@ import { PlanillaComisionesService } from '../../../planilla-comisiones/planilla
     DatePipe,
     DecimalPipe,
     MonedaPipe,
+    PageHeaderComponent,
     AvatarComponent,
     BadgeComponent,
     EmptyStateComponent,

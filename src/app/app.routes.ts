@@ -55,15 +55,51 @@ export const routes: Routes = [
           import('./features/servicios/servicios.page').then(m => m.ServiciosPage),
       },
       {
-        /* Hub Unificado de Finanzas & Comisiones (Liquidación, Analítica Médica y Resumen Anual) */
-        path: 'finanzas',
+        /* Planilla mensual de comisiones: importar, clasificar y liquidar */
+        path: 'planilla',
         canActivate: [exigeRol('ADMIN')],
         loadComponent: () =>
-          import('./features/finanzas/finanzas.page').then(m => m.FinanzasPage),
+          import('./features/planilla-comisiones/planilla-comisiones.page').then(
+            m => m.PlanillaComisionesPage,
+          ),
+      },
+      {
+        /* Desempeño 360° individual por ejecutiva y metas */
+        path: 'desempeno-agentes',
+        loadComponent: () =>
+          import('./features/finanzas/components/desempeno-agentes/desempeno-agentes.component').then(
+            m => m.DesempenoAgentesComponent,
+          ),
+      },
+      {
+        /* Analítica médica y de distribución clínica */
+        path: 'analitica',
+        canActivate: [exigeRol('ADMIN')],
+        loadComponent: () =>
+          import('./features/reportes/reportes.page').then(m => m.ReportesPage),
+      },
+      {
+        /* Resumen anual consolidado: 12 meses y 4 trimestres */
+        path: 'resumen-anual',
+        canActivate: [exigeRol('ADMIN')],
+        loadComponent: () =>
+          import('./features/planilla-comisiones/resumen-anual.page').then(
+            m => m.ResumenAnualPage,
+          ),
+      },
+      {
+        path: 'finanzas',
+        redirectTo: 'planilla',
+        pathMatch: 'full',
       },
       {
         path: 'reportes',
-        redirectTo: 'finanzas',
+        redirectTo: 'analitica',
+        pathMatch: 'full',
+      },
+      {
+        path: 'comisiones',
+        redirectTo: 'desempeno-agentes',
         pathMatch: 'full',
       },
       {
@@ -96,20 +132,15 @@ export const routes: Routes = [
           import('./features/ventas/ventas.page').then(m => m.VentasPage),
       },
       {
-        path: 'comisiones',
-        loadComponent: () =>
-          import('./features/comisiones/comisiones.page').then(m => m.ComisionesPage),
-      },
-      {
         /* Redirección transparente por compatibilidad con marcadores existentes */
         path: 'planilla-comisiones',
-        redirectTo: 'finanzas',
+        redirectTo: 'planilla',
         pathMatch: 'full',
       },
       {
         /* Redirección transparente por compatibilidad con marcadores existentes */
         path: 'comisiones-anual',
-        redirectTo: 'finanzas',
+        redirectTo: 'resumen-anual',
         pathMatch: 'full',
       },
       {
