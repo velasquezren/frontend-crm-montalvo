@@ -3,14 +3,18 @@ import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
 import { RespuestaPaginada } from '../../../../core/api/pagination.model';
+import { ToastService } from '../../../../core/toast/toast.service';
 import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
+import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { FilterChipComponent } from '../../../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { InputComponent } from '../../../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { TableComponent } from '../../../../shared/components/table/table.component';
-import { MonedaPipe } from '../../../../shared/pipes/moneda.pipe';
+import { formatearBs, MonedaPipe } from '../../../../shared/pipes/moneda.pipe';
 import {
   CLASIF_LABEL,
   ClasifComision,
@@ -29,11 +33,12 @@ import { PlanillaComisionesService } from '../../../planilla-comisiones/planilla
 /**
  * Ficha 360° de Desempeño por Agente / Ejecutiva Comercial.
  * Permite a administración y gerencia:
- * - Seleccionar cualquier agente del equipo comercial.
+ * - Seleccionar cualquier agente del equipo comercial con medalla de rendimiento.
  * - Ver termómetro de cumplimiento de metas de maternidad (franquicia).
  * - Ver nivel acumulado de cirugías (Nivel 1 al 6) y distancia al siguiente tramo.
  * - Ver desglose líquido a pagar (Sueldo Base + Tipo A/B/C + Bonos = Total BOB).
- * - Inspeccionar las ventas individuales del mes de esa ejecutiva.
+ * - Copiar resumen de liquidación estructurado en 1 clic para comprobante/WhatsApp.
+ * - Filtrar y buscar entre las ventas individuales del mes de esa ejecutiva.
  */
 @Component({
   selector: 'app-desempeno-agentes',
@@ -44,6 +49,9 @@ import { PlanillaComisionesService } from '../../../planilla-comisiones/planilla
     PageHeaderComponent,
     AvatarComponent,
     BadgeComponent,
+    ButtonComponent,
+    FilterChipComponent,
+    InputComponent,
     EmptyStateComponent,
     IconComponent,
     LoadingSkeletonComponent,
@@ -55,6 +63,7 @@ import { PlanillaComisionesService } from '../../../planilla-comisiones/planilla
 })
 export class DesempenoAgentesComponent {
   private readonly service = inject(PlanillaComisionesService);
+  private readonly toast = inject(ToastService);
 
   protected readonly clasifLabel = CLASIF_LABEL;
   protected readonly tipoLabel = TIPO_LABEL;
@@ -63,6 +72,8 @@ export class DesempenoAgentesComponent {
   /* ── Estado Reactivo ─────────────────────────────────────────────────── */
   readonly periodoId = signal<string | null>(null);
   readonly vendedoraIdSeleccionada = signal<string | null>(null);
+  readonly busquedaVentas = signal<string>('');
+  readonly filtroCanal = signal<'TODOS' | 'EMPRESA' | 'PROPIO'>('TODOS');
 
   /* ── Recursos HTTP Reactivos (Signals) ────────────────────────────────── */
   protected readonly periodos = httpResource<RespuestaPaginada<PeriodoComision>>(() =>
@@ -80,7 +91,7 @@ export class DesempenoAgentesComponent {
     if (!pId || !vId) return undefined;
     return this.service.ventasRequest(pId, {
       vendedoraId: vId,
-      limite: 100,
+      limite: 150,
     });
   });
 
@@ -114,6 +125,19 @@ export class DesempenoAgentesComponent {
       if (encontrada) return encontrada;
     }
     return lista[0] ?? null;
+  });
+
+  /** Ejecutiva con mayor recaudación total del periodo. */
+  readonly topPerformerId = computed<string | null>(() => {
+    const lista = this.vendedoras();
+    if (lista.length === 0) return null;
+    let max = lista[0];
+    for (const v of lista) {
+      if (v.totalGanado > max.totalGanado) {
+        max = v;
+      }
+    }
+    return max.vendedoraId;
   });
 
   /** Progreso de meta de maternidad (ej. 6 planes vs 4 objetivo = 150%). */
@@ -167,6 +191,39 @@ export class DesempenoAgentesComponent {
     };
   });
 
+  /** Estadísticas de efectividad de canales de la ejecutiva. */
+  readonly estadisticasCanales = computed(() => {
+    const lista = this.ventas.value()?.datos ?? [];
+    if (lista.length === 0) return { total: 0, propios: 0, empresa: 0, pctPropio: 0 };
+    const propios = lista.filter(v => v.canal === 'PROPIO').length;
+    const empresa = lista.length - propios;
+    const pctPropio = Math.round((propios / lista.length) * 100);
+    return {
+      total: lista.length,
+      propios,
+      empresa,
+      pctPropio,
+    };
+  });
+
+  /** Ventas filtradas reactivamente por búsqueda y canal. */
+  readonly ventasFiltradas = computed<VentaImportada[]>(() => {
+    const lista = this.ventas.value()?.datos ?? [];
+    const busq = this.busquedaVentas().trim().toLowerCase();
+    const canal = this.filtroCanal();
+
+    return lista.filter(v => {
+      if (canal !== 'TODOS' && v.canal !== canal) return false;
+      if (busq) {
+        const detalleMatch = v.detalle.toLowerCase().includes(busq);
+        const pacienteMatch = (v.paciente ?? '').toLowerCase().includes(busq);
+        const clasifMatch = (this.clasifLabel[v.clasif] ?? '').toLowerCase().includes(busq);
+        if (!detalleMatch && !pacienteMatch && !clasifMatch) return false;
+      }
+      return true;
+    });
+  });
+
   /* ── Acciones de Usuario ─────────────────────────────────────────────── */
 
   seleccionarPeriodo(id: string): void {
@@ -200,5 +257,44 @@ export class DesempenoAgentesComponent {
 
   obtenerTipoLabel(tipo: string): string {
     return this.tipoLabel[tipo as TipoComision] ?? tipo;
+  }
+
+  /** Copia el comprobante estructurado de liquidación al portapapeles. */
+  async copiarLiquidacion(): Promise<void> {
+    const v = this.vendedoraActual();
+    const p = this.periodoActual();
+    if (!v || !p) return;
+
+    const tc = p.tipoCambio ? +p.tipoCambio : 6.97;
+    const lineas = [
+      `🏥 CLÍNICA MONTALVO — RESUMEN DE LIQUIDACIÓN`,
+      `📅 Periodo: ${this.nombreMes(p.mes)} ${p.anio} (TC: ${tc})`,
+      `👤 Ejecutiva: ${v.nombre} (${v.tipo} · ${v.area})`,
+      `────────────────────────────────────────`,
+      `• Sueldo Base (Fijo): ${formatearBs(v.sueldoBase)}`,
+      `• Comisiones Tipo A (Planes): ${formatearBs(v.comisionA * tc)} ($${v.comisionA.toFixed(2)} USD)`,
+      `• Comisiones Tipo B (Cirugías): ${formatearBs(v.comisionB * tc)} ($${v.comisionB.toFixed(2)} USD)`,
+      `• Comisiones Tipo C (Servicios): ${formatearBs(v.comisionC * tc)} ($${v.comisionC.toFixed(2)} USD)`,
+    ];
+
+    if (v.bonoJefatura > 0) {
+      lineas.push(`• Bono Mensual Jefatura: ${formatearBs(v.bonoJefatura * tc)} ($${v.bonoJefatura.toFixed(2)} USD)`);
+    }
+    if (v.bonoTrimestral > 0) {
+      lineas.push(`• Bono Trimestral: ${formatearBs(v.bonoTrimestral * tc)} ($${v.bonoTrimestral.toFixed(2)} USD)`);
+    }
+
+    lineas.push(`────────────────────────────────────────`);
+    lineas.push(`💰 TOTAL A TRANSFERIR: ${formatearBs(v.totalGanado)}`);
+
+    try {
+      await navigator.clipboard.writeText(lineas.join('\n'));
+      this.toast.success(
+        `Resumen de ${v.nombre} copiado al portapapeles.`,
+        'Liquidación copiada',
+      );
+    } catch {
+      this.toast.info('No se pudo acceder al portapapeles.', 'Atención');
+    }
   }
 }
