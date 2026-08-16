@@ -20,7 +20,7 @@ cambio no es de rendimiento — es de estilo, y va con otro prefijo.
 ### La cicatriz que hace falta esta regla
 
 El 2026-08-10, entre las 20:50 y las 20:57, se commitearon tres cambios seguidos
-sobre `fab-menu.component.ts`:
+sobre el componente de acciones rápidas flotantes (FAB):
 
 | Commit | Título | Diff |
 |---|---|---|

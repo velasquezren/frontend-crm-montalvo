@@ -6,7 +6,6 @@ import { cubreRol } from '../../../core/auth/roles';
 import { ToastContainerComponent } from '../../../core/toast/toast-container.component';
 import { ModoInmersivoService } from '../../../core/ui/modo-inmersivo.service';
 import { AvatarComponent } from '../avatar/avatar.component';
-import { FabMenuComponent, FabMenuItem } from '../fab-menu/fab-menu.component';
 import { IconComponent } from '../icon/icon.component';
 import { NAV_GROUPS, NAV_ITEMS } from './nav-items';
 
@@ -14,7 +13,6 @@ import { NAV_GROUPS, NAV_ITEMS } from './nav-items';
  * Layout Shell — Estructura maestra del CRM
  * Consume AuthService.user signal para mostrar datos dinámicos
  * del agente en el topbar y permite cerrar sesión.
- * Las acciones rápidas viven en el FAB flotante (único punto de entrada).
  */
 @Component({
   selector: 'app-layout',
@@ -24,7 +22,6 @@ import { NAV_GROUPS, NAV_ITEMS } from './nav-items';
     RouterLinkActive,
     IconComponent,
     AvatarComponent,
-    FabMenuComponent,
     ToastContainerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -137,20 +134,6 @@ export class LayoutComponent {
       this.sidebarExpanded.set(false);
     }
   }
-
-  /* Acciones rápidas del FAB — el ítem más usado va último (más cerca del botón).
-     Los acentos salen de la paleta cerrada, no de hexadecimales sueltos: antes
-     eran un índigo, un esmeralda y un ámbar, justo los tonos que el sistema
-     excluye a propósito para sostener la línea "premium médico". El validador
-     no los veía porque solo revisaba las plantillas .html. */
-  protected readonly fabItems: readonly FabMenuItem[] = [
-    /* Administración, no operación del día: gris, se distingue sin competir. */
-    { icon: 'users',          label: 'Gestionar Agentes',   path: '/agentes',                   rolMinimo: 'SUPER_ADMIN', accent: 'var(--color-neutral)' },
-    { icon: 'message-circle', label: 'Abrir WhatsApp',      path: '/conversaciones',            accent: 'var(--color-secondary)' },
-    { icon: 'shopping-bag',   label: 'Registrar Venta',     path: '/ventas',                    accent: 'var(--color-primary)' },
-    /* Sin accent: cae en var(--color-primary), que es el fallback del átomo. */
-    { icon: 'user-plus',      label: 'Registro Presencial', path: '/leads/registro-presencial' },
-  ];
 
   logout(): void {
     this.authService.logout();
