@@ -85,7 +85,7 @@ export class DesempenoAgentesComponent {
     if (!pId || !vId) return undefined;
     return this.service.ventasRequest(pId, {
       vendedoraId: vId,
-      limite: 200,
+      limite: 100,
     });
   });
 
