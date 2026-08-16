@@ -87,7 +87,7 @@ export class DesempenoAgentesComponent {
 
   protected readonly ventas = httpResource<RespuestaPaginada<VentaImportada>>(() => {
     const pId = this.periodoIdEfectivo();
-    const vId = this.vendedoraIdSeleccionada();
+    const vId = this.vendedoraActual()?.vendedoraId;
     if (!pId || !vId) return undefined;
     return this.service.ventasRequest(pId, {
       vendedoraId: vId,

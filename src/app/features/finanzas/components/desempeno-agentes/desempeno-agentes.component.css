@@ -87,11 +87,13 @@
   cursor: pointer;
   transition: all 0.15s ease;
   font-size: 0.8125rem;
+  user-select: none;
 }
 
 .chip-agente-nombre {
   font-weight: 600;
   color: var(--color-text-dark);
+  transition: color 0.15s ease;
 }
 
 .chip-agente-rol {
@@ -100,25 +102,43 @@
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  transition: color 0.15s ease;
 }
 
-.chip-agente:hover {
-  border-color: var(--color-secondary);
+.chip-agente:hover:not(.chip-agente--activo) {
+  border-color: var(--color-primary);
   background-color: var(--color-bg-light);
 }
 
+.chip-agente:hover:not(.chip-agente--activo) .chip-agente-nombre {
+  color: var(--color-primary);
+}
+
+.chip-agente:hover:not(.chip-agente--activo) .chip-agente-rol {
+  color: var(--color-primary);
+  opacity: 0.8;
+}
+
 .chip-agente--activo {
-  background-color: var(--color-primary);
-  border-color: var(--color-primary);
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
 }
 
-.chip-agente--activo .chip-agente-nombre {
-  color: var(--color-background, #FFFFFF);
+.chip-agente--activo:hover {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  opacity: 0.95;
 }
 
-.chip-agente--activo .chip-agente-rol {
-  color: var(--color-bg-light, #EAF7F5);
-  opacity: 0.85;
+.chip-agente--activo .chip-agente-nombre,
+.chip-agente--activo:hover .chip-agente-nombre {
+  color: var(--color-background, #FFFFFF) !important;
+}
+
+.chip-agente--activo .chip-agente-rol,
+.chip-agente--activo:hover .chip-agente-rol {
+  color: var(--color-bg-light, #EAF7F5) !important;
+  opacity: 0.9;
 }
 
 .chip-top-badge {
@@ -131,7 +151,8 @@
   border: 1px solid var(--color-primary);
 }
 
-.chip-agente--activo .chip-top-badge {
+.chip-agente--activo .chip-top-badge,
+.chip-agente--activo:hover .chip-top-badge {
   background-color: var(--color-background, #FFFFFF);
   color: var(--color-primary);
   border-color: var(--color-background, #FFFFFF);
