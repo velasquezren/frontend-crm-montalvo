@@ -13,9 +13,9 @@
         class="select-base font-semibold"
         [value]="periodoId() || ''"
         (change)="seleccionarPeriodo($any($event.target).value)">
-        <option value="" disabled>Elegir mes…</option>
+        <option value="" disabled [selected]="!periodoId()">Elegir mes…</option>
         @for (p of periodos.value().datos; track p.id) {
-          <option [value]="p.id">
+          <option [value]="p.id" [selected]="p.id === periodoId()">
             {{ nombreMes(p.mes) }} {{ p.anio }} — {{ estadoLabel[p.estado] }} ({{ p.filasTotales }} filas)
           </option>
         }
@@ -246,9 +246,9 @@
           <app-input type="search" placeholder="Buscar por servicio o paciente…" [(value)]="busqueda" />
         </div>
         <select class="select-base font-medium" [value]="filtroClasif() || ''" (change)="filtrarPorClasif($any($event.target).value)">
-          <option value="">Todas las clasificaciones</option>
+          <option value="" [selected]="!filtroClasif()">Todas las clasificaciones</option>
           @for (c of clasificaciones; track c) {
-            <option [value]="c">{{ clasifLabel[c] }}</option>
+            <option [value]="c" [selected]="c === filtroClasif()">{{ clasifLabel[c] }}</option>
           }
         </select>
         <button type="button" class="chip-filtro" [class.chip-filtro-activo]="soloSinClasificar()" (click)="alternarSoloSinClasificar()">
@@ -310,7 +310,7 @@
                   <select class="select-base select-mini w-full font-medium" [value]="v.clasif"
                     (change)="cambiarClasificacion(v, $any($event.target).value)">
                     @for (c of clasificaciones; track c) {
-                      <option [value]="c">{{ clasifLabel[c] }}</option>
+                      <option [value]="c" [selected]="c === v.clasif">{{ clasifLabel[c] }}</option>
                     }
                   </select>
                 </td>
@@ -591,15 +591,15 @@
               </td>
               <td class="text-center">
                 <select class="select-base select-mini font-medium" [value]="v.tipo" (change)="cambiarTipoVendedora(v, $any($event.target).value)">
-                  <option value="VENDEDORA">Vendedora</option>
-                  <option value="JEFA">Jefa</option>
+                  <option value="VENDEDORA" [selected]="v.tipo === 'VENDEDORA'">Vendedora</option>
+                  <option value="JEFA" [selected]="v.tipo === 'JEFA'">Jefa</option>
                 </select>
               </td>
               <td class="text-center">
                 <select class="select-base select-mini font-medium" [value]="v.area" (change)="cambiarAreaVendedora(v, $any($event.target).value)">
-                  <option value="EJECUTIVA">Ejecutiva</option>
-                  <option value="RA">Coordinadora RA</option>
-                  <option value="PUBLICIDAD">Publicidad</option>
+                  <option value="EJECUTIVA" [selected]="v.area === 'EJECUTIVA'">Ejecutiva</option>
+                  <option value="RA" [selected]="v.area === 'RA'">Coordinadora RA</option>
+                  <option value="PUBLICIDAD" [selected]="v.area === 'PUBLICIDAD'">Publicidad</option>
                 </select>
               </td>
               <td class="text-right">
@@ -844,8 +844,8 @@
                   class="select-base"
                   [value]="c.canal"
                   (change)="guardarCaptacion(c.valor, $any($event.target).value)">
-                  <option value="EMPRESA">Empresa (tarifa base)</option>
-                  <option value="PROPIO">Propia (tarifa alta)</option>
+                  <option value="EMPRESA" [selected]="c.canal === 'EMPRESA'">Empresa (tarifa base)</option>
+                  <option value="PROPIO" [selected]="c.canal === 'PROPIO'">Propia (tarifa alta)</option>
                 </select>
               </td>
               <td class="text-right">

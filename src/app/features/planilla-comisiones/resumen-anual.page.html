@@ -16,7 +16,7 @@
         [value]="anio()"
         (change)="cambiarAnio($any($event.target).value)">
         @for (a of anios(); track a) {
-          <option [value]="a">{{ a }}</option>
+          <option [value]="a" [selected]="a === anio()">{{ a }}</option>
         }
       </select>
       <app-icon name="chevron-down" [size]="16" class="select-icono-flecha" />
