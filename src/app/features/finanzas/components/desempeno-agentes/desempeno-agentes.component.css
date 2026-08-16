@@ -3,7 +3,8 @@
   width: 100%;
 }
 
-.desempeno-toolbar {
+/* ── Barra de Periodo y Filtros ─────────────────────────────────────── */
+.barra-periodo {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -44,11 +45,11 @@
   color: var(--color-text-dark);
   cursor: pointer;
   outline: none;
-  transition: all 0.15s ease;
+  transition: border-color 0.15s ease;
 }
 
 .select-periodo:hover {
-  border-color: var(--color-secondary);
+  border-color: var(--color-primary);
 }
 
 .select-icono-flecha {
@@ -58,113 +59,29 @@
   color: var(--color-text-muted);
 }
 
-.badge-tc {
+.pill-tc {
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--color-text-muted);
   background-color: var(--color-bg-light);
-  padding: 0.25rem 0.6rem;
+  padding: 0.2rem 0.6rem;
   border-radius: 9999px;
   border: 1px solid var(--color-border);
 }
 
-/* Chips de selección de Vendedoras */
-.chips-vendedoras {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.chip-agente {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 9999px;
-  background-color: var(--color-bg-workspace);
-  border: 1px solid var(--color-border);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-size: 0.8125rem;
-  user-select: none;
-}
-
-.chip-agente-nombre {
-  font-weight: 600;
-  color: var(--color-text-dark);
-  transition: color 0.15s ease;
-}
-
-.chip-agente-rol {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  transition: color 0.15s ease;
-}
-
-.chip-agente:hover:not(.chip-agente--activo) {
-  border-color: var(--color-primary);
-  background-color: var(--color-bg-light);
-}
-
-.chip-agente:hover:not(.chip-agente--activo) .chip-agente-nombre {
-  color: var(--color-primary);
-}
-
-.chip-agente:hover:not(.chip-agente--activo) .chip-agente-rol {
-  color: var(--color-primary);
-  opacity: 0.8;
-}
-
-.chip-agente--activo {
-  background-color: var(--color-primary) !important;
-  border-color: var(--color-primary) !important;
-}
-
-.chip-agente--activo:hover {
-  background-color: var(--color-primary) !important;
-  border-color: var(--color-primary) !important;
-  opacity: 0.95;
-}
-
-.chip-agente--activo .chip-agente-nombre,
-.chip-agente--activo:hover .chip-agente-nombre {
-  color: var(--color-background, #FFFFFF) !important;
-}
-
-.chip-agente--activo .chip-agente-rol,
-.chip-agente--activo:hover .chip-agente-rol {
-  color: var(--color-bg-light, #EAF7F5) !important;
-  opacity: 0.9;
-}
-
-.chip-top-badge {
-  font-size: 0.625rem;
-  font-weight: 700;
-  padding: 0.1rem 0.4rem;
-  border-radius: 9999px;
-  background-color: var(--color-bg-light);
-  color: var(--color-primary);
-  border: 1px solid var(--color-primary);
-}
-
-.chip-agente--activo .chip-top-badge,
-.chip-agente--activo:hover .chip-top-badge {
-  background-color: var(--color-background, #FFFFFF);
-  color: var(--color-primary);
-  border-color: var(--color-background, #FFFFFF);
-}
-
-/* Tarjeta Perfil Ejecutiva */
-.tarjeta-perfil-ejecutiva {
-  background-color: var(--color-background);
+/* ── Paneles y Tarjetas ─────────────────────────────────────────────── */
+.panel {
+  background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 16px;
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 1rem;
+  padding: 1.25rem;
+}
+
+.sub-panel {
+  background: var(--color-bg-workspace);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 0.75rem;
 }
 
 .badge-area {
@@ -178,24 +95,18 @@
   text-transform: uppercase;
 }
 
-.codigo-pk {
-  font-family: monospace;
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-}
-
-.tarjeta-total-destacado {
+.caja-total-pago {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
-  padding: 0.6rem 1rem;
+  padding: 0.5rem 1rem;
   background-color: var(--color-bg-light);
   border: 1px solid var(--color-border);
   border-radius: 12px;
 }
 
-.total-label {
+.caja-total-etiqueta {
   font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -203,50 +114,19 @@
   color: var(--color-primary);
 }
 
-.total-monto {
+.caja-total-monto {
   font-size: 1.25rem;
   font-weight: 800;
   color: var(--color-text-dark);
 }
 
-.total-subtexto {
+.caja-total-subtexto {
   font-size: 0.6875rem;
   color: var(--color-text-muted);
 }
 
-/* Grilla de Termómetros */
-.grilla-termometros {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.tarjeta-termometro {
-  background-color: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 1.15rem;
-}
-
-.termometro-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.termometro-titulo {
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: var(--color-text-dark);
-}
-
-.icono-acento-a { color: var(--color-primary); }
-.icono-acento-b { color: var(--color-secondary); }
-.icono-acento-c { color: var(--color-primary); }
-
-.barra-progreso-track {
+/* ── Barra de Progreso ──────────────────────────────────────────────── */
+.track-progreso {
   width: 100%;
   height: 6px;
   background-color: var(--color-bg-workspace);
@@ -254,72 +134,21 @@
   overflow: hidden;
 }
 
-.barra-progreso-fill {
+.fill-progreso {
   height: 100%;
   border-radius: 9999px;
-  transition: width 0.4s ease;
+  transition: width 0.3s ease;
 }
 
-.barra-fill-a { background-color: var(--color-primary); }
-.barra-fill-b { background-color: var(--color-secondary); }
-
-/* Desglose de Haberes */
-.tarjeta-liquidacion-desglose {
-  background-color: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 1.25rem;
-  margin-bottom: 1rem;
+.fill-primary {
+  background-color: var(--color-primary);
 }
 
-.grilla-haberes {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 0.75rem;
+.fill-secondary {
+  background-color: var(--color-secondary);
 }
 
-.item-haber {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.75rem;
-  background-color: var(--color-bg-workspace);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-}
-
-.item-haber-label {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-text-muted);
-}
-
-.item-haber-valor {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--color-text-dark);
-}
-
-.item-haber-detalle {
-  font-size: 0.6875rem;
-  color: var(--color-text-muted);
-}
-
-.item-haber--total {
-  background-color: var(--color-bg-light);
-  border-color: var(--color-primary);
-}
-
-/* Tabla Ventas Agente */
-.tarjeta-ventas-agente {
-  background-color: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 1.25rem;
-}
-
+/* ── Tabla y Píldoras ───────────────────────────────────────────────── */
 .tipo-pill {
   display: inline-flex;
   align-items: center;
