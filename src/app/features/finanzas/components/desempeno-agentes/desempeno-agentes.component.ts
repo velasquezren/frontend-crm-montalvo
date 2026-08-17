@@ -36,6 +36,14 @@ import { PlanillaComisionesService } from '../../../planilla-comisiones/planilla
  * - Desglose transparente de haberes contables del mes.
  * - Buscador y filtros de ventas registradas.
  */
+/** Reparto por canal que devuelve `GET /planilla-comisiones/periodos/:id/canales/:vendedoraId`. */
+interface EstadisticasCanal {
+  readonly total: number;
+  readonly propios: number;
+  readonly empresa: number;
+  readonly pctPropio: number;
+}
+
 @Component({
   selector: 'app-desempeno-agentes',
   imports: [
@@ -172,20 +180,23 @@ export class DesempenoAgentesComponent {
     };
   });
 
-  /** Estadísticas de efectividad de canales de la ejecutiva. */
-  readonly estadisticasCanales = computed(() => {
-    const lista = this.ventas.value()?.datos ?? [];
-    if (lista.length === 0) return { total: 0, propios: 0, empresa: 0, pctPropio: 0 };
-    const propios = lista.filter(v => v.canal === 'PROPIO').length;
-    const empresa = lista.length - propios;
-    const pctPropio = Math.round((propios / lista.length) * 100);
-    return {
-      total: lista.length,
-      propios,
-      empresa,
-      pctPropio,
-    };
-  });
+  /**
+   * Reparto por canal de la ejecutiva, agregado en el SERVIDOR.
+   *
+   * Antes se contaba aquí sobre `ventas.value().datos`, que es una página de
+   * 100 filas y no el mes. Medido en producción: 29 de 67 combinaciones
+   * vendedora-mes pasan de 100, promedio 117 y máximo 423. La ejecutiva con 423
+   * ventas veía "100" como su total y un porcentaje sacado del último tercio
+   * del mes, presentado como su desempeño — en la pantalla con la que se la
+   * evalúa. Un `reduce` sobre datos paginados no es un total.
+   */
+  protected readonly estadisticasCanales = httpResource<EstadisticasCanal>(() => {
+    const pId = this.periodoIdEfectivo();
+    const vId = this.vendedoraActual()?.vendedoraId;
+    if (!pId || !vId) return undefined;
+    return this.service.canalesRequest(pId, vId);
+  }).value;
+
 
   /** Información detallada de bonos y trimestre activo. */
   readonly bonoTrimestralDetalle = computed(() => {
