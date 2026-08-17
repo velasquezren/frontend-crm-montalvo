@@ -41,6 +41,17 @@ export class RealtimeService {
    *  polling de respaldo de 60s. */
   readonly reconectado = signal(0);
 
+  /**
+   * Si el canal de tiempo real está vivo ahora mismo.
+   *
+   * Lo consume el respaldo por temporizador de Conversaciones para dejar de
+   * preguntar cuando el socket ya está avisando. socket.io mantiene su propio
+   * ping/pong, así que una conexión zombi —abierta pero muerta— acaba
+   * disparando `disconnect` y esto vuelve a false; por eso el respaldo puede
+   * fiarse de esta señal sin quedarse mudo para siempre.
+   */
+  readonly conectado = signal(false);
+
   private yaConectoUnaVez = false;
 
   /** Se conecta si hace falta y se desconecta solo cuando `destroyRef` se dispara. */
@@ -55,11 +66,13 @@ export class RealtimeService {
         this.actividad.set({ conversacionId: payload.conversacionId, ts: Date.now() });
       });
       this.socket.on('connect', () => {
+        this.conectado.set(true);
         if (this.yaConectoUnaVez) {
           this.reconectado.update(n => n + 1);
         }
         this.yaConectoUnaVez = true;
       });
+      this.socket.on('disconnect', () => this.conectado.set(false));
     }
     destroyRef.onDestroy(() => this.desconectar());
   }
@@ -70,6 +83,7 @@ export class RealtimeService {
       this.socket.disconnect();
       this.socket = null;
       this.yaConectoUnaVez = false;
+      this.conectado.set(false);
     }
   }
 }

@@ -30,6 +30,28 @@ import { ConversacionSidebarComponent } from './components/conversacion-sidebar/
  * - Modo inmersivo en dispositivos móviles
  * - Notificaciones nativas y badges PWA
  */
+/** Latido del respaldo. Un minuto es lo que el navegador respeta de fondo. */
+const INTERVALO_RESPALDO_MS = 60_000;
+
+/** Con el socket sano solo se pregunta cada 5 latidos, por si quedó zombi. */
+const TICKS_CON_SOCKET = 5;
+
+/**
+ * Si este latido del respaldo debe preguntar al servidor.
+ *
+ * Se saca del componente para poder fijarla con pruebas: es la regla que decide
+ * cuánta red gasta la vista más usada del CRM, y de la que salían 219 de 437
+ * peticiones que no traían nada nuevo.
+ *
+ * - Pestaña oculta: nunca. Nadie está mirando, y al volver se refresca una vez.
+ * - Socket conectado: uno de cada `TICKS_CON_SOCKET`, solo por si quedó zombi.
+ * - Socket caído: cada latido, que es justo cuando el respaldo hace falta.
+ */
+export function debeRefrescar(ticks: number, conectado: boolean, oculto: boolean): boolean {
+  if (oculto) return false;
+  return ticks >= (conectado ? TICKS_CON_SOCKET : 1);
+}
+
 @Component({
   selector: 'app-conversaciones',
   standalone: true,
@@ -54,6 +76,8 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
 
   private pollingInterval: ReturnType<typeof setInterval> | null = null;
+  private alVolverAlFrente: (() => void) | null = null;
+  private ticksDesdeUltimoRefresco = 0;
   private entradaPropia = false;
 
   /** Chat abierto según la URL. */
@@ -171,14 +195,55 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
     if (this.pollingInterval) {
       clearInterval(this.pollingInterval);
     }
+    if (this.alVolverAlFrente) {
+      document.removeEventListener('visibilitychange', this.alVolverAlFrente);
+    }
   }
 
+  /**
+   * Respaldo por temporizador — y respaldo de verdad, no un segundo canal.
+   *
+   * El socket es quien avisa de la actividad; esto solo existe por si se cae sin
+   * que `reconectado` llegue a dispararse. Estaba escrito como si fuera el canal
+   * principal: recargaba el inbox Y el chat abierto cada 60 s pasara lo que
+   * pasara, con el socket sano y con la pestaña de fondo.
+   *
+   * Medido en el log de producción: de 437 peticiones a `/conversaciones`, **219
+   * devolvieron 304** — la mitad eran viajes de red que no traían nada nuevo.
+   *
+   * Ahora el ritmo depende de lo que esté pasando:
+   *   · pestaña oculta      → no se pregunta (nadie está mirando)
+   *   · socket conectado    → cada 5 min, solo por si la conexión quedó zombi
+   *   · socket caído        → cada 60 s, que es cuando el respaldo hace falta
+   *
+   * Al volver a la pestaña se recarga una vez, que sustituye con creces a todo
+   * lo que se habría preguntado mientras no se veía.
+   */
   private startPolling(): void {
     this.pollingInterval = setInterval(() => {
-      this.state.conversacionesRecurso.reload();
-      if (this.state.seleccionadaId()) {
-        this.state.detalle.reload();
+      this.ticksDesdeUltimoRefresco++;
+      if (!debeRefrescar(this.ticksDesdeUltimoRefresco, this.realtimeService.conectado(), document.hidden)) {
+        return;
       }
-    }, 60000);
+
+      this.ticksDesdeUltimoRefresco = 0;
+      this.refrescar();
+    }, INTERVALO_RESPALDO_MS);
+
+    /* Volver a la pestaña es la señal más fuerte de que alguien quiere ver algo
+       al día: se refresca una vez y se reinicia la cuenta. */
+    this.alVolverAlFrente = () => {
+      if (document.hidden) return;
+      this.ticksDesdeUltimoRefresco = 0;
+      this.refrescar();
+    };
+    document.addEventListener('visibilitychange', this.alVolverAlFrente);
+  }
+
+  private refrescar(): void {
+    this.state.conversacionesRecurso.reload();
+    if (this.state.seleccionadaId()) {
+      this.state.detalle.reload();
+    }
   }
 }
