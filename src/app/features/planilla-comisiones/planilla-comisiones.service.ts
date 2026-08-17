@@ -55,17 +55,6 @@ export class PlanillaComisionesService {
     return this.api.request('/planilla-comisiones/periodos', { limite: 100 });
   }
 
-  /**
-   * Reparto por canal de una vendedora en el mes, agregado en el servidor.
-   *
-   * No se cuenta en el navegador sobre las ventas cargadas: la vista pagina de
-   * 100 en 100 y casi la mitad de los meses tienen más, así que contar la
-   * página daba un porcentaje del último tramo presentado como el del mes.
-   */
-  canalesRequest(periodoId: string, vendedoraId: string): ResourceRequest {
-    return this.api.request(`/planilla-comisiones/periodos/${periodoId}/canales/${vendedoraId}`);
-  }
-
   ventasRequest(periodoId: string, filtro: FiltroVentas): ResourceRequest {
     return this.api.request(`/planilla-comisiones/periodos/${periodoId}/ventas`, {
       pagina: filtro.pagina,

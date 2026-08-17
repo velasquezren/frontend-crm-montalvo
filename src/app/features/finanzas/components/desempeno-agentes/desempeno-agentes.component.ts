@@ -36,12 +36,20 @@ import { PlanillaComisionesService } from '../../../planilla-comisiones/planilla
  * - Desglose transparente de haberes contables del mes.
  * - Buscador y filtros de ventas registradas.
  */
-/** Reparto por canal que devuelve `GET /planilla-comisiones/periodos/:id/canales/:vendedoraId`. */
+/**
+ * Reparto por canal que acompaña al listado de ventas cuando se filtra por
+ * vendedora. `null` si no se filtró: el porcentaje es de una persona.
+ */
 interface EstadisticasCanal {
   readonly total: number;
   readonly propios: number;
   readonly empresa: number;
   readonly pctPropio: number;
+}
+
+/** La página de ventas del mes, con el reparto por canal pegado. */
+interface VentasConCanales extends RespuestaPaginada<VentaImportada> {
+  readonly canales: EstadisticasCanal | null;
 }
 
 @Component({
@@ -87,7 +95,7 @@ export class DesempenoAgentesComponent {
     return pId ? this.service.consolidadoRequest(pId) : undefined;
   });
 
-  protected readonly ventas = httpResource<RespuestaPaginada<VentaImportada>>(() => {
+  protected readonly ventas = httpResource<VentasConCanales>(() => {
     const pId = this.periodoIdEfectivo();
     const vId = this.vendedoraActual()?.vendedoraId;
     if (!pId || !vId) return undefined;
@@ -181,21 +189,21 @@ export class DesempenoAgentesComponent {
   });
 
   /**
-   * Reparto por canal de la ejecutiva, agregado en el SERVIDOR.
+   * Reparto por canal de la ejecutiva, agregado en el SERVIDOR y traído DENTRO
+   * de la respuesta de ventas.
    *
-   * Antes se contaba aquí sobre `ventas.value().datos`, que es una página de
-   * 100 filas y no el mes. Medido en producción: 29 de 67 combinaciones
-   * vendedora-mes pasan de 100, promedio 117 y máximo 423. La ejecutiva con 423
-   * ventas veía "100" como su total y un porcentaje sacado del último tercio
-   * del mes, presentado como su desempeño — en la pantalla con la que se la
-   * evalúa. Un `reduce` sobre datos paginados no es un total.
+   * Antes se contaba aquí sobre `ventas.value().datos`, que es una página de 100
+   * filas y no el mes: medido en producción, 29 de 67 combinaciones
+   * vendedora-mes la superan (promedio 117, máximo 423), así que la ejecutiva
+   * con 423 ventas veía "100" como total y un porcentaje del último tercio del
+   * mes — en la pantalla con la que se la evalúa.
+   *
+   * Viaja pegado al listado en vez de en su propia petición porque aquí el 97%
+   * del tiempo es red: el `groupBy` cuesta milisegundos dentro de la
+   * transacción que ya se hacía, y una segunda llamada costaría otro viaje
+   * completo cada vez que se cambia de vendedora.
    */
-  protected readonly estadisticasCanales = httpResource<EstadisticasCanal>(() => {
-    const pId = this.periodoIdEfectivo();
-    const vId = this.vendedoraActual()?.vendedoraId;
-    if (!pId || !vId) return undefined;
-    return this.service.canalesRequest(pId, vId);
-  }).value;
+  protected readonly estadisticasCanales = computed(() => this.ventas.value()?.canales ?? null);
 
 
   /** Información detallada de bonos y trimestre activo. */
