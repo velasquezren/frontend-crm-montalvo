@@ -99,9 +99,14 @@ export class DesempenoAgentesComponent {
     const pId = this.periodoIdEfectivo();
     const vId = this.vendedoraActual()?.vendedoraId;
     if (!pId || !vId) return undefined;
+    /* El mes entero, no la primera página: el buscador y los filtros de abajo
+       trabajan en memoria sobre esto. Con 100 filas, la vendedora con 418
+       ventas tenía 318 invisibles y 9 de sus 61 servicios no se podían
+       encontrar — el buscador respondía "no existe" a algo que sí existe.
+       Pesa ~16 KB comprimidos en el peor mes que hay en la base. */
     return this.service.ventasRequest(pId, {
       vendedoraId: vId,
-      limite: 100,
+      mesCompleto: true,
     });
   });
 

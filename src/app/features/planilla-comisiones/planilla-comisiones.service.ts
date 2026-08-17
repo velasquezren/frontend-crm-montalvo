@@ -39,6 +39,14 @@ export interface FiltroVentas {
   soloExcluidas?: boolean;
   soloSinClasificar?: boolean;
   limite?: number;
+  /**
+   * true = trae el mes entero de la vendedora en vez de una página.
+   *
+   * Lo necesita la vista de desempeño, que busca y filtra en memoria: con una
+   * página, lo que no llegó no aparece al buscar y el buscador dice "no existe"
+   * en vez de "no lo tengo".
+   */
+  mesCompleto?: boolean;
 }
 
 /**
@@ -64,6 +72,7 @@ export class PlanillaComisionesService {
       soloExcluidas: filtro.soloExcluidas ? true : undefined,
       soloSinClasificar: filtro.soloSinClasificar ? true : undefined,
       limite: filtro.limite,
+      mesCompleto: filtro.mesCompleto ? true : undefined,
     });
   }
 
