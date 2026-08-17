@@ -239,6 +239,20 @@ export class DesempenoAgentesComponent {
     };
   });
 
+  /**
+   * Cuántas ventas del mes quedaron fuera del cálculo de comisiones.
+   *
+   * Se muestra porque explica una diferencia que si no desconcierta: el
+   * contador de captación cuenta solo comisionables —para cuadrar con lo que se
+   * paga— mientras la tabla de abajo las lista todas. En 39 de las 67
+   * combinaciones vendedora-mes de la base los dos números no coinciden, hasta
+   * por 21 filas. Dos cifras correctas pegadas y sin explicación se leen como un
+   * error del sistema.
+   */
+  protected readonly ventasExcluidas = computed(
+    () => this.ventas.value()?.datos.filter(v => !v.comisionable).length ?? 0,
+  );
+
   /** Ventas filtradas reactivamente por búsqueda y canal. */
   readonly ventasFiltradas = computed<VentaImportada[]>(() => {
     const lista = this.ventas.value()?.datos ?? [];

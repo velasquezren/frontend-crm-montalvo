@@ -240,6 +240,9 @@
             <strong class="text-primary">{{ c.pctPropio }}% Propia ({{ c.propios }})</strong>
             <span>·</span>
             <strong class="text-text-dark">{{ 100 - c.pctPropio }}% Clínica ({{ c.empresa }})</strong>
+            <span class="text-[10px] text-text-muted">
+              sobre {{ c.total }} comisionables@if (ventasExcluidas() > 0) {, {{ ventasExcluidas() }} excluidas del cálculo}
+            </span>
           </div>
         }
       </div>
