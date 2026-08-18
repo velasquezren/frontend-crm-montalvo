@@ -512,3 +512,20 @@
   pointer-events: none;
   transition: opacity 0.12s ease-out;
 }
+
+/* Pie de la tabla. El átomo ya le da fondo, negrita y posición fija; aquí solo
+   se distingue la etiqueta del conteo, que es dato secundario. */
+.pie-etiqueta {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-dark);
+}
+
+.pie-conteo {
+  margin-left: 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}

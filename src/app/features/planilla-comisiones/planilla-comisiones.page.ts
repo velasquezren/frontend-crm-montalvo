@@ -136,6 +136,17 @@ export class PlanillaComisionesPage implements OnDestroy {
      que revisar "todo lo que paga por Tipo B" no se podía con el filtro anterior. */
   protected readonly filtroTipo = signal<TipoComision | null>(null);
   protected readonly filtroVendedora = signal<string | null>(null);
+
+  /** Si hay algún filtro puesto, para que el pie no diga "del mes" cuando no lo es. */
+  protected readonly hayFiltroActivo = computed(
+    () =>
+      Boolean(this.filtroClasif()) ||
+      Boolean(this.filtroTipo()) ||
+      Boolean(this.filtroVendedora()) ||
+      Boolean(this.busquedaDebounced()) ||
+      this.soloExcluidas() ||
+      this.soloSinClasificar(),
+  );
   protected readonly soloExcluidas = signal(false);
   protected readonly soloSinClasificar = signal(false);
 

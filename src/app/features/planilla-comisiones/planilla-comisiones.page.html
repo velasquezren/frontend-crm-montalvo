@@ -168,36 +168,15 @@
           </tbody>
           <tfoot>
             <tr>
-              <td colspan="4" class="text-right font-bold">
-                Total del filtro
-                <span class="font-normal text-text-muted">
-                  ({{ ventas.value().totales.ventas }}
-                  {{ ventas.value().totales.ventas === 1 ? 'venta' : 'ventas' }})
+              <td colspan="4" class="text-left">
+                <span class="pie-etiqueta">{{ hayFiltroActivo() ? 'Total filtrado' : 'Total del mes' }}</span>
+                <span class="pie-conteo">
+                  {{ ventas.value().totales.ventas }}
+                  {{ ventas.value().totales.ventas === 1 ? 'venta' : 'ventas' }}
                 </span>
-                <app-info-hint titulo="Por qué la base es bastante menor">
-                  <p>
-                    No es solo el 13% de impuestos. La diferencia grande la hacen
-                    los <strong>planes con anticipo</strong>: ahí la base no es el
-                    precio del plan sino <strong>lo que la paciente pagó ese
-                    mes</strong>.
-                  </p>
-                  <p>
-                    Un plan de 3.500 con 1.800 de anticipo aporta 1.800 a la base,
-                    no 3.045. Son pocas filas pero concentran la mayor parte del
-                    dinero, así que mueven mucho el total.
-                  </p>
-                  <p>
-                    En las ventas normales, sin anticipo, la base sí es
-                    exactamente el 87% del precio.
-                  </p>
-                </app-info-hint>
               </td>
-              <td class="text-right font-bold tabular-nums">
-                ${{ ventas.value().totales.monto | number: '1.2-2' }}
-              </td>
-              <td class="text-right font-bold tabular-nums">
-                ${{ ventas.value().totales.base | number: '1.2-2' }}
-              </td>
+              <td class="text-right">${{ ventas.value().totales.monto | number: '1.2-2' }}</td>
+              <td class="text-right">${{ ventas.value().totales.base | number: '1.2-2' }}</td>
               <td colspan="4"></td>
             </tr>
           </tfoot>
