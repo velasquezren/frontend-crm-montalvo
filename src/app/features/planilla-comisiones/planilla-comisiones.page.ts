@@ -19,7 +19,7 @@ import { PaginatorComponent } from '../../shared/components/paginator/paginator.
 import { SelectorPeriodoEmptyComponent } from '../../shared/components/selector-periodo-empty/selector-periodo-empty.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
-import { PlanillaComisionesService } from './planilla-comisiones.service';
+import { SubtotalVendedora, TotalesVentas, PlanillaComisionesService } from './planilla-comisiones.service';
 import { TablaLiquidacionComponent } from './components/tabla-liquidacion.component';
 import {
   Alertas,
@@ -66,6 +66,12 @@ interface GrupoPlanes {
  *
  * Flujo: subir/arrastrar el Excel → revisar cómo quedó clasificado → calcular → reportes.
  */
+/** La página de ventas, con los totales del filtro entero que agrega el servidor. */
+interface VentasConTotales extends RespuestaPaginada<VentaImportada> {
+  readonly totales: TotalesVentas;
+  readonly porVendedora: readonly SubtotalVendedora[];
+}
+
 @Component({
   selector: 'app-planilla-comisiones',
   imports: [
@@ -129,6 +135,7 @@ export class PlanillaComisionesPage implements OnDestroy {
   /* El tipo agrupa varias clasificaciones —A planes, B cirugías, C el resto—, así
      que revisar "todo lo que paga por Tipo B" no se podía con el filtro anterior. */
   protected readonly filtroTipo = signal<TipoComision | null>(null);
+  protected readonly filtroVendedora = signal<string | null>(null);
   protected readonly soloExcluidas = signal(false);
   protected readonly soloSinClasificar = signal(false);
 
@@ -176,7 +183,7 @@ export class PlanillaComisionesPage implements OnDestroy {
     { defaultValue: paginaVacia<PeriodoComision>() },
   );
 
-  protected readonly ventas = httpResource<RespuestaPaginada<VentaImportada>>(
+  protected readonly ventas = httpResource<VentasConTotales>(
     () => {
       const id = this.periodoId();
       if (!id) return undefined;
@@ -184,12 +191,21 @@ export class PlanillaComisionesPage implements OnDestroy {
         pagina: this.pagina(),
         clasif: this.filtroClasif() ?? undefined,
         tipo: this.filtroTipo() ?? undefined,
+        vendedoraId: this.filtroVendedora() ?? undefined,
         buscar: this.busquedaDebounced() || undefined,
         soloExcluidas: this.soloExcluidas(),
         soloSinClasificar: this.soloSinClasificar(),
       });
     },
-    { defaultValue: paginaVacia<VentaImportada>() },
+    /* El vacío también trae totales en cero: así la plantilla nunca tiene que
+       preguntar si existen, y el pie muestra 0 en vez de parpadear. */
+    {
+      defaultValue: {
+        ...paginaVacia<VentaImportada>(),
+        totales: { ventas: 0, monto: 0, base: 0 },
+        porVendedora: [],
+      },
+    },
   );
 
   /*
@@ -351,6 +367,13 @@ export class PlanillaComisionesPage implements OnDestroy {
 
   protected setPestana(p: Pestana): void {
     this.pestana.set(p);
+    /* La columna "Tarifa" de Clasificación sale de la configuración, y esta solo
+       se cargaba al abrir la pestaña Configuración: sin ella, `tarifaDe()`
+       devolvía "—" en TODAS las filas y parecía que ninguna venta tenía tarifa.
+       Se pide una sola vez; si ya está, no vuelve a viajar. */
+    if ((p === 'CLASIFICACION' || p === 'PLANES') && !this.configuracion()) {
+      void this.cargarConfiguracion();
+    }
   }
 
   protected seleccionarPeriodo(id: string): void {
@@ -722,6 +745,7 @@ export class PlanillaComisionesPage implements OnDestroy {
     this.busqueda.set('');
     this.filtroClasif.set(null);
     this.filtroTipo.set(null);
+    this.filtroVendedora.set(null);
     this.soloExcluidas.set(false);
     this.soloSinClasificar.set(false);
     this.pagina.set(1);
@@ -770,6 +794,14 @@ export class PlanillaComisionesPage implements OnDestroy {
     const ts = cfg.tarifasServicio.find(t => t.clasif === venta.clasif);
     if (!ts) return '—';
     return `${Number(propio ? ts.pctPropio : ts.pctEmpresa)}%`;
+  }
+
+  /** Pulsar la tarjeta de un agente acota la tabla a sus ventas, y volver a
+   *  pulsarla la suelta. Es el gesto que esperaba administración: ver el total
+   *  de alguien y entrar a su detalle sin buscar en un desplegable. */
+  protected alternarVendedora(id: string): void {
+    this.filtroVendedora.update(actual => (actual === id ? null : id));
+    this.pagina.set(1);
   }
 
   protected filtrarPorTipo(valor: string): void {

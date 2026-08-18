@@ -416,3 +416,82 @@
   }
 }
 
+
+/* ── Resumen por agente, encima del detalle ──────────────────────────────
+   Las cifras salen del servidor sobre el filtro entero, no de la página que
+   se está viendo: por eso la cabecera lo dice explícitamente. Cada tarjeta es
+   un filtro — pulsarla acota la tabla a esa vendedora y volver a pulsarla la
+   suelta, que es como administración quería entrar al detalle. */
+.resumen-agentes {
+  margin-bottom: 1rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-bg-light);
+}
+
+.resumen-agentes-cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.resumen-agentes-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.625rem;
+}
+
+.tarjeta-agente {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.tarjeta-agente:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-subtle);
+}
+
+.tarjeta-agente-activa {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, white);
+  box-shadow: var(--shadow-subtle);
+}
+
+.tarjeta-agente-nombre {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tarjeta-agente-monto {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.tarjeta-agente-pie {
+  font-size: 0.625rem;
+  color: var(--color-text-muted);
+}
+
+/* Pie de la tabla: el total de TODO lo filtrado, no de las filas visibles. */
+.fila-totales {
+  background: color-mix(in srgb, var(--color-primary) 6%, white);
+  font-weight: 700;
+}

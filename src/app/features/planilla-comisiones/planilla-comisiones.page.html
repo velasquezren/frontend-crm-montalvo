@@ -166,6 +166,24 @@
               </tr>
             }
           </tbody>
+          <tfoot>
+            <tr class="fila-totales">
+              <td colspan="4" class="text-right font-bold">
+                Total del filtro
+                <span class="font-normal text-text-muted">
+                  ({{ ventas.value().totales.ventas }}
+                  {{ ventas.value().totales.ventas === 1 ? 'venta' : 'ventas' }})
+                </span>
+              </td>
+              <td class="text-right font-bold tabular-nums">
+                ${{ ventas.value().totales.monto | number: '1.2-2' }}
+              </td>
+              <td class="text-right font-bold tabular-nums">
+                ${{ ventas.value().totales.base | number: '1.2-2' }}
+              </td>
+              <td colspan="4"></td>
+            </tr>
+          </tfoot>
         </app-table>
       </div>
     }
@@ -280,6 +298,37 @@
         <app-empty-state icon="file-x" title="Sin resultados"
           description="Ninguna fila coincide con los filtros aplicados." />
       } @else {
+          @if (ventas.value(); as v) {
+          @if (v.porVendedora.length > 0) {
+            <div class="resumen-agentes">
+              <div class="resumen-agentes-cabecera">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-text-muted">
+                  Resumen por agente
+                </span>
+                <span class="text-[10px] text-text-muted">
+                  sobre las {{ v.totales.ventas }} ventas del filtro actual, no solo las de esta página
+                </span>
+              </div>
+              <div class="resumen-agentes-lista">
+                @for (a of v.porVendedora; track a.vendedoraId) {
+                  <button
+                    type="button"
+                    class="tarjeta-agente"
+                    [class.tarjeta-agente-activa]="filtroVendedora() === a.vendedoraId"
+                    (click)="alternarVendedora(a.vendedoraId)">
+                    <span class="tarjeta-agente-nombre">{{ a.nombre }}</span>
+                    <span class="tarjeta-agente-monto">${{ a.monto | number: '1.2-2' }}</span>
+                    <span class="tarjeta-agente-pie">
+                      {{ a.ventas }} {{ a.ventas === 1 ? 'venta' : 'ventas' }}
+                      · base ${{ a.base | number: '1.2-2' }}
+                    </span>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        }
+
         <app-table [dense]="true">
           <thead>
             <tr>

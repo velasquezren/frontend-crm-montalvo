@@ -31,6 +31,19 @@ export interface AjusteVenta {
   comisionaPlan?: boolean | null;
 }
 
+/** Totales del filtro completo — los calcula el servidor, no la página. */
+export interface TotalesVentas {
+  readonly ventas: number;
+  readonly monto: number;
+  readonly base: number;
+}
+
+/** Subtotal de una vendedora dentro del filtro actual. */
+export interface SubtotalVendedora extends TotalesVentas {
+  readonly vendedoraId: string;
+  readonly nombre: string;
+}
+
 /** Filtros de la tabla de vista previa. */
 export interface FiltroVentas {
   pagina?: number;
