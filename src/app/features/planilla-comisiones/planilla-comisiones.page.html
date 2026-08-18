@@ -698,6 +698,49 @@
 
 <!-- ══════════════ 4. CONFIGURACIÓN ══════════════ -->
 @if (pestana() === 'CONFIGURACION') {
+  <!-- Reglas globales del cálculo -->
+  <section class="panel mb-4">
+    <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">
+      Reglas del cálculo
+      <app-info-hint titulo="Las cuatro palancas globales">
+        <p>
+          Valen para todas las vendedoras y todos los periodos. Cambiarlas
+          <strong>no recalcula nada por sí solo</strong>: el nuevo valor se aplica
+          la próxima vez que se calcule un periodo.
+        </p>
+        <p>
+          Un periodo ya CERRADO no se toca. Si necesitas rehacer un mes ya
+          liquidado, tienes que reabrirlo a propósito.
+        </p>
+      </app-info-hint>
+    </h3>
+    <p class="text-xs text-text-muted mb-3">
+      Solo el super administrador puede cambiarlas.
+    </p>
+
+    <div class="space-y-3">
+      @for (p of parametrosConocidos; track p.clave) {
+        <div class="regla-global">
+          <div class="min-w-0">
+            <p class="text-xs font-bold text-text-dark">{{ p.titulo }}</p>
+            <p class="text-[11px] text-text-muted leading-snug mt-0.5">{{ p.ayuda }}</p>
+            <code class="text-[10px] text-text-muted">{{ p.clave }}</code>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <input
+              class="input-base w-28 text-right tabular-nums"
+              type="text"
+              inputmode="decimal"
+              [value]="valorParametro(p.clave)"
+              [disabled]="!esSuperAdmin()"
+              (change)="guardarParametro(p.clave, $any($event.target).value)" />
+            <span class="text-[10px] text-text-muted w-28">{{ p.sufijo }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
   <!-- Vendedoras -->
   <section class="panel mb-4">
     <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">Vendedoras

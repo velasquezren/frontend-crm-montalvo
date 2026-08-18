@@ -221,6 +221,16 @@ export class PlanillaComisionesService {
     return this.api.patch(`/planilla-comisiones/configuracion/objetivos/${id}`, datos);
   }
 
+  /**
+   * Cambia un parámetro global del cálculo.
+   *
+   * El endpoint existía desde el principio pero la interfaz no lo exponía, así
+   * que reglas como "el área RA no comisiona" solo se podían tocar por SQL.
+   */
+  actualizarParametro(clave: string, valor: number): Promise<unknown> {
+    return this.api.patch(`/planilla-comisiones/configuracion/parametros/${clave}`, { valor });
+  }
+
   /** Metas que rigen en un periodo: las propias del mes o, si no hay, las base. */
   objetivosDelPeriodo(periodoId: string): Promise<Objetivo[]> {
     return this.api.get<Objetivo[]>(`/planilla-comisiones/periodos/${periodoId}/objetivos`);

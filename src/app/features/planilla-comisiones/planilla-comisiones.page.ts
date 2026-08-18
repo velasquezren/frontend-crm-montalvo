@@ -560,6 +560,81 @@ export class PlanillaComisionesPage implements OnDestroy {
     }
   }
 
+  /**
+   * Los cuatro parámetros globales, con lo que hace cada uno.
+   *
+   * Se describen aquí y no en la plantilla porque el texto explica una REGLA de
+   * negocio, no un estilo: quien lo lea tiene que poder decidir si cambiarlo.
+   * Las claves son las que ya existen en la base; no se inventa ninguna.
+   */
+  protected readonly parametrosConocidos: ReadonlyArray<{
+    clave: string;
+    titulo: string;
+    ayuda: string;
+    sufijo: string;
+  }> = [
+    {
+      clave: 'PCT_TIPO_C_RA',
+      titulo: 'Comisión del área RA',
+      ayuda:
+        'Porcentaje que cobran las ventas cuya columna «area» del export dice RA. ' +
+        'En 0 no comisionan a nadie: era así porque las cobraba la coordinadora RA. ' +
+        'En enero son 198 de 423 ventas — 170 laboratorios, 25 consultas — repartidas ' +
+        'sobre todo en Claudia (129).',
+      sufijo: '%  (0,045 = 4,5%)',
+    },
+    {
+      clave: 'FACTOR_BONO_JEFATURA',
+      titulo: 'Factor del bono de jefatura',
+      ayuda:
+        'Se aplica al excedente sobre el objetivo mensual de cada vendedora para armar ' +
+        'el pote. El pote se paga DOS veces: íntegro a la jefatura y otro tanto ' +
+        'repartido entre publicidad.',
+      sufijo: '(0,002 = 0,2%)',
+    },
+    {
+      clave: 'FACTOR_BONO_TRIMESTRAL',
+      titulo: 'Factor del bono trimestral',
+      ayuda:
+        'Se aplica al PROMEDIO del trimestre, no al mes suelto, y solo si ese promedio ' +
+        'supera el objetivo trimestral. Se paga únicamente en los meses de cierre: ' +
+        'marzo, junio, septiembre y diciembre.',
+      sufijo: '(0,005 = 0,5%)',
+    },
+    {
+      clave: 'MESES_BONO_TRIMESTRAL',
+      titulo: 'Meses que promedia el bono trimestral',
+      ayuda:
+        'Cuántos meses entran en el promedio, contando hacia atrás desde el mes que se ' +
+        'liquida. Con 3, liquidar marzo promedia enero, febrero y marzo.',
+      sufijo: 'meses',
+    },
+  ];
+
+  /** Valor actual de cada parámetro, tal como está guardado. */
+  protected valorParametro(clave: string): string {
+    const p = this.configuracion()?.parametros.find(x => x.clave === clave);
+    return p ? String(p.valor) : '';
+  }
+
+  protected async guardarParametro(clave: string, valor: string): Promise<void> {
+    const numero = Number(valor);
+    if (!Number.isFinite(numero)) {
+      this.toast.error('El valor tiene que ser un número.', 'Parámetros');
+      return;
+    }
+    try {
+      await this.service.actualizarParametro(clave, numero);
+      await this.cargarConfiguracion();
+      this.toast.success(
+        'Se aplica en el próximo cálculo: recalcula el periodo para verlo.',
+        'Parámetro guardado',
+      );
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo guardar el parámetro.'), 'Parámetros');
+    }
+  }
+
   protected async cargarConfiguracion(): Promise<void> {
     try {
       this.configuracion.set(await this.service.obtenerConfiguracion());
