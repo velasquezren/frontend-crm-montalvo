@@ -777,9 +777,21 @@ export class PlanillaComisionesPage implements OnDestroy {
 
     if (venta.clasif === 'CIRUGIA') return 'según nivel';
 
+    /*
+     * Área RA. Decía "sin tarifa RA", que se lee como "falta configurar algo", y
+     * era falso: las ventas del área RA NO comisionan a las ejecutivas —solo a
+     * la coordinadora RA, regla 5 de casos borde, con PCT_TIPO_C_RA en 0—.
+     *
+     * Lo que hay ahí son análisis y consultas que pide la unidad de
+     * reproducción, atribuidos a la ejecutiva: en enero, las 198 filas RA eran
+     * hemogramas, creatininas, glicemias y consultas. Las 10 tarifas RA
+     * configuradas son procedimientos de la coordinadora —transferencias,
+     * aspiración de óvulos, inseminación—, así que ninguna cruza con un
+     * hemograma, y eso está bien.
+     */
     if (venta.unidadNegocio === 'RA') {
       const ra = cfg.tarifasRA.find(t => t.procedimiento === venta.detalle);
-      if (!ra) return 'sin tarifa RA';
+      if (!ra) return 'no comisiona · RA';
       const monto = Number(propio ? ra.montoPropio : ra.montoEmpresa);
       return ra.esPorcentaje ? `${monto}%` : `$${monto.toFixed(2)} fijo`;
     }
