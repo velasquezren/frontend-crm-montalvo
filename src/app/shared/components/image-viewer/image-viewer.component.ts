@@ -98,7 +98,7 @@ export class ImageViewerComponent {
 
     this.overlayRef = this.dialogService.openTemplate(tpl, this.vcr, {
       panelClass: ['fixed', 'inset-0', 'z-[99999]', 'pointer-events-auto'],
-      backdropClass: ['fixed', 'inset-0', 'bg-black/90', 'backdrop-blur-md', 'z-[99998]'],
+      backdropClass: ['fixed', 'inset-0', 'bg-black/95', 'z-[99998]'],
     });
   }
 

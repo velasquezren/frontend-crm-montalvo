@@ -15,7 +15,7 @@ import { ToastService } from './toast.service';
     <div class="fixed top-4 right-4 sm:top-5 sm:right-5 w-[calc(100%-2rem)] sm:w-auto sm:max-w-sm z-50 flex flex-col gap-2.5 pointer-events-none">
       @for (toast of toasts(); track toast.id) {
         <div
-          class="pointer-events-auto flex items-start gap-3.5 p-4 rounded-2xl bg-white/95 backdrop-blur-xl border border-border/80 text-text-dark shadow-2xl shadow-slate-900/10 transition-all duration-300 animate-toast-slide">
+          class="pointer-events-auto flex items-start gap-3.5 p-4 rounded-2xl bg-white border border-border text-text-dark shadow-lifted transition-all duration-200 animate-toast-slide">
 
           <!-- Ícono temático -->
           <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border" [class]="getIconBg(toast.type)">

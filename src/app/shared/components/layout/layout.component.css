@@ -236,9 +236,7 @@
   right: 0;
   height: calc(3.8rem + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: #FFFFFF;
   border-top: 1px solid var(--color-border);
   display: none;              /* ← oculto por defecto (desktop) */
   align-items: center;
