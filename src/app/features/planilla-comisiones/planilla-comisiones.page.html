@@ -344,12 +344,22 @@
                     base es <code>precio × 0,87</code>.
                   </p>
                   <p>
-                    <strong>anticipo cobrado:</strong> la fila es el cobro de un
-                    plan o paquete. La base es lo que la paciente pagó este mes, y
+                    <strong>pagó N %:</strong> la fila es el cobro de un plan o
+                    paquete. La base es lo que la paciente abonó este mes, y
                     <strong>no se le quita el 13 %</strong> porque FileMaker ya lo
                     entrega neto — descontarlo sería quitar el impuesto dos veces.
-                    Lo que quede pendiente comisionará el mes en que se cobre, en
-                    su propia fila.
+                  </p>
+                  <p>
+                    El porcentaje es sobre el <strong>precio del plan</strong>, que
+                    en estas filas no es lo vendido sino lo que cuesta en el
+                    catálogo: se repite igual en cada cobro. Por eso unas filas
+                    parecen "bajar a la mitad" y otras no — no son reglas
+                    distintas, es que una pagó el 50 % y otra el 100 %. Lo
+                    pendiente comisionará el mes en que se cobre, en su propia fila.
+                  </p>
+                  <p>
+                    Por encima del 100 % se marca aparte: es un cobro mayor que el
+                    precio de catálogo y conviene revisarlo antes de liquidar.
                   </p>
                 </app-info-hint>
               </th>
@@ -463,7 +473,16 @@
                      lo que nadie sabía leer— es la REGLA que se aplicó. -->
                 <td class="text-center whitespace-nowrap">
                   @if (origenBase(v) === 'anticipo') {
-                    <span class="ajuste ajuste-anticipo">anticipo cobrado</span>
+                    <!-- El porcentaje es lo que explica la tabla: el precio de un
+                         plan se repite igual en cada cobro, así que lo único que
+                         cambia entre filas es cuánto pagó cada paciente. Por
+                         encima de 100 % se marca aparte — es un cobro por encima
+                         del catálogo y hay que verlo. -->
+                    <span
+                      class="ajuste ajuste-anticipo"
+                      [class.ajuste-excede]="(porcentajeAnticipo(v) ?? 0) > 100">
+                      pagó {{ porcentajeAnticipo(v) }}%
+                    </span>
                   } @else {
                     <span class="ajuste">−13% IVA</span>
                   }

@@ -553,3 +553,13 @@
   color: var(--color-primary);
   background: var(--color-bg-light);
 }
+
+/* Cobro por encima del precio de catálogo. No es un error del sistema —el Excel
+   lo trae así— pero sí algo que revisar antes de liquidar: la base de comisión
+   sale por encima de lo que el plan dice costar. En enero son cinco filas y
+   1.240,73 USD. Va en negro y no en rojo porque la paleta excluye los rojos de
+   alarma a propósito (ver el skill crm-design-system). */
+.ajuste-excede {
+  color: var(--color-text-critical);
+  background: var(--color-critical-bg);
+}

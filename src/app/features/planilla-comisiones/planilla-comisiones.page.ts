@@ -872,6 +872,30 @@ export class PlanillaComisionesPage implements OnDestroy {
     return Number(venta.anticipoPlan ?? 0) > 0 ? 'anticipo' : 'iva';
   }
 
+  /**
+   * Qué parte del plan cubrió este cobro.
+   *
+   * Es el dato que faltaba para entender la tabla. La columna «Precio» de una
+   * fila de plan **no es lo que se vendió**: es lo que cuesta el plan en el
+   * catálogo, y se repite idéntica en cada cobro. Lo único que cambia es cuánto
+   * pagó cada paciente, y sin el porcentaje eso no se ve.
+   *
+   * En enero, el Paquete Bariatrica Premium sale cinco veces siempre a 2.510,77:
+   * tres pacientes pagaron el 100 % y dos el 34 % y el 40 %. Eso es lo que hacía
+   * que unas filas "se mantuvieran" y otras "bajaran a la mitad" — no había dos
+   * reglas, había pacientes pagando distinto.
+   *
+   * Por encima de 100 no se recorta a propósito: son cobros por encima del precio
+   * de catálogo y conviene que salten a la vista (hay cinco en enero, 1.240,73
+   * USD de base por encima de la lista).
+   */
+  protected porcentajeAnticipo(venta: VentaImportada): number | null {
+    const anticipo = Number(venta.anticipoPlan ?? 0);
+    const precio = Number(venta.precio ?? 0);
+    if (anticipo <= 0 || precio <= 0) return null;
+    return Math.round((anticipo / precio) * 100);
+  }
+
   protected tarifaDe(venta: VentaImportada): string {
     const cfg = this.configuracion();
     if (!cfg) return '—';
