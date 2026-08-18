@@ -7,6 +7,7 @@ export interface DialogOptions {
   hasBackdrop?: boolean;
   backdropClass?: string | string[];
   disableClose?: boolean;
+  onClose?: () => void;
 }
 
 /**
@@ -27,7 +28,7 @@ export class DialogService {
   ): OverlayRef {
     const config = new OverlayConfig({
       hasBackdrop: options.hasBackdrop ?? true,
-      backdropClass: options.backdropClass ?? ['fixed', 'inset-0', 'bg-black/60', 'backdrop-blur-xs', 'z-[100]'],
+      backdropClass: options.backdropClass ?? ['fixed', 'inset-0', 'bg-black/50', 'z-[100]'],
       panelClass: options.panelClass ?? ['fixed', 'inset-0', 'z-[101]', 'flex', 'items-center', 'justify-center', 'p-4', 'sm:p-6', 'pointer-events-none'],
       scrollStrategy: this.overlay.scrollStrategies.block(),
       positionStrategy: this.overlay.position().global().centerHorizontally().centerVertically(),
@@ -39,7 +40,10 @@ export class DialogService {
     overlayRef.attach(portal);
 
     if (!options.disableClose) {
-      overlayRef.backdropClick().subscribe(() => overlayRef.dispose());
+      overlayRef.backdropClick().subscribe(() => {
+        options.onClose?.();
+        overlayRef.dispose();
+      });
     }
 
     /**

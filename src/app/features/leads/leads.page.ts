@@ -24,7 +24,6 @@ import { generarIniciales } from '../../core/auth/user.model';
 import { ToastService } from '../../core/toast/toast.service';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
-import { ButtonComponent } from '../../shared/components/button/button.component';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
@@ -56,7 +55,6 @@ type FiltroOrigen = OrigenLeadApi | 'TODOS';
     TableComponent,
     AvatarComponent,
     BadgeComponent,
-    ButtonComponent,
     EmptyStateComponent,
     LoadingSkeletonComponent,
     IconComponent,
@@ -184,7 +182,9 @@ export class LeadsPage implements OnDestroy {
   protected abrirFichaLead(lead: Lead, template: TemplateRef<unknown>): void {
     this.leadSeleccionado.set(lead);
     this.activeOverlayRef?.dispose();
-    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
+      onClose: () => this.leadSeleccionado.set(null),
+    });
   }
 
   protected cerrarFichaLead(): void {

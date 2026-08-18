@@ -154,7 +154,7 @@
 
   <!-- ── Modal Template: Registro de Venta (CDK Overlay) ─────────── -->
   <ng-template #modalVentaTemplate>
-    <div class="bg-white rounded-2xl shadow-lifted border border-border max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto">
+    <div class="bg-white rounded-2xl shadow-lifted border border-border max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto animate-modal-pop">
       
       <!-- Header -->
       <div class="flex items-center justify-between px-6 py-4.5 border-b border-border bg-white shrink-0">
@@ -369,7 +369,7 @@
   <!-- ── Lightbox Template (CDK Overlay) ──────────────────────────── -->
   <ng-template #lightboxTemplate>
     <div
-      class="bg-white rounded-2xl shadow-lifted max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto border border-border"
+      class="bg-white rounded-2xl shadow-lifted max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto border border-border animate-modal-pop"
       (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between p-4 border-b border-border bg-white">
         <div class="flex items-center gap-2 min-w-0">
