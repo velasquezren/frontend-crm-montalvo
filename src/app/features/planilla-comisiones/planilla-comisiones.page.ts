@@ -732,6 +732,46 @@ export class PlanillaComisionesPage implements OnDestroy {
     this.pagina.set(1);
   }
 
+  /**
+   * Qué se le aplica a esta fila, según la configuración vigente.
+   *
+   * Existe porque cambiar el canal de una venta "no hacía nada": sí lo hace,
+   * pero la diferencia es de céntimos y la tabla no mostraba nada por fila. Una
+   * consulta de base $31,21 pasa de 4,5% ($1,40) a 5,5% ($1,72) — 32 centavos,
+   * invisibles en un total de miles. Mostrando el porcentaje, el efecto del
+   * cambio se ve en el momento.
+   *
+   * Las cirugías dependen del nivel, que sale del ACUMULADO del mes de esa
+   * vendedora y no de la fila, así que ahí se dice de qué depende en vez de
+   * inventar un número. Las RA pagan tarifa fija por procedimiento, no
+   * porcentaje.
+   */
+  protected tarifaDe(venta: VentaImportada): string {
+    const cfg = this.configuracion();
+    if (!cfg) return '—';
+    const propio = venta.canal === 'PROPIO';
+
+    if (venta.clasif === 'CIRUGIA') return 'según nivel';
+
+    if (venta.unidadNegocio === 'RA') {
+      const ra = cfg.tarifasRA.find(t => t.procedimiento === venta.detalle);
+      if (!ra) return 'sin tarifa RA';
+      const monto = Number(propio ? ra.montoPropio : ra.montoEmpresa);
+      return ra.esPorcentaje ? `${monto}%` : `$${monto.toFixed(2)} fijo`;
+    }
+
+    if (venta.clasif === 'PLANPAQ' || venta.clasif === 'PLANNIN') {
+      const clave = venta.clasif === 'PLANNIN' ? 'PLANNIN' : (venta.nivel ?? 'SILVER');
+      const tp = cfg.tarifasPlan.find(t => t.clave === clave);
+      if (!tp) return '—';
+      return `${Number(propio ? tp.pctPropio : tp.pctEmpresa)}%`;
+    }
+
+    const ts = cfg.tarifasServicio.find(t => t.clasif === venta.clasif);
+    if (!ts) return '—';
+    return `${Number(propio ? ts.pctPropio : ts.pctEmpresa)}%`;
+  }
+
   protected filtrarPorTipo(valor: string): void {
     this.filtroTipo.set(valor ? (valor as TipoComision) : null);
     this.pagina.set(1);

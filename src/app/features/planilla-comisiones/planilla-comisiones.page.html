@@ -318,6 +318,28 @@
                   </p>
                 </app-info-hint>
               </th>
+              <th class="text-right w-[95px]">
+                Tarifa
+                <app-info-hint titulo="Lo que se le aplica a esta fila">
+                  <p>
+                    El porcentaje que sale de tu configuración para esta
+                    clasificación <strong>y este canal</strong>. Cambiar el canal
+                    de EMPRESA a PROPIO lo sube: en servicios va de 4,5% a 5,5%,
+                    y en planes de 3% a 5% según el nivel.
+                  </p>
+                  <p>
+                    Sobre una consulta la diferencia son centavos, y por eso
+                    cambiar el canal parecía no hacer nada: sí lo hace, pero no se
+                    veía en ningún sitio. Aquí sí.
+                  </p>
+                  <p>
+                    Las <strong>cirugías</strong> dicen "según nivel" porque su
+                    porcentaje depende del acumulado del mes de esa vendedora, no
+                    de la venta suelta. Las <strong>RA</strong> pagan una tarifa
+                    fija por procedimiento.
+                  </p>
+                </app-info-hint>
+              </th>
               <th class="text-left min-w-[160px]">Clasificación</th>
               <th class="text-center w-[70px]">
                 Tipo
@@ -359,6 +381,13 @@
                 </td>
                 <td class="text-right font-medium text-text-dark whitespace-nowrap">${{ v.precio | number: '1.2-2' }}</td>
                 <td class="text-right text-text-muted whitespace-nowrap">${{ v.ingresoNeto | number: '1.2-2' }}</td>
+                <td class="text-right whitespace-nowrap">
+                  <span class="text-[11px] font-semibold tabular-nums"
+                        [class.text-primary]="v.canal === 'PROPIO'"
+                        [class.text-text-muted]="v.canal !== 'PROPIO'">
+                    {{ tarifaDe(v) }}
+                  </span>
+                </td>
                 <td class="text-left">
                   <select class="select-base select-mini w-full font-medium" [value]="v.clasif"
                     (change)="cambiarClasificacion(v, $any($event.target).value)">
@@ -470,9 +499,11 @@
                       {{ grupo.objetivo }}, comisionan {{ grupo.cupo }}.
                     </p>
                     <p>
-                      Igualar el objetivo paga cero. Está verificado contra la
-                      planilla real: en diciembre de 2024 una vendedora hizo 4
-                      paquetes con objetivo 4 y no cobró Tipo A.
+                      Igualar el objetivo paga cero. Verificado contra la
+                      planilla de <strong>diciembre 2025</strong>, hoja "TIPO
+                      COMISION": su columna VALIDACIÓN CUMPLIMIENTO es
+                      literalmente vendidos − objetivo, y Zuany con 4 planes y
+                      objetivo 4 figura como NO cumple.
                     </p>
                     <p>
                       El sistema elige los de <strong>menor base</strong>, que es
