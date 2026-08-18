@@ -251,6 +251,12 @@
             <option [value]="c" [selected]="c === filtroClasif()">{{ clasifLabel[c] }}</option>
           }
         </select>
+        <select class="select-base font-medium" [value]="filtroTipo() || ''" (change)="filtrarPorTipo($any($event.target).value)">
+          <option value="" [selected]="!filtroTipo()">Todos los tipos</option>
+          @for (t of tipos; track t) {
+            <option [value]="t" [selected]="t === filtroTipo()">Tipo {{ t }} — {{ tipoLabel[t] }}</option>
+          }
+        </select>
         <button type="button" class="chip-filtro" [class.chip-filtro-activo]="soloSinClasificar()" (click)="alternarSoloSinClasificar()">
           Sin clasificar
         </button>
@@ -313,7 +319,25 @@
                 </app-info-hint>
               </th>
               <th class="text-left min-w-[160px]">Clasificación</th>
-              <th class="text-center w-[70px]">Tipo</th>
+              <th class="text-center w-[70px]">
+                Tipo
+                <app-info-hint titulo="Los tres tipos de comisión">
+                  <p>
+                    Es la columna por la que se paga en la liquidación, y sale
+                    sola de la clasificación:
+                  </p>
+                  <p>
+                    <strong>A</strong> — planes y paquetes (PLANPAQ, PLANNIN).<br />
+                    <strong>B</strong> — cirugías e internaciones.<br />
+                    <strong>C</strong> — todo lo demás: consulta, laboratorio,
+                    ecografía, campañas, promociones y otros servicios.
+                  </p>
+                  <p>
+                    Cada uno paga con su propia tabla y su propio porcentaje, por
+                    eso la liquidación los muestra en columnas separadas.
+                  </p>
+                </app-info-hint>
+              </th>
               <th class="text-right min-w-[110px]">Estado</th>
             </tr>
           </thead>
@@ -333,8 +357,8 @@
                 <td class="text-center">
                   <app-badge [variant]="v.canal === 'PROPIO' ? 'info' : 'neutral'">{{ v.canal }}</app-badge>
                 </td>
-                <td class="text-right font-medium text-text-dark whitespace-nowrap">\${{ v.precio | number: '1.2-2' }}</td>
-                <td class="text-right text-text-muted whitespace-nowrap">\${{ v.ingresoNeto | number: '1.2-2' }}</td>
+                <td class="text-right font-medium text-text-dark whitespace-nowrap">${{ v.precio | number: '1.2-2' }}</td>
+                <td class="text-right text-text-muted whitespace-nowrap">${{ v.ingresoNeto | number: '1.2-2' }}</td>
                 <td class="text-left">
                   <select class="select-base select-mini w-full font-medium" [value]="v.clasif"
                     (change)="cambiarClasificacion(v, $any($event.target).value)">
@@ -463,7 +487,7 @@
                       </span>
                       <span class="flex items-center gap-3 shrink-0">
                         <span class="text-xs font-semibold tabular-nums text-text-dark">
-                          \${{ plan.ingresoNeto | number: '1.2-2' }}
+                          ${{ plan.ingresoNeto | number: '1.2-2' }}
                         </span>
                         @if (plan.comisionaPlan === true) {
                           <app-badge variant="success">elegido a mano</app-badge>

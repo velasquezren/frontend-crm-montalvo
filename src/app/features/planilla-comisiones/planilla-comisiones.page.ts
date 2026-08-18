@@ -34,6 +34,7 @@ import {
   ReporteConsolidado,
   ResumenImportacion,
   TIPO_LABEL,
+  TipoComision,
   CambiosVendedora,
   TipoVendedora,
   Vendedora,
@@ -104,6 +105,7 @@ export class PlanillaComisionesPage implements OnDestroy {
   protected readonly tipoLabel = TIPO_LABEL;
   protected readonly meses = MESES;
   protected readonly clasificaciones = Object.keys(CLASIF_LABEL) as ClasifComision[];
+  protected readonly tipos = Object.keys(TIPO_LABEL) as TipoComision[];
 
   /* ── Estado de UI ───────────────────────────────────────────────────── */
 
@@ -124,6 +126,9 @@ export class PlanillaComisionesPage implements OnDestroy {
   /** Campo para dar de alta un valor de captación nuevo desde configuración. */
   protected readonly captacionNueva = signal('');
   protected readonly filtroClasif = signal<ClasifComision | null>(null);
+  /* El tipo agrupa varias clasificaciones —A planes, B cirugías, C el resto—, así
+     que revisar "todo lo que paga por Tipo B" no se podía con el filtro anterior. */
+  protected readonly filtroTipo = signal<TipoComision | null>(null);
   protected readonly soloExcluidas = signal(false);
   protected readonly soloSinClasificar = signal(false);
 
@@ -178,6 +183,7 @@ export class PlanillaComisionesPage implements OnDestroy {
       return this.service.ventasRequest(id, {
         pagina: this.pagina(),
         clasif: this.filtroClasif() ?? undefined,
+        tipo: this.filtroTipo() ?? undefined,
         buscar: this.busquedaDebounced() || undefined,
         soloExcluidas: this.soloExcluidas(),
         soloSinClasificar: this.soloSinClasificar(),
@@ -715,6 +721,7 @@ export class PlanillaComisionesPage implements OnDestroy {
   protected limpiarFiltros(): void {
     this.busqueda.set('');
     this.filtroClasif.set(null);
+    this.filtroTipo.set(null);
     this.soloExcluidas.set(false);
     this.soloSinClasificar.set(false);
     this.pagina.set(1);
@@ -722,6 +729,11 @@ export class PlanillaComisionesPage implements OnDestroy {
 
   protected filtrarPorClasif(valor: string): void {
     this.filtroClasif.set(valor ? (valor as ClasifComision) : null);
+    this.pagina.set(1);
+  }
+
+  protected filtrarPorTipo(valor: string): void {
+    this.filtroTipo.set(valor ? (valor as TipoComision) : null);
     this.pagina.set(1);
   }
 

@@ -5,6 +5,7 @@ import {
   Alertas,
   ClasifComision,
   CanalVenta,
+  TipoComision,
   ConfiguracionPlanilla,
   MapeoCaptacion,
   Objetivo,
@@ -34,6 +35,10 @@ export interface AjusteVenta {
 export interface FiltroVentas {
   pagina?: number;
   clasif?: ClasifComision;
+  /** Tipo de comisión A/B/C. Agrupa varias clasificaciones, así que no se puede
+   *  acotar con `clasif`: "todo lo que paga por Tipo B" cruza CIRUGIA e
+   *  internaciones. */
+  tipo?: TipoComision;
   vendedoraId?: string;
   buscar?: string;
   soloExcluidas?: boolean;
@@ -67,6 +72,7 @@ export class PlanillaComisionesService {
     return this.api.request(`/planilla-comisiones/periodos/${periodoId}/ventas`, {
       pagina: filtro.pagina,
       clasif: filtro.clasif,
+      tipo: filtro.tipo,
       vendedoraId: filtro.vendedoraId,
       buscar: filtro.buscar,
       soloExcluidas: filtro.soloExcluidas ? true : undefined,
