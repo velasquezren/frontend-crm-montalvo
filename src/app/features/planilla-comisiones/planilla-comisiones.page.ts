@@ -866,7 +866,7 @@ export class PlanillaComisionesPage implements OnDestroy {
      */
     if (venta.unidadNegocio === 'RA') {
       const ra = cfg.tarifasRA.find(t => t.procedimiento === venta.detalle);
-      if (!ra) return 'no comisiona · RA';
+      if (!ra) return 'sin % directo · RA';
       const monto = Number(propio ? ra.montoPropio : ra.montoEmpresa);
       return ra.esPorcentaje ? `${monto}%` : `$${monto.toFixed(2)} fijo`;
     }
