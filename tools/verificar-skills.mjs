@@ -440,17 +440,43 @@ function verificarRendimiento() {
   }
 
   /* c) Polling ciego. El mecanismo de tiempo real es el WebSocket; el intervalo
-     es solo la red de seguridad por si el socket se cae. Solo se miran literales
-     numéricos: un intervalo extraído a constante se da por deliberado. */
+     es solo la red de seguridad por si el socket se cae.
+
+     Se resuelven también las constantes del propio archivo. La versión anterior
+     solo miraba literales y daba por deliberado «un intervalo extraído a
+     constante», pero eso era un agujero, no una excepción: extraer el número a
+     una constante —que es lo que pide el buen estilo, y lo que hizo
+     `INTERVALO_RESPALDO_MS`— bastaba para volverse invisible al check. Un
+     `const CADA = 5000` futuro pasaría en silencio, que es justo lo que esta
+     regla existe para impedir. */
   for (const ruta of indexar(resolve(RAIZ, 'src')).filter(r => r.endsWith('.ts'))) {
-    for (const [, ms] of readFileSync(ruta, 'utf8').matchAll(/setInterval\([\s\S]*?,\s*(\d+)\s*\)/g)) {
-      if (Number(ms) < 60_000) {
-        señala(
-          skill,
-          `${relative(RAIZ, ruta)}: setInterval de ${ms} ms. El polling de respaldo es de ` +
-            '60 s; para reaccionar antes usa RealtimeService, no un intervalo más corto.',
-        );
-      }
+    const fuente = readFileSync(ruta, 'utf8');
+
+    /* `60_000` y `60000` son el mismo número para JS; el guion bajo se quita
+       antes de comparar o `Number('60_000')` daría NaN y no fallaría nunca. */
+    const aNumero = texto => Number(String(texto).replace(/_/g, ''));
+    const constantes = new Map(
+      [...fuente.matchAll(/\bconst\s+([A-Za-z_$][\w$]*)\s*=\s*([\d_]+)\s*;/g)].map(m => [
+        m[1],
+        aNumero(m[2]),
+      ]),
+    );
+
+    for (const [, argumento] of fuente.matchAll(
+      /setInterval\([\s\S]*?,\s*([\d_]+|[A-Za-z_$][\w$]*)\s*\)/g,
+    )) {
+      const ms = /^[\d_]+$/.test(argumento) ? aNumero(argumento) : constantes.get(argumento);
+      /* Un identificador que no se resuelve aquí (importado de otro archivo) se
+         deja pasar: es mejor no señalar que señalar en falso. */
+      if (ms === undefined || Number.isNaN(ms) || ms >= 60_000) continue;
+
+      señala(
+        skill,
+        `${relative(RAIZ, ruta)}: setInterval de ${ms} ms` +
+          (/^[\d_]+$/.test(argumento) ? '' : ` (${argumento})`) +
+          '. El polling de respaldo es de 60 s; para reaccionar antes usa ' +
+          'RealtimeService, no un intervalo más corto.',
+      );
     }
   }
 }
