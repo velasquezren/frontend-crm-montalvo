@@ -290,7 +290,10 @@
         }
       </div>
 
-      @if (ventas.isLoading()) {
+      <!-- Esqueleto SOLO en la primera carga. Al cambiar un filtro se conserva la
+           tabla anterior atenuada: sustituirla por barras grises hace que 190 ms
+           de red se lean como una pantalla que se rompe y se rehace. -->
+      @if (ventas.isLoading() && ventas.value().datos.length === 0) {
         <div class="flex flex-col gap-2">
           @for (n of [1,2,3,4,5,6]; track n) { <app-loading-skeleton height="38px" /> }
         </div>
@@ -298,6 +301,7 @@
         <app-empty-state icon="file-x" title="Sin resultados"
           description="Ninguna fila coincide con los filtros aplicados." />
       } @else {
+        <div class="tabla-envoltorio" [class.tabla-refrescando]="ventas.isLoading()">
           @if (ventas.value(); as v) {
           @if (v.porVendedora.length > 0) {
             <div class="resumen-agentes">
@@ -473,6 +477,7 @@
             }
           </tbody>
         </app-table>
+        </div>
 
         <div class="mt-4">
           <app-paginator

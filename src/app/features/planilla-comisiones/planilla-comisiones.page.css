@@ -509,3 +509,12 @@
   border-radius: 12px;
   background: var(--color-bg-light);
 }
+
+/* Mientras llega una respuesta nueva se atenúa lo que ya está en pantalla en vez
+   de vaciarla: la tabla sigue leyéndose y el cambio de filtro no parece un
+   parpadeo. Los clics se bloquean para no editar una fila que está por cambiar. */
+.tabla-refrescando {
+  opacity: 0.55;
+  pointer-events: none;
+  transition: opacity 0.12s ease-out;
+}

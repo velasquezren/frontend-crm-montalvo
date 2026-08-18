@@ -318,7 +318,9 @@
         </div>
       </div>
 
-      @if (ventas.isLoading()) {
+      <!-- Esqueleto solo en la primera carga; al cambiar de vendedora se conserva
+           la tabla anterior en vez de vaciar la pantalla. -->
+      @if (ventas.isLoading() && (ventas.value()?.datos?.length ?? 0) === 0) {
         <div class="flex flex-col gap-2">
           @for (n of [1,2,3,4]; track n) { <app-loading-skeleton height="36px" /> }
         </div>
