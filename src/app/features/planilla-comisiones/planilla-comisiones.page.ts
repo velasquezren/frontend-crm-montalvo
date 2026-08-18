@@ -618,9 +618,12 @@ export class PlanillaComisionesPage implements OnDestroy {
   }
 
   protected async guardarParametro(clave: string, valor: string): Promise<void> {
-    const numero = Number(valor);
+    const numero = Number(valor.replace(',', '.').trim());
+    /* Se recarga la configuración también al fallar: si no, el campo se queda
+       con lo que la persona escribió mal y parece guardado. */
     if (!Number.isFinite(numero)) {
-      this.toast.error('El valor tiene que ser un número.', 'Parámetros');
+      this.toast.error(`"${valor}" no es un número.`, 'Parámetros');
+      await this.cargarConfiguracion();
       return;
     }
     try {

@@ -423,8 +423,8 @@
    un filtro — pulsarla acota la tabla a esa vendedora y volver a pulsarla la
    suelta, que es como administración quería entrar al detalle. */
 .resumen-agentes {
-  margin-bottom: 1rem;
-  padding: 0.875rem 1rem;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: 16px;
   background: var(--color-bg-light);
@@ -490,12 +490,6 @@
   color: var(--color-text-muted);
 }
 
-/* Pie de la tabla: el total de TODO lo filtrado, no de las filas visibles. */
-.fila-totales {
-  background: color-mix(in srgb, var(--color-primary) 6%, white);
-  font-weight: 700;
-}
-
 /* ── Reglas globales del cálculo ─────────────────────────────────────────
    Cada fila explica qué hace la palanca antes de dejar cambiarla: son valores
    que mueven la nómina de todo el equipo, no preferencias de pantalla. */
@@ -504,7 +498,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem 0.875rem;
+  padding: 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: 12px;
   background: var(--color-bg-light);
