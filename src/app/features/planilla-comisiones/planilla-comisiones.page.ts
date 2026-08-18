@@ -577,10 +577,9 @@ export class PlanillaComisionesPage implements OnDestroy {
       clave: 'PCT_TIPO_C_RA',
       titulo: 'Comisión del área RA',
       ayuda:
-        'Porcentaje que cobran las ventas cuya columna «area» del export dice RA. ' +
-        'En 0 no comisionan a nadie: era así porque las cobraba la coordinadora RA. ' +
-        'En enero son 198 de 423 ventas — 170 laboratorios, 25 consultas — repartidas ' +
-        'sobre todo en Claudia (129).',
+        'Porcentaje que aplica a las ventas cuya columna «area» del export dice RA. ' +
+        'En 0 no pagan comisión directa, aunque siguen sumando al monto vendido del ' +
+        'mes y por tanto a los bonos.',
       sufijo: '%  (0,045 = 4,5%)',
     },
     {
