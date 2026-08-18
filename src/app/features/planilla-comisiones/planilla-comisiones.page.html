@@ -166,20 +166,6 @@
               </tr>
             }
           </tbody>
-          <tfoot>
-            <tr>
-              <td colspan="4" class="text-left">
-                <span class="pie-etiqueta">{{ hayFiltroActivo() ? 'Total filtrado' : 'Total del mes' }}</span>
-                <span class="pie-conteo">
-                  {{ ventas.value().totales.ventas }}
-                  {{ ventas.value().totales.ventas === 1 ? 'venta' : 'ventas' }}
-                </span>
-              </td>
-              <td class="text-right">${{ ventas.value().totales.monto | number: '1.2-2' }}</td>
-              <td class="text-right">${{ ventas.value().totales.base | number: '1.2-2' }}</td>
-              <td colspan="4"></td>
-            </tr>
-          </tfoot>
         </app-table>
       </div>
     }
@@ -346,6 +332,26 @@
                   </p>
                 </app-info-hint>
               </th>
+              <th class="text-right w-[100px]">
+                Anticipo USD
+                <app-info-hint titulo="Lo que la paciente pagó este mes">
+                  <p>
+                    Solo en cobros de plan o paquete. Es lo que la paciente
+                    <strong>abonó en este periodo</strong>, no lo que cuesta el
+                    plan entero: en enero los anticipos van del 10 % al 100 %,
+                    cada una a su ritmo.
+                  </p>
+                  <p>
+                    Cuando hay anticipo, <strong>es él quien manda</strong> como
+                    base de cálculo. Lo que quede pendiente comisionará el mes en
+                    que se cobre, en su propia fila.
+                  </p>
+                  <p>
+                    Un guion significa que no es un plan: ahí la base sale del
+                    precio menos el 13 %.
+                  </p>
+                </app-info-hint>
+              </th>
               <th class="text-right w-[110px]">
                 Base Cálculo USD
                 <app-info-hint titulo="Sobre qué se comisiona">
@@ -450,15 +456,21 @@
                   <app-badge [variant]="v.canal === 'PROPIO' ? 'info' : 'neutral'">{{ v.canal }}</app-badge>
                 </td>
                 <td class="text-right font-medium text-text-dark whitespace-nowrap">${{ v.precio | number: '1.2-2' }}</td>
-                <!-- La base sola no dice cuál de las dos reglas se le aplicó, y
-                     esa es la pregunta que deja una fila donde el precio baja de
-                     3.532 a 1.787 mientras la de al lado no se mueve. El rótulo
-                     lo responde sin tener que abrir la ayuda de la cabecera. -->
+                <!-- Con el anticipo en su propia columna, la base se explica
+                     sola: si hay anticipo, la base ES ese número. El guion deja
+                     ver de un vistazo qué filas son cobros de plan. -->
+                <td class="text-right whitespace-nowrap">
+                  @if (origenBase(v) === 'anticipo') {
+                    <span class="tabular-nums">${{ v.anticipoPlan | number: '1.2-2' }}</span>
+                  } @else {
+                    <span class="text-text-muted">—</span>
+                  }
+                </td>
                 <td class="text-right whitespace-nowrap">
                   <span class="text-text-muted tabular-nums">${{ v.ingresoNeto | number: '1.2-2' }}</span>
-                  @if (origenBase(v) === 'anticipo') {
-                    <span class="origen-base">anticipo cobrado</span>
-                  } @else {
+                  <!-- El rótulo solo donde la cifra no se explica sola: con
+                       anticipo, la columna de al lado ya lo dice. -->
+                  @if (origenBase(v) !== 'anticipo') {
                     <span class="origen-base">precio −13%</span>
                   }
                 </td>
@@ -494,6 +506,29 @@
               </tr>
             }
           </tbody>
+          <!-- Totales del FILTRO ENTERO, no de la página: los calcula el
+               servidor (ver `listarVentas`). Estaba colgado de la tabla de
+               planillas cargadas, así que se veía en Importar —bajo una tabla de
+               7 columnas, con colspan para 10— y no se veía aquí, que es donde
+               significa algo. Los colspan suman las 11 columnas de ESTA tabla. -->
+          <tfoot>
+            <tr>
+              <td colspan="4" class="text-left">
+                <span class="pie-etiqueta">{{ hayFiltroActivo() ? 'Total filtrado' : 'Total del mes' }}</span>
+                <span class="pie-conteo">
+                  {{ ventas.value().totales.ventas }}
+                  {{ ventas.value().totales.ventas === 1 ? 'venta' : 'ventas' }}
+                </span>
+              </td>
+              <td class="text-right">${{ ventas.value().totales.monto | number: '1.2-2' }}</td>
+              <!-- Sin total de anticipos a propósito: en las filas de plan la
+                   base YA es el anticipo, así que sumarlos aparte invitaría a
+                   sumar dos veces lo mismo. -->
+              <td></td>
+              <td class="text-right">${{ ventas.value().totales.base | number: '1.2-2' }}</td>
+              <td colspan="4"></td>
+            </tr>
+          </tfoot>
         </app-table>
         </div>
 
