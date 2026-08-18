@@ -60,6 +60,15 @@ export interface VentaImportada {
   vendedoraNombre: string | null;
   captacion: string | null;
   precio: string;
+  /**
+   * Lo que la paciente pagó de su plan este mes, si la fila es un cobro de plan.
+   *
+   * Es lo que decide de dónde sale `ingresoNeto`: con anticipo manda el
+   * anticipo, sin él manda `precio × 0,87`. Por eso viaja hasta la tabla — sin
+   * este dato no se puede decir en pantalla POR QUÉ la base no es el 87 % del
+   * precio, y esa era justo la pregunta que nadie sabía responder mirando la fila.
+   */
+  anticipoPlan?: string | null;
   ingresoNeto: string;
   canal: CanalVenta;
   unidadNegocio: UnidadNegocio;

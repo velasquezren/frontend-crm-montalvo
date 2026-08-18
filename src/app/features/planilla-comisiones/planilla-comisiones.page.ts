@@ -858,6 +858,20 @@ export class PlanillaComisionesPage implements OnDestroy {
    * inventar un número. Las RA pagan tarifa fija por procedimiento, no
    * porcentaje.
    */
+  /**
+   * De dónde sale la base de cálculo de esta fila.
+   *
+   * La base se obtiene de dos maneras y el número solo no distingue cuál: en un
+   * cobro de plan es el anticipo tal cual, y en el resto es el precio menos el
+   * 13 %. Sin decirlo, dos filas seguidas parecen incoherentes —una baja de
+   * 3.532 a 1.787 y la de al lado se queda igual— y no hay forma de saber si es
+   * correcto o un error de importación. Lo era: la primera pagó una cuota y la
+   * segunda pagó el paquete entero.
+   */
+  protected origenBase(venta: VentaImportada): 'anticipo' | 'iva' {
+    return Number(venta.anticipoPlan ?? 0) > 0 ? 'anticipo' : 'iva';
+  }
+
   protected tarifaDe(venta: VentaImportada): string {
     const cfg = this.configuracion();
     if (!cfg) return '—';

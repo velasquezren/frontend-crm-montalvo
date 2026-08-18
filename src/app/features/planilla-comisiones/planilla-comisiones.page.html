@@ -450,7 +450,18 @@
                   <app-badge [variant]="v.canal === 'PROPIO' ? 'info' : 'neutral'">{{ v.canal }}</app-badge>
                 </td>
                 <td class="text-right font-medium text-text-dark whitespace-nowrap">${{ v.precio | number: '1.2-2' }}</td>
-                <td class="text-right text-text-muted whitespace-nowrap">${{ v.ingresoNeto | number: '1.2-2' }}</td>
+                <!-- La base sola no dice cuál de las dos reglas se le aplicó, y
+                     esa es la pregunta que deja una fila donde el precio baja de
+                     3.532 a 1.787 mientras la de al lado no se mueve. El rótulo
+                     lo responde sin tener que abrir la ayuda de la cabecera. -->
+                <td class="text-right whitespace-nowrap">
+                  <span class="text-text-muted tabular-nums">${{ v.ingresoNeto | number: '1.2-2' }}</span>
+                  @if (origenBase(v) === 'anticipo') {
+                    <span class="origen-base">anticipo cobrado</span>
+                  } @else {
+                    <span class="origen-base">precio −13%</span>
+                  }
+                </td>
                 <td class="text-right whitespace-nowrap">
                   <span class="text-[11px] font-semibold tabular-nums"
                         [class.text-primary]="v.canal === 'PROPIO'"

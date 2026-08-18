@@ -529,3 +529,20 @@
   font-weight: 500;
   color: var(--color-text-muted);
 }
+
+/* Rótulo bajo la base de cálculo: dice cuál de las dos reglas se le aplicó a la
+   fila —el anticipo cobrado, o el precio menos el 13 %—.
+
+   Va en la propia celda y no en la ayuda de la cabecera porque la duda aparece
+   al comparar dos filas seguidas: si una baja de 3.532 a 1.787 y la de al lado
+   no se mueve, sin este rótulo no hay forma de saber si es correcto. Lo es: una
+   pagó una cuota y la otra el paquete entero. */
+.origen-base {
+  display: block;
+  margin-top: 1px;
+  font-size: 0.625rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--color-text-muted);
+  opacity: 0.75;
+}
