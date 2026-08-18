@@ -462,6 +462,24 @@
                   <app-badge [variant]="grupo.cupo > 0 ? 'info' : 'neutral'">
                     {{ grupo.cupo }} {{ grupo.cupo === 1 ? 'comisiona' : 'comisionan' }}
                   </app-badge>
+                  <app-info-hint titulo="Por qué no comisionan todos">
+                    <p>
+                      El objetivo es una <strong>franquicia</strong>, no una meta
+                      que se cruza: solo comisiona lo que lo <strong>supera</strong>.
+                      Con {{ grupo.planes.length }} vendidos y objetivo
+                      {{ grupo.objetivo }}, comisionan {{ grupo.cupo }}.
+                    </p>
+                    <p>
+                      Igualar el objetivo paga cero. Está verificado contra la
+                      planilla real: en diciembre de 2024 una vendedora hizo 4
+                      paquetes con objetivo 4 y no cobró Tipo A.
+                    </p>
+                    <p>
+                      El sistema elige los de <strong>menor base</strong>, que es
+                      lo conservador. Puedes cambiarlo pulsando cualquier plan de
+                      la lista: queda marcado a mano y manda sobre el automático.
+                    </p>
+                  </app-info-hint>
                 </div>
               </header>
 
