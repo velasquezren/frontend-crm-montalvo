@@ -281,8 +281,37 @@
               <th class="text-left">Servicio / Paciente</th>
               <th class="text-left min-w-[130px]">Vendedora</th>
               <th class="text-center w-[90px]">Canal</th>
-              <th class="text-right w-[110px]">Precio</th>
-              <th class="text-right w-[110px]">Base Cálculo</th>
+              <th class="text-right w-[110px]">
+                Precio USD
+                <app-info-hint titulo="Precio en dólares">
+                  <p>
+                    Tal cual viene del Excel de FileMaker, que factura en
+                    <strong>dólares</strong>. La conversión a bolivianos se hace
+                    una sola vez al final, sobre la comisión ya calculada.
+                  </p>
+                </app-info-hint>
+              </th>
+              <th class="text-right w-[110px]">
+                Base Cálculo USD
+                <app-info-hint titulo="Sobre qué se comisiona">
+                  <p>
+                    Es la cifra sobre la que se aplica el porcentaje de comisión,
+                    y no el precio completo. Se calcula de dos maneras según la
+                    venta:
+                  </p>
+                  <p>
+                    <strong>Venta normal:</strong> precio × 0,87, o sea el precio
+                    sin el 13% de impuestos.
+                  </p>
+                  <p>
+                    <strong>Plan con anticipo:</strong> el anticipo tal cual, sin
+                    descontarle nada. FileMaker ya lo entrega neto, así que
+                    aplicarle el 0,87 descontaría el impuesto dos veces. Por eso
+                    en esas filas la base no es el 87% del precio — verificado
+                    contra las 30 que hay en el sistema.
+                  </p>
+                </app-info-hint>
+              </th>
               <th class="text-left min-w-[160px]">Clasificación</th>
               <th class="text-center w-[70px]">Tipo</th>
               <th class="text-right min-w-[110px]">Estado</th>
@@ -304,8 +333,8 @@
                 <td class="text-center">
                   <app-badge [variant]="v.canal === 'PROPIO' ? 'info' : 'neutral'">{{ v.canal }}</app-badge>
                 </td>
-                <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ v.precio | moneda }}</td>
-                <td class="text-right text-text-muted whitespace-nowrap">{{ v.ingresoNeto | moneda }}</td>
+                <td class="text-right font-medium text-text-dark whitespace-nowrap">\${{ v.precio | number: '1.2-2' }}</td>
+                <td class="text-right text-text-muted whitespace-nowrap">\${{ v.ingresoNeto | number: '1.2-2' }}</td>
                 <td class="text-left">
                   <select class="select-base select-mini w-full font-medium" [value]="v.clasif"
                     (change)="cambiarClasificacion(v, $any($event.target).value)">
@@ -434,7 +463,7 @@
                       </span>
                       <span class="flex items-center gap-3 shrink-0">
                         <span class="text-xs font-semibold tabular-nums text-text-dark">
-                          {{ plan.ingresoNeto | moneda }}
+                          \${{ plan.ingresoNeto | number: '1.2-2' }}
                         </span>
                         @if (plan.comisionaPlan === true) {
                           <app-badge variant="success">elegido a mano</app-badge>

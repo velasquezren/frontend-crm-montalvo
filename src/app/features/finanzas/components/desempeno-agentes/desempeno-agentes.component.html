@@ -353,8 +353,8 @@
                 <td class="text-center">
                   <app-badge [variant]="venta.canal === 'PROPIO' ? 'info' : 'neutral'">{{ venta.canal }}</app-badge>
                 </td>
-                <td class="text-right font-medium text-text-dark text-xs whitespace-nowrap">{{ venta.precio | moneda }}</td>
-                <td class="text-right text-xs text-text-muted whitespace-nowrap">{{ venta.ingresoNeto | moneda }}</td>
+                <td class="text-right font-medium text-text-dark text-xs whitespace-nowrap">\${{ venta.precio | number: '1.2-2' }}</td>
+                <td class="text-right text-xs text-text-muted whitespace-nowrap">\${{ venta.ingresoNeto | number: '1.2-2' }}</td>
                 <td class="text-left text-xs font-medium text-text-dark">{{ obtenerClasifLabel(venta.clasif) }}</td>
                 <td class="text-center">
                   <span class="tipo-pill" [title]="obtenerTipoLabel(venta.tipo)">{{ venta.tipo }}</span>
