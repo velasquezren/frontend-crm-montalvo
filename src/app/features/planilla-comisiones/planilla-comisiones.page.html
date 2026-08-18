@@ -332,23 +332,24 @@
                   </p>
                 </app-info-hint>
               </th>
-              <th class="text-right w-[100px]">
-                Anticipo USD
-                <app-info-hint titulo="Lo que la paciente pagó este mes">
+              <th class="text-center w-[120px]">
+                Ajuste
+                <app-info-hint titulo="Qué se le hace al precio">
                   <p>
-                    Solo en cobros de plan o paquete. Es lo que la paciente
-                    <strong>abonó en este periodo</strong>, no lo que cuesta el
-                    plan entero: en enero los anticipos van del 10 % al 100 %,
-                    cada una a su ritmo.
+                    Esta columna dice <strong>por qué</strong> la base no es el
+                    precio, que es lo único que cambia entre una fila y otra.
                   </p>
                   <p>
-                    Cuando hay anticipo, <strong>es él quien manda</strong> como
-                    base de cálculo. Lo que quede pendiente comisionará el mes en
-                    que se cobre, en su propia fila.
+                    <strong>−13 % IVA:</strong> la fila es un servicio suelto. La
+                    base es <code>precio × 0,87</code>.
                   </p>
                   <p>
-                    Un guion significa que no es un plan: ahí la base sale del
-                    precio menos el 13 %.
+                    <strong>anticipo cobrado:</strong> la fila es el cobro de un
+                    plan o paquete. La base es lo que la paciente pagó este mes, y
+                    <strong>no se le quita el 13 %</strong> porque FileMaker ya lo
+                    entrega neto — descontarlo sería quitar el impuesto dos veces.
+                    Lo que quede pendiente comisionará el mes en que se cobre, en
+                    su propia fila.
                   </p>
                 </app-info-hint>
               </th>
@@ -456,23 +457,19 @@
                   <app-badge [variant]="v.canal === 'PROPIO' ? 'info' : 'neutral'">{{ v.canal }}</app-badge>
                 </td>
                 <td class="text-right font-medium text-text-dark whitespace-nowrap">${{ v.precio | number: '1.2-2' }}</td>
-                <!-- Con el anticipo en su propia columna, la base se explica
-                     sola: si hay anticipo, la base ES ese número. El guion deja
-                     ver de un vistazo qué filas son cobros de plan. -->
-                <td class="text-right whitespace-nowrap">
+                <!-- Mostrar el importe del anticipo era repetir la base: en un
+                     cobro de plan son SIEMPRE el mismo número, así que la
+                     columna no añadía nada. Lo que cambia de una fila a otra —y
+                     lo que nadie sabía leer— es la REGLA que se aplicó. -->
+                <td class="text-center whitespace-nowrap">
                   @if (origenBase(v) === 'anticipo') {
-                    <span class="tabular-nums">${{ v.anticipoPlan | number: '1.2-2' }}</span>
+                    <span class="ajuste ajuste-anticipo">anticipo cobrado</span>
                   } @else {
-                    <span class="text-text-muted">—</span>
+                    <span class="ajuste">−13% IVA</span>
                   }
                 </td>
                 <td class="text-right whitespace-nowrap">
                   <span class="text-text-muted tabular-nums">${{ v.ingresoNeto | number: '1.2-2' }}</span>
-                  <!-- El rótulo solo donde la cifra no se explica sola: con
-                       anticipo, la columna de al lado ya lo dice. -->
-                  @if (origenBase(v) !== 'anticipo') {
-                    <span class="origen-base">precio −13%</span>
-                  }
                 </td>
                 <td class="text-right whitespace-nowrap">
                   <span class="text-[11px] font-semibold tabular-nums"
