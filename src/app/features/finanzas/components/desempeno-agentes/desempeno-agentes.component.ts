@@ -1,6 +1,6 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 
 import { RespuestaPaginada } from '../../../../core/api/pagination.model';
 import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
@@ -83,6 +83,31 @@ export class DesempenoAgentesComponent {
   readonly periodoId = signal<string | null>(null);
   readonly vendedoraIdSeleccionada = signal<string | null>(null);
   readonly busquedaVentas = signal<string>('');
+  /**
+   * La búsqueda que de verdad filtra, un instante después de teclear.
+   *
+   * El filtro corre en memoria sobre el mes entero. Medido en la plantilla: 11
+   * expresiones por fila, que con las 418 ventas del mes más cargado son ~4.600
+   * evaluaciones por pulsación. Antes eran 100 filas y no se notaba; al traer el
+   * mes completo —necesario para que el buscador no mintiera— se multiplicó por
+   * cuatro.
+   *
+   * 150 ms y no los 350 de la planilla: allí el debounce protege una llamada al
+   * servidor y conviene esperar a que la persona termine; aquí no viaja nada, así
+   * que solo hace falta saltarse las pulsaciones intermedias sin que se sienta
+   * lento.
+   */
+  private readonly busquedaAplicada = signal<string>('');
+
+  constructor() {
+    /* Mismo patrón que la página de planilla, con menos espera: se descarta el
+       temporizador anterior en cada tecla, así que solo filtra la última. */
+    effect(onCleanup => {
+      const texto = this.busquedaVentas();
+      const id = setTimeout(() => this.busquedaAplicada.set(texto), 150);
+      onCleanup(() => clearTimeout(id));
+    });
+  }
   readonly filtroCanal = signal<'TODOS' | 'EMPRESA' | 'PROPIO'>('TODOS');
 
   /* ── Recursos HTTP Reactivos (Signals) ────────────────────────────────── */
@@ -256,7 +281,7 @@ export class DesempenoAgentesComponent {
   /** Ventas filtradas reactivamente por búsqueda y canal. */
   readonly ventasFiltradas = computed<VentaImportada[]>(() => {
     const lista = this.ventas.value()?.datos ?? [];
-    const busq = this.busquedaVentas().trim().toLowerCase();
+    const busq = this.busquedaAplicada().trim().toLowerCase();
     const canal = this.filtroCanal();
 
     return lista.filter(v => {
