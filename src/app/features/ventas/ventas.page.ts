@@ -1,4 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal, TemplateRef, ViewContainerRef } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  OnDestroy,
+  signal,
+  TemplateRef,
+  viewChild,
+  ViewContainerRef,
+} from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { OverlayRef } from '@angular/cdk/overlay';
@@ -66,13 +78,18 @@ export const METODOS_PAGO: readonly { id: MetodoPagoVenta; label: string; icon: 
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './ventas.page.html',
 })
-export class VentasPage {
+export class VentasPage implements OnDestroy {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly ventasService = inject(VentasService);
   private readonly clientesService = inject(ClientesService);
   private readonly dialogService = inject(DialogService);
   private readonly vcr = inject(ViewContainerRef);
 
+  protected readonly modalVentaTemplate = viewChild<TemplateRef<unknown>>('modalVentaTemplate');
+
   private activeOverlayRef?: OverlayRef;
+  private queryParamsProcesados = false;
 
   protected readonly estadoBadge = ESTADO_VENTA_BADGE;
   protected readonly estadoLabel = ESTADO_VENTA_LABEL;
@@ -123,6 +140,40 @@ export class VentasPage {
   protected readonly lightboxUrl = signal<string | null>(null);
   protected readonly lightboxNombre = signal<string | null>(null);
 
+  constructor() {
+    effect(() => {
+      const qp = this.route.snapshot.queryParams;
+      const clienteId = qp['clienteId'];
+      const clienteNombre = qp['clienteNombre'];
+      const clienteTelefono = qp['clienteTelefono'];
+      const nuevo = qp['nuevo'];
+      const tpl = this.modalVentaTemplate();
+
+      if (nuevo === '1' && tpl && !this.formularioAbierto() && !this.queryParamsProcesados) {
+        this.queryParamsProcesados = true;
+        if (clienteId && clienteNombre) {
+          this.elegirCliente({
+            id: clienteId,
+            nombre: clienteNombre,
+            telefono: clienteTelefono || '',
+            email: null,
+            categoria: 'PROSPECTO',
+            agenteId: null,
+            agente: null,
+            intereses: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+        }
+        this.abrirFormulario(tpl);
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.activeOverlayRef?.dispose();
+  }
+
   protected abrirFormulario(template: TemplateRef<unknown>): void {
     this.formularioAbierto.set(true);
     this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
@@ -132,6 +183,9 @@ export class VentasPage {
     this.formularioAbierto.set(false);
     this.activeOverlayRef?.dispose();
     this.activeOverlayRef = undefined;
+    if (this.route.snapshot.queryParams['nuevo']) {
+      void this.router.navigate([], { queryParams: {}, replaceUrl: true });
+    }
   }
 
   /**

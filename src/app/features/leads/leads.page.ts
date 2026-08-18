@@ -1,6 +1,17 @@
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  linkedSignal,
+  OnDestroy,
+  signal,
+  TemplateRef,
+  ViewContainerRef,
+} from '@angular/core';
+import { OverlayRef } from '@angular/cdk/overlay';
 import {
   CdkDragDrop,
   DragDropModule,
@@ -13,6 +24,8 @@ import { generarIniciales } from '../../core/auth/user.model';
 import { ToastService } from '../../core/toast/toast.service';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
+import { ButtonComponent } from '../../shared/components/button/button.component';
+import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
@@ -43,6 +56,7 @@ type FiltroOrigen = OrigenLeadApi | 'TODOS';
     TableComponent,
     AvatarComponent,
     BadgeComponent,
+    ButtonComponent,
     EmptyStateComponent,
     LoadingSkeletonComponent,
     IconComponent,
@@ -55,10 +69,21 @@ type FiltroOrigen = OrigenLeadApi | 'TODOS';
   templateUrl: './leads.page.html',
   styleUrl: './leads.page.css',
 })
-export class LeadsPage {
+export class LeadsPage implements OnDestroy {
   private readonly leadsService = inject(LeadsService);
   private readonly toastService = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
+  private readonly dialogService = inject(DialogService);
+  private readonly vcr = inject(ViewContainerRef);
+
+  private activeOverlayRef?: OverlayRef;
+
+  protected readonly leadSeleccionado = signal<Lead | null>(null);
+  protected readonly estadosDisponibles: readonly EstadoLead[] = ['NUEVO', 'CONTACTADO', 'CONVERTIDO', 'PERDIDO'];
+
+  ngOnDestroy(): void {
+    this.activeOverlayRef?.dispose();
+  }
 
   protected readonly estadoBadge = ESTADO_LEAD_BADGE;
   protected readonly estadoLabel = ESTADO_LEAD_LABEL;
@@ -121,13 +146,13 @@ export class LeadsPage {
   );
 
   /* ── Copia local reactiva auto-sincronizada con linkedSignal (Angular 19/21) ─────────── */
-  protected readonly leadsLocales = linkedSignal(() => this.leads.value().datos);
+  protected readonly leadsLocales = linkedSignal<readonly Lead[]>(() => this.leads.value().datos);
 
   /* ── Columnas del Kanban derivadas síncronamente con computed() ────── */
-  protected readonly nuevos = computed(() => this.leadsLocales().filter(l => l.estado === 'NUEVO'));
-  protected readonly contactados = computed(() => this.leadsLocales().filter(l => l.estado === 'CONTACTADO'));
-  protected readonly convertidos = computed(() => this.leadsLocales().filter(l => l.estado === 'CONVERTIDO'));
-  protected readonly perdidos = computed(() => this.leadsLocales().filter(l => l.estado === 'PERDIDO'));
+  protected readonly nuevos = computed(() => this.leadsLocales().filter((l: Lead) => l.estado === 'NUEVO'));
+  protected readonly contactados = computed(() => this.leadsLocales().filter((l: Lead) => l.estado === 'CONTACTADO'));
+  protected readonly convertidos = computed(() => this.leadsLocales().filter((l: Lead) => l.estado === 'CONVERTIDO'));
+  protected readonly perdidos = computed(() => this.leadsLocales().filter((l: Lead) => l.estado === 'PERDIDO'));
 
   /** Cuántas tarjetas hay sin cargar en cada columna (total real − cargadas). */
   protected ocultasEn(estado: EstadoLead, cargadas: number): number {
@@ -156,6 +181,43 @@ export class LeadsPage {
     this.modoVista.set(modo);
   }
 
+  protected abrirFichaLead(lead: Lead, template: TemplateRef<unknown>): void {
+    this.leadSeleccionado.set(lead);
+    this.activeOverlayRef?.dispose();
+    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+  }
+
+  protected cerrarFichaLead(): void {
+    this.leadSeleccionado.set(null);
+    this.activeOverlayRef?.dispose();
+    this.activeOverlayRef = undefined;
+  }
+
+  protected async cambiarEstadoLeadDirecto(nuevoEstado: EstadoLead): Promise<void> {
+    const lead = this.leadSeleccionado();
+    if (!lead || lead.estado === nuevoEstado) return;
+
+    this.leadsLocales.update(lista =>
+      lista.map((l: Lead) => (l.id === lead.id ? { ...l, estado: nuevoEstado } : l)),
+    );
+    this.leadSeleccionado.update(l => (l ? { ...l, estado: nuevoEstado } : null));
+
+    try {
+      await this.leadsService.cambiarEstado(lead.id, nuevoEstado);
+      this.toastService.success(
+        `Lead ${lead.cliente.nombre} actualizado a ${this.estadoLabel[nuevoEstado]}`,
+        'Estado Actualizado',
+      );
+      this.resumen.reload();
+    } catch (err: unknown) {
+      this.toastService.error(
+        mensajeDeError(err, 'Ocurrió un error al actualizar el estado del lead.'),
+        'Error',
+      );
+      this.leads.reload();
+    }
+  }
+
   protected drop(event: CdkDragDrop<Lead[], Lead[], Lead>): void {
     if (event.previousContainer === event.container) {
       // Reordenamiento dentro de la misma columna usando leadsLocales de forma inmutable
@@ -180,7 +242,7 @@ export class LeadsPage {
 
       // 1. Actualización optimista pura sustituyendo la propiedad estado en la señal escribible linkedSignal
       this.leadsLocales.update(lista =>
-        lista.map(l => (l.id === item.id ? { ...l, estado: targetColumnId } : l)),
+        lista.map((l: Lead) => (l.id === item.id ? { ...l, estado: targetColumnId } : l)),
       );
 
       // 2. Persistir en el Backend

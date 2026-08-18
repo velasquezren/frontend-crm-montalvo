@@ -40,7 +40,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
   {
     titulo: 'Gestión & Clínica',
     items: [
-      { path: '/servicios', label: 'Historial Clínico', icon: 'activity', rolMinimo: 'ADMIN' },
+      { path: '/servicios', label: 'Historial de Servicios', icon: 'activity', rolMinimo: 'ADMIN' },
       { path: '/usuarios', label: 'Usuarios y Accesos', icon: 'shield', rolMinimo: 'SUPER_ADMIN' },
     ],
   },

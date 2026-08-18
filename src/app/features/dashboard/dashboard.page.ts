@@ -393,6 +393,14 @@ export class DashboardPage {
     }
   }
 
+  protected navegarActividad(item: ActividadItem): void {
+    if (item.tipo === 'VENTA') {
+      void this.router.navigate(['/ventas']);
+    } else {
+      void this.router.navigate(['/leads']);
+    }
+  }
+
   protected formatearMonto(valor: number): string {
     return formatearBs(valor);
   }

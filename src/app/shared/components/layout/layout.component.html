@@ -111,17 +111,27 @@
      ══════════════════════════════════════════════════════════════════════ -->
 <nav class="mobile-bottom-bar" [class.mobile-bottom-bar--oculta]="inmersivo()" aria-label="Navegación móvil">
   <a routerLink="/conversaciones" routerLinkActive="mobile-nav-active" class="mobile-nav-item">
-    <app-icon name="message-circle" [size]="22" />
+    <app-icon name="message-circle" [size]="20" />
     <span>Chats</span>
   </a>
 
+  <a routerLink="/leads" routerLinkActive="mobile-nav-active" class="mobile-nav-item">
+    <app-icon name="user-plus" [size]="20" />
+    <span>Leads</span>
+  </a>
+
   <a routerLink="/dashboard" routerLinkActive="mobile-nav-active" class="mobile-nav-item">
-    <app-icon name="activity" [size]="22" />
-    <span>Resumen</span>
+    <app-icon name="dashboard" [size]="20" />
+    <span>Panel</span>
+  </a>
+
+  <a routerLink="/ventas" routerLinkActive="mobile-nav-active" class="mobile-nav-item">
+    <app-icon name="shopping-bag" [size]="20" />
+    <span>Ventas</span>
   </a>
 
   <a routerLink="/perfil" routerLinkActive="mobile-nav-active" class="mobile-nav-item">
-    <app-icon name="users" [size]="22" />
+    <app-icon name="user" [size]="20" />
     <span>Perfil</span>
   </a>
 </nav>

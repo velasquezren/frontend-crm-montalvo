@@ -398,7 +398,13 @@
         @if (actividadReciente().length > 0) {
           <div class="space-y-2.5">
             @for (item of actividadReciente(); track item.id) {
-              <div class="flex items-start justify-between gap-3 p-2.5 rounded-xl border border-border/50 bg-bg-workspace/40 hover:bg-bg-workspace transition-colors">
+              <div
+                role="button"
+                tabindex="0"
+                (click)="navegarActividad(item)"
+                (keydown.enter)="navegarActividad(item)"
+                class="flex items-start justify-between gap-3 p-2.5 rounded-xl border border-border/50 bg-bg-workspace/40 hover:bg-bg-workspace hover:border-primary/40 transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-primary/20"
+                [title]="item.tipo === 'VENTA' ? 'Ver en Ventas' : 'Ver en Leads'">
                 <div class="flex items-start gap-2.5 min-w-0">
                   <div
                     class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
@@ -406,7 +412,7 @@
                     <app-icon [name]="item.tipo === 'VENTA' ? 'shopping-bag' : 'user-plus'" [size]="14" />
                   </div>
                   <div class="min-w-0">
-                    <p class="text-xs font-bold text-text-dark truncate">{{ item.titulo }}</p>
+                    <p class="text-xs font-bold text-text-dark truncate group-hover:text-primary transition-colors">{{ item.titulo }}</p>
                     <p class="text-[11px] text-text-muted truncate">{{ item.subtitulo }}</p>
                   </div>
                 </div>
