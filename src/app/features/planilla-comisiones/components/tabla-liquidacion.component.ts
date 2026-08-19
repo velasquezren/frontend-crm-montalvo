@@ -242,7 +242,7 @@ export class TablaLiquidacionComponent {
       };
     }
 
-    if (f.comisionA > 0 || f.cumpleObjetivoPlanes) {
+    if (Number(f.comisionA) > 0) {
       return {
         texto: 'comisiona Tipo A',
         esComisionable: true,
