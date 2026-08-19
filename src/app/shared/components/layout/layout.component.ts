@@ -7,6 +7,7 @@ import { ToastContainerComponent } from '../../../core/toast/toast-container.com
 import { ModoInmersivoService } from '../../../core/ui/modo-inmersivo.service';
 import { AvatarComponent } from '../avatar/avatar.component';
 import { IconComponent } from '../icon/icon.component';
+import { MonedaToggleComponent } from '../moneda-toggle/moneda-toggle.component';
 import { NAV_GROUPS, NAV_ITEMS } from './nav-items';
 
 /**
@@ -22,6 +23,7 @@ import { NAV_GROUPS, NAV_ITEMS } from './nav-items';
     RouterLinkActive,
     IconComponent,
     AvatarComponent,
+    MonedaToggleComponent,
     ToastContainerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

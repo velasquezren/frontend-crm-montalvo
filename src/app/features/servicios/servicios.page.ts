@@ -28,6 +28,8 @@ import { InfoHintComponent } from '../../shared/components/info-hint/info-hint.c
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { TableComponent } from '../../shared/components/table/table.component';
+import { MonedaToggleComponent } from '../../shared/components/moneda-toggle/moneda-toggle.component';
+import { MonedaService } from '../../core/moneda/moneda.service';
 import { formatearBs, MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import {
   ESTADO_PERIODO_LABEL,
@@ -65,6 +67,7 @@ type Pestana = 'DASHBOARD' | 'PACIENTES' | 'MEDICOS';
   imports: [
     DecimalPipe,
     MonedaPipe,
+    MonedaToggleComponent,
     BadgeComponent,
     BarChartComponent,
     ButtonComponent,
@@ -91,6 +94,7 @@ type Pestana = 'DASHBOARD' | 'PACIENTES' | 'MEDICOS';
 export class ServiciosPage {
   private readonly service = inject(ServiciosService);
   private readonly toast = inject(ToastService);
+  protected readonly monedaService = inject(MonedaService);
 
   protected readonly meses = MESES;
   protected readonly estadoLabel = ESTADO_PERIODO_LABEL;
@@ -299,11 +303,11 @@ export class ServiciosPage {
       },
       {
         label: 'Facturado',
-        valor: formatearBs(d.totales.ingreso),
+        valor: this.monedaService.formatear(d.totales.ingreso, 'USD', this.periodoActual() ? +this.periodoActual()!.tipoCambio : undefined),
         icon: 'wallet' as const,
         tono: 'primary' as const,
         destacado: false,
-        pie: `${formatearBs(ticket)} por servicio`,
+        pie: `${this.monedaService.formatear(ticket, 'USD', this.periodoActual() ? +this.periodoActual()!.tipoCambio : undefined)} por servicio`,
       },
     ];
   });
@@ -333,7 +337,7 @@ export class ServiciosPage {
       },
       {
         label: 'Saldo arrastrado',
-        valor: formatearBs(g.saldoAcumulado),
+        valor: this.monedaService.formatear(g.saldoAcumulado, 'USD'),
         icon: 'wallet' as const,
         tono: 'neutral' as const,
         destacado: false,
@@ -358,11 +362,11 @@ export class ServiciosPage {
       },
       {
         label: 'Gastado',
-        valor: formatearBs(h.resumen.gastado),
+        valor: this.monedaService.formatear(h.resumen.gastado, 'USD'),
         icon: 'wallet' as const,
         tono: 'primary' as const,
         destacado: true,
-        pie: `${formatearBs(ticket)} por servicio`,
+        pie: `${this.monedaService.formatear(ticket, 'USD')} por servicio`,
       },
       {
         /* Mientras carga, la tabla no sabe cuántos médicos lo atendieron: un 0

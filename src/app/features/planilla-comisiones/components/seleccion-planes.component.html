@@ -92,7 +92,7 @@
                   </span>
                   <span class="flex items-center gap-3 shrink-0">
                     <span class="text-xs font-semibold tabular-nums text-text-dark">
-                      ${{ plan.ingresoNeto | number: '1.2-2' }}
+                      {{ plan.ingresoNeto | moneda }}
                     </span>
                     @if (plan.comisionaPlan === true) {
                       <app-badge variant="success">elegido a mano</app-badge>

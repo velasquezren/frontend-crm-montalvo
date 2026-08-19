@@ -170,10 +170,10 @@ import { FilaConsolidado } from '../planilla.model';
             <td class="text-right font-semibold text-primary whitespace-nowrap">
               \${{ f.totalUsd | number: '1.2-2' }}
             </td>
-            <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ f.totalBob | moneda }}</td>
-            <td class="text-right text-text-muted whitespace-nowrap">{{ f.sueldoBase | moneda }}</td>
+            <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ f.totalBob | moneda:'BOB' }}</td>
+            <td class="text-right text-text-muted whitespace-nowrap">{{ f.sueldoBase | moneda:'BOB' }}</td>
             <td class="text-right font-extrabold text-secondary text-base whitespace-nowrap">
-              {{ f.totalGanado | moneda }}
+              {{ f.totalGanado | moneda:'BOB' }}
             </td>
           </tr>
         }
@@ -193,10 +193,10 @@ import { FilaConsolidado } from '../planilla.model';
           <td class="text-right font-bold whitespace-nowrap">\${{ totales()['bonoTrimestral'] | number: '1.2-2' }}</td>
           <td class="text-right font-bold whitespace-nowrap">\${{ otrosBonos() | number: '1.2-2' }}</td>
           <td class="text-right font-bold text-primary whitespace-nowrap">\${{ totales()['totalUsd'] | number: '1.2-2' }}</td>
-          <td class="text-right font-bold whitespace-nowrap">{{ totales()['totalBob'] | moneda }}</td>
-          <td class="text-right font-bold whitespace-nowrap">{{ totales()['sueldoBase'] | moneda }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ totales()['totalBob'] | moneda:'BOB' }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ totales()['sueldoBase'] | moneda:'BOB' }}</td>
           <td class="text-right font-extrabold text-secondary text-base whitespace-nowrap">
-            {{ totales()['totalGanado'] | moneda }}
+            {{ totales()['totalGanado'] | moneda:'BOB' }}
           </td>
         </tr>
       </tfoot>

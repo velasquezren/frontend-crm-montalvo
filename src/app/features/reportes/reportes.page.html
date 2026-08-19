@@ -57,7 +57,7 @@
       style="--indice: 0"
       class="aparecer"
       label="Facturado"
-      [valor]="'$' + (a.resumen.montoVendido | number: '1.2-2')"
+      [valor]="a.resumen.montoVendido | moneda"
       icon="wallet"
       tono="primary"
       [destacado]="true"
@@ -76,11 +76,11 @@
       style="--indice: 2"
       class="aparecer"
       label="Comisión total"
-      [valor]="'$' + (a.resumen.comisionTotalUsd | number: '1.2-2')"
+      [valor]="a.resumen.comisionTotalUsd | moneda"
       icon="trending-up"
       tono="secondary"
       tonoValor="secondary"
-      [pie]="(comparativaMoM() ? (comparativaMoM()!.comisionDiff + ' vs ' + comparativaMoM()!.nombrePrevio + ' · ') : '') + (a.resumen.comisionTotalBob | moneda)" />
+      [pie]="(comparativaMoM() ? (comparativaMoM()!.comisionDiff + ' vs ' + comparativaMoM()!.nombrePrevio + ' · ') : '') + (a.resumen.comisionTotalBob | moneda:'BOB')" />
 
     <app-kpi-card
       style="--indice: 3"
@@ -138,7 +138,7 @@
             </div>
           </div>
           <div>
-            <span class="text-2xl font-extrabold text-text-dark tracking-tight block">${{ a.resumen.comisionTipoAUsd | number: '1.2-2' }}</span>
+            <span class="text-2xl font-extrabold text-text-dark tracking-tight block">{{ a.resumen.comisionTipoAUsd | moneda }}</span>
             <span class="text-xs text-text-muted font-medium mt-1 block">Planes y paquetes</span>
           </div>
         </div>
@@ -152,7 +152,7 @@
             </div>
           </div>
           <div>
-            <span class="text-2xl font-extrabold text-text-dark tracking-tight block">${{ a.resumen.comisionTipoBUsd | number: '1.2-2' }}</span>
+            <span class="text-2xl font-extrabold text-text-dark tracking-tight block">{{ a.resumen.comisionTipoBUsd | moneda }}</span>
             <span class="text-xs text-text-muted font-medium mt-1 block">Cirugías y Reproducción Asistida</span>
           </div>
         </div>
@@ -166,7 +166,7 @@
             </div>
           </div>
           <div>
-            <span class="text-2xl font-extrabold text-text-dark tracking-tight block">${{ a.resumen.comisionTipoCUsd | number: '1.2-2' }}</span>
+            <span class="text-2xl font-extrabold text-text-dark tracking-tight block">{{ a.resumen.comisionTipoCUsd | moneda }}</span>
             <span class="text-xs text-text-muted font-medium mt-1 block">Consultas, labs, ecografías</span>
           </div>
         </div>
@@ -180,7 +180,7 @@
             </div>
           </div>
           <div>
-            <span class="text-2xl font-extrabold text-text-dark tracking-tight block">${{ a.resumen.bonosUsd | number: '1.2-2' }}</span>
+            <span class="text-2xl font-extrabold text-text-dark tracking-tight block">{{ a.resumen.bonosUsd | moneda }}</span>
             <span class="text-xs text-text-muted font-medium mt-1 block">Jefatura y trimestrales</span>
           </div>
         </div>
@@ -253,7 +253,7 @@
               <tr>
                 <td class="text-left font-semibold text-text-dark">{{ c.etiqueta }}</td>
                 <td class="text-right font-medium">{{ c.cantidad }}</td>
-                <td class="text-right font-semibold text-text-dark">${{ c.montoVendido | number: '1.2-2' }}</td>
+                <td class="text-right font-semibold text-text-dark">{{ c.montoVendido | moneda }}</td>
                 <td class="text-right text-text-muted">{{ c.baseCalculo | moneda }}</td>
                 <td class="text-right">
                   <span class="badge-pct">{{ c.pctMonto }}%</span>
@@ -386,7 +386,7 @@
               </td>
               <td class="text-left text-sm font-medium text-text-dark">{{ s.etiqueta }}</td>
               <td class="text-right font-medium">{{ s.cantidad }}</td>
-              <td class="text-right font-semibold text-text-dark">${{ s.montoVendido | number: '1.2-2' }}</td>
+              <td class="text-right font-semibold text-text-dark">{{ s.montoVendido | moneda }}</td>
               <td class="text-right text-text-muted font-medium">{{ s.pctMonto }}%</td>
             </tr>
           }
@@ -441,7 +441,7 @@
               </td>
               <td class="text-left text-sm font-medium text-text-dark">{{ m.etiqueta }}</td>
               <td class="text-right font-medium">{{ m.cantidad }}</td>
-              <td class="text-right font-semibold text-text-dark">${{ m.montoVendido | number: '1.2-2' }}</td>
+              <td class="text-right font-semibold text-text-dark">{{ m.montoVendido | moneda }}</td>
               <td class="text-right text-text-muted font-medium">{{ m.pctMonto }}%</td>
             </tr>
           }

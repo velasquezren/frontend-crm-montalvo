@@ -29,6 +29,7 @@
       <span class="text-xs font-semibold text-text-muted bg-bg-light px-2.5 py-1 rounded-full border border-border">
         TC {{ periodo.tipoCambio }}
       </span>
+      <app-moneda-toggle [mostrarDetalle]="true" />
       @if (hayAlertas()) {
         <app-badge variant="critical" icon="alert-circle">Revisar antes de calcular</app-badge>
       }
@@ -329,10 +330,10 @@
                     [class.tarjeta-agente-activa]="filtroVendedora() === a.vendedoraId"
                     (click)="alternarVendedora(a.vendedoraId)">
                     <span class="tarjeta-agente-nombre">{{ a.nombre }}</span>
-                    <span class="tarjeta-agente-monto">${{ a.monto | number: '1.2-2' }}</span>
+                    <span class="tarjeta-agente-monto">{{ a.monto | moneda }}</span>
                     <span class="tarjeta-agente-pie">
                       {{ a.ventas }} {{ a.ventas === 1 ? 'venta' : 'ventas' }}
-                      · base ${{ a.base | number: '1.2-2' }}
+                      · base {{ a.base | moneda }}
                     </span>
                   </button>
                 }
@@ -349,12 +350,11 @@
               <th class="text-left min-w-[130px]">Vendedora</th>
               <th class="text-center w-[90px]">Canal</th>
               <th class="text-right w-[110px]">
-                Precio USD
-                <app-info-hint titulo="Precio en dólares">
+                Precio
+                <app-info-hint titulo="Precio del servicio">
                   <p>
-                    Tal cual viene del Excel de FileMaker, que factura en
-                    <strong>dólares</strong>. La conversión a bolivianos se hace
-                    una sola vez al final, sobre la comisión ya calculada.
+                    Precio según el catálogo de FileMaker, visualizado en la moneda
+                    activa seleccionada (Bolivianos o Dólares).
                   </p>
                 </app-info-hint>
               </th>
@@ -380,7 +380,7 @@
                 </app-info-hint>
               </th>
               <th class="text-right w-[110px]">
-                Base Cálculo USD
+                Base Cálculo
                 <app-info-hint titulo="Sobre qué se comisiona">
                   <p>
                     Es la cifra sobre la que se aplica el porcentaje de comisión:
@@ -482,7 +482,7 @@
                 <td class="text-center">
                   <app-badge [variant]="v.canal === 'PROPIO' ? 'info' : 'neutral'">{{ v.canal }}</app-badge>
                 </td>
-                <td class="text-right font-medium text-text-dark whitespace-nowrap">${{ v.precio | number: '1.2-2' }}</td>
+                <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ v.precio | moneda }}</td>
                 <!-- Mostrar el importe del anticipo era repetir la base: en un
                      cobro de plan son SIEMPRE el mismo número, así que la
                      columna no añadía nada. Lo que cambia de una fila a otra —y
@@ -496,7 +496,7 @@
                     <span
                       class="ajuste ajuste-anticipo"
                       [class.ajuste-excede]="(porcentajeAnticipo(v) ?? 0) > 100">
-                      ${{ v.anticipoPlan | number: '1.2-2' }} · {{ porcentajeAnticipo(v) }}%
+                      {{ v.anticipoPlan | moneda }} · {{ porcentajeAnticipo(v) }}%
                     </span>
                     <!-- El estado del plan, para que administración vea en qué
                          punto va. No excluye ni cambia la comisión. -->
@@ -508,7 +508,7 @@
                   }
                 </td>
                 <td class="text-right whitespace-nowrap">
-                  <span class="text-text-muted tabular-nums">${{ v.ingresoNeto | number: '1.2-2' }}</span>
+                  <span class="text-text-muted tabular-nums">{{ v.ingresoNeto | moneda }}</span>
                 </td>
                 <td class="text-right whitespace-nowrap">
                   <span class="text-[11px] font-semibold tabular-nums"
@@ -573,12 +573,12 @@
                   {{ ventas.value().totales.ventas === 1 ? 'venta' : 'ventas' }}
                 </span>
               </td>
-              <td class="text-right">${{ ventas.value().totales.monto | number: '1.2-2' }}</td>
+              <td class="text-right">{{ ventas.value().totales.monto | moneda }}</td>
               <!-- Sin total de anticipos a propósito: en las filas de plan la
                    base YA es el anticipo, así que sumarlos aparte invitaría a
                    sumar dos veces lo mismo. -->
               <td></td>
-              <td class="text-right">${{ ventas.value().totales.base | number: '1.2-2' }}</td>
+              <td class="text-right">{{ ventas.value().totales.base | moneda }}</td>
               <td colspan="4"></td>
             </tr>
           </tfoot>
@@ -688,27 +688,27 @@
         </h3>
         <div class="grid-metricas">
           <div class="metrica">
-            <span class="metrica-valor">${{ rep.totales['montoVendido'] | number: '1.2-2' }}</span>
-            <span class="metrica-label">total vendido (USD)</span>
+            <span class="metrica-valor">{{ rep.totales['montoVendido'] | moneda }}</span>
+            <span class="metrica-label">total vendido</span>
           </div>
           <div class="metrica">
-            <span class="metrica-valor">${{ rep.totales['baseCalculo'] | number: '1.2-2' }}</span>
-            <span class="metrica-label">base de cálculo (USD)</span>
+            <span class="metrica-valor">{{ rep.totales['baseCalculo'] | moneda }}</span>
+            <span class="metrica-label">base de cálculo</span>
           </div>
           <div class="metrica">
-            <span class="metrica-valor text-primary">${{ rep.totales['totalUsd'] | number: '1.2-2' }}</span>
-            <span class="metrica-label">comisión total (USD)</span>
+            <span class="metrica-valor text-primary">{{ rep.totales['totalUsd'] | moneda }}</span>
+            <span class="metrica-label">comisión total</span>
           </div>
           <div class="metrica">
-            <span class="metrica-valor text-secondary">{{ rep.totales['totalBob'] | moneda }}</span>
-            <span class="metrica-label">comisión total (Bs)</span>
+            <span class="metrica-valor text-secondary">{{ rep.totales['totalBob'] | moneda:'BOB' }}</span>
+            <span class="metrica-label">comisión en bolivianos</span>
           </div>
         </div>
         <div class="flex flex-wrap gap-2 mt-4">
-          <span class="chip-motivo">Tipo A · Planes: ${{ rep.totales['comisionA'] | number: '1.2-2' }}</span>
-          <span class="chip-motivo">Tipo B · Cirugías: ${{ rep.totales['comisionB'] | number: '1.2-2' }}</span>
-          <span class="chip-motivo">Tipo C · Servicios: ${{ rep.totales['comisionC'] | number: '1.2-2' }}</span>
-          <span class="chip-motivo">Bonos: ${{ rep.totales['bonos'] | number: '1.2-2' }}</span>
+          <span class="chip-motivo">Tipo A · Planes: {{ rep.totales['comisionA'] | moneda }}</span>
+          <span class="chip-motivo">Tipo B · Cirugías: {{ rep.totales['comisionB'] | moneda }}</span>
+          <span class="chip-motivo">Tipo C · Servicios: {{ rep.totales['comisionC'] | moneda }}</span>
+          <span class="chip-motivo">Bonos: {{ rep.totales['bonos'] | moneda }}</span>
         </div>
       </section>
 
@@ -755,7 +755,7 @@
         <p class="text-sm font-semibold text-text-dark">{{ v.detalle }}</p>
         <p class="text-xs text-text-muted mt-0.5">
           {{ v.paciente || 'Sin paciente' }} · {{ v.vendedoraNombre || 'Sin vendedora' }}
-          · ${{ v.ingresoNeto | number: '1.2-2' }} de base
+          · {{ v.ingresoNeto | moneda }} de base
         </p>
       </div>
 

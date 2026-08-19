@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { MonedaToggleComponent } from '../../shared/components/moneda-toggle/moneda-toggle.component';
 import { DesempenoAgentesComponent } from './components/desempeno-agentes/desempeno-agentes.component';
 import { PlanillaComisionesPage } from '../planilla-comisiones/planilla-comisiones.page';
 import { ReportesPage } from '../reportes/reportes.page';
@@ -58,8 +59,9 @@ const TABS: readonly TabConfig[] = [
   imports: [
     PageHeaderComponent,
     IconComponent,
-    PlanillaComisionesPage,
+    MonedaToggleComponent,
     DesempenoAgentesComponent,
+    PlanillaComisionesPage,
     ReportesPage,
     ResumenAnualPage,
   ],

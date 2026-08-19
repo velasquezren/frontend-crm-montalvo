@@ -32,6 +32,8 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { SelectorPeriodoEmptyComponent } from '../../shared/components/selector-periodo-empty/selector-periodo-empty.component';
 import { TableComponent } from '../../shared/components/table/table.component';
+import { MonedaToggleComponent } from '../../shared/components/moneda-toggle/moneda-toggle.component';
+import { MonedaService } from '../../core/moneda/moneda.service';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import { SubtotalVendedora, TotalesVentas, PlanillaComisionesService } from './planilla-comisiones.service';
 import { TablaLiquidacionComponent } from './components/tabla-liquidacion.component';
@@ -76,6 +78,7 @@ interface VentasConTotales extends RespuestaPaginada<VentaImportada> {
     TablaLiquidacionComponent,
     ConfiguracionComisionesComponent,
     SeleccionPlanesComponent,
+    MonedaToggleComponent,
     DatePipe,
     DecimalPipe,
     MonedaPipe,
@@ -104,6 +107,7 @@ export class PlanillaComisionesPage implements OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly dialogService = inject(DialogService);
   private readonly vcr = inject(ViewContainerRef);
+  protected readonly monedaService = inject(MonedaService);
 
   /** Importar y borrar planillas queda reservado al super admin. */
   protected readonly esSuperAdmin = this.authService.isSuperAdmin;

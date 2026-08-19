@@ -51,7 +51,6 @@ type ColRanking = 'etiqueta' | 'cantidad' | 'montoVendido' | 'pctMonto';
   selector: 'app-reportes',
   imports: [
     TablaLiquidacionComponent,
-    DecimalPipe,
     MonedaPipe,
     BadgeComponent,
     ButtonComponent,

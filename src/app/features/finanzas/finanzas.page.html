@@ -1,9 +1,14 @@
 <div class="finanzas-contenedor">
   <!-- ── Encabezado Unificado del Hub ─────────────────────────────────── -->
   <header class="finanzas-header-wrapper">
-    <app-page-header
-      title="Finanzas & Comisiones"
-      subtitle="Liquidación mensual de comisiones, analítica de facturación médica y balance anual" />
+    <div class="flex items-center justify-between gap-4 flex-wrap pb-1">
+      <app-page-header
+        title="Finanzas & Comisiones"
+        subtitle="Liquidación mensual de comisiones, analítica de facturación médica y balance anual" />
+      <div class="flex items-center gap-2">
+        <app-moneda-toggle [mostrarDetalle]="true" />
+      </div>
+    </div>
 
     <!-- ── Barra de Pestañas Segmentadas ──────────────────────────────── -->
     <nav class="finanzas-tabs-bar" role="tablist" aria-label="Secciones de Finanzas">

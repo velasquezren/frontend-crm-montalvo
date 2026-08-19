@@ -208,8 +208,8 @@
               }
             </div>
             <div class="flex justify-between pt-1">
-              <span class="text-text-muted">Total Bonos en Bs:</span>
-              <strong class="text-text-dark">{{ (v.totalBonos * (periodoActual()?.tipoCambio ? +periodoActual()!.tipoCambio : 6.97)) | moneda }}</strong>
+              <span class="text-text-muted">Total Bonos:</span>
+              <strong class="text-text-dark">{{ v.totalBonos | moneda }}</strong>
             </div>
 
             <p class="text-[10px] text-text-muted leading-tight mt-1">
@@ -250,31 +250,31 @@
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <div class="sub-panel">
           <span class="block text-[11px] font-bold uppercase tracking-wider text-text-muted mb-0.5">Sueldo Base</span>
-          <span class="block text-sm font-bold text-text-dark">{{ v.sueldoBase | moneda }}</span>
+          <span class="block text-sm font-bold text-text-dark">{{ v.sueldoBase | moneda:'BOB' }}</span>
           <span class="block text-[10px] text-text-muted">Haber Básico</span>
         </div>
 
         <div class="sub-panel">
           <span class="block text-[11px] font-bold uppercase tracking-wider text-text-muted mb-0.5">Tipo A (Planes)</span>
-          <span class="block text-sm font-bold text-text-dark">{{ (v.comisionA * (periodoActual()?.tipoCambio ? +periodoActual()!.tipoCambio : 6.97)) | moneda }}</span>
-          <span class="block text-[10px] text-text-muted">$ {{ v.comisionA | number:'1.2-2' }} USD</span>
+          <span class="block text-sm font-bold text-text-dark">{{ v.comisionA | moneda }}</span>
+          <span class="block text-[10px] text-text-muted">Maternidad & Niños</span>
         </div>
 
         <div class="sub-panel">
           <span class="block text-[11px] font-bold uppercase tracking-wider text-text-muted mb-0.5">Tipo B (Cirugías)</span>
-          <span class="block text-sm font-bold text-text-dark">{{ (v.comisionB * (periodoActual()?.tipoCambio ? +periodoActual()!.tipoCambio : 6.97)) | moneda }}</span>
-          <span class="block text-[10px] text-text-muted">$ {{ v.comisionB | number:'1.2-2' }} USD</span>
+          <span class="block text-sm font-bold text-text-dark">{{ v.comisionB | moneda }}</span>
+          <span class="block text-[10px] text-text-muted">Cirugías & RA</span>
         </div>
 
         <div class="sub-panel">
           <span class="block text-[11px] font-bold uppercase tracking-wider text-text-muted mb-0.5">Tipo C (Servicios)</span>
-          <span class="block text-sm font-bold text-text-dark">{{ (v.comisionC * (periodoActual()?.tipoCambio ? +periodoActual()!.tipoCambio : 6.97)) | moneda }}</span>
-          <span class="block text-[10px] text-text-muted">$ {{ v.comisionC | number:'1.2-2' }} USD</span>
+          <span class="block text-sm font-bold text-text-dark">{{ v.comisionC | moneda }}</span>
+          <span class="block text-[10px] text-text-muted">Consultas, labs, ecos</span>
         </div>
 
         <div class="sub-panel bg-bg-light border-primary/40 col-span-2 sm:col-span-1">
           <span class="block text-[11px] font-bold uppercase tracking-wider text-primary mb-0.5">Total a Pagar</span>
-          <span class="block text-sm font-bold text-primary">{{ v.totalGanado | moneda }}</span>
+          <span class="block text-sm font-bold text-primary">{{ v.totalGanado | moneda:'BOB' }}</span>
           <span class="block text-[10px] text-text-muted">Comisiones + Sueldo</span>
         </div>
       </div>

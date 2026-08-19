@@ -24,8 +24,9 @@
       </span>
     </div>
 
-    <!-- Acciones — perfil + logout -->
+    <!-- Acciones — moneda + perfil + logout -->
     <div class="flex items-center gap-3">
+      <app-moneda-toggle size="sm" />
       @if (user(); as currentUser) {
         <div class="flex items-center gap-3">
           <a routerLink="/perfil" class="flex items-center gap-3 hover:opacity-90 transition-opacity cursor-pointer group" title="Ver mi perfil">

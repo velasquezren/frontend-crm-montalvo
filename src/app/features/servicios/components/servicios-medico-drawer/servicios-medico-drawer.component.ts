@@ -1,6 +1,7 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 
+import { MonedaService } from '../../../../core/moneda/moneda.service';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
@@ -39,6 +40,8 @@ const MESES = [
   styleUrl: './servicios-medico-drawer.component.css',
 })
 export class ServiciosMedicoDrawerComponent {
+  private readonly monedaService = inject(MonedaService);
+
   readonly perfil = input.required<PerfilMedico>();
 
   /**
@@ -74,11 +77,11 @@ export class ServiciosMedicoDrawerComponent {
       },
       {
         label: 'Facturado',
-        valor: formatearBs(r.ingreso),
+        valor: this.monedaService.formatear(r.ingreso, 'USD'),
         icon: 'wallet' as const,
         tono: 'primary' as const,
         destacado: true,
-        pie: `${formatearBs(r.ticketPromedio)} por servicio`,
+        pie: `${this.monedaService.formatear(r.ticketPromedio, 'USD')} por servicio`,
       },
     ];
   });

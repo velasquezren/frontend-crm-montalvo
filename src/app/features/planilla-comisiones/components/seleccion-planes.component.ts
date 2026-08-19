@@ -6,6 +6,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { InfoHintComponent } from '../../../shared/components/info-hint/info-hint.component';
 import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton/loading-skeleton.component';
+import { MonedaPipe } from '../../../shared/pipes/moneda.pipe';
 import { GrupoPlanes, VentaImportada } from '../planilla.model';
 
 /**
@@ -19,7 +20,7 @@ import { GrupoPlanes, VentaImportada } from '../planilla.model';
 @Component({
   selector: 'app-seleccion-planes',
   imports: [
-    DecimalPipe,
+    MonedaPipe,
     BadgeComponent,
     EmptyStateComponent,
     IconComponent,

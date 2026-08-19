@@ -28,8 +28,9 @@
       <span class="pill-meta">{{ mesesConDatos() }} de 12 meses importados</span>
       <span class="pill-meta">{{ res.filas.length }} vendedoras</span>
       <span class="pill-meta bg-primary/10 text-primary font-bold border-primary/20">
-        ${{ totalAnual() | number: '1.0-0' }} USD
+        {{ totalAnual() | moneda }}
       </span>
+      <app-moneda-toggle [mostrarDetalle]="true" />
     </div>
   }
 </div>
@@ -50,7 +51,7 @@
   <section class="grid-kpis-modern mb-6">
     <app-kpi-card
       label="Facturado Anual"
-      [valor]="'$' + (totalAnual() | number: '1.0-0')"
+      [valor]="totalAnual() | moneda"
       icon="wallet"
       tono="primary"
       [destacado]="true"
@@ -58,7 +59,7 @@
 
     <app-kpi-card
       label="Promedio Mensual"
-      [valor]="'$' + (promedioMensual() | number: '1.0-0')"
+      [valor]="promedioMensual() | moneda"
       icon="trending-up"
       tono="secondary"
       tonoValor="secondary"
@@ -66,7 +67,7 @@
 
     <app-kpi-card
       label="Bonos Trimestrales"
-      [valor]="'$' + (totalBonosAnualUsd() | number: '1.0-0')"
+      [valor]="totalBonosAnualUsd() | moneda"
       icon="award"
       tono="secondary"
       [pie]="vendedorasQueCobranBono() + ' vendedora(s) alcanzaron la meta'" />
@@ -188,7 +189,7 @@
             @for (m of mesesCortos; track m) {
               <th class="text-right col-mes">{{ m }}</th>
             }
-            <th class="text-right col-total">Total (USD)</th>
+            <th class="text-right col-total">Total</th>
           </tr>
         </thead>
         <tbody>
@@ -206,7 +207,7 @@
                   [class.celda-sin-liquidar]="mes.importado && !mes.liquidado">
                   @if (mes.importado) {
                     <span [class.font-semibold]="mes.montoVendido > 0">
-                      {{ mes.montoVendido | number: '1.0-0' }}
+                      {{ mes.montoVendido | moneda }}
                     </span>
                   } @else {
                     <span class="text-text-muted/60">—</span>
@@ -215,7 +216,7 @@
               }
 
               <td class="text-right col-total font-mono text-xs font-bold text-primary whitespace-nowrap">
-                ${{ f.totalVendido | number: '1.0-0' }}
+                {{ f.totalVendido | moneda }}
               </td>
             </tr>
           } @empty {
@@ -229,7 +230,7 @@
         <tfoot>
           <tr class="fila-totales">
             <td class="text-left font-bold celda-sticky col-vendedora text-xs">
-              TOTALES (USD)
+              TOTALES
               <!-- Con un filtro activo el pie suma SOLO lo visible, para que
                    cuadre con las filas de encima. Se dice, o parece que el año
                    entero vendió menos. -->
@@ -240,14 +241,14 @@
             @for (t of totalesPorMesFiltrados(); track $index) {
               <td class="text-right col-mes font-mono font-bold text-[11px] whitespace-nowrap">
                 @if (t > 0) {
-                  {{ t | number: '1.0-0' }}
+                  {{ t | moneda }}
                 } @else {
                   <span class="text-text-muted/60">—</span>
                 }
               </td>
             }
             <td class="text-right col-total font-mono font-extrabold text-xs text-primary whitespace-nowrap">
-              ${{ totalFiltrado() | number: '1.0-0' }}
+              {{ totalFiltrado() | moneda }}
             </td>
           </tr>
         </tfoot>
@@ -340,7 +341,7 @@
 
                   <div class="flex items-baseline justify-between text-xs my-1">
                     <span class="text-text-muted text-[11px]">Promedio:</span>
-                    <span class="font-bold text-text-dark font-mono">${{ t.promedio | number: '1.0-0' }}</span>
+                    <span class="font-bold text-text-dark font-mono">{{ t.promedio | moneda }}</span>
                   </div>
 
                   <div class="w-full h-1.5 bg-bg-light rounded-full overflow-hidden mb-1">
@@ -352,7 +353,7 @@
                   </div>
 
                   <p class="text-[10px] text-text-muted leading-tight font-mono">
-                    meta ${{ t.objetivoUsd | number: '1.0-0' }}
+                    meta {{ t.objetivoUsd | moneda }}
                   </p>
 
                   @if (leyendaTrimestre(t); as leyenda) {
@@ -362,7 +363,7 @@
                   @if (t.bonoUsd > 0) {
                     <div class="mt-2 pt-1.5 border-t border-border/40 flex items-center justify-between">
                       <span class="text-[10px] font-bold text-text-dark">Bono:</span>
-                      <span class="text-xs font-bold text-secondary font-mono">${{ t.bonoUsd | number: '1.2-2' }}</span>
+                      <span class="text-xs font-bold text-secondary font-mono">{{ t.bonoUsd | moneda }}</span>
                     </div>
                   }
                 </div>
