@@ -78,6 +78,7 @@ export class ConversacionComposerComponent implements OnDestroy {
   /* ── Template Refs ─────────────────────────────────────────────── */
   private readonly modalPlantillas = viewChild<TemplateRef<unknown>>('modalPlantillas');
   private readonly modalGestionPlantillas = viewChild<TemplateRef<unknown>>('modalGestionPlantillas');
+  private readonly modalConfirmarMedia = viewChild<TemplateRef<unknown>>('modalConfirmarMedia');
   private overlayRef?: OverlayRef;
 
   /* ── Adjuntos & Drag and Drop ──────────────────────────────────── */
@@ -227,9 +228,9 @@ export class ConversacionComposerComponent implements OnDestroy {
     this.adjuntoPendiente.set(null);
   }
 
-  /* ── Envío de Mensajes con Rollback Optimista ──────────────────── */
-  protected async enviar(event: Event): Promise<void> {
-    event.preventDefault();
+  /* ── Envío de Mensajes con Rollback Optimista & Confirmación de Media ── */
+  protected async enviar(event?: Event): Promise<void> {
+    event?.preventDefault();
     const texto = this.state.mensajeNuevo().trim();
     const id = this.state.seleccionadaId();
     const adj = this.adjuntoPendiente();
@@ -241,6 +242,44 @@ export class ConversacionComposerComponent implements OnDestroy {
       this.toast.warning(`Han pasado >${horas}h desde el último mensaje del paciente. Usa una Plantilla de WhatsApp.`);
       return;
     }
+
+    // Si hay un adjunto (imagen o documento), solicitar confirmación explícita para evitar envíos accidentales
+    if (adj) {
+      this.abrirConfirmarMedia();
+      return;
+    }
+
+    await this.ejecutarEnvio();
+  }
+
+  protected abrirConfirmarMedia(): void {
+    const tmpl = this.modalConfirmarMedia();
+    if (!tmpl) return;
+    this.overlayRef?.dispose();
+    this.overlayRef = this.dialogService.openTemplate(tmpl, this.vcr);
+  }
+
+  protected cerrarConfirmarMedia(): void {
+    this.overlayRef?.dispose();
+    this.overlayRef = undefined;
+  }
+
+  protected quitarAdjuntoDesdeModal(): void {
+    this.quitarAdjunto();
+    this.cerrarConfirmarMedia();
+  }
+
+  protected async confirmarYEnviarMedia(): Promise<void> {
+    this.cerrarConfirmarMedia();
+    await this.ejecutarEnvio();
+  }
+
+  private async ejecutarEnvio(): Promise<void> {
+    const texto = this.state.mensajeNuevo().trim();
+    const id = this.state.seleccionadaId();
+    const adj = this.adjuntoPendiente();
+
+    if ((!texto && !adj) || !id || this.state.enviando()) return;
 
     this.state.enviando.set(true);
     const chatPrevio = this.state.detalle.value();

@@ -373,3 +373,93 @@
     </div>
   </div>
 </ng-template>
+
+<!-- ── Modal: confirmación de envío de imagen o archivo ────────────── -->
+<ng-template #modalConfirmarMedia>
+  <div class="pointer-events-auto w-full max-w-md bg-white rounded-2xl shadow-lifted overflow-hidden border border-border animate-modal-pop">
+    <!-- Cabecera -->
+    <div class="flex items-center justify-between px-5 py-4 border-b border-border bg-bg-light/40">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+          <app-icon [name]="adjuntoPendiente()?.mediaMime?.startsWith('image/') ? 'image' : 'file-text'" [size]="16" />
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-text-dark">Confirmar envío</h3>
+          <p class="text-[11px] text-text-muted">Verifica la imagen antes de enviarla al paciente</p>
+        </div>
+      </div>
+      <button
+        type="button"
+        (click)="cerrarConfirmarMedia()"
+        class="p-1.5 text-text-muted hover:text-text-dark hover:bg-black/5 rounded-lg cursor-pointer transition-colors"
+        aria-label="Cerrar">
+        <app-icon name="x" [size]="16" />
+      </button>
+    </div>
+
+    <!-- Cuerpo con vista previa -->
+    <div class="p-5 space-y-4">
+      <!-- Ficha del paciente / destinatario -->
+      <div class="p-3 rounded-xl bg-bg-workspace border border-border flex items-center justify-between">
+        <div class="min-w-0 flex-1">
+          <span class="text-[10px] uppercase font-bold text-text-muted block">Destinatario</span>
+          <p class="text-xs font-bold text-text-dark truncate">
+            {{ state.detalle.value()?.cliente?.nombre || 'Paciente' }}
+          </p>
+        </div>
+        @if (state.detalle.value()?.cliente?.telefono; as tel) {
+          <span class="text-xs font-mono text-text-muted shrink-0 ml-2">{{ tel }}</span>
+        }
+      </div>
+
+      <!-- Vista previa de la imagen -->
+      @if (adjuntoPendiente(); as adj) {
+        <div class="space-y-2">
+          @if (adj.vistaPrevia) {
+            <div class="relative rounded-xl overflow-hidden bg-bg-light border border-border/80 flex items-center justify-center max-h-60 p-1 shadow-subtle">
+              <img [src]="adj.vistaPrevia" [alt]="adj.mediaNombre || 'Vista previa'" class="max-h-56 w-auto object-contain rounded-lg" />
+            </div>
+          }
+          <div class="flex items-center justify-between text-xs text-text-muted px-0.5">
+            <span class="truncate font-medium flex items-center gap-1.5">
+              <app-icon [name]="adj.mediaMime?.startsWith('image/') ? 'image' : 'file-text'" [size]="14" class="text-primary shrink-0" />
+              {{ adj.mediaNombre || 'Archivo adjunto' }}
+            </span>
+            <button
+              type="button"
+              (click)="quitarAdjuntoDesdeModal()"
+              class="text-critical hover:underline font-semibold text-xs shrink-0 cursor-pointer ml-2">
+              Quitar
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Mensaje o texto adjunto opcional -->
+      @if (state.mensajeNuevo().trim(); as msg) {
+        <div class="p-3 rounded-xl bg-bg-light/60 border border-border/70">
+          <span class="text-[10px] uppercase font-bold text-text-muted block mb-1">Texto adjunto</span>
+          <p class="text-xs text-text-dark whitespace-pre-wrap leading-relaxed">{{ msg }}</p>
+        </div>
+      }
+    </div>
+
+    <!-- Pie con acciones -->
+    <div class="flex items-center justify-end gap-2.5 px-5 py-3.5 border-t border-border bg-bg-light/30">
+      <app-button
+        variant="ghost"
+        size="sm"
+        (clicked)="cerrarConfirmarMedia()">
+        Cancelar
+      </app-button>
+      <app-button
+        variant="primary"
+        size="sm"
+        icon="send"
+        [loading]="state.enviando()"
+        (clicked)="confirmarYEnviarMedia()">
+        Enviar imagen
+      </app-button>
+    </div>
+  </div>
+</ng-template>
