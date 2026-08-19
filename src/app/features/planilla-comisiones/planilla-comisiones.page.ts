@@ -95,6 +95,7 @@ interface VentasConTotales extends RespuestaPaginada<VentaImportada> {
     BadgeComponent,
     ButtonComponent,
     EmptyStateComponent,
+    FilterChipComponent,
     IconComponent,
     InfoHintComponent,
     InputComponent,

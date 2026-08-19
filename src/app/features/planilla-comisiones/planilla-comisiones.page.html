@@ -257,13 +257,15 @@
             <option [value]="t" [selected]="t === filtroTipo()">Tipo {{ t }} — {{ tipoLabel[t] }}</option>
           }
         </select>
-        <button type="button" class="chip-filtro" [class.chip-filtro-activo]="soloSinClasificar()" (click)="alternarSoloSinClasificar()">
+        <app-filter-chip [active]="soloSinClasificar()" (clicked)="alternarSoloSinClasificar()">
           Sin clasificar
-        </button>
-        <button type="button" class="chip-filtro" [class.chip-filtro-activo]="soloExcluidas()" (click)="alternarSoloExcluidas()">
+        </app-filter-chip>
+        <app-filter-chip [active]="soloExcluidas()" (clicked)="alternarSoloExcluidas()">
           Excluidas
-        </button>
-        <app-button variant="ghost" size="sm" icon="x" (clicked)="limpiarFiltros()">Limpiar</app-button>
+        </app-filter-chip>
+        @if (hayFiltroActivo()) {
+          <app-button variant="ghost" size="sm" icon="x" (clicked)="limpiarFiltros()">Limpiar</app-button>
+        }
 
         @if (periodoActual()?.estado !== 'CERRADO') {
           <app-button icon="percent" [loading]="calculando()" (clicked)="calcular()">
