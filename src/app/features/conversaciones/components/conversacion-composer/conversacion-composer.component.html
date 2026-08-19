@@ -175,11 +175,7 @@
             Ventana de atención inactiva ({{ state.horasVentanaMeta() }}h)
           </p>
           <p class="text-[11px] text-text-muted leading-tight truncate">
-            @if (state.esLeadMetaAds()) {
-              Han pasado >72h desde el mensaje del anuncio. Para contactar al paciente debes enviar una Plantilla Oficial de WhatsApp.
-            } @else {
-              Han pasado >24h desde el último mensaje del paciente. Para contactar al paciente debes enviar una Plantilla Oficial de WhatsApp.
-            }
+            Han pasado >24h desde el último mensaje del paciente (o >72h del anuncio). Para contactar al paciente debes enviar una Plantilla Oficial de WhatsApp.
           </p>
         </div>
       </div>

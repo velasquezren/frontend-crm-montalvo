@@ -194,6 +194,28 @@ export class ConversacionesStateService {
     );
   });
 
+  /** Fecha en que el lead hizo clic en el anuncio de Meta Ads, si aplica. */
+  readonly fechaCampanaMeta = computed<Date | null>(() => {
+    const chat = this.detalle.value();
+    if (!chat) return null;
+    const datos = chat.cliente.datosExtra;
+    if (!datos || typeof datos !== 'object') return null;
+    const campana = (datos as Record<string, unknown>)['campanaOrigen'] as { fecha?: string } | undefined;
+    const referral = (datos as Record<string, unknown>)['referral'] as { fecha?: string } | undefined;
+    const fechaStr = campana?.fecha || referral?.fecha;
+    if (!fechaStr) return null;
+    const d = new Date(fechaStr);
+    return isNaN(d.getTime()) ? null : d;
+  });
+
+  /** Si la ventana extendida de 72h por anuncio de Meta Ads está actualmente activa desde que se originó el anuncio. */
+  readonly ventana72hMetaActiva = computed(() => {
+    const fechaCampana = this.fechaCampanaMeta();
+    if (!fechaCampana) return false;
+    const horasDesdeCampana = (Date.now() - fechaCampana.getTime()) / (1000 * 60 * 60);
+    return horasDesdeCampana >= 0 && horasDesdeCampana < 72;
+  });
+
   readonly esLeadMetaAds = computed(() => {
     const chat = this.detalle.value();
     if (!chat) return false;
@@ -201,15 +223,20 @@ export class ConversacionesStateService {
     return Boolean(datos?.['campanaOrigen'] || datos?.['referral']);
   });
 
-  readonly horasVentanaMeta = computed(() => (this.esLeadMetaAds() ? 72 : 24));
+  readonly horasVentanaMeta = computed(() => (this.ventana72hMetaActiva() ? 72 : 24));
 
   readonly fueraDeVentana24h = computed(() => {
     const chat = this.detalle.value();
     if (!chat) return false;
     const ultimoEntrante = [...chat.mensajes].reverse().find(m => m.direccion === 'ENTRANTE');
     if (!ultimoEntrante) return true;
+
+    // Si la ventana de 72h por anuncio Click-to-WhatsApp sigue vigente desde la fecha del anuncio
+    if (this.ventana72hMetaActiva()) return false;
+
+    // Ventana estándar de servicio al cliente: 24h desde el último mensaje entrante del paciente
     const haceHoras = (Date.now() - new Date(ultimoEntrante.createdAt).getTime()) / (1000 * 60 * 60);
-    return haceHoras >= this.horasVentanaMeta();
+    return haceHoras >= 24;
   });
 
   readonly horasRestantesVentana = computed(() => {
@@ -217,9 +244,20 @@ export class ConversacionesStateService {
     if (!chat) return 0;
     const ultimoEntrante = [...chat.mensajes].reverse().find(m => m.direccion === 'ENTRANTE');
     if (!ultimoEntrante) return 0;
-    const haceHoras = (Date.now() - new Date(ultimoEntrante.createdAt).getTime()) / (1000 * 60 * 60);
-    const limite = this.horasVentanaMeta();
-    return Math.max(0, Math.round((limite - haceHoras) * 10) / 10);
+
+    const haceHorasMsg = (Date.now() - new Date(ultimoEntrante.createdAt).getTime()) / (1000 * 60 * 60);
+    const restanteMsg = Math.max(0, 24 - haceHorasMsg);
+
+    if (this.ventana72hMetaActiva()) {
+      const fechaCampana = this.fechaCampanaMeta();
+      if (fechaCampana) {
+        const haceHorasCampana = (Date.now() - fechaCampana.getTime()) / (1000 * 60 * 60);
+        const restanteCampana = Math.max(0, 72 - haceHorasCampana);
+        return Math.round(Math.max(restanteMsg, restanteCampana) * 10) / 10;
+      }
+    }
+
+    return Math.round(restanteMsg * 10) / 10;
   });
 
   readonly notaMedicaFijada = computed(() => {
