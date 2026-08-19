@@ -114,14 +114,13 @@ import { FilaConsolidado } from '../planilla.model';
 
             <td class="text-right whitespace-nowrap">
               <span class="font-medium text-text-dark">{{ f.planesVendidos }}</span>
-              @if (f.planpaqComisionables + f.planninComisionables; as comisionables) {
-                <span class="text-[10px] text-primary font-semibold block text-right">
-                  {{ comisionables }} comisiona{{ comisionables === 1 ? '' : 'n' }}
-                </span>
-              } @else if (f.planesVendidos > 0) {
-                <span class="text-[10px] text-text-muted font-semibold block text-right"
-                  title="El objetivo es una franquicia: solo comisionan los planes que lo SUPERAN.">
-                  no supera el objetivo
+              @if (planesInfo(f); as info) {
+                <span
+                  class="text-[10px] font-semibold block text-right"
+                  [class.text-primary]="info.esComisionable"
+                  [class.text-text-muted]="!info.esComisionable"
+                  [title]="info.esComisionable ? 'Supera el objetivo comercial y genera comisión Tipo A' : 'El objetivo es una franquicia: solo comisionan los planes que lo SUPERAN.'">
+                  {{ info.texto }}
                 </span>
               }
             </td>
@@ -231,4 +230,28 @@ export class TablaLiquidacionComponent {
     const t = this.totales();
     return (t['bonos'] ?? 0) - (t['bonoTrimestral'] ?? 0);
   });
+
+  protected planesInfo(f: FilaConsolidado): { texto: string; esComisionable: boolean } | null {
+    if (!f.planesVendidos || f.planesVendidos <= 0) return null;
+
+    const comisionables = (Number(f.planpaqComisionables) || 0) + (Number(f.planninComisionables) || 0);
+    if (comisionables > 0) {
+      return {
+        texto: `${comisionables} comisiona${comisionables === 1 ? '' : 'n'}`,
+        esComisionable: true,
+      };
+    }
+
+    if (f.comisionA > 0 || f.cumpleObjetivoPlanes) {
+      return {
+        texto: 'comisiona Tipo A',
+        esComisionable: true,
+      };
+    }
+
+    return {
+      texto: 'no supera el objetivo',
+      esComisionable: false,
+    };
+  }
 }
