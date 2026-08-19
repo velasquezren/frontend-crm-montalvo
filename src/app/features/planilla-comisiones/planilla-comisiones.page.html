@@ -472,6 +472,11 @@
                       [class.ajuste-excede]="(porcentajeAnticipo(v) ?? 0) > 100">
                       ${{ v.anticipoPlan | number: '1.2-2' }} · {{ porcentajeAnticipo(v) }}%
                     </span>
+                    <!-- El estado del plan, para que administración vea en qué
+                         punto va. No excluye ni cambia la comisión. -->
+                    @if (v.estadoPlan) {
+                      <span class="estado-plan">{{ v.estadoPlan }}</span>
+                    }
                   } @else {
                     <span class="text-text-muted">—</span>
                   }

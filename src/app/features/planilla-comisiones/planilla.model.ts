@@ -69,6 +69,14 @@ export interface VentaImportada {
    * precio, y esa era justo la pregunta que nadie sabía responder mirando la fila.
    */
   anticipoPlan?: string | null;
+  /**
+   * Estado del plan en FileMaker (APROBADO / TERMINADO). Solo en filas de plan.
+   *
+   * **No excluye ni cambia la comisión** — antes sí, y se retiró. Y **no dice si
+   * la paciente pagó**: en enero hay TERMINADOS con el 25 % pagado y APROBADOS
+   * con el 100 %. Está para que administración vea en qué punto va cada plan.
+   */
+  estadoPlan?: string | null;
   ingresoNeto: string;
   canal: CanalVenta;
   unidadNegocio: UnidadNegocio;

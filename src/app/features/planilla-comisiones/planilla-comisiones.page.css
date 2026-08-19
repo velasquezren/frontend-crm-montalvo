@@ -563,3 +563,16 @@
   color: var(--color-text-critical);
   background: var(--color-critical-bg);
 }
+
+/* Estado del plan en FileMaker, bajo el anticipo. Es contexto para
+   administración —en qué punto va cada plan— y nada más: no excluye la fila ni
+   cambia la comisión, y tampoco dice si la paciente pagó. */
+.estado-plan {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  color: var(--color-text-muted);
+}
