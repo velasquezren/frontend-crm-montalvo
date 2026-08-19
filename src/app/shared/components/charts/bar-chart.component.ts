@@ -1,7 +1,7 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 
-import { formatearBs } from '../../pipes/moneda.pipe';
+import { MonedaService } from '../../../core/moneda/moneda.service';
 
 export interface ChartItem {
   readonly label: string;
@@ -214,7 +214,20 @@ export class BarChartComponent {
   readonly title = input<string>('');
   readonly subtitle = input<string>('');
   readonly height = input<string>('240px');
+  private readonly moneda = inject(MonedaService);
+
   readonly formatType = input<'currency' | 'number' | 'percent'>('currency');
+  /**
+   * En qué moneda vienen los valores de la serie.
+   *
+   * Por defecto BOB, que es lo que hacía este componente cuando formateaba con
+   * `formatearBs`. Se declara porque no siempre es cierto: las gráficas de
+   * Reportes se alimentan de la analítica de comisiones, que viene en DÓLARES, y
+   * las estaban imprimiendo con la etiqueta "Bs" sin convertir — la misma cifra
+   * que la tabla de al lado mostraba multiplicada por el tipo de cambio.
+   */
+  readonly origenMoneda = input<'USD' | 'BOB'>('BOB');
+
 
   protected readonly hoveredLabel = signal<string | null>(null);
 
@@ -244,7 +257,7 @@ export class BarChartComponent {
 
   protected format(val: number): string {
     const type = this.formatType();
-    if (type === 'currency') return formatearBs(val);
+    if (type === 'currency') return this.moneda.formatear(val, this.origenMoneda());
     if (type === 'percent') return `${val.toFixed(1)}%`;
     return val.toLocaleString('es-BO');
   }

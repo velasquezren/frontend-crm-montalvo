@@ -209,6 +209,7 @@
           title=""
           subtitle=""
           etiquetaTotal="facturado"
+          origenMoneda="USD"
           [items]="serieCategorias()" />
       </div>
 
@@ -274,7 +275,8 @@
         subtitle="Facturación acumulada por día del mes"
         mode="COLUMN"
         height="240px"
-        [items]="serieDiaria()" />
+        origenMoneda="USD"
+          [items]="serieDiaria()" />
     </section>
   } @placeholder {
     <section class="panel">
@@ -290,6 +292,7 @@
           title="Canal de venta"
           subtitle="Empresa vs. gestión propia de la vendedora"
           etiquetaTotal="facturado"
+          origenMoneda="USD"
           [items]="serieCanal()" />
       </section>
       <section style="--indice: 4" class="aparecer panel">
@@ -297,6 +300,7 @@
           title="Unidad de negocio"
           subtitle="Maternidad, Reproducción Asistida y Varios"
           etiquetaTotal="facturado"
+          origenMoneda="USD"
           [items]="serieUnidad()" />
       </section>
     </div>
@@ -314,6 +318,7 @@
           title="Módulo de origen"
           subtitle="De qué parte de FileMaker viene cada venta"
           mode="BAR" height="190px"
+          origenMoneda="USD"
           [items]="serieModulo()" />
       </section>
       <section style="--indice: 6" class="aparecer panel">
@@ -322,7 +327,8 @@
             title="Nivel de plan"
             subtitle="Reparto de los planes de maternidad vendidos"
             mode="BAR" height="190px"
-            [items]="serieNivel()" />
+            origenMoneda="USD"
+          [items]="serieNivel()" />
         } @else {
           <h3 class="titulo-seccion mb-2">Nivel de plan</h3>
           <app-empty-state icon="file-x" title="Sin planes de maternidad"

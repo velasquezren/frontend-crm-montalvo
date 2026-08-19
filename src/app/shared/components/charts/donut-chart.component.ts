@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 
-import { formatearBs } from '../../pipes/moneda.pipe';
+import { MonedaService } from '../../../core/moneda/moneda.service';
 import { ChartItem } from './bar-chart.component';
 
 /**
@@ -262,7 +262,20 @@ export class DonutChartComponent {
    * cuentan cosas —servicios, pacientes— y ponerles "Bs" delante las hacía
    * mentir: 711 servicios no son 711 bolivianos.
    */
+  private readonly moneda = inject(MonedaService);
+
   readonly formatType = input<'currency' | 'number' | 'percent'>('currency');
+  /**
+   * En qué moneda vienen los valores de la serie.
+   *
+   * Por defecto BOB, que es lo que hacía este componente cuando formateaba con
+   * `formatearBs`. Se declara porque no siempre es cierto: las gráficas de
+   * Reportes se alimentan de la analítica de comisiones, que viene en DÓLARES, y
+   * las estaban imprimiendo con la etiqueta "Bs" sin convertir — la misma cifra
+   * que la tabla de al lado mostraba multiplicada por el tipo de cambio.
+   */
+  readonly origenMoneda = input<'USD' | 'BOB'>('BOB');
+
 
   protected readonly resaltada = signal<string | null>(null);
 
@@ -310,7 +323,7 @@ export class DonutChartComponent {
 
   private formatearTotal(valor: number): string {
     const tipo = this.formatType();
-    if (tipo === 'currency') return formatearBs(valor);
+    if (tipo === 'currency') return this.moneda.formatear(valor, this.origenMoneda());
     if (tipo === 'percent') return `${valor.toFixed(1)}%`;
     return valor.toLocaleString('es-BO');
   }

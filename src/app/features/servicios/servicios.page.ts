@@ -28,9 +28,8 @@ import { InfoHintComponent } from '../../shared/components/info-hint/info-hint.c
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { TableComponent } from '../../shared/components/table/table.component';
-import { MonedaToggleComponent } from '../../shared/components/moneda-toggle/moneda-toggle.component';
 import { MonedaService } from '../../core/moneda/moneda.service';
-import { formatearBs, MonedaPipe } from '../../shared/pipes/moneda.pipe';
+import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import {
   ESTADO_PERIODO_LABEL,
   MESES,
@@ -67,7 +66,6 @@ type Pestana = 'DASHBOARD' | 'PACIENTES' | 'MEDICOS';
   imports: [
     DecimalPipe,
     MonedaPipe,
-    MonedaToggleComponent,
     BadgeComponent,
     BarChartComponent,
     ButtonComponent,

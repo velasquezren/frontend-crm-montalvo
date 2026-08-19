@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
+import { MonedaService } from '../../../core/moneda/moneda.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { cubreRol } from '../../../core/auth/roles';
 import { ToastContainerComponent } from '../../../core/toast/toast-container.component';
@@ -35,9 +36,24 @@ export class LayoutComponent {
   private readonly router = inject(Router);
   private readonly elementRef = inject(ElementRef);
 
+  /**
+   * El tipo de cambio se pide UNA vez, aquí y no en `provideAppInitializer`.
+   *
+   * Este componente es el armazón de la sesión iniciada: existe solo cuando hay
+   * usuario, así que la petición nunca sale sin token —ni en la pantalla de
+   * login— y se hace igual tras un login nuevo que tras un F5. Se dispara con
+   * `void` porque nada debe esperarla: mientras no responda se usa el TC de
+   * respaldo y la aplicación pinta al instante.
+   */
+  private readonly moneda = inject(MonedaService);
+
   /** Con un chat abierto en el teléfono, las barras se apartan. Solo aplica
    *  por debajo de 768px: en escritorio el CSS lo ignora. */
   protected readonly inmersivo = inject(ModoInmersivoService).activo;
+
+  constructor() {
+    void this.moneda.cargarTipoCambio();
+  }
 
   protected readonly user = this.authService.user;
   protected readonly isAdmin = this.authService.isAdmin;

@@ -13,7 +13,6 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { BarChartComponent, ChartItem } from '../../shared/components/charts/bar-chart.component';
-import { MonedaToggleComponent } from '../../shared/components/moneda-toggle/moneda-toggle.component';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import { FilaAnual, MESES_CORTOS, ResumenAnual, TrimestreVendedora } from './planilla.model';
 import { PlanillaComisionesService } from './planilla-comisiones.service';
@@ -35,7 +34,6 @@ export type FiltroBonoResumen = 'TODAS' | 'CON_BONO' | 'SIN_BONO';
   imports: [
     DecimalPipe,
     MonedaPipe,
-    MonedaToggleComponent,
     PageHeaderComponent,
     TableComponent,
     BadgeComponent,

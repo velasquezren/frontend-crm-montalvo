@@ -1,9 +1,46 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
+
+import { ApiService } from '../api/api.service';
 
 export type MonedaVisualizacion = 'BOB' | 'USD';
 
 const CLAVE_STORAGE = 'crm_moneda_visualizacion';
-export const TIPO_CAMBIO_POR_DEFECTO = 6.97;
+
+/**
+ * Solo se usa mientras el backend no ha contestado, o si no contesta.
+ *
+ * **No es "el tipo de cambio del sistema".** Ese vive en el backend, en el
+ * periodo de comisiones más reciente, y lo trae `cargarTipoCambio()`. Tener aquí
+ * un número fijo como única fuente era el bug: si administración importaba un
+ * mes con otro TC, pasar una tabla a dólares dividía por 6,97 igualmente.
+ */
+export const TIPO_CAMBIO_DE_RESPALDO = 6.97;
+
+/**
+ * El ÚNICO formateador de números del CRM, construido una sola vez.
+ *
+ * `Number.prototype.toLocaleString` construye un `Intl.NumberFormat` nuevo en
+ * cada llamada, y ese constructor es la parte cara: ~15 µs contra ~0,3 µs de
+ * formatear con uno ya hecho. Con 77 celdas de dinero en pantalla y un pipe
+ * impuro, esa diferencia se paga en cada ciclo de detección de cambios.
+ */
+const FORMATO = new Intl.NumberFormat('es-BO', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+/** Un número con separador de miles y dos decimales, sin símbolo de moneda. */
+export function formatearNumero(valor: number): string {
+  return FORMATO.format(valor);
+}
+
+/** Lo que responde `GET /planilla-comisiones/tipo-cambio`. */
+interface TipoCambioVigente {
+  tipoCambio: number;
+  anio: number | null;
+  mes: number | null;
+  origen: 'periodo' | 'defecto';
+}
 
 /**
  * Servicio central para el selector de moneda (Bs / $us).
@@ -12,13 +49,19 @@ export const TIPO_CAMBIO_POR_DEFECTO = 6.97;
  */
 @Injectable({ providedIn: 'root' })
 export class MonedaService {
+  private readonly api = inject(ApiService);
+
   private readonly _moneda = signal<MonedaVisualizacion>(this.cargarMonedaInicial());
-  private readonly _tipoCambio = signal<number>(TIPO_CAMBIO_POR_DEFECTO);
+  private readonly _tipoCambio = signal<number>(TIPO_CAMBIO_DE_RESPALDO);
+  private readonly _tipoCambioGlobal = signal<number>(TIPO_CAMBIO_DE_RESPALDO);
+  private readonly _fuente = signal<'backend' | 'respaldo'>('respaldo');
 
   /** Moneda activa actualmente: 'BOB' (Bolivianos) o 'USD' (Dólares). */
   readonly moneda = this._moneda.asReadonly();
-  /** Tipo de cambio oficial vigente (por defecto 6.97). */
+  /** Tipo de cambio con el que se convierte ahora mismo. */
   readonly tipoCambio = this._tipoCambio.asReadonly();
+  /** 'respaldo' mientras el backend no haya contestado. Para poder avisarlo. */
+  readonly fuente = this._fuente.asReadonly();
 
   /** True si la visualización activa es en Bolivianos. */
   readonly esBob = computed(() => this._moneda() === 'BOB');
@@ -39,12 +82,43 @@ export class MonedaService {
   }
 
   /**
-   * Actualiza el tipo de cambio (ej. cuando se carga un periodo con TC específico).
+   * Trae del backend el tipo de cambio vigente: el del último periodo importado.
+   *
+   * Se llama UNA vez al arrancar y nunca más — es el dato de referencia por
+   * excelencia (cambia cuando administración importa un mes) y volver a pedirlo
+   * costaría 190 ms de red por nada. Si falla, se queda el de respaldo y la
+   * aplicación sigue: un selector de moneda no puede tumbar una pantalla.
+   */
+  async cargarTipoCambio(): Promise<void> {
+    try {
+      const vigente = await this.api.get<TipoCambioVigente>('/planilla-comisiones/tipo-cambio');
+      if (!(vigente?.tipoCambio > 0)) return;
+
+      this._tipoCambioGlobal.set(vigente.tipoCambio);
+      this._fuente.set(vigente.origen === 'periodo' ? 'backend' : 'respaldo');
+      this._tipoCambio.set(vigente.tipoCambio);
+    } catch {
+      /* Sin sesión todavía, o backend caído: se sigue con el de respaldo. */
+    }
+  }
+
+  /**
+   * Fija el TC de un periodo concreto mientras se está viendo ese periodo.
+   *
+   * La planilla muestra cifras que el backend liquidó con el TC de SU mes, así
+   * que convertirlas a dólares con el TC de otro mes daría un número que no
+   * cuadra con la liquidación. Al salir de esa pantalla se vuelve al global con
+   * `restaurarTipoCambioGlobal()`.
    */
   setTipoCambio(tc: number): void {
     if (tc > 0 && !isNaN(tc)) {
       this._tipoCambio.set(tc);
     }
+  }
+
+  /** Devuelve la conversión al tipo de cambio vigente del backend. */
+  restaurarTipoCambioGlobal(): void {
+    this._tipoCambio.set(this._tipoCambioGlobal());
   }
 
   /**
@@ -95,11 +169,17 @@ export class MonedaService {
     }
   }
 
+  /**
+   * Atajo para los importes que ya vienen en bolivianos, que son casi todos los
+   * del CRM propio (ventas, comisiones, sueldos). Existe para que las tarjetas
+   * de KPI puedan ser reactivas sin repetir `'BOB'` en cada llamada.
+   */
+  formatearBob(valor: number | string): string {
+    return this.formatear(valor, 'BOB');
+  }
+
   private formatearNumero(num: number): string {
-    return num.toLocaleString('es-BO', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+    return FORMATO.format(num);
   }
 
   private cargarMonedaInicial(): MonedaVisualizacion {

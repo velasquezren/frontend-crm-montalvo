@@ -38,7 +38,8 @@ import {
   ESTADO_VENTA_LABEL,
   EstadoVenta,
 } from '../../shared/models/estados.model';
-import { formatearBs, MonedaPipe } from '../../shared/pipes/moneda.pipe';
+import { MonedaService } from '../../core/moneda/moneda.service';
+import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import { CATALOGO_VACIO, filtrarMedicos, filtrarServicios, moduloDeServicio } from './catalogo.util';
 import { CatalogoClinico, ComprobanteSubido, MetodoPagoVenta, Venta } from './venta.model';
 import { VentasService } from './ventas.service';
@@ -79,6 +80,12 @@ export const METODOS_PAGO: readonly { id: MetodoPagoVenta; label: string; icon: 
   templateUrl: './ventas.page.html',
 })
 export class VentasPage implements OnDestroy {
+  /* Los KPI se formatean con el servicio y no con `formatearBs`, que imprimía
+     siempre "Bs": leer aquí la señal de moneda hace que este computed se
+     recalcule al pulsar el selector, y así las tarjetas dejan de contradecir a
+     la tabla que tienen debajo. */
+  private readonly moneda = inject(MonedaService);
+
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly ventasService = inject(VentasService);
@@ -242,9 +249,9 @@ export class VentasPage implements OnDestroy {
     const ticket = ganadas.length > 0 ? Math.round(total / ganadas.length) : 0;
 
     return [
-      { label: 'Total cerrado', valor: formatearBs(total), icon: 'trending-up' as IconName },
+      { label: 'Total cerrado', valor: this.moneda.formatearBob(total), icon: 'trending-up' as IconName },
       { label: 'Ventas ganadas', valor: String(ganadas.length), icon: 'check-circle' as IconName },
-      { label: 'Ticket promedio', valor: formatearBs(ticket), icon: 'shopping-bag' as IconName },
+      { label: 'Ticket promedio', valor: this.moneda.formatearBob(ticket), icon: 'shopping-bag' as IconName },
     ];
   });
 

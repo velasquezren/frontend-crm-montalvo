@@ -13,7 +13,8 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
 import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { IconComponent, IconName } from '../../shared/components/icon/icon.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
-import { formatearBs, MonedaPipe } from '../../shared/pipes/moneda.pipe';
+import { MonedaService } from '../../core/moneda/moneda.service';
+import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import { ActividadItem, KpiResumen, TopServicio } from './kpis.model';
 import { KpisService } from './kpis.service';
 
@@ -119,6 +120,12 @@ const ORIGEN_COLOR: Record<string, string> = {
   styleUrl: './dashboard.page.css',
 })
 export class DashboardPage {
+  /* Los KPI se formatean con el servicio y no con `formatearBs`, que imprimía
+     siempre "Bs": leer aquí la señal de moneda hace que este computed se
+     recalcule al pulsar el selector, y así las tarjetas dejan de contradecir a
+     la tabla que tienen debajo. */
+  private readonly moneda = inject(MonedaService);
+
   private readonly authService = inject(AuthService);
   private readonly kpisService = inject(KpisService);
   private readonly router = inject(Router);
@@ -163,9 +170,9 @@ export class DashboardPage {
     return [
       {
         label: 'Ventas Cerradas (Periodo)',
-        valor: formatearBs(totalVentas),
+        valor: this.moneda.formatearBob(totalVentas),
         icon: 'wallet',
-        tendencia: `${cantVentas} ventas · Ticket: ${formatearBs(ticketProm)}`,
+        tendencia: `${cantVentas} ventas · Ticket: ${this.moneda.formatearBob(ticketProm)}`,
         tendenciaVariant: 'success',
         tendenciaIcon: 'trending-up',
         sparklinePath: 'M0,25 Q15,10 30,18 T60,8 T90,22 T120,4',
@@ -173,7 +180,7 @@ export class DashboardPage {
       },
       {
         label: 'Ventas de Hoy',
-        valor: formatearBs(ventasHoyMonto),
+        valor: this.moneda.formatearBob(ventasHoyMonto),
         icon: 'shopping-bag',
         tendencia: `${ventasHoyCant} cerradas hoy`,
         tendenciaVariant: ventasHoyCant > 0 ? 'success' : 'neutral',
@@ -402,6 +409,6 @@ export class DashboardPage {
   }
 
   protected formatearMonto(valor: number): string {
-    return formatearBs(valor);
+    return this.moneda.formatearBob(valor);
   }
 }

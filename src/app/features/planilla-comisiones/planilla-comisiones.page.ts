@@ -32,7 +32,6 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { SelectorPeriodoEmptyComponent } from '../../shared/components/selector-periodo-empty/selector-periodo-empty.component';
 import { TableComponent } from '../../shared/components/table/table.component';
-import { MonedaToggleComponent } from '../../shared/components/moneda-toggle/moneda-toggle.component';
 import { MonedaService } from '../../core/moneda/moneda.service';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import { SubtotalVendedora, TotalesVentas, PlanillaComisionesService } from './planilla-comisiones.service';
@@ -106,7 +105,6 @@ function ultimoPrimero(a: VentaImportada, b: VentaImportada): number {
     TablaLiquidacionComponent,
     ConfiguracionComisionesComponent,
     SeleccionPlanesComponent,
-    MonedaToggleComponent,
     DatePipe,
     DecimalPipe,
     MonedaPipe,
@@ -210,9 +208,24 @@ export class PlanillaComisionesPage implements OnDestroy {
       if (!id) return;
       void this.refrescarPanelesDelPeriodo(id);
     });
+
+    /*
+     * Esta pantalla convierte con el TC de SU periodo, no con el global.
+     *
+     * Las cifras en bolivianos que muestra son las que el backend liquidó
+     * multiplicando por el tipo de cambio de ese mes concreto. Pasarlas a
+     * dólares dividiendo por el de otro mes daría un número que no cuadra con la
+     * liquidación que administración tiene delante. Al salir se restaura el
+     * global en `ngOnDestroy`.
+     */
+    effect(() => {
+      const tc = Number(this.periodoActual()?.tipoCambio);
+      if (tc > 0) this.monedaService.setTipoCambio(tc);
+    });
   }
 
   ngOnDestroy(): void {
+    this.monedaService.restaurarTipoCambioGlobal();
     if (typeof window !== 'undefined') {
       window.removeEventListener('dragover', this.preventDefaultDrag);
       window.removeEventListener('drop', this.preventDefaultDrag);

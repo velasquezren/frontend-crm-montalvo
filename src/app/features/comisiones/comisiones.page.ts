@@ -24,7 +24,8 @@ import {
   ESTADO_COMISION_LABEL,
   EstadoComision,
 } from '../../shared/models/estados.model';
-import { formatearBs, MonedaPipe } from '../../shared/pipes/moneda.pipe';
+import { MonedaService } from '../../core/moneda/moneda.service';
+import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import { Comision } from './comision.model';
 import { ComisionesService } from './comisiones.service';
 
@@ -58,6 +59,12 @@ type FiltroComision = EstadoComision | 'TODAS';
   templateUrl: './comisiones.page.html',
 })
 export class ComisionesPage {
+  /* Los KPI se formatean con el servicio y no con `formatearBs`, que imprimía
+     siempre "Bs": leer aquí la señal de moneda hace que este computed se
+     recalcule al pulsar el selector, y así las tarjetas dejan de contradecir a
+     la tabla que tienen debajo. */
+  private readonly moneda = inject(MonedaService);
+
   private readonly comisionesService = inject(ComisionesService);
   private readonly authService = inject(AuthService);
   private readonly toast = inject(ToastService);
@@ -99,9 +106,9 @@ export class ComisionesPage {
       .reduce((s, c) => s + Number(c.monto), 0);
 
     return [
-      { label: 'Comisiones generadas', valor: formatearBs(total), icon: 'wallet' as IconName },
-      { label: 'Pendientes de pago', valor: formatearBs(pendiente), icon: 'clock' as IconName },
-      { label: 'Pagadas', valor: formatearBs(total - pendiente), icon: 'check-circle' as IconName },
+      { label: 'Comisiones generadas', valor: this.moneda.formatearBob(total), icon: 'wallet' as IconName },
+      { label: 'Pendientes de pago', valor: this.moneda.formatearBob(pendiente), icon: 'clock' as IconName },
+      { label: 'Pagadas', valor: this.moneda.formatearBob(total - pendiente), icon: 'check-circle' as IconName },
     ];
   });
 
