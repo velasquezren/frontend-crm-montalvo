@@ -18,6 +18,15 @@
   margin-bottom: 0.875rem;
 }
 
+/* Las tres píldoras del canal se mantienen juntas aunque la barra se parta en
+   dos líneas: separadas de su grupo dejan de leerse como opciones de lo mismo. */
+.grupo-filtros {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
 .controles {
   display: flex;
   align-items: center;

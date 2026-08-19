@@ -43,7 +43,7 @@
   height: 14px;
   border-radius: 9999px;
   overflow: hidden;
-  background-color: var(--color-bg-workspace);
+  background-color: var(--color-bg-light);
 }
 
 .segmento {
@@ -59,13 +59,22 @@
 }
 
 /*
- * Los cinco tonos salen de la paleta cerrada por `color-mix`, no de hexadecimales
- * nuevos. El sueldo va en gris a propósito: no es comisión, y separarlo por color
- * deja ver de un vistazo cuánto del mes lo ganó la persona vendiendo.
+ * Los cinco tonos son una RAMPA de la paleta, del más claro al más oscuro, y se
+ * ordenan para que dos segmentos vecinos nunca queden a un paso de distancia.
+ *
+ * El sueldo iba en gris (`--color-text-muted`) para decir "esto no es comisión".
+ * Se lee como un hueco apagado en medio de una barra que por lo demás es verde,
+ * y el gris de la paleta es un color de TEXTO secundario, no de superficie: usado
+ * en un bloque grande compite con el texto en vez de acompañarlo. Ahora es el
+ * tono más claro del verde, que dice lo mismo —es la base, no lo ganado— sin
+ * apagar la barra.
+ *
+ * Ningún hexadecimal nuevo: todo sale de `--color-primary` y `--color-secondary`
+ * por `color-mix`.
  */
 .segmento-sueldo,
 .punto-sueldo {
-  background-color: var(--color-text-muted);
+  background-color: color-mix(in srgb, var(--color-secondary) 28%, white);
 }
 
 .segmento-a,
@@ -80,12 +89,12 @@
 
 .segmento-c,
 .punto-c {
-  background-color: color-mix(in srgb, var(--color-secondary) 40%, white);
+  background-color: color-mix(in srgb, var(--color-primary) 45%, white);
 }
 
 .segmento-bonos,
 .punto-bonos {
-  background-color: color-mix(in srgb, var(--color-primary) 45%, white);
+  background-color: color-mix(in srgb, var(--color-primary) 72%, white);
 }
 
 /* ── La leyenda ─────────────────────────────────────────────────────── */

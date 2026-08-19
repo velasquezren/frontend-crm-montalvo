@@ -95,6 +95,22 @@ export class VentasAgenteComponent {
     () => this.ventas().filter(v => !v.comisionable).length,
   );
 
+  /**
+   * Cuántas ventas caen en cada canal, para que los chips lleven su número.
+   *
+   * Se cuenta sobre lo que YA está en memoria —el mes entero—, así que no cuesta
+   * una petición ni depende del texto buscado: los contadores dicen cuántas hay
+   * en total por canal, no cuántas quedarían tras el filtro, que es lo que se
+   * espera de un selector. Un chip en cero avisa de que pulsarlo vacía la tabla
+   * antes de pulsarlo.
+   */
+  protected readonly conteoCanal = computed(() => {
+    let propio = 0;
+    for (const v of this.ventas()) if (v.canal === 'PROPIO') propio++;
+    const total = this.ventas().length;
+    return { TODOS: total, PROPIO: propio, EMPRESA: total - propio };
+  });
+
   protected readonly filtradas = computed<readonly VentaImportada[]>(() => {
     const texto = this.busquedaAplicada().trim().toLowerCase();
     const canal = this.filtroCanal();

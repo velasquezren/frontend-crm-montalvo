@@ -12,7 +12,11 @@ export type AvatarVariant = 'light' | 'solid';
   selector: 'app-avatar',
   template: `
     @if (imageUrl()) {
-      <img [src]="imageUrl()" [class]="imgClasses()" alt="Avatar" />
+      <img
+        [src]="imageUrl()"
+        [class]="imgClasses()"
+        [alt]="nombre() ? 'Foto de ' + nombre() : 'Foto de perfil'"
+        decoding="async" />
     } @else {
       <div [class]="classes()">
         <span class="font-semibold leading-none">{{ initials() }}</span>
@@ -25,6 +29,14 @@ export class AvatarComponent {
   readonly size = input<AvatarSize>('md');
   readonly variant = input<AvatarVariant>('light');
   readonly imageUrl = input<string | null | undefined>(undefined);
+  /**
+   * Nombre de la persona, solo para el texto alternativo de la foto.
+   *
+   * Sin él la imagen anunciaba "Avatar" a un lector de pantalla, que es el
+   * nombre del componente y no dice de quién es la cara. Las iniciales tampoco
+   * servían: se leen letra a letra.
+   */
+  readonly nombre = input<string | null | undefined>(undefined);
 
   protected readonly imgClasses = computed(() => {
     const sizes: Record<AvatarSize, string> = {

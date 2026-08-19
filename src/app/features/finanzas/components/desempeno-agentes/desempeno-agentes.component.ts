@@ -17,6 +17,7 @@ import {
   MESES,
   PeriodoComision,
   ReporteConsolidado,
+  Vendedora,
   VentaImportada,
 } from '../../../planilla-comisiones/planilla.model';
 import { ComposicionPagoComponent } from './partes/composicion-pago.component';
@@ -103,6 +104,18 @@ export class DesempenoAgentesComponent {
     this.service.configuracionRequest(),
   );
 
+  /**
+   * El equipo oficial, solo para poner cara a cada ficha.
+   *
+   * Es el único endpoint que ya cruza vendedora de planilla con usuario del CRM
+   * —`Usuario.codigo` ES el `vendedora_pk` del Excel—, y además está en la lista
+   * de los cuatro que el interceptor cachea 60 s: las fotos se descargan una vez
+   * por sesión y no en cada cambio de periodo ni de ejecutiva.
+   */
+  protected readonly equipo = httpResource<readonly Vendedora[]>(() =>
+    this.service.vendedorasRequest(),
+  );
+
   protected readonly ventas = httpResource<VentasConCanales>(() => {
     const periodoId = this.periodoId();
     const vendedoraId = this.vendedora()?.vendedoraId;
@@ -136,6 +149,21 @@ export class DesempenoAgentesComponent {
     const lista = this.vendedoras();
     const id = this.vendedoraSeleccionada();
     return (id ? lista.find(v => v.vendedoraId === id) : null) ?? lista[0] ?? null;
+  });
+
+  /**
+   * Foto de la ejecutiva que se está viendo, o `null`.
+   *
+   * Se resuelve por CÓDIGO y no por nombre: el nombre del Excel y el del CRM no
+   * tienen por qué coincidir carácter a carácter, y cruzar por texto es cómo una
+   * ficha acaba con la cara de otra persona. El código es único en las dos
+   * tablas y es la clave que el propio schema declara como puente.
+   */
+  protected readonly fotoActual = computed<string | null>(() => {
+    const codigo = this.vendedora()?.codigo;
+    if (!codigo) return null;
+    const ficha = (this.equipo.value() ?? []).find(v => v.codigo === codigo);
+    return ficha?.agente?.foto ?? null;
   });
 
   /** El TC con el que se liquidó este mes, para normalizar la composición. */

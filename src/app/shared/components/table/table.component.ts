@@ -13,29 +13,53 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
  * el contenido proyectado sin duplicar CSS en cada vista.
  * Ref: CRM_MANIFESTO.md §4.3 (organismos) y guía de tablas del diseño:
  * cabeceras 12px gris sobre #F8F9FA, filas blancas separadas por bordes sutiles.
+ *
+ * ## Dos contenedores, no uno — y no es decorativo
+ *
+ * El marco redondea y recorta; el de dentro es el que hace scroll. Estaban
+ * fundidos en un solo `div` con `border-radius` **y** `overflow: auto`, y con la
+ * cabecera en `position: sticky` eso se ve mal en cuanto la tabla scrollea: un
+ * elemento sticky no queda recortado por el `border-radius` de su propio
+ * contenedor de scroll, así que el fondo gris de la cabecera pintaba cuadrado
+ * sobre las esquinas redondeadas y el contenido parecía salirse de la tabla.
+ * Lo mismo abajo con `tfoot`, que también es sticky.
+ *
+ * Separarlos lo arregla sin tocar ninguna vista: el recorte pasa a un elemento
+ * que NO scrollea, y dentro el sticky se mueve con total libertad.
+ *
+ * `.crm-table-dense` se queda en el marco a propósito: es ancestro de
+ * `.crm-table`, así que los selectores que ya existían fuera —`resumen-anual`
+ * afina ahí el alto de fila— siguen encontrando lo que buscan.
  */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-table',
   encapsulation: ViewEncapsulation.None,
   template: `
-    <div
-      class="crm-table-wrap"
-      [class.crm-table-dense]="dense()"
-      [style.max-height]="maxHeight()">
-      <table class="crm-table">
-        <ng-content />
-      </table>
+    <div class="crm-table-marco" [class.crm-table-dense]="dense()">
+      <div class="crm-table-scroll" [style.max-height]="maxHeight()">
+        <table class="crm-table">
+          <ng-content />
+        </table>
+      </div>
     </div>
   `,
   styles: `
-    .crm-table-wrap {
+    /* Recorta y enmarca. NO scrollea: si scrolleara, volvería el problema. */
+    .crm-table-marco {
       width: 100%;
-      overflow: auto;
       background: white;
       border-radius: 16px;
+      overflow: hidden;
       box-shadow: var(--shadow-subtle);
       border: 1px solid var(--color-border);
+    }
+
+    /* Scrollea. No lleva radio ni borde: de eso se encarga el marco. */
+    .crm-table-scroll {
+      width: 100%;
+      overflow: auto;
+      overscroll-behavior-x: contain;
     }
 
     .crm-table {

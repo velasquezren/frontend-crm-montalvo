@@ -19,15 +19,29 @@
         [value]="busqueda()"
         (valueChange)="busqueda.set($event)" />
 
-      <div class="flex items-center gap-1">
-        <app-filter-chip [active]="filtroCanal() === 'TODOS'" size="sm" (clicked)="filtroCanal.set('TODOS')">
+      <!-- Grupo con nombre: tres píldoras sueltas no dicen a un lector de
+           pantalla que son opciones de lo mismo. -->
+      <div class="grupo-filtros" role="group" aria-label="Filtrar por canal de venta">
+        <app-filter-chip
+          [active]="filtroCanal() === 'TODOS'"
+          [count]="conteoCanal().TODOS"
+          size="sm"
+          (clicked)="filtroCanal.set('TODOS')">
           Todos
         </app-filter-chip>
-        <app-filter-chip [active]="filtroCanal() === 'PROPIO'" size="sm" (clicked)="filtroCanal.set('PROPIO')">
+        <app-filter-chip
+          [active]="filtroCanal() === 'PROPIO'"
+          [count]="conteoCanal().PROPIO"
+          size="sm"
+          (clicked)="filtroCanal.set('PROPIO')">
           Propio
         </app-filter-chip>
-        <app-filter-chip [active]="filtroCanal() === 'EMPRESA'" size="sm" (clicked)="filtroCanal.set('EMPRESA')">
-          Empresa
+        <app-filter-chip
+          [active]="filtroCanal() === 'EMPRESA'"
+          [count]="conteoCanal().EMPRESA"
+          size="sm"
+          (clicked)="filtroCanal.set('EMPRESA')">
+          Clínica
         </app-filter-chip>
       </div>
     </div>

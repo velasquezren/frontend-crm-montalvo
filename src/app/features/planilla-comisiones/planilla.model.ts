@@ -183,6 +183,15 @@ export interface AgenteDelCrm {
   email: string;
   codigo: string | null;
   activo: boolean;
+  /**
+   * Foto de perfil como data URL (base64), tal cual la guarda el usuario.
+   *
+   * No es una URL de R2 ni viene firmada, así que no caduca y se puede pintar
+   * directamente. Pesa ~10 KB por persona en producción, y llega por el endpoint
+   * de vendedoras, que el interceptor cachea 60 s: se descarga una vez por sesión
+   * y no en cada cambio de periodo.
+   */
+  foto: string | null;
 }
 
 export interface FilaConsolidado {

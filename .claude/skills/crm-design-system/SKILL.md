@@ -103,7 +103,7 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 | Badge | `<app-badge>` | `variant` (success/info/neutral/critical), `icon` |
 | Card | `<app-card>` | `padding` (sm/md/lg), `hoverable` |
 | KpiCard | `<app-kpi-card>` | `label`, `valor` (requeridos; número → lo formatea el átomo), `icon`, `tono` (primary/secondary/neutral/critical), `tonoValor`, `destacado`, `compacto`, `pie`, `pieIcono` + contenido proyectado |
-| Avatar | `<app-avatar>` | `initials` (requerido), `size`, `variant` (light/solid), `imageUrl` |
+| Avatar | `<app-avatar>` | `initials` (requerido), `size`, `variant` (light/solid), `imageUrl`, `nombre` |
 | Icon | `<app-icon>` | `name` (catálogo cerrado), `size`, `strokeWidth` |
 | EmptyState | `<app-empty-state>` | `icon`, `title` (requerido), `description` + contenido proyectado |
 | ErrorCarga | `<app-error-carga>` | `que` ("los clientes"), `titulo`, `descripcion` · `(reintentar)` — estado de error de una vista con datos remotos |
@@ -184,6 +184,85 @@ y sus variantes.
 Cuando eso pase, extrae un átomo a `shared/components/` en vez de repartir
 copias: una sola definición, un solo lugar donde cambiarla, y el resto de las
 vistas lo hereda gratis.
+
+## Un contenedor que scrollea NO puede ser el que redondea
+
+`position: sticky` no queda recortado por el `border-radius` del contenedor que
+hace su scroll. Si el mismo elemento lleva `border-radius`, `overflow: auto` y
+dentro una cabecera sticky, en cuanto la tabla scrollea el fondo de la cabecera
+pinta **cuadrado sobre las esquinas redondeadas** y el contenido parece salirse
+de la caja. Lo mismo abajo con un `tfoot` sticky.
+
+Por eso `<app-table>` tiene dos divs y no uno:
+
+```
+.crm-table-marco    borde + radio + sombra + overflow:hidden   ← recorta, NO scrollea
+  └ .crm-table-scroll   overflow:auto + max-height             ← scrollea, sin radio
+      └ table.crm-table
+```
+
+Si maquetas otra superficie con cabecera o pie pegajoso, sepáralos igual. Y si
+añades una clase de afinado desde fuera (lo hace `resumen-anual.page.css` para
+apretar las filas), cuélgala de `.crm-table-dense`, que vive en el marco y por
+tanto es ancestro de todo lo demás.
+
+## El gris de la paleta es color de TEXTO, no de superficie
+
+`--color-text-muted` (#6B7280) está para texto secundario. Usado como fondo de
+un bloque grande —un segmento de barra, un carril de progreso, una tarjeta— se
+lee como un hueco apagado y compite con el texto en vez de acompañarlo, sobre
+todo dentro de una interfaz que por lo demás es verde.
+
+Para superficies suaves hay dos tokens hechos para eso:
+
+| Quiero | Token |
+|---|---|
+| Fondo del área de trabajo, `<select>`, cajas neutras | `--color-bg-workspace` |
+| Carril de progreso, pista de una barra, chip suave | `--color-bg-light` |
+
+Y para una **rampa** de varios tonos (una barra apilada, una serie), deriva con
+`color-mix()` sobre `--color-primary` y `--color-secondary`, ordenando los pasos
+para que dos vecinos no queden a una distancia mínima:
+
+```css
+color-mix(in srgb, var(--color-secondary) 28%, white)   /* el más claro */
+var(--color-primary)
+var(--color-secondary)
+color-mix(in srgb, var(--color-primary) 45%, white)
+color-mix(in srgb, var(--color-primary) 72%, white)
+```
+
+Ejemplo vivo: `composicion-pago.component.css`.
+
+## Filtros: el chip ya sabe contar, y el grupo necesita nombre
+
+`<app-filter-chip>` acepta `count`. Úsalo siempre que el número se pueda sacar de
+datos que YA están en memoria: un chip en cero avisa de que pulsarlo vacía la
+tabla **antes** de pulsarlo, y eso ahorra el "no encuentro nada".
+
+El contador cuenta el total de esa categoría, **no** lo que quedaría tras
+combinarlo con el buscador. Un selector que cambia sus propios números mientras
+escribes no se puede usar para decidir.
+
+Varios chips que son opciones de lo mismo van envueltos en
+`<div role="group" aria-label="…">`: sueltos, un lector de pantalla los anuncia
+como botones sin relación. El `aria-pressed` de cada uno ya lo pone el átomo.
+
+## Fotos de perfil: `<app-avatar>` ya cae solo a las iniciales
+
+Pásale `imageUrl` y `nombre`; si la foto es `null` pinta las iniciales sin que
+haya que ramificar en la plantilla. `nombre` es solo para el texto alternativo —
+sin él la imagen se anuncia como "Foto de perfil", que no dice de quién es.
+
+En este CRM `Usuario.foto` es un **data URL en base64** guardado en la columna,
+no una clave de R2: no caduca, no hay que firmarlo y se pinta sin tocar la red.
+Medido en producción: ~10 KB por persona.
+
+Para ponerle cara a una vendedora de la planilla, crúzala por **`codigo`**, que
+es la clave que el schema declara como puente (`Usuario.codigo` ES el
+`vendedora_pk` del Excel). Cruzar por nombre es cómo una ficha acaba con la cara
+de otra persona. Las fotos llegan por `/planilla-comisiones/vendedoras`, que el
+interceptor cachea 60 s: se descargan una vez por sesión.
 
 ## Helpers compartidos
 

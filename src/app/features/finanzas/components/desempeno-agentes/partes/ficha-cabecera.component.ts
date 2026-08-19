@@ -33,6 +33,14 @@ import { FilaConsolidado } from '../../../../planilla-comisiones/planilla.model'
 })
 export class FichaCabeceraComponent {
   readonly fila = input.required<FilaConsolidado>();
+  /**
+   * Foto de perfil de la ejecutiva, si el CRM tiene una para su código.
+   *
+   * `null` no es un caso de error: no todo el equipo oficial de la planilla
+   * tiene usuario en el CRM, y quien lo tiene puede no haber subido foto. En
+   * cualquiera de los dos casos el átomo Avatar cae solo a las iniciales.
+   */
+  readonly foto = input<string | null>(null);
 
   /** Iniciales del avatar. Dos palabras dan dos letras; una, la suya. */
   protected readonly iniciales = computed(() => {
