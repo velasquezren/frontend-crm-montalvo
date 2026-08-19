@@ -64,7 +64,7 @@
 
 <!-- ══════════════ 1. IMPORTAR ══════════════ -->
 @if (pestana() === 'IMPORTAR' && esSuperAdmin()) {
-  <section style="--indice: 0" class="aparecer panel">
+  <section class="panel">
     <div
       class="zona-carga"
       [class.zona-carga-dragged]="isDragging()"
@@ -240,7 +240,7 @@
     }
 
     <!-- Panel principal de clasificación -->
-    <section style="--indice: 1" class="aparecer panel">
+    <section class="panel">
       <div class="filtros mb-4">
         <div class="flex-1 min-w-[220px]">
           <app-input type="search" placeholder="Buscar por servicio o paciente…" [(value)]="busqueda" />
@@ -588,124 +588,12 @@
       (importarClic)="setPestana('IMPORTAR')"
       (archivoSeleccionado)="procesarArchivo($event)" />
   } @else {
-    <section class="panel">
-      <div class="flex items-start justify-between gap-3 flex-wrap mb-4">
-        <div>
-          <h2 class="text-base font-bold text-text-dark flex items-center gap-2">
-            Qué planes comisionan este mes
-            <app-info-hint titulo="Cómo se eligen">
-              El objetivo funciona como <strong>franquicia</strong>: solo comisionan los planes que lo
-              <strong>superan</strong>. Con 5 paquetes y objetivo 4 comisiona 1, y quien vende
-              exactamente 4 no cobra nada por planes.
-              <br /><br />
-              El plan elegido paga <strong>su base completa</strong> con la tarifa de su nivel — no se
-              reparte entre los demás.
-              <br /><br />
-              El sistema propone los de <strong>base más baja</strong>, que es el criterio que venía
-              usando administración. Puedes cambiarlo: tu decisión manda sobre la automática.
-            </app-info-hint>
-          </h2>
-          <p class="text-xs text-text-muted mt-1">
-            Toca un plan para alternar entre <strong>automático</strong>, <strong>comisiona</strong> y
-            <strong>no comisiona</strong>. Se aplica al volver a calcular.
-          </p>
-        </div>
-      </div>
-
-      @if (planesPaq.isLoading() || planesNin.isLoading()) {
-        <app-loading-skeleton shape="text" height="3rem" />
-      } @else if (planesPaq.error() || planesNin.error()) {
-        <app-empty-state
-          icon="alert-circle"
-          title="No se pudieron cargar los planes"
-          description="Verifica que el servidor esté encendido y vuelve a intentarlo." />
-      } @else if (gruposDePlanes().length > 0) {
-        <div class="space-y-4">
-          @for (grupo of gruposDePlanes(); track grupo.clave) {
-            <div class="grupo-planes">
-              <header class="grupo-planes-cabecera">
-                <div class="min-w-0">
-                  <p class="font-bold text-sm text-text-dark truncate">{{ grupo.vendedoraNombre }}</p>
-                  <p class="text-[11px] text-text-muted">
-                    {{ grupo.tipo === 'PLANPAQ' ? 'Paquetes de maternidad' : 'Planes varios' }}
-                  </p>
-                </div>
-                <div class="flex items-center gap-2 flex-wrap">
-                  <app-badge [variant]="grupo.cupo > 0 ? 'success' : 'neutral'">
-                    {{ grupo.planes.length }} vendidos · objetivo {{ grupo.objetivo }}
-                  </app-badge>
-                  <app-badge [variant]="grupo.cupo > 0 ? 'info' : 'neutral'">
-                    {{ grupo.cupo }} {{ grupo.cupo === 1 ? 'comisiona' : 'comisionan' }}
-                  </app-badge>
-                  <app-info-hint titulo="Por qué no comisionan todos">
-                    <p>
-                      El objetivo es una <strong>franquicia</strong>, no una meta
-                      que se cruza: solo comisiona lo que lo <strong>supera</strong>.
-                      Con {{ grupo.planes.length }} vendidos y objetivo
-                      {{ grupo.objetivo }}, comisionan {{ grupo.cupo }}.
-                    </p>
-                    <p>
-                      Igualar el objetivo paga cero. Verificado contra la
-                      planilla de <strong>diciembre 2025</strong>, hoja "TIPO
-                      COMISION": su columna VALIDACIÓN CUMPLIMIENTO es
-                      literalmente vendidos − objetivo, y quien vendió tantos
-                      planes como su objetivo figura ahí como NO cumple.
-                    </p>
-                    <p>
-                      El sistema elige los de <strong>menor base</strong>, que es
-                      lo conservador. Puedes cambiarlo pulsando cualquier plan de
-                      la lista: queda marcado a mano y manda sobre el automático.
-                    </p>
-                  </app-info-hint>
-                </div>
-              </header>
-
-              <ul class="divide-y divide-border">
-                @for (plan of grupo.planes; track plan.id) {
-                  <li>
-                    <button
-                      type="button"
-                      class="fila-plan"
-                      [class.fila-plan-elegida]="grupo.elegidos?.has(plan.id)"
-                      [disabled]="!esSuperAdmin()"
-                      (click)="alternarPlan(plan)">
-                      <span class="flex items-center gap-2 min-w-0">
-                        <app-icon
-                          [name]="grupo.elegidos?.has(plan.id) ? 'check-circle' : 'circle'"
-                          [size]="16"
-                          [class.text-primary]="grupo.elegidos?.has(plan.id)"
-                          [class.text-text-muted]="!grupo.elegidos?.has(plan.id)" />
-                        <span class="truncate text-xs font-medium text-text-dark">{{ plan.detalle }}</span>
-                        @if (plan.nivel) {
-                          <app-badge variant="neutral">{{ plan.nivel }}</app-badge>
-                        }
-                      </span>
-                      <span class="flex items-center gap-3 shrink-0">
-                        <span class="text-xs font-semibold tabular-nums text-text-dark">
-                          ${{ plan.ingresoNeto | number: '1.2-2' }}
-                        </span>
-                        @if (plan.comisionaPlan === true) {
-                          <app-badge variant="success">elegido a mano</app-badge>
-                        } @else if (plan.comisionaPlan === false) {
-                          <app-badge variant="critical">excluido a mano</app-badge>
-                        } @else {
-                          <app-badge variant="neutral">automático</app-badge>
-                        }
-                      </span>
-                    </button>
-                  </li>
-                }
-              </ul>
-            </div>
-          }
-        </div>
-      } @else {
-        <app-empty-state
-          icon="file-text"
-          title="Este periodo no tiene planes"
-          description="Importa un Excel con paquetes o planes para decidir cuáles comisionan." />
-      }
-    </section>
+    <app-seleccion-planes
+      [grupos]="gruposDePlanes()"
+      [cargando]="planesPaq.isLoading() || planesNin.isLoading()"
+      [error]="planesPaq.error() || planesNin.error()"
+      [esSuperAdmin]="esSuperAdmin()"
+      (planAlternado)="alternarPlan($event)" />
   }
 }
 
@@ -771,7 +659,7 @@
       </section>
 
       <!-- Planilla final por persona -->
-      <section style="--indice: 2" class="aparecer panel">
+      <section class="panel">
         <h3 class="text-sm font-bold text-text-dark mb-3">Planilla por Persona</h3>
         <app-tabla-liquidacion
           [filas]="rep.filas"

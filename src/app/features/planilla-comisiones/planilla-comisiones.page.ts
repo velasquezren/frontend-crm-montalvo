@@ -36,12 +36,14 @@ import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import { SubtotalVendedora, TotalesVentas, PlanillaComisionesService } from './planilla-comisiones.service';
 import { TablaLiquidacionComponent } from './components/tabla-liquidacion.component';
 import { ConfiguracionComisionesComponent } from './components/configuracion-comisiones.component';
+import { SeleccionPlanesComponent } from './components/seleccion-planes.component';
 import {
   Alertas,
   ClasifComision,
   CLASIF_LABEL,
   ConfiguracionPlanilla,
   ESTADO_PERIODO_LABEL,
+  GrupoPlanes,
   MESES,
   Objetivo,
   PeriodoComision,
@@ -49,28 +51,12 @@ import {
   ResumenImportacion,
   TIPO_LABEL,
   TipoComision,
+  TipoPlan,
   Vendedora,
   VentaImportada,
 } from './planilla.model';
 
 type Pestana = 'IMPORTAR' | 'CLASIFICACION' | 'PLANES' | 'REPORTES' | 'CONFIGURACION';
-
-/** Los dos tipos de plan que tienen objetivo propio. */
-type TipoPlan = 'PLANPAQ' | 'PLANNIN';
-
-/** Los planes de una vendedora de un tipo, con su objetivo y su cupo resueltos. */
-interface GrupoPlanes {
-  clave: string;
-  vendedoraId: string;
-  vendedoraNombre: string;
-  tipo: TipoPlan;
-  /** Cuántos hay que superar para que empiecen a comisionar. */
-  objetivo: number;
-  /** Cuántos comisionan: vendidos − objetivo. */
-  cupo: number;
-  planes: VentaImportada[];
-  elegidos?: ReadonlySet<string>;
-}
 
 /**
  * Planilla de Comisiones — liquidación mensual del equipo comercial a partir
@@ -89,6 +75,7 @@ interface VentasConTotales extends RespuestaPaginada<VentaImportada> {
   imports: [
     TablaLiquidacionComponent,
     ConfiguracionComisionesComponent,
+    SeleccionPlanesComponent,
     DatePipe,
     DecimalPipe,
     MonedaPipe,

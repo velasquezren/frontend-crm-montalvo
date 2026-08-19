@@ -364,3 +364,21 @@ export const MESES_CORTOS = [
   'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
   'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
 ] as const;
+
+/** Los dos tipos de plan que tienen objetivo propio. */
+export type TipoPlan = 'PLANPAQ' | 'PLANNIN';
+
+/** Los planes de una vendedora de un tipo, con su objetivo y su cupo resueltos. */
+export interface GrupoPlanes {
+  readonly clave: string;
+  readonly vendedoraId: string;
+  readonly vendedoraNombre: string;
+  readonly tipo: TipoPlan;
+  /** Cuántos hay que superar para que empiecen a comisionar. */
+  readonly objetivo: number;
+  /** Cuántos comisionan: vendidos − objetivo. */
+  readonly cupo: number;
+  planes: VentaImportada[];
+  elegidos?: ReadonlySet<string>;
+}
+

@@ -110,3 +110,38 @@ precio.
 El anticipo sigue viajando y se muestra en la columna «Pagado», pero es
 **informativo**: dice quién va al día y quién debe, y destapa los cobros por
 encima del precio de catálogo (cinco en enero). No toca la comisión.
+
+---
+
+## 6. Arquitectura Modular y Subcomponentes
+
+Para evitar código espagueti y archivos monolíticos, `PlanillaComisionesPage` delega sus responsabilidades a subcomponentes `OnPush` reutilizables:
+
+1. **`<app-tabla-liquidacion>` (`TablaLiquidacionComponent`)**:
+   - Renderiza la matriz contable por vendedora.
+   - Muestra Tipo A, Tipo B (cirugías), Tipo C (servicios), bonos de jefatura/trimestral, sueldo base, total USD y total BOB (calculado con `tipoCambio` oficial del periodo).
+
+2. **`<app-configuracion-comisiones>` (`ConfiguracionComisionesComponent`)**:
+   - Subcomponente aislado para las 9 secciones de configuración:
+     1. Palancas globales (`PCT_TIPO_C_RA`, `FACTOR_BONO_JEFATURA`, `FACTOR_BONO_TRIMESTRAL`, `MESES_BONO_TRIMESTRAL`).
+     2. Directorio de vendedoras (sueldo base, tipo y área).
+     3. Tarifas Tipo A (Planes).
+     4. Tarifas Tipo C (Servicios).
+     5. Escala Tipo B (Cirugías por volumen mensual).
+     6. Histórico RA (Procedimientos de reproducción asistida descontinuados).
+     7. Canales de captación (Mapeo empresa vs. propia).
+     8. Metas comerciales (Base vs. específicas del mes).
+     9. Diccionario de clasificación por patrón de texto.
+
+3. **`<app-seleccion-planes>` (`SeleccionPlanesComponent`)**:
+   - Subcomponente que agrupa los planes por vendedora y tipo (`PLANPAQ`, `PLANNIN`).
+   - Aplica la franquicia (`vendidos − objetivo`) y permite alternar planes elegidos a mano vs. automáticos (menor base).
+
+---
+
+## 7. Reglas de Auditoría y Estados de Periodo
+
+- **Exclusiones con Auditoría**: Para marcar `comisionable = false`, el backend exige obligatoriamente `motivoExclusion` (3 a 200 caracteres), registrando autor, fecha y motivo en `AuditLog`. Al reincluir (`comisionable = true`), el motivo se limpia.
+- **Inmutabilidad de Periodos Cerrados**: Los periodos en estado `CERRADO` no admiten recálculo, borrado ni cambios en sus filas comisionables.
+- **Estado del Plan Informativo**: El campo `estadoPlan` (`APROBADO`, `TERMINADO`, etc.) informa el avance clínico/administrativo pero **no excluye** la venta del cálculo de comisión.
+
