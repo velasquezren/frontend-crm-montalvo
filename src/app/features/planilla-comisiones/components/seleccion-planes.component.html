@@ -4,20 +4,32 @@
       <h2 class="text-base font-bold text-text-dark flex items-center gap-2">
         Qué planes comisionan este mes
         <app-info-hint titulo="Cómo se eligen">
-          El objetivo funciona como <strong>franquicia</strong>: solo comisionan los planes que lo
-          <strong>superan</strong>. Con 5 paquetes y objetivo 4 comisiona 1, y quien vende
-          exactamente 4 no cobra nada por planes.
-          <br /><br />
-          El plan elegido paga <strong>su base completa</strong> con la tarifa de su nivel — no se
-          reparte entre los demás.
-          <br /><br />
-          El sistema propone los de <strong>base más baja</strong>, que es el criterio que venía
-          usando administración. Puedes cambiarlo: tu decisión manda sobre la automática.
+          <p>
+            El objetivo funciona como <strong>franquicia</strong>: solo comisionan los planes que lo
+            <strong>superan</strong>. Con 8 paquetes y objetivo 6 comisionan 2, no los 8, y quien
+            vende exactamente 6 no cobra nada por planes.
+          </p>
+          <p>
+            Los que comisionan son los <strong>últimos vendidos</strong>. La lista viene ordenada
+            del último al primero, así que son siempre los de arriba.
+          </p>
+          <p>
+            Cada plan elegido paga <strong>su base completa</strong> con <strong>su propia</strong>
+            tarifa — no se promedia ni se reparte entre los demás. Por eso cuáles se eligen cambia
+            lo que se paga.
+          </p>
+          <p>
+            La base es el <strong>precio entero menos el 13 %</strong>, siempre. No cambia según lo
+            que la paciente haya pagado de anticipo ni lo que quede debiendo: el plan comisiona una
+            sola vez, el mes en que se vendió.
+          </p>
+          <p>Tu decisión manual manda sobre la automática.</p>
         </app-info-hint>
       </h2>
       <p class="text-xs text-text-muted mt-1">
-        Toca un plan para alternar entre <strong>automático</strong>, <strong>comisiona</strong> y
-        <strong>no comisiona</strong>. Se aplica al volver a calcular.
+        Ordenados <strong>del último al primero</strong>. Toca un plan para alternar entre
+        <strong>automático</strong>, <strong>comisiona</strong> y <strong>no comisiona</strong>. Se
+        aplica al volver a calcular.
       </p>
     </div>
   </div>
@@ -62,9 +74,16 @@
                   planes como su objetivo figura ahí como NO cumple.
                 </p>
                 <p>
-                  El sistema elige los de <strong>menor base</strong>, que es
-                  lo conservador. Puedes cambiarlo pulsando cualquier plan de
-                  la lista: queda marcado a mano y manda sobre el automático.
+                  Los que comisionan son los <strong>últimos</strong>: los
+                  {{ grupo.cupo }} primeros de esta lista, que está ordenada
+                  del último plan vendido al primero. Así lo marcó
+                  administración en la planilla de diciembre 2025, donde las
+                  dos vendedoras que superaron su objetivo cobraron por sus
+                  dos ventas de correlativo más alto.
+                </p>
+                <p>
+                  Puedes cambiarlo pulsando cualquier plan de la lista: queda
+                  marcado a mano y manda sobre el automático.
                 </p>
               </app-info-hint>
             </div>
@@ -80,19 +99,42 @@
                   [disabled]="!esSuperAdmin()"
                   (click)="planAlternado.emit(plan)">
                   <span class="flex items-center gap-2 min-w-0">
+                    <span class="orden-plan" [class.orden-plan-elegido]="grupo.elegidos?.has(plan.id)">
+                      {{ $index + 1 }}
+                    </span>
                     <app-icon
                       [name]="grupo.elegidos?.has(plan.id) ? 'check-circle' : 'circle'"
                       [size]="16"
                       [class.text-primary]="grupo.elegidos?.has(plan.id)"
                       [class.text-text-muted]="!grupo.elegidos?.has(plan.id)" />
-                    <span class="truncate text-xs font-medium text-text-dark">{{ plan.detalle }}</span>
+                    <span class="min-w-0">
+                      <span class="block truncate text-xs font-medium text-text-dark">
+                        {{ plan.detalle }}
+                      </span>
+                      <span class="block text-[11px] text-text-muted tabular-nums">
+                        @if (plan.codOrigen) {
+                          {{ plan.codOrigen }}
+                        }
+                        @if (plan.codOrigen && plan.fecha) {
+                          ·
+                        }
+                        @if (plan.fecha) {
+                          {{ plan.fecha | date: 'd MMM' }}
+                        }
+                      </span>
+                    </span>
                     @if (plan.nivel) {
                       <app-badge variant="neutral">{{ plan.nivel }}</app-badge>
                     }
                   </span>
                   <span class="flex items-center gap-3 shrink-0">
-                    <span class="text-xs font-semibold tabular-nums text-text-dark">
-                      {{ plan.ingresoNeto | moneda }}
+                    <span class="text-right">
+                      <span class="block text-xs font-semibold tabular-nums text-text-dark">
+                        {{ plan.ingresoNeto | moneda }}
+                      </span>
+                      <span class="block text-[11px] text-text-muted tabular-nums">
+                        precio {{ plan.precio | moneda }}
+                      </span>
                     </span>
                     @if (plan.comisionaPlan === true) {
                       <app-badge variant="success">elegido a mano</app-badge>

@@ -1,4 +1,4 @@
-import { DecimalPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
@@ -13,13 +13,18 @@ import { GrupoPlanes, VentaImportada } from '../planilla.model';
  * Componente para auditar y decidir qué planes y paquetes comisionan en el mes.
  *
  * El objetivo de planes funciona como FRANQUICIA: solo comisionan los planes
- * que superan la meta (vendidos − objetivo). El sistema elige por defecto los de
- * menor base de cálculo, pero el usuario puede pulsar cualquier plan para
- * forzarlo a comisionar o excluirlo a mano.
+ * que superan la meta (vendidos − objetivo), y los que comisionan son los
+ * ÚLTIMOS vendidos. El usuario puede pulsar cualquier plan para forzarlo a
+ * comisionar o excluirlo a mano.
+ *
+ * La lista llega ya ordenada del último al primero: ese orden ES la regla, así
+ * que se muestra numerado y con el correlativo de registro a la vista. Sin eso,
+ * "comisionan 2 de 8" obliga a creer en el sistema en vez de poder comprobarlo.
  */
 @Component({
   selector: 'app-seleccion-planes',
   imports: [
+    DatePipe,
     MonedaPipe,
     BadgeComponent,
     EmptyStateComponent,

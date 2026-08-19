@@ -218,7 +218,11 @@ import {
               Dos columnas porque el <strong>canal</strong> cambia la tarifa: la venta propia paga más
               que la que llegó por la clínica.
             </p>
-            <p>Recuerda que solo comisionan los planes que superan el objetivo del mes.</p>
+            <p>
+              Recuerda que solo comisionan los planes que <strong>superan</strong> el objetivo del
+              mes, y que son los <strong>últimos vendidos</strong>: cada uno cobra con la tarifa de
+              su propia fila, así que estas cifras no se promedian entre planes.
+            </p>
           </app-info-hint>
         </h3>
         <p class="text-xs text-text-muted mb-3">
@@ -524,7 +528,8 @@ import {
           <app-info-hint titulo="Cómo funcionan las metas">
             <p>
               El objetivo es una <strong>franquicia, no un interruptor</strong>: solo comisionan los
-              planes que lo superan. Con 5 paquetes y objetivo 4, comisiona 1. Igualar paga cero.
+              planes que lo superan, y son los <strong>últimos vendidos</strong>. Con 8 paquetes y
+              objetivo 6 comisionan los 2 últimos, no los 8. Igualar el objetivo paga cero.
             </p>
             <p>
               <strong>Mensual:</strong> quien lo supera aporta a la bolsa que cobra publicidad.

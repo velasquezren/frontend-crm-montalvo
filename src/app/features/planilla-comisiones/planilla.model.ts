@@ -94,10 +94,11 @@ export interface VentaImportada {
   /**
    * Lo que la paciente pagó de su plan este mes, si la fila es un cobro de plan.
    *
-   * Es lo que decide de dónde sale `ingresoNeto`: con anticipo manda el
-   * anticipo, sin él manda `precio × 0,87`. Por eso viaja hasta la tabla — sin
-   * este dato no se puede decir en pantalla POR QUÉ la base no es el 87 % del
-   * precio, y esa era justo la pregunta que nadie sabía responder mirando la fila.
+   * **No entra en el cálculo.** La base es siempre `precio × 0,87`, pague la
+   * paciente el total, un anticipo o nada: el plan comisiona una sola vez, por
+   * su precio entero, el mes en que se vendió. Viaja hasta la tabla solo como
+   * información — un plan se cobra a lo largo de varios meses y administración
+   * necesita ver por dónde va, pero eso no mueve la comisión.
    */
   anticipoPlan?: string | null;
   /**
@@ -119,8 +120,9 @@ export interface VentaImportada {
   requiereRevision: boolean;
   ajustadaManual: boolean;
   /**
-   * Solo en planes. `null` = lo elige el sistema (base más baja primero);
-   * `true`/`false` = administración lo decidió a mano y su decisión manda.
+   * Solo en planes. `null` = lo elige el sistema (los últimos vendidos, por
+   * correlativo de registro); `true`/`false` = administración lo decidió a mano
+   * y su decisión manda.
    */
   comisionaPlan: boolean | null;
   vendedora: { id: string; nombre: string; codigo: string } | null;

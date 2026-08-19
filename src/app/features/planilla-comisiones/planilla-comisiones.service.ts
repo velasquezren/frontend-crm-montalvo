@@ -145,7 +145,7 @@ export class PlanillaComisionesService {
 
   /**
    * Decide si un plan concreto comisiona. `null` devuelve la decisión al
-   * sistema, que elige los de base más baja hasta llenar el cupo.
+   * sistema, que elige los ÚLTIMOS vendidos hasta llenar el cupo.
    */
   marcarPlanComisiona(ventaId: string, comisiona: boolean | null): Promise<unknown> {
     return this.ajustarVenta(ventaId, { comisionaPlan: comisiona });

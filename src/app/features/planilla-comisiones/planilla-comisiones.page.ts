@@ -72,6 +72,34 @@ interface VentasConTotales extends RespuestaPaginada<VentaImportada> {
   readonly porVendedora: readonly SubtotalVendedora[];
 }
 
+/** El número dentro de un `Cod. Origen`: "VE1462" → 1462. */
+function correlativo(codOrigen: string | null | undefined): number | null {
+  if (!codOrigen) return null;
+  const digitos = codOrigen.replace(/\D+/g, '');
+  return digitos === '' ? null : Number(digitos);
+}
+
+/**
+ * Ordena los planes del último registrado al primero, igual que el motor.
+ *
+ * Se compara el NÚMERO del correlativo, no el texto: como texto "VE999" iría
+ * después de "VE1000" y el último plan del mes dejaría de serlo justo al cruzar
+ * el millar. La fecha solo desempata cuando no hay correlativo, porque las dos
+ * cosas se contradicen —en diciembre 2025 la venta VE1458 es del 22/12 y la
+ * VE1462, posterior, del 13/12— y la planilla siempre siguió el correlativo.
+ */
+function ultimoPrimero(a: VentaImportada, b: VentaImportada): number {
+  const ca = correlativo(a.codOrigen);
+  const cb = correlativo(b.codOrigen);
+  if (ca !== null && cb !== null && ca !== cb) return cb - ca;
+
+  const fa = a.fecha ? Date.parse(a.fecha) : NaN;
+  const fb = b.fecha ? Date.parse(b.fecha) : NaN;
+  if (!Number.isNaN(fa) && !Number.isNaN(fb) && fa !== fb) return fb - fa;
+
+  return b.id.localeCompare(a.id);
+}
+
 @Component({
   selector: 'app-planilla-comisiones',
   imports: [
@@ -257,9 +285,13 @@ export class PlanillaComisionesPage implements OnDestroy {
    * Los planes agrupados por vendedora y tipo, con el cupo ya resuelto.
    *
    * El cupo es `vendidos − objetivo`: solo comisionan los planes que SUPERAN el
-   * objetivo, así que con 5 paquetes y objetivo 4 comisiona uno. Se marca cuál
-   * comisiona reproduciendo el orden que usa el sistema (base más baja primero),
-   * para que lo que se ve en pantalla sea lo que se va a pagar.
+   * objetivo, así que con 8 paquetes y objetivo 6 comisionan los 2 ÚLTIMOS. Se
+   * marca cuál comisiona reproduciendo el orden que usa el motor —correlativo de
+   * registro descendente—, para que lo que se ve en pantalla sea lo que se paga.
+   *
+   * Es la misma regla escrita dos veces, y eso es una deuda conocida: si cambia
+   * `seleccionarPlanesComisionables` en el backend hay que cambiarla aquí, o la
+   * pantalla mostrará marcados unos planes y la liquidación pagará otros.
    */
   protected readonly gruposDePlanes = computed<GrupoPlanes[]>(() => {
     const objetivos: readonly Objetivo[] = this.configuracion()?.objetivos ?? [];
@@ -293,10 +325,8 @@ export class PlanillaComisionesPage implements OnDestroy {
         const objetivo =
           grupo.tipo === 'PLANPAQ' ? (meta?.planpaqMinimos ?? 0) : (meta?.planninMinimos ?? 0);
 
-        // Mismo orden que usa el motor: base ascendente, y a igualdad el id.
-        const planes = [...grupo.planes].sort(
-          (a, b) => Number(a.ingresoNeto) - Number(b.ingresoNeto) || a.id.localeCompare(b.id),
-        );
+        // Mismo orden que usa el motor: del último registrado al primero.
+        const planes = [...grupo.planes].sort(ultimoPrimero);
         const cupo = Math.max(0, planes.length - objetivo);
 
         // Reproduce la selección del backend: lo marcado a mano primero.

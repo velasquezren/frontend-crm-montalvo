@@ -52,6 +52,25 @@
   box-shadow: inset 3px 0 0 var(--color-primary);
 }
 
+/*
+ * El número de orden. No es decoración: la regla es "comisionan los últimos",
+ * así que la posición en la lista ES el motivo por el que un plan cobra. Sin
+ * verla, administración tiene que confiar en el sistema en vez de comprobarlo.
+ */
+.orden-plan {
+  flex-shrink: 0;
+  width: 20px;
+  text-align: right;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.orden-plan-elegido {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fila-plan {
     transition: none;

@@ -62,7 +62,14 @@ import { FilaConsolidado } from '../planilla.model';
                 segundo.
               </p>
               <p>
-                Pasa el ratón por la cifra para ver el desglose de cada vendedora.
+                Los que comisionan son los <strong>últimos vendidos</strong>, y cada
+                uno paga con <strong>su</strong> base y <strong>su</strong> tarifa —
+                no se promedian. La base es el precio entero menos el 13 %, sin
+                importar cuánto se pagó de anticipo ni cuánto queda debiendo.
+              </p>
+              <p>
+                Pasa el ratón por la cifra para ver el desglose de cada vendedora,
+                o entra en "Planes que comisionan" para ver cuáles son.
               </p>
             </app-info-hint>
           </th>
