@@ -232,7 +232,7 @@ export class PlanillaComisionesPage implements OnDestroy {
   protected readonly planesPaq = httpResource<RespuestaPaginada<VentaImportada>>(
     () => {
       const id = this.periodoId();
-      return id
+      return id && this.pestana() === 'PLANES'
         ? this.service.ventasRequest(id, { clasif: 'PLANPAQ', limite: 100 })
         : undefined;
     },
@@ -242,7 +242,7 @@ export class PlanillaComisionesPage implements OnDestroy {
   protected readonly planesNin = httpResource<RespuestaPaginada<VentaImportada>>(
     () => {
       const id = this.periodoId();
-      return id
+      return id && this.pestana() === 'PLANES'
         ? this.service.ventasRequest(id, { clasif: 'PLANNIN', limite: 100 })
         : undefined;
     },
@@ -384,6 +384,10 @@ export class PlanillaComisionesPage implements OnDestroy {
        Se pide una sola vez; si ya está, no vuelve a viajar. */
     if ((p === 'CLASIFICACION' || p === 'PLANES') && !this.configuracion()) {
       void this.cargarConfiguracion();
+    }
+    if (p === 'REPORTES' && !this.consolidado()) {
+      const id = this.periodoId();
+      if (id) void this.cargarConsolidado(id);
     }
   }
 
@@ -750,15 +754,28 @@ export class PlanillaComisionesPage implements OnDestroy {
     this.pagina.set(1);
   }
 
-  /** Recarga alertas y consolidado del periodo activo (ambos en paralelo). */
+  /** Recarga alertas (y consolidado si ya estaba activo o en la pestaña REPORTES). */
   private async refrescarPanelesDelPeriodo(id: string): Promise<void> {
-    const [alertas, consolidado] = await Promise.allSettled([
+    const tareas: [Promise<Alertas>, Promise<ReporteConsolidado | null>] = [
       this.service.obtenerAlertas(id),
-      this.service.obtenerConsolidado(id),
-    ]);
+      this.pestana() === 'REPORTES' || this.consolidado() !== null
+        ? this.service.obtenerConsolidado(id).catch(() => null)
+        : Promise.resolve(null),
+    ];
+
+    const [alertas, consolidado] = await Promise.allSettled(tareas);
 
     this.alertas.set(alertas.status === 'fulfilled' ? alertas.value : null);
-    // El consolidado solo existe si el periodo ya se calculó: su fallo es normal.
-    this.consolidado.set(consolidado.status === 'fulfilled' ? consolidado.value : null);
+    if (consolidado.status === 'fulfilled' && consolidado.value !== null) {
+      this.consolidado.set(consolidado.value);
+    }
+  }
+
+  private async cargarConsolidado(id: string): Promise<void> {
+    try {
+      this.consolidado.set(await this.service.obtenerConsolidado(id));
+    } catch {
+      this.consolidado.set(null);
+    }
   }
 }
