@@ -118,7 +118,7 @@ import { FilaConsolidado } from '../planilla.model';
                 <span class="text-[10px] text-primary font-semibold block text-right">
                   {{ comisionables }} comisiona{{ comisionables === 1 ? '' : 'n' }}
                 </span>
-              } @else {
+              } @else if (f.planesVendidos > 0) {
                 <span class="text-[10px] text-text-muted font-semibold block text-right"
                   title="El objetivo es una franquicia: solo comisionan los planes que lo SUPERAN.">
                   no supera el objetivo
