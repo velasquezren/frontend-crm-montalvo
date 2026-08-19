@@ -1,0 +1,89 @@
+<div class="rejilla-metas">
+  <!-- ── Planes: un bloque por objetivo, porque son metas independientes ── -->
+  <section class="panel-meta">
+    <header class="cabecera-meta">
+      <h3>
+        <app-icon name="shopping-bag" [size]="15" class="text-primary" />
+        Planes (Tipo A)
+      </h3>
+      <app-info-hint titulo="Por qué hay dos metas">
+        <p>
+          Los <strong>paquetes de maternidad</strong> y los <strong>planes varios</strong> son
+          categorías distintas y cada una tiene su propia meta. No se suman.
+        </p>
+        <p>
+          La meta es una <strong>franquicia</strong>: solo comisiona lo que la
+          <strong>supera</strong>. Igualarla paga cero.
+        </p>
+      </app-info-hint>
+    </header>
+
+    <div class="lista-metas">
+      @for (m of metas(); track m.etiqueta) {
+        <div class="meta">
+          <div class="meta-fila">
+            <span class="meta-nombre">{{ m.etiqueta }}</span>
+            <span class="meta-cifra tabular-nums">{{ m.vendidos }} / {{ m.objetivo }}</span>
+          </div>
+
+          <div class="pista">
+            <div class="relleno relleno-primario" [style.width.%]="m.avance"></div>
+          </div>
+
+          <p class="meta-nota">
+            @if (m.comisionables > 0) {
+              <strong class="text-primary">{{ m.comisionables }}</strong>
+              {{ m.comisionables === 1 ? 'comisiona' : 'comisionan' }}
+            } @else if (m.vendidos >= m.objetivo) {
+              Igualó la meta: no comisiona ninguno
+            } @else {
+              {{ m.objetivo - m.vendidos + 1 }} más para que empiece a comisionar
+            }
+          </p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ── Cirugías: el tramo alcanzado y lo que falta para el siguiente ── -->
+  <section class="panel-meta">
+    @let c = cirugias();
+    <header class="cabecera-meta">
+      <h3>
+        <app-icon name="activity" [size]="15" class="text-secondary" />
+        Cirugías (Tipo B)
+      </h3>
+      <app-badge [variant]="c.nivel > 0 ? 'success' : 'neutral'">
+        {{ c.nivel > 0 ? 'Nivel ' + c.nivel + ' · ' + c.pct + '%' : 'Sin nivel' }}
+      </app-badge>
+    </header>
+
+    <div class="meta">
+      <div class="meta-fila">
+        <span class="meta-nombre">Acumulado del mes</span>
+        <span class="meta-cifra tabular-nums">{{ c.acumulado | moneda }}</span>
+      </div>
+
+      <div class="pista">
+        <div class="relleno relleno-secundario" [style.width.%]="c.avance"></div>
+      </div>
+
+      <p class="meta-nota">
+        @if (c.nivel > 0) {
+          Paga <strong class="text-text-dark">{{ c.pct }}%</strong> sobre todo el volumen.
+          @if (c.siguienteNivel) {
+            Faltan <strong class="text-text-dark">{{ c.falta | moneda }}</strong> para el nivel
+            {{ c.siguienteNivel }}.
+          } @else {
+            Es el nivel más alto de la escala.
+          }
+        } @else if (c.siguienteNivel) {
+          Faltan <strong class="text-text-dark">{{ c.falta | moneda }}</strong> para entrar al
+          nivel {{ c.siguienteNivel }}.
+        } @else {
+          Este periodo no tiene escala de cirugías configurada.
+        }
+      </p>
+    </div>
+  </section>
+</div>

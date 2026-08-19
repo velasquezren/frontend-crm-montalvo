@@ -3,8 +3,9 @@
   width: 100%;
 }
 
-/* ── Barra de Periodo y Filtros ─────────────────────────────────────── */
-.barra-periodo {
+/* ── Barra de control ───────────────────────────────────────────────── */
+
+.barra-control {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -28,7 +29,7 @@
   color: var(--color-primary);
 }
 
-.contenedor-select-periodo {
+.envoltura-select {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -48,18 +49,19 @@
   transition: border-color 0.15s ease;
 }
 
-.select-periodo:hover {
+.select-periodo:hover,
+.select-periodo:focus-visible {
   border-color: var(--color-primary);
 }
 
-.select-icono-flecha {
+.flecha-select {
   position: absolute;
   right: 0.6rem;
   pointer-events: none;
   color: var(--color-text-muted);
 }
 
-.pill-tc {
+.pildora-tc {
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--color-text-muted);
@@ -69,109 +71,22 @@
   border: 1px solid var(--color-border);
 }
 
-/* ── Paneles y Tarjetas ─────────────────────────────────────────────── */
-.panel {
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 1.25rem;
-}
+/* ── La ficha ───────────────────────────────────────────────────────── */
 
-.sub-panel {
-  background: var(--color-bg-workspace);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 0.75rem;
-}
-
-.badge-area {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: var(--color-text-muted);
-  background-color: var(--color-bg-workspace);
-  border: 1px solid var(--color-border);
-  padding: 0.15rem 0.5rem;
-  border-radius: 9999px;
-  text-transform: uppercase;
-}
-
-.caja-total-pago {
+/*
+ * Una sola columna con separación uniforme. El maquetado de cada bloque vive en
+ * SU componente: al partir la vista, el CSS del padre deja de alcanzar al HTML
+ * que se movió —encapsulación `Emulated`— y la pantalla se queda sin estilos sin
+ * que nada avise.
+ */
+.ficha {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  justify-content: center;
-  padding: 0.5rem 1rem;
-  background-color: var(--color-bg-light);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
+  gap: 1rem;
 }
 
-.caja-total-etiqueta {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-primary);
-}
-
-.caja-total-monto {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--color-text-dark);
-}
-
-.caja-total-subtexto {
-  font-size: 0.6875rem;
-  color: var(--color-text-muted);
-}
-
-/* ── Barra de Progreso ──────────────────────────────────────────────── */
-.track-progreso {
-  width: 100%;
-  height: 6px;
-  background-color: var(--color-bg-workspace);
-  border-radius: 9999px;
-  overflow: hidden;
-}
-
-.fill-progreso {
-  height: 100%;
-  border-radius: 9999px;
-  transition: width 0.3s ease;
-}
-
-.fill-primary {
-  background-color: var(--color-primary);
-}
-
-.fill-secondary {
-  background-color: var(--color-secondary);
-}
-
-/* ── Tabla y Píldoras ───────────────────────────────────────────────── */
-.tipo-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  padding: 0.1rem 0.45rem;
-  border-radius: 9999px;
-  background-color: var(--color-bg-workspace);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-dark);
-}
-
-.fila-excluida {
-  opacity: 0.45;
-  background-color: var(--color-bg-workspace);
-}
-
-.aparecer {
-  animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .select-periodo {
+    transition: none;
+  }
 }

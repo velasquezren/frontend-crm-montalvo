@@ -1,0 +1,51 @@
+<section class="panel-composicion">
+  <header class="cabecera">
+    <h3>
+      De qué se compone el pago
+      <app-info-hint titulo="Cómo se arma esta barra">
+        <p>
+          Todo se lleva a bolivianos con el tipo de cambio de este periodo, que es el mismo con
+          el que se liquidó. Sin convertir, el sueldo se vería siete veces menor de lo que pesa.
+        </p>
+        <p>
+          Los porcentajes suman 100 siempre: el total del mes es exactamente
+          <strong>sueldo + (Tipo A + Tipo B + Tipo C + bonos) × TC</strong>.
+        </p>
+      </app-info-hint>
+    </h3>
+    <span class="total tabular-nums">{{ total() | moneda: 'BOB' }}</span>
+  </header>
+
+  @if (hayComposicion()) {
+    <div
+      class="barra"
+      role="img"
+      [attr.aria-label]="'Composición del pago del mes en ' + conceptos().length + ' conceptos'">
+      @for (c of conceptos(); track c.clave) {
+        <span
+          class="segmento"
+          [class]="'segmento-' + c.clave"
+          [style.width.%]="c.porcentaje"
+          [title]="c.etiqueta"></span>
+      }
+    </div>
+
+    <ul class="leyenda">
+      @for (c of conceptos(); track c.clave) {
+        <li>
+          <span class="punto" [class]="'punto-' + c.clave" aria-hidden="true"></span>
+          <span class="leyenda-texto">
+            <span class="leyenda-etiqueta">{{ c.etiqueta }}</span>
+            <span class="leyenda-detalle">{{ c.detalle }}</span>
+          </span>
+          <span class="leyenda-cifras tabular-nums">
+            <span class="leyenda-monto">{{ c.montoBob | moneda: 'BOB' }}</span>
+            <span class="leyenda-pct">{{ c.porcentaje | number: '1.0-1' }}%</span>
+          </span>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="sin-datos">Este mes no generó pago: no hay nada que repartir.</p>
+  }
+</section>

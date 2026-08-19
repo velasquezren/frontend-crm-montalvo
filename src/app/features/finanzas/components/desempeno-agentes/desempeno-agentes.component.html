@@ -1,46 +1,48 @@
 <app-page-header
   title="Desempeño de Agentes"
-  subtitle="Ficha 360°, metas de maternidad, tramos de cirugía y liquidación por ejecutiva" />
+  subtitle="Por qué cada ejecutiva cobró lo que cobró: metas, tramos y composición del pago" />
 
-<!-- ── Barra de Control: Selector de Periodo y Selección de Agente con FilterChips ── -->
-<div class="barra-periodo">
+<!-- ── Barra de control: periodo y ejecutiva ─────────────────────────── -->
+<div class="barra-control">
   <div class="flex items-center gap-3 min-w-0 flex-wrap">
-    <div class="icono-periodo">
+    <span class="icono-periodo">
       <app-icon name="calendar" [size]="18" />
-    </div>
+    </span>
 
     @if (periodos.isLoading()) {
-      <app-loading-skeleton width="180px" height="36px" />
+      <app-loading-skeleton width="200px" height="36px" />
     } @else {
-      <div class="contenedor-select-periodo">
+      <span class="envoltura-select">
         <select
           class="select-periodo"
-          [value]="periodoIdEfectivo() || ''"
-          (change)="seleccionarPeriodo($any($event.target).value)">
+          aria-label="Periodo a consultar"
+          [value]="periodoId() || ''"
+          (change)="elegirPeriodo($any($event.target).value)">
           @for (p of periodos.value()?.datos ?? []; track p.id) {
-            <option [value]="p.id" [selected]="p.id === periodoIdEfectivo()">
-              {{ nombreMes(p.mes) }} {{ p.anio }} — {{ obtenerEstadoLabel(p.estado) }}
+            <option [value]="p.id" [selected]="p.id === periodoId()">
+              {{ nombreMes(p.mes) }} {{ p.anio }} — {{ etiquetaEstado(p.estado) }}
             </option>
           }
         </select>
-        <app-icon name="chevron-down" [size]="16" class="select-icono-flecha" />
-      </div>
+        <app-icon name="chevron-down" [size]="16" class="flecha-select" />
+      </span>
     }
 
-    @if (periodoActual(); as p) {
-      <span class="pill-tc">TC {{ p.tipoCambio }}</span>
+    @if (periodo(); as p) {
+      <span class="pildora-tc" title="Tipo de cambio con el que se liquidó este mes">
+        TC {{ p.tipoCambio }}
+      </span>
     }
   </div>
 
-  <!-- Selector de Agentes con FilterChip oficial del sistema -->
   @if (vendedoras().length > 0) {
     <div class="flex items-center gap-1.5 flex-wrap">
       @for (v of vendedoras(); track v.vendedoraId) {
         <app-filter-chip
-          [active]="vendedoraActual()?.vendedoraId === v.vendedoraId"
+          [active]="vendedora()?.vendedoraId === v.vendedoraId"
           size="sm"
-          (clicked)="seleccionarVendedora(v.vendedoraId)">
-          {{ v.nombre }} ({{ v.tipo }})
+          (clicked)="elegirVendedora(v.vendedoraId)">
+          {{ v.nombre }}
         </app-filter-chip>
       }
     </div>
@@ -48,324 +50,30 @@
 </div>
 
 @if (consolidado.isLoading()) {
-  <div class="mt-4 flex flex-col gap-3">
-    <app-loading-skeleton height="80px" />
-    <app-loading-skeleton height="180px" />
+  <div class="flex flex-col gap-4">
+    <app-loading-skeleton height="104px" />
+    <app-loading-skeleton height="196px" />
     <app-loading-skeleton height="260px" />
   </div>
-} @else if (!vendedoraActual()) {
-  <div class="mt-6">
-    <app-empty-state
-      icon="users"
-      title="Sin liquidación calculada"
-      description="Calcula la planilla del periodo seleccionado para ver el desempeño de las ejecutivas." />
+} @else if (consolidado.error()) {
+  <app-error-carga que="el desempeño de las ejecutivas" (reintentar)="consolidado.reload()" />
+} @else if (vendedora(); as v) {
+  <div class="ficha animate-fade-scale">
+    <app-ficha-cabecera [fila]="v" />
+
+    <app-metas-agente [fila]="v" [metas]="metas()" [tramos]="tramos()" />
+
+    <app-composicion-pago [fila]="v" [tipoCambio]="tipoCambio()" />
+
+    <app-ventas-agente
+      [ventas]="ventasDelMes()"
+      [cargando]="ventas.isLoading()"
+      [codigoVendedora]="v.codigo"
+      [canales]="canales()" />
   </div>
 } @else {
-  @let v = vendedoraActual()!;
-  
-  <div class="desempeno-layout aparecer">
-    <!-- ── 1. Panel de Perfil de la Ejecutiva ───────────────────────────── -->
-    <section class="panel mb-4">
-      <div class="flex items-center justify-between gap-4 flex-wrap">
-        <div class="flex items-center gap-3.5 min-w-0">
-          <app-avatar [initials]="obtenerIniciales(v.nombre)" size="lg" />
-          
-          <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-2 flex-wrap">
-              <h2 class="text-base font-bold text-text-dark tracking-tight">{{ v.nombre }}</h2>
-              <app-badge [variant]="v.tipo === 'JEFA' ? 'info' : 'neutral'">{{ v.tipo }}</app-badge>
-              <span class="badge-area">{{ v.area }}</span>
-              <span class="text-xs font-mono text-text-muted">{{ v.codigo }}</span>
-            </div>
-            <p class="text-xs text-text-muted mt-0.5">
-              Sueldo Base mensual: <strong class="text-text-dark">{{ v.sueldoBase | moneda }}</strong>
-              · Facturado Total: <strong class="text-text-dark">$ {{ v.montoVendido | number:'1.2-2' }} USD</strong>
-            </p>
-          </div>
-        </div>
-
-        <div class="caja-total-pago">
-          <span class="caja-total-etiqueta">Total a Transferir (BOB)</span>
-          <span class="caja-total-monto">{{ v.totalGanado | moneda }}</span>
-          <span class="caja-total-subtexto">Comisiones ($ {{ v.totalUsd | number:'1.2-2' }} USD) + Sueldo</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── 2. Indicadores de Rendimiento y Metas ───────────────────────── -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-      <!-- Maternidad -->
-      <section class="panel">
-        <div class="flex items-center justify-between gap-2 mb-2">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-text-dark flex items-center gap-1.5">
-            <app-icon name="shopping-bag" [size]="15" class="text-primary" />
-            Meta Maternidad (Tipo A)
-          </h3>
-          @if (metaMaternidadInfo(); as meta) {
-            <app-badge [variant]="meta.supera ? 'success' : meta.iguala ? 'info' : 'neutral'">
-              {{ meta.supera ? 'Superada' : meta.iguala ? 'Meta alcanzada' : 'En progreso' }}
-            </app-badge>
-          }
-        </div>
-
-        @if (metaMaternidadInfo(); as meta) {
-          <div class="space-y-2 text-xs">
-            <div class="flex items-baseline justify-between">
-              <span class="text-text-muted">Planes vendidos</span>
-              <strong class="text-sm font-bold text-text-dark">{{ meta.vendidos }} / {{ meta.metaMinima }} planes</strong>
-            </div>
-
-            <div class="track-progreso">
-              <div
-                class="fill-progreso fill-primary"
-                [style.width.%]="meta.porcentaje > 100 ? 100 : meta.porcentaje">
-              </div>
-            </div>
-
-            <p class="text-[11px] text-text-muted leading-relaxed">
-              @if (meta.supera) {
-                Superó la meta por <strong class="text-primary">{{ meta.comisionables }} planes</strong> comisionables.
-              } @else if (meta.iguala) {
-                Igualó la meta de {{ meta.metaMinima }} planes (la franquicia requiere superarla).
-              } @else {
-                Faltaron {{ meta.metaMinima - meta.vendidos }} planes para alcanzar la franquicia.
-              }
-            </p>
-          </div>
-        }
-      </section>
-
-      <!-- Cirugías -->
-      <section class="panel">
-        <div class="flex items-center justify-between gap-2 mb-2">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-text-dark flex items-center gap-1.5">
-            <app-icon name="activity" [size]="15" class="text-secondary" />
-            Cirugías (Tipo B)
-          </h3>
-          @if (nivelCirugiaInfo(); as cir) {
-            <app-badge [variant]="cir.nivel > 0 ? 'success' : 'neutral'">
-              {{ cir.nivel > 0 ? 'Nivel ' + cir.nivel + ' (' + cir.pctActual + '%)' : 'Sin nivel' }}
-            </app-badge>
-          }
-        </div>
-
-        @if (nivelCirugiaInfo(); as cir) {
-          <div class="space-y-2 text-xs">
-            <div class="flex items-baseline justify-between">
-              <span class="text-text-muted">Acumulado del mes</span>
-              <strong class="text-sm font-bold text-text-dark">$ {{ cir.acumulado | number:'1.2-2' }} USD</strong>
-            </div>
-
-            <div class="track-progreso">
-              <div
-                class="fill-progreso fill-secondary"
-                [style.width.%]="cir.nivel === 0 ? 15 : (cir.nivel / 6) * 100">
-              </div>
-            </div>
-
-            <p class="text-[11px] text-text-muted leading-relaxed">
-              @if (cir.nivel > 0) {
-                Aplica tarifa de <strong class="text-text-dark">{{ cir.pctActual }}%</strong> al volumen quirúrgico.
-                @if (cir.siguienteNivel) {
-                  A $ {{ cir.faltaParaSiguiente | number:'1.2-2' }} USD del Nivel {{ cir.siguienteNivel }}.
-                }
-              } @else {
-                No alcanzó el mínimo de $1,000 USD para Nivel 1.
-              }
-            </p>
-          </div>
-        }
-      </section>
-
-      <!-- Bonos -->
-      <section class="panel">
-        <div class="flex items-center justify-between gap-2 mb-2">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-text-dark flex items-center gap-1.5">
-            <app-icon name="pie-chart" [size]="15" class="text-primary" />
-            Bonos & Estímulos
-          </h3>
-          @if (bonoTrimestralDetalle(); as info) {
-            <app-badge [variant]="v.totalBonos > 0 ? 'success' : 'neutral'">
-              {{ v.totalBonos > 0 ? '$ ' + (v.totalBonos | number:'1.2-2') + ' USD' : 'Sin bonos' }}
-            </app-badge>
-          }
-        </div>
-
-        @if (bonoTrimestralDetalle(); as info) {
-          <div class="space-y-1.5 text-xs">
-            <div class="flex justify-between py-1 border-b border-border/40">
-              <span class="text-text-muted">Bono Jefatura (Mensual):</span>
-              <strong class="text-text-dark">{{ v.bonoJefatura > 0 ? '$ ' + (v.bonoJefatura | number:'1.2-2') : '—' }}</strong>
-            </div>
-            <div class="flex justify-between py-1 border-b border-border/40">
-              <span class="text-text-muted">Bono {{ info.etiquetaTrimestre }}:</span>
-              @if (info.esCierre) {
-                <strong class="text-primary font-semibold">
-                  {{ info.tieneBono ? '$ ' + (info.bonoTrimestral | number:'1.2-2') + ' USD' : 'No superó $15k' }}
-                </strong>
-              } @else {
-                <span class="text-[11px] text-text-muted italic">Se liquida al cierre (Mes 3)</span>
-              }
-            </div>
-            <div class="flex justify-between pt-1">
-              <span class="text-text-muted">Total Bonos:</span>
-              <strong class="text-text-dark">{{ v.totalBonos | moneda }}</strong>
-            </div>
-
-            <p class="text-[10px] text-text-muted leading-tight mt-1">
-              @if (info.esCierre) {
-                @if (info.tieneBono) {
-                  Mes de cierre {{ info.etiquetaTrimestre }}: Aplica 0.5% sobre el promedio trimestral facturado.
-                } @else {
-                  Mes de cierre {{ info.etiquetaTrimestre }}: El promedio trimestral no superó el objetivo de $15,000 USD.
-                }
-              } @else {
-                Mes intermedio de {{ info.etiquetaTrimestre }}. Las ventas acumulan para el promedio del trimestre.
-              }
-            </p>
-          </div>
-        }
-      </section>
-    </div>
-
-    <!-- ── 3. Desglose Contable de Haberes ─────────────────────────────── -->
-    <section class="panel mb-4">
-      <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
-        <h3 class="text-xs font-bold uppercase tracking-wider text-text-muted">
-          Desglose Contable del Mes — {{ v.nombre }}
-        </h3>
-        @if (estadisticasCanales(); as c) {
-          <div class="flex items-center gap-2 text-xs text-text-muted">
-            <span>Captación:</span>
-            <strong class="text-primary">{{ c.pctPropio }}% Propia ({{ c.propios }})</strong>
-            <span>·</span>
-            <strong class="text-text-dark">{{ 100 - c.pctPropio }}% Clínica ({{ c.empresa }})</strong>
-            <span class="text-[10px] text-text-muted">
-              sobre {{ c.total }} comisionables@if (ventasExcluidas() > 0) {, {{ ventasExcluidas() }} excluidas del cálculo}
-            </span>
-          </div>
-        }
-      </div>
-
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <div class="sub-panel">
-          <span class="block text-[11px] font-bold uppercase tracking-wider text-text-muted mb-0.5">Sueldo Base</span>
-          <span class="block text-sm font-bold text-text-dark">{{ v.sueldoBase | moneda:'BOB' }}</span>
-          <span class="block text-[10px] text-text-muted">Haber Básico</span>
-        </div>
-
-        <div class="sub-panel">
-          <span class="block text-[11px] font-bold uppercase tracking-wider text-text-muted mb-0.5">Tipo A (Planes)</span>
-          <span class="block text-sm font-bold text-text-dark">{{ v.comisionA | moneda }}</span>
-          <span class="block text-[10px] text-text-muted">Maternidad & Niños</span>
-        </div>
-
-        <div class="sub-panel">
-          <span class="block text-[11px] font-bold uppercase tracking-wider text-text-muted mb-0.5">Tipo B (Cirugías)</span>
-          <span class="block text-sm font-bold text-text-dark">{{ v.comisionB | moneda }}</span>
-          <span class="block text-[10px] text-text-muted">Cirugías & RA</span>
-        </div>
-
-        <div class="sub-panel">
-          <span class="block text-[11px] font-bold uppercase tracking-wider text-text-muted mb-0.5">Tipo C (Servicios)</span>
-          <span class="block text-sm font-bold text-text-dark">{{ v.comisionC | moneda }}</span>
-          <span class="block text-[10px] text-text-muted">Consultas, labs, ecos</span>
-        </div>
-
-        <div class="sub-panel bg-bg-light border-primary/40 col-span-2 sm:col-span-1">
-          <span class="block text-[11px] font-bold uppercase tracking-wider text-primary mb-0.5">Total a Pagar</span>
-          <span class="block text-sm font-bold text-primary">{{ v.totalGanado | moneda:'BOB' }}</span>
-          <span class="block text-[10px] text-text-muted">Comisiones + Sueldo</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── 4. Ventas Registradas en el Mes ────────────────────────────── -->
-    <section class="panel">
-      <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
-        <div>
-          <h3 class="text-sm font-bold text-text-dark">Ventas Registradas en el Mes</h3>
-          <p class="text-xs text-text-muted">Servicios facturados bajo el código {{ v.codigo }}</p>
-        </div>
-
-        <div class="flex items-center gap-2 flex-wrap">
-          <app-input
-            placeholder="Buscar paciente o servicio…"
-            icon="search"
-            [value]="busquedaVentas()"
-            (valueChange)="busquedaVentas.set($event)" />
-
-          <div class="flex items-center gap-1">
-            <app-filter-chip
-              [active]="filtroCanal() === 'TODOS'"
-              size="sm"
-              (clicked)="filtroCanal.set('TODOS')">
-              Todos
-            </app-filter-chip>
-            <app-filter-chip
-              [active]="filtroCanal() === 'PROPIO'"
-              size="sm"
-              (clicked)="filtroCanal.set('PROPIO')">
-              Propio
-            </app-filter-chip>
-            <app-filter-chip
-              [active]="filtroCanal() === 'EMPRESA'"
-              size="sm"
-              (clicked)="filtroCanal.set('EMPRESA')">
-              Empresa
-            </app-filter-chip>
-          </div>
-        </div>
-      </div>
-
-      <!-- Esqueleto solo en la primera carga; al cambiar de vendedora se conserva
-           la tabla anterior en vez de vaciar la pantalla. -->
-      @if (ventas.isLoading() && (ventas.value()?.datos?.length ?? 0) === 0) {
-        <div class="flex flex-col gap-2">
-          @for (n of [1,2,3,4]; track n) { <app-loading-skeleton height="36px" /> }
-        </div>
-      } @else if (ventasFiltradas().length === 0) {
-        <p class="text-xs text-text-muted py-6 text-center">No se encontraron ventas con los filtros aplicados.</p>
-      } @else {
-        <app-table [dense]="true">
-          <thead>
-            <tr>
-              <th class="text-left w-[85px]">Fecha</th>
-              <th class="text-left w-[95px]">Código</th>
-              <th class="text-left">Servicio / Procedimiento</th>
-              <th class="text-left">Paciente</th>
-              <th class="text-center w-[80px]">Canal</th>
-              <th class="text-right w-[100px]">Precio</th>
-              <th class="text-right w-[100px]">Base Neta</th>
-              <th class="text-left w-[120px]">Clasificación</th>
-              <th class="text-center w-[60px]">Tipo</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (venta of ventasFiltradas(); track venta.id) {
-              <tr [class.fila-excluida]="!venta.comisionable">
-                <td class="text-left text-xs whitespace-nowrap text-text-muted">
-                  {{ venta.fecha ? (venta.fecha | date: 'dd/MM/yyyy') : '—' }}
-                </td>
-                <td class="text-left text-xs font-mono font-medium text-text-muted whitespace-nowrap">
-                  {{ obtenerCodigoVenta(venta) }}
-                </td>
-                <td class="text-left font-semibold text-xs text-text-dark">{{ venta.detalle }}</td>
-                <td class="text-left text-xs text-text-muted truncate max-w-[180px]">{{ venta.paciente ?? '—' }}</td>
-                <td class="text-center">
-                  <app-badge [variant]="venta.canal === 'PROPIO' ? 'info' : 'neutral'">{{ venta.canal }}</app-badge>
-                </td>
-                <td class="text-right font-medium text-text-dark text-xs whitespace-nowrap">${{ venta.precio | number: '1.2-2' }}</td>
-                <td class="text-right text-xs text-text-muted whitespace-nowrap">${{ venta.ingresoNeto | number: '1.2-2' }}</td>
-                <td class="text-left text-xs font-medium text-text-dark">{{ obtenerClasifLabel(venta.clasif) }}</td>
-                <td class="text-center">
-                  <span class="tipo-pill" [title]="obtenerTipoLabel(venta.tipo)">{{ venta.tipo }}</span>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </app-table>
-      }
-    </section>
-  </div>
+  <app-empty-state
+    icon="users"
+    title="Sin liquidación calculada"
+    description="Calcula la planilla de este periodo para ver el desempeño de las ejecutivas." />
 }

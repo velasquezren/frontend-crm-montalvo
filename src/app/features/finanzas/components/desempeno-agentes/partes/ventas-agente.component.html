@@ -1,0 +1,98 @@
+<section class="panel-ventas">
+  <header class="cabecera">
+    <div class="min-w-0">
+      <h3 class="text-sm font-bold text-text-dark">Ventas del mes</h3>
+      <p class="text-xs text-text-muted">
+        Facturado bajo el código {{ codigoVendedora() }}
+        @if (canales(); as c) {
+          · <strong class="text-primary">{{ c.pctPropio }}% propia</strong> ({{ c.propios }})
+          · <strong class="text-text-dark">{{ 100 - c.pctPropio }}% clínica</strong> ({{ c.empresa }})
+          sobre {{ c.total }} comisionables@if (excluidas() > 0) {, {{ excluidas() }} fuera del cálculo}
+        }
+      </p>
+    </div>
+
+    <div class="controles">
+      <app-input
+        placeholder="Buscar paciente o servicio…"
+        icon="search"
+        [value]="busqueda()"
+        (valueChange)="busqueda.set($event)" />
+
+      <div class="flex items-center gap-1">
+        <app-filter-chip [active]="filtroCanal() === 'TODOS'" size="sm" (clicked)="filtroCanal.set('TODOS')">
+          Todos
+        </app-filter-chip>
+        <app-filter-chip [active]="filtroCanal() === 'PROPIO'" size="sm" (clicked)="filtroCanal.set('PROPIO')">
+          Propio
+        </app-filter-chip>
+        <app-filter-chip [active]="filtroCanal() === 'EMPRESA'" size="sm" (clicked)="filtroCanal.set('EMPRESA')">
+          Empresa
+        </app-filter-chip>
+      </div>
+    </div>
+  </header>
+
+  <!-- Esqueleto solo en la primera carga: al cambiar de ejecutiva se conserva la
+       tabla anterior en vez de vaciar la pantalla durante el viaje a la red. -->
+  @if (cargando() && ventas().length === 0) {
+    <div class="flex flex-col gap-2">
+      @for (n of [1, 2, 3, 4]; track n) {
+        <app-loading-skeleton height="36px" />
+      }
+    </div>
+  } @else if (filtradas().length === 0) {
+    <p class="sin-resultados">No hay ventas que coincidan con el filtro.</p>
+  } @else {
+    <app-table [dense]="true" maxHeight="60vh">
+      <thead>
+        <tr>
+          <th class="text-left w-[85px]">Fecha</th>
+          <th class="text-left w-[95px]">Código</th>
+          <th class="text-left">Servicio</th>
+          <th class="text-left">Paciente</th>
+          <th class="text-center w-[80px]">Canal</th>
+          <th class="text-right w-[110px]">Precio</th>
+          <th class="text-right w-[110px]">Base neta</th>
+          <th class="text-left w-[120px]">Clasificación</th>
+          <th class="text-center w-[60px]">Tipo</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (venta of filtradas(); track venta.id) {
+          <tr [class.fila-excluida]="!venta.comisionable">
+            <td class="text-left text-xs whitespace-nowrap text-text-muted">
+              {{ venta.fecha ? (venta.fecha | date: 'dd/MM/yyyy') : '—' }}
+            </td>
+            <td class="text-left text-xs font-mono text-text-muted whitespace-nowrap">
+              {{ codigo(venta) }}
+            </td>
+            <td class="text-left text-xs font-semibold text-text-dark">{{ venta.detalle }}</td>
+            <td class="text-left text-xs text-text-muted truncate max-w-[180px]">
+              {{ venta.paciente ?? '—' }}
+            </td>
+            <td class="text-center">
+              <app-badge [variant]="venta.canal === 'PROPIO' ? 'info' : 'neutral'">
+                {{ venta.canal }}
+              </app-badge>
+            </td>
+            <!-- El importe del Excel viene en dólares: lo convierte el pipe, que
+                 sigue al selector Bs/$us de la barra superior. -->
+            <td class="text-right text-xs font-medium text-text-dark whitespace-nowrap">
+              {{ venta.precio | moneda }}
+            </td>
+            <td class="text-right text-xs text-text-muted whitespace-nowrap">
+              {{ venta.ingresoNeto | moneda }}
+            </td>
+            <td class="text-left text-xs font-medium text-text-dark">
+              {{ etiquetaClasif(venta.clasif) }}
+            </td>
+            <td class="text-center">
+              <span class="pildora-tipo" [title]="etiquetaTipo(venta.tipo)">{{ venta.tipo }}</span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </app-table>
+  }
+</section>

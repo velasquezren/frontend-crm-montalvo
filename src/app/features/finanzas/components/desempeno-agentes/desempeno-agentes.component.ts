@@ -1,72 +1,75 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
 import { RespuestaPaginada } from '../../../../core/api/pagination.model';
-import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
-import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { ErrorCargaComponent } from '../../../../shared/components/error-carga/error-carga.component';
 import { FilterChipComponent } from '../../../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
-import { InputComponent } from '../../../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
-import { TableComponent } from '../../../../shared/components/table/table.component';
-import { MonedaPipe } from '../../../../shared/pipes/moneda.pipe';
+import { PlanillaComisionesService } from '../../../planilla-comisiones/planilla-comisiones.service';
 import {
-  CLASIF_LABEL,
-  ClasifComision,
+  ConfiguracionPlanilla,
   ESTADO_PERIODO_LABEL,
   EstadoPeriodo,
   FilaConsolidado,
   MESES,
   PeriodoComision,
   ReporteConsolidado,
-  TIPO_LABEL,
-  TipoComision,
   VentaImportada,
 } from '../../../planilla-comisiones/planilla.model';
-import { PlanillaComisionesService } from '../../../planilla-comisiones/planilla-comisiones.service';
+import { ComposicionPagoComponent } from './partes/composicion-pago.component';
+import { FichaCabeceraComponent } from './partes/ficha-cabecera.component';
+import { MetaPlanes, MetasAgenteComponent, TramoCirugia } from './partes/metas-agente.component';
+import { RepartoCanal, VentasAgenteComponent } from './partes/ventas-agente.component';
 
-/**
- * Ficha 360° de Desempeño por Agente / Ejecutiva Comercial.
- * Diseño minimalista de alta densidad con:
- * - Selector fluido con FilterChip de diseño atómico.
- * - Termómetro limpio de metas y tramos de cirugía.
- * - Desglose transparente de haberes contables del mes.
- * - Buscador y filtros de ventas registradas.
- */
-/**
- * Reparto por canal que acompaña al listado de ventas cuando se filtra por
- * vendedora. `null` si no se filtró: el porcentaje es de una persona.
- */
-interface EstadisticasCanal {
-  readonly total: number;
-  readonly propios: number;
-  readonly empresa: number;
-  readonly pctPropio: number;
-}
-
-/** La página de ventas del mes, con el reparto por canal pegado. */
+/** La página de ventas del mes con el reparto por canal que el servidor agrega. */
 interface VentasConCanales extends RespuestaPaginada<VentaImportada> {
-  readonly canales: EstadisticasCanal | null;
+  readonly canales: RepartoCanal | null;
 }
 
+/**
+ * Ficha 360° de una ejecutiva: qué vendió, qué metas tocó y cómo se arma su pago.
+ *
+ * ## Qué hace esta pantalla que no hagan los otros informes
+ *
+ * El reporte consolidado ya da la tabla de todas las ejecutivas, y la pestaña de
+ * clasificación ya lista las ventas del mes. Lo que ninguno responde es **por
+ * qué una persona cobró lo que cobró**: contra qué meta se midió, en qué tramo
+ * de cirugías cayó, cuánto le faltó para el siguiente y qué proporción de su
+ * pago es sueldo y cuál es comisión. Por eso esta vista no repite la tabla de
+ * cifras por concepto —que sería el consolidado otra vez— sino que la sustituye
+ * por la composición del pago, que es la lectura que sí es de una sola persona.
+ *
+ * ## Este componente ya no dibuja: reparte
+ *
+ * Era una plantilla de 371 líneas con cuatro bloques dentro. Ahora resuelve los
+ * datos y los pasa a cuatro piezas con `input()`, cada una con su HTML y su CSS:
+ * cabecera, metas, composición del pago y ventas. Teclear en el buscador solo
+ * repinta la tabla, no la ficha entera.
+ *
+ * ## De dónde salen las metas y los tramos
+ *
+ * De `periodo.configuracionUsada` — la foto de las reglas con las que se liquidó
+ * ESE mes— y solo si falta, de la configuración de hoy. Estaban escritos a mano
+ * en el componente, así que cambiar una meta en Configuración no se reflejaba
+ * aquí, y al abrir un mes antiguo se mostraban las reglas de hoy como si fueran
+ * las suyas.
+ */
 @Component({
   selector: 'app-desempeno-agentes',
   imports: [
-    DatePipe,
-    DecimalPipe,
-    MonedaPipe,
     PageHeaderComponent,
-    AvatarComponent,
-    BadgeComponent,
     FilterChipComponent,
-    InputComponent,
-    EmptyStateComponent,
     IconComponent,
+    EmptyStateComponent,
+    ErrorCargaComponent,
     LoadingSkeletonComponent,
-    TableComponent,
+    FichaCabeceraComponent,
+    MetasAgenteComponent,
+    ComposicionPagoComponent,
+    VentasAgenteComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './desempeno-agentes.component.html',
@@ -75,264 +78,163 @@ interface VentasConCanales extends RespuestaPaginada<VentaImportada> {
 export class DesempenoAgentesComponent {
   private readonly service = inject(PlanillaComisionesService);
 
-  protected readonly clasifLabel = CLASIF_LABEL;
-  protected readonly tipoLabel = TIPO_LABEL;
-  protected readonly estadoLabel = ESTADO_PERIODO_LABEL;
+  protected readonly periodoSeleccionado = signal<string | null>(null);
+  protected readonly vendedoraSeleccionada = signal<string | null>(null);
 
-  /* ── Estado Reactivo ─────────────────────────────────────────────────── */
-  readonly periodoId = signal<string | null>(null);
-  readonly vendedoraIdSeleccionada = signal<string | null>(null);
-  readonly busquedaVentas = signal<string>('');
-  /**
-   * La búsqueda que de verdad filtra, un instante después de teclear.
-   *
-   * El filtro corre en memoria sobre el mes entero. Medido en la plantilla: 11
-   * expresiones por fila, que con las 418 ventas del mes más cargado son ~4.600
-   * evaluaciones por pulsación. Antes eran 100 filas y no se notaba; al traer el
-   * mes completo —necesario para que el buscador no mintiera— se multiplicó por
-   * cuatro.
-   *
-   * 150 ms y no los 350 de la planilla: allí el debounce protege una llamada al
-   * servidor y conviene esperar a que la persona termine; aquí no viaja nada, así
-   * que solo hace falta saltarse las pulsaciones intermedias sin que se sienta
-   * lento.
-   */
-  private readonly busquedaAplicada = signal<string>('');
+  /* ── Datos remotos ──────────────────────────────────────────────────── */
 
-  constructor() {
-    /* Mismo patrón que la página de planilla, con menos espera: se descarta el
-       temporizador anterior en cada tecla, así que solo filtra la última. */
-    effect(onCleanup => {
-      const texto = this.busquedaVentas();
-      const id = setTimeout(() => this.busquedaAplicada.set(texto), 150);
-      onCleanup(() => clearTimeout(id));
-    });
-  }
-  readonly filtroCanal = signal<'TODOS' | 'EMPRESA' | 'PROPIO'>('TODOS');
-
-  /* ── Recursos HTTP Reactivos (Signals) ────────────────────────────────── */
   protected readonly periodos = httpResource<RespuestaPaginada<PeriodoComision>>(() =>
     this.service.periodosRequest(),
   );
 
   protected readonly consolidado = httpResource<ReporteConsolidado>(() => {
-    const pId = this.periodoIdEfectivo();
-    return pId ? this.service.consolidadoRequest(pId) : undefined;
-  });
-
-  protected readonly ventas = httpResource<VentasConCanales>(() => {
-    const pId = this.periodoIdEfectivo();
-    const vId = this.vendedoraActual()?.vendedoraId;
-    if (!pId || !vId) return undefined;
-    /* El mes entero, no la primera página: el buscador y los filtros de abajo
-       trabajan en memoria sobre esto. Con 100 filas, la vendedora con 418
-       ventas tenía 318 invisibles y 9 de sus 61 servicios no se podían
-       encontrar — el buscador respondía "no existe" a algo que sí existe.
-       Pesa ~16 KB comprimidos en el peor mes que hay en la base. */
-    return this.service.ventasRequest(pId, {
-      vendedoraId: vId,
-      mesCompleto: true,
-    });
-  });
-
-  /* ── Computados ──────────────────────────────────────────────────────── */
-
-  /** Periodo activo: el seleccionado manualmente o el más reciente calculado. */
-  readonly periodoIdEfectivo = computed<string | null>(() => {
-    const manual = this.periodoId();
-    if (manual) return manual;
-    const lista: PeriodoComision[] = this.periodos.value()?.datos ?? [];
-    const calculado = lista.find((p: PeriodoComision) => p.estado === 'CALCULADO');
-    return calculado ? calculado.id : (lista[0]?.id ?? null);
-  });
-
-  readonly periodoActual = computed<PeriodoComision | null>(() => {
-    const id = this.periodoIdEfectivo();
-    if (!id) return null;
-    const lista: PeriodoComision[] = this.periodos.value()?.datos ?? [];
-    return lista.find((p: PeriodoComision) => p.id === id) ?? null;
-  });
-
-  readonly vendedoras = computed<FilaConsolidado[]>(() => {
-    return this.consolidado.value()?.filas ?? [];
-  });
-
-  readonly vendedoraActual = computed<FilaConsolidado | null>(() => {
-    const id = this.vendedoraIdSeleccionada();
-    const lista = this.vendedoras();
-    if (id) {
-      const encontrada = lista.find(v => v.vendedoraId === id);
-      if (encontrada) return encontrada;
-    }
-    return lista[0] ?? null;
-  });
-
-  /** Progreso de meta de maternidad (ej. 6 planes vs 4 objetivo = 150%). */
-  readonly metaMaternidadInfo = computed(() => {
-    const v = this.vendedoraActual();
-    if (!v) return null;
-    const esJefa = v.tipo === 'JEFA';
-    const metaMinima = esJefa ? 6 : 4;
-    const vendidos = v.planesVendidos;
-    const porcentaje = Math.min(Math.round((vendidos / metaMinima) * 100), 200);
-    const comisionables = Math.max(0, vendidos - metaMinima);
-    const supera = vendidos > metaMinima;
-    const iguala = vendidos === metaMinima;
-
-    return {
-      metaMinima,
-      vendidos,
-      porcentaje,
-      comisionables,
-      supera,
-      iguala,
-    };
-  });
-
-  /** Información del nivel de cirugías y distancia al siguiente nivel. */
-  readonly nivelCirugiaInfo = computed(() => {
-    const v = this.vendedoraActual();
-    if (!v) return null;
-    const nivel = v.nivelCirugia ?? 0;
-    const acumulado = v.acumuladoCirugias;
-
-    const escalas = [
-      { nivel: 1, desde: 1000, hasta: 5000, pct: 1.0 },
-      { nivel: 2, desde: 5000, hasta: 10000, pct: 1.5 },
-      { nivel: 3, desde: 10000, hasta: 15000, pct: 2.5 },
-      { nivel: 4, desde: 15000, hasta: 22000, pct: 3.0 },
-      { nivel: 5, desde: 22000, hasta: 30000, pct: 3.5 },
-      { nivel: 6, desde: 30000, hasta: 40000, pct: 4.0 },
-    ];
-
-    const escalaActual = escalas.find(e => e.nivel === nivel);
-    const siguienteEscala = escalas.find(e => e.nivel === nivel + 1);
-    const faltaParaSiguiente = siguienteEscala ? Math.max(0, siguienteEscala.desde - acumulado) : 0;
-
-    return {
-      nivel,
-      acumulado,
-      pctActual: escalaActual?.pct ?? 0,
-      siguienteNivel: siguienteEscala?.nivel ?? null,
-      faltaParaSiguiente,
-    };
+    const id = this.periodoId();
+    return id ? this.service.consolidadoRequest(id) : undefined;
   });
 
   /**
-   * Reparto por canal de la ejecutiva, agregado en el SERVIDOR y traído DENTRO
-   * de la respuesta de ventas.
+   * La configuración de HOY, solo como respaldo de la foto del periodo.
    *
-   * Antes se contaba aquí sobre `ventas.value().datos`, que es una página de 100
-   * filas y no el mes: medido en producción, 29 de 67 combinaciones
-   * vendedora-mes la superan (promedio 117, máximo 423), así que la ejecutiva
-   * con 423 ventas veía "100" como total y un porcentaje del último tercio del
-   * mes — en la pantalla con la que se la evalúa.
-   *
-   * Viaja pegado al listado en vez de en su propia petición porque aquí el 97%
-   * del tiempo es red: el `groupBy` cuesta milisegundos dentro de la
-   * transacción que ya se hacía, y una segunda llamada costaría otro viaje
-   * completo cada vez que se cambia de vendedora.
+   * Se pide siempre porque es uno de los cuatro endpoints cacheados 60 s: sale
+   * gratis después de la primera vez, y tenerla evita una pantalla a medias
+   * cuando el periodo es anterior a que se guardaran las fotos.
    */
-  protected readonly estadisticasCanales = computed(() => this.ventas.value()?.canales ?? null);
-
-
-  /** Información detallada de bonos y trimestre activo. */
-  readonly bonoTrimestralDetalle = computed(() => {
-    const p = this.periodoActual();
-    const v = this.vendedoraActual();
-    if (!p || !v) return null;
-
-    const mes = p.mes;
-    const trimestreNum = Math.ceil(mes / 3);
-    const esCierre = mes % 3 === 0;
-    const nombresTrimestres: Record<number, string> = {
-      1: 'Q1 (Ene - Mar)',
-      2: 'Q2 (Abr - Jun)',
-      3: 'Q3 (Jul - Sep)',
-      4: 'Q4 (Oct - Dic)',
-    };
-    const etiquetaTrimestre = nombresTrimestres[trimestreNum] ?? `Q${trimestreNum}`;
-
-    return {
-      mes,
-      trimestreNum,
-      etiquetaTrimestre,
-      esCierre,
-      bonoTrimestral: v.bonoTrimestral,
-      tieneBono: v.bonoTrimestral > 0,
-      bonoJefatura: v.bonoJefatura,
-    };
-  });
-
-  /**
-   * Cuántas ventas del mes quedaron fuera del cálculo de comisiones.
-   *
-   * Se muestra porque explica una diferencia que si no desconcierta: el
-   * contador de captación cuenta solo comisionables —para cuadrar con lo que se
-   * paga— mientras la tabla de abajo las lista todas. En 39 de las 67
-   * combinaciones vendedora-mes de la base los dos números no coinciden, hasta
-   * por 21 filas. Dos cifras correctas pegadas y sin explicación se leen como un
-   * error del sistema.
-   */
-  protected readonly ventasExcluidas = computed(
-    () => this.ventas.value()?.datos.filter(v => !v.comisionable).length ?? 0,
+  protected readonly configuracion = httpResource<ConfiguracionPlanilla>(() =>
+    this.service.configuracionRequest(),
   );
 
-  /** Ventas filtradas reactivamente por búsqueda y canal. */
-  readonly ventasFiltradas = computed<VentaImportada[]>(() => {
-    const lista = this.ventas.value()?.datos ?? [];
-    const busq = this.busquedaAplicada().trim().toLowerCase();
-    const canal = this.filtroCanal();
-
-    return lista.filter(v => {
-      if (canal !== 'TODOS' && v.canal !== canal) return false;
-      if (busq) {
-        const codigoMatch = this.obtenerCodigoVenta(v).toLowerCase().includes(busq);
-        const detalleMatch = v.detalle.toLowerCase().includes(busq);
-        const pacienteMatch = (v.paciente ?? '').toLowerCase().includes(busq);
-        const clasifMatch = (this.clasifLabel[v.clasif] ?? '').toLowerCase().includes(busq);
-        if (!detalleMatch && !pacienteMatch && !clasifMatch && !codigoMatch) return false;
-      }
-      return true;
-    });
+  protected readonly ventas = httpResource<VentasConCanales>(() => {
+    const periodoId = this.periodoId();
+    const vendedoraId = this.vendedora()?.vendedoraId;
+    if (!periodoId || !vendedoraId) return undefined;
+    /* El mes entero, no la primera página: el buscador de la tabla filtra en
+       memoria, así que una venta fuera de la página no está "en la siguiente",
+       no existe para él. Pesa ~16 KB comprimidos en el peor mes de la base. */
+    return this.service.ventasRequest(periodoId, { vendedoraId, mesCompleto: true });
   });
 
-  /* ── Acciones de Usuario ─────────────────────────────────────────────── */
+  /* ── Selección ──────────────────────────────────────────────────────── */
 
-  obtenerCodigoVenta(v: VentaImportada): string {
-    return v.codOrigen || v.codItem || v.id.slice(0, 8);
+  /** El periodo elegido a mano, o el más reciente que ya esté calculado. */
+  protected readonly periodoId = computed<string | null>(() => {
+    const manual = this.periodoSeleccionado();
+    if (manual) return manual;
+    const lista = this.periodos.value()?.datos ?? [];
+    return (lista.find(p => p.estado === 'CALCULADO') ?? lista[0])?.id ?? null;
+  });
+
+  protected readonly periodo = computed<PeriodoComision | null>(() => {
+    const id = this.periodoId();
+    return (this.periodos.value()?.datos ?? []).find(p => p.id === id) ?? null;
+  });
+
+  protected readonly vendedoras = computed<readonly FilaConsolidado[]>(
+    () => this.consolidado.value()?.filas ?? [],
+  );
+
+  protected readonly vendedora = computed<FilaConsolidado | null>(() => {
+    const lista = this.vendedoras();
+    const id = this.vendedoraSeleccionada();
+    return (id ? lista.find(v => v.vendedoraId === id) : null) ?? lista[0] ?? null;
+  });
+
+  /** El TC con el que se liquidó este mes, para normalizar la composición. */
+  protected readonly tipoCambio = computed(() => Number(this.periodo()?.tipoCambio) || 1);
+
+  /* ── Reglas del periodo ─────────────────────────────────────────────── */
+
+  /**
+   * Los dos objetivos de planes de ESTA ejecutiva, con lo que de verdad comisiona.
+   *
+   * `comisionables` no se recalcula: se lee de lo que guardó el motor. Rehacer
+   * aquí la resta `vendidos − objetivo` es cómo una pantalla acaba contradiciendo
+   * a la liquidación cuando la regla cambia en un solo sitio.
+   */
+  protected readonly metas = computed<readonly MetaPlanes[]>(() => {
+    const v = this.vendedora();
+    if (!v) return [];
+
+    const foto = this.periodo()?.configuracionUsada;
+    const objetivoFoto = foto?.objetivos.find(o => o.tipo === v.tipo);
+    const objetivoVivo = this.configuracion.value()?.objetivos.find(o => o.tipo === v.tipo);
+
+    const paq = objetivoFoto?.planpaqMinimos ?? objetivoVivo?.planpaqMinimos ?? 0;
+    const nin = objetivoFoto?.planninMinimos ?? objetivoVivo?.planninMinimos ?? 0;
+
+    const avance = (vendidos: number, objetivo: number): number =>
+      objetivo > 0 ? Math.min(100, Math.round((vendidos / objetivo) * 100)) : 100;
+
+    return [
+      {
+        etiqueta: 'Paquetes de maternidad',
+        vendidos: v.planpaqVendidos,
+        objetivo: paq,
+        comisionables: v.planpaqComisionables,
+        avance: avance(v.planpaqVendidos, paq),
+      },
+      {
+        etiqueta: 'Planes varios',
+        vendidos: v.planninVendidos,
+        objetivo: nin,
+        comisionables: v.planninComisionables,
+        avance: avance(v.planninVendidos, nin),
+      },
+    ];
+  });
+
+  /** La escala de cirugías del periodo, de la foto o —si falta— de la de hoy. */
+  protected readonly tramos = computed<readonly TramoCirugia[]>(() => {
+    const foto = this.periodo()?.configuracionUsada;
+    if (foto?.nivelesCirugia.length) {
+      return foto.nivelesCirugia
+        .map(n => ({
+          nivel: n.nivel,
+          desde: n.montoDesde,
+          hasta: n.montoHasta,
+          /* La ficha resume el tramo con un solo porcentaje, y se muestra el de
+             EMPRESA: 183 de las 185 ventas de diciembre entraron por ahí. */
+          pct: n.pctEmpresa,
+        }))
+        .sort((a, b) => a.nivel - b.nivel);
+    }
+
+    return (this.configuracion.value()?.nivelesCirugia ?? [])
+      .map(n => ({
+        nivel: n.nivel,
+        desde: Number(n.montoDesde),
+        hasta: Number(n.montoHasta),
+        pct: Number(n.pctEmpresa),
+      }))
+      .sort((a, b) => a.nivel - b.nivel);
+  });
+
+  /* ── Derivados de la tabla ──────────────────────────────────────────── */
+
+  protected readonly ventasDelMes = computed<readonly VentaImportada[]>(
+    () => this.ventas.value()?.datos ?? [],
+  );
+
+  protected readonly canales = computed(() => this.ventas.value()?.canales ?? null);
+
+  /* ── Acciones ───────────────────────────────────────────────────────── */
+
+  protected elegirPeriodo(id: string): void {
+    this.periodoSeleccionado.set(id);
+    /* La ejecutiva se re-elige sola: la del mes anterior puede no estar en el
+       nuevo, y dejar el id viejo mostraba la primera de la lista sin que el chip
+       activo lo dijera. */
+    this.vendedoraSeleccionada.set(null);
   }
 
-  seleccionarPeriodo(id: string): void {
-    this.periodoId.set(id);
+  protected elegirVendedora(id: string): void {
+    this.vendedoraSeleccionada.set(id);
   }
 
-  seleccionarVendedora(id: string): void {
-    this.vendedoraIdSeleccionada.set(id);
-  }
-
-  nombreMes(mes: number): string {
+  protected nombreMes(mes: number): string {
     return MESES[mes - 1] ?? `Mes ${mes}`;
   }
 
-  obtenerIniciales(nombre: string): string {
-    if (!nombre) return 'VG';
-    const partes = nombre.trim().split(/\s+/);
-    if (partes.length >= 2) {
-      return (partes[0][0] + partes[1][0]).toUpperCase();
-    }
-    return (partes[0]?.[0] ?? 'V').toUpperCase();
-  }
-
-  obtenerEstadoLabel(estado: string): string {
-    return this.estadoLabel[estado as EstadoPeriodo] ?? estado;
-  }
-
-  obtenerClasifLabel(clasif: string): string {
-    return this.clasifLabel[clasif as ClasifComision] ?? clasif;
-  }
-
-  obtenerTipoLabel(tipo: string): string {
-    return this.tipoLabel[tipo as TipoComision] ?? tipo;
+  protected etiquetaEstado(estado: string): string {
+    return ESTADO_PERIODO_LABEL[estado as EstadoPeriodo] ?? estado;
   }
 }
