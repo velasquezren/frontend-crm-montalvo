@@ -26,6 +26,11 @@ export interface AjusteVenta {
   unidadNegocio?: 'MATERNIDAD' | 'RA' | 'VARIOS';
   nivel?: 'BRONCE' | 'SILVER' | 'GOLD';
   comisionable?: boolean;
+  /**
+   * Por qué se saca la venta del cálculo. **El backend lo exige al excluir** y
+   * lo guarda en la auditoría; al reincluir lo borra él solo.
+   */
+  motivoExclusion?: string;
   vendedoraId?: string;
   /** `null` devuelve la decisión al sistema. */
   comisionaPlan?: boolean | null;

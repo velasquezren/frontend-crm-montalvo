@@ -576,3 +576,27 @@
   line-height: 1.2;
   color: var(--color-text-muted);
 }
+
+/* Botón para quitar o devolver la comisión de una fila. Discreto a propósito:
+   convive con la insignia de estado en la misma celda y no debe competir con
+   ella — es una acción rara, no algo que se pulse cada día. */
+.boton-comision {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  background: var(--color-bg-workspace);
+  border: 1px solid var(--color-border);
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.boton-comision:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-bg-light);
+}

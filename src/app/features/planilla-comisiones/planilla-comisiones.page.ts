@@ -1,11 +1,25 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, OnDestroy, signal } from '@angular/core';
+import { OverlayRef } from '@angular/cdk/overlay';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  OnDestroy,
+  signal,
+  TemplateRef,
+  ViewContainerRef,
+  viewChild,
+} from '@angular/core';
 
 import { mensajeDeError } from '../../core/api/http-error';
 import { AuthService } from '../../core/auth/auth.service';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { ToastService } from '../../core/toast/toast.service';
+import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
@@ -102,6 +116,8 @@ export class PlanillaComisionesPage implements OnDestroy {
   private readonly service = inject(PlanillaComisionesService);
   private readonly toast = inject(ToastService);
   private readonly authService = inject(AuthService);
+  private readonly dialogService = inject(DialogService);
+  private readonly vcr = inject(ViewContainerRef);
 
   /** Importar y borrar planillas queda reservado al super admin. */
   protected readonly esSuperAdmin = this.authService.isSuperAdmin;
@@ -493,6 +509,71 @@ export class PlanillaComisionesPage implements OnDestroy {
   }
 
   /** Corrige la clasificación de una fila desde la tabla de revisión. */
+
+  /* ── Quitar o devolver la comisión de una fila ─────────────────────────
+   *
+   * El backend exige motivo al excluir y lo guarda en la auditoría, así que la
+   * decisión queda rastreable: dentro de tres meses se puede saber quién sacó
+   * esa venta del cálculo y por qué. Reincluir no pide nada y borra el motivo.
+   */
+  protected readonly ventaAExcluir = signal<VentaImportada | null>(null);
+  protected readonly motivoExclusion = signal('');
+  protected readonly excluyendo = signal(false);
+  private readonly plantillaExcluir = viewChild<TemplateRef<unknown>>('modalExcluir');
+  private overlayExcluir: OverlayRef | null = null;
+
+  protected alternarComisionable(venta: VentaImportada): void {
+    if (venta.comisionable) {
+      this.motivoExclusion.set('');
+      this.ventaAExcluir.set(venta);
+      const tpl = this.plantillaExcluir();
+      if (!tpl) return;
+      this.overlayExcluir?.dispose();
+      this.overlayExcluir = this.dialogService.openTemplate(tpl, this.vcr);
+      this.overlayExcluir.backdropClick().subscribe(() => this.cerrarExcluir());
+      return;
+    }
+    /* Devolverla al cálculo no necesita explicación: se vuelve al estado que el
+       propio sistema había decidido. */
+    void this.guardarComisionable(venta, true);
+  }
+
+  protected cerrarExcluir(): void {
+    this.ventaAExcluir.set(null);
+    this.overlayExcluir?.dispose();
+    this.overlayExcluir = null;
+  }
+
+  protected async confirmarExclusion(): Promise<void> {
+    const venta = this.ventaAExcluir();
+    const motivo = this.motivoExclusion().trim();
+    if (!venta || motivo.length < 3) return;
+    await this.guardarComisionable(venta, false, motivo);
+    this.cerrarExcluir();
+  }
+
+  private async guardarComisionable(
+    venta: VentaImportada,
+    comisionable: boolean,
+    motivoExclusion?: string,
+  ): Promise<void> {
+    this.excluyendo.set(true);
+    try {
+      await this.service.ajustarVenta(venta.id, { comisionable, motivoExclusion });
+      this.toast.success(
+        comisionable ? `"${venta.detalle}" vuelve al cálculo.` : `"${venta.detalle}" ya no comisiona.`,
+        comisionable ? 'Comisión devuelta' : 'Comisión retirada',
+      );
+      this.ventas.reload();
+      const id = this.periodoId();
+      if (id) await this.refrescarPanelesDelPeriodo(id);
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo cambiar la fila.'), 'Error');
+    } finally {
+      this.excluyendo.set(false);
+    }
+  }
+
   protected async cambiarClasificacion(venta: VentaImportada, valor: string): Promise<void> {
     const clasif = valor as ClasifComision;
     if (!clasif || clasif === venta.clasif) return;
