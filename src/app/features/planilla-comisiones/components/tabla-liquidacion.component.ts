@@ -44,12 +44,26 @@ import { FilaConsolidado } from '../planilla.model';
           </th>
           <th class="text-right">
             Planes
-            <app-info-hint titulo="Objetivo de planes">
+            <app-info-hint titulo="Cuántos planes comisionan">
               <p>
-                El objetivo es una <strong>franquicia</strong>: solo comisionan los planes que lo
-                SUPERAN. Con 6 planes y objetivo 4, comisionan 2.
+                El objetivo es una <strong>franquicia</strong>: solo comisionan los que lo
+                SUPERAN. Igualarlo paga cero.
               </p>
-              <p>Igualar el objetivo paga cero.</p>
+              <p>
+                Y son <strong>dos objetivos distintos</strong>, que se cuentan por
+                separado: uno para <strong>paquetes</strong> de maternidad y otro
+                para <strong>planes varios</strong>. El número de esta columna es
+                la suma de los dos.
+              </p>
+              <p>
+                Por eso puede parecer alto: el objetivo de planes varios es 1, así
+                que casi todos superan. Con 1 paquete (objetivo 6) y 7 planes
+                varios (objetivo 1) comisionan 6 — ninguno del primero, seis del
+                segundo.
+              </p>
+              <p>
+                Pasa el ratón por la cifra para ver el desglose de cada vendedora.
+              </p>
             </app-info-hint>
           </th>
           @if (mostrarCirugias()) {
@@ -119,7 +133,7 @@ import { FilaConsolidado } from '../planilla.model';
                   class="text-[10px] font-semibold block text-right"
                   [class.text-primary]="info.esComisionable"
                   [class.text-text-muted]="!info.esComisionable"
-                  [title]="info.esComisionable ? 'Supera el objetivo comercial y genera comisión Tipo A' : 'El objetivo es una franquicia: solo comisionan los planes que lo SUPERAN.'">
+                  [title]="desglosePlanes(f)">
                   {{ info.texto }}
                 </span>
               }
@@ -230,6 +244,21 @@ export class TablaLiquidacionComponent {
     const t = this.totales();
     return (t['bonos'] ?? 0) - (t['bonoTrimestral'] ?? 0);
   });
+
+  /**
+   * Desglose de los dos cálculos que esta columna resume en un número.
+   *
+   * Paquetes y planes varios tienen objetivos distintos y se cuentan por
+   * separado; la celda muestra la suma. Sin el desglose, ver "6 comisionan" de 8
+   * planes no se puede reconstruir, y parece que hay una regla escondida.
+   */
+  protected desglosePlanes(f: FilaConsolidado): string {
+    const paq = Number(f.planpaqVendidos) || 0;
+    const paqCom = Number(f.planpaqComisionables) || 0;
+    const nin = Number(f.planninVendidos) || 0;
+    const ninCom = Number(f.planninComisionables) || 0;
+    return `${paq} paquete(s) → ${paqCom} comisiona(n) · ${nin} plan(es) varios → ${ninCom} comisiona(n)`;
+  }
 
   protected planesInfo(f: FilaConsolidado): { texto: string; esComisionable: boolean } | null {
     if (!f.planesVendidos || f.planesVendidos <= 0) return null;
