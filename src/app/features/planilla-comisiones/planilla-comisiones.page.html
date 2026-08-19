@@ -144,7 +144,10 @@
           </thead>
           <tbody>
             @for (p of periodos.value().datos; track p.id) {
-              <tr [class.fila-activa]="p.id === periodoId()">
+              <tr
+                class="fila-interactiva"
+                [class.fila-activa]="p.id === periodoId()"
+                (click)="abrirPeriodo(p.id)">
                 <td class="text-left font-semibold text-text-dark">{{ nombreMes(p.mes) }} {{ p.anio }}</td>
                 <td class="text-center">
                   <app-badge [variant]="p.estado === 'CALCULADO' ? 'success' : 'neutral'">
@@ -155,9 +158,9 @@
                 <td class="text-right font-semibold text-secondary">{{ p.filasValidas | number }}</td>
                 <td class="text-left text-xs text-text-muted truncate max-w-[180px]">{{ p.archivoNombre }}</td>
                 <td class="text-left text-xs text-text-muted">{{ p.calculadoEn ? (p.calculadoEn | date: 'dd/MM/yy HH:mm') : '—' }}</td>
-                <td class="text-right whitespace-nowrap">
+                <td class="text-right whitespace-nowrap" (click)="$event.stopPropagation()">
                   <div class="flex items-center justify-end gap-1">
-                    <app-button variant="ghost" size="sm" icon="eye" (clicked)="seleccionarPeriodo(p.id)">Abrir</app-button>
+                    <app-button variant="ghost" size="sm" icon="eye" (clicked)="abrirPeriodo(p.id)">Abrir</app-button>
                     @if (p.estado !== 'CERRADO' && esSuperAdmin()) {
                       <app-button variant="ghost" size="sm" icon="trash" (clicked)="eliminarPeriodo(p)">Borrar</app-button>
                     }

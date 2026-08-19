@@ -392,6 +392,12 @@ export class PlanillaComisionesPage implements OnDestroy {
     this.pagina.set(1);
   }
 
+  /** Selecciona el periodo y entra directamente a la auditoría de ventas. */
+  protected abrirPeriodo(id: string): void {
+    this.seleccionarPeriodo(id);
+    this.setPestana('CLASIFICACION');
+  }
+
   protected nombreMes(mes: number): string {
     return this.meses[mes - 1] ?? String(mes);
   }

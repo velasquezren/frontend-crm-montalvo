@@ -315,6 +315,19 @@
   background: color-mix(in srgb, var(--color-secondary) 12%, white);
 }
 
+.fila-interactiva {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.fila-interactiva:hover {
+  background-color: var(--color-bg-light);
+}
+
+.fila-interactiva.fila-activa:hover {
+  background: color-mix(in srgb, var(--color-secondary) 18%, white);
+}
+
 .fila-pendiente {
   background: color-mix(in srgb, var(--color-critical-bg) 50%, white);
 }
