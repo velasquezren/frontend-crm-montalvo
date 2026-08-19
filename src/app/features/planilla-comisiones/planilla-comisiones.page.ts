@@ -868,26 +868,20 @@ export class PlanillaComisionesPage implements OnDestroy {
    * correcto o un error de importación. Lo era: la primera pagó una cuota y la
    * segunda pagó el paquete entero.
    */
-  protected origenBase(venta: VentaImportada): 'anticipo' | 'iva' {
-    return Number(venta.anticipoPlan ?? 0) > 0 ? 'anticipo' : 'iva';
+  protected tieneAnticipo(venta: VentaImportada): boolean {
+    return Number(venta.anticipoPlan ?? 0) > 0;
   }
 
   /**
-   * Qué parte del plan cubrió este cobro.
+   * Qué parte del plan lleva pagado la paciente.
    *
-   * Es el dato que faltaba para entender la tabla. La columna «Precio» de una
-   * fila de plan **no es lo que se vendió**: es lo que cuesta el plan en el
-   * catálogo, y se repite idéntica en cada cobro. Lo único que cambia es cuánto
-   * pagó cada paciente, y sin el porcentaje eso no se ve.
-   *
-   * En enero, el Paquete Bariatrica Premium sale cinco veces siempre a 2.510,77:
-   * tres pacientes pagaron el 100 % y dos el 34 % y el 40 %. Eso es lo que hacía
-   * que unas filas "se mantuvieran" y otras "bajaran a la mitad" — no había dos
-   * reglas, había pacientes pagando distinto.
+   * **Es informativo: no entra en la comisión.** La base sale siempre del precio
+   * menos el 13 %, cobre lo que cobre — verificado sobre las 356 filas de
+   * diciembre. Se muestra porque a administración le sirve ver quién va al día y
+   * quién debe, no porque cambie lo que se paga.
    *
    * Por encima de 100 no se recorta a propósito: son cobros por encima del precio
-   * de catálogo y conviene que salten a la vista (hay cinco en enero, 1.240,73
-   * USD de base por encima de la lista).
+   * de catálogo y conviene que salten a la vista (hay cinco en enero).
    */
   protected porcentajeAnticipo(venta: VentaImportada): number | null {
     const anticipo = Number(venta.anticipoPlan ?? 0);

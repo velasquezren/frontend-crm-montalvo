@@ -333,33 +333,23 @@
                 </app-info-hint>
               </th>
               <th class="text-center w-[120px]">
-                Ajuste
-                <app-info-hint titulo="Qué se le hace al precio">
+                Pagado
+                <app-info-hint titulo="Cuánto lleva pagado la paciente">
                   <p>
-                    Esta columna dice <strong>por qué</strong> la base no es el
-                    precio, que es lo único que cambia entre una fila y otra.
+                    Solo en planes y paquetes: el anticipo cobrado, y qué parte del
+                    precio representa.
                   </p>
                   <p>
-                    <strong>−13 % IVA:</strong> la fila es un servicio suelto. La
-                    base es <code>precio × 0,87</code>.
+                    <strong>No entra en la comisión.</strong> La base sale siempre
+                    del precio menos el 13 %, cobre lo que cobre: la vendedora
+                    cobra por <em>vender</em> el plan, no al ritmo al que la
+                    paciente lo paga. Está aquí porque sirve para ver quién va al
+                    día y quién debe.
                   </p>
                   <p>
-                    <strong>pagó N %:</strong> la fila es el cobro de un plan o
-                    paquete. La base es lo que la paciente abonó este mes, y
-                    <strong>no se le quita el 13 %</strong> porque FileMaker ya lo
-                    entrega neto — descontarlo sería quitar el impuesto dos veces.
-                  </p>
-                  <p>
-                    El porcentaje es sobre el <strong>precio del plan</strong>, que
-                    en estas filas no es lo vendido sino lo que cuesta en el
-                    catálogo: se repite igual en cada cobro. Por eso unas filas
-                    parecen "bajar a la mitad" y otras no — no son reglas
-                    distintas, es que una pagó el 50 % y otra el 100 %. Lo
-                    pendiente comisionará el mes en que se cobre, en su propia fila.
-                  </p>
-                  <p>
-                    Por encima del 100 % se marca aparte: es un cobro mayor que el
-                    precio de catálogo y conviene revisarlo antes de liquidar.
+                    Un guion significa que la fila no es un plan. Por encima del
+                    100 % se marca aparte: se cobró más que el precio de catálogo
+                    y conviene revisarlo.
                   </p>
                 </app-info-hint>
               </th>
@@ -367,20 +357,20 @@
                 Base Cálculo USD
                 <app-info-hint titulo="Sobre qué se comisiona">
                   <p>
-                    Es la cifra sobre la que se aplica el porcentaje de comisión,
-                    y no el precio completo. Se calcula de dos maneras según la
-                    venta:
+                    Es la cifra sobre la que se aplica el porcentaje de comisión:
+                    <strong>siempre precio × 0,87</strong>, o sea el precio sin el
+                    13 % de impuestos. Una sola regla, sin excepciones.
                   </p>
                   <p>
-                    <strong>Venta normal:</strong> precio × 0,87, o sea el precio
-                    sin el 13% de impuestos.
+                    <strong>También en los planes</strong>, cobre lo que cobre la
+                    paciente. Lo pagado se ve en la columna «Pagado» pero no entra
+                    aquí: la vendedora cobra por vender el plan, no al ritmo al que
+                    se cobra.
                   </p>
                   <p>
-                    <strong>Plan con anticipo:</strong> el anticipo tal cual, sin
-                    descontarle nada. FileMaker ya lo entrega neto, así que
-                    aplicarle el 0,87 descontaría el impuesto dos veces. Por eso
-                    en esas filas la base no es el 87% del precio — verificado
-                    contra las 30 que hay en el sistema.
+                    Verificado sobre las 356 filas de la planilla de diciembre: el
+                    ingreso neto es <code>precio × 0,87</code> en las 356, incluidas
+                    las 20 que traen anticipo.
                   </p>
                 </app-info-hint>
               </th>
@@ -471,20 +461,19 @@
                      cobro de plan son SIEMPRE el mismo número, así que la
                      columna no añadía nada. Lo que cambia de una fila a otra —y
                      lo que nadie sabía leer— es la REGLA que se aplicó. -->
+                <!-- Informativo: el cobro NO cambia la comisión (la base sale
+                     siempre del precio menos el 13 %). Sirve para ver quién va al
+                     día, y el porcentaje destapa solo los cobros por encima del
+                     precio de catálogo. -->
                 <td class="text-center whitespace-nowrap">
-                  @if (origenBase(v) === 'anticipo') {
-                    <!-- El porcentaje es lo que explica la tabla: el precio de un
-                         plan se repite igual en cada cobro, así que lo único que
-                         cambia entre filas es cuánto pagó cada paciente. Por
-                         encima de 100 % se marca aparte — es un cobro por encima
-                         del catálogo y hay que verlo. -->
+                  @if (tieneAnticipo(v)) {
                     <span
                       class="ajuste ajuste-anticipo"
                       [class.ajuste-excede]="(porcentajeAnticipo(v) ?? 0) > 100">
-                      pagó {{ porcentajeAnticipo(v) }}%
+                      ${{ v.anticipoPlan | number: '1.2-2' }} · {{ porcentajeAnticipo(v) }}%
                     </span>
                   } @else {
-                    <span class="ajuste">−13% IVA</span>
+                    <span class="text-text-muted">—</span>
                   }
                 </td>
                 <td class="text-right whitespace-nowrap">

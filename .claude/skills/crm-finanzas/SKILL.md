@@ -64,3 +64,49 @@ En la plantilla HTML:
 
 - **Prohibido el uso de `@keyframes` de entrada escalonada (`.aparecer`) o `pageFadeIn`**: Las vistas y tablas deben renderizarse en el acto de forma nativa e instantánea.
 - **Sin demoras**: Todo cambio de filtro, mes o pestaña debe reflejarse en tiempo real.
+
+## 5. La base de comisión es SIEMPRE precio × 0,87
+
+Una sola regla, sin excepciones, y conviene desconfiar de cualquier código que
+proponga otra:
+
+```
+base de cálculo = precio × 0,87
+```
+
+El 13 % se descuenta **multiplicando por 0,87, no dividiendo entre 1,13**. Sobre
+100 el primero deja 87,00 y el segundo 88,50; la clínica usa el primero. Es
+contablemente discutible —para extraer el neto de un precio que ya incluye
+impuesto lo correcto sería dividir— pero aquí manda cómo liquida administración.
+
+### El anticipo NO es la base
+
+Hubo una excepción: si la fila traía anticipo, ese monto pasaba a ser la base y
+no se le descontaba nada, con el argumento de que "FileMaker ya lo entrega
+neto". **Es falso.** Contrastado contra `BDEjecutivas` de
+`CALCULO COMISION DICIEMBRE 2025.xlsx`, que es donde administración calcula:
+
+| | |
+|---|---|
+| `INGRESO NETO = precio × 0,87` | **356 de 356 filas** |
+| `INGRESO NETO = anticipo` | **0 de 356** |
+| `MONTO VENDIDO = precio` | **356 de 356** |
+
+Incluidas las 20 filas que traen anticipo. Ejemplo: *Plan Nacer Cesárea 1er
+trimestre*, precio 3.236,52 y anticipo 323,65, liquida sobre **2.815,78** —que
+es `3.236,52 × 0,87`— y no sobre los 323,65.
+
+La vendedora cobra por **vender** el plan, no al ritmo al que la paciente lo
+paga. Por eso el mismo plan aparece con precio idéntico en cada fila: ese precio
+es el del catálogo, no lo cobrado, y lo único que cambia entre filas es qué
+paciente lo compró.
+
+**Cómo se coló:** la verificación fue circular. Se comprobó que el `ingresoNeto`
+guardado coincidía con el anticipo, y coincidía porque el propio código lo había
+escrito así. Contra el Excel nunca se contrastó. La regla dejaba la base de enero
+corta en **24.974 USD sobre 30 filas**, y alta en las que el anticipo superaba al
+precio.
+
+El anticipo sigue viajando y se muestra en la columna «Pagado», pero es
+**informativo**: dice quién va al día y quién debe, y destapa los cobros por
+encima del precio de catálogo (cinco en enero). No toca la comisión.
