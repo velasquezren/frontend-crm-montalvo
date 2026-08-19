@@ -557,3 +557,53 @@
   border-color: var(--color-primary);
   background: var(--color-bg-light);
 }
+
+/* Confirmación en línea antes de rehacer un cálculo. No es un overlay a
+   propósito: la decisión se toma junto al botón que la provoca, y así el aviso
+   dice qué va a pasar en vez de un "¿estás seguro?" sin contexto. */
+.confirmar-calculo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.75rem;
+  border: 1px solid var(--color-primary);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-primary) 6%, white);
+}
+
+.confirmar-calculo-texto {
+  flex: 1 1 18rem;
+  min-width: 0;
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  color: var(--color-text-dark);
+}
+
+/* Reglas congeladas del periodo, encima de los reportes. Es una línea de
+   contexto, no un panel: dice con qué se pagó sin robarle sitio a las cifras. */
+.reglas-usadas {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg-light);
+}
+
+.reglas-usadas-titulo {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.reglas-usadas-dato {
+  font-size: 0.6875rem;
+  color: var(--color-text-dark);
+  font-variant-numeric: tabular-nums;
+}

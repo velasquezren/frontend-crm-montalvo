@@ -20,6 +20,29 @@ export type {
   UnidadNegocio,
 };
 
+/** Foto de las reglas que produjeron una liquidación. */
+export interface FotoConfiguracion {
+  readonly calculadoEn: string;
+  readonly tipoCambio: number;
+  readonly parametros: Record<string, number>;
+  readonly objetivos: ReadonlyArray<{
+    tipo: string;
+    planpaqMinimos: number;
+    planninMinimos: number;
+    montoMensualUsd: number;
+    montoTrimestralUsd: number;
+  }>;
+  readonly tarifasServicio: ReadonlyArray<{ clasif: string; pctEmpresa: number; pctPropio: number }>;
+  readonly tarifasPlan: ReadonlyArray<{ clave: string; pctEmpresa: number; pctPropio: number }>;
+  readonly nivelesCirugia: ReadonlyArray<{
+    nivel: number;
+    montoDesde: number;
+    montoHasta: number;
+    pctEmpresa: number;
+    pctPropio: number;
+  }>;
+}
+
 export interface PeriodoComision {
   id: string;
   anio: number;
@@ -30,6 +53,14 @@ export interface PeriodoComision {
   filasTotales: number;
   filasValidas: number;
   calculadoEn: string | null;
+  /**
+   * Reglas con las que se liquidó este mes, congeladas al calcular.
+   *
+   * `null` en los periodos calculados antes de que esto existiera: no se puede
+   * inventar qué reglas fueron, y la pantalla lo dice en vez de mostrar las de
+   * hoy como si hubieran sido las suyas.
+   */
+  configuracionUsada: FotoConfiguracion | null;
   createdAt: string;
   _count?: { ventas: number; resultados: number };
 }

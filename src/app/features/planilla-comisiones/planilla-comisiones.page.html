@@ -271,9 +271,30 @@
         }
 
         @if (periodoActual()?.estado !== 'CERRADO') {
-          <app-button icon="percent" [loading]="calculando()" (clicked)="calcular()">
-            Calcular planilla
-          </app-button>
+          @if (confirmandoCalculo()) {
+            <div class="confirmar-calculo">
+              <p class="confirmar-calculo-texto">
+                Este periodo ya se calculó
+                @if (periodoActual()?.calculadoEn; as cuando) {
+                  el {{ cuando | date: 'dd/MM/yy HH:mm' }}
+                }
+                . Rehacerlo sobrescribe los resultados con la configuración
+                <strong>actual</strong>, que puede haber cambiado desde entonces.
+              </p>
+              <div class="flex items-center gap-2 shrink-0">
+                <app-button variant="ghost" size="sm" (clicked)="cancelarCalculo()">
+                  Cancelar
+                </app-button>
+                <app-button icon="percent" size="sm" [loading]="calculando()" (clicked)="calcular()">
+                  Sí, recalcular
+                </app-button>
+              </div>
+            </div>
+          } @else {
+            <app-button icon="percent" [loading]="calculando()" (clicked)="pedirCalculo()">
+              Calcular planilla
+            </app-button>
+          }
         }
       </div>
 
@@ -602,6 +623,36 @@
 
 <!-- ══════════════ 4. REPORTES ══════════════ -->
 @if (pestana() === 'REPORTES') {
+  @if (periodoActual(); as per) {
+    <div class="reglas-usadas">
+      @if (per.configuracionUsada; as foto) {
+        <span class="reglas-usadas-titulo">Liquidado con estas reglas</span>
+        <span class="reglas-usadas-dato">TC {{ foto.tipoCambio }}</span>
+        <span class="reglas-usadas-dato">Área RA {{ foto.parametros['PCT_TIPO_C_RA'] * 100 }}%</span>
+        <span class="reglas-usadas-dato">Bono jefatura {{ foto.parametros['FACTOR_BONO_JEFATURA'] * 100 }}%</span>
+        <span class="reglas-usadas-dato">Bono trimestral {{ foto.parametros['FACTOR_BONO_TRIMESTRAL'] * 100 }}%</span>
+        <span class="reglas-usadas-dato">{{ foto.nivelesCirugia.length }} niveles de cirugía</span>
+        <app-info-hint titulo="Por qué se guardan">
+          <p>
+            Las tarifas y los parámetros son <strong>globales</strong>: cambiarlos
+            hoy cambia lo que daría recalcular cualquier mes, también uno ya
+            pagado.
+          </p>
+          <p>
+            Por eso al calcular se guarda una foto de las reglas usadas. Los
+            números de arriba salieron de estas, aunque la configuración actual
+            ya sea otra.
+          </p>
+        </app-info-hint>
+      } @else if (per.estado !== 'BORRADOR') {
+        <span class="reglas-usadas-titulo">Sin registro de reglas</span>
+        <span class="reglas-usadas-dato">
+          Este periodo se calculó antes de que se guardaran. Recalcúlalo para dejar constancia.
+        </span>
+      }
+    </div>
+  }
+
   @if (!periodoId()) {
     <app-selector-periodo-empty
       titulo="Elige un periodo para ver la liquidación"

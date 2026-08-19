@@ -481,8 +481,33 @@ export class PlanillaComisionesPage implements OnDestroy {
     }
   }
 
+  /**
+   * Pedir confirmación antes de rehacer un periodo ya calculado.
+   *
+   * Recalcular pisa los resultados con la configuración que haya AHORA, y las
+   * tarifas y parámetros son globales: pueden haber cambiado desde el cálculo
+   * anterior sin que nadie lo relacione con este mes. Un clic de más en un mes
+   * ya revisado devolvía otros números sin avisar.
+   *
+   * La primera vez no pregunta: no hay nada que sobrescribir.
+   */
+  protected readonly confirmandoCalculo = signal(false);
+
+  protected pedirCalculo(): void {
+    if (this.periodoActual()?.estado === 'CALCULADO') {
+      this.confirmandoCalculo.set(true);
+      return;
+    }
+    void this.calcular();
+  }
+
+  protected cancelarCalculo(): void {
+    this.confirmandoCalculo.set(false);
+  }
+
   protected async calcular(): Promise<void> {
     const id = this.periodoId();
+    this.confirmandoCalculo.set(false);
     if (!id || this.calculando()) return;
 
     this.calculando.set(true);
