@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
@@ -14,7 +13,6 @@ import { ErrorCargaComponent } from '../../shared/components/error-carga/error-c
 import { IconComponent, IconName } from '../../shared/components/icon/icon.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { MonedaService } from '../../core/moneda/moneda.service';
-import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import { ActividadItem, KpiResumen, TopServicio } from './kpis.model';
 import { KpisService } from './kpis.service';
 

@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
-import { CuotaMemoria, RecursoMemoria } from './memoria-agente.model';
+import { RecursoMemoria } from './memoria-agente.model';
 
 @Injectable({ providedIn: 'root' })
 export class MemoriaAgenteService {

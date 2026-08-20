@@ -4,7 +4,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { AuthService } from '../../core/auth/auth.service';
-import { generarIniciales, UsuarioApi } from '../../core/auth/user.model';
+import { generarIniciales } from '../../core/auth/user.model';
 import { ToastService } from '../../core/toast/toast.service';
 import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';

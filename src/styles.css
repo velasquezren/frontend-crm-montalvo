@@ -4,8 +4,10 @@
    Tailwind CSS v4 — Configuración CSS-first vía @theme
    ========================================================================== */
 
-/* Google Fonts — Poppins (tipografía principal del manifiesto) */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+/* Poppins NO se pide desde aquí: va como <link> en index.html.
+   Un @import dentro de una hoja de estilos encadena las descargas —el navegador
+   tiene que bajar y parsear ESTA hoja antes de enterarse de que existe la
+   fuente— y además impide que el build la inline. Ver index.html. */
 
 /* Tailwind CSS v4 — Punto de entrada único */
 @import 'tailwindcss';

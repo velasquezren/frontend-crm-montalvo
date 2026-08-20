@@ -11,11 +11,9 @@ import {
   AgenteResumen,
   ConversacionDetalle,
   ConversacionResumen,
-  esperandoDesde,
   estaSinResponder,
   FiltroInbox,
   ItemHilo,
-  MensajeApi,
   PlantillaAgente,
   PlantillaResumen,
 } from '../conversacion.model';

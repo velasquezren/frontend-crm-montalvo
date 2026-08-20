@@ -12,7 +12,6 @@ import { ConversacionesStateService } from '../../services/conversaciones-state.
 import {
   ConversacionResumen,
   esperandoDesde,
-  estaSinResponder,
   FiltroInbox,
 } from '../../conversacion.model';
 

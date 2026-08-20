@@ -6,7 +6,7 @@ import {
   inject,
   OnDestroy,
 } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 
@@ -72,13 +72,11 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
   private readonly realtimeService = inject(RealtimeService);
   private readonly modoInmersivo = inject(ModoInmersivoService);
   private readonly notificacionNativa = inject(NotificacionNativaService);
-  private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
   private pollingInterval: ReturnType<typeof setInterval> | null = null;
   private alVolverAlFrente: (() => void) | null = null;
   private ticksDesdeUltimoRefresco = 0;
-  private entradaPropia = false;
 
   /** Chat abierto según la URL. */
   private readonly idEnRuta = toSignal(
@@ -154,7 +152,6 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
       } else {
         this.state.seleccionadaId.set(null);
         this.state.editandoFicha.set(false);
-        this.entradaPropia = false;
       }
     });
 

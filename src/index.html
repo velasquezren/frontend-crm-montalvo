@@ -11,6 +11,25 @@
     />
     <meta name="theme-color" content="#006156" />
 
+    <!--
+      Poppins, la tipografía del manifiesto.
+
+      Va aquí y no con un @import dentro de styles.css porque un @import encadena
+      las descargas: el navegador baja y parsea la hoja entera antes de enterarse
+      de que hay una fuente que pedir. Y sobre todo, así el build puede INLINEAR
+      la respuesta de Google en este mismo HTML (`optimization.fonts.inline`), lo
+      que elimina un viaje completo a un host nuevo — medido contra producción
+      desde Bolivia, abrir una conexión TLS a un dominio de terceros cuesta ~385 ms.
+
+      Las dos preconexiones abren el canal a gstatic (de donde sale el .woff2)
+      mientras el navegador sigue leyendo el HTML, en vez de esperar a necesitarlo.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" />
+
     <!-- Favicon: navegadores modernos (SVG adaptativo) -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <!-- Favicon: navegadores legacy (ICO) -->

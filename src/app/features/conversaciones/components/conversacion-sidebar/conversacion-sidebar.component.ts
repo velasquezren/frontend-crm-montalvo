@@ -11,7 +11,6 @@ import {
   CATEGORIA_BADGE,
   CATEGORIA_ICON,
   CATEGORIA_LABEL,
-  CategoriaCliente,
 } from '../../../../shared/models/cliente-categoria.model';
 import { generarIniciales } from '../../../../core/auth/user.model';
 import { calcularEdad } from '../../../../core/api/edad';

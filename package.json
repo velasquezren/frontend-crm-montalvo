@@ -1,6 +1,9 @@
 {
   "name": "montalvo-crm-frontend",
   "version": "0.0.0",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
