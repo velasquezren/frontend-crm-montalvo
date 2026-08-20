@@ -102,6 +102,9 @@ cifra es lo que un agente descarga antes de ver la primera pantalla, y en una re
 190 ms de latencia es lo que más pesa.
 
 Referencia del 2026-08-11: **436.79 kB brutos / 113.26 kB transferidos**.
+Referencia del 2026-08-20: **442.43 kB brutos / 115.69 kB transferidos** (+5.6 kB
+en nueve días de funcionalidad nueva; se anota para que la deriva se vea, no
+porque haya que arreglarla).
 
 Para un cambio que afecta a una vista concreta, compara además el tamaño de su
 *lazy chunk* en la misma tabla.

@@ -117,6 +117,10 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 | DonutChart | `<app-donut-chart>` | `items`, `title`, `subtitle`, `etiquetaTotal`, `formatType`, `origenMoneda` |
 | InfoHint | `<app-info-hint>` | `titulo` (requerido), `size` + contenido proyectado — el "!" que explica una regla |
 | SelectorPeriodoEmpty | `<app-selector-periodo-empty>` | `periodos`, `cargando`, `titulo`, `descripcion`, `icono`, `puedeImportar` · `(periodoSeleccionado)`, `(importarClic)`, `(archivoSeleccionado)` |
+| Timeline | `<app-timeline>` | `gap` — eje vertical con punto; proyecta un `<article class="crm-timeline-evento">` por hito (clases `crm-timeline-fecha` / `crm-timeline-valor`) |
+| ImageViewer | `<app-image-viewer>` | `imageUrl`, `title` · `(closed)` — visor a pantalla completa de un adjunto |
+| MonedaToggle | `<app-moneda-toggle>` | `size` (sm/md), `mostrarDetalle` — cambia Bs/USD en toda la app |
+| Layout | `<app-layout>` | *(sin API)* — el armazón de la app: header, sidebar y `<router-outlet>` |
 | DialogService | *(servicio)* | `openTemplate(tpl, vcr)` — modales por CDK Overlay, ver `crm-feature-page` |
 
 ### Uso típico

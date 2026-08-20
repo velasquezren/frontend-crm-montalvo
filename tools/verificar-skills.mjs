@@ -109,6 +109,36 @@ function apiDelComponente(selector) {
   );
 }
 
+/**
+ * Que no exista un átomo SIN FILA.
+ *
+ * `verificarInventario` recorre las filas de la tabla, así que un componente que
+ * no aparece en ninguna es invisible para las dos direcciones del chequeo: ni se
+ * comprueba su API ni se avisa de que falta. Es el caso peor, porque el
+ * inventario es justo lo que se lee para decidir si hace falta un componente
+ * nuevo o basta una variante — y lo que no está listado se reinventa.
+ *
+ * Pasó con `<app-timeline>` el 2026-08-20: se extrajo como átomo (bien) y entró
+ * sin fila, junto a otros tres que llevaban más tiempo sin documentar.
+ */
+function verificarInventarioCompleto(skill, texto) {
+  const documentados = new Set(
+    [...texto.matchAll(/<(app-[a-z-]+)>/g)].map(m => m[1]),
+  );
+
+  for (const archivo of ARCHIVOS) {
+    if (!archivo.includes('/shared/components/')) continue;
+    const selector = readFileSync(archivo, 'utf8').match(/selector: '(app-[a-z-]+)'/)?.[1];
+    if (!selector || documentados.has(selector)) continue;
+
+    señala(
+      skill,
+      `<${selector}> vive en shared/components/ y no está en el inventario — ` +
+        'añade su fila, o la próxima sesión lo reinventará por no saber que existe.',
+    );
+  }
+}
+
 function verificarInventario(skill, texto) {
   for (const fila of texto.split('\n')) {
     const selector = fila.match(/<(app-[a-z-]+)>/)?.[1];
@@ -501,6 +531,9 @@ for (const nombre of readdirSync(SKILLS)) {
   verificarRutas(nombre, texto);
   verificarSelectores(nombre, texto);
   verificarInventario(nombre, texto);
+  /* Solo contra el skill que ES el inventario: en los demás, no listar un átomo
+     no es una omisión — no es su trabajo listarlos. */
+  if (texto.includes('## Inventario de átomos')) verificarInventarioCompleto(nombre, texto);
   verificarPaleta(nombre, texto);
   verificarAnimaciones(nombre, texto);
   verificarRoles(nombre, texto);
