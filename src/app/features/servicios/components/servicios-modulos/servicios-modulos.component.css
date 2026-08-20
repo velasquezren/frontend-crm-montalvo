@@ -49,6 +49,12 @@
   box-shadow: var(--shadow-subtle);
 }
 
+.sub-card--active {
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-background, #ffffff));
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+
 .sub-card-cifra {
   display: block;
   font-size: 22px;

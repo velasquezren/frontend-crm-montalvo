@@ -76,6 +76,58 @@ tr:hover .celda-sticky {
   margin-bottom: 20px;
 }
 
+.fila-ranking-medico {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.fila-ranking-medico:hover,
+.fila-ranking-medico:focus-visible {
+  background: var(--color-bg-light);
+  outline: none;
+}
+
+.avatar-medico {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-secondary) 14%, white);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ranking-posicion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  width: 24px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ranking-top {
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
+.badge-servicios {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  background: var(--color-bg-workspace);
+  border: 1px solid var(--color-border);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-variant-numeric: tabular-nums;
+}
+
 .titulo-seccion + app-table,
 .titulo-seccion + .grid-dos-equitativo {
   margin-top: 16px;

@@ -1,11 +1,11 @@
 <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
   <div>
     <h3 class="titulo-seccion">Servicios por módulo</h3>
-    <p class="subtitulo-seccion">De dónde viene cada atención registrada</p>
+    <p class="subtitulo-seccion">Toca cualquier módulo para filtrar el dashboard completo</p>
   </div>
   @if (filtroModulo(); as m) {
     <app-button variant="ghost" size="sm" icon="x" (clicked)="alternarModulo.emit(m)">
-      Quitar filtro
+      Quitar filtro ({{ m }})
     </app-button>
   }
 </div>
@@ -18,7 +18,7 @@
       <button
         type="button"
         class="sub-card text-left cursor-pointer"
-        [class.ring-2]="filtroModulo() === m.etiqueta"
+        [class.sub-card--active]="filtroModulo() === m.etiqueta"
         (click)="alternarModulo.emit(m.etiqueta)">
         <div class="flex items-center justify-between mb-3">
           <app-badge [variant]="filtroModulo() === m.etiqueta ? 'success' : 'neutral'">

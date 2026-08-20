@@ -41,6 +41,7 @@ export class ServiciosHistorialDrawerComponent {
   readonly cargando = input<boolean>(false);
 
   readonly cerrar = output<void>();
+  readonly verMedico = output<string>();
 
   /**
    * La línea de tiempo, agrupada por año y con el gasto de cada uno.

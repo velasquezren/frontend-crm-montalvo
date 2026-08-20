@@ -152,14 +152,9 @@
 
       <!-- Ranking de médicos -->
       <section style="--indice: 5" class="aparecer panel">
-        <!-- Alcance explícito: Analítica de Facturación tiene otra tabla de
-             médicos, acotada al mes importado. Esta es la base completa, así que
-             las dos cifras pueden no cuadrar y conviene que se sepa por qué. -->
         <h3 class="titulo-seccion">Médicos con más atenciones</h3>
         <p class="subtitulo-seccion">
-          Toda la base de médicos del historial clínico. Ordena el servidor y cada
-          fila abre su ficha; para el reparto de un mes concreto está Analítica de
-          Facturación.
+          Toda la base de médicos del historial clínico. Haz clic en cualquier profesional para ver su perfil 360°, pacientes y facturación.
         </p>
         <app-table [dense]="true">
           <thead>
@@ -169,16 +164,42 @@
               <th class="text-right">Servicios</th>
               <th class="text-right">% del total</th>
               <th class="text-right">Facturado</th>
+              <th class="text-right">Perfil</th>
             </tr>
           </thead>
           <tbody>
-            @for (m of d.porMedico; track m.codigo) {
-              <tr>
-                <td class="text-left font-semibold text-text-dark celda-sticky">{{ m.etiqueta }}</td>
+            @for (m of d.porMedico; track m.codigo; let i = $index) {
+              <tr
+                class="fila-ranking-medico"
+                [attr.tabindex]="m.codigo ? 0 : null"
+                [attr.role]="m.codigo ? 'button' : null"
+                [attr.aria-label]="m.codigo ? 'Ver perfil de ' + (m.etiqueta || m.codigo) : null"
+                (click)="m.codigo && abrirMedico(m.codigo)"
+                (keydown.enter)="m.codigo && abrirMedico(m.codigo)"
+                (keydown.space)="m.codigo && abrirMedico(m.codigo)">
+                <td class="text-left font-semibold text-text-dark celda-sticky">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="ranking-posicion" [class.ranking-top]="i < 3">#{{ i + 1 }}</span>
+                    <div class="avatar-medico shrink-0" aria-hidden="true">
+                      {{ iniciales(m.etiqueta || m.codigo) }}
+                    </div>
+                    <span class="truncate font-semibold text-text-dark">{{ m.etiqueta }}</span>
+                  </div>
+                </td>
                 <td class="text-left text-xs text-text-muted font-mono">{{ m.codigo }}</td>
-                <td class="text-right font-medium">{{ m.total | number }}</td>
+                <td class="text-right font-medium">
+                  <span class="badge-servicios">{{ m.total | number }}</span>
+                </td>
                 <td class="text-right"><span class="badge-pct">{{ pctDelTotal()(m.total) }}%</span></td>
-                <td class="text-right font-medium text-primary">{{ m.ingreso | moneda }}</td>
+                <td class="text-right font-semibold text-primary tabular-nums">{{ m.ingreso | moneda }}</td>
+                <td class="text-right">
+                  <app-button
+                    variant="ghost"
+                    size="sm"
+                    icon="chevron-right"
+                    [circle]="true"
+                    (clicked)="$event.stopPropagation(); m.codigo && abrirMedico(m.codigo)" />
+                </td>
               </tr>
             }
           </tbody>
@@ -313,7 +334,8 @@
       [historial]="h"
       [resumenHistorial]="resumenHistorial()"
       [cargando]="cargandoHistorial()"
-      (cerrar)="cerrarHistorial()" />
+      (cerrar)="cerrarHistorial()"
+      (verMedico)="verMedicoDelHistorial($event)" />
   }
 </ng-template>
 

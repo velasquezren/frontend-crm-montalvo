@@ -137,7 +137,19 @@
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-semibold text-text-dark">{{ s.detalle }}</p>
                   <p class="text-xs text-text-muted mt-0.5">
-                    @if (s.medico) { {{ s.medico }} · }
+                    @if (s.medico) {
+                      @if (s.medicoPk) {
+                        <button
+                          type="button"
+                          class="font-medium text-primary hover:underline cursor-pointer inline-flex items-center"
+                          title="Ver perfil del médico"
+                          (click)="verMedico.emit(s.medicoPk)">
+                          {{ s.medico }}
+                        </button> ·
+                      } @else {
+                        {{ s.medico }} ·
+                      }
+                    }
                     {{ s.modulo }}
                     @if (s.seguro) { · {{ s.seguro }} }
                   </p>

@@ -35,6 +35,7 @@ import {
   MESES,
   PeriodoComision,
 } from '../planilla-comisiones/planilla.model';
+import { generarIniciales } from '../../core/auth/user.model';
 import { ServiciosService } from './servicios.service';
 import { ServiciosHistorialDrawerComponent } from './components/servicios-historial-drawer/servicios-historial-drawer.component';
 import { ServiciosMedicoDrawerComponent } from './components/servicios-medico-drawer/servicios-medico-drawer.component';
@@ -125,6 +126,7 @@ export class ServiciosPage {
   protected readonly meses = MESES;
   protected readonly estadoLabel = ESTADO_PERIODO_LABEL;
   protected readonly tabs = TABS_SERVICIOS;
+  protected readonly iniciales = generarIniciales;
 
   /* ── Estado de UI ───────────────────────────────────────────────────── */
 
@@ -648,5 +650,13 @@ export class ServiciosPage {
   protected async verPacienteDelMedico(pac: string): Promise<void> {
     this.cerrarMedico();
     await this.abrirHistorial(pac);
+  }
+
+  /**
+   * Salta del historial del paciente al perfil 360° del médico tratante.
+   */
+  protected async verMedicoDelHistorial(codigo: string): Promise<void> {
+    this.cerrarHistorial();
+    await this.abrirMedico(codigo);
   }
 }
