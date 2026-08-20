@@ -20,6 +20,10 @@ export interface FiltroServicios {
 export class ServiciosService {
   private readonly api = inject(ApiService);
 
+  private readonly cacheHistorial = new Map<string, { data: HistorialPaciente; expira: number }>();
+  private readonly cacheMedico = new Map<string, { data: PerfilMedico; expira: number }>();
+  private readonly TTL_MS = 5 * 60 * 1000; // 5 minutos
+
   dashboardRequest(filtro: FiltroServicios): ResourceRequest {
     return this.api.request('/servicios/dashboard', {
       periodoId: filtro.periodoId,
@@ -44,13 +48,47 @@ export class ServiciosService {
     return this.api.request('/servicios/medicos', { pagina, busqueda, orden, direccion });
   }
 
+  getHistorialEnCache(pac: string): HistorialPaciente | null {
+    const key = pac.toUpperCase().trim();
+    const entry = this.cacheHistorial.get(key);
+    if (!entry) return null;
+    if (Date.now() > entry.expira) {
+      this.cacheHistorial.delete(key);
+      return null;
+    }
+    return entry.data;
+  }
+
+  getPerfilMedicoEnCache(codigo: string): PerfilMedico | null {
+    const key = codigo.trim();
+    const entry = this.cacheMedico.get(key);
+    if (!entry) return null;
+    if (Date.now() > entry.expira) {
+      this.cacheMedico.delete(key);
+      return null;
+    }
+    return entry.data;
+  }
+
   /** Ficha y línea de tiempo. Se pide al abrir el detalle, no en el listado. */
-  historialPaciente(pac: string): Promise<HistorialPaciente> {
-    return this.api.get<HistorialPaciente>(`/servicios/pacientes/${encodeURIComponent(pac)}`);
+  async historialPaciente(pac: string): Promise<HistorialPaciente> {
+    const key = pac.toUpperCase().trim();
+    const cached = this.getHistorialEnCache(key);
+    if (cached) return cached;
+
+    const data = await this.api.get<HistorialPaciente>(`/servicios/pacientes/${encodeURIComponent(key)}`);
+    this.cacheHistorial.set(key, { data, expira: Date.now() + this.TTL_MS });
+    return data;
   }
 
   /** Perfil del médico. Igual que el historial: se pide al abrirlo, no en el listado. */
-  perfilMedico(codigo: string): Promise<PerfilMedico> {
-    return this.api.get<PerfilMedico>(`/servicios/medicos/${encodeURIComponent(codigo)}`);
+  async perfilMedico(codigo: string): Promise<PerfilMedico> {
+    const key = codigo.trim();
+    const cached = this.getPerfilMedicoEnCache(key);
+    if (cached) return cached;
+
+    const data = await this.api.get<PerfilMedico>(`/servicios/medicos/${encodeURIComponent(key)}`);
+    this.cacheMedico.set(key, { data, expira: Date.now() + this.TTL_MS });
+    return data;
   }
 }
