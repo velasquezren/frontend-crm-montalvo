@@ -496,16 +496,6 @@ export class ServiciosPage {
   protected async abrirHistorial(pac: string | null): Promise<void> {
     if (!pac) return;
 
-    const cached = this.service.getHistorialEnCache(pac);
-    if (cached) {
-      this.historial.set(cached);
-      this.cargandoHistorial.set(false);
-      this.overlayHistorial = this.abrirCajon(this.plantillaHistorial(), this.overlayHistorial, () =>
-        this.cerrarHistorial(),
-      );
-      return;
-    }
-
     const fila = this.pacientes.value().datos.find(p => p.pac === pac);
     this.historial.set(this.historialProvisional(pac, fila));
     this.cargandoHistorial.set(true);
@@ -596,16 +586,6 @@ export class ServiciosPage {
    */
   protected async abrirMedico(codigo: string | null): Promise<void> {
     if (!codigo) return;
-
-    const cached = this.service.getPerfilMedicoEnCache(codigo);
-    if (cached) {
-      this.perfilMedico.set(cached);
-      this.cargandoMedico.set(false);
-      this.overlayMedico = this.abrirCajon(this.plantillaMedico(), this.overlayMedico, () =>
-        this.cerrarMedico(),
-      );
-      return;
-    }
 
     const fila = this.medicos.value().datos.find(m => m.codigo === codigo);
     this.perfilMedico.set(this.perfilProvisional(codigo, fila));

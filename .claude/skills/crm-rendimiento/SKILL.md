@@ -149,19 +149,23 @@ es un agujero: el backend responde 403 igualmente.
 leads, ventas, conversaciones ni KPIs: una respuesta vieja de esos es un dato
 equivocado en pantalla, y eso vale más que 190 ms.
 
-Los cuatro que entran hoy, y la lista es exhaustiva:
+Los siete que entran hoy, y la lista es exhaustiva:
 
 ```
 /planilla-comisiones/periodos
 /planilla-comisiones/configuracion
 /planilla-comisiones/vendedoras
 /servicios/demografia
+/servicios/dashboard
+/servicios/pacientes
+/servicios/medicos
 ```
 
 > Antes de añadir un endpoint a esa lista, pregúntate qué se ve si llega un minuto
 > tarde. Si la respuesta incomoda, no va. El validador exige que la lista del código
 > y la de este archivo coincidan, justamente para que nadie amplíe la caché sin
-> pasar por esa pregunta.
+> pasar por esa pregunta. Los endpoints de `/servicios/*` se alimentan del Excel
+> importado y no cambian en vivo; cualquier mutación invalida la caché completa.
 
 **3. El polling de respaldo es de 60 s, no de 15.** El mecanismo principal es
 `RealtimeService` por WebSocket; el intervalo es una red de seguridad por si el

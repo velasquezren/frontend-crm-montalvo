@@ -25,6 +25,9 @@ const REFERENCIA = [
   '/planilla-comisiones/vendedoras',
   /* Agregado de las 15.000+ fichas: solo se mueve al importar pacientes. */
   '/servicios/demografia',
+  '/servicios/dashboard',
+  '/servicios/pacientes',
+  '/servicios/medicos',
 ];
 
 /** Vida de una entrada. Corta a propósito: ante la duda, que pese la frescura. */
