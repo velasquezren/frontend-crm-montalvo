@@ -26,7 +26,7 @@
   width: 100%;
   border-radius: 0;
   overflow: hidden;
-  background: white;
+  background: var(--color-background);
   box-shadow: none;
   transition: grid-template-columns 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -61,7 +61,7 @@
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  background: white;
+  background: var(--color-background);
 }
 
 app-conversacion-lista {

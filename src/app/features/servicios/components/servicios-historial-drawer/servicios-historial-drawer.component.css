@@ -101,7 +101,7 @@
   width: 9px;
   height: 9px;
   border-radius: 9999px;
-  background: white;
+  background: var(--color-background);
   border: 2px solid var(--color-secondary);
 }
 

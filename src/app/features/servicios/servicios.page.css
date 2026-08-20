@@ -10,7 +10,7 @@
 /* ── Paneles y títulos ──────────────────────────────────────────────── */
 
 .panel {
-  background: white;
+  background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 20px;
@@ -62,7 +62,7 @@
 .celda-sticky {
   position: sticky;
   left: 0;
-  background: white;
+  background: var(--color-background);
   z-index: 2;
   border-right: 1px solid var(--color-border);
   box-shadow: 2px 0 5px rgb(0 0 0 / 0.02);
@@ -124,7 +124,7 @@ tr:hover .celda-sticky {
 
 .pestana-activa {
   color: var(--color-primary);
-  background-color: white;
+  background-color: var(--color-background);
   border-color: var(--color-border) var(--color-border) transparent var(--color-border);
   border-bottom: 2px solid var(--color-primary);
 }
@@ -139,7 +139,7 @@ tr:hover .celda-sticky {
   flex-wrap: wrap;
   gap: 12px;
   padding: 12px 18px;
-  background: white;
+  background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 16px;
   box-shadow: var(--shadow-subtle);

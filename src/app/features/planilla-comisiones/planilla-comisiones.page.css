@@ -11,7 +11,7 @@
   flex-wrap: wrap;
   gap: 12px;
   padding: 12px 18px;
-  background: white;
+  background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 16px;
   box-shadow: var(--shadow-subtle);
@@ -72,7 +72,7 @@
 
 .pestana-activa {
   color: var(--color-primary);
-  background-color: white;
+  background-color: var(--color-background);
   border-color: var(--color-border) var(--color-border) transparent var(--color-border);
   border-bottom: 2px solid var(--color-primary);
 }
@@ -94,7 +94,7 @@
 
 /* ── Paneles ──────────────────────────────────────────────────────── */
 .panel {
-  background: white;
+  background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 20px;
@@ -176,7 +176,7 @@
   flex-direction: column;
   gap: 3px;
   padding: 14px 16px;
-  background: white;
+  background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 12px;
   box-shadow: var(--shadow-subtle);
@@ -254,7 +254,7 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-dark);
-  background: white;
+  background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 12px;
   cursor: pointer;
@@ -280,7 +280,7 @@
   font-size: 12px;
   font-weight: 600;
   color: var(--color-text-dark);
-  background: white;
+  background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 12px;
   font-variant-numeric: tabular-nums;
@@ -299,7 +299,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 12px 16px;
-  background: white;
+  background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: 12px;
   box-shadow: var(--shadow-subtle);
@@ -410,7 +410,7 @@
   text-align: left;
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  background: white;
+  background: var(--color-background);
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s;
 }

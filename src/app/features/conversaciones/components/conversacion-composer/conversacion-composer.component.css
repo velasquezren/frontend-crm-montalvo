@@ -8,7 +8,7 @@
 .composer-container {
   padding: 8px 16px 12px;
   padding-bottom: max(12px, env(safe-area-inset-bottom));
-  background: white;
+  background: var(--color-background);
   border-top: 1px solid var(--color-border);
   position: relative;
 }
@@ -124,7 +124,7 @@
   font-size: 13px;
   line-height: 1.45;
   color: var(--color-text-dark);
-  background: white;
+  background: var(--color-background);
   outline: none;
   max-height: 120px;
   min-height: 42px;
@@ -187,7 +187,7 @@
   border: 1px solid var(--color-border);
   border-radius: 12px;
   outline: none;
-  background: white;
+  background: var(--color-background);
   color: var(--color-text-dark);
   font-family: inherit;
   min-height: 70px;
