@@ -2,6 +2,8 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 import { RespuestaPaginada } from '../../../../core/api/pagination.model';
+import { generarIniciales } from '../../../../core/auth/user.model';
+import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { InputComponent } from '../../../../shared/components/input/input.component';
@@ -21,6 +23,7 @@ import { PacienteConServicios } from '../../servicios.model';
     DatePipe,
     DecimalPipe,
     MonedaPipe,
+    AvatarComponent,
     ButtonComponent,
     EmptyStateComponent,
     InputComponent,
@@ -54,12 +57,7 @@ export class ServiciosPacientesTablaComponent {
     this.busquedaChange.emit(val);
   }
 
-  protected iniciales(nombre: string | null): string {
-    if (!nombre) return 'P';
-    const partes = nombre.trim().split(/\s+/).filter(Boolean);
-    if (partes.length >= 2) {
-      return (partes[0][0] + partes[1][0]).toUpperCase();
-    }
-    return (partes[0]?.[0] || 'P').toUpperCase();
-  }
+  /** Iniciales del avatar: usa la función compartida del sistema. */
+  protected readonly iniciales = (nombre: string | null): string =>
+    nombre ? generarIniciales(nombre) : 'P';
 }

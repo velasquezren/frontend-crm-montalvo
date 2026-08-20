@@ -7,6 +7,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { KpiCardComponent } from '../../../../shared/components/kpi-card/kpi-card.component';
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
+import { TimelineComponent } from '../../../../shared/components/timeline/timeline.component';
 import { MonedaPipe } from '../../../../shared/pipes/moneda.pipe';
 import { PerfilMedico } from '../../servicios.model';
 import { KpiItem } from '../servicios-kpis/servicios-kpis.component';
@@ -34,6 +35,7 @@ const MESES = [
     IconComponent,
     KpiCardComponent,
     LoadingSkeletonComponent,
+    TimelineComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './servicios-medico-drawer.component.html',

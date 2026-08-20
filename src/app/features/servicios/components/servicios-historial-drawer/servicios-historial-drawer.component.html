@@ -130,10 +130,10 @@
             </span>
           </div>
 
-          <div class="linea-tiempo">
+          <app-timeline>
             @for (s of grupo.servicios; track s.id) {
-              <article class="evento">
-                <span class="evento-fecha">{{ s.fecha ? (s.fecha | date: 'dd MMM') : '—' }}</span>
+              <article class="crm-timeline-evento">
+                <span class="crm-timeline-fecha">{{ s.fecha ? (s.fecha | date: 'dd MMM') : '—' }}</span>
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-semibold text-text-dark">{{ s.detalle }}</p>
                   <p class="text-xs text-text-muted mt-0.5">
@@ -159,7 +159,7 @@
                 </span>
               </article>
             }
-          </div>
+          </app-timeline>
         }
       } @else {
         <app-empty-state icon="inbox" title="Sin servicios registrados" />

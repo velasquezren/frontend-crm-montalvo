@@ -57,9 +57,10 @@
             (keydown.space)="m.codigo && abrirMedico.emit(m.codigo)">
             <td class="text-left font-semibold text-text-dark celda-sticky">
               <div class="flex items-center gap-2.5 min-w-0">
-                <div class="avatar-medico shrink-0" aria-hidden="true">
-                  {{ iniciales(m.nombre || m.codigo) }}
-                </div>
+                <app-avatar
+                  size="sm"
+                  [initials]="iniciales(m.nombre || m.codigo)"
+                  [nombre]="m.nombre" />
                 <span class="truncate font-semibold text-text-dark">{{ m.nombre || '—' }}</span>
               </div>
             </td>

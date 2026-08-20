@@ -7,13 +7,6 @@
  * de la derecha es la única que scrollea y la línea de tiempo ocupa lo que
  * necesite.
  */
-.linea-tiempo {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 8px 4px 6px 26px;
-}
 
 /**
  * Cabecera de año, pegada al borde superior mientras se recorre el historial.
@@ -21,15 +14,6 @@
  * En una lista de cincuenta servicios todas las filas se parecen; el año fijo
  * arriba dice en qué época estás sin tener que leer las fechas una a una, y el
  * total responde de un vistazo cuánto dejó ese año.
- */
-/**
- * Cabecera de año, pegada al borde superior mientras se recorre el historial.
- *
- * Lleva relleno propio (`bg-light`) y no un simple borde sobre blanco: en blanco
- * sobre blanco el año se leía como texto flotando a mitad de la lista, sin
- * pertenecer a nada. Con cuerpo y esquinas superiores redondeadas se ve lo que
- * es —la tapa del bloque de ese año— y al quedarse fija mientras el resto pasa
- * por debajo, se entiende que encabeza lo que estás mirando.
  */
 .anio-cabecera {
   display: flex;
@@ -42,7 +26,8 @@
   margin-bottom: 8px;
 }
 
-.linea-tiempo + .anio-cabecera {
+/* El átomo <app-timeline> lleva su propio margen superior entre grupos de año. */
+.crm-timeline + .anio-cabecera {
   margin-top: 22px;
 }
 
@@ -58,60 +43,6 @@
   font-weight: 500;
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
-}
-
-.linea-tiempo::before {
-  content: '';
-  position: absolute;
-  top: 8px;
-  bottom: 8px;
-  left: 7px;
-  width: 2px;
-  background: linear-gradient(
-    to bottom,
-    var(--color-secondary),
-    color-mix(in srgb, var(--color-secondary) 25%, white)
-  );
-  border-radius: 9999px;
-}
-
-.evento {
-  position: relative;
-  display: flex;
-  gap: 12px;
-  padding: 12px 14px;
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  transition:
-    border-color 0.2s var(--ease-spring-smooth),
-    box-shadow 0.2s var(--ease-spring-smooth);
-}
-
-.evento:hover {
-  border-color: var(--color-secondary);
-  box-shadow: var(--shadow-subtle);
-}
-
-.evento::before {
-  content: '';
-  position: absolute;
-  top: 18px;
-  left: -23px;
-  width: 9px;
-  height: 9px;
-  border-radius: 9999px;
-  background: var(--color-background);
-  border: 2px solid var(--color-secondary);
-}
-
-.evento-fecha {
-  min-width: 56px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--color-primary);
-  font-variant-numeric: tabular-nums;
-  padding-top: 2px;
 }
 
 .grid-ficha {

@@ -17,6 +17,7 @@ import { mensajeDeError } from '../../core/api/http-error';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { ToastService } from '../../core/toast/toast.service';
+import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { BarChartComponent, ChartItem } from '../../shared/components/charts/bar-chart.component';
@@ -106,6 +107,7 @@ const TABS_SERVICIOS: readonly TabServicioConfig[] = [
     LoadingSkeletonComponent,
     PageHeaderComponent,
     TableComponent,
+    AvatarComponent,
     ServiciosKpisComponent,
     ServiciosModulosComponent,
     ServiciosPacientesTablaComponent,

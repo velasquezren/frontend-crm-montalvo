@@ -48,9 +48,10 @@
             (click)="p.pac && abrirHistorial.emit(p.pac)">
             <td class="text-left font-semibold text-text-dark celda-sticky">
               <div class="flex items-center gap-2.5 min-w-0">
-                <div class="avatar-iniciales shrink-0" aria-hidden="true">
-                  {{ iniciales(p.paciente || p.pac) }}
-                </div>
+                <app-avatar
+                  size="sm"
+                  [initials]="iniciales(p.paciente || p.pac)"
+                  [nombre]="p.paciente" />
                 <div class="min-w-0 flex flex-col">
                   <span class="truncate font-semibold text-text-dark">{{ p.paciente || '—' }}</span>
                   @if (!p.clienteId) {

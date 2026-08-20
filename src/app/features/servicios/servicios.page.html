@@ -13,9 +13,10 @@
     } @else {
       <div class="contenedor-select-periodo">
         <select
+          #selPeriodo
           class="select-periodo"
           [value]="periodoId() || ''"
-          (change)="seleccionarPeriodo($any($event.target).value)">
+          (change)="seleccionarPeriodo(selPeriodo.value)">
           <option value="">Todo el historial</option>
           @for (p of periodos.value().datos; track p.id) {
             <option [value]="p.id">{{ nombreMes(p.mes) }} {{ p.anio }}</option>
@@ -118,6 +119,19 @@
           (alternarModulo)="alternarModulo($event)" />
       </section>
 
+      @if (serieClasif().length > 1) {
+        <section style="--indice: 4" class="aparecer panel">
+          <h3 class="titulo-seccion">Distribución por clasificación</h3>
+          <p class="subtitulo-seccion">
+            Cómo se reparten los servicios según su tipo de comisión
+          </p>
+          <app-donut-chart
+            etiquetaTotal="servicios"
+            formatType="number"
+            [items]="serieClasif()" />
+        </section>
+      }
+
       @defer (on viewport) {
         <section style="--indice: 2" class="aparecer panel">
           <app-bar-chart
@@ -152,10 +166,21 @@
 
       <!-- Ranking de médicos -->
       <section style="--indice: 5" class="aparecer panel">
-        <h3 class="titulo-seccion">Médicos con más atenciones</h3>
-        <p class="subtitulo-seccion">
-          Toda la base de médicos del historial clínico. Haz clic en cualquier profesional para ver su perfil 360°, pacientes y facturación.
-        </p>
+        <div class="flex items-start justify-between gap-3 mb-1 flex-wrap">
+          <div>
+            <h3 class="titulo-seccion">Médicos con más atenciones</h3>
+            <p class="subtitulo-seccion">
+              Toda la base de médicos del historial clínico. Haz clic en cualquier profesional para ver su perfil 360°, pacientes y facturación.
+            </p>
+          </div>
+          <app-button
+            variant="ghost"
+            size="sm"
+            icon="chevron-right"
+            (clicked)="setPestana('MEDICOS')">
+            Ver todos
+          </app-button>
+        </div>
         <app-table [dense]="true">
           <thead>
             <tr>
@@ -180,9 +205,10 @@
                 <td class="text-left font-semibold text-text-dark celda-sticky">
                   <div class="flex items-center gap-2.5 min-w-0">
                     <span class="ranking-posicion" [class.ranking-top]="i < 3">#{{ i + 1 }}</span>
-                    <div class="avatar-medico shrink-0" aria-hidden="true">
-                      {{ iniciales(m.etiqueta || m.codigo) }}
-                    </div>
+                    <app-avatar
+                      size="sm"
+                      [initials]="iniciales(m.etiqueta || m.codigo)"
+                      [nombre]="m.etiqueta" />
                     <span class="truncate font-semibold text-text-dark">{{ m.etiqueta }}</span>
                   </div>
                 </td>

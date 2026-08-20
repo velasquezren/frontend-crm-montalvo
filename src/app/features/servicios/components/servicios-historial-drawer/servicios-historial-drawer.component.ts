@@ -6,6 +6,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { KpiCardComponent } from '../../../../shared/components/kpi-card/kpi-card.component';
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
+import { TimelineComponent } from '../../../../shared/components/timeline/timeline.component';
 import { MonedaPipe } from '../../../../shared/pipes/moneda.pipe';
 import { KpiItem } from '../servicios-kpis/servicios-kpis.component';
 import { HistorialPaciente } from '../../servicios.model';
@@ -20,6 +21,7 @@ import { HistorialPaciente } from '../../servicios.model';
     IconComponent,
     KpiCardComponent,
     LoadingSkeletonComponent,
+    TimelineComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './servicios-historial-drawer.component.html',

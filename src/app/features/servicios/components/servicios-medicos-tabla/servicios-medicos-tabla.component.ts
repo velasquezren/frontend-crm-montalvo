@@ -2,6 +2,8 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 import { RespuestaPaginada } from '../../../../core/api/pagination.model';
+import { generarIniciales } from '../../../../core/auth/user.model';
+import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { InputComponent } from '../../../../shared/components/input/input.component';
 import {
@@ -20,6 +22,7 @@ import { MedicoConServicios } from '../../servicios.model';
     DatePipe,
     DecimalPipe,
     MonedaPipe,
+    AvatarComponent,
     EmptyStateComponent,
     InputComponent,
     ThOrdenableComponent,
@@ -52,13 +55,14 @@ export class ServiciosMedicosTablaComponent {
     this.busquedaChange.emit(val);
   }
 
-  protected iniciales(nombre: string | null): string {
+  /**
+   * Iniciales del avatar. Los nombres de médicos del Excel traen prefijo
+   * "Dr." / "Dra.": se quita antes de generar las iniciales para que no salga
+   * "Dr" como avatar de "Dr. Juan Pérez".
+   */
+  protected readonly iniciales = (nombre: string | null): string => {
     if (!nombre) return 'Dr';
     const limpio = nombre.replace(/^Dr\.\s*|^Dra\.\s*/i, '').trim();
-    const partes = limpio.split(/\s+/).filter(Boolean);
-    if (partes.length >= 2) {
-      return (partes[0][0] + partes[1][0]).toUpperCase();
-    }
-    return (partes[0]?.[0] || 'D').toUpperCase();
-  }
+    return limpio ? generarIniciales(limpio) : 'Dr';
+  };
 }

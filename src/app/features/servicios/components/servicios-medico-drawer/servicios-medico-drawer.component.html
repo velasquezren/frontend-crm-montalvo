@@ -80,10 +80,10 @@
         }
       </div>
     } @else {
-    <div class="linea-tiempo mb-5">
+    <app-timeline [gap]="12" class="mb-5">
       @for (s of perfil().topServicios; track s.etiqueta) {
-        <article class="evento">
-          <span class="evento-fecha tabular-nums">{{ s.total | number }}×</span>
+        <article class="crm-timeline-evento">
+          <span class="crm-timeline-fecha crm-timeline-fecha--ancho tabular-nums">{{ s.total | number }}×</span>
           <div class="flex-1 min-w-0">
             <p class="text-sm font-semibold text-text-dark truncate">{{ s.etiqueta }}</p>
           </div>
@@ -94,7 +94,7 @@
       } @empty {
         <app-empty-state icon="inbox" title="Sin servicios registrados" />
       }
-    </div>
+    </app-timeline>
     }
 
     <!-- Sus pacientes -->
@@ -106,15 +106,15 @@
         }
       </div>
     } @else {
-    <div class="linea-tiempo">
+    <app-timeline [gap]="12">
       @for (p of perfil().topPacientes; track p.pac) {
         <!-- Clicable solo si tiene código: sin él no hay historial que abrir. -->
         <button
           type="button"
-          class="evento evento-clicable w-full text-left"
+          class="crm-timeline-evento crm-timeline-evento--clicable w-full text-left"
           [disabled]="!p.pac"
           (click)="p.pac && verPaciente.emit(p.pac)">
-          <span class="evento-fecha tabular-nums">{{ p.servicios | number }}×</span>
+          <span class="crm-timeline-fecha crm-timeline-fecha--ancho tabular-nums">{{ p.servicios | number }}×</span>
           <div class="flex-1 min-w-0">
             <p class="text-sm font-semibold text-text-dark truncate">{{ p.paciente || p.pac }}</p>
             <p class="text-xs text-text-muted mt-0.5 font-mono">
@@ -132,7 +132,7 @@
           title="Sin pacientes identificados"
           description="Sus servicios no traen código de paciente en el Excel." />
       }
-    </div>
+    </app-timeline>
     }
     </div>
   </div>
