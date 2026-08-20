@@ -48,7 +48,7 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
     /* Recorta y enmarca. NO scrollea: si scrolleara, volvería el problema. */
     .crm-table-marco {
       width: 100%;
-      background: white;
+      background: var(--color-background);
       border-radius: 16px;
       overflow: hidden;
       box-shadow: var(--shadow-subtle);
