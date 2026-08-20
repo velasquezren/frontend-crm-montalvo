@@ -13,7 +13,7 @@ export type KpiTono = 'primary' | 'secondary' | 'neutral' | 'critical';
  * Tarjeta de indicador: etiqueta, valor grande, ícono y pie.
  *
  * Existe porque `.kpi-card` estaba **definida a mano en cuatro CSS distintos**
- * (`servicios.page`, `servicios-kpis`, el cajón del historial y `reportes.page`).
+ * (`servicios.page`, `servicios-kpis`, el cajón del historial y `analitica.page`).
  * Con encapsulación `Emulated` cada plantilla necesita su copia, así que cada
  * arreglo había que hacerlo cuatro veces — y en la práctica se hacía en una.
  * Este es el caso que el skill `crm-design-system` describe como señal de que un

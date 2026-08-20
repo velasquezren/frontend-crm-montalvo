@@ -92,7 +92,7 @@ simples, `transition-all duration-200`.
 **Gráficos y bloques pesados bajo el pliegue van en `@defer (on viewport)`**, con un
 `<app-loading-skeleton>` de **altura exacta** en el `@placeholder`. Si el esqueleto mide distinto
 que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
-`reportes.page.html` y `ventas.page.html`.
+`analitica.page.html` y `ventas.page.html`.
 
 ## Inventario de átomos (`src/app/shared/components/`)
 

@@ -4,6 +4,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 
 import { mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
+import { Router } from '@angular/router';
+
 import { ToastService } from '../../core/toast/toast.service';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -21,11 +23,9 @@ import {
   ESTADO_PERIODO_LABEL,
   MESES,
   PeriodoComision,
-  ReporteConsolidado,
 } from '../planilla-comisiones/planilla.model';
-import { ReportesService } from './reportes.service';
-import { AnaliticaPeriodo, FilaRanking, Porcion } from './reportes.model';
-import { TablaLiquidacionComponent } from '../planilla-comisiones/components/tabla-liquidacion.component';
+import { AnaliticaService } from './analitica.service';
+import { AnaliticaPeriodo, FilaRanking, Porcion } from './analitica.model';
 
 /** Paleta de las series — tokens de la paleta cerrada, no hex sueltos. */
 const COLORES = [
@@ -48,9 +48,8 @@ type ColRanking = 'etiqueta' | 'cantidad' | 'montoVendido' | 'pctMonto';
  * captación de leads se mira en el Dashboard — no se repite aquí.
  */
 @Component({
-  selector: 'app-reportes',
+  selector: 'app-analitica',
   imports: [
-    TablaLiquidacionComponent,
     MonedaPipe,
     BadgeComponent,
     ButtonComponent,
@@ -65,14 +64,15 @@ type ColRanking = 'etiqueta' | 'cantidad' | 'montoVendido' | 'pctMonto';
     TableComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './reportes.page.html',
-  styleUrl: './reportes.page.css',
+  templateUrl: './analitica.page.html',
+  styleUrl: './analitica.page.css',
 })
-export class ReportesPage {
+export class AnaliticaPage {
   readonly embedded = input(false);
 
-  private readonly service = inject(ReportesService);
+  private readonly service = inject(AnaliticaService);
   private readonly toast = inject(ToastService);
+  private readonly router = inject(Router);
 
   protected readonly descargando = signal(false);
 
@@ -103,14 +103,6 @@ export class ReportesPage {
     () => {
       const id = this.periodoIdEfectivo();
       return id ? this.service.analiticaRequest(id) : undefined;
-    },
-    { defaultValue: undefined },
-  );
-
-  protected readonly consolidado = httpResource<ReporteConsolidado | undefined>(
-    () => {
-      const id = this.periodoIdEfectivo();
-      return id ? this.service.consolidadoRequest(id) : undefined;
     },
     { defaultValue: undefined },
   );
@@ -177,10 +169,15 @@ export class ReportesPage {
 
   protected readonly hayDatos = computed(() => this.analitica.value() !== undefined);
 
-  /** El consolidado solo existe si el mes ya se calculó. */
+  /** Solo hay a dónde enviar si el mes ya se calculó. */
   protected readonly liquidacionLista = computed(
     () => (this.analitica.value()?.resumen.vendedorasLiquidadas ?? 0) > 0,
   );
+
+  /** Lleva a la Planilla, que es donde vive el monto a pagar. */
+  protected irAPlanilla(): void {
+    void this.router.navigate(['/planilla']);
+  }
 
   /* ── Derivados Ordenados (Listas cortas completas, inmutables) ─────── */
 

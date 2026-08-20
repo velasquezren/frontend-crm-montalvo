@@ -76,7 +76,7 @@ export const routes: Routes = [
         path: 'analitica',
         canActivate: [exigeRol('ADMIN')],
         loadComponent: () =>
-          import('./features/reportes/reportes.page').then(m => m.ReportesPage),
+          import('./features/analitica/analitica.page').then(m => m.AnaliticaPage),
       },
       {
         /* Resumen anual consolidado: 12 meses y 4 trimestres */

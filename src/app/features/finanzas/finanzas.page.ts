@@ -6,7 +6,7 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { DesempenoAgentesComponent } from './components/desempeno-agentes/desempeno-agentes.component';
 import { PlanillaComisionesPage } from '../planilla-comisiones/planilla-comisiones.page';
-import { ReportesPage } from '../reportes/reportes.page';
+import { AnaliticaPage } from '../analitica/analitica.page';
 import { ResumenAnualPage } from '../planilla-comisiones/resumen-anual.page';
 
 export type TabFinanzas = 'liquidacion' | 'agentes' | 'analitica' | 'anual';
@@ -60,7 +60,7 @@ const TABS: readonly TabConfig[] = [
     IconComponent,
     DesempenoAgentesComponent,
     PlanillaComisionesPage,
-    ReportesPage,
+    AnaliticaPage,
     ResumenAnualPage,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

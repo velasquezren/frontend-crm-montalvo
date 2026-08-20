@@ -17,7 +17,7 @@ El módulo consolida tres vistas operativas en una sola experiencia fluida bajo 
    - Componente: `PlanillaComisionesPage` (`app-planilla-comisiones`)
    - Importación de Excel de FileMaker, cálculo de comisiones individuales, objetivos de paquetes (`PLANPAQ` y `PLANNIN`), retenciones y exportación.
 2. **Analítica Médica (`tab=analitica`)**:
-   - Componente: `ReportesPage` (`app-reportes`)
+   - Componente: `AnaliticaPage` (`app-analitica`), en `features/analitica/`
    - Distribución de ingresos por categoría de servicio, ranking de procedimientos más facturados, médicos tratantes y canales de captación.
 3. **Resumen Anual (`tab=anual`)**:
    - Componente: `ResumenAnualPage` (`app-resumen-anual`)

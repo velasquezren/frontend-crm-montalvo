@@ -13,7 +13,7 @@ import { ReporteConsolidado } from '../planilla-comisiones/planilla.model';
  * Ref: CRM_MANIFESTO.md §4.4.
  */
 @Injectable({ providedIn: 'root' })
-export class ReportesService {
+export class AnaliticaService {
   private readonly api = inject(ApiService);
   private readonly http = inject(HttpClient);
 

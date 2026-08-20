@@ -33,7 +33,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       { path: '/ventas', label: 'Ventas', icon: 'shopping-bag' },
       { path: '/planilla', label: 'Planilla de Liquidación', icon: 'file-text', rolMinimo: 'ADMIN' },
       { path: '/desempeno-agentes', label: 'Desempeño de Agentes', icon: 'users' },
-      { path: '/analitica', label: 'Analítica Médica', icon: 'bar-chart', rolMinimo: 'ADMIN' },
+      { path: '/analitica', label: 'Analítica de Facturación', icon: 'bar-chart', rolMinimo: 'ADMIN' },
       { path: '/resumen-anual', label: 'Resumen Anual', icon: 'trending-up', rolMinimo: 'ADMIN' },
     ],
   },

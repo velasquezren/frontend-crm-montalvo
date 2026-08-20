@@ -456,25 +456,26 @@
     </section>
   </div>
 
-  <!-- ══ 7. Liquidación por vendedora ══ -->
-  @if (consolidado.value(); as rep) {
-    @if (rep.filas.length > 0) {
-      <section style="--indice: 9" class="aparecer panel">
-        <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
-          <div>
-            <h3 class="titulo-seccion">Liquidación por vendedora</h3>
-            <p class="subtitulo-seccion">Monto final a pagar en el periodo actual</p>
-          </div>
+  <!-- ══ 7. A dónde seguir ══
+       Aquí vivía "Liquidación por vendedora", que era el MISMO
+       <app-tabla-liquidacion> con los mismos datos que ya pinta la Planilla.
+       Esta pantalla responde "de dónde sale la facturación del mes"; cuánto
+       cobra cada quien es otra pregunta y tiene su sitio. Duplicarla obligaba a
+       pedir el consolidado entero solo para repetir una tabla. -->
+  @if (liquidacionLista()) {
+    <section style="--indice: 9" class="aparecer panel">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h3 class="titulo-seccion">¿Cuánto cobra cada vendedora?</h3>
+          <p class="subtitulo-seccion">
+            Esta pantalla explica de dónde sale la facturación. El monto a pagar,
+            con sus bonos y su sueldo, está en la Planilla.
+          </p>
         </div>
-
-        <div class="contenedor-tabla-scroll">
-          <app-tabla-liquidacion
-            [filas]="rep.filas"
-            [totales]="rep.totales"
-            [tipoCambio]="+rep.periodo.tipoCambio"
-            maxHeight="calc(100dvh - 220px)" />
-        </div>
-      </section>
-    }
+        <app-button variant="secondary" icon="file-text" (clicked)="irAPlanilla()">
+          Ver liquidación
+        </app-button>
+      </div>
+    </section>
   }
 }
