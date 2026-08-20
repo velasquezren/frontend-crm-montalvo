@@ -347,6 +347,8 @@
   <div class="grid-dos-equitativo">
     <section style="--indice: 7" class="aparecer panel">
       <div class="flex items-center justify-between mb-2">
+        <!-- Ver la nota del Dashboard: allí el ranking sale de las ventas del
+             CRM y aquí de lo facturado en el Excel. Son cosas distintas. -->
         <h3 class="titulo-seccion">Servicios que más facturan</h3>
         <div class="flex items-center gap-2">
           <span class="badge-tag">Top 15</span>
@@ -402,13 +404,20 @@
 
     <section style="--indice: 8" class="aparecer panel">
       <div class="flex items-center justify-between mb-2">
-        <h3 class="titulo-seccion">Médicos que más facturan</h3>
+        <!-- El alcance va en el título a propósito: hay otra tabla de médicos en
+             Historial de Servicios, con toda la base y ficha por médico. Esta es
+             una rebanada de la facturación DE ESTE MES, así que las dos cifras
+             pueden no cuadrar y conviene que se vea por qué. -->
+        <h3 class="titulo-seccion">Médicos en la facturación del mes</h3>
         <div class="flex items-center gap-2">
           <span class="badge-tag">Top 10</span>
           <app-button variant="ghost" size="sm" icon="copy" (clicked)="copiarRankingMedicos()">Copiar</app-button>
         </div>
       </div>
-      <p class="subtitulo-seccion mb-3">Haz clic en los encabezados para ordenar los profesionales</p>
+      <p class="subtitulo-seccion mb-3">
+        Quién aporta a lo facturado en el periodo importado. Para la base completa
+        de médicos, con su ficha y su historial, está Historial de Servicios.
+      </p>
       <app-table [dense]="true">
         <thead>
           <tr>
@@ -455,27 +464,4 @@
       </app-table>
     </section>
   </div>
-
-  <!-- ══ 7. A dónde seguir ══
-       Aquí vivía "Liquidación por vendedora", que era el MISMO
-       <app-tabla-liquidacion> con los mismos datos que ya pinta la Planilla.
-       Esta pantalla responde "de dónde sale la facturación del mes"; cuánto
-       cobra cada quien es otra pregunta y tiene su sitio. Duplicarla obligaba a
-       pedir el consolidado entero solo para repetir una tabla. -->
-  @if (liquidacionLista()) {
-    <section style="--indice: 9" class="aparecer panel">
-      <div class="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 class="titulo-seccion">¿Cuánto cobra cada vendedora?</h3>
-          <p class="subtitulo-seccion">
-            Esta pantalla explica de dónde sale la facturación. El monto a pagar,
-            con sus bonos y su sueldo, está en la Planilla.
-          </p>
-        </div>
-        <app-button variant="secondary" icon="file-text" (clicked)="irAPlanilla()">
-          Ver liquidación
-        </app-button>
-      </div>
-    </section>
-  }
 }

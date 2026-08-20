@@ -138,8 +138,15 @@
 
       <!-- Ranking de médicos -->
       <section style="--indice: 5" class="aparecer panel">
+        <!-- Alcance explícito: Analítica de Facturación tiene otra tabla de
+             médicos, acotada al mes importado. Esta es la base completa, así que
+             las dos cifras pueden no cuadrar y conviene que se sepa por qué. -->
         <h3 class="titulo-seccion">Médicos con más atenciones</h3>
-        <p class="subtitulo-seccion">Ordenados por volumen de servicios en el periodo</p>
+        <p class="subtitulo-seccion">
+          Toda la base de médicos del historial clínico. Ordena el servidor y cada
+          fila abre su ficha; para el reparto de un mes concreto está Analítica de
+          Facturación.
+        </p>
         <app-table [dense]="true">
           <thead>
             <tr>

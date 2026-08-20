@@ -4,8 +4,6 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 
 import { mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
-import { Router } from '@angular/router';
-
 import { ToastService } from '../../core/toast/toast.service';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -72,7 +70,6 @@ export class AnaliticaPage {
 
   private readonly service = inject(AnaliticaService);
   private readonly toast = inject(ToastService);
-  private readonly router = inject(Router);
 
   protected readonly descargando = signal(false);
 
@@ -173,11 +170,6 @@ export class AnaliticaPage {
   protected readonly liquidacionLista = computed(
     () => (this.analitica.value()?.resumen.vendedorasLiquidadas ?? 0) > 0,
   );
-
-  /** Lleva a la Planilla, que es donde vive el monto a pagar. */
-  protected irAPlanilla(): void {
-    void this.router.navigate(['/planilla']);
-  }
 
   /* ── Derivados Ordenados (Listas cortas completas, inmutables) ─────── */
 
