@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -84,6 +84,28 @@ export class FinanzasPage {
     return 'liquidacion';
   });
 
+  /**
+   * Pestañas ya visitadas. Una vez montada, se queda montada.
+   *
+   * Las cuatro se pintaban siempre con `[hidden]`, que solo aplica
+   * `display: none`: los cuatro componentes se instanciaban y **todas sus
+   * peticiones salían al entrar**, aunque solo se mirase una. Entrar en Finanzas
+   * cargaba Planilla, Desempeño, Analítica y Resumen Anual de golpe.
+   *
+   * Quitarlo del todo con `@if` habría costado la retención de estado que la
+   * pestaña buscaba —filtros y scroll se perderían al ir y volver—. Con este
+   * conjunto se tienen las dos cosas: al entrar solo se monta la activa, y a
+   * partir de la primera visita cada una permanece viva, así que volver sigue
+   * siendo instantáneo y sin pedir nada.
+   */
+  private readonly visitadas = signal<ReadonlySet<TabFinanzas>>(new Set());
+
+  protected readonly estaMontada = computed(() => {
+    const vistas = new Set(this.visitadas());
+    vistas.add(this.tabActiva());
+    return (tab: TabFinanzas): boolean => vistas.has(tab);
+  });
+
   protected readonly tabInfoActual = computed<TabConfig>(() => {
     const activa = this.tabActiva();
     return this.tabs.find(t => t.id === activa) ?? this.tabs[0];
@@ -91,6 +113,12 @@ export class FinanzasPage {
 
   protected cambiarTab(nuevaTab: TabFinanzas): void {
     if (this.tabActiva() === nuevaTab) return;
+    /* Se apuntan LAS DOS antes de navegar: la que se abre y la que se deja.
+       Sin apuntar la que se deja, la primera pestaña —que nunca pasó por aquí,
+       porque venía activa desde la URL— se desmontaría al salir de ella y
+       perdería su estado justo al volver, que es lo contrario de lo que se
+       busca. */
+    this.visitadas.update(vistas => new Set(vistas).add(this.tabActiva()).add(nuevaTab));
     void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { tab: nuevaTab },

@@ -53,7 +53,35 @@ import {
   PacienteConServicios,
 } from './servicios.model';
 
-type Pestana = 'DASHBOARD' | 'PACIENTES' | 'MEDICOS';
+export type Pestana = 'DASHBOARD' | 'PACIENTES' | 'MEDICOS';
+
+export interface TabServicioConfig {
+  readonly id: Pestana;
+  readonly label: string;
+  readonly icon: 'bar-chart' | 'users' | 'briefcase';
+  readonly descripcion: string;
+}
+
+const TABS_SERVICIOS: readonly TabServicioConfig[] = [
+  {
+    id: 'DASHBOARD',
+    label: 'Resumen General',
+    icon: 'bar-chart',
+    descripcion: 'Volumen clínico, módulos y especialidades',
+  },
+  {
+    id: 'PACIENTES',
+    label: 'Directorio de Pacientes',
+    icon: 'users',
+    descripcion: 'Historial individual y atenciones clínicas',
+  },
+  {
+    id: 'MEDICOS',
+    label: 'Equipo Médico',
+    icon: 'briefcase',
+    descripcion: 'Rendimiento y atenciones por profesional',
+  },
+];
 
 /**
  * Historial de Servicios — qué se hizo en la clínica, a quién y quién lo hizo.
@@ -96,6 +124,7 @@ export class ServiciosPage {
 
   protected readonly meses = MESES;
   protected readonly estadoLabel = ESTADO_PERIODO_LABEL;
+  protected readonly tabs = TABS_SERVICIOS;
 
   /* ── Estado de UI ───────────────────────────────────────────────────── */
 
@@ -103,6 +132,15 @@ export class ServiciosPage {
   protected readonly filtroModulo = signal<string | null>(null);
   /** null = todo el historial; con id = solo ese mes. */
   protected readonly periodoId = signal<string | null>(null);
+
+  /** Pestañas ya visitadas para retención instantánea de estado (0ms). */
+  private readonly visitadas = signal<ReadonlySet<Pestana>>(new Set(['DASHBOARD']));
+
+  protected readonly estaMontada = computed(() => {
+    const vistas = new Set(this.visitadas());
+    vistas.add(this.pestana());
+    return (tab: Pestana): boolean => vistas.has(tab);
+  });
 
   protected readonly paginaPacientes = signal(1);
   protected readonly paginaMedicos = signal(1);
@@ -195,7 +233,7 @@ export class ServiciosPage {
    */
   protected readonly pacientes = httpResource<RespuestaPaginada<PacienteConServicios>>(
     () =>
-      this.pestana() === 'PACIENTES'
+      this.estaMontada()('PACIENTES')
         ? this.service.pacientesRequest(
             this.paginaPacientes(),
             this.pacientesDebounced() || undefined,
@@ -208,7 +246,7 @@ export class ServiciosPage {
 
   protected readonly medicos = httpResource<RespuestaPaginada<MedicoConServicios>>(
     () =>
-      this.pestana() === 'MEDICOS'
+      this.estaMontada()('MEDICOS')
         ? this.service.medicosRequest(
             this.paginaMedicos(),
             this.medicosDebounced() || undefined,
@@ -423,6 +461,8 @@ export class ServiciosPage {
   }
 
   protected setPestana(p: Pestana): void {
+    if (this.pestana() === p) return;
+    this.visitadas.update(vistas => new Set(vistas).add(this.pestana()).add(p));
     this.pestana.set(p);
   }
 

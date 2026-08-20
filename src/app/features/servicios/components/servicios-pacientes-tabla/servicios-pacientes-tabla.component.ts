@@ -1,8 +1,7 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, input, output, ModelSignal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 import { RespuestaPaginada } from '../../../../core/api/pagination.model';
-import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { InputComponent } from '../../../../shared/components/input/input.component';
@@ -22,7 +21,6 @@ import { PacienteConServicios } from '../../servicios.model';
     DatePipe,
     DecimalPipe,
     MonedaPipe,
-    BadgeComponent,
     ButtonComponent,
     EmptyStateComponent,
     InputComponent,
@@ -54,5 +52,14 @@ export class ServiciosPacientesTablaComponent {
 
   protected onBusquedaInput(val: string): void {
     this.busquedaChange.emit(val);
+  }
+
+  protected iniciales(nombre: string | null): string {
+    if (!nombre) return 'P';
+    const partes = nombre.trim().split(/\s+/).filter(Boolean);
+    if (partes.length >= 2) {
+      return (partes[0][0] + partes[1][0]).toUpperCase();
+    }
+    return (partes[0]?.[0] || 'P').toUpperCase();
   }
 }

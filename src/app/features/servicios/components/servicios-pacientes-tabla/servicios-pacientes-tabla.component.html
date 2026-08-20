@@ -8,7 +8,11 @@
   </div>
 
   @if (isLoading()) {
-    <app-loading-skeleton shape="text" height="2.5rem" />
+    <div class="space-y-3">
+      @for (n of [1, 2, 3, 4, 5]; track n) {
+        <app-loading-skeleton height="48px" />
+      }
+    </div>
   } @else if (error()) {
     <app-empty-state
       icon="alert-circle"
@@ -29,32 +33,47 @@
           <th class="text-right" appOrdenable="gastado"
               [orden]="orden()" [direccion]="direccion()"
               direccionInicial="desc"
-              (ordenar)="ordenar.emit($event)">Gastado</th>
+              (ordenar)="ordenar.emit($event)">Facturado</th>
           <th class="text-left" appOrdenable="ultima"
               [orden]="orden()" [direccion]="direccion()"
               direccionInicial="desc"
               (ordenar)="ordenar.emit($event)">Última visita</th>
-          <th class="text-right">Historial</th>
+          <th class="text-right">Acción</th>
         </tr>
       </thead>
       <tbody>
         @for (p of pacientes().datos; track p.pac) {
-          <tr>
+          <tr
+            class="fila-clicable"
+            (click)="p.pac && abrirHistorial.emit(p.pac)">
             <td class="text-left font-semibold text-text-dark celda-sticky">
-              {{ p.paciente || '—' }}
-              @if (!p.clienteId) {
-                <app-badge variant="neutral">sin ficha</app-badge>
-              }
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="avatar-iniciales shrink-0" aria-hidden="true">
+                  {{ iniciales(p.paciente || p.pac) }}
+                </div>
+                <div class="min-w-0 flex flex-col">
+                  <span class="truncate font-semibold text-text-dark">{{ p.paciente || '—' }}</span>
+                  @if (!p.clienteId) {
+                    <span class="text-[10px] text-text-muted font-normal mt-0.5">Sin ficha en CRM</span>
+                  }
+                </div>
+              </div>
             </td>
             <td class="text-left text-xs text-text-muted font-mono">{{ p.pac }}</td>
-            <td class="text-right font-medium">{{ p.servicios | number }}</td>
-            <td class="text-right font-medium text-primary">{{ p.gastado | moneda }}</td>
+            <td class="text-right font-medium">
+              <span class="badge-servicios">{{ p.servicios | number }}</span>
+            </td>
+            <td class="text-right font-semibold text-primary tabular-nums">{{ p.gastado | moneda }}</td>
             <td class="text-left text-xs text-text-muted">
-              {{ p.ultimaVisita ? (p.ultimaVisita | date: 'dd/MM/yy') : '—' }}
+              {{ p.ultimaVisita ? (p.ultimaVisita | date: 'dd/MM/yyyy') : '—' }}
             </td>
             <td class="text-right">
-              <app-button variant="ghost" size="sm" icon="eye" (clicked)="abrirHistorial.emit(p.pac)">
-                Ver
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="eye"
+                (clicked)="$event.stopPropagation(); abrirHistorial.emit(p.pac)">
+                Historial
               </app-button>
             </td>
           </tr>

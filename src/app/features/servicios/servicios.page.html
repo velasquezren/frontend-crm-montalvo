@@ -40,21 +40,35 @@
   </div>
 </div>
 
-<!-- ── Pestañas ────────────────────────────────────────────────────── -->
-<nav class="pestanas">
-  <button type="button" class="pestana" [class.pestana-activa]="pestana() === 'DASHBOARD'" (click)="setPestana('DASHBOARD')">
-    <app-icon name="bar-chart" [size]="15" /> <span>Resumen</span>
-  </button>
-  <button type="button" class="pestana" [class.pestana-activa]="pestana() === 'PACIENTES'" (click)="setPestana('PACIENTES')">
-    <app-icon name="users" [size]="15" /> <span>Pacientes</span>
-  </button>
-  <button type="button" class="pestana" [class.pestana-activa]="pestana() === 'MEDICOS'" (click)="setPestana('MEDICOS')">
-    <app-icon name="briefcase" [size]="15" /> <span>Médicos</span>
-  </button>
+<!-- ── Barra de Pestañas Segmentadas ──────────────────────────────── -->
+<nav class="servicios-tabs-bar" role="tablist" aria-label="Secciones de Historial de Servicios">
+  @for (t of tabs; track t.id) {
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="pestana() === t.id"
+      [attr.aria-controls]="'panel-' + t.id"
+      [id]="'tab-' + t.id"
+      (click)="setPestana(t.id)"
+      class="servicios-tab-btn"
+      [class.servicios-tab-btn--active]="pestana() === t.id">
+      <app-icon [name]="t.icon" [size]="16" class="tab-icono" />
+      <span class="tab-label">{{ t.label }}</span>
+    </button>
+  }
 </nav>
 
-<!-- ══════════════ RESUMEN ══════════════ -->
-@if (pestana() === 'DASHBOARD') {
+<!-- ══════════════ CUERPO DE PESTAÑAS ══════════════
+     `@if (estaMontada(...))` monta el componente en su primera visita;
+     `[hidden]` retiene el estado en memoria para transiciones instantáneas de 0ms. -->
+<main class="servicios-cuerpo">
+  @if (estaMontada()('DASHBOARD')) {
+    <div
+      id="panel-DASHBOARD"
+      aria-labelledby="tab-DASHBOARD"
+      [hidden]="pestana() !== 'DASHBOARD'"
+      class="servicios-tab-panel"
+      role="tabpanel">
   @if (dashboard.isLoading()) {
     <div class="grid-kpis-modern">
       @for (n of [1, 2, 3, 4, 5]; track n) {
@@ -236,42 +250,57 @@
           } @placeholder {
             <app-loading-skeleton shape="card" height="220px" />
           }
-
         }
       </section>
     }
   }
-}
+  </div>
+  }
 
-<!-- ══════════════ PACIENTES ══════════════ -->
-@if (pestana() === 'PACIENTES') {
-  <app-servicios-pacientes-tabla
-    [pacientes]="pacientes.value()"
-    [isLoading]="pacientes.isLoading()"
-    [error]="pacientes.error()"
-    [busqueda]="busquedaPacientes()"
-    (busquedaChange)="busquedaPacientes.set($event)"
-    (paginaChange)="paginaPacientes.set($event)"
-    [orden]="ordenPacientes()"
-    [direccion]="direccionPacientes()"
-    (ordenar)="ordenarPacientes($event)"
-    (abrirHistorial)="abrirHistorial($event)" />
-}
+  <!-- ══════════════ PACIENTES ══════════════ -->
+  @if (estaMontada()('PACIENTES')) {
+    <div
+      id="panel-PACIENTES"
+      aria-labelledby="tab-PACIENTES"
+      [hidden]="pestana() !== 'PACIENTES'"
+      class="servicios-tab-panel"
+      role="tabpanel">
+      <app-servicios-pacientes-tabla
+        [pacientes]="pacientes.value()"
+        [isLoading]="pacientes.isLoading()"
+        [error]="pacientes.error()"
+        [busqueda]="busquedaPacientes()"
+        (busquedaChange)="busquedaPacientes.set($event)"
+        (paginaChange)="paginaPacientes.set($event)"
+        [orden]="ordenPacientes()"
+        [direccion]="direccionPacientes()"
+        (ordenar)="ordenarPacientes($event)"
+        (abrirHistorial)="abrirHistorial($event)" />
+    </div>
+  }
 
-<!-- ══════════════ MÉDICOS ══════════════ -->
-@if (pestana() === 'MEDICOS') {
-  <app-servicios-medicos-tabla
-    [medicos]="medicos.value()"
-    [isLoading]="medicos.isLoading()"
-    [error]="medicos.error()"
-    [busqueda]="busquedaMedicos()"
-    (busquedaChange)="busquedaMedicos.set($event)"
-    (paginaChange)="paginaMedicos.set($event)"
-    [orden]="ordenMedicos()"
-    [direccion]="direccionMedicos()"
-    (ordenar)="ordenarMedicos($event)"
-    (abrirMedico)="abrirMedico($event)" />
-}
+  <!-- ══════════════ MÉDICOS ══════════════ -->
+  @if (estaMontada()('MEDICOS')) {
+    <div
+      id="panel-MEDICOS"
+      aria-labelledby="tab-MEDICOS"
+      [hidden]="pestana() !== 'MEDICOS'"
+      class="servicios-tab-panel"
+      role="tabpanel">
+      <app-servicios-medicos-tabla
+        [medicos]="medicos.value()"
+        [isLoading]="medicos.isLoading()"
+        [error]="medicos.error()"
+        [busqueda]="busquedaMedicos()"
+        (busquedaChange)="busquedaMedicos.set($event)"
+        (paginaChange)="paginaMedicos.set($event)"
+        [orden]="ordenMedicos()"
+        [direccion]="direccionMedicos()"
+        (ordenar)="ordenarMedicos($event)"
+        (abrirMedico)="abrirMedico($event)" />
+    </div>
+  }
+</main>
 
 <!-- ══════════════ CAJONES LATERALES ══════════════
      Van en <ng-template> y los proyecta DialogService a document.body. Con un

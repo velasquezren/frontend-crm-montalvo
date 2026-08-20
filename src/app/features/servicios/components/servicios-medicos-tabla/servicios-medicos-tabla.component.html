@@ -8,7 +8,11 @@
   </div>
 
   @if (isLoading()) {
-    <app-loading-skeleton shape="text" height="2.5rem" />
+    <div class="space-y-3">
+      @for (n of [1, 2, 3, 4, 5]; track n) {
+        <app-loading-skeleton height="48px" />
+      }
+    </div>
   } @else if (error()) {
     <app-empty-state
       icon="alert-circle"
@@ -51,13 +55,24 @@
             (click)="m.codigo && abrirMedico.emit(m.codigo)"
             (keydown.enter)="m.codigo && abrirMedico.emit(m.codigo)"
             (keydown.space)="m.codigo && abrirMedico.emit(m.codigo)">
-            <td class="text-left font-semibold text-text-dark celda-sticky">{{ m.nombre || '—' }}</td>
+            <td class="text-left font-semibold text-text-dark celda-sticky">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="avatar-medico shrink-0" aria-hidden="true">
+                  {{ iniciales(m.nombre || m.codigo) }}
+                </div>
+                <span class="truncate font-semibold text-text-dark">{{ m.nombre || '—' }}</span>
+              </div>
+            </td>
             <td class="text-left text-xs text-text-muted font-mono">{{ m.codigo }}</td>
-            <td class="text-right font-medium">{{ m.servicios | number }}</td>
-            <td class="text-right font-medium text-secondary">{{ m.pacientes | number }}</td>
-            <td class="text-right font-medium text-primary">{{ m.ingreso | moneda }}</td>
+            <td class="text-right font-medium">
+              <span class="badge-servicios">{{ m.servicios | number }}</span>
+            </td>
+            <td class="text-right font-medium">
+              <span class="badge-pacientes">{{ m.pacientes | number }}</span>
+            </td>
+            <td class="text-right font-semibold text-primary tabular-nums">{{ m.ingreso | moneda }}</td>
             <td class="text-left text-xs text-text-muted">
-              {{ m.ultimaAtencion ? (m.ultimaAtencion | date: 'dd/MM/yy') : '—' }}
+              {{ m.ultimaAtencion ? (m.ultimaAtencion | date: 'dd/MM/yyyy') : '—' }}
             </td>
           </tr>
         }

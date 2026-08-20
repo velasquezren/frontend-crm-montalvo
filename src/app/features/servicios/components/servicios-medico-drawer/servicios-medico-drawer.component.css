@@ -69,15 +69,6 @@
   padding-top: 2px;
 }
 
-.evento-fecha {
-  min-width: 74px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--color-primary);
-  font-variant-numeric: tabular-nums;
-  padding-top: 2px;
-}
-
 /* Fila del evento como botón: hereda la caja de .evento y añade el afford. */
 .evento-clicable {
   cursor: pointer;

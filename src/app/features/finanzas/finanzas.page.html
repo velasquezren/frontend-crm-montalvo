@@ -16,6 +16,8 @@
           type="button"
           role="tab"
           [attr.aria-selected]="tabActiva() === t.id"
+          [attr.aria-controls]="'panel-' + t.id"
+          [id]="'tab-' + t.id"
           (click)="cambiarTab(t.id)"
           class="finanzas-tab-btn"
           [class.finanzas-tab-btn--active]="tabActiva() === t.id">
@@ -26,22 +28,53 @@
     </nav>
   </header>
 
-  <!-- ── Vistas Dinámicas con Retención Instantánea de Estado (0ms) ───── -->
+  <!-- ── Vistas: se montan al visitarlas y se quedan montadas ──────────
+       `@if` decide si el componente EXISTE (y por tanto si pide datos);
+       `[hidden]` decide si se ve. Antes solo estaba el `[hidden]`, así que las
+       cuatro pantallas pedían sus datos al entrar aunque se mirase una. -->
   <main class="finanzas-cuerpo">
-    <div [hidden]="tabActiva() !== 'liquidacion'" class="finanzas-tab-panel" role="tabpanel">
-      <app-planilla-comisiones [embedded]="true" />
-    </div>
+    @if (estaMontada()('liquidacion')) {
+      <div
+        id="panel-liquidacion"
+        aria-labelledby="tab-liquidacion"
+        [hidden]="tabActiva() !== 'liquidacion'"
+        class="finanzas-tab-panel"
+        role="tabpanel">
+        <app-planilla-comisiones [embedded]="true" />
+      </div>
+    }
 
-    <div [hidden]="tabActiva() !== 'agentes'" class="finanzas-tab-panel" role="tabpanel">
-      <app-desempeno-agentes />
-    </div>
+    @if (estaMontada()('agentes')) {
+      <div
+        id="panel-agentes"
+        aria-labelledby="tab-agentes"
+        [hidden]="tabActiva() !== 'agentes'"
+        class="finanzas-tab-panel"
+        role="tabpanel">
+        <app-desempeno-agentes />
+      </div>
+    }
 
-    <div [hidden]="tabActiva() !== 'analitica'" class="finanzas-tab-panel" role="tabpanel">
-      <app-analitica [embedded]="true" />
-    </div>
+    @if (estaMontada()('analitica')) {
+      <div
+        id="panel-analitica"
+        aria-labelledby="tab-analitica"
+        [hidden]="tabActiva() !== 'analitica'"
+        class="finanzas-tab-panel"
+        role="tabpanel">
+        <app-analitica [embedded]="true" />
+      </div>
+    }
 
-    <div [hidden]="tabActiva() !== 'anual'" class="finanzas-tab-panel" role="tabpanel">
-      <app-resumen-anual [embedded]="true" />
-    </div>
+    @if (estaMontada()('anual')) {
+      <div
+        id="panel-anual"
+        aria-labelledby="tab-anual"
+        [hidden]="tabActiva() !== 'anual'"
+        class="finanzas-tab-panel"
+        role="tabpanel">
+        <app-resumen-anual [embedded]="true" />
+      </div>
+    }
   </main>
 </div>

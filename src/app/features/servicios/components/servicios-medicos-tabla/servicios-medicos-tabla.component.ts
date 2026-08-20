@@ -51,4 +51,14 @@ export class ServiciosMedicosTablaComponent {
   protected onBusquedaInput(val: string): void {
     this.busquedaChange.emit(val);
   }
+
+  protected iniciales(nombre: string | null): string {
+    if (!nombre) return 'Dr';
+    const limpio = nombre.replace(/^Dr\.\s*|^Dra\.\s*/i, '').trim();
+    const partes = limpio.split(/\s+/).filter(Boolean);
+    if (partes.length >= 2) {
+      return (partes[0][0] + partes[1][0]).toUpperCase();
+    }
+    return (partes[0]?.[0] || 'D').toUpperCase();
+  }
 }
