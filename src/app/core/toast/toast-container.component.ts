@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { ToastService } from './toast.service';
@@ -11,6 +11,7 @@ import { ToastService } from './toast.service';
 @Component({
   selector: 'app-toast-container',
   imports: [IconComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="fixed top-4 right-4 sm:top-5 sm:right-5 w-[calc(100%-2rem)] sm:w-auto sm:max-w-sm z-50 flex flex-col gap-2.5 pointer-events-none">
       @for (toast of toasts(); track toast.id) {

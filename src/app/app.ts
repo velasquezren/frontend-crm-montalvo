@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 import { PwaUpdateService } from './core/pwa/pwa-update.service';
@@ -8,6 +8,7 @@ import { PwaUpdateService } from './core/pwa/pwa-update.service';
   imports: [RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
   private readonly pwaUpdateService = inject(PwaUpdateService);
