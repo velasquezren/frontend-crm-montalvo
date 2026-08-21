@@ -36,7 +36,7 @@
                 {{ currentUser.nombre }}
               </p>
               <p class="text-[11px] text-text-muted leading-tight">
-                {{ currentUser.rol === 'ADMIN' ? 'Administrador' : 'Agente' }}
+                {{ rolLabel[currentUser.rol] }}
               </p>
             </div>
           </a>

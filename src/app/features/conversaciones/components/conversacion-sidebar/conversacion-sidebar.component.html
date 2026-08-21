@@ -375,7 +375,7 @@
                       <app-avatar [initials]="iniciales(ag.nombre)" size="sm" />
                       <div class="min-w-0">
                         <p class="text-sm text-text-dark truncate">{{ ag.nombre }}</p>
-                        <p class="text-[10px] text-text-muted">{{ ag.rol === 'ADMIN' ? 'Admin' : 'Agente' }}</p>
+                        <p class="text-[10px] text-text-muted">{{ rolLabel[ag.rol] }}</p>
                       </div>
                       @if (chat.agente?.id === ag.id) {
                         <app-icon name="check-circle" [size]="16" class="text-primary ml-auto shrink-0" />

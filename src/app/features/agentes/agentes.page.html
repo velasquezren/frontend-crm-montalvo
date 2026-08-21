@@ -308,7 +308,7 @@
               {{ ag.nombre }}
             </h2>
             <div class="flex flex-wrap items-center gap-2 mt-1.5">
-              <app-badge [variant]="ag.rol === 'ADMIN' ? 'success' : 'info'">
+              <app-badge [variant]="cubreRol(ag.rol, 'ADMIN') ? 'success' : 'info'">
                 {{ rolLabel[ag.rol] }}
               </app-badge>
               @if (!ag.activo) {

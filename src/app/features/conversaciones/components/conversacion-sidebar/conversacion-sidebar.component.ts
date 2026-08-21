@@ -13,6 +13,7 @@ import {
   CATEGORIA_LABEL,
 } from '../../../../shared/models/cliente-categoria.model';
 import { generarIniciales } from '../../../../core/auth/user.model';
+import { ROL_LABEL } from '../../../../core/auth/roles';
 import { calcularEdad } from '../../../../core/api/edad';
 import { listaExtra, textoExtra } from '../../../../core/api/datos-extra';
 import { mensajeDeError } from '../../../../core/api/http-error';
@@ -44,7 +45,6 @@ function soloDigitos(telefono: string): string {
  */
 @Component({
   selector: 'app-conversacion-sidebar',
-  standalone: true,
   imports: [
     AvatarComponent,
     BadgeComponent,
@@ -61,6 +61,8 @@ export class ConversacionSidebarComponent {
   private readonly toast = inject(ToastService);
 
   /* ── Helpers visuales ──────────────────────────────────────────── */
+  /** Nunca comparar `rol === 'ADMIN'` a mano en la plantilla (deja fuera a SUPER_ADMIN). */
+  protected readonly rolLabel = ROL_LABEL;
   protected readonly categoriaLabel = CATEGORIA_LABEL;
   protected readonly categoriaBadge = CATEGORIA_BADGE;
   protected readonly categoriaIcon = CATEGORIA_ICON;

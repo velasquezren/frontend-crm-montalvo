@@ -3,7 +3,7 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 
 import { MonedaService } from '../../../core/moneda/moneda.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { cubreRol } from '../../../core/auth/roles';
+import { cubreRol, ROL_LABEL } from '../../../core/auth/roles';
 import { ToastContainerComponent } from '../../../core/toast/toast-container.component';
 import { ModoInmersivoService } from '../../../core/ui/modo-inmersivo.service';
 import { AvatarComponent } from '../avatar/avatar.component';
@@ -57,6 +57,8 @@ export class LayoutComponent {
 
   protected readonly user = this.authService.user;
   protected readonly isAdmin = this.authService.isAdmin;
+  /** Para la plantilla: nunca comparar `rol === 'ADMIN'` a mano (deja fuera a SUPER_ADMIN). */
+  protected readonly rolLabel = ROL_LABEL;
   /** En escritorio el sidebar arranca abierto (240px) y el workspace se adapta fluidamente.
    *  En móvil arranca cerrado como drawer. */
   protected readonly sidebarExpanded = signal(

@@ -15,7 +15,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InputComponent } from '../../shared/components/input/input.component';
 import { ToastService } from '../../core/toast/toast.service';
 import { IconName } from '../../shared/components/icon/icon.component';
-import { ROL_LABEL } from '../../core/auth/roles';
+import { cubreRol, ROL_LABEL } from '../../core/auth/roles';
 import { RolUsuario } from '../../core/auth/user.model';
 import { Agente, CreateAgentePayload } from './agente.model';
 import { AgentesService } from './agentes.service';
@@ -80,6 +80,8 @@ export class AgentesPage {
 
   /** Etiquetas de rol — vienen de core/auth/roles.ts, no se redefinen aquí. */
   protected readonly rolLabel = ROL_LABEL;
+  /** Para la plantilla: nunca comparar `rol === 'ADMIN'` a mano (deja fuera a SUPER_ADMIN). */
+  protected readonly cubreRol = cubreRol;
 
   /* ── Datos del Servidor ────────────────────────────────────────── */
   protected readonly agentes = httpResource<Agente[]>(
