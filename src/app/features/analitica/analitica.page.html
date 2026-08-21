@@ -54,8 +54,6 @@
   <!-- ══ 1. Cifras del mes (KPI Cards) ══ -->
   <section class="grid-kpis-modern">
     <app-kpi-card
-      style="--indice: 0"
-      class="aparecer"
       label="Facturado"
       [valor]="a.resumen.montoVendido | moneda"
       icon="wallet"
@@ -65,16 +63,12 @@
       [pie]="(comparativaMoM() ? (comparativaMoM()!.facturadoDiff + ' vs ' + comparativaMoM()!.nombrePrevio + ' · ') : '') + a.resumen.filasComisionables + ' ventas'" />
 
     <app-kpi-card
-      style="--indice: 1"
-      class="aparecer"
       label="Base de cálculo"
       [valor]="a.resumen.baseCalculo | moneda"
       icon="activity"
       [pie]="'tras descontar ' + (a.resumen.impuestosDescontados | moneda) + ' de impuestos'" />
 
     <app-kpi-card
-      style="--indice: 2"
-      class="aparecer"
       label="Comisión total"
       [valor]="a.resumen.comisionTotalUsd | moneda"
       icon="trending-up"
@@ -83,16 +77,12 @@
       [pie]="(comparativaMoM() ? (comparativaMoM()!.comisionDiff + ' vs ' + comparativaMoM()!.nombrePrevio + ' · ') : '') + (a.resumen.comisionTotalBob | moneda:'BOB')" />
 
     <app-kpi-card
-      style="--indice: 3"
-      class="aparecer"
       label="Ticket promedio"
       [valor]="a.resumen.ticketPromedio | moneda"
       icon="shopping-bag"
       [pie]="(comparativaMoM() ? (comparativaMoM()!.ticketDiff + ' vs ' + comparativaMoM()!.nombrePrevio + ' · ') : '') + 'mayor ' + (a.resumen.ventaMayor | moneda)" />
 
     <app-kpi-card
-      style="--indice: 4"
-      class="aparecer"
       label="Pacientes atendidos"
       [valor]="a.resumen.pacientesUnicos"
       icon="users"
@@ -101,8 +91,6 @@
     <!-- El tono salta a `critical` (negro) solo si hay filas fuera del cálculo:
          un cero no es una alarma. -->
     <app-kpi-card
-      style="--indice: 5"
-      class="aparecer"
       label="Excluidas del cálculo"
       [valor]="a.resumen.filasExcluidas"
       icon="file-x"
@@ -114,7 +102,7 @@
 
   <!-- ══ 2. Reparto de la comisión por tipo ══ -->
   @if (liquidacionLista()) {
-    <section style="--indice: 0" class="aparecer panel">
+    <section class="panel">
       <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div>
           <h3 class="titulo-seccion">Comisión por tipo</h3>
@@ -190,14 +178,14 @@
     <section class="panel aviso-sin-calcular">
       <app-icon name="alert-circle" [size]="18" class="shrink-0 text-critical" />
       <span>
-        Este mes está importado pero <strong>todavía no se ha calculated</strong>. Las cifras de venta
+        Este mes está importado pero <strong>todavía no se ha calculado</strong>. Las cifras de venta
         ya son reales; las comisiones aparecerán al pulsar «Calcular planilla».
       </span>
     </section>
   }
 
   <!-- ══ 3. Categorías de servicio (Split Panel: Dona + Tabla con Ordenamiento) ══ -->
-  <section style="--indice: 1" class="aparecer panel">
+  <section class="panel">
     <div class="mb-4">
       <h3 class="titulo-seccion">Categorías de servicio</h3>
       <p class="subtitulo-seccion">Peso y distribución de cada categoría en la facturación del mes (Haz clic en los encabezados para ordenar)</p>
@@ -269,7 +257,7 @@
 
   <!-- ══ 4. Evolución del mes (@defer on viewport con altura exacta de 240px) ══ -->
   @defer (on viewport) {
-    <section style="--indice: 2" class="aparecer panel">
+    <section class="panel">
       <app-bar-chart
         title="Evolución diaria"
         subtitle="Facturación acumulada por día del mes"
@@ -287,7 +275,7 @@
   <!-- ══ 5. Canal y unidad de negocio (@defer on viewport con altura exacta de 200px) ══ -->
   @defer (on viewport) {
     <div class="grid-dos-equitativo">
-      <section style="--indice: 3" class="aparecer panel">
+      <section class="panel">
         <app-donut-chart
           title="Canal de venta"
           subtitle="Empresa vs. gestión propia de la vendedora"
@@ -295,7 +283,7 @@
           origenMoneda="USD"
           [items]="serieCanal()" />
       </section>
-      <section style="--indice: 4" class="aparecer panel">
+      <section class="panel">
         <app-donut-chart
           title="Unidad de negocio"
           subtitle="Maternidad, Reproducción Asistida y Varios"
@@ -313,7 +301,7 @@
 
   @defer (on viewport) {
     <div class="grid-dos-equitativo">
-      <section style="--indice: 5" class="aparecer panel">
+      <section class="panel">
         <app-bar-chart
           title="Módulo de origen"
           subtitle="De qué parte de FileMaker viene cada venta"
@@ -321,7 +309,7 @@
           origenMoneda="USD"
           [items]="serieModulo()" />
       </section>
-      <section style="--indice: 6" class="aparecer panel">
+      <section class="panel">
         @if (serieNivel().length > 0) {
           <app-bar-chart
             title="Nivel de plan"
@@ -345,7 +333,7 @@
 
   <!-- ══ 6. Rankings con Ordenamiento Interactivo ══ -->
   <div class="grid-dos-equitativo">
-    <section style="--indice: 7" class="aparecer panel">
+    <section class="panel">
       <div class="flex items-center justify-between mb-2">
         <!-- Ver la nota del Dashboard: allí el ranking sale de las ventas del
              CRM y aquí de lo facturado en el Excel. Son cosas distintas. -->
@@ -402,7 +390,7 @@
       </app-table>
     </section>
 
-    <section style="--indice: 8" class="aparecer panel">
+    <section class="panel">
       <div class="flex items-center justify-between mb-2">
         <!-- El alcance va en el título a propósito: hay otra tabla de médicos en
              Historial de Servicios, con toda la base y ficha por médico. Esta es
