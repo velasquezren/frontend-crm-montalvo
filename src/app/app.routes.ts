@@ -108,8 +108,9 @@ export const routes: Routes = [
         pathMatch: 'full',
       },
       {
+        /* Redirección histórica hacia el hub unificado de finanzas */
         path: 'comisiones',
-        redirectTo: 'desempeno-agentes',
+        redirectTo: 'finanzas',
         pathMatch: 'full',
       },
       {

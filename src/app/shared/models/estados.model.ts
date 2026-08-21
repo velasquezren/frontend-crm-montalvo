@@ -1,7 +1,7 @@
 import { BadgeVariant } from '../components/badge/badge.component';
-import { EstadoComision, EstadoLead, EstadoVenta } from '../../core/api/db-enums';
+import { EstadoLead, EstadoVenta } from '../../core/api/db-enums';
 
-export type { EstadoComision, EstadoLead, EstadoVenta };
+export type { EstadoLead, EstadoVenta };
 
 /* ── Leads ─────────────────────────────────────────────────────── */
 export const ESTADO_LEAD_LABEL: Record<EstadoLead, string> = {
@@ -29,15 +29,4 @@ export const ESTADO_VENTA_BADGE: Record<EstadoVenta, BadgeVariant> = {
   GANADA: 'success',
   EN_PROCESO: 'info',
   PERDIDA: 'critical',
-};
-
-/* ── Comisiones ────────────────────────────────────────────────── */
-export const ESTADO_COMISION_LABEL: Record<EstadoComision, string> = {
-  PENDIENTE: 'Pendiente',
-  PAGADA: 'Pagada',
-};
-
-export const ESTADO_COMISION_BADGE: Record<EstadoComision, BadgeVariant> = {
-  PENDIENTE: 'info',
-  PAGADA: 'success',
 };

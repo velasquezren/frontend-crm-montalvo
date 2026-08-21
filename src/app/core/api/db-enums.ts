@@ -24,8 +24,6 @@ export type EstadoVenta = 'GANADA' | 'EN_PROCESO' | 'PERDIDA';
 
 export type EstadoLead = 'NUEVO' | 'CONTACTADO' | 'CONVERTIDO' | 'PERDIDO';
 
-export type EstadoComision = 'PENDIENTE' | 'PAGADA';
-
 export type DireccionMensaje = 'ENTRANTE' | 'SALIENTE';
 
 export type TipoMensaje = 'TEXTO' | 'IMAGEN' | 'DOCUMENTO' | 'AUDIO' | 'VIDEO' | 'STICKER';

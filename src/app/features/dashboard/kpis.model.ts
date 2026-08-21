@@ -44,10 +44,6 @@ export interface KpiResumen {
     tasaConversion: number;
   }>;
   clientesPorCategoria: Array<{ categoria: string; cantidad: number }>;
-  comisiones: {
-    pendiente: number;
-    pagada: number;
-  };
   funnel?: {
     conversacionesTotal: number;
     leadsContactados: number;
