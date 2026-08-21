@@ -7,42 +7,9 @@
   margin-bottom: 20px;
 }
 
-.celda-sticky {
-  position: sticky;
-  left: 0;
-  background: var(--color-background);
-  z-index: 2;
-  border-right: 1px solid var(--color-border);
-  box-shadow: 2px 0 5px rgb(0 0 0 / 0.02);
-}
-
-tr:hover .celda-sticky {
-  background: var(--color-bg-workspace);
-}
-
-/* Fila que abre el perfil del médico. */
-.fila-clicable {
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.fila-clicable:hover,
-.fila-clicable:focus-visible {
-  background: var(--color-bg-light);
-  outline: none;
-}
-
-.badge-servicios {
-  display: inline-block;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-dark);
-  background: var(--color-bg-workspace);
-  border: 1px solid var(--color-border);
-  padding: 2px 8px;
-  border-radius: 9999px;
-  font-variant-numeric: tabular-nums;
-}
+/* .celda-sticky, .fila-clicable y .badge-servicios son utilidades globales
+   (styles.css) — las repetían esta hoja, servicios.page.css y
+   servicios-pacientes-tabla byte a byte. */
 
 .badge-pacientes {
   display: inline-block;

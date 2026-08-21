@@ -1,4 +1,4 @@
-<section style="--indice: 7" class="aparecer panel">
+<section class="panel">
   <div class="mb-6 max-w-md">
     <app-input
       label="Buscar paciente"
@@ -43,9 +43,16 @@
       </thead>
       <tbody>
         @for (p of pacientes().datos; track p.pac) {
+          <!-- Toda la fila abre el historial, con teclado igual que con clic
+               (mismo patrón que la tabla de médicos). -->
           <tr
             class="fila-clicable"
-            (click)="p.pac && abrirHistorial.emit(p.pac)">
+            [attr.tabindex]="p.pac ? 0 : null"
+            [attr.role]="p.pac ? 'button' : null"
+            [attr.aria-label]="p.pac ? 'Ver historial de ' + (p.paciente || p.pac) : null"
+            (click)="p.pac && abrirHistorial.emit(p.pac)"
+            (keydown.enter)="p.pac && abrirHistorial.emit(p.pac)"
+            (keydown.space)="p.pac && abrirHistorial.emit(p.pac)">
             <td class="text-left font-semibold text-text-dark celda-sticky">
               <div class="flex items-center gap-2.5 min-w-0">
                 <app-avatar

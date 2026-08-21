@@ -1,8 +1,6 @@
 <section class="grid-kpis-modern">
   @for (item of resumen(); track item.label; let i = $index) {
     <app-kpi-card
-      [style.--indice]="i"
-      class="aparecer"
       [label]="item.label"
       [valor]="item.valor"
       [icon]="item.icon"
@@ -14,8 +12,6 @@
   <!-- La cobertura lleva barra de progreso y una nota explicativa, así que
        proyecta su contenido dentro del átomo en vez de pasar solo `pie`. -->
   <app-kpi-card
-    [style.--indice]="4"
-    class="aparecer"
     label="Enlazado a ficha"
     [valor]="pctCobertura() + '%'"
     [icon]="pctCobertura() >= 80 ? 'check-circle' : 'alert-circle'"

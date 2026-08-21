@@ -250,11 +250,6 @@
   }
 }
 
-/* Entrada de contenido instantánea sin demoras artificiales */
-.aparecer {
-  display: block;
-}
-
 /* Rejilla de tarjetas de indicador. Global porque la usan cuatro vistas y es
    layout puro: la tarjeta en sí es el átomo <app-kpi-card>. */
 .grid-kpis-modern {
@@ -262,4 +257,52 @@
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 14px;
   margin-bottom: 20px;
+}
+
+/* ==========================================================================
+   Tablas de datos densas — Servicios
+   Global porque `servicios.page.css`, `servicios-pacientes-tabla` y
+   `servicios-medicos-tabla` la repetían las tres byte a byte: exactamente el
+   caso que describe crm-design-system ("si la misma clase la necesitan dos o
+   tres plantillas, es un átomo"). Cualquier tabla nueva de esta densidad la
+   hereda gratis en vez de volver a copiarla.
+   ========================================================================== */
+
+/* Primera columna fija mientras el resto de la tabla scrollea horizontal. */
+.celda-sticky {
+  position: sticky;
+  left: 0;
+  background: var(--color-background);
+  z-index: 2;
+  border-right: 1px solid var(--color-border);
+  box-shadow: 2px 0 5px rgb(0 0 0 / 0.02);
+}
+
+tr:hover .celda-sticky {
+  background: var(--color-bg-workspace);
+}
+
+/* Fila de tabla que abre un detalle al tocarla o activarla con teclado. */
+.fila-clicable {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.fila-clicable:hover,
+.fila-clicable:focus-visible {
+  background: var(--color-bg-light);
+  outline: none;
+}
+
+/* Cifra en píldora dentro de una celda — variante neutra por defecto. */
+.badge-servicios {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  background: var(--color-bg-workspace);
+  border: 1px solid var(--color-border);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-variant-numeric: tabular-nums;
 }

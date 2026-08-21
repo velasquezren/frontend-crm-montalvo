@@ -59,32 +59,12 @@
   font-variant-numeric: tabular-nums;
 }
 
-.celda-sticky {
-  position: sticky;
-  left: 0;
-  background: var(--color-background);
-  z-index: 2;
-  border-right: 1px solid var(--color-border);
-  box-shadow: 2px 0 5px rgb(0 0 0 / 0.02);
-}
-
-tr:hover .celda-sticky {
-  background: var(--color-bg-workspace);
-}
+/* .celda-sticky, .fila-clicable y .badge-servicios son ahora utilidades
+   globales (styles.css): las repetían byte a byte esta hoja y las dos tablas
+   de subcomponentes de este módulo. */
 
 .panel .grid-kpis-modern {
   margin-bottom: 20px;
-}
-
-.fila-ranking-medico {
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.fila-ranking-medico:hover,
-.fila-ranking-medico:focus-visible {
-  background: var(--color-bg-light);
-  outline: none;
 }
 
 .ranking-posicion {
@@ -101,18 +81,6 @@ tr:hover .celda-sticky {
 .ranking-top {
   color: var(--color-primary);
   font-weight: 800;
-}
-
-.badge-servicios {
-  display: inline-block;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-dark);
-  background: var(--color-bg-workspace);
-  border: 1px solid var(--color-border);
-  padding: 2px 8px;
-  border-radius: 9999px;
-  font-variant-numeric: tabular-nums;
 }
 
 .titulo-seccion + app-table,

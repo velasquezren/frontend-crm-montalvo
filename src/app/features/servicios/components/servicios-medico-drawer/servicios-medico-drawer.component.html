@@ -20,8 +20,6 @@
       @for (item of resumen(); track item.label; let i = $index) {
         <app-kpi-card
           [compacto]="true"
-          [style.--indice]="i"
-          class="aparecer"
           [label]="item.label"
           [valor]="item.valor"
           [icon]="item.icon"
