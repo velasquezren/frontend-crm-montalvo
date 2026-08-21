@@ -54,7 +54,6 @@ const TABS: readonly TabConfig[] = [
  */
 @Component({
   selector: 'app-finanzas',
-  standalone: true,
   imports: [
     PageHeaderComponent,
     IconComponent,

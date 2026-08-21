@@ -59,7 +59,6 @@ export function formatearUsd(valor: number | string): string {
  */
 @Pipe({
   name: 'moneda',
-  standalone: true,
   pure: false,
 })
 export class MonedaPipe implements PipeTransform {

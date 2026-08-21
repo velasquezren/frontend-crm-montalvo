@@ -24,7 +24,6 @@ import { Pipe, PipeTransform } from '@angular/core';
  */
 @Pipe({
   name: 'whatsappMarkdown',
-  standalone: true,
 })
 export class WhatsAppMarkdownPipe implements PipeTransform {
   transform(value: string | null | undefined): string {

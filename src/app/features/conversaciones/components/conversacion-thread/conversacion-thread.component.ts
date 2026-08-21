@@ -34,7 +34,6 @@ function soloDigitos(telefono: string): string {
  */
 @Component({
   selector: 'app-conversacion-thread',
-  standalone: true,
   imports: [
     AvatarComponent,
     BadgeComponent,

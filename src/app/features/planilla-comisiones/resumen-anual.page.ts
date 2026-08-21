@@ -30,7 +30,6 @@ export type FiltroBonoResumen = 'TODAS' | 'CON_BONO' | 'SIN_BONO';
  */
 @Component({
   selector: 'app-resumen-anual',
-  standalone: true,
   imports: [
     DecimalPipe,
     MonedaPipe,

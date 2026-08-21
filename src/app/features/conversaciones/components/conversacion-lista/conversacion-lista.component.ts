@@ -22,7 +22,6 @@ import {
  */
 @Component({
   selector: 'app-conversacion-lista',
-  standalone: true,
   imports: [
     AvatarComponent,
     BadgeComponent,

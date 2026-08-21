@@ -35,7 +35,6 @@ import { DialogService } from '../dialog/dialog.service';
  */
 @Component({
   selector: 'app-image-viewer',
-  standalone: true,
   imports: [IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './image-viewer.component.html',

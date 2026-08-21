@@ -56,7 +56,6 @@ function tipoBase(mime: string): string {
  */
 @Component({
   selector: 'app-conversacion-composer',
-  standalone: true,
   imports: [
     RouterLink,
     ButtonComponent,

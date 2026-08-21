@@ -54,7 +54,6 @@ export function debeRefrescar(ticks: number, conectado: boolean, oculto: boolean
 
 @Component({
   selector: 'app-conversaciones',
-  standalone: true,
   imports: [
     ConversacionListaComponent,
     ConversacionThreadComponent,
