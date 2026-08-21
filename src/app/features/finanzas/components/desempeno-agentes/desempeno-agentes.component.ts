@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 
 import { RespuestaPaginada } from '../../../../core/api/pagination.model';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -77,6 +77,9 @@ interface VentasConCanales extends RespuestaPaginada<VentaImportada> {
   styleUrl: './desempeno-agentes.component.css',
 })
 export class DesempenoAgentesComponent {
+  /** Oculta su propio `<app-page-header>` cuando vive dentro del hub de Finanzas. */
+  readonly embedded = input(false);
+
   private readonly service = inject(PlanillaComisionesService);
 
   protected readonly periodoSeleccionado = signal<string | null>(null);

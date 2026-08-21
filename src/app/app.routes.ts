@@ -92,9 +92,15 @@ export const routes: Routes = [
           ),
       },
       {
+        /* Hub unificado: Liquidación + Desempeño + Analítica + Anual en pestañas
+           con retención de estado instantánea (ver crm-finanzas). Las cuatro
+           rutas de abajo (planilla, desempeno-agentes, analitica, resumen-anual)
+           se quedan activas aparte para no romper enlaces guardados; el menú
+           lateral ahora solo lleva a este hub. */
         path: 'finanzas',
-        redirectTo: 'planilla',
-        pathMatch: 'full',
+        canActivate: [exigeRol('ADMIN')],
+        loadComponent: () =>
+          import('./features/finanzas/finanzas.page').then(m => m.FinanzasPage),
       },
       {
         path: 'reportes',

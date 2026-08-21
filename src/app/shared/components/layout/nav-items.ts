@@ -31,10 +31,11 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     titulo: 'Ventas & Finanzas',
     items: [
       { path: '/ventas', label: 'Ventas', icon: 'shopping-bag' },
-      { path: '/planilla', label: 'Planilla de Liquidación', icon: 'file-text', rolMinimo: 'ADMIN' },
-      { path: '/desempeno-agentes', label: 'Desempeño de Agentes', icon: 'users', rolMinimo: 'ADMIN' },
-      { path: '/analitica', label: 'Analítica de Facturación', icon: 'bar-chart', rolMinimo: 'ADMIN' },
-      { path: '/resumen-anual', label: 'Resumen Anual', icon: 'trending-up', rolMinimo: 'ADMIN' },
+      /* Hub unificado: Liquidación, Desempeño, Analítica y Resumen Anual en
+         pestañas (features/finanzas/finanzas.page.ts). Las cuatro rutas
+         siguen vivas por separado para enlaces guardados, pero el menú ya
+         solo lleva a este único ítem. */
+      { path: '/finanzas', label: 'Finanzas & Comisiones', icon: 'wallet', rolMinimo: 'ADMIN' },
     ],
   },
   {
