@@ -8,6 +8,8 @@ import { AvatarComponent } from '../../shared/components/avatar/avatar.component
 import { BadgeComponent, BadgeVariant } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { CardComponent } from '../../shared/components/card/card.component';
+import { ChartItem } from '../../shared/components/charts/bar-chart.component';
+import { DonutChartComponent } from '../../shared/components/charts/donut-chart.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { IconComponent, IconName } from '../../shared/components/icon/icon.component';
@@ -41,14 +43,11 @@ interface FunnelStage {
 export interface CanalConversion {
   readonly origen: string;
   readonly nombre: string;
-  readonly nombreCorto: string;
   readonly leads: number;
   readonly convertidos: number;
   readonly conversion: number;
   readonly color: string;
   readonly porcentajeTotal: number;
-  readonly dashArray: string;
-  readonly dashOffset: number;
 }
 
 interface AgenteRanking {
@@ -70,18 +69,6 @@ const ORIGEN_NOMBRE: Record<string, string> = {
   INSTAGRAM_MENSAJE: 'Instagram Mensajes',
   PRESENCIAL: 'Ventanilla Presencial',
   IMPORTACION: 'Importación Histórica',
-};
-
-const ORIGEN_CORTO: Record<string, string> = {
-  WHATSAPP_DIRECTO: 'WhatsApp',
-  FACEBOOK_LEAD_AD: 'Facebook',
-  FACEBOOK_COMENTARIO: 'FB Coment.',
-  FACEBOOK_MENSAJE: 'FB Mensajes',
-  INSTAGRAM_LEAD_AD: 'Instagram',
-  INSTAGRAM_COMENTARIO: 'IG Coment.',
-  INSTAGRAM_MENSAJE: 'IG Mensajes',
-  PRESENCIAL: 'Presencial',
-  IMPORTACION: 'Histórico',
 };
 
 const ORIGEN_COLOR: Record<string, string> = {
@@ -108,6 +95,7 @@ const ORIGEN_COLOR: Record<string, string> = {
     CardComponent,
     BadgeComponent,
     ButtonComponent,
+    DonutChartComponent,
     IconComponent,
     AvatarComponent,
     EmptyStateComponent,
@@ -131,7 +119,6 @@ export class DashboardPage {
   /* ── Estado de UI del gráfico de canales ────────────────────────── */
   protected readonly vistaGrafico = signal<'DONUT' | 'BARRAS'>('DONUT');
   protected readonly incluirImportacion = signal<boolean>(false);
-  protected readonly hoveredCanal = signal<string | null>(null);
 
   protected readonly firstName = computed(
     () => this.authService.user()?.nombre.split(' ')[0] ?? '',
@@ -295,42 +282,36 @@ export class DashboardPage {
     }
 
     const totalLeads = lista.reduce((s, l) => s + l.cantidad, 0);
-    const C = 2 * Math.PI * 38; // ~238.761 (Radio = 38)
-    let accFrac = 0;
 
-    return lista.map(l => {
-      const frac = totalLeads > 0 ? l.cantidad / totalLeads : 0;
-      const porcentajeTotal = totalLeads > 0 ? Math.round(frac * 100) : 0;
-      const strokeLen = (frac * C).toFixed(2);
-      const dashArray = `${strokeLen} ${C.toFixed(2)}`;
-      const dashOffset = -(accFrac * C);
-
-      accFrac += frac;
-
-      return {
-        origen: l.origen,
-        nombre: ORIGEN_NOMBRE[l.origen] || l.origen,
-        nombreCorto: ORIGEN_CORTO[l.origen] || l.origen,
-        leads: l.cantidad,
-        convertidos: l.convertidos,
-        conversion: l.tasaConversion,
-        color: ORIGEN_COLOR[l.origen] || '#006156',
-        porcentajeTotal,
-        dashArray,
-        dashOffset,
-      };
-    });
+    return lista.map(l => ({
+      origen: l.origen,
+      nombre: ORIGEN_NOMBRE[l.origen] || l.origen,
+      leads: l.cantidad,
+      convertidos: l.convertidos,
+      conversion: l.tasaConversion,
+      color: ORIGEN_COLOR[l.origen] || '#006156',
+      porcentajeTotal: totalLeads > 0 ? Math.round((l.cantidad / totalLeads) * 100) : 0,
+    }));
   });
 
   protected readonly totalLeadsCanales = computed(() =>
     this.canales().reduce((s, c) => s + c.leads, 0),
   );
 
-  protected readonly canalActivoInfo = computed(() => {
-    const h = this.hoveredCanal();
-    if (!h) return null;
-    return this.canales().find(c => c.origen === h) ?? null;
-  });
+  /**
+   * Los mismos canales, en la forma que consume `<app-donut-chart>`.
+   * `id: origen` es la clave real de negocio; `label: nombre` es lo que se
+   * lee — segmentClick emite la primera, nunca el nombre traducido.
+   */
+  protected readonly canalesChartItems = computed<ChartItem[]>(() =>
+    this.canales().map(c => ({
+      id: c.origen,
+      label: c.nombre,
+      value: c.leads,
+      color: c.color,
+      sublabel: `${c.conversion}% conversión`,
+    })),
+  );
 
   protected readonly topAgentes = computed<AgenteRanking[]>(() => {
     const res = this.kpiData.value();

@@ -168,92 +168,14 @@
 
         @if (canales().length > 0) {
           @if (vistaGrafico() === 'DONUT') {
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-              <div class="relative flex items-center justify-center p-2">
-                <svg class="w-56 h-56 transform -rotate-90 drop-shadow-subtle" viewBox="0 0 100 100">
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="38"
-                    fill="none"
-                    stroke="#F1F5F9"
-                    stroke-width="14" />
-
-                  @for (canal of canales(); track canal.origen) {
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="38"
-                      fill="none"
-                      [attr.stroke]="canal.color"
-                      stroke-width="14"
-                      [attr.stroke-dasharray]="canal.dashArray"
-                      [attr.stroke-dashoffset]="canal.dashOffset"
-                      stroke-linecap="butt"
-                      class="transition-all duration-300 cursor-pointer hover:opacity-85"
-                      [class.opacity-40]="hoveredCanal() && hoveredCanal() !== canal.origen"
-                      (mouseenter)="hoveredCanal.set(canal.origen)"
-                      (mouseleave)="hoveredCanal.set(null)"
-                      (click)="navegarACanal(canal.origen)" />
-                  }
-                </svg>
-
-                <div class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none p-2">
-                  @if (canalActivoInfo(); as activo) {
-                    <span class="text-[11px] font-bold text-text-muted uppercase tracking-wider truncate max-w-[110px]">
-                      {{ activo.nombreCorto }}
-                    </span>
-                    <span class="text-3xl font-black text-text-dark leading-none my-1" [style.color]="activo.color">
-                      {{ activo.leads }}
-                    </span>
-                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-bg-light text-text-dark border border-border/60">
-                      {{ activo.porcentajeTotal }}% del total
-                    </span>
-                  } @else {
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-text-muted">
-                      Total Leads
-                    </span>
-                    <span class="text-3xl font-extrabold text-text-dark leading-none my-1">
-                      {{ totalLeadsCanales() }}
-                    </span>
-                    <span class="text-[10px] font-medium text-text-muted">
-                      {{ canales().length }} canal{{ canales().length === 1 ? '' : 'es' }}
-                    </span>
-                  }
-                </div>
-              </div>
-
-              <!-- Leyenda Lateral Interactiva -->
-              <div class="flex flex-col gap-2.5">
-                @for (canal of canales(); track canal.origen) {
-                  <div
-                    class="flex items-center justify-between p-2.5 rounded-xl border border-border/60 hover:border-primary/40 bg-bg-workspace/50 hover:bg-bg-workspace transition-all cursor-pointer group"
-                    [class.ring-1]="hoveredCanal() === canal.origen"
-                    [class.ring-primary]="hoveredCanal() === canal.origen"
-                    (mouseenter)="hoveredCanal.set(canal.origen)"
-                    (mouseleave)="hoveredCanal.set(null)"
-                    (click)="navegarACanal(canal.origen)">
-                    <div class="flex items-center gap-2.5 min-w-0">
-                      <span class="w-3.5 h-3.5 rounded-full shrink-0 shadow-subtle" [style.background-color]="canal.color"></span>
-                      <div class="min-w-0">
-                        <p class="text-xs font-bold text-text-dark group-hover:text-primary transition-colors truncate">
-                          {{ canal.nombre }}
-                        </p>
-                        <p class="text-[10px] text-text-muted">
-                          {{ canal.leads }} leads ({{ canal.porcentajeTotal }}%)
-                        </p>
-                      </div>
-                    </div>
-                    <div class="text-right shrink-0 flex items-center gap-1.5">
-                      <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary/10 text-primary">
-                        {{ canal.conversion }}% conv.
-                      </span>
-                      <app-icon name="chevron-left" [size]="12" class="rotate-180 text-text-muted group-hover:text-primary transition-colors" />
-                    </div>
-                  </div>
-                }
-              </div>
-            </div>
+            <!-- Mismo átomo que usan Servicios y Analítica: antes esta vista
+                 reimplementaba su propio SVG de dona a mano, con un gris fuera
+                 de la paleta cerrada (#F1F5F9) que ningún validador veía. -->
+            <app-donut-chart
+              etiquetaTotal="leads"
+              formatType="number"
+              [items]="canalesChartItems()"
+              (segmentClick)="navegarACanal($event)" />
           } @else {
             <div class="flex flex-col gap-3">
               @for (canal of canales(); track canal.origen) {
