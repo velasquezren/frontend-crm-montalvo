@@ -275,6 +275,16 @@ const REGLAS = [
      esmeralda y un ámbar —#6366f1, #10b981, #f59e0b— en layout.component.ts sin
      que nada avisara, justo los tonos que la paleta excluye a propósito. */
   { clave: 'hex', patron: HEX_AJENO, ext: /\.ts$/, que: 'hexadecimal(es) fuera de la paleta cerrada' },
+  /* Mismo hueco que el de arriba, pero con clases de utilidad en vez de hex:
+     un `computed()` que arma `'bg-amber-100 text-amber-800 …'` como string y lo
+     mete por `[class]` renderiza el color igual que si estuviera escrito en el
+     .html, pero el regex de `color`/`sombra` solo miraba .html y no lo veía.
+     Así vivieron sin que nada avisara un medallero ámbar/gris en
+     dashboard.page.ts y cuatro variantes de toast en semáforo completo
+     (esmeralda/rosa/ámbar/celeste) en toast-container.component.ts — el
+     componente que más se ve en toda la app. */
+  { clave: 'color', patron: COLOR_AJENO, ext: /\.ts$/, que: 'color(es) fuera de la paleta cerrada' },
+  { clave: 'sombra', patron: SOMBRA_AJENA, ext: /\.ts$/, que: 'sombra(s) fuera de shadow-subtle/lifted' },
 ];
 
 function verificarCodigo() {

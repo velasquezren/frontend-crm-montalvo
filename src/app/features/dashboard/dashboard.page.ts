@@ -339,10 +339,14 @@ export class DashboardPage {
     const maxMonto = Math.max(...res.ventas.porAgente.map(a => a.monto), 1);
 
     return res.ventas.porAgente.map((a, i) => {
+      /* Medallero 1-2-3 con la paleta cerrada: nada de oro/plata/bronce
+         (ámbar/gris) — CRM_MANIFESTO.md §3.4 los excluye a propósito. La
+         jerarquía se lee por intensidad del mismo verde de marca: sólido,
+         sólido secundario, y suave. */
       let rankBadge: { label: string; colorClass: string } | undefined;
-      if (i === 0) rankBadge = { label: '#1', colorClass: 'bg-amber-100 text-amber-800 border-amber-300' };
-      else if (i === 1) rankBadge = { label: '#2', colorClass: 'bg-slate-100 text-slate-700 border-slate-300' };
-      else if (i === 2) rankBadge = { label: '#3', colorClass: 'bg-amber-700/10 text-amber-900 border-amber-400/30' };
+      if (i === 0) rankBadge = { label: '#1', colorClass: 'bg-primary text-white border-primary' };
+      else if (i === 1) rankBadge = { label: '#2', colorClass: 'bg-secondary text-white border-secondary' };
+      else if (i === 2) rankBadge = { label: '#3', colorClass: 'bg-primary/10 text-primary border-primary/30' };
 
       return {
         nombre: a.agente,

@@ -8,11 +8,10 @@ import { MonedaService, MonedaVisualizacion } from '../../../core/moneda/moneda.
  */
 @Component({
   selector: 'app-moneda-toggle',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
-      class="inline-flex items-center p-0.5 rounded-xl bg-bg-light/90 border border-border/80 shadow-xs select-none"
+      class="inline-flex items-center p-0.5 rounded-xl bg-bg-light/90 border border-border/80 shadow-subtle select-none"
       [class.text-xs]="size() === 'sm'"
       [class.text-sm]="size() === 'md'"
       role="group"

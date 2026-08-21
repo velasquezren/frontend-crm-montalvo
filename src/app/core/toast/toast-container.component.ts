@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 
+import { ButtonComponent } from '../../shared/components/button/button.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { ToastService } from './toast.service';
 
@@ -10,7 +11,7 @@ import { ToastService } from './toast.service';
  */
 @Component({
   selector: 'app-toast-container',
-  imports: [IconComponent],
+  imports: [IconComponent, ButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="fixed top-4 right-4 sm:top-5 sm:right-5 w-[calc(100%-2rem)] sm:w-auto sm:max-w-sm z-50 flex flex-col gap-2.5 pointer-events-none">
@@ -34,12 +35,9 @@ import { ToastService } from './toast.service';
               {{ toast.message }}
             </p>
             @if (toast.actionLabel && toast.onAction) {
-              <button
-                type="button"
-                (click)="toast.onAction(); dismiss(toast.id)"
-                class="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-dark text-white text-xs font-semibold rounded-xl transition-all shadow-xs hover:shadow-md cursor-pointer active:scale-95">
-                <span>{{ toast.actionLabel }}</span>
-              </button>
+              <app-button size="sm" class="mt-2.5 inline-block" (clicked)="toast.onAction(); dismiss(toast.id)">
+                {{ toast.actionLabel }}
+              </app-button>
             }
           </div>
 
@@ -67,13 +65,17 @@ export class ToastContainerComponent {
   getIconBg(type: string): string {
     switch (type) {
       case 'success':
-        return 'bg-emerald-50 text-emerald-600 border-emerald-200/60';
+        return 'bg-success-bg text-success border-success/20';
       case 'error':
-        return 'bg-rose-50 text-rose-600 border-rose-200/60';
       case 'warning':
-        return 'bg-amber-50 text-amber-600 border-amber-200/60';
+        /* La paleta cerrada no tiene un quinto tono de alarma — nada de
+           ámbar, es deliberado (CRM_MANIFESTO.md §3.4). "Warning" no es una
+           variante propia ni en <app-badge>: error y warning comparten el
+           tono crítico (negro), y el ícono (x-circle / alert-circle) es lo
+           que los distingue. */
+        return 'bg-critical-bg text-critical border-critical/20';
       default:
-        return 'bg-sky-50 text-sky-600 border-sky-200/60';
+        return 'bg-info-bg text-info border-info/20';
     }
   }
 
