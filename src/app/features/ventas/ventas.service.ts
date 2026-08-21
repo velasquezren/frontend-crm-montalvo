@@ -19,6 +19,9 @@ export interface CrearVentaDto {
   medico?: string;
   modulo?: string;
   notas?: string;
+  /** Lead que originó esta venta, si el agente lo indicó. */
+  leadId?: string;
+  motivoPerdida?: string;
 }
 
 export interface ComprobanteSubido {
@@ -52,6 +55,15 @@ export class VentasService {
 
   crear(venta: CrearVentaDto): Promise<Venta> {
     return this.api.post<Venta>('/ventas', venta);
+  }
+
+  /**
+   * Cambio de estado (solo ADMIN, el backend lo exige). `motivoPerdida` es
+   * obligatorio cuando `estado = 'PERDIDA'` — la página abre un modal a
+   * pedirlo antes de llamar acá.
+   */
+  cambiarEstado(id: string, estado: EstadoVenta, motivoPerdida?: string): Promise<Venta> {
+    return this.api.patch<Venta>(`/ventas/${id}/estado`, { estado, motivoPerdida });
   }
 
   subirComprobante(file: File): Promise<ComprobanteSubido> {

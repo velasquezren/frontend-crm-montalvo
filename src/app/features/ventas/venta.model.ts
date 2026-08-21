@@ -1,4 +1,5 @@
 import { EstadoVenta } from '../../shared/models/estados.model';
+import { OrigenLeadApi } from '../leads/lead.model';
 
 export type { EstadoVenta };
 
@@ -29,6 +30,11 @@ export interface Venta {
   readonly cliente: { id: string; nombre: string; telefono: string; pac?: string | null };
   readonly agente: { id: string; nombre: string };
   readonly comision: { id: string; monto: string; estado: string } | null;
+  /** Lead que originó esta venta, si el agente lo indicó al registrarla. */
+  readonly leadId?: string | null;
+  readonly lead?: { id: string; origen: OrigenLeadApi; anuncioId?: string | null } | null;
+  /** Solo tiene valor si `estado = 'PERDIDA'`; se limpia al volver a moverse. */
+  readonly motivoPerdida?: string | null;
   readonly createdAt: string;
 }
 

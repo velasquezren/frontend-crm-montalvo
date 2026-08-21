@@ -14,6 +14,8 @@ export interface CrearLeadPresencialDto {
 export interface FiltroLeads {
   origen?: OrigenLeadApi;
   estado?: EstadoLead;
+  /** Leads de un cliente puntual — usado por el selector de "lead de origen" al registrar una venta. */
+  clienteId?: string;
   /** Incluir el histórico importado de FileMaker (excluido por defecto). */
   incluirImportacion?: boolean;
   pagina?: number;
@@ -42,6 +44,7 @@ export class LeadsService {
     return this.api.request('/leads', {
       origen: filtro.origen,
       estado: filtro.estado,
+      clienteId: filtro.clienteId,
       incluirImportacion: filtro.incluirImportacion ? 'true' : undefined,
       pagina: filtro.pagina,
       limite: filtro.limite,
@@ -55,9 +58,13 @@ export class LeadsService {
     });
   }
 
-  /** Mueve una tarjeta del kanban a otra columna. */
-  cambiarEstado(id: string, estado: EstadoLead): Promise<Lead> {
-    return this.api.patch<Lead>(`/leads/${id}/estado`, { estado });
+  /**
+   * Mueve una tarjeta del kanban a otra columna. `motivoPerdida` es
+   * obligatorio en el backend cuando `estado = 'PERDIDO'` — la página abre un
+   * modal a pedirlo antes de llamar acá.
+   */
+  cambiarEstado(id: string, estado: EstadoLead, motivoPerdida?: string): Promise<Lead> {
+    return this.api.patch<Lead>(`/leads/${id}/estado`, { estado, motivoPerdida });
   }
 
   crearPresencial(datos: CrearLeadPresencialDto): Promise<Lead> {

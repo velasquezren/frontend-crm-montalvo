@@ -9,6 +9,7 @@ import {
   OnDestroy,
   signal,
   TemplateRef,
+  viewChild,
   ViewContainerRef,
 } from '@angular/core';
 import { OverlayRef } from '@angular/cdk/overlay';
@@ -24,10 +25,12 @@ import { generarIniciales } from '../../core/auth/user.model';
 import { ToastService } from '../../core/toast/toast.service';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
+import { ButtonComponent } from '../../shared/components/button/button.component';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { InputComponent } from '../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
@@ -55,7 +58,9 @@ type FiltroOrigen = OrigenLeadApi | 'TODOS';
     TableComponent,
     AvatarComponent,
     BadgeComponent,
+    ButtonComponent,
     EmptyStateComponent,
+    InputComponent,
     LoadingSkeletonComponent,
     IconComponent,
     PaginatorComponent,
@@ -75,9 +80,19 @@ export class LeadsPage implements OnDestroy {
   private readonly vcr = inject(ViewContainerRef);
 
   private activeOverlayRef?: OverlayRef;
+  protected readonly modalMotivoPerdida = viewChild<TemplateRef<unknown>>('modalMotivoPerdida');
 
   protected readonly leadSeleccionado = signal<Lead | null>(null);
   protected readonly estadosDisponibles: readonly EstadoLead[] = ['NUEVO', 'CONTACTADO', 'CONVERTIDO', 'PERDIDO'];
+
+  /* ── Motivo de pérdida ─────────────────────────────────────────────
+     El backend exige motivo al marcar un lead PERDIDO (queda en AuditLog),
+     así que antes de llamar a cambiarEstado se pide con este modal — igual
+     criterio que "Quitar comisión" en la planilla de FileMaker. */
+  protected readonly leadParaPerder = signal<Lead | null>(null);
+  protected readonly motivoPerdidaTexto = signal('');
+  protected readonly guardandoMotivoPerdida = signal(false);
+  private onConfirmarMotivoPerdida?: (motivo: string) => void;
 
   ngOnDestroy(): void {
     this.activeOverlayRef?.dispose();
@@ -193,17 +208,31 @@ export class LeadsPage implements OnDestroy {
     this.activeOverlayRef = undefined;
   }
 
-  protected async cambiarEstadoLeadDirecto(nuevoEstado: EstadoLead): Promise<void> {
+  protected cambiarEstadoLeadDirecto(nuevoEstado: EstadoLead): void {
     const lead = this.leadSeleccionado();
     if (!lead || lead.estado === nuevoEstado) return;
 
+    if (nuevoEstado === 'PERDIDO') {
+      this.abrirMotivoPerdida(lead, motivo => this.aplicarCambioEstado(lead, nuevoEstado, motivo));
+      return;
+    }
+
+    void this.aplicarCambioEstado(lead, nuevoEstado);
+  }
+
+  /** Aplica el cambio en el estado local (optimista) y lo persiste. Único punto que llama al backend. */
+  private async aplicarCambioEstado(
+    lead: Lead,
+    nuevoEstado: EstadoLead,
+    motivoPerdida?: string,
+  ): Promise<void> {
     this.leadsLocales.update(lista =>
       lista.map((l: Lead) => (l.id === lead.id ? { ...l, estado: nuevoEstado } : l)),
     );
-    this.leadSeleccionado.update(l => (l ? { ...l, estado: nuevoEstado } : null));
+    this.leadSeleccionado.update(l => (l && l.id === lead.id ? { ...l, estado: nuevoEstado } : l));
 
     try {
-      await this.leadsService.cambiarEstado(lead.id, nuevoEstado);
+      await this.leadsService.cambiarEstado(lead.id, nuevoEstado, motivoPerdida);
       this.toastService.success(
         `Lead ${lead.cliente.nombre} actualizado a ${this.estadoLabel[nuevoEstado]}`,
         'Estado Actualizado',
@@ -216,6 +245,41 @@ export class LeadsPage implements OnDestroy {
       );
       this.leads.reload();
     }
+  }
+
+  /**
+   * Pide el motivo antes de marcar un lead PERDIDO — el backend lo exige y lo
+   * deja en AuditLog. Reutiliza el `activeOverlayRef` de la ficha: abrir este
+   * modal cierra la ficha si estaba abierta, igual que el resto de la página.
+   */
+  protected abrirMotivoPerdida(lead: Lead, onConfirmar: (motivo: string) => void): void {
+    const template = this.modalMotivoPerdida();
+    if (!template) return;
+
+    this.leadParaPerder.set(lead);
+    this.motivoPerdidaTexto.set('');
+    this.onConfirmarMotivoPerdida = onConfirmar;
+
+    this.activeOverlayRef?.dispose();
+    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
+      onClose: () => this.cerrarMotivoPerdida(),
+    });
+  }
+
+  protected cerrarMotivoPerdida(): void {
+    this.leadParaPerder.set(null);
+    this.onConfirmarMotivoPerdida = undefined;
+    this.activeOverlayRef?.dispose();
+    this.activeOverlayRef = undefined;
+  }
+
+  protected confirmarMotivoPerdida(): void {
+    const motivo = this.motivoPerdidaTexto().trim();
+    if (motivo.length < 3) return;
+
+    const confirmar = this.onConfirmarMotivoPerdida;
+    this.cerrarMotivoPerdida();
+    confirmar?.(motivo);
   }
 
   protected drop(event: CdkDragDrop<Lead[], Lead[], Lead>): void {
@@ -240,28 +304,42 @@ export class LeadsPage implements OnDestroy {
       const item = event.previousContainer.data[event.previousIndex];
       const targetColumnId = event.container.id as EstadoLead;
 
-      // 1. Actualización optimista pura sustituyendo la propiedad estado en la señal escribible linkedSignal
-      this.leadsLocales.update(lista =>
-        lista.map((l: Lead) => (l.id === item.id ? { ...l, estado: targetColumnId } : l)),
-      );
+      /* Soltar en "Perdido" pide el motivo antes de mover nada: como las
+         columnas del Kanban se derivan de `leadsLocales` con `computed()`,
+         no tocar la señal todavía significa que la tarjeta ni se mueve
+         visualmente hasta que se confirme el modal — no hace falta "revertir"
+         un movimiento que nunca se aplicó. */
+      if (targetColumnId === 'PERDIDO') {
+        this.abrirMotivoPerdida(item, motivo => this.moverLeadEnPipeline(item, targetColumnId, motivo));
+        return;
+      }
 
-      // 2. Persistir en el Backend
-      this.leadsService
-        .cambiarEstado(item.id, targetColumnId)
-        .then(() => {
-          this.toastService.success(
-            `Lead ${item.cliente.nombre} movido a ${this.estadoLabel[targetColumnId]}`,
-            'Pipeline Actualizado',
-          );
-          this.resumen.reload();
-        })
-        .catch((err: unknown) => {
-          this.toastService.error(
-            mensajeDeError(err, 'Ocurrió un error al actualizar el estado del lead.'),
-            'Error al Mover',
-          );
-          this.leads.reload(); // Revertir cambios recargando
-        });
+      this.moverLeadEnPipeline(item, targetColumnId);
     }
+  }
+
+  private moverLeadEnPipeline(item: Lead, targetColumnId: EstadoLead, motivoPerdida?: string): void {
+    // 1. Actualización optimista pura sustituyendo la propiedad estado en la señal escribible linkedSignal
+    this.leadsLocales.update(lista =>
+      lista.map((l: Lead) => (l.id === item.id ? { ...l, estado: targetColumnId } : l)),
+    );
+
+    // 2. Persistir en el Backend
+    this.leadsService
+      .cambiarEstado(item.id, targetColumnId, motivoPerdida)
+      .then(() => {
+        this.toastService.success(
+          `Lead ${item.cliente.nombre} movido a ${this.estadoLabel[targetColumnId]}`,
+          'Pipeline Actualizado',
+        );
+        this.resumen.reload();
+      })
+      .catch((err: unknown) => {
+        this.toastService.error(
+          mensajeDeError(err, 'Ocurrió un error al actualizar el estado del lead.'),
+          'Error al Mover',
+        );
+        this.leads.reload(); // Revertir cambios recargando
+      });
   }
 }

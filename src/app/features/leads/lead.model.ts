@@ -30,5 +30,7 @@ export interface Lead {
     readonly datosExtra?: DatosExtra | null;
   };
   readonly agente: { readonly id: string; readonly nombre: string } | null;
+  /** Solo tiene valor si `estado = 'PERDIDO'`; se limpia al volver a moverse. */
+  readonly motivoPerdida?: string | null;
   readonly createdAt: string;
 }

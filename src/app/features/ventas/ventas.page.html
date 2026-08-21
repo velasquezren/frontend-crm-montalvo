@@ -127,9 +127,47 @@
               <td class="text-text-muted text-xs whitespace-nowrap">{{ venta.agente.nombre }}</td>
               <td class="text-text-muted text-xs whitespace-nowrap">{{ venta.createdAt | date: 'dd/MM/yy HH:mm' }}</td>
               <td>
-                <app-badge [variant]="estadoBadge[venta.estado]">
-                  {{ estadoLabel[venta.estado] }}
-                </app-badge>
+                <div class="flex items-center gap-1.5">
+                  <span [title]="venta.estado === 'PERDIDA' ? venta.motivoPerdida : null">
+                    <app-badge [variant]="estadoBadge[venta.estado]">
+                      {{ estadoLabel[venta.estado] }}
+                    </app-badge>
+                  </span>
+                  @if (esAdmin()) {
+                    <div class="flex items-center gap-0.5">
+                      @if (venta.estado !== 'GANADA') {
+                        <button
+                          type="button"
+                          [disabled]="cambiandoEstado()"
+                          (click)="cambiarEstadoVenta(venta, 'GANADA')"
+                          title="Marcar ganada"
+                          class="w-6 h-6 rounded-lg flex items-center justify-center text-text-muted hover:text-success hover:bg-success-bg transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                          <app-icon name="check-circle" [size]="13" />
+                        </button>
+                      }
+                      @if (venta.estado !== 'EN_PROCESO') {
+                        <button
+                          type="button"
+                          [disabled]="cambiandoEstado()"
+                          (click)="cambiarEstadoVenta(venta, 'EN_PROCESO')"
+                          title="Marcar en proceso"
+                          class="w-6 h-6 rounded-lg flex items-center justify-center text-text-muted hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                          <app-icon name="clock" [size]="13" />
+                        </button>
+                      }
+                      @if (venta.estado !== 'PERDIDA') {
+                        <button
+                          type="button"
+                          [disabled]="cambiandoEstado()"
+                          (click)="cambiarEstadoVenta(venta, 'PERDIDA')"
+                          title="Marcar perdida"
+                          class="w-6 h-6 rounded-lg flex items-center justify-center text-text-muted hover:text-critical hover:bg-critical-bg transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                          <app-icon name="x-circle" [size]="13" />
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
               </td>
             </tr>
           }
@@ -242,6 +280,46 @@
             }
           }
         </div>
+
+        <!-- 1.5 Lead de origen (opcional) — de qué campaña/canal vino esta venta -->
+        @if (leadsAbiertosDelCliente().length > 0) {
+          <div class="space-y-1.5">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">
+              Lead de origen (opcional)
+            </label>
+            <div class="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                (click)="leadIdSeleccionado.set(null)"
+                class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer"
+                [class.bg-primary]="leadIdSeleccionado() === null"
+                [class.text-white]="leadIdSeleccionado() === null"
+                [class.border-primary]="leadIdSeleccionado() === null"
+                [class.bg-bg-workspace]="leadIdSeleccionado() !== null"
+                [class.text-text-dark]="leadIdSeleccionado() !== null"
+                [class.border-border]="leadIdSeleccionado() !== null">
+                Ninguno
+              </button>
+              @for (lead of leadsAbiertosDelCliente(); track lead.id) {
+                <button
+                  type="button"
+                  (click)="leadIdSeleccionado.set(lead.id)"
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer"
+                  [class.bg-primary]="leadIdSeleccionado() === lead.id"
+                  [class.text-white]="leadIdSeleccionado() === lead.id"
+                  [class.border-primary]="leadIdSeleccionado() === lead.id"
+                  [class.bg-bg-workspace]="leadIdSeleccionado() !== lead.id"
+                  [class.text-text-dark]="leadIdSeleccionado() !== lead.id"
+                  [class.border-border]="leadIdSeleccionado() !== lead.id">
+                  {{ origenLabel[lead.origen] }}
+                </button>
+              }
+            </div>
+            <p class="text-[11px] text-text-muted">
+              Vincula la venta a la campaña/canal que trajo a este cliente, en vez de asumir que todos sus leads abiertos se cerraron por igual.
+            </p>
+          </div>
+        }
 
         <!-- 2. Procedimiento / Tratamiento -->
         <div class="space-y-1.5">
@@ -401,6 +479,55 @@
         }
         <app-button variant="ghost" size="sm" (clicked)="cerrarLightbox()">Cerrar</app-button>
       </div>
+    </div>
+  </ng-template>
+
+  <!-- ── Modal Template: Motivo de pérdida (CDK Overlay) ──────────── -->
+  <ng-template #modalMotivoPerdidaTemplate>
+    <div class="bg-white rounded-2xl shadow-lifted border border-border max-w-sm w-full pointer-events-auto animate-modal-pop">
+      @if (ventaParaMotivo(); as v) {
+        <div class="flex items-center justify-between px-5 py-4 border-b border-border bg-bg-workspace/40">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-8 h-8 rounded-xl bg-critical-bg flex items-center justify-center text-critical shrink-0">
+              <app-icon name="x-circle" [size]="15" />
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-sm font-bold text-text-dark leading-tight truncate">Marcar venta como perdida</h3>
+              <p class="text-[11px] text-text-muted mt-0.5 truncate">{{ v.cliente.nombre }} · {{ v.producto }}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            (click)="cerrarMotivoPerdidaVenta()"
+            class="w-7 h-7 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
+            aria-label="Cerrar">
+            <app-icon name="x" [size]="14" />
+          </button>
+        </div>
+
+        <div class="p-5 space-y-1.5">
+          <app-input
+            label="Motivo (queda en el registro de auditoría)"
+            placeholder="Ej. Se fue con la competencia, no pudo pagar, canceló…"
+            [(value)]="motivoPerdidaTexto" />
+          <p class="text-[11px] text-text-muted">
+            Mínimo 3 caracteres. Sin motivo no se puede: dentro de tres meses nadie
+            sabría si fue un error o una decisión concreta.
+          </p>
+
+          <div class="flex justify-end gap-2 pt-3">
+            <app-button variant="ghost" size="sm" (clicked)="cerrarMotivoPerdidaVenta()">Cancelar</app-button>
+            <app-button
+              variant="primary"
+              size="sm"
+              [disabled]="motivoPerdidaTexto().trim().length < 3"
+              [loading]="cambiandoEstado()"
+              (clicked)="confirmarMotivoPerdidaVenta()">
+              Marcar perdida
+            </app-button>
+          </div>
+        </div>
+      }
     </div>
   </ng-template>
 

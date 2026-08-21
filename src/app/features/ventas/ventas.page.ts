@@ -17,9 +17,13 @@ import { OverlayRef } from '@angular/cdk/overlay';
 
 import { mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
+import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales } from '../../core/auth/user.model';
+import { ToastService } from '../../core/toast/toast.service';
 import { Cliente } from '../clientes/cliente.model';
 import { ClientesService } from '../clientes/clientes.service';
+import { Lead, ORIGEN_LABEL } from '../leads/lead.model';
+import { LeadsService } from '../leads/leads.service';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -90,10 +94,18 @@ export class VentasPage implements OnDestroy {
   private readonly router = inject(Router);
   private readonly ventasService = inject(VentasService);
   private readonly clientesService = inject(ClientesService);
+  private readonly leadsService = inject(LeadsService);
+  private readonly authService = inject(AuthService);
+  private readonly toastService = inject(ToastService);
   private readonly dialogService = inject(DialogService);
   private readonly vcr = inject(ViewContainerRef);
 
   protected readonly modalVentaTemplate = viewChild<TemplateRef<unknown>>('modalVentaTemplate');
+  protected readonly modalMotivoPerdidaTemplate = viewChild<TemplateRef<unknown>>('modalMotivoPerdidaTemplate');
+
+  /** Cambiar el estado de una venta (marcarla perdida, revertir un cierre) es cosa de ADMIN+. */
+  protected readonly esAdmin = this.authService.isAdmin;
+  protected readonly origenLabel = ORIGEN_LABEL;
 
   private activeOverlayRef?: OverlayRef;
   private queryParamsProcesados = false;
@@ -138,6 +150,16 @@ export class VentasPage implements OnDestroy {
   protected readonly guardando = signal(false);
   protected readonly errorForm = signal('');
 
+  /** Lead de origen elegido para esta venta (opcional). Ver `leadsAbiertosDelCliente`. */
+  protected readonly leadIdSeleccionado = signal<string | null>(null);
+
+  /* ── Cambio de estado de una venta ya registrada (ADMIN) ──────────
+     El backend exige motivo al marcar PERDIDA (queda en AuditLog), así que
+     antes de llamar a cambiarEstado se pide con este modal. */
+  protected readonly ventaParaMotivo = signal<Venta | null>(null);
+  protected readonly motivoPerdidaTexto = signal('');
+  protected readonly cambiandoEstado = signal(false);
+
   /* Adjunto de Comprobante / Recibo */
   protected readonly subiendoComprobante = signal(false);
   protected readonly comprobanteSubido = signal<ComprobanteSubido | null>(null);
@@ -171,6 +193,13 @@ export class VentasPage implements OnDestroy {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           });
+          /* Viene de la ficha de un lead ("Registrar Venta"): se preselecciona
+             como origen. `elegirCliente` ya limpió este signal justo arriba,
+             así que fijarlo acá después es lo que queda. */
+          const leadId = qp['leadId'];
+          if (leadId) {
+            this.leadIdSeleccionado.set(leadId);
+          }
         }
         this.abrirFormulario(tpl);
       }
@@ -243,6 +272,27 @@ export class VentasPage implements OnDestroy {
     { defaultValue: [] },
   );
 
+  /**
+   * Leads del cliente elegido, para vincular la venta a su origen (RF-17
+   * extendido: de qué campaña/canal vino una venta real, no solo un lead
+   * cerrado en bloque). Se pide solo con el formulario abierto y un cliente
+   * puesto — no tiene sentido antes.
+   */
+  protected readonly leadsDelCliente = httpResource<RespuestaPaginada<Lead>>(
+    () => {
+      const cliente = this.clienteElegido();
+      return this.formularioAbierto() && cliente
+        ? this.leadsService.listarRequest({ clienteId: cliente.id, pagina: 1, limite: 10 })
+        : undefined;
+    },
+    { defaultValue: paginaVacia<Lead>() },
+  );
+
+  /** Solo los que siguen abiertos: uno ya CONVERTIDO o PERDIDO no es un origen útil para elegir. */
+  protected readonly leadsAbiertosDelCliente = computed(() =>
+    this.leadsDelCliente.value().datos.filter(l => l.estado === 'NUEVO' || l.estado === 'CONTACTADO'),
+  );
+
   protected readonly resumen = computed(() => {
     const ganadas = this.ventas.value().datos.filter(v => v.estado === 'GANADA');
     const total = ganadas.reduce((suma, v) => suma + Number(v.monto), 0);
@@ -258,11 +308,15 @@ export class VentasPage implements OnDestroy {
   protected elegirCliente(cliente: Cliente): void {
     this.clienteElegido.set(cliente);
     this.busquedaCliente.set(cliente.nombre);
+    /* Un cliente nuevo invalida el lead que se hubiera elegido antes — lo
+       vuelve a fijar quien llame esto con contexto (ver el efecto de arriba). */
+    this.leadIdSeleccionado.set(null);
   }
 
   protected limpiarCliente(): void {
     this.clienteElegido.set(null);
     this.busquedaCliente.set('');
+    this.leadIdSeleccionado.set(null);
   }
 
   protected seleccionarSugerencia(nombreServicio: string): void {
@@ -343,6 +397,7 @@ export class VentasPage implements OnDestroy {
         medico: this.medico().trim() || undefined,
         modulo: this.moduloDetectado() || undefined,
         notas: this.notas().trim() || undefined,
+        leadId: this.leadIdSeleccionado() ?? undefined,
       });
 
       this.cerrarFormulario();
@@ -358,6 +413,68 @@ export class VentasPage implements OnDestroy {
       this.errorForm.set(mensajeDeError(err, 'No se pudo registrar la venta. Intenta de nuevo.'));
     } finally {
       this.guardando.set(false);
+    }
+  }
+
+  /* ── Cambiar estado de una venta ya registrada (ADMIN) ────────────── */
+
+  protected cambiarEstadoVenta(venta: Venta, estado: EstadoVenta): void {
+    if (estado === venta.estado) return;
+
+    if (estado === 'PERDIDA') {
+      this.abrirMotivoPerdidaVenta(venta);
+      return;
+    }
+
+    void this.aplicarCambioEstadoVenta(venta, estado);
+  }
+
+  /** Pide el motivo antes de marcar PERDIDA — el backend lo exige y lo deja en AuditLog. */
+  protected abrirMotivoPerdidaVenta(venta: Venta): void {
+    const template = this.modalMotivoPerdidaTemplate();
+    if (!template) return;
+
+    this.ventaParaMotivo.set(venta);
+    this.motivoPerdidaTexto.set('');
+
+    this.activeOverlayRef?.dispose();
+    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
+      onClose: () => this.cerrarMotivoPerdidaVenta(),
+    });
+  }
+
+  protected cerrarMotivoPerdidaVenta(): void {
+    this.ventaParaMotivo.set(null);
+    this.activeOverlayRef?.dispose();
+    this.activeOverlayRef = undefined;
+  }
+
+  protected async confirmarMotivoPerdidaVenta(): Promise<void> {
+    const venta = this.ventaParaMotivo();
+    const motivo = this.motivoPerdidaTexto().trim();
+    if (!venta || motivo.length < 3) return;
+
+    this.cerrarMotivoPerdidaVenta();
+    await this.aplicarCambioEstadoVenta(venta, 'PERDIDA', motivo);
+  }
+
+  private async aplicarCambioEstadoVenta(
+    venta: Venta,
+    estado: EstadoVenta,
+    motivoPerdida?: string,
+  ): Promise<void> {
+    this.cambiandoEstado.set(true);
+    try {
+      await this.ventasService.cambiarEstado(venta.id, estado, motivoPerdida);
+      this.toastService.success(`Venta actualizada a ${this.estadoLabel[estado]}`, 'Estado actualizado');
+      this.ventas.reload();
+    } catch (err: unknown) {
+      this.toastService.error(
+        mensajeDeError(err, 'No se pudo cambiar el estado de la venta.'),
+        'Error',
+      );
+    } finally {
+      this.cambiandoEstado.set(false);
     }
   }
 }
