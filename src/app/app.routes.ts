@@ -64,8 +64,12 @@ export const routes: Routes = [
           ),
       },
       {
-        /* Desempeño 360° individual por ejecutiva y metas */
+        /* Desempeño 360° individual por ejecutiva y metas: consume
+           PlanillaComisionesService, que es @Roles('ADMIN') de clase en el
+           backend (datos de remuneración de todo el equipo). Sin este guard
+           un agente vería el ítem en el menú y cada petición le devolvería 403. */
         path: 'desempeno-agentes',
+        canActivate: [exigeRol('ADMIN')],
         loadComponent: () =>
           import('./features/finanzas/components/desempeno-agentes/desempeno-agentes.component').then(
             m => m.DesempenoAgentesComponent,
