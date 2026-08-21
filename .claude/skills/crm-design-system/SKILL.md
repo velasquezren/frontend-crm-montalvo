@@ -113,8 +113,8 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 | Table | `<app-table>` | `dense`, `maxHeight` — proyecta `<thead>`/`<tbody>` nativos |
 | ThOrdenable | `th[appOrdenable]` | `appOrdenable` (columna, requerido), `orden`, `direccion`, `direccionInicial` · `(ordenar)` — cabecera ordenable; **ordena el servidor**, no el cliente |
 | Paginator | `<app-paginator>` | `pagina`, `totalPaginas`, `total` (requeridos), `limite` · `(cambiar)` |
-| BarChart | `<app-bar-chart>` | `items`, `mode` (BAR/COLUMN), `title`, `subtitle`, `height`, `formatType`, `origenMoneda` |
-| DonutChart | `<app-donut-chart>` | `items`, `title`, `subtitle`, `etiquetaTotal`, `formatType`, `origenMoneda` |
+| BarChart | `<app-bar-chart>` | `items`, `mode` (BAR/COLUMN), `title`, `subtitle`, `height`, `formatType`, `origenMoneda` · `(segmentClick)` |
+| DonutChart | `<app-donut-chart>` | `items`, `title`, `subtitle`, `etiquetaTotal`, `formatType`, `origenMoneda` · `(segmentClick)` |
 | InfoHint | `<app-info-hint>` | `titulo` (requerido), `size` + contenido proyectado — el "!" que explica una regla |
 | SelectorPeriodoEmpty | `<app-selector-periodo-empty>` | `periodos`, `cargando`, `titulo`, `descripcion`, `icono`, `puedeImportar` · `(periodoSeleccionado)`, `(importarClic)`, `(archivoSeleccionado)` |
 | Timeline | `<app-timeline>` | `gap` — eje vertical con punto; proyecta un `<article class="crm-timeline-evento">` por hito (clases `crm-timeline-fecha` / `crm-timeline-valor`) |
@@ -152,6 +152,19 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
   Guardar Registro
 </app-button>
 ```
+
+## `<app-donut-chart>` y `<app-bar-chart>` con clic: `ChartItem.id`
+
+`ChartItem` acepta un `id` opcional — la clave de negocio para navegar (ej. el
+`origen` de un lead), separada de `label` (lo que se lee) y de `sublabel` (un
+dato secundario que ahora también se pinta en la leyenda de la dona). `(segmentClick)`
+de `<app-donut-chart>` emite `item.id ?? item.label`.
+
+Existe porque el Dashboard traía su propia dona en SVG a mano —duplicando
+`stroke-dasharray`/leyenda/hover que el átomo ya resolvía— con un gris fuera de
+la paleta (`#F1F5F9`) que ningún validador veía por estar en un atributo SVG
+del `.html`, no en una clase Tailwind ni en un `.css`. Si necesitas clic en una
+dona o en unas barras, usa `id`/`(segmentClick)` en vez de reescribir el SVG.
 
 ## Íconos: catálogo cerrado, cero emojis
 

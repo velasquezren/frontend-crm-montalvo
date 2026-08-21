@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 
 import { MonedaService } from '../../../core/moneda/moneda.service';
 import { ChartItem } from './bar-chart.component';
@@ -47,7 +47,8 @@ import { ChartItem } from './bar-chart.component';
                   [attr.stroke-dashoffset]="p.offset"
                   [style.--retraso]="p.indice * 90 + 'ms'"
                   (mouseenter)="resaltada.set(p.clave)"
-                  (mouseleave)="resaltada.set(null)" />
+                  (mouseleave)="resaltada.set(null)"
+                  (click)="segmentClick.emit(p.navegacion)" />
               }
             </svg>
 
@@ -67,9 +68,15 @@ import { ChartItem } from './bar-chart.component';
                 [class.donut-leyenda-activa]="resaltada() === p.clave"
                 [class.donut-leyenda-atenuada]="resaltada() !== null && resaltada() !== p.clave"
                 (mouseenter)="resaltada.set(p.clave)"
-                (mouseleave)="resaltada.set(null)">
+                (mouseleave)="resaltada.set(null)"
+                (click)="segmentClick.emit(p.navegacion)">
                 <span class="donut-punto" [style.background-color]="p.color"></span>
-                <span class="donut-leyenda-texto" [title]="p.label">{{ p.label }}</span>
+                <span class="donut-leyenda-texto" [title]="p.label">
+                  {{ p.label }}
+                  @if (p.sublabel) {
+                    <span class="donut-leyenda-sublabel">{{ p.sublabel }}</span>
+                  }
+                </span>
                 <span class="donut-leyenda-pct">{{ p.pct }}%</span>
               </li>
             }
@@ -229,6 +236,14 @@ import { ChartItem } from './bar-chart.component';
       white-space: nowrap;
     }
 
+    /* Dato secundario opcional (ej. "24% conversión") junto al label. */
+    .donut-leyenda-sublabel {
+      margin-left: 4px;
+      font-weight: 400;
+      font-size: 11px;
+      color: var(--color-text-muted);
+    }
+
     .donut-leyenda-pct {
       font-weight: 700;
       font-size: 11px;
@@ -276,6 +291,8 @@ export class DonutChartComponent {
    */
   readonly origenMoneda = input<'USD' | 'BOB'>('BOB');
 
+  /** Clic en una porción o su leyenda — emite `item.id` (o `label` si no hay id). */
+  readonly segmentClick = output<string>();
 
   protected readonly resaltada = signal<string | null>(null);
 
@@ -298,6 +315,9 @@ export class DonutChartComponent {
       const porcion = {
         clave: item.label,
         label: item.label,
+        sublabel: item.sublabel,
+        /** Lo que se emite en `segmentClick`: la clave estable si viene, si no el label. */
+        navegacion: item.id ?? item.label,
         color: item.color ?? 'var(--color-primary)',
         valor: item.value,
         pct: Math.round(arco * 10) / 10,

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 
 import { MonedaService } from '../../../core/moneda/moneda.service';
 
@@ -8,6 +8,8 @@ export interface ChartItem {
   readonly secondaryValue?: number;
   readonly color?: string;
   readonly sublabel?: string;
+  /** Clave estable para navegación al hacer clic — si falta, se usa `label`. */
+  readonly id?: string;
 }
 
 /**
@@ -48,7 +50,8 @@ export interface ChartItem {
             <div
               class="group relative"
               (mouseenter)="hoveredLabel.set(item.label)"
-              (mouseleave)="hoveredLabel.set(null)">
+              (mouseleave)="hoveredLabel.set(null)"
+              (click)="segmentClick.emit(item.id ?? item.label)">
               <div class="flex items-center justify-between text-xs mb-1">
                 <span class="font-medium text-text-dark truncate max-w-[65%] group-hover:text-primary transition-colors">
                   {{ item.label }}
@@ -79,7 +82,8 @@ export interface ChartItem {
             <div
               class="columna"
               (mouseenter)="hoveredLabel.set(item.label)"
-              (mouseleave)="hoveredLabel.set(null)">
+              (mouseleave)="hoveredLabel.set(null)"
+              (click)="segmentClick.emit(item.id ?? item.label)">
 
               @if (hoveredLabel() === item.label) {
                 <div class="columna-tooltip">
@@ -227,6 +231,8 @@ export class BarChartComponent {
    */
   readonly origenMoneda = input<'USD' | 'BOB'>('BOB');
 
+  /** Clic en una barra/columna — emite `item.id` (o `label` si no hay id). Mismo contrato que `<app-donut-chart>`. */
+  readonly segmentClick = output<string>();
 
   protected readonly hoveredLabel = signal<string | null>(null);
 
