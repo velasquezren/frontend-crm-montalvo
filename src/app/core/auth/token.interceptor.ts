@@ -6,8 +6,17 @@ import { from, switchMap, tap, catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 import { PwaUpdateService } from '../pwa/pwa-update.service';
 
+/**
+ * Peticiones que nunca deben disparar el refresco silencioso: un 401 en ellas
+ * ya ES la respuesta. `/auth/logout` está en la lista para que salir no pueda
+ * acabar resucitando la sesión que se está cerrando.
+ */
 function esPeticionDeAutenticacion(url: string): boolean {
-  return url.endsWith('/auth/login') || url.endsWith('/auth/refresh');
+  return (
+    url.endsWith('/auth/login') ||
+    url.endsWith('/auth/refresh') ||
+    url.endsWith('/auth/logout')
+  );
 }
 
 /**
@@ -49,7 +58,19 @@ export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
             return throwError(() => error);
           }
           const reintento = req.clone({ setHeaders: { Authorization: `Bearer ${nuevoToken}` } });
-          return next(reintento);
+          return next(reintento).pipe(
+            /* Si el reintento vuelve a dar 401 con un token recién emitido, el
+               problema no es el token: la sesión no vale (usuario desactivado,
+               permisos revocados). Sin esto se propagaba el error y la agente
+               se quedaba en una pantalla que fallaba en bucle sin explicación. */
+            catchError(errorReintento => {
+              if (errorReintento?.status === 401) {
+                authService.logout();
+                router.navigate(['/auth/login']);
+              }
+              return throwError(() => errorReintento);
+            }),
+          );
         }),
       );
     }),

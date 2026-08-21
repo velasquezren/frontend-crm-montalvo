@@ -161,6 +161,18 @@ export class AuthService {
   }
 
   logout(): void {
+    /* Avisa al backend para que borre la cookie `refresh_token` (HttpOnly: este
+       código no puede tocarla). Sin esto, vaciar el storage dejaba una
+       credencial de 30 días viva en el navegador, canjeable en /auth/refresh
+       por una sesión nueva — y en la clínica el equipo se comparte.
+
+       Sin esperar respuesta y sin propagar el error a propósito: salir nunca
+       puede quedarse a medias porque la red falle. El estado local se limpia
+       igual, que es lo que ve la agente. */
+    this.http
+      .post(`${API_URL}/auth/logout`, {}, { withCredentials: true })
+      .subscribe({ error: () => undefined });
+
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     sessionStorage.removeItem(TOKEN_KEY);
