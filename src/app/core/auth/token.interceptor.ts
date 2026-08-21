@@ -1,14 +1,23 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { tap, catchError, throwError } from 'rxjs';
+import { from, switchMap, tap, catchError, throwError } from 'rxjs';
 
 import { AuthService } from './auth.service';
 import { PwaUpdateService } from '../pwa/pwa-update.service';
 
+function esPeticionDeAutenticacion(url: string): boolean {
+  return url.endsWith('/auth/login') || url.endsWith('/auth/refresh');
+}
+
 /**
- * Adjunta el JWT a cada petición y, ante un 401 (token vencido/inválido),
- * cierra la sesión y redirige al login. Además inspecciona cabeceras de versión del backend.
+ * Adjunta el JWT a cada petición. Ante un 401 que no venga de login/refresh,
+ * intenta un refresco silencioso una sola vez (vía `AuthService.refrescarToken`,
+ * que a su vez pide el `access_token` nuevo con la cookie `refresh_token`) y
+ * reintenta la petición original con el token nuevo. Solo cierra sesión y
+ * redirige al login si ese refresco también falla —el `refresh_token` de 30
+ * días también venció o no existe—. Además inspecciona cabeceras de versión
+ * del backend.
  */
 export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
@@ -28,11 +37,21 @@ export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
       }
     }),
     catchError(error => {
-      if (error?.status === 401 && !req.url.endsWith('/auth/login')) {
-        authService.logout();
-        router.navigate(['/auth/login']);
+      if (error?.status !== 401 || esPeticionDeAutenticacion(req.url)) {
+        return throwError(() => error);
       }
-      return throwError(() => error);
+
+      return from(authService.refrescarToken()).pipe(
+        switchMap(nuevoToken => {
+          if (!nuevoToken) {
+            authService.logout();
+            router.navigate(['/auth/login']);
+            return throwError(() => error);
+          }
+          const reintento = req.clone({ setHeaders: { Authorization: `Bearer ${nuevoToken}` } });
+          return next(reintento);
+        }),
+      );
     }),
   );
 };

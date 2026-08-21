@@ -107,6 +107,59 @@ export class AuthService {
     this.currentUser.set(nuevoUsuario);
   }
 
+  /** Refresco en curso — compartido para que 401 simultáneos no disparen N llamadas. */
+  private refrescoEnCurso: Promise<string | null> | null = null;
+
+  /**
+   * Pide un `access_token` nuevo con el `refresh_token` (cookie HttpOnly: el
+   * navegador la manda solo, este código nunca la toca). La usa el
+   * interceptor cuando una petición vuelve con 401.
+   *
+   * Deduplicado a propósito: si varias peticiones expiran a la vez, todas
+   * esperan el mismo refresco en vez de pedir uno cada una. Nunca lanza —
+   * `null` significa que el refresh_token también venció, y de ahí en más
+   * cerrar sesión es cosa del interceptor, no de este método.
+   */
+  refrescarToken(): Promise<string | null> {
+    if (!this.refrescoEnCurso) {
+      this.refrescoEnCurso = this.ejecutarRefresco().finally(() => {
+        this.refrescoEnCurso = null;
+      });
+    }
+    return this.refrescoEnCurso;
+  }
+
+  private async ejecutarRefresco(): Promise<string | null> {
+    try {
+      const respuesta = await firstValueFrom(
+        this.http.post<LoginResponse>(
+          `${API_URL}/auth/refresh`,
+          {},
+          { withCredentials: true },
+        ),
+      );
+
+      const usuario: User = {
+        id: respuesta.usuario.sub,
+        nombre: respuesta.usuario.nombre,
+        email: respuesta.usuario.email,
+        rol: respuesta.usuario.rol,
+        iniciales: generarIniciales(respuesta.usuario.nombre),
+        foto: respuesta.usuario.foto,
+      };
+
+      // La sesión ya vivía en localStorage o sessionStorage: se actualiza la misma.
+      const storage = localStorage.getItem(TOKEN_KEY) ? localStorage : sessionStorage;
+      storage.setItem(TOKEN_KEY, respuesta.access_token);
+      storage.setItem(USER_KEY, JSON.stringify(usuario));
+
+      this.currentUser.set(usuario);
+      return respuesta.access_token;
+    } catch {
+      return null;
+    }
+  }
+
   logout(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
