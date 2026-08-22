@@ -42,6 +42,7 @@ import {
  * 3. Tarifas Tipo A (Planes y paquetes).
  * 4. Tarifas Tipo C (Consultas, labs, ecografías y servicios sueltos).
  * 5. Escala Tipo B (Cirugías por volumen mensual).
+ * 5b. Escala Tipo A (RA) — excedente combinado planes + RA no-cirugía (solo lectura hoy).
  * 6. Histórico RA (Procedimientos de Reproducción Asistida).
  * 7. Canales de Captación (Mapeo empresa vs. propia).
  * 8. Metas comerciales (Base y específicas del periodo).
@@ -91,11 +92,12 @@ export class ConfiguracionComisionesComponent {
   }> = [
     {
       clave: 'PCT_TIPO_C_RA',
-      titulo: 'Comisión del área RA',
+      titulo: 'Comisión de campaña/promoción del área RA',
       ayuda:
-        'Porcentaje que aplica a las ventas cuya columna «area» del export dice RA. ' +
-        'En 0 no pagan comisión directa, aunque siguen sumando al monto vendido del ' +
-        'mes y por tanto a los bonos.',
+        'Solo aplica a ventas del área RA clasificadas como campaña o promoción — ' +
+        'en 0 no pagan nada. El resto del área RA (consulta, laboratorio, ecografía, ' +
+        'otros) NO usa este parámetro: comisiona por la escala Tipo A (RA) de más ' +
+        'abajo, cuando el ingreso combinado con planes supera el objetivo mensual.',
       sufijo: '%  (0,045 = 4,5%)',
     },
     {

@@ -207,6 +207,14 @@ export class PlanillaComisionesService {
     return this.api.patch(`/planilla-comisiones/configuracion/niveles-cirugia/${nivel}`, datos);
   }
 
+  /** Mismo tramo que `actualizarNivelCirugia`, tabla aparte: ver `NivelTipoARA`. */
+  actualizarNivelTipoARA(
+    nivel: number,
+    datos: { montoDesde: number; montoHasta: number; pctEmpresa: number; pctPropio: number },
+  ): Promise<unknown> {
+    return this.api.patch(`/planilla-comisiones/configuracion/niveles-tipo-a-ra/${nivel}`, datos);
+  }
+
   actualizarTarifaRa(
     id: string,
     datos: { montoEmpresa: number; montoPropio: number },

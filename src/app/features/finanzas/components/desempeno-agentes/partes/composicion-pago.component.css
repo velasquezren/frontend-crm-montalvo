@@ -82,6 +82,14 @@
   background-color: var(--color-primary);
 }
 
+/* Tipo A (RA): mezcla a partes iguales de los dos colores de marca — tiene que
+   distinguirse tanto del primary puro de 'a' como del secondary puro de 'b',
+   sus dos vecinos en la barra. */
+.segmento-ara,
+.punto-ara {
+  background-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-secondary) 50%);
+}
+
 .segmento-b,
 .punto-b {
   background-color: var(--color-secondary);

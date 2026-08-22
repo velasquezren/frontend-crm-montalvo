@@ -37,10 +37,14 @@ interface Concepto {
  *
  * La composición cuadra por construcción, no por casualidad:
  *
- *   totalGanado = sueldoBase + (comisionA + comisionB + comisionC + bonos) × TC
+ *   totalGanado = sueldoBase + (comisionA + comisionTipoARA + comisionB + comisionC + bonos) × TC
  *
  * es literalmente cómo lo calcula `calculo-comisiones.service.ts`, así que los
- * porcentajes siempre suman 100 sin necesidad de un concepto "otros".
+ * porcentajes siempre suman 100 sin necesidad de un concepto "otros". Faltó
+ * `comisionTipoARA` una vez (el cubo Tipo A (RA) recién agregado, 2026-08-22) y
+ * la barra dejó de sumar 100 en cuanto alguien tuvo ventas RA que superaran el
+ * objetivo mensual — cualquier comisión nueva que agregue el backend tiene que
+ * entrar aquí también, o este comentario vuelve a mentir.
  */
 @Component({
   selector: 'app-composicion-pago',
@@ -73,6 +77,12 @@ export class ComposicionPagoComponent {
         etiqueta: 'Tipo A · planes',
         detalle: 'Paquetes de maternidad y planes varios',
         montoBob: v.comisionA * tc,
+      },
+      {
+        clave: 'ara',
+        etiqueta: 'Tipo A (RA)',
+        detalle: 'Consulta, laboratorio y ecografía del área RA, por nivel',
+        montoBob: v.comisionTipoARA * tc,
       },
       {
         clave: 'b',

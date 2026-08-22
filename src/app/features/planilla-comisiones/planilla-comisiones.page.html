@@ -627,10 +627,15 @@
       @if (per.configuracionUsada; as foto) {
         <span class="reglas-usadas-titulo">Liquidado con estas reglas</span>
         <span class="reglas-usadas-dato">TC {{ foto.tipoCambio }}</span>
-        <span class="reglas-usadas-dato">Área RA {{ foto.parametros['PCT_TIPO_C_RA'] * 100 }}%</span>
+        <span class="reglas-usadas-dato">Campaña/promoción RA {{ foto.parametros['PCT_TIPO_C_RA'] * 100 }}%</span>
         <span class="reglas-usadas-dato">Bono jefatura {{ foto.parametros['FACTOR_BONO_JEFATURA'] * 100 }}%</span>
         <span class="reglas-usadas-dato">Bono trimestral {{ foto.parametros['FACTOR_BONO_TRIMESTRAL'] * 100 }}%</span>
         <span class="reglas-usadas-dato">{{ foto.nivelesCirugia.length }} niveles de cirugía</span>
+        @if (foto.nivelesTipoARA) {
+          <!-- Periodos liquidados antes del 2026-08-22 no tienen este campo en su
+               foto congelada: no se inventa, se omite. -->
+          <span class="reglas-usadas-dato">{{ foto.nivelesTipoARA.length }} niveles Tipo A (RA)</span>
+        }
         <app-info-hint titulo="Por qué se guardan">
           <p>
             Las tarifas y los parámetros son <strong>globales</strong>: cambiarlos

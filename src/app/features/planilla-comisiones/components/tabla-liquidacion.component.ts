@@ -85,6 +85,22 @@ import { FilaConsolidado } from '../planilla.model';
             </th>
           }
           <th class="text-right">Tipo A</th>
+          <th class="text-right">
+            Tipo A (RA)
+            <app-info-hint titulo="Tipo A (RA)">
+              <p>
+                No es la misma comisión que <strong>Tipo A</strong>: esta paga aparte, sobre las
+                ventas del área RA que <strong>no</strong> son cirugía (consulta, laboratorio,
+                ecografía, otros).
+              </p>
+              <p>
+                Se suma el ingreso de planes de maternidad con el de esas ventas RA. Si esa suma
+                supera el <strong>objetivo mensual en $</strong> de la vendedora, el excedente cae
+                en una escala de niveles —igual que Tipo B— y ese porcentaje se cobra
+                <strong>solo sobre la porción RA</strong>, no sobre los planes.
+              </p>
+            </app-info-hint>
+          </th>
           <th class="text-right">Tipo B</th>
           <th class="text-right">Tipo C</th>
           <th class="text-right">
@@ -158,6 +174,14 @@ import { FilaConsolidado } from '../planilla.model';
             }
 
             <td class="text-right whitespace-nowrap">\${{ f.comisionA | number: '1.2-2' }}</td>
+            <td class="text-right whitespace-nowrap">
+              \${{ f.comisionTipoARA | number: '1.2-2' }}
+              @if (f.nivelTipoARA) {
+                <span class="text-[10px] text-text-muted font-medium block text-right">
+                  nivel {{ f.nivelTipoARA }}
+                </span>
+              }
+            </td>
             <td class="text-right whitespace-nowrap">\${{ f.comisionB | number: '1.2-2' }}</td>
             <td class="text-right whitespace-nowrap">\${{ f.comisionC | number: '1.2-2' }}</td>
 
@@ -195,6 +219,7 @@ import { FilaConsolidado } from '../planilla.model';
             <td></td>
           }
           <td class="text-right font-bold whitespace-nowrap">\${{ totales()['comisionA'] | number: '1.2-2' }}</td>
+          <td class="text-right font-bold whitespace-nowrap">\${{ totales()['comisionTipoARA'] | number: '1.2-2' }}</td>
           <td class="text-right font-bold whitespace-nowrap">\${{ totales()['comisionB'] | number: '1.2-2' }}</td>
           <td class="text-right font-bold whitespace-nowrap">\${{ totales()['comisionC'] | number: '1.2-2' }}</td>
           <td class="text-right font-bold whitespace-nowrap">\${{ totales()['bonoTrimestral'] | number: '1.2-2' }}</td>
@@ -215,7 +240,7 @@ import { FilaConsolidado } from '../planilla.model';
       overflow-x: auto;
     }
 
-    /* El nombre se queda fijo al desplazar en horizontal: con trece columnas,
+    /* El nombre se queda fijo al desplazar en horizontal: con tantas columnas,
        sin esto se pierde de vista de quién es cada cifra. */
     .celda-fija {
       position: sticky;

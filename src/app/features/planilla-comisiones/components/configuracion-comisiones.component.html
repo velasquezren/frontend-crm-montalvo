@@ -332,6 +332,52 @@
     </app-table>
   </section>
 
+  <!-- Tipo A (RA) -->
+  <section class="panel mb-4">
+    <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">
+      Tipo A (RA) — Escala por excedente combinado
+      <app-info-hint titulo="Cubo aparte del Tipo A de planes">
+        <p>
+          No es la misma tabla que la de planes GOLD/SILVER/BRONCE. Aplica al ingreso de la
+          vendedora en <strong>consulta, laboratorio, ecografía y otros del área RA</strong>
+          (la cirugía RA sigue yendo a la escala de Tipo B de arriba).
+        </p>
+        <p>
+          Se suma ese ingreso con el de sus planes de maternidad, y si la suma supera el
+          <strong>objetivo mensual en $</strong> (el mismo de la pestaña Metas, no el de cantidad
+          de planes), el excedente cae en esta escala. El % resultante se cobra solo sobre la
+          porción RA.
+        </p>
+      </app-info-hint>
+    </h3>
+    <p class="text-xs text-text-muted mb-3">
+      El nivel se decide con el excedente sobre el objetivo mensual; el porcentaje se cobra solo
+      sobre las ventas RA que no son cirugía.
+    </p>
+    <app-table [dense]="true">
+      <thead>
+        <tr>
+          <th class="text-left">Nivel</th>
+          <th class="text-right">Excedente Desde</th>
+          <th class="text-right">Excedente Hasta</th>
+          <th class="text-right">Empresa %</th>
+          <th class="text-right">Propio %</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (n of cfg.nivelesTipoARA; track n.id) {
+          <tr>
+            <td class="text-left font-semibold text-text-dark">Nivel {{ n.nivel }}</td>
+            <td class="text-right text-text-dark font-medium">{{ n.montoDesde | moneda }}</td>
+            <td class="text-right text-text-dark font-medium">{{ n.montoHasta | moneda }}</td>
+            <td class="text-right font-semibold text-primary">{{ n.pctEmpresa }}%</td>
+            <td class="text-right font-semibold text-secondary">{{ n.pctPropio }}%</td>
+          </tr>
+        }
+      </tbody>
+    </app-table>
+  </section>
+
   <!-- Tarifas RA (Histórico) -->
   <section class="panel mb-4">
     <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">

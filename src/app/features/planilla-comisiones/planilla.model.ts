@@ -41,6 +41,13 @@ export interface FotoConfiguracion {
     pctEmpresa: number;
     pctPropio: number;
   }>;
+  readonly nivelesTipoARA: ReadonlyArray<{
+    nivel: number;
+    montoDesde: number;
+    montoHasta: number;
+    pctEmpresa: number;
+    pctPropio: number;
+  }>;
 }
 
 export interface PeriodoComision {
@@ -214,6 +221,16 @@ export interface FilaConsolidado {
   comisionA: number;
   comisionB: number;
   comisionC: number;
+  /**
+   * Tipo A (RA): NO es lo mismo que `comisionA`. `comisionA` es la comisión de
+   * planes de maternidad (GOLD/SILVER/BRONCE); esta es un cubo aparte —
+   * consulta/laboratorio/ecografía/otros del área RA— que comisiona por nivel
+   * cuando el ingreso combinado con planes supera el objetivo mensual. Ver
+   * `nivelTipoARA` para en qué nivel cayó.
+   */
+  comisionTipoARA: number;
+  /** Nivel de la escala Tipo A (RA), o `null` si no superó el objetivo mensual. */
+  nivelTipoARA: number | null;
   bonoJefatura: number;
   /** Parte del pote de jefatura que cobra cada persona del área de publicidad. */
   bonoPublicidad: number;
@@ -257,6 +274,20 @@ export interface TarifaServicio {
 }
 
 export interface NivelCirugia {
+  id: string;
+  nivel: number;
+  montoDesde: string;
+  montoHasta: string;
+  pctEmpresa: string;
+  pctPropio: string;
+}
+
+/**
+ * Escala Tipo A (RA): mismo tramo que `NivelCirugia`, tabla aparte. El nivel
+ * sale del excedente de (planes + RA no-cirugía) sobre el objetivo mensual;
+ * el % se aplica solo a la porción RA.
+ */
+export interface NivelTipoARA {
   id: string;
   nivel: number;
   montoDesde: string;
@@ -312,6 +343,7 @@ export interface ConfiguracionPlanilla {
   tarifasPlan: TarifaPlan[];
   tarifasServicio: TarifaServicio[];
   nivelesCirugia: NivelCirugia[];
+  nivelesTipoARA: NivelTipoARA[];
   tarifasRA: TarifaRA[];
   objetivos: Objetivo[];
   parametros: { clave: string; valor: string }[];
