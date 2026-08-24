@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   OnDestroy,
   signal,
@@ -109,6 +110,39 @@ export class ConversacionComposerComponent implements OnDestroy {
   protected readonly formPlantillaAtajo = signal('');
   protected readonly formPlantillaContenido = signal('');
   protected readonly guardandoPlantilla = signal(false);
+
+  /**
+   * "Escribiendo…" del lado del paciente mientras la agente redacta.
+   *
+   * El backend ya lo tenía completo (`marcarLeido(id, typing)` → Meta apaga
+   * el indicador solo a los 25s o al llegar el mensaje) pero nada en el
+   * frontend lo llamaba con `typing: true` — el paciente nunca veía nada
+   * hasta que el mensaje aparecía de golpe, aunque la agente llevara un
+   * minuto escribiendo una respuesta larga. Es justo la señal que WhatsApp
+   * nativo da gratis y que hace que escribir desde el CRM se sienta más
+   * "en vivo" que el silencio de antes.
+   *
+   * Un `throttle` de 20s (Meta lo mantiene 25s) evita mandar la señal en
+   * cada tecla — solo se reenvía si pasó el umbral desde la última vez, **por
+   * conversación**: cambiar de chat no debe heredar el enfriamiento del
+   * anterior.
+   */
+  private readonly ultimoTypingPorChat = new Map<string, number>();
+  private static readonly TYPING_THROTTLE_MS = 20_000;
+
+  constructor() {
+    effect(() => {
+      const texto = this.state.mensajeNuevo();
+      const id = this.state.seleccionadaId();
+      if (!texto.trim() || !id || this.state.fueraDeVentana24h()) return;
+
+      const ahora = Date.now();
+      const ultimo = this.ultimoTypingPorChat.get(id) ?? 0;
+      if (ahora - ultimo < ConversacionComposerComponent.TYPING_THROTTLE_MS) return;
+      this.ultimoTypingPorChat.set(id, ahora);
+      void this.conversacionesService.marcarLeido(id, true).catch(() => {});
+    });
+  }
 
   ngOnDestroy(): void {
     this.overlayRef?.dispose();
@@ -310,14 +344,15 @@ export class ConversacionComposerComponent implements OnDestroy {
     this.adjuntoPendiente.set(null);
 
     try {
-      await this.conversacionesService.enviarMensaje(id, texto, adj ? {
+      const real = await this.conversacionesService.enviarMensaje(id, texto, adj ? {
         mediaKey: adj.mediaKey,
         mediaMime: adj.mediaMime ?? null,
         mediaNombre: adj.mediaNombre ?? null,
       } : undefined);
 
-      this.state.conversacionesRecurso.reload();
-      this.state.detalle.reload();
+      // Sin reload: reemplaza el mensaje optimista con el real, en memoria.
+      // Ver el porqué en `reconciliarEnvioLocal`.
+      this.state.reconciliarEnvioLocal(id, idOptimista, real);
     } catch (err) {
       // Rollback optimista en caso de fallo
       if (chatPrevio) {
@@ -367,16 +402,15 @@ export class ConversacionComposerComponent implements OnDestroy {
 
     this.enviandoPlantilla.set(true);
     try {
-      await this.conversacionesService.enviarPlantilla(id, {
+      const real = await this.conversacionesService.enviarPlantilla(id, {
         plantilla: p.nombre,
         idioma: p.idioma,
         parametros: this.variablesPlantilla(),
         contenido: p.cuerpo,
       });
+      this.state.reconciliarEnvioLocal(id, null, real);
       this.toast.success('Plantilla de WhatsApp enviada.');
       this.cerrarModalPlantillas();
-      this.state.detalle.reload();
-      this.state.conversacionesRecurso.reload();
     } catch (err) {
       this.toast.error(mensajeDeError(err, 'No se pudo enviar la plantilla.'));
     } finally {

@@ -107,7 +107,6 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
       if (timerReload) clearTimeout(timerReload);
       timerReload = setTimeout(() => {
         this.state.conversacionesRecurso.reload();
-        void this.conversacionesService.actualizarCachePorRealtime(aviso.conversacionId);
 
         const chatSeleccionado = this.state.seleccionadaId() === aviso.conversacionId;
 

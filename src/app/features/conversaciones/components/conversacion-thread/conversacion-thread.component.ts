@@ -5,6 +5,7 @@ import {
   ElementRef,
   inject,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
@@ -63,12 +64,35 @@ export class ConversacionThreadComponent {
   private scrollInicialListo = false;
   private chatActualId = '';
 
+  /**
+   * Si el usuario estaba pegado al fondo la última vez que scrolleó, ANTES
+   * de que `items` cambiara. Lo actualiza `onMessagesScroll()` en cada
+   * evento real de scroll — nunca este `effect()`, que solo lo LEE (con
+   * `untracked`, para no crear una dependencia y volver a correr en cada
+   * scroll suelto).
+   *
+   * Patrón estándar de cualquier chat (Slack, Discord, WhatsApp Web, y la
+   * corrección de Chatwoot en su PR #10969 "Remove scroll to the bottom
+   * when new message arrives"): el auto-scroll nunca pelea con quien ya
+   * scrolleó hacia arriba a propósito. Antes de esto, este mismo `effect()`
+   * forzaba el fondo en CUALQUIER cambio de `items` — abrir un chat nuevo,
+   * que llegue un mensaje del paciente, o **cargar historial anterior**—,
+   * así que scrollear arriba a leer una charla vieja se deshacía solo a los
+   * pocos cientos de ms (el propio `setTimeout(forzarAbajo, 180)` de abajo),
+   * peleando contra la compensación de `onMessagesScroll()`. Es exactamente
+   * el tipo de fricción que hace preferir el WhatsApp del teléfono.
+   */
+  protected readonly pegadoAlFondo = signal(true);
+  private static readonly UMBRAL_FONDO_PX = 120;
+  private ultimaVersionEnvioVista = 0;
+
   constructor() {
     effect(() => {
       const container = this.messagesContainer()?.nativeElement;
       const anchor = this.bottomAnchor()?.nativeElement;
       const items = this.state.mensajesConFecha();
       const chat = this.state.detalle.value();
+      const versionEnvio = this.state.versionEnvioPropio();
 
       if (!chat) {
         this.scrollInicialListo = false;
@@ -81,9 +105,20 @@ export class ConversacionThreadComponent {
 
       if (esNuevoChat) {
         this.scrollInicialListo = false;
+        this.pegadoAlFondo.set(true);
       }
 
+      // Enviar un mensaje propio es una acción deliberada: baja al fondo
+      // aunque la agente estuviera leyendo historial viejo en ese momento.
+      const esEnvioPropio = versionEnvio !== this.ultimaVersionEnvioVista;
+      this.ultimaVersionEnvioVista = versionEnvio;
+
       if (!container || items.length === 0) return;
+
+      // Un chat nuevo o un envío propio siempre bajan al fondo. Cualquier
+      // otro cambio —un mensaje entrante, cargar historial anterior— solo
+      // baja si el usuario ya estaba ahí.
+      if (!esNuevoChat && !esEnvioPropio && !untracked(this.pegadoAlFondo)) return;
 
       const forzarAbajo = () => {
         container.scrollTop = container.scrollHeight;
@@ -206,7 +241,12 @@ export class ConversacionThreadComponent {
   /* ── Scroll Inteligente ────────────────────────────────────────── */
   protected onMessagesScroll(): void {
     const el = this.messagesContainer()?.nativeElement;
-    if (!el || !this.scrollInicialListo) return;
+    if (!el) return;
+
+    const distanciaAlFondo = el.scrollHeight - el.scrollTop - el.clientHeight;
+    this.pegadoAlFondo.set(distanciaAlFondo < ConversacionThreadComponent.UMBRAL_FONDO_PX);
+
+    if (!this.scrollInicialListo) return;
 
     // Detectar si está cerca del top para cargar mensajes antiguos
     if (el.scrollTop <= 40 && el.scrollHeight > el.clientHeight && !this.state.cargandoHistorial() && this.state.hayMasHistorial()) {

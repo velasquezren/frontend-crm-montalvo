@@ -14,6 +14,7 @@ import {
   estaSinResponder,
   FiltroInbox,
   ItemHilo,
+  MensajeApi,
   PlantillaAgente,
   PlantillaResumen,
 } from '../conversacion.model';
@@ -121,6 +122,12 @@ export class ConversacionesStateService {
   readonly asignando = signal(false);
   readonly lightboxImagenUrl = signal<string | null>(null);
   readonly velocidadesAudio = signal<Record<string, number>>({});
+
+  /** Sube cada vez que `reconciliarEnvioLocal` reconcilia un envío PROPIO
+   *  (nunca uno entrante). El hilo lo usa para saber que debe bajar al fondo
+   *  aunque la agente estuviera leyendo historial viejo — enviar es una
+   *  acción deliberada suya, a diferencia de un mensaje que llega solo. */
+  readonly versionEnvioPropio = signal(0);
 
   readonly plantillasAgente = httpResource<PlantillaAgente[]>(
     () => (this.seleccionadaId() ? this.conversacionesService.plantillasAgenteRequest() : undefined),
@@ -479,5 +486,69 @@ export class ConversacionesStateService {
     const siguiente = actual === 1 ? 1.5 : actual === 1.5 ? 2 : 1;
     audioElement.playbackRate = siguiente;
     this.velocidadesAudio.update(v => ({ ...v, [msgId]: siguiente }));
+  }
+
+  /**
+   * Reemplaza el mensaje optimista por el real que devolvió el POST —
+   * en memoria, sin volver a pedirle nada al servidor.
+   *
+   * El backend ya está diseñado para esto: `enviarMensaje()` (backend)
+   * responde en cuanto guarda en base, con `estadoEnvio: 'ENVIADO'` real —
+   * el envío a Meta va sin `await` a propósito ("el agente no debe esperar
+   * el round-trip a Meta, 300-900ms típico") — y el tick final llega
+   * DESPUÉS por WebSocket ("se corrige en segundo plano... sin que el
+   * agente tenga que refrescar", dice su propio comentario).
+   *
+   * Antes de esto, el composer llamaba `conversacionesRecurso.reload()` +
+   * `detalle.reload()` justo después del POST — dos peticiones completas
+   * que Meta todavía no había contestado, así que en el mejor caso volvían
+   * a traer lo mismo que el mensaje optimista ya mostraba, y en el peor
+   * (una charla con más de 50 mensajes) el `findOne` de `detalle` trae solo
+   * los últimos 50 y **descartaba el historial** que la agente había
+   * cargado con `cargarHistorialAnterior()`. El aviso real de WebSocket
+   * (`conversacion:actividad`, disparado por `registrarResultadoEnvio` en
+   * cuanto Meta contesta) sigue llegando igual y sigue reconciliando el
+   * tick — ver el efecto de `conversaciones.page.ts` — así que quitar estos
+   * dos reloads no pierde nada, solo el viaje redundante.
+   */
+  reconciliarEnvioLocal(conversacionId: string, idOptimista: string | null, real: MensajeApi): void {
+    const chat = this.detalle.value();
+    if (chat && chat.id === conversacionId) {
+      /* Las plantillas (fuera de la ventana de 24h) no pasan por un mensaje
+         optimista previo — el modal solo espera la respuesta— así que aquí
+         no hay nada que reemplazar: se añade al final. */
+      const yaHabiaOptimista = idOptimista !== null && chat.mensajes.some(m => m.id === idOptimista);
+      const mensajes = yaHabiaOptimista
+        ? chat.mensajes.map(m =>
+            m.id === idOptimista
+              ? { ...m, id: real.id, createdAt: real.createdAt, estadoEnvio: real.estadoEnvio }
+              : m,
+          )
+        : [...chat.mensajes, real];
+      const nuevoDetalle = { ...chat, mensajes, updatedAt: real.createdAt };
+      this.conversacionesService.setCachedDetalle(conversacionId, nuevoDetalle);
+      this.detalle.set(nuevoDetalle);
+      this.versionEnvioPropio.update(v => v + 1);
+    }
+
+    const lista = this.conversacionesRecurso.value();
+    const idx = lista.findIndex(c => c.id === conversacionId);
+    if (idx === -1) return;
+
+    const actual = lista[idx];
+    /* El backend reclama la conversación del pool al primer envío —ver la
+       nota de `enviarMensaje()`— pero el POST no devuelve el `agente`
+       resultante. La regla es determinista, así que se reproduce aquí en
+       vez de dejar la fila con el dueño viejo hasta el próximo reload:
+       si estaba sin asignar, ahora es de quien acaba de escribir. */
+    const actualizada: ConversacionResumen = {
+      ...actual,
+      mensajes: [real],
+      updatedAt: real.createdAt,
+      agente: actual.agente ?? { id: this.currentUserId(), nombre: this.authService.user()?.nombre ?? '' },
+    };
+
+    const resto = lista.filter((_, i) => i !== idx);
+    this.conversacionesRecurso.set([actualizada, ...resto]);
   }
 }
