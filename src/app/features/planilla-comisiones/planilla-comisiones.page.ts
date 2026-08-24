@@ -27,6 +27,7 @@ import { FilterChipComponent } from '../../shared/components/filter-chip/filter-
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InfoHintComponent } from '../../shared/components/info-hint/info-hint.component';
 import { InputComponent } from '../../shared/components/input/input.component';
+import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
@@ -40,6 +41,7 @@ import { ConfiguracionComisionesComponent } from './components/configuracion-com
 import { SeleccionPlanesComponent } from './components/seleccion-planes.component';
 import {
   Alertas,
+  CanalVenta,
   ClasifComision,
   CLASIF_LABEL,
   ConfiguracionPlanilla,
@@ -56,6 +58,10 @@ import {
   Vendedora,
   VentaImportada,
 } from './planilla.model';
+
+/** Etiquetas del filtro de canal — mismo criterio que `tarifaDe()`: cambia la
+ *  tarifa aplicada (empresa vs. propia), así que conviene poder acotar por él. */
+const CANAL_LABEL: Record<CanalVenta, string> = { EMPRESA: 'Empresa', PROPIO: 'Propio' };
 
 type Pestana = 'IMPORTAR' | 'CLASIFICACION' | 'PLANES' | 'REPORTES' | 'CONFIGURACION';
 
@@ -115,6 +121,7 @@ function ultimoPrimero(a: VentaImportada, b: VentaImportada): number {
     IconComponent,
     InfoHintComponent,
     InputComponent,
+    KpiCardComponent,
     LoadingSkeletonComponent,
     PageHeaderComponent,
     PaginatorComponent,
@@ -144,6 +151,8 @@ export class PlanillaComisionesPage implements OnDestroy {
   protected readonly meses = MESES;
   protected readonly clasificaciones = Object.keys(CLASIF_LABEL) as ClasifComision[];
   protected readonly tipos = Object.keys(TIPO_LABEL) as TipoComision[];
+  protected readonly canales = Object.keys(CANAL_LABEL) as CanalVenta[];
+  protected readonly canalLabel = CANAL_LABEL;
 
   /* ── Estado de UI ───────────────────────────────────────────────────── */
 
@@ -165,6 +174,10 @@ export class PlanillaComisionesPage implements OnDestroy {
   /* El tipo agrupa varias clasificaciones —A planes, B cirugías, C el resto—, así
      que revisar "todo lo que paga por Tipo B" no se podía con el filtro anterior. */
   protected readonly filtroTipo = signal<TipoComision | null>(null);
+  /** EMPRESA/PROPIO. El backend ya lo soportaba y no había forma de acotarlo
+   *  desde la interfaz: para ver "todo lo vendido por canal propio" había que
+   *  contar a mano fila por fila. */
+  protected readonly filtroCanal = signal<CanalVenta | null>(null);
   protected readonly filtroVendedora = signal<string | null>(null);
 
   /** Si hay algún filtro puesto, para que el pie no diga "del mes" cuando no lo es. */
@@ -172,6 +185,7 @@ export class PlanillaComisionesPage implements OnDestroy {
     () =>
       Boolean(this.filtroClasif()) ||
       Boolean(this.filtroTipo()) ||
+      Boolean(this.filtroCanal()) ||
       Boolean(this.filtroVendedora()) ||
       Boolean(this.busquedaDebounced()) ||
       this.soloExcluidas() ||
@@ -247,6 +261,7 @@ export class PlanillaComisionesPage implements OnDestroy {
         pagina: this.pagina(),
         clasif: this.filtroClasif() ?? undefined,
         tipo: this.filtroTipo() ?? undefined,
+        canal: this.filtroCanal() ?? undefined,
         vendedoraId: this.filtroVendedora() ?? undefined,
         buscar: this.busquedaDebounced() || undefined,
         soloExcluidas: this.soloExcluidas(),
@@ -706,6 +721,7 @@ export class PlanillaComisionesPage implements OnDestroy {
     this.busqueda.set('');
     this.filtroClasif.set(null);
     this.filtroTipo.set(null);
+    this.filtroCanal.set(null);
     this.filtroVendedora.set(null);
     this.soloExcluidas.set(false);
     this.soloSinClasificar.set(false);
@@ -714,6 +730,12 @@ export class PlanillaComisionesPage implements OnDestroy {
 
   protected filtrarPorClasif(valor: string): void {
     this.filtroClasif.set(valor ? (valor as ClasifComision) : null);
+    this.pagina.set(1);
+  }
+
+  /** Alternar: pulsar el canal ya activo vuelve a "Todos". */
+  protected filtrarPorCanal(valor: CanalVenta): void {
+    this.filtroCanal.update(actual => (actual === valor ? null : valor));
     this.pagina.set(1);
   }
 

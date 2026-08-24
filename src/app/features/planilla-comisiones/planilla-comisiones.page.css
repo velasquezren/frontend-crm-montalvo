@@ -156,47 +156,16 @@
   box-shadow: var(--shadow-lifted);
 }
 
-/* ── Métricas ─────────────────────────────────────────────────────── */
+/* ── Resumen de importación ─────────────────────────────────────────
+   Las cifras van en <app-kpi-card> sobre `.grid-kpis-modern` (styles.css
+   global): esta caja ya se maquetaba a mano con `.metrica`/`.grid-metricas`,
+   duplicando el átomo que `resumen-anual.page.html` ya usa para lo mismo. */
 .resumen-import {
   margin-top: 20px;
   padding: 20px;
   background: var(--color-bg-workspace);
   border: 1px solid var(--color-border);
   border-radius: 16px;
-}
-
-.grid-metricas {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
-}
-
-.metrica {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 14px 16px;
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  box-shadow: var(--shadow-subtle);
-}
-
-.metrica-valor {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--color-text-dark);
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-}
-
-.metrica-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
 .aviso-amber {
@@ -213,28 +182,29 @@
   gap: 10px;
 }
 
-.chip-filtro {
-  padding: 7px 16px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  background: var(--color-bg-workspace);
-  border: 1px solid var(--color-border);
-  border-radius: 9999px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s ease;
+/* Dos filas separadas a propósito: la primera ACOTA qué filas se ven
+   (búsqueda, clasificación, canal, chips rápidos); la segunda no toca el
+   filtro — cambia cómo se LEEN los montos (moneda) o dispara el cálculo.
+   Antes vivían juntas en una sola hilera y competían por espacio. */
+.filtros-fila-buscar {
+  margin-bottom: 10px;
 }
 
-.chip-filtro:hover {
-  color: var(--color-text-dark);
-  border-color: var(--color-text-muted);
+.filtros-fila-acciones {
+  justify-content: flex-end;
+  margin-bottom: 16px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
 }
 
-.chip-filtro-activo {
-  color: white;
-  background: var(--color-primary);
-  border-color: var(--color-primary);
+/* Varios chips que son opciones del mismo filtro (canal, o los rápidos de
+   clasificación) van agrupados y con `role="group"` — sueltos, un lector de
+   pantalla los anuncia como botones sin relación entre sí. */
+.grupo-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .chip-motivo {
@@ -274,24 +244,6 @@
   border-radius: 12px;
 }
 
-.input-mini {
-  width: 96px;
-  padding: 5px 8px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-dark);
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-.input-mini:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
-}
-
 /* ── Servicios sin clasificar ─────────────────────────────────────── */
 .fila-sin-clasificar {
   display: flex;
@@ -326,10 +278,6 @@
 
 .fila-interactiva.fila-activa:hover {
   background: color-mix(in srgb, var(--color-secondary) 18%, white);
-}
-
-.fila-pendiente {
-  background: color-mix(in srgb, var(--color-critical-bg) 50%, white);
 }
 
 .tipo-pill {
@@ -445,20 +393,6 @@
 .tarjeta-agente-pie {
   font-size: 0.625rem;
   color: var(--color-text-muted);
-}
-
-/* ── Reglas globales del cálculo ─────────────────────────────────────────
-   Cada fila explica qué hace la palanca antes de dejar cambiarla: son valores
-   que mueven la nómina de todo el equipo, no preferencias de pantalla. */
-.regla-global {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  background: var(--color-bg-light);
 }
 
 /* Mientras llega una respuesta nueva se atenúa lo que ya está en pantalla en vez

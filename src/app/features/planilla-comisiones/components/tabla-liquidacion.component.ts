@@ -1,10 +1,30 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { InfoHintComponent } from '../../../shared/components/info-hint/info-hint.component';
+import { InputComponent } from '../../../shared/components/input/input.component';
 import { TableComponent } from '../../../shared/components/table/table.component';
 import { MonedaPipe } from '../../../shared/pipes/moneda.pipe';
 import { FilaConsolidado } from '../planilla.model';
+
+/** Campos por los que se puede ordenar, en memoria — no hay paginación que romper. */
+type CampoOrden =
+  | 'nombre'
+  | 'montoVendido'
+  | 'planesVendidos'
+  | 'acumuladoCirugias'
+  | 'comisionA'
+  | 'comisionTipoARA'
+  | 'comisionB'
+  | 'comisionC'
+  | 'bonoTrimestral'
+  | 'otrosBonos'
+  | 'totalUsd'
+  | 'totalBob'
+  | 'sueldoBase'
+  | 'totalGanado';
+
+type DireccionOrden = 'asc' | 'desc';
 
 /**
  * La liquidación del mes, vendedora por vendedora.
@@ -22,28 +42,75 @@ import { FilaConsolidado } from '../planilla.model';
  *
  * Es **presentacional**: recibe filas y totales ya calculados y no pide nada al
  * servidor. Quien lo usa decide de dónde salen los datos.
+ *
+ * ## Orden y búsqueda son locales, y el patrón sale de `analitica.page.html`
+ *
+ * `filas()` llega COMPLETA — el consolidado de un periodo no se pagina, son
+ * como mucho un puñado de vendedoras — así que ordenar y filtrar en memoria no
+ * miente sobre nada que no esté en pantalla. Por eso este componente NO usa
+ * `th[appOrdenable]` (`ThOrdenableComponent`): esa cabecera documenta
+ * explícitamente que ordena el SERVIDOR, y usarla aquí contradiría lo que
+ * promete en cualquier tabla paginada del CRM que sí la use.
+ *
+ * Para la cabecera ordenable local **no se inventó CSS nuevo**: es el mismo
+ * patrón que ya usa `analitica.page.html` (mismo módulo de Finanzas) para su
+ * tabla de categorías — clases Tailwind (`cursor-pointer select-none
+ * hover:text-primary transition-colors`) más un `<app-icon>` condicional, sin
+ * clases propias. La primera versión de este archivo sí se inventó un bloque
+ * `.th-clic*` de 40 líneas que reproducía a mano el aspecto de
+ * `ThOrdenableComponent` — duplicación evitable que ya existía resuelta a un
+ * componente de distancia.
+ *
+ * ## La moneda se aplica UNA vez, no columna por columna
+ *
+ * Antes, la mitad de las columnas (`montoVendido`, las comisiones, `totalUsd`)
+ * mostraban siempre "$…" con un `number` a mano, y la otra mitad (`totalBob`,
+ * `sueldoBase`, `totalGanado`) sí pasaban por el pipe `moneda` y por eso sí
+ * obedecían el selector Bs/$us del topbar. Con el selector en Bs, una misma
+ * fila mezclaba dólares y bolivianos sin que nada lo explicara. Ahora las 14
+ * columnas de dinero pasan por el mismo pipe con el mismo TC.
+ *
+ * El selector de moneda en sí **no vive aquí ni en la página**: ya es global,
+ * uno solo en el topbar (`layout.component.html`). Añadir uno propio habría
+ * sido el mismo error de fondo que el bloque `.th-clic*` — dos controles
+ * distintos gobernando el mismo estado.
  */
 @Component({
   selector: 'app-tabla-liquidacion',
-  imports: [DecimalPipe, MonedaPipe, TableComponent, InfoHintComponent],
+  imports: [MonedaPipe, TableComponent, InfoHintComponent, IconComponent, InputComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <div class="tabla-liquidacion-buscador">
+      <app-input type="search" placeholder="Buscar vendedora…" [(value)]="busqueda" />
+    </div>
+
     <app-table [dense]="true" [maxHeight]="maxHeight()">
       <thead>
         <tr>
-          <th class="text-left celda-fija">Vendedora</th>
-          <th class="text-right">
+          <th class="text-left celda-fija cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('nombre')">
+            Vendedora
+            @if (ordenCampo() === 'nombre') {
+              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
+            }
+          </th>
+          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('montoVendido')">
             Facturado
+            @if (ordenCampo() === 'montoVendido') {
+              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
+            }
             <app-info-hint titulo="Facturado y base de cálculo">
-              <p>Lo cobrado en el mes, <strong>en dólares</strong> — la moneda del Excel de FileMaker.</p>
+              <p>Lo cobrado en el mes, convertido con el tipo de cambio del periodo.</p>
               <p>
                 Las comisiones no se calculan sobre este número sino sobre la <strong>base</strong>,
                 que es el monto menos el impuesto vigente.
               </p>
             </app-info-hint>
           </th>
-          <th class="text-right">
+          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('planesVendidos')">
             Planes
+            @if (ordenCampo() === 'planesVendidos') {
+              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
+            }
             <app-info-hint titulo="Cuántos planes comisionan">
               <p>
                 El objetivo es una <strong>franquicia</strong>: solo comisionan los que lo
@@ -74,19 +141,30 @@ import { FilaConsolidado } from '../planilla.model';
             </app-info-hint>
           </th>
           @if (mostrarCirugias()) {
-            <th class="text-right">
+            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('acumuladoCirugias')">
               Cirugías
+              @if (ordenCampo() === 'acumuladoCirugias') {
+                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
+              }
               <app-info-hint titulo="Cirugías del mes">
                 <p>
-                  Acumulado de cirugías e internaciones, en dólares. Su <strong>nivel</strong> sale
+                  Acumulado de cirugías e internaciones. Su <strong>nivel</strong> sale
                   de este monto —no del excedente sobre el objetivo— y decide el porcentaje.
                 </p>
               </app-info-hint>
             </th>
           }
-          <th class="text-right">Tipo A</th>
-          <th class="text-right">
+          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('comisionA')">
+            Tipo A
+            @if (ordenCampo() === 'comisionA') {
+              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
+            }
+          </th>
+          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('comisionTipoARA')">
             Tipo A (RA)
+            @if (ordenCampo() === 'comisionTipoARA') {
+              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
+            }
             <app-info-hint titulo="Tipo A (RA)">
               <p>
                 No es la misma comisión que <strong>Tipo A</strong>: esta paga aparte, sobre las
@@ -101,10 +179,23 @@ import { FilaConsolidado } from '../planilla.model';
               </p>
             </app-info-hint>
           </th>
-          <th class="text-right">Tipo B</th>
-          <th class="text-right">Tipo C</th>
-          <th class="text-right">
+          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('comisionB')">
+            Tipo B
+            @if (ordenCampo() === 'comisionB') {
+              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
+            }
+          </th>
+          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('comisionC')">
+            Tipo C
+            @if (ordenCampo() === 'comisionC') {
+              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
+            }
+          </th>
+          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('bonoTrimestral')">
             Bono trimestral
+            @if (ordenCampo() === 'bonoTrimestral') {
+              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
+            }
             <app-info-hint titulo="Bono trimestral">
               <p>
                 <strong>0,5 % del PROMEDIO</strong> de lo facturado en los tres meses del trimestre,
@@ -117,8 +208,11 @@ import { FilaConsolidado } from '../planilla.model';
               <p>Se paga en marzo, junio, septiembre y diciembre.</p>
             </app-info-hint>
           </th>
-          <th class="text-right">
+          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('otrosBonos')">
             Otros bonos
+            @if (ordenCampo() === 'otrosBonos') {
+              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
+            }
             <app-info-hint titulo="Bono de jefatura y publicidad">
               <p>
                 Cada vendedora que supera su objetivo mensual aporta un porcentaje de su
@@ -130,15 +224,35 @@ import { FilaConsolidado } from '../planilla.model';
               </p>
             </app-info-hint>
           </th>
-          <th class="text-right">Total USD</th>
-          <th class="text-right">Total Bs</th>
-          <th class="text-right">Sueldo</th>
-          <th class="text-right">A pagar</th>
+          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('totalUsd')">
+            Total USD
+            @if (ordenCampo() === 'totalUsd') {
+              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
+            }
+          </th>
+          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('totalBob')">
+            Total Bs
+            @if (ordenCampo() === 'totalBob') {
+              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
+            }
+          </th>
+          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('sueldoBase')">
+            Sueldo
+            @if (ordenCampo() === 'sueldoBase') {
+              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
+            }
+          </th>
+          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('totalGanado')">
+            A pagar
+            @if (ordenCampo() === 'totalGanado') {
+              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
+            }
+          </th>
         </tr>
       </thead>
 
       <tbody>
-        @for (f of filas(); track f.vendedoraId) {
+        @for (f of filasVisibles(); track f.vendedoraId) {
           <tr>
             <td class="celda-fija">
               <span class="font-semibold text-sm text-text-dark block">{{ f.nombre }}</span>
@@ -146,7 +260,7 @@ import { FilaConsolidado } from '../planilla.model';
             </td>
 
             <td class="text-right font-medium text-text-dark whitespace-nowrap">
-              \${{ f.montoVendido | number: '1.2-2' }}
+              {{ f.montoVendido | moneda: 'USD' : tipoCambio() }}
             </td>
 
             <td class="text-right whitespace-nowrap">
@@ -164,7 +278,7 @@ import { FilaConsolidado } from '../planilla.model';
 
             @if (mostrarCirugias()) {
               <td class="text-right whitespace-nowrap">
-                <span class="font-medium text-text-dark">\${{ f.acumuladoCirugias | number: '1.2-2' }}</span>
+                <span class="font-medium text-text-dark">{{ f.acumuladoCirugias | moneda: 'USD' : tipoCambio() }}</span>
                 @if (f.nivelCirugia) {
                   <span class="text-[10px] text-text-muted font-medium block text-right">
                     nivel {{ f.nivelCirugia }}
@@ -173,38 +287,39 @@ import { FilaConsolidado } from '../planilla.model';
               </td>
             }
 
-            <td class="text-right whitespace-nowrap">\${{ f.comisionA | number: '1.2-2' }}</td>
+            <td class="text-right whitespace-nowrap">{{ f.comisionA | moneda: 'USD' : tipoCambio() }}</td>
             <td class="text-right whitespace-nowrap">
-              \${{ f.comisionTipoARA | number: '1.2-2' }}
+              {{ f.comisionTipoARA | moneda: 'USD' : tipoCambio() }}
               @if (f.nivelTipoARA) {
                 <span class="text-[10px] text-text-muted font-medium block text-right">
                   nivel {{ f.nivelTipoARA }}
                 </span>
               }
             </td>
-            <td class="text-right whitespace-nowrap">\${{ f.comisionB | number: '1.2-2' }}</td>
-            <td class="text-right whitespace-nowrap">\${{ f.comisionC | number: '1.2-2' }}</td>
+            <td class="text-right whitespace-nowrap">{{ f.comisionB | moneda: 'USD' : tipoCambio() }}</td>
+            <td class="text-right whitespace-nowrap">{{ f.comisionC | moneda: 'USD' : tipoCambio() }}</td>
 
             <td class="text-right whitespace-nowrap">
-              <span class="font-medium text-text-dark">\${{ f.bonoTrimestral | number: '1.2-2' }}</span>
-              @if (f.bonoTrimestral) {
-                <span class="text-[10px] text-text-muted block text-right">
-                  {{ f.bonoTrimestral * tipoCambio() | moneda }}
-                </span>
-              }
+              <span class="font-medium text-text-dark">{{ f.bonoTrimestral | moneda: 'USD' : tipoCambio() }}</span>
             </td>
 
             <td class="text-right whitespace-nowrap">
-              \${{ f.bonoJefatura + f.bonoPublicidad | number: '1.2-2' }}
+              {{ f.bonoJefatura + f.bonoPublicidad | moneda: 'USD' : tipoCambio() }}
             </td>
 
             <td class="text-right font-semibold text-primary whitespace-nowrap">
-              \${{ f.totalUsd | number: '1.2-2' }}
+              {{ f.totalUsd | moneda: 'USD' : tipoCambio() }}
             </td>
-            <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ f.totalBob | moneda:'BOB' }}</td>
-            <td class="text-right text-text-muted whitespace-nowrap">{{ f.sueldoBase | moneda:'BOB' }}</td>
+            <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ f.totalBob | moneda: 'BOB' : tipoCambio() }}</td>
+            <td class="text-right text-text-muted whitespace-nowrap">{{ f.sueldoBase | moneda: 'BOB' : tipoCambio() }}</td>
             <td class="text-right font-extrabold text-secondary text-base whitespace-nowrap">
-              {{ f.totalGanado | moneda:'BOB' }}
+              {{ f.totalGanado | moneda: 'BOB' : tipoCambio() }}
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td [attr.colspan]="mostrarCirugias() ? 14 : 13" class="text-center text-sm text-text-muted py-6">
+              Ninguna vendedora coincide con "{{ busqueda() }}".
             </td>
           </tr>
         }
@@ -213,22 +328,22 @@ import { FilaConsolidado } from '../planilla.model';
       <tfoot>
         <tr class="fila-totales">
           <td class="text-left font-bold celda-fija">TOTALES</td>
-          <td class="text-right font-bold whitespace-nowrap">\${{ totales()['montoVendido'] | number: '1.2-2' }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ totales()['montoVendido'] | moneda: 'USD' : tipoCambio() }}</td>
           <td></td>
           @if (mostrarCirugias()) {
             <td></td>
           }
-          <td class="text-right font-bold whitespace-nowrap">\${{ totales()['comisionA'] | number: '1.2-2' }}</td>
-          <td class="text-right font-bold whitespace-nowrap">\${{ totales()['comisionTipoARA'] | number: '1.2-2' }}</td>
-          <td class="text-right font-bold whitespace-nowrap">\${{ totales()['comisionB'] | number: '1.2-2' }}</td>
-          <td class="text-right font-bold whitespace-nowrap">\${{ totales()['comisionC'] | number: '1.2-2' }}</td>
-          <td class="text-right font-bold whitespace-nowrap">\${{ totales()['bonoTrimestral'] | number: '1.2-2' }}</td>
-          <td class="text-right font-bold whitespace-nowrap">\${{ otrosBonos() | number: '1.2-2' }}</td>
-          <td class="text-right font-bold text-primary whitespace-nowrap">\${{ totales()['totalUsd'] | number: '1.2-2' }}</td>
-          <td class="text-right font-bold whitespace-nowrap">{{ totales()['totalBob'] | moneda:'BOB' }}</td>
-          <td class="text-right font-bold whitespace-nowrap">{{ totales()['sueldoBase'] | moneda:'BOB' }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ totales()['comisionA'] | moneda: 'USD' : tipoCambio() }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ totales()['comisionTipoARA'] | moneda: 'USD' : tipoCambio() }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ totales()['comisionB'] | moneda: 'USD' : tipoCambio() }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ totales()['comisionC'] | moneda: 'USD' : tipoCambio() }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ totales()['bonoTrimestral'] | moneda: 'USD' : tipoCambio() }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ otrosBonos() | moneda: 'USD' : tipoCambio() }}</td>
+          <td class="text-right font-bold text-primary whitespace-nowrap">{{ totales()['totalUsd'] | moneda: 'USD' : tipoCambio() }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ totales()['totalBob'] | moneda: 'BOB' : tipoCambio() }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ totales()['sueldoBase'] | moneda: 'BOB' : tipoCambio() }}</td>
           <td class="text-right font-extrabold text-secondary text-base whitespace-nowrap">
-            {{ totales()['totalGanado'] | moneda:'BOB' }}
+            {{ totales()['totalGanado'] | moneda: 'BOB' : tipoCambio() }}
           </td>
         </tr>
       </tfoot>
@@ -238,6 +353,11 @@ import { FilaConsolidado } from '../planilla.model';
     :host {
       display: block;
       overflow-x: auto;
+    }
+
+    .tabla-liquidacion-buscador {
+      max-width: 280px;
+      margin-bottom: 10px;
     }
 
     /* El nombre se queda fijo al desplazar en horizontal: con tantas columnas,
@@ -263,7 +383,7 @@ export class TablaLiquidacionComponent {
   readonly filas = input.required<readonly FilaConsolidado[]>();
   readonly totales = input.required<Record<string, number>>();
 
-  /** Para mostrar el equivalente en bolivianos del bono trimestral. */
+  /** Para convertir las columnas nativas en USD cuando el selector está en Bs. */
   readonly tipoCambio = input<number>(1);
 
   /** La columna de cirugías solo interesa en la planilla operativa. */
@@ -271,11 +391,58 @@ export class TablaLiquidacionComponent {
 
   readonly maxHeight = input<string | undefined>(undefined);
 
+  protected readonly busqueda = signal('');
+  protected readonly ordenCampo = signal<CampoOrden>('totalGanado');
+  protected readonly ordenDireccion = signal<DireccionOrden>('desc');
+
   /** Jefatura + publicidad. El backend manda `bonos` con los tres sumados. */
   protected readonly otrosBonos = computed(() => {
     const t = this.totales();
     return (t['bonos'] ?? 0) - (t['bonoTrimestral'] ?? 0);
   });
+
+  /**
+   * Filas buscadas y ordenadas. Todo en memoria: `filas()` ya trae el
+   * consolidado completo del periodo, así que ni el filtro ni el orden dejan
+   * fuera nada que no esté también fuera de la vista.
+   */
+  protected readonly filasVisibles = computed<readonly FilaConsolidado[]>(() => {
+    const texto = this.busqueda().trim().toLowerCase();
+    const filtradas = texto
+      ? this.filas().filter(
+          f => f.nombre.toLowerCase().includes(texto) || f.codigo.toLowerCase().includes(texto),
+        )
+      : this.filas();
+
+    const campo = this.ordenCampo();
+    const signo = this.ordenDireccion() === 'asc' ? 1 : -1;
+
+    return [...filtradas].sort((a, b) => {
+      const va = this.valorDeCampo(a, campo);
+      const vb = this.valorDeCampo(b, campo);
+      if (typeof va === 'string' || typeof vb === 'string') {
+        return signo * String(va).localeCompare(String(vb));
+      }
+      return signo * (va - vb);
+    });
+  });
+
+  private valorDeCampo(f: FilaConsolidado, campo: CampoOrden): number | string {
+    if (campo === 'nombre') return f.nombre;
+    if (campo === 'otrosBonos') return f.bonoJefatura + f.bonoPublicidad;
+    return f[campo];
+  }
+
+  /** Sobre la columna activa invierte; sobre una nueva empieza descendente —
+   *  mismo criterio que `ordenarClasif` en `analitica.page.ts`. */
+  protected ordenarPor(campo: CampoOrden): void {
+    if (this.ordenCampo() === campo) {
+      this.ordenDireccion.update(d => (d === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+    this.ordenCampo.set(campo);
+    this.ordenDireccion.set('desc');
+  }
 
   /**
    * Desglose de los dos cálculos que esta columna resume en un número.

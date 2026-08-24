@@ -57,6 +57,9 @@ export interface FiltroVentas {
    *  acotar con `clasif`: "todo lo que paga por Tipo B" cruza CIRUGIA e
    *  internaciones. */
   tipo?: TipoComision;
+  /** EMPRESA/PROPIO. El backend ya lo soporta (`QueryVentasImportadasDto.canal`);
+   *  faltaba exponerlo aquí. Cambia la tarifa aplicada, ver `tarifaDe()`. */
+  canal?: CanalVenta;
   vendedoraId?: string;
   buscar?: string;
   soloExcluidas?: boolean;
@@ -91,6 +94,7 @@ export class PlanillaComisionesService {
       pagina: filtro.pagina,
       clasif: filtro.clasif,
       tipo: filtro.tipo,
+      canal: filtro.canal,
       vendedoraId: filtro.vendedoraId,
       buscar: filtro.buscar,
       soloExcluidas: filtro.soloExcluidas ? true : undefined,

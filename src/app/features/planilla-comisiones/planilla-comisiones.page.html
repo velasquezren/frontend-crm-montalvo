@@ -100,23 +100,23 @@
     @if (ultimaImportacion(); as r) {
       <div class="resumen-import">
         <h4 class="text-sm font-bold text-text-dark mb-3">Resumen de la última importación</h4>
-        <div class="grid-metricas">
-          <div class="metrica">
-            <span class="metrica-valor">{{ r.filasLeidas }}</span>
-            <span class="metrica-label">filas leídas</span>
-          </div>
-          <div class="metrica">
-            <span class="metrica-valor text-secondary">{{ r.filasComisionables }}</span>
-            <span class="metrica-label">comisionables</span>
-          </div>
-          <div class="metrica">
-            <span class="metrica-valor">{{ r.vendedorasDetectadas }}</span>
-            <span class="metrica-label">vendedoras</span>
-          </div>
-          <div class="metrica">
-            <span class="metrica-valor" [class.text-critical]="r.filasSinClasificar > 0">{{ r.filasSinClasificar }}</span>
-            <span class="metrica-label">sin clasificar</span>
-          </div>
+        <div class="grid-kpis-modern">
+          <app-kpi-card label="Filas leídas" [valor]="r.filasLeidas" icon="file-text" tono="neutral" [compacto]="true" />
+          <app-kpi-card
+            label="Comisionables"
+            [valor]="r.filasComisionables"
+            icon="check-circle"
+            tono="secondary"
+            tonoValor="secondary"
+            [compacto]="true" />
+          <app-kpi-card label="Vendedoras" [valor]="r.vendedorasDetectadas" icon="users" tono="primary" [compacto]="true" />
+          <app-kpi-card
+            label="Sin clasificar"
+            [valor]="r.filasSinClasificar"
+            icon="alert-circle"
+            [tono]="r.filasSinClasificar > 0 ? 'critical' : 'neutral'"
+            [tonoValor]="r.filasSinClasificar > 0 ? 'critical' : ''"
+            [compacto]="true" />
         </div>
         @if (r.columnasAusentes.length > 0) {
           <p class="aviso-amber mt-3">
@@ -244,7 +244,8 @@
 
     <!-- Panel principal de clasificación -->
     <section class="panel">
-      <div class="filtros mb-4">
+      <!-- Fila 1: búsqueda y filtros que acotan qué filas se ven. -->
+      <div class="filtros filtros-fila-buscar">
         <div class="flex-1 min-w-[220px]">
           <app-input type="search" placeholder="Buscar por servicio o paciente…" [(value)]="busqueda" />
         </div>
@@ -260,16 +261,46 @@
             <option [value]="t" [selected]="t === filtroTipo()">Tipo {{ t }} — {{ tipoLabel[t] }}</option>
           }
         </select>
-        <app-filter-chip [active]="soloSinClasificar()" (clicked)="alternarSoloSinClasificar()">
-          Sin clasificar
-        </app-filter-chip>
-        <app-filter-chip [active]="soloExcluidas()" (clicked)="alternarSoloExcluidas()">
-          Excluidas
-        </app-filter-chip>
+
+        <!-- Canal: el backend ya lo soportaba (cambia la tarifa aplicada, ver
+             columna "Tarifa") pero no se podía acotar desde aquí. -->
+        <div role="group" aria-label="Canal" class="grupo-chips">
+          @for (c of canales; track c) {
+            <app-filter-chip size="sm" [active]="filtroCanal() === c" (clicked)="filtrarPorCanal(c)">
+              {{ canalLabel[c] }}
+            </app-filter-chip>
+          }
+        </div>
+
+        <!-- Filtros rápidos: el chip ya sabe contar, así que se ve en cero
+             antes de pulsarlo — no hace falta pulsar para descubrir que vacía
+             la tabla. -->
+        <div role="group" aria-label="Filtros rápidos" class="grupo-chips">
+          <app-filter-chip
+            size="sm"
+            [active]="soloSinClasificar()"
+            [count]="alertas()?.totales?.filasSinClasificar"
+            (clicked)="alternarSoloSinClasificar()">
+            Sin clasificar
+          </app-filter-chip>
+          <app-filter-chip
+            size="sm"
+            [active]="soloExcluidas()"
+            [count]="alertas()?.totales?.filasExcluidas"
+            (clicked)="alternarSoloExcluidas()">
+            Excluidas
+          </app-filter-chip>
+        </div>
+
         @if (hayFiltroActivo()) {
           <app-button variant="ghost" size="sm" icon="x" (clicked)="limpiarFiltros()">Limpiar</app-button>
         }
+      </div>
 
+      <!-- Fila 2: la acción de calcular, separada de los filtros — que no la
+           empujen ni compitan por espacio con ella en una sola hilera. El
+           selector de moneda ya vive una sola vez, en el topbar (global). -->
+      <div class="filtros filtros-fila-acciones">
         @if (periodoActual()?.estado !== 'CERRADO') {
           @if (confirmandoCalculo()) {
             <div class="confirmar-calculo">
@@ -479,7 +510,7 @@
                 </td>
                 <td class="text-left text-xs font-medium text-text-dark">{{ v.vendedora?.nombre ?? '—' }}</td>
                 <td class="text-center">
-                  <app-badge [variant]="v.canal === 'PROPIO' ? 'info' : 'neutral'">{{ v.canal }}</app-badge>
+                  <app-badge [variant]="v.canal === 'PROPIO' ? 'info' : 'neutral'">{{ canalLabel[v.canal] }}</app-badge>
                 </td>
                 <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ v.precio | moneda }}</td>
                 <!-- Mostrar el importe del anticipo era repetir la base: en un
@@ -690,29 +721,28 @@
         <h3 class="text-sm font-bold text-text-dark mb-3">
           Consolidado General — {{ nombreMes(rep.periodo.mes) }} {{ rep.periodo.anio }}
         </h3>
-        <div class="grid-metricas">
-          <div class="metrica">
-            <span class="metrica-valor">{{ rep.totales['montoVendido'] | moneda }}</span>
-            <span class="metrica-label">total vendido</span>
-          </div>
-          <div class="metrica">
-            <span class="metrica-valor">{{ rep.totales['baseCalculo'] | moneda }}</span>
-            <span class="metrica-label">base de cálculo</span>
-          </div>
-          <div class="metrica">
-            <span class="metrica-valor text-primary">{{ rep.totales['totalUsd'] | moneda }}</span>
-            <span class="metrica-label">comisión total</span>
-          </div>
-          <div class="metrica">
-            <span class="metrica-valor text-secondary">{{ rep.totales['totalBob'] | moneda:'BOB' }}</span>
-            <span class="metrica-label">comisión en bolivianos</span>
-          </div>
+        <div class="grid-kpis-modern">
+          <app-kpi-card label="Total vendido" [valor]="rep.totales['montoVendido'] | moneda" icon="trending-up" tono="neutral" />
+          <app-kpi-card label="Base de cálculo" [valor]="rep.totales['baseCalculo'] | moneda" icon="percent" tono="neutral" />
+          <app-kpi-card
+            label="Comisión total"
+            [valor]="rep.totales['totalUsd'] | moneda"
+            icon="dollar-sign"
+            tono="primary"
+            tonoValor="primary"
+            [destacado]="true" />
+          <app-kpi-card
+            label="Comisión en bolivianos"
+            [valor]="rep.totales['totalBob'] | moneda:'BOB'"
+            icon="wallet"
+            tono="secondary"
+            tonoValor="secondary" />
         </div>
         <div class="flex flex-wrap gap-2 mt-4">
-          <span class="chip-motivo">Tipo A · Planes: {{ rep.totales['comisionA'] | moneda }}</span>
-          <span class="chip-motivo">Tipo B · Cirugías: {{ rep.totales['comisionB'] | moneda }}</span>
-          <span class="chip-motivo">Tipo C · Servicios: {{ rep.totales['comisionC'] | moneda }}</span>
-          <span class="chip-motivo">Bonos: {{ rep.totales['bonos'] | moneda }}</span>
+          <app-badge variant="info">Tipo A · Planes: {{ rep.totales['comisionA'] | moneda }}</app-badge>
+          <app-badge variant="info">Tipo B · Cirugías: {{ rep.totales['comisionB'] | moneda }}</app-badge>
+          <app-badge variant="info">Tipo C · Servicios: {{ rep.totales['comisionC'] | moneda }}</app-badge>
+          <app-badge variant="neutral">Bonos: {{ rep.totales['bonos'] | moneda }}</app-badge>
         </div>
       </section>
 
