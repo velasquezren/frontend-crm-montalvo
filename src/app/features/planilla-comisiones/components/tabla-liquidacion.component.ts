@@ -4,7 +4,7 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { InfoHintComponent } from '../../../shared/components/info-hint/info-hint.component';
 import { InputComponent } from '../../../shared/components/input/input.component';
 import { TableComponent } from '../../../shared/components/table/table.component';
-import { MonedaPipe } from '../../../shared/pipes/moneda.pipe';
+import { formatearBs, formatearUsd, MonedaPipe } from '../../../shared/pipes/moneda.pipe';
 import { FilaConsolidado } from '../planilla.model';
 
 /** Campos por los que se puede ordenar, en memoria — no hay paginación que romper. */
@@ -61,14 +61,26 @@ type DireccionOrden = 'asc' | 'desc';
  * `ThOrdenableComponent` — duplicación evitable que ya existía resuelta a un
  * componente de distancia.
  *
- * ## La moneda se aplica UNA vez, no columna por columna
+ * ## La moneda se aplica UNA vez, salvo en la columna que ya la nombra
  *
  * Antes, la mitad de las columnas (`montoVendido`, las comisiones, `totalUsd`)
  * mostraban siempre "$…" con un `number` a mano, y la otra mitad (`totalBob`,
  * `sueldoBase`, `totalGanado`) sí pasaban por el pipe `moneda` y por eso sí
  * obedecían el selector Bs/$us del topbar. Con el selector en Bs, una misma
- * fila mezclaba dólares y bolivianos sin que nada lo explicara. Ahora las 14
- * columnas de dinero pasan por el mismo pipe con el mismo TC.
+ * fila mezclaba dólares y bolivianos sin que nada lo explicara. Se unificó
+ * para que las columnas de desglose (Facturado, Cirugías, Tipo A/B/C, los dos
+ * bonos) sigan todas al selector con el mismo TC.
+ *
+ * **Pero "Total USD", "Total Bs", "Sueldo" y "A pagar" son la excepción, a
+ * propósito.** Su encabezado YA nombra la moneda — no es un dato que el
+ * selector deba traducir, es el resultado final que administración necesita
+ * ver siempre en su moneda real: nadie paga un sueldo boliviano en dólares
+ * porque alguien tocó un switch de la interfaz. Dejarlas seguir al selector
+ * (como se hizo en la primera versión de este archivo) las volvía inútiles en
+ * cuanto se tocaba el switch: con el selector en $us, "Total Bs" mostraba el
+ * mismo número que "Total USD" — dos columnas para un solo dato, y la que
+ * decía "Bs" mintiendo. Por eso estas cuatro usan `formatearUsd`/`formatearBs`
+ * (sin pipe, sin TC, siempre esa moneda) y no `| moneda`.
  *
  * El selector de moneda en sí **no vive aquí ni en la página**: ya es global,
  * uno solo en el topbar (`layout.component.html`). Añadir uno propio habría
@@ -308,12 +320,12 @@ type DireccionOrden = 'asc' | 'desc';
             </td>
 
             <td class="text-right font-semibold text-primary whitespace-nowrap">
-              {{ f.totalUsd | moneda: 'USD' : tipoCambio() }}
+              {{ formatearUsd(f.totalUsd) }}
             </td>
-            <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ f.totalBob | moneda: 'BOB' : tipoCambio() }}</td>
-            <td class="text-right text-text-muted whitespace-nowrap">{{ f.sueldoBase | moneda: 'BOB' : tipoCambio() }}</td>
+            <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ formatearBs(f.totalBob) }}</td>
+            <td class="text-right text-text-muted whitespace-nowrap">{{ formatearBs(f.sueldoBase) }}</td>
             <td class="text-right font-extrabold text-secondary text-base whitespace-nowrap">
-              {{ f.totalGanado | moneda: 'BOB' : tipoCambio() }}
+              {{ formatearBs(f.totalGanado) }}
             </td>
           </tr>
         } @empty {
@@ -339,11 +351,11 @@ type DireccionOrden = 'asc' | 'desc';
           <td class="text-right font-bold whitespace-nowrap">{{ totales()['comisionC'] | moneda: 'USD' : tipoCambio() }}</td>
           <td class="text-right font-bold whitespace-nowrap">{{ totales()['bonoTrimestral'] | moneda: 'USD' : tipoCambio() }}</td>
           <td class="text-right font-bold whitespace-nowrap">{{ otrosBonos() | moneda: 'USD' : tipoCambio() }}</td>
-          <td class="text-right font-bold text-primary whitespace-nowrap">{{ totales()['totalUsd'] | moneda: 'USD' : tipoCambio() }}</td>
-          <td class="text-right font-bold whitespace-nowrap">{{ totales()['totalBob'] | moneda: 'BOB' : tipoCambio() }}</td>
-          <td class="text-right font-bold whitespace-nowrap">{{ totales()['sueldoBase'] | moneda: 'BOB' : tipoCambio() }}</td>
+          <td class="text-right font-bold text-primary whitespace-nowrap">{{ formatearUsd(totales()['totalUsd']) }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ formatearBs(totales()['totalBob']) }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ formatearBs(totales()['sueldoBase']) }}</td>
           <td class="text-right font-extrabold text-secondary text-base whitespace-nowrap">
-            {{ totales()['totalGanado'] | moneda: 'BOB' : tipoCambio() }}
+            {{ formatearBs(totales()['totalGanado']) }}
           </td>
         </tr>
       </tfoot>
@@ -390,6 +402,11 @@ export class TablaLiquidacionComponent {
   readonly mostrarCirugias = input<boolean>(false);
 
   readonly maxHeight = input<string | undefined>(undefined);
+
+  /** "Total USD"/"Total Bs"/"Sueldo"/"A pagar": moneda fija en el nombre de
+   *  la columna, no siguen el selector del topbar. Ver el porqué arriba. */
+  protected readonly formatearUsd = formatearUsd;
+  protected readonly formatearBs = formatearBs;
 
   protected readonly busqueda = signal('');
   protected readonly ordenCampo = signal<CampoOrden>('totalGanado');
