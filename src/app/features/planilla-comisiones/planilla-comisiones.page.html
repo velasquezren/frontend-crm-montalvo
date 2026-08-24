@@ -658,7 +658,12 @@
       @if (per.configuracionUsada; as foto) {
         <span class="reglas-usadas-titulo">Liquidado con estas reglas</span>
         <span class="reglas-usadas-dato">TC {{ foto.tipoCambio }}</span>
-        <span class="reglas-usadas-dato">Campaña/promoción RA {{ foto.parametros['PCT_TIPO_C_RA'] * 100 }}%</span>
+        <!-- PCT_TIPO_C_RA ya viene en PUNTOS porcentuales (4.5 = 4,5%), igual que
+             pctEmpresa/pctPropio de tarifas y niveles — así lo consume el motor
+             (`comisionUsd = base * porcentaje / 100`). FACTOR_BONO_JEFATURA y
+             FACTOR_BONO_TRIMESTRAL, en cambio, SÍ son fracción (0,002 = 0,2%) y
+             necesitan el ×100. Multiplicar los tres igual mostraba 4,5% como 450%. -->
+        <span class="reglas-usadas-dato">Campaña/promoción RA {{ foto.parametros['PCT_TIPO_C_RA'] }}%</span>
         <span class="reglas-usadas-dato">Bono jefatura {{ foto.parametros['FACTOR_BONO_JEFATURA'] * 100 }}%</span>
         <span class="reglas-usadas-dato">Bono trimestral {{ foto.parametros['FACTOR_BONO_TRIMESTRAL'] * 100 }}%</span>
         <span class="reglas-usadas-dato">{{ foto.nivelesCirugia.length }} niveles de cirugía</span>

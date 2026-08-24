@@ -98,7 +98,12 @@ export class ConfiguracionComisionesComponent {
         'en 0 no pagan nada. El resto del área RA (consulta, laboratorio, ecografía, ' +
         'otros) NO usa este parámetro: comisiona por la escala Tipo A (RA) de más ' +
         'abajo, cuando el ingreso combinado con planes supera el objetivo mensual.',
-      sufijo: '%  (0,045 = 4,5%)',
+      /* Ojo: este parámetro va en PUNTOS porcentuales (escribe 4.5 para 4,5%),
+         no en fracción — al revés que los dos de abajo. El sufijo anterior decía
+         "0,045 = 4,5%", la unidad contraria a la que de verdad usa el motor
+         (`porcentaje / 100`, igual que pctEmpresa/pctPropio de cualquier tarifa).
+         Quien siguiera ese hint al pie de la letra pagaría 0,045% en vez de 4,5%. */
+      sufijo: '%  (escribe 4.5 para 4,5% — NO 0,045)',
     },
     {
       clave: 'FACTOR_BONO_JEFATURA',
