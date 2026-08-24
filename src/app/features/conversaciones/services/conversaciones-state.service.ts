@@ -514,17 +514,43 @@ export class ConversacionesStateService {
   reconciliarEnvioLocal(conversacionId: string, idOptimista: string | null, real: MensajeApi): void {
     const chat = this.detalle.value();
     if (chat && chat.id === conversacionId) {
-      /* Las plantillas (fuera de la ventana de 24h) no pasan por un mensaje
-         optimista previo — el modal solo espera la respuesta— así que aquí
-         no hay nada que reemplazar: se añade al final. */
+      /*
+       * El backend llama `emitirActividad()` de forma SÍNCRONA e
+       * incondicional en cuanto guarda el mensaje —antes incluso de
+       * responder el POST— para que las demás pestañas se refresquen. Ese
+       * aviso viaja por el socket y puede llegarle al MISMO navegador que
+       * envió, por un canal aparte, ANTES de que la promesa del propio POST
+       * se resuelva aquí.
+       *
+       * Si eso pasa: el efecto de tiempo real de `conversaciones.page.ts`
+       * dispara `detalle.reload()`, que trae el mensaje real por su cuenta
+       * y REEMPLAZA el array entero —sin saber nada del `idOptimista`, que
+       * es puramente local—. Cuando esta función corre después, busca el
+       * optimista para reemplazarlo y ya no está: cayó al `else` de abajo y
+       * agregaba el mensaje real POR SEGUNDA VEZ, aunque el reload ya lo
+       * había traído. Es la causa de las imágenes (y en teoría cualquier
+       * mensaje) que a veces se ven duplicadas — una carrera, no un
+       * doble clic ni doble envío real a Meta.
+       *
+       * Por eso el primer chequeo es simple y cubre los dos casos a la vez:
+       * si el id real YA está en el array —lo trajo el reload, o esta misma
+       * función ya corrió antes por algún reintento— no se toca nada.
+       */
+      const yaEstaElReal = chat.mensajes.some(m => m.id === real.id);
       const yaHabiaOptimista = idOptimista !== null && chat.mensajes.some(m => m.id === idOptimista);
-      const mensajes = yaHabiaOptimista
-        ? chat.mensajes.map(m =>
-            m.id === idOptimista
-              ? { ...m, id: real.id, createdAt: real.createdAt, estadoEnvio: real.estadoEnvio }
-              : m,
-          )
-        : [...chat.mensajes, real];
+
+      /* Las plantillas (fuera de la ventana de 24h) no pasan por un mensaje
+         optimista previo — el modal solo espera la respuesta— así que ahí
+         no hay nada que reemplazar: se añade al final. */
+      const mensajes = yaEstaElReal
+        ? chat.mensajes
+        : yaHabiaOptimista
+          ? chat.mensajes.map(m =>
+              m.id === idOptimista
+                ? { ...m, id: real.id, createdAt: real.createdAt, estadoEnvio: real.estadoEnvio }
+                : m,
+            )
+          : [...chat.mensajes, real];
       const nuevoDetalle = { ...chat, mensajes, updatedAt: real.createdAt };
       this.conversacionesService.setCachedDetalle(conversacionId, nuevoDetalle);
       this.detalle.set(nuevoDetalle);
