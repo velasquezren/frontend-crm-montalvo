@@ -53,6 +53,8 @@ export interface CanalConversion {
 interface AgenteRanking {
   readonly nombre: string;
   readonly iniciales: string;
+  /** Data URL en base64 (~10 KB), o null si el agente nunca subió foto — ver crm-design-system. */
+  readonly foto: string | null;
   readonly ventas: number;
   readonly monto: number;
   readonly porcentaje: number;
@@ -332,6 +334,7 @@ export class DashboardPage {
       return {
         nombre: a.agente,
         iniciales: generarIniciales(a.agente),
+        foto: a.foto,
         ventas: a.cantidad,
         monto: a.monto,
         porcentaje: Math.round((a.monto / maxMonto) * 100),

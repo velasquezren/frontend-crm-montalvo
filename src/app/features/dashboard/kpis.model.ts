@@ -32,7 +32,7 @@ export interface KpiResumen {
     total: number;
     cantidad: number;
     ticketPromedio?: number;
-    porAgente: Array<{ agenteId: string; agente: string; cantidad: number; monto: number }>;
+    porAgente: Array<{ agenteId: string; agente: string; foto: string | null; cantidad: number; monto: number }>;
   };
   topServicios?: TopServicio[];
   actividadReciente?: ActividadItem[];
