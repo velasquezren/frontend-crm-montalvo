@@ -57,6 +57,8 @@ export interface FiltroVentas {
    *  acotar con `clasif`: "todo lo que paga por Tipo B" cruza CIRUGIA e
    *  internaciones. */
   tipo?: TipoComision;
+  /** Maternidad / RA / Varios — aísla, por ejemplo, todo lo del área RA. */
+  unidadNegocio?: 'MATERNIDAD' | 'RA' | 'VARIOS';
   vendedoraId?: string;
   buscar?: string;
   soloExcluidas?: boolean;
@@ -91,6 +93,7 @@ export class PlanillaComisionesService {
       pagina: filtro.pagina,
       clasif: filtro.clasif,
       tipo: filtro.tipo,
+      unidadNegocio: filtro.unidadNegocio,
       vendedoraId: filtro.vendedoraId,
       buscar: filtro.buscar,
       soloExcluidas: filtro.soloExcluidas ? true : undefined,

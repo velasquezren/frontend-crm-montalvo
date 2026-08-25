@@ -244,58 +244,90 @@
 
     <!-- Panel principal de clasificación -->
     <section class="panel">
-      <div class="filtros mb-4">
-        <div class="flex-1 min-w-[220px]">
-          <app-input type="search" placeholder="Buscar por servicio o paciente…" [(value)]="busqueda" />
-        </div>
-        <select class="select-base font-medium" [value]="filtroClasif() || ''" (change)="filtrarPorClasif($any($event.target).value)">
-          <option value="" [selected]="!filtroClasif()">Todas las clasificaciones</option>
-          @for (c of clasificaciones; track c) {
-            <option [value]="c" [selected]="c === filtroClasif()">{{ clasifLabel[c] }}</option>
+      <div class="filtros-panel mb-4">
+        <!-- Fila 1: búsqueda, clasificación/tipo (con conteo del mes en cada opción) y acciones -->
+        <div class="filtros">
+          <div class="flex-1 min-w-[220px]">
+            <app-input type="search" placeholder="Buscar por servicio o paciente…" [(value)]="busqueda" />
+          </div>
+          <select class="select-base font-medium" [value]="filtroClasif() || ''" (change)="filtrarPorClasif($any($event.target).value)">
+            <option value="" [selected]="!filtroClasif()">Todas las clasificaciones</option>
+            @for (c of clasificaciones; track c) {
+              <option [value]="c" [selected]="c === filtroClasif()">{{ clasifLabel[c] }} ({{ conteoPorClasif().get(c) ?? 0 }})</option>
+            }
+          </select>
+          <select class="select-base font-medium" [value]="filtroTipo() || ''" (change)="filtrarPorTipo($any($event.target).value)">
+            <option value="" [selected]="!filtroTipo()">Todos los tipos</option>
+            @for (t of tipos; track t) {
+              <option [value]="t" [selected]="t === filtroTipo()">Tipo {{ t }} — {{ tipoLabel[t] }} ({{ conteoPorTipo().get(t) ?? 0 }})</option>
+            }
+          </select>
+          @if (hayFiltroActivo()) {
+            <app-button variant="ghost" size="sm" icon="x" (clicked)="limpiarFiltros()">Limpiar</app-button>
           }
-        </select>
-        <select class="select-base font-medium" [value]="filtroTipo() || ''" (change)="filtrarPorTipo($any($event.target).value)">
-          <option value="" [selected]="!filtroTipo()">Todos los tipos</option>
-          @for (t of tipos; track t) {
-            <option [value]="t" [selected]="t === filtroTipo()">Tipo {{ t }} — {{ tipoLabel[t] }}</option>
-          }
-        </select>
-        <app-filter-chip [active]="soloSinClasificar()" (clicked)="alternarSoloSinClasificar()">
-          Sin clasificar
-        </app-filter-chip>
-        <app-filter-chip [active]="soloExcluidas()" (clicked)="alternarSoloExcluidas()">
-          Excluidas
-        </app-filter-chip>
-        @if (hayFiltroActivo()) {
-          <app-button variant="ghost" size="sm" icon="x" (clicked)="limpiarFiltros()">Limpiar</app-button>
-        }
 
-        @if (periodoActual()?.estado !== 'CERRADO') {
-          @if (confirmandoCalculo()) {
-            <div class="confirmar-calculo">
-              <p class="confirmar-calculo-texto">
-                Este periodo ya se calculó
-                @if (periodoActual()?.calculadoEn; as cuando) {
-                  el {{ cuando | date: 'dd/MM/yy HH:mm' }}
-                }
-                . Rehacerlo sobrescribe los resultados con la configuración
-                <strong>actual</strong>, que puede haber cambiado desde entonces.
-              </p>
-              <div class="flex items-center gap-2 shrink-0">
-                <app-button variant="ghost" size="sm" (clicked)="cancelarCalculo()">
-                  Cancelar
-                </app-button>
-                <app-button icon="percent" size="sm" [loading]="calculando()" (clicked)="calcular()">
-                  Sí, recalcular
-                </app-button>
+          @if (periodoActual()?.estado !== 'CERRADO') {
+            @if (confirmandoCalculo()) {
+              <div class="confirmar-calculo">
+                <p class="confirmar-calculo-texto">
+                  Este periodo ya se calculó
+                  @if (periodoActual()?.calculadoEn; as cuando) {
+                    el {{ cuando | date: 'dd/MM/yy HH:mm' }}
+                  }
+                  . Rehacerlo sobrescribe los resultados con la configuración
+                  <strong>actual</strong>, que puede haber cambiado desde entonces.
+                </p>
+                <div class="flex items-center gap-2 shrink-0">
+                  <app-button variant="ghost" size="sm" (clicked)="cancelarCalculo()">
+                    Cancelar
+                  </app-button>
+                  <app-button icon="percent" size="sm" [loading]="calculando()" (clicked)="calcular()">
+                    Sí, recalcular
+                  </app-button>
+                </div>
               </div>
-            </div>
-          } @else {
-            <app-button icon="percent" [loading]="calculando()" (clicked)="pedirCalculo()">
-              Calcular planilla
-            </app-button>
+            } @else {
+              <app-button icon="percent" [loading]="calculando()" (clicked)="pedirCalculo()">
+                Calcular planilla
+              </app-button>
+            }
           }
-        }
+        </div>
+
+        <!-- Fila 2: unidad de negocio y estado de revisión, agrupados y con conteo del mes
+             entero en cada chip — así se ve cuánto trae cada uno ANTES de tocarlo. -->
+        <div class="filtros-chips">
+          <div class="filtros-grupo" role="group" aria-label="Filtrar por unidad de negocio">
+            <span class="filtros-grupo-etiqueta">Unidad de negocio</span>
+            @for (u of unidades; track u) {
+              <app-filter-chip
+                size="sm"
+                [active]="filtroUnidad() === u"
+                [count]="conteoPorUnidad().get(u) ?? 0"
+                (clicked)="alternarUnidad(u)">
+                {{ unidadLabel[u] }}
+              </app-filter-chip>
+            }
+          </div>
+
+          <div class="filtros-grupo" role="group" aria-label="Filtrar por estado de revisión">
+            <span class="filtros-grupo-etiqueta">Estado</span>
+            <app-filter-chip
+              size="sm"
+              [active]="soloSinClasificar()"
+              [count]="alertas()?.totales?.filasSinClasificar ?? 0"
+              (clicked)="alternarSoloSinClasificar()">
+              Sin clasificar
+            </app-filter-chip>
+            <app-filter-chip
+              size="sm"
+              [active]="soloExcluidas()"
+              [count]="alertas()?.totales?.filasExcluidas ?? 0"
+              (clicked)="alternarSoloExcluidas()">
+              Excluidas
+            </app-filter-chip>
+          </div>
+        </div>
       </div>
 
       <!-- Esqueleto SOLO en la primera carga. Al cambiar un filtro se conserva la
