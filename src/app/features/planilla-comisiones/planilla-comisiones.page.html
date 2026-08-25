@@ -244,7 +244,9 @@
 
     <!-- Panel principal de clasificación -->
     <section class="panel">
-      <!-- Fila 1: búsqueda y filtros que acotan qué filas se ven. -->
+      <!-- Fila 1: búsqueda y filtros que acotan qué filas se ven. Clasificación
+           y Tipo muestran cuántas filas trae cada opción — mismo criterio que
+           los chips de abajo, que ya cuentan antes de tocarlos. -->
       <div class="filtros filtros-fila-buscar">
         <div class="flex-1 min-w-[220px]">
           <app-input type="search" placeholder="Buscar por servicio o paciente…" [(value)]="busqueda" />
@@ -252,13 +254,13 @@
         <select class="select-base font-medium" [value]="filtroClasif() || ''" (change)="filtrarPorClasif($any($event.target).value)">
           <option value="" [selected]="!filtroClasif()">Todas las clasificaciones</option>
           @for (c of clasificaciones; track c) {
-            <option [value]="c" [selected]="c === filtroClasif()">{{ clasifLabel[c] }}</option>
+            <option [value]="c" [selected]="c === filtroClasif()">{{ clasifLabel[c] }} ({{ conteoPorClasif().get(c) ?? 0 }})</option>
           }
         </select>
         <select class="select-base font-medium" [value]="filtroTipo() || ''" (change)="filtrarPorTipo($any($event.target).value)">
           <option value="" [selected]="!filtroTipo()">Todos los tipos</option>
           @for (t of tipos; track t) {
-            <option [value]="t" [selected]="t === filtroTipo()">Tipo {{ t }} — {{ tipoLabel[t] }}</option>
+            <option [value]="t" [selected]="t === filtroTipo()">Tipo {{ t }} — {{ tipoLabel[t] }} ({{ conteoPorTipo().get(t) ?? 0 }})</option>
           }
         </select>
 
@@ -272,6 +274,21 @@
           }
         </div>
 
+        <!-- Unidad de negocio: aísla, por ejemplo, todo lo del área RA — antes
+             había que scrollear las 200+ filas de consultas y análisis que
+             arrastra esa área para encontrarlas (ver la nota de `tarifaDe()`). -->
+        <div role="group" aria-label="Unidad de negocio" class="grupo-chips">
+          @for (u of unidades; track u) {
+            <app-filter-chip
+              size="sm"
+              [active]="filtroUnidad() === u"
+              [count]="conteoPorUnidad().get(u) ?? 0"
+              (clicked)="alternarUnidad(u)">
+              {{ unidadLabel[u] }}
+            </app-filter-chip>
+          }
+        </div>
+
         <!-- Filtros rápidos: el chip ya sabe contar, así que se ve en cero
              antes de pulsarlo — no hace falta pulsar para descubrir que vacía
              la tabla. -->
@@ -279,14 +296,14 @@
           <app-filter-chip
             size="sm"
             [active]="soloSinClasificar()"
-            [count]="alertas()?.totales?.filasSinClasificar"
+            [count]="alertas()?.totales?.filasSinClasificar ?? 0"
             (clicked)="alternarSoloSinClasificar()">
             Sin clasificar
           </app-filter-chip>
           <app-filter-chip
             size="sm"
             [active]="soloExcluidas()"
-            [count]="alertas()?.totales?.filasExcluidas"
+            [count]="alertas()?.totales?.filasExcluidas ?? 0"
             (clicked)="alternarSoloExcluidas()">
             Excluidas
           </app-filter-chip>

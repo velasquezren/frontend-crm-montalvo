@@ -213,7 +213,19 @@ export class ConversacionesStateService {
     return isNaN(d.getTime()) ? null : d;
   });
 
-  /** Si la ventana extendida de 72h por anuncio de Meta Ads está actualmente activa desde que se originó el anuncio. */
+  /**
+   * Si la ventana extendida de 72h por anuncio de Meta Ads (Free Entry Point)
+   * está activa desde que se originó el anuncio.
+   *
+   * OJO: esta ventana **solo** habilita mandar PLANTILLAS sin costo. No
+   * reemplaza ni extiende la ventana de servicio al cliente (CSW) de 24h, que
+   * es la única que habilita texto libre. Son independientes — así lo dice la
+   * documentación oficial de WhatsApp Business Platform (Pricing ›
+   * "Free Entry Point conversations"). Se guarda aparte solo como dato
+   * informativo (p. ej. para saber si una plantilla saldrá gratis), nunca
+   * para decidir si se puede escribir texto libre — `fueraDeVentana24h` no
+   * debe volver a leer esta señal.
+   */
   readonly ventana72hMetaActiva = computed(() => {
     const fechaCampana = this.fechaCampanaMeta();
     if (!fechaCampana) return false;
@@ -228,22 +240,25 @@ export class ConversacionesStateService {
     return Boolean(datos?.['campanaOrigen'] || datos?.['referral']);
   });
 
-  readonly horasVentanaMeta = computed(() => (this.ventana72hMetaActiva() ? 72 : 24));
+  /** El texto libre siempre depende únicamente de la CSW de 24h. */
+  readonly horasVentanaMeta = computed(() => 24);
 
+  /**
+   * true si ya no se puede mandar texto libre: pasaron 24h desde el último
+   * mensaje ENTRANTE del paciente. La ventana de 72h del anuncio (FEP) NO
+   * entra acá — solo aplica a plantillas, ver `ventana72hMetaActiva`.
+   */
   readonly fueraDeVentana24h = computed(() => {
     const chat = this.detalle.value();
     if (!chat) return false;
     const ultimoEntrante = [...chat.mensajes].reverse().find(m => m.direccion === 'ENTRANTE');
     if (!ultimoEntrante) return true;
 
-    // Si la ventana de 72h por anuncio Click-to-WhatsApp sigue vigente desde la fecha del anuncio
-    if (this.ventana72hMetaActiva()) return false;
-
-    // Ventana estándar de servicio al cliente: 24h desde el último mensaje entrante del paciente
     const haceHoras = (Date.now() - new Date(ultimoEntrante.createdAt).getTime()) / (1000 * 60 * 60);
     return haceHoras >= 24;
   });
 
+  /** Horas que quedan de la CSW de 24h antes de que se bloquee el texto libre. */
   readonly horasRestantesVentana = computed(() => {
     const chat = this.detalle.value();
     if (!chat) return 0;
@@ -251,18 +266,7 @@ export class ConversacionesStateService {
     if (!ultimoEntrante) return 0;
 
     const haceHorasMsg = (Date.now() - new Date(ultimoEntrante.createdAt).getTime()) / (1000 * 60 * 60);
-    const restanteMsg = Math.max(0, 24 - haceHorasMsg);
-
-    if (this.ventana72hMetaActiva()) {
-      const fechaCampana = this.fechaCampanaMeta();
-      if (fechaCampana) {
-        const haceHorasCampana = (Date.now() - fechaCampana.getTime()) / (1000 * 60 * 60);
-        const restanteCampana = Math.max(0, 72 - haceHorasCampana);
-        return Math.round(Math.max(restanteMsg, restanteCampana) * 10) / 10;
-      }
-    }
-
-    return Math.round(restanteMsg * 10) / 10;
+    return Math.round(Math.max(0, 24 - haceHorasMsg) * 10) / 10;
   });
 
   readonly notaMedicaFijada = computed(() => {

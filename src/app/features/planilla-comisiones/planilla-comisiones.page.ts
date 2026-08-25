@@ -55,6 +55,8 @@ import {
   TIPO_LABEL,
   TipoComision,
   TipoPlan,
+  UNIDAD_LABEL,
+  UnidadNegocio,
   Vendedora,
   VentaImportada,
 } from './planilla.model';
@@ -148,11 +150,15 @@ export class PlanillaComisionesPage implements OnDestroy {
   protected readonly clasifLabel = CLASIF_LABEL;
   protected readonly estadoLabel = ESTADO_PERIODO_LABEL;
   protected readonly tipoLabel = TIPO_LABEL;
+  protected readonly unidadLabel = UNIDAD_LABEL;
   protected readonly meses = MESES;
   protected readonly clasificaciones = Object.keys(CLASIF_LABEL) as ClasifComision[];
   protected readonly tipos = Object.keys(TIPO_LABEL) as TipoComision[];
   protected readonly canales = Object.keys(CANAL_LABEL) as CanalVenta[];
   protected readonly canalLabel = CANAL_LABEL;
+  /* Maternidad primero porque es el grueso del volumen; RA al medio porque es
+     el que administración pide aislar más seguido (ver `alternarUnidad`). */
+  protected readonly unidades: UnidadNegocio[] = ['MATERNIDAD', 'RA', 'VARIOS'];
 
   /* ── Estado de UI ───────────────────────────────────────────────────── */
 
@@ -178,6 +184,10 @@ export class PlanillaComisionesPage implements OnDestroy {
    *  desde la interfaz: para ver "todo lo vendido por canal propio" había que
    *  contar a mano fila por fila. */
   protected readonly filtroCanal = signal<CanalVenta | null>(null);
+  /** Maternidad / RA / Varios. Nace de que RA no tenía forma de aislarse: para
+   *  verla completa había que scrollear las 200+ filas de consultas y
+   *  análisis que arrastra ese área (ver la nota de `tarifaDe()`). */
+  protected readonly filtroUnidad = signal<UnidadNegocio | null>(null);
   protected readonly filtroVendedora = signal<string | null>(null);
 
   /** Si hay algún filtro puesto, para que el pie no diga "del mes" cuando no lo es. */
@@ -186,6 +196,7 @@ export class PlanillaComisionesPage implements OnDestroy {
       Boolean(this.filtroClasif()) ||
       Boolean(this.filtroTipo()) ||
       Boolean(this.filtroCanal()) ||
+      Boolean(this.filtroUnidad()) ||
       Boolean(this.filtroVendedora()) ||
       Boolean(this.busquedaDebounced()) ||
       this.soloExcluidas() ||
@@ -262,6 +273,7 @@ export class PlanillaComisionesPage implements OnDestroy {
         clasif: this.filtroClasif() ?? undefined,
         tipo: this.filtroTipo() ?? undefined,
         canal: this.filtroCanal() ?? undefined,
+        unidadNegocio: this.filtroUnidad() ?? undefined,
         vendedoraId: this.filtroVendedora() ?? undefined,
         buscar: this.busquedaDebounced() || undefined,
         soloExcluidas: this.soloExcluidas(),
@@ -389,6 +401,30 @@ export class PlanillaComisionesPage implements OnDestroy {
     if (!a) return false;
     const t = a.totales;
     return t.filasSinClasificar > 0 || t.vendedorasSinConfigurar > 0 || t.filasExcluidas > 0;
+  });
+
+  /**
+   * Cuántas filas hay por unidad de negocio, del mes entero — para pintar el
+   * número en cada chip ANTES de tocarlo. Un mapa y no un array: se consulta
+   * por clave en la plantilla, una vez por chip, sin `find()` en cada change
+   * detection.
+   */
+  protected readonly conteoPorUnidad = computed(() => {
+    const mapa = new Map<UnidadNegocio, number>();
+    for (const fila of this.alertas()?.porUnidadNegocio ?? []) mapa.set(fila.unidadNegocio, fila.filas);
+    return mapa;
+  });
+
+  protected readonly conteoPorClasif = computed(() => {
+    const mapa = new Map<ClasifComision, number>();
+    for (const fila of this.alertas()?.porClasif ?? []) mapa.set(fila.clasif, fila.filas);
+    return mapa;
+  });
+
+  protected readonly conteoPorTipo = computed(() => {
+    const mapa = new Map<TipoComision, number>();
+    for (const fila of this.alertas()?.porTipo ?? []) mapa.set(fila.tipo, fila.filas);
+    return mapa;
   });
 
   /* ── Acciones Drag & Drop / Selección de Archivo ─────────────────────── */
@@ -722,6 +758,7 @@ export class PlanillaComisionesPage implements OnDestroy {
     this.filtroClasif.set(null);
     this.filtroTipo.set(null);
     this.filtroCanal.set(null);
+    this.filtroUnidad.set(null);
     this.filtroVendedora.set(null);
     this.soloExcluidas.set(false);
     this.soloSinClasificar.set(false);
@@ -736,6 +773,13 @@ export class PlanillaComisionesPage implements OnDestroy {
   /** Alternar: pulsar el canal ya activo vuelve a "Todos". */
   protected filtrarPorCanal(valor: CanalVenta): void {
     this.filtroCanal.update(actual => (actual === valor ? null : valor));
+    this.pagina.set(1);
+  }
+
+  /** Alterna la unidad de negocio: pulsar la ya activa la suelta, igual que
+   *  `alternarVendedora` con la tarjeta de un agente. */
+  protected alternarUnidad(unidad: UnidadNegocio): void {
+    this.filtroUnidad.update(actual => (actual === unidad ? null : unidad));
     this.pagina.set(1);
   }
 

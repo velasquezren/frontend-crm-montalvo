@@ -151,6 +151,12 @@ export interface Alertas {
     montoAfectado: number;
   }[];
   vendedorasPendientes: { id: string; codigo: string; nombre: string }[];
+  /** Cuántas filas del periodo hay por cada unidad de negocio, clasificación y
+   *  tipo — del mes entero, no del filtro activo. Alimenta los contadores de
+   *  los chips/`<select>` de filtro sin pedir nada aparte. */
+  porUnidadNegocio: { unidadNegocio: UnidadNegocio; filas: number }[];
+  porClasif: { clasif: ClasifComision; filas: number }[];
+  porTipo: { tipo: TipoComision; filas: number }[];
 }
 
 export interface Vendedora {
@@ -370,6 +376,15 @@ export const TIPO_LABEL: Record<TipoComision, string> = {
   A: 'Tipo A · Planes',
   B: 'Tipo B · Cirugías',
   C: 'Tipo C · Servicios',
+};
+
+/** RA = Reproducción Asistida. Ver la nota de `tarifaDe()` en la página: las
+ *  ventas de esta unidad no pagan % directo a la ejecutiva, pero sí cuentan
+ *  para sus bonos — por eso administración necesita poder aislarlas. */
+export const UNIDAD_LABEL: Record<UnidadNegocio, string> = {
+  MATERNIDAD: 'Maternidad',
+  RA: 'Reproducción Asistida (RA)',
+  VARIOS: 'Varios',
 };
 
 export const ESTADO_PERIODO_LABEL: Record<EstadoPeriodo, string> = {

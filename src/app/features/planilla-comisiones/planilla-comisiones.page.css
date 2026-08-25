@@ -183,9 +183,9 @@
 }
 
 /* Dos filas separadas a propósito: la primera ACOTA qué filas se ven
-   (búsqueda, clasificación, canal, chips rápidos); la segunda no toca el
-   filtro — cambia cómo se LEEN los montos (moneda) o dispara el cálculo.
-   Antes vivían juntas en una sola hilera y competían por espacio. */
+   (búsqueda, clasificación, tipo, canal, unidad de negocio, chips rápidos);
+   la segunda no toca el filtro — dispara el cálculo. Antes vivían juntas en
+   una sola hilera y competían por espacio. */
 .filtros-fila-buscar {
   margin-bottom: 10px;
 }
@@ -197,9 +197,10 @@
   border-top: 1px solid var(--color-border);
 }
 
-/* Varios chips que son opciones del mismo filtro (canal, o los rápidos de
-   clasificación) van agrupados y con `role="group"` — sueltos, un lector de
-   pantalla los anuncia como botones sin relación entre sí. */
+/* Varios chips que son opciones del mismo filtro (canal, unidad de negocio,
+   o los rápidos de clasificación) van agrupados y con `role="group"` —
+   sueltos, un lector de pantalla los anuncia como botones sin relación entre
+   sí. */
 .grupo-chips {
   display: flex;
   align-items: center;

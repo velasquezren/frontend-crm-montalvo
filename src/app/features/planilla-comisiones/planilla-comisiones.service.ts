@@ -60,6 +60,8 @@ export interface FiltroVentas {
   /** EMPRESA/PROPIO. El backend ya lo soporta (`QueryVentasImportadasDto.canal`);
    *  faltaba exponerlo aquí. Cambia la tarifa aplicada, ver `tarifaDe()`. */
   canal?: CanalVenta;
+  /** Maternidad / RA / Varios — aísla, por ejemplo, todo lo del área RA. */
+  unidadNegocio?: 'MATERNIDAD' | 'RA' | 'VARIOS';
   vendedoraId?: string;
   buscar?: string;
   soloExcluidas?: boolean;
@@ -95,6 +97,7 @@ export class PlanillaComisionesService {
       clasif: filtro.clasif,
       tipo: filtro.tipo,
       canal: filtro.canal,
+      unidadNegocio: filtro.unidadNegocio,
       vendedoraId: filtro.vendedoraId,
       buscar: filtro.buscar,
       soloExcluidas: filtro.soloExcluidas ? true : undefined,
