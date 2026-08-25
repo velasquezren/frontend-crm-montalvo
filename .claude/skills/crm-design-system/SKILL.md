@@ -202,6 +202,17 @@ Cuando eso pase, extrae un átomo a `shared/components/` en vez de repartir
 copias: una sola definición, un solo lugar donde cambiarla, y el resto de las
 vistas lo hereda gratis.
 
+**No siempre hace falta un átomo — a veces alcanza una clase utilitaria
+global.** Cuando lo que se repite es *solo estilo* (una celda pegajosa, una
+fila clicable, un badge) sin marcado propio que estructurar ni lógica que
+envolver, una clase en `styles.css` (`.celda-sticky`, `.fila-clicable`,
+`.badge-servicios`) resuelve lo mismo con menos ceremonia que un componente.
+La pregunta que decide: si además se repite *marcado* (la misma estructura de
+tags, un `input()`, un evento), es un átomo; si se repite nada más que una
+regla CSS, es una utilidad. Las tres de `servicios` empezaron copiadas byte a
+byte en `servicios.page.css` y dos tablas de subcomponentes — subirlas a
+`styles.css` bastó, y de paso quedaron disponibles para cualquier tabla nueva.
+
 ## Un contenedor que scrollea NO puede ser el que redondea
 
 `position: sticky` no queda recortado por el `border-radius` del contenedor que
@@ -333,7 +344,8 @@ bajar** —arreglar obliga a actualizar la cifra, empeorar rompe el build—.
 un gráfico. No es descuido: la paleta cerrada ofrece tres tonos usables y con tres ese gráfico
 deja de leerse. Resolverlo es una decisión de identidad visual (aceptar los colores de canal
 como excepción, o distinguir por etiqueta directa en vez de por color), no una limpieza, y
-está pendiente de decidir. Mientras tanto la cifra está congelada en 12.
+está pendiente de decidir. Mientras tanto la cifra está congelada en 11 (`tools/verificar-skills.mjs`,
+objeto `DEUDA` — solo puede bajar).
 
 Lo que se arregló, por si sirve de guía: los estados de lead estaban pintados a mano con
 escalas inventadas (sky/amber/emerald) mientras la tabla de la misma pantalla usaba

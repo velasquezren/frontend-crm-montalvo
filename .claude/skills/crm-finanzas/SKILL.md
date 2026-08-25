@@ -115,6 +115,25 @@ El anticipo sigue viajando y se muestra en la columna «Pagado», pero es
 **informativo**: dice quién va al día y quién debe, y destapa los cobros por
 encima del precio de catálogo (cinco en enero). No toca la comisión.
 
+### Puntos porcentuales vs. fracción: dos convenciones conviven, y ya chocaron tres veces
+
+`pctEmpresa`/`pctPropio` de cualquier tarifa y `PCT_TIPO_C_RA` nacen en **puntos
+porcentuales** (`4.5` = 4,5%) — así los siembra el backend y así los consume el
+motor (`comisionUsd = base * porcentaje / 100`). `FACTOR_BONO_JEFATURA` y
+`FACTOR_BONO_TRIMESTRAL` son **fracción** (`0.002` = 0,2%) y sí necesitan `×100`
+para mostrarse. Mismo prefijo "porcentaje", dos unidades — tratarlas igual ya
+rompió tres veces de forma independiente: el motor de cálculo (que siempre
+estuvo bien), la exportación a Excel del backend y el panel "Liquidado con
+estas reglas" de este frontend multiplicaron por 100 de más, un 4,5% saliendo
+como 450%. La corrección de acá también arregló el *hint* del campo en
+Configuración, que decía "0,045 = 4,5%" — la unidad contraria a la que usa el
+motor; seguirlo al pie de la letra habría liquidado 0,045% en vez de 4,5%.
+
+**Antes de mostrar o multiplicar un `%`, confirma la unidad contra el motor
+(`calculo-comisiones.service.ts` en el backend) o el sembrado
+(`configuracion-por-defecto.ts`) — nunca contra el nombre del campo ni contra
+otro `%` de la misma pantalla.**
+
 ---
 
 ## 6. Arquitectura Modular y Subcomponentes

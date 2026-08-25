@@ -57,6 +57,16 @@ npm run sync:tipos     # regenera db-enums.ts desde el schema.prisma del backend
   caído dice "no hay clientes", que es una mentira, no un hueco.
 - **El backend es la autoridad de permisos.** Ocultar algo aquí no lo protege.
 
+## Autenticación
+
+`token.interceptor.ts` adjunta el JWT a cada petición y, ante un 401 ajeno a
+login/refresh/logout, intenta un refresco silencioso (`AuthService.refrescarToken()`,
+contra la cookie `HttpOnly` de 30 días que emite el backend) y reintenta la
+petición original una vez. Solo desloguea si ese refresco falla o si la
+petición reintentada con el token nuevo **vuelve** a dar 401 — sin ese freno,
+una sesión realmente inválida entraba en bucle. Detalle completo en
+`crm-feature-page`.
+
 ## Rendimiento: el cuello de botella es la RED
 
 Medido contra producción desde Bolivia: la consulta tarda 6-27 ms y el viaje de ida
@@ -75,6 +85,11 @@ Regla corta: **un cambio de rendimiento sin medición antes y después no se com
   `npm run sync:tipos` o el build falla.
 - **Moneda del sistema: Bs (es-BO)**, siempre vía el pipe `moneda`. Nunca a mano.
   (Las comisiones se calculan en dólares dentro del backend; aquí llegan ya en Bs.)
+- **Un `%` puede ser puntos porcentuales o fracción, y confundirlos ya rompió tres
+  veces.** `pctEmpresa`/`pctPropio`/`PCT_TIPO_C_RA` nacen en puntos (`4.5` =
+  4,5%); `FACTOR_BONO_JEFATURA`/`FACTOR_BONO_TRIMESTRAL` son fracción (`0.002` =
+  0,2%) y sí llevan `×100` al mostrarse. Ver `crm-finanzas` antes de tocar
+  cualquier `%` de comisiones.
 - **Una URL firmada NUNCA se guarda: se guarda la clave.** `mediaUrl` viene
   firmada y caduca (1 h), así que meterla en un campo que se persiste —el texto de
   un mensaje, una nota— deja la imagen rota para siempre, mostrando su texto

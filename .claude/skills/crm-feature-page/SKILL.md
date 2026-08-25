@@ -277,6 +277,29 @@ Nunca lo uses para acciones cuyo resultado el servidor pueda rechazar de forma
 no obvia para el usuario (crear con validación de negocio compleja, montos,
 etc.) — ahí sí conviene esperar la respuesta antes de reflejar el cambio.
 
+## Autenticación: refresh silencioso ante un 401, con freno anti-bucle
+
+`token.interceptor.ts` adjunta el JWT a cada petición. Ante un 401 que **no**
+venga de `/auth/login`, `/auth/refresh` ni `/auth/logout`
+(`esPeticionDeAutenticacion` los excluye — si no, cerrar sesión podría
+resucitarla), intenta UN refresco silencioso vía `AuthService.refrescarToken()`
+y reintenta la petición original con el token nuevo. Solo desloguea y manda a
+`/auth/login` si:
+
+- el refresco en sí falla (el `refresh_token` de 30 días también venció), o
+- la petición reintentada con el token **nuevo** vuelve a dar 401 — ahí el
+  problema no es el token, es la sesión (usuario desactivado, permisos
+  revocados), y sin este freno la agente quedaba en una pantalla que fallaba
+  en bucle sin explicación.
+
+**`refrescarToken()` deduplica con una promesa compartida** (`AuthService`,
+campo `refrescoEnCurso`): si varias peticiones reciben 401 a la vez —típico al
+volver de segundo plano con el `access_token` ya vencido—, todas esperan el
+MISMO refresco en vuelo en vez de disparar N peticiones a `/auth/refresh` para
+pedir, todas, lo mismo. Ver `crm-backend-module` (repo del backend) para el
+otro lado: por qué la cookie es `SameSite=None` en producción y qué hace
+`logout()` de verdad.
+
 ## Roles y permisos
 
 Hay tres roles jerárquicos: `AGENTE` < `ADMIN` < `SUPER_ADMIN`. La jerarquía vive en
@@ -300,10 +323,18 @@ guard de rol a mano** — usa la fábrica.
 
 Como la comparación es por **rango mínimo**, pedir `ADMIN` deja pasar también al `SUPER_ADMIN`
 sin enumerarlo. Nunca compares `rol === 'ADMIN'` a mano: eso deja fuera al super admin y es
-exactamente el bug que la jerarquía existe para prevenir.
+exactamente el bug que la jerarquía existe para prevenir. Mismo error, versión
+"mostrar texto": para pintar el rol como etiqueta (no para decidir acceso), usa
+`ROL_LABEL[rol]`, nunca un `if`/`switch` a mano — una comparación manual ahí
+dejó una vez a un SUPER_ADMIN etiquetado como "Agente" en pantalla.
 
 Ocultar en el frontend nunca es suficiente: si un endpoint nuevo es sensible, verifica que el
-backend también lo restrinja.
+backend también lo restrinja. Al revés también rompe: `/desempeno-agentes` quedó sin
+`canActivate` un tiempo —el backend restringía bien, pero la ruta era visible para
+cualquier rol— y un agente que entraba ahí veía una pantalla en blanco con cada
+petición cayendo en 403 suyo, sin ninguna pista de qué había pasado. Toda ruta
+sensible necesita su guardia en `app.routes.ts` aunque el backend ya la
+proteja: la protección del backend evita la fuga de datos, no la pantalla rota.
 
 ## Rutas
 

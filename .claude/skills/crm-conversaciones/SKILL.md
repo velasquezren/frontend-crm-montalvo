@@ -21,6 +21,15 @@ Este módulo gestiona la mensajería omnicanal de WhatsApp Cloud API integrada c
   - Es **estrictamente obligatorio** utilizar una **Plantilla Aprobada de WhatsApp (HSM / Template)**.
   - El frontend bloquea de forma automática y estricta la caja de texto y despliega el selector de plantillas oficiales con sus variables obligatorias para evitar que se envíen mensajes anulados/fallidos.
 
+**Cicatriz real (corregida):** el composer alguna vez saltaba este bloqueo si
+la ventana de 72h de Meta Ads seguía activa (`ventana72hMetaActiva`), como si
+esas 72h habilitaran texto libre. **No es así**: el FEP de 72h solo evita que
+se COBRE una plantilla, nunca sustituye a la CSW de 24h para texto libre. El
+mensaje salía "No enviado" igual, solo que más tarde y sin explicación. El
+bloqueo de `fueraDeVentana24h` es incondicional; `ventana72hMetaActiva` solo se
+lee para matizar el texto del aviso ("sale gratis" vs. se cobra), nunca para
+decidir si se bloquea.
+
 ### Tratamiento Seguro de Medios (R2 Storage)
 - **Las URLs de medios nunca se guardan como enlaces públicos permanentes en la base de datos.**
 - En la base de datos solo reside la `mediaKey` (ej. `wa/convId/msgId.jpg` o `memoria/userId/uuid.png`).
@@ -47,6 +56,15 @@ Este módulo gestiona la mensajería omnicanal de WhatsApp Cloud API integrada c
 - Al pulsar `Enter` o enviar, el mensaje se inserta inmediatamente en el hilo con un `idOptimista` temporal y estado `ENVIANDO`.
 - Al confirmar el servidor, se reemplaza el ID provisional por el definitivo y el estado cambia a `ENVIADO` con su check.
 - Si la petición falla, se restaura el estado previo (`chatPrevio`) y se notifica el error permitiendo reintentar.
+- **Cuidado con la carrera WebSocket-vs-POST**: el backend llama `emitirActividad()`
+  de forma síncrona en cuanto guarda el mensaje —antes de responder el POST—,
+  así que el aviso de socket puede llegarle al mismo navegador que envió ANTES
+  de que resuelva su propia petición. Si el `reload()` de tiempo real ya trajo
+  el mensaje real cuando el POST resuelve, `reconciliarEnvioLocal` no debe
+  agregarlo de nuevo: el chequeo correcto es "¿el id real ya está en el
+  array?", no "busca el optimista y reemplázalo". Sin eso, algunas imágenes (y
+  en teoría cualquier mensaje) se duplicaban en el hilo — no por doble clic ni
+  doble envío a Meta, sino por la misma confirmación llegando dos veces.
 
 ## 4. Despiece Modular de Componentes
 
