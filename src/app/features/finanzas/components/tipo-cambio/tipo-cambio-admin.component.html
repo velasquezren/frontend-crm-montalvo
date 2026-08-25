@@ -1,0 +1,122 @@
+<div class="flex flex-col gap-6">
+
+  <!-- ── Cabecera: navegación de mes + sincronizar ────────────────────── -->
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        (click)="mesAnterior()"
+        class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
+        aria-label="Mes anterior">
+        <app-icon name="chevron-left" [size]="16" />
+      </button>
+      <span class="text-sm font-bold text-text-dark min-w-32 text-center">{{ etiquetaMes() }}</span>
+      <button
+        type="button"
+        [disabled]="esMesActual()"
+        (click)="mesSiguiente()"
+        class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+        aria-label="Mes siguiente">
+        <app-icon name="chevron-up" [size]="16" class="rotate-90" />
+      </button>
+    </div>
+
+    <div class="flex items-center gap-2">
+      @if (esMesActual() && fechaEnEdicion() === null) {
+        <app-button variant="ghost" size="sm" icon="plus" (clicked)="abrirEdicionHoy()">
+          Cargar hoy a mano
+        </app-button>
+      }
+      <app-button variant="secondary" size="sm" icon="rotate-cw" [loading]="sincronizando()" (clicked)="sincronizarAhora()">
+        Sincronizar ahora
+      </app-button>
+    </div>
+  </div>
+
+  <p class="text-xs text-text-muted -mt-3">
+    Serie diaria del tipo de cambio oficial USD→BOB. Un intervalo la trae cada 6&nbsp;horas de un
+    espejo público del BCB (<span class="font-medium text-text-dark">Automático</span>); una
+    corrección hecha a mano (<span class="font-medium text-text-dark">Manual</span>) siempre le
+    gana a la automática de ese mismo día.
+  </p>
+
+  <!-- ── Fila de edición de "hoy" cuando todavía no tiene ninguna fila ─── -->
+  @if (fechaEnEdicionEsNueva()) {
+    @let fecha = fechaEnEdicion()!;
+    <div class="bg-white rounded-2xl shadow-subtle p-4 flex items-center gap-3 border border-primary/20">
+      <span class="text-sm font-semibold text-text-dark whitespace-nowrap">{{ formatearFecha(fecha) }}</span>
+      <app-input type="text" placeholder="Ej. 11.54" [(value)]="valorEdicion" class="max-w-32" />
+      <app-button size="sm" [loading]="guardando()" (clicked)="guardarEdicion(fecha)">Guardar</app-button>
+      <app-button variant="ghost" size="sm" (clicked)="cancelarEdicion()">Cancelar</app-button>
+    </div>
+  }
+
+  <!-- ── Tabla del mes (carga / error / vacío / contenido) ─────────────── -->
+  @if (dias.isLoading()) {
+    <div class="bg-white rounded-2xl shadow-subtle p-6 flex flex-col gap-3">
+      @for (fila of [1, 2, 3, 4, 5]; track fila) {
+        <app-loading-skeleton shape="text" height="2rem" />
+      }
+    </div>
+  } @else if (dias.error()) {
+    <div class="bg-white rounded-2xl shadow-subtle">
+      <app-error-carga que="el historial de tipo de cambio" (reintentar)="dias.reload()" />
+    </div>
+  } @else if (dias.value().length > 0) {
+    <div class="bg-white rounded-2xl shadow-subtle overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-border">
+            <th class="text-left px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-text-muted">Fecha</th>
+            <th class="text-left px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-text-muted">Bs por USD</th>
+            <th class="text-left px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-text-muted">Fuente</th>
+            <th class="px-4 py-2.5"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (dia of dias.value(); track dia.fecha) {
+            <tr class="border-b border-border last:border-0">
+              @if (fechaEnEdicion() === dia.fecha) {
+                <td class="px-4 py-2 font-medium text-text-dark whitespace-nowrap">{{ formatearFecha(dia.fecha) }}</td>
+                <td class="px-4 py-2" colspan="2">
+                  <app-input type="text" placeholder="Ej. 11.54" [(value)]="valorEdicion" class="max-w-32" />
+                </td>
+                <td class="px-4 py-2 text-right">
+                  <div class="flex items-center justify-end gap-1.5">
+                    <app-button size="sm" [loading]="guardando()" (clicked)="guardarEdicion(dia.fecha)">Guardar</app-button>
+                    <app-button variant="ghost" size="sm" (clicked)="cancelarEdicion()">Cancelar</app-button>
+                  </div>
+                </td>
+              } @else {
+                <td class="px-4 py-2 font-medium text-text-dark whitespace-nowrap">{{ formatearFecha(dia.fecha) }}</td>
+                <td class="px-4 py-2 font-bold text-primary tabular-nums">{{ dia.valor }}</td>
+                <td class="px-4 py-2">
+                  <app-badge [variant]="fuenteBadge[dia.fuente]">{{ fuenteLabel[dia.fuente] }}</app-badge>
+                </td>
+                <td class="px-4 py-2 text-right">
+                  <button
+                    type="button"
+                    (click)="abrirEdicion(dia)"
+                    class="w-7 h-7 rounded-lg inline-flex items-center justify-center text-text-muted hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                    title="Corregir a mano">
+                    <app-icon name="edit" [size]="13" />
+                  </button>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <div class="bg-white rounded-2xl shadow-subtle">
+      <app-empty-state icon="trending-up" title="Sin tipo de cambio registrado este mes"
+        description="Ni la sincronización automática ni una corrección manual han dejado un valor todavía.">
+        <app-button icon="rotate-cw" [loading]="sincronizando()" (clicked)="sincronizarAhora()">
+          Sincronizar ahora
+        </app-button>
+      </app-empty-state>
+    </div>
+  }
+
+</div>

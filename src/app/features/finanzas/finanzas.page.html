@@ -76,5 +76,16 @@
         <app-resumen-anual [embedded]="true" />
       </div>
     }
+
+    @if (estaMontada()('tipo-cambio')) {
+      <div
+        id="panel-tipo-cambio"
+        aria-labelledby="tab-tipo-cambio"
+        [hidden]="tabActiva() !== 'tipo-cambio'"
+        class="finanzas-tab-panel"
+        role="tabpanel">
+        <app-tipo-cambio-admin />
+      </div>
+    }
   </main>
 </div>

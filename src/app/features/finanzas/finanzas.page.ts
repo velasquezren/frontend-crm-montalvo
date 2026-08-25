@@ -5,16 +5,17 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { DesempenoAgentesComponent } from './components/desempeno-agentes/desempeno-agentes.component';
+import { TipoCambioAdminComponent } from './components/tipo-cambio/tipo-cambio-admin.component';
 import { PlanillaComisionesPage } from '../planilla-comisiones/planilla-comisiones.page';
 import { AnaliticaPage } from '../analitica/analitica.page';
 import { ResumenAnualPage } from '../planilla-comisiones/resumen-anual.page';
 
-export type TabFinanzas = 'liquidacion' | 'agentes' | 'analitica' | 'anual';
+export type TabFinanzas = 'liquidacion' | 'agentes' | 'analitica' | 'anual' | 'tipo-cambio';
 
 interface TabConfig {
   readonly id: TabFinanzas;
   readonly label: string;
-  readonly icon: 'file-text' | 'users' | 'bar-chart' | 'trending-up';
+  readonly icon: 'file-text' | 'users' | 'bar-chart' | 'trending-up' | 'dollar-sign';
   readonly descripcion: string;
 }
 
@@ -43,6 +44,12 @@ const TABS: readonly TabConfig[] = [
     icon: 'trending-up',
     descripcion: 'Consolidado histórico de 12 meses y bonos trimestrales',
   },
+  {
+    id: 'tipo-cambio',
+    label: 'Tipo de Cambio',
+    icon: 'dollar-sign',
+    descripcion: 'Serie histórica del TC oficial USD→BOB, con corrección manual',
+  },
 ];
 
 /**
@@ -58,6 +65,7 @@ const TABS: readonly TabConfig[] = [
     PageHeaderComponent,
     IconComponent,
     DesempenoAgentesComponent,
+    TipoCambioAdminComponent,
     PlanillaComisionesPage,
     AnaliticaPage,
     ResumenAnualPage,
@@ -77,7 +85,7 @@ export class FinanzasPage {
   /** Pestaña activa derivada reactivamente de la URL */
   protected readonly tabActiva = computed<TabFinanzas>(() => {
     const q = this.queryParams()?.['tab'] as string;
-    if (q === 'agentes' || q === 'analitica' || q === 'anual' || q === 'liquidacion') {
+    if (q === 'agentes' || q === 'analitica' || q === 'anual' || q === 'liquidacion' || q === 'tipo-cambio') {
       return q;
     }
     return 'liquidacion';

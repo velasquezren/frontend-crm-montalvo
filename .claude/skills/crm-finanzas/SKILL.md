@@ -22,6 +22,10 @@ El módulo consolida tres vistas operativas en una sola experiencia fluida bajo 
 3. **Resumen Anual (`tab=anual`)**:
    - Componente: `ResumenAnualPage` (`app-resumen-anual`)
    - Matriz histórica de facturación de 12 meses por vendedora y cálculo de bonos trimestrales (Q1, Q2, Q3, Q4).
+4. **Tipo de Cambio (`tab=tipo-cambio`, agregado 2026-08-25)**:
+   - Componente: `TipoCambioAdminComponent` (`app-tipo-cambio-admin`), en `features/finanzas/components/tipo-cambio/`
+   - Historial diario del TC oficial USD→BOB (backend: módulo `tipo-cambio`, modelo `TipoCambioDiario`) — **no es lo mismo que** `PeriodoComision.tipoCambio`, que es el TC ya fijo de un mes de liquidación cerrado. Un intervalo en el backend intenta traer el valor del día cada 6h de un espejo público del BCB (`fuente: AUTOMATICO`); un ADMIN puede corregir cualquier día a mano (`fuente: MANUAL`), y lo manual siempre gana sobre lo automático de ese mismo día.
+   - `MonedaService` (frontend, `core/moneda/`) lee de aquí (`GET /tipo-cambio/vigente`) el TC que usa en toda la app fuera de una liquidación abierta — antes de esto era una constante fija (6,97) que nadie actualizaba.
 
 ---
 

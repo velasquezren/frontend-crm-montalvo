@@ -9,10 +9,12 @@ const CLAVE_STORAGE = 'crm_moneda_visualizacion';
 /**
  * Solo se usa mientras el backend no ha contestado, o si no contesta.
  *
- * **No es "el tipo de cambio del sistema".** Ese vive en el backend, en el
- * periodo de comisiones más reciente, y lo trae `cargarTipoCambio()`. Tener aquí
- * un número fijo como única fuente era el bug: si administración importaba un
- * mes con otro TC, pasar una tabla a dólares dividía por 6,97 igualmente.
+ * **No es "el tipo de cambio del sistema".** Ese vive en el backend, en la
+ * serie histórica de `TipoCambioDiario` (módulo `tipo-cambio`), y lo trae
+ * `cargarTipoCambio()`. Tener aquí un número fijo como única fuente era el bug
+ * original: quedó escrito 6,97 mientras el oficial subía a 11,54 y nada en el
+ * frontend se enteraba, porque no había ninguna otra fuente contra la cual
+ * contrastarlo.
  */
 export const TIPO_CAMBIO_DE_RESPALDO = 6.97;
 
@@ -34,12 +36,11 @@ export function formatearNumero(valor: number): string {
   return FORMATO.format(valor);
 }
 
-/** Lo que responde `GET /planilla-comisiones/tipo-cambio`. */
+/** Lo que responde `GET /tipo-cambio/vigente`. */
 interface TipoCambioVigente {
   tipoCambio: number;
-  anio: number | null;
-  mes: number | null;
-  origen: 'periodo' | 'defecto';
+  fecha: string | null;
+  fuente: 'AUTOMATICO' | 'MANUAL' | 'RESPALDO';
 }
 
 /**
@@ -82,20 +83,21 @@ export class MonedaService {
   }
 
   /**
-   * Trae del backend el tipo de cambio vigente: el del último periodo importado.
+   * Trae del backend el tipo de cambio vigente: el más reciente de la serie
+   * histórica `TipoCambioDiario` (automático o corregido a mano por un ADMIN).
    *
-   * Se llama UNA vez al arrancar y nunca más — es el dato de referencia por
-   * excelencia (cambia cuando administración importa un mes) y volver a pedirlo
-   * costaría 190 ms de red por nada. Si falla, se queda el de respaldo y la
-   * aplicación sigue: un selector de moneda no puede tumbar una pantalla.
+   * Se llama UNA vez al arrancar y nunca más — volver a pedirlo costaría 190 ms
+   * de red por nada, y el valor del día no cambia mientras la sesión está
+   * abierta. Si falla, se queda el de respaldo y la aplicación sigue: un
+   * selector de moneda no puede tumbar una pantalla.
    */
   async cargarTipoCambio(): Promise<void> {
     try {
-      const vigente = await this.api.get<TipoCambioVigente>('/planilla-comisiones/tipo-cambio');
+      const vigente = await this.api.get<TipoCambioVigente>('/tipo-cambio/vigente');
       if (!(vigente?.tipoCambio > 0)) return;
 
       this._tipoCambioGlobal.set(vigente.tipoCambio);
-      this._fuente.set(vigente.origen === 'periodo' ? 'backend' : 'respaldo');
+      this._fuente.set(vigente.fuente === 'RESPALDO' ? 'respaldo' : 'backend');
       this._tipoCambio.set(vigente.tipoCambio);
     } catch {
       /* Sin sesión todavía, o backend caído: se sigue con el de respaldo. */

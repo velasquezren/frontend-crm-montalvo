@@ -64,3 +64,5 @@ export type TipoVendedora = 'JEFA' | 'VENDEDORA';
 export type AreaVendedora = 'EJECUTIVA' | 'RA' | 'PUBLICIDAD';
 
 export type EstadoPeriodo = 'BORRADOR' | 'CALCULADO' | 'CERRADO';
+
+export type FuenteTipoCambio = 'AUTOMATICO' | 'MANUAL';
