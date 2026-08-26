@@ -353,6 +353,12 @@
         <div class="flex flex-col gap-2">
           @for (n of [1,2,3,4,5,6]; track n) { <app-loading-skeleton height="38px" /> }
         </div>
+      } @else if (ventas.error()) {
+        <!-- Faltaba: sin esto, un backend caído devuelve el defaultValue vacío
+             y esta rama caía derecho al "Ninguna fila coincide" de más abajo —
+             mintiendo que el mes no tiene ventas en vez de avisar que el
+             servidor no contestó. -->
+        <app-error-carga que="las ventas del periodo" (reintentar)="ventas.reload()" />
       } @else if (ventas.value().datos.length === 0 && filtroVendedoraFantasma()) {
         <!-- El resumen por agente ignora el filtro de vendedora a propósito
              (backend: whereSinVendedora), así que puede seguir mostrando a

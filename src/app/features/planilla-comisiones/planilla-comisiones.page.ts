@@ -24,6 +24,7 @@ import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
+import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InfoHintComponent } from '../../shared/components/info-hint/info-hint.component';
@@ -114,6 +115,7 @@ function ultimoPrimero(a: VentaImportada, b: VentaImportada): number {
     TablaLiquidacionComponent,
     DesgloseComisionesComponent,
     ConfiguracionComisionesComponent,
+    ErrorCargaComponent,
     SeleccionPlanesComponent,
     DatePipe,
     DecimalPipe,
