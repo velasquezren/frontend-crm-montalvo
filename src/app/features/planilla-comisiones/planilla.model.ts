@@ -256,6 +256,39 @@ export interface ReporteConsolidado {
   totales: Record<string, number>;
 }
 
+/**
+ * Una línea del desglose por tipo/canal/unidad de negocio de UNA vendedora,
+ * con quién es y el subtipo ya resuelto por el backend — ver `subtipo` y la
+ * nota de `etiquetaTipoFila` más arriba: `tipo` sale 'A' tanto de un plan
+ * como de una consulta RA, y aquí ya viene separado.
+ */
+export interface LineaDesgloseVendedora {
+  vendedoraId: string;
+  vendedoraNombre: string;
+  vendedoraCodigo: string;
+  clasif: ClasifComision;
+  canal: CanalVenta;
+  unidadNegocio: UnidadNegocio;
+  tipo: TipoComision;
+  subtipo: 'A' | 'A_RA' | 'B' | 'C';
+  cantidad: number;
+  montoVendido: number;
+  baseCalculo: number;
+  porcentaje: number;
+  comisionUsd: number;
+}
+
+export interface ReporteDesglose {
+  filas: LineaDesgloseVendedora[];
+}
+
+export const SUBTIPO_LABEL: Record<LineaDesgloseVendedora['subtipo'], string> = {
+  A: 'Tipo A · Planes',
+  A_RA: 'Tipo A (RA)',
+  B: 'Tipo B · Cirugías',
+  C: 'Tipo C · Servicios',
+};
+
 export interface ResultadoCalculo {
   periodoId: string;
   vendedorasLiquidadas: number;
@@ -372,11 +405,30 @@ export const CLASIF_LABEL: Record<ClasifComision, string> = {
   PROMOCION: 'Promoción',
 };
 
+/** Cambia la tarifa aplicada (empresa vs. propia) — ver `tarifaDe()` en la
+ *  página de Planilla de Comisiones. */
+export const CANAL_LABEL: Record<CanalVenta, string> = { EMPRESA: 'Empresa', PROPIO: 'Propio' };
+
 export const TIPO_LABEL: Record<TipoComision, string> = {
   A: 'Tipo A · Planes',
   B: 'Tipo B · Cirugías',
   C: 'Tipo C · Servicios',
 };
+
+/**
+ * Etiqueta real de una fila, resolviendo la ambigüedad de `TipoComision.A`:
+ * sale tanto de un plan de maternidad/varios como de una consulta,
+ * laboratorio, ecografía u otro del área RA — dos bolsas con reglas de
+ * tarifa distintas (por plan elegido vs. por nivel mensual combinado) que
+ * comparten letra porque así las marca `PARAMETROS` en la planilla de
+ * administración (columna `TIPO COMISION`). Mostrar "Tipo A · Planes" en el
+ * badge de una fila de "Consulta" del área RA es literalmente falso — la
+ * fila no es un plan. La única pista que las distingue es `unidadNegocio`.
+ */
+export function etiquetaTipoFila(v: { tipo: TipoComision; unidadNegocio: UnidadNegocio }): string {
+  if (v.tipo === 'A' && v.unidadNegocio === 'RA') return 'Tipo A (RA)';
+  return TIPO_LABEL[v.tipo];
+}
 
 /** RA = Reproducción Asistida. Ver la nota de `tarifaDe()` en la página: las
  *  ventas de esta unidad no pagan % directo a la ejecutiva, pero sí cuentan

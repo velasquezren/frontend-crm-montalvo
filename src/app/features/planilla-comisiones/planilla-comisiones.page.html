@@ -505,6 +505,16 @@
                     ecografía, campañas, promociones y otros servicios.
                   </p>
                   <p>
+                    <strong>Excepción: el área RA.</strong> Sus consultas,
+                    laboratorios, ecografías y otros también llevan
+                    <strong>A</strong> — así los marca la planilla de
+                    administración —, pero <strong>no son un plan</strong> y
+                    pagan por una regla totalmente distinta: por nivel según el
+                    excedente combinado del mes, no por plan elegido. El badge
+                    los distingue como <strong>"A RA"</strong>. Filtra por
+                    Tipo A + Unidad de negocio RA para verlos aparte.
+                  </p>
+                  <p>
                     Cada uno paga con su propia tabla y su propio porcentaje, por
                     eso la liquidación los muestra en columnas separadas.
                   </p>
@@ -573,7 +583,9 @@
                   </select>
                 </td>
                 <td class="text-center">
-                  <span class="tipo-pill" [title]="tipoLabel[v.tipo]">{{ v.tipo }}</span>
+                  <span class="tipo-pill" [title]="etiquetaTipoFila(v)">
+                    {{ v.tipo }}{{ v.tipo === 'A' && v.unidadNegocio === 'RA' ? ' RA' : '' }}
+                  </span>
                 </td>
                 <td class="text-right whitespace-nowrap">
                   <div class="flex items-center justify-end gap-1.5">
@@ -781,14 +793,37 @@
           </app-button>
         </div>
         <p class="text-xs text-text-muted -mt-2 mb-3">
-          La tabla de abajo resume cada vendedora en una fila. El Excel trae, además, una
-          hoja aparte por vendedora con el desglose por tipo y sección y cada venta del mes.
+          La tabla de abajo resume cada vendedora en una fila. Para el desglose por tipo y
+          sección de cada una, mira "Desglose por Tipo y Sección" más abajo, o descarga el
+          Excel completo: trae, además, una hoja aparte por vendedora con cada venta del mes.
         </p>
         <app-tabla-liquidacion
           [filas]="rep.filas"
           [totales]="rep.totales"
           [tipoCambio]="+rep.periodo.tipoCambio"
           [mostrarCirugias]="true" />
+      </section>
+
+      <!-- Desglose por tipo y sección: responde "¿cuánto cobramos de Tipo B
+           este mes?" sin sumar a mano — arriba Tipo B es una columna por
+           vendedora, aquí es una lista filtrable con su propia sumatoria. -->
+      <section class="panel">
+        <h3 class="text-sm font-bold text-text-dark mb-3">Desglose por Tipo y Sección</h3>
+        @if (desglose.isLoading() && desglose.value().filas.length === 0) {
+          <app-loading-skeleton height="200px" />
+        } @else if (desglose.error()) {
+          <app-empty-state
+            icon="alert-circle"
+            title="No se pudo cargar el desglose"
+            description="Verifica que el servidor esté encendido e inténtalo de nuevo." />
+        } @else if (desglose.value().filas.length > 0) {
+          <app-desglose-comisiones [filas]="desglose.value().filas" [tipoCambio]="+rep.periodo.tipoCambio" />
+        } @else {
+          <app-empty-state
+            icon="pie-chart"
+            title="Sin líneas de desglose"
+            description="Este periodo todavía no tiene comisiones calculadas por tipo y sección." />
+        }
       </section>
     }
   }

@@ -115,6 +115,13 @@ export class PlanillaComisionesService {
     return this.api.request(`/planilla-comisiones/periodos/${periodoId}/reporte/consolidado`);
   }
 
+  /** Todas las líneas de desglose (tipo/canal/unidad de negocio) de todas las
+   *  vendedoras liquidadas — para filtrar por un cubo concreto y ver la
+   *  sumatoria, sin abrir el Excel. */
+  desgloseRequest(periodoId: string): ResourceRequest {
+    return this.api.request(`/planilla-comisiones/periodos/${periodoId}/reporte/desglose`);
+  }
+
   /** Resumen anual por vendedora: doce meses y cuatro trimestres. Solo ADMIN. */
   resumenAnualRequest(anio: number): ResourceRequest {
     return this.api.request('/planilla-comisiones/anual', { anio: String(anio) });

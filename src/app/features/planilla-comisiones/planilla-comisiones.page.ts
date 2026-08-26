@@ -42,16 +42,19 @@ import { ConfiguracionComisionesComponent } from './components/configuracion-com
 import { SeleccionPlanesComponent } from './components/seleccion-planes.component';
 import {
   Alertas,
+  CANAL_LABEL,
   CanalVenta,
   ClasifComision,
   CLASIF_LABEL,
   ConfiguracionPlanilla,
   ESTADO_PERIODO_LABEL,
+  etiquetaTipoFila,
   GrupoPlanes,
   MESES,
   Objetivo,
   PeriodoComision,
   ReporteConsolidado,
+  ReporteDesglose,
   ResumenImportacion,
   TIPO_LABEL,
   TipoComision,
@@ -61,10 +64,7 @@ import {
   Vendedora,
   VentaImportada,
 } from './planilla.model';
-
-/** Etiquetas del filtro de canal — mismo criterio que `tarifaDe()`: cambia la
- *  tarifa aplicada (empresa vs. propia), así que conviene poder acotar por él. */
-const CANAL_LABEL: Record<CanalVenta, string> = { EMPRESA: 'Empresa', PROPIO: 'Propio' };
+import { DesgloseComisionesComponent } from './components/desglose-comisiones.component';
 
 type Pestana = 'IMPORTAR' | 'CLASIFICACION' | 'PLANES' | 'REPORTES' | 'CONFIGURACION';
 
@@ -112,6 +112,7 @@ function ultimoPrimero(a: VentaImportada, b: VentaImportada): number {
   selector: 'app-planilla-comisiones',
   imports: [
     TablaLiquidacionComponent,
+    DesgloseComisionesComponent,
     ConfiguracionComisionesComponent,
     SeleccionPlanesComponent,
     DatePipe,
@@ -152,6 +153,7 @@ export class PlanillaComisionesPage implements OnDestroy {
   protected readonly estadoLabel = ESTADO_PERIODO_LABEL;
   protected readonly tipoLabel = TIPO_LABEL;
   protected readonly unidadLabel = UNIDAD_LABEL;
+  protected readonly etiquetaTipoFila = etiquetaTipoFila;
   protected readonly meses = MESES;
   protected readonly clasificaciones = Object.keys(CLASIF_LABEL) as ClasifComision[];
   protected readonly tipos = Object.keys(TIPO_LABEL) as TipoComision[];
@@ -303,6 +305,16 @@ export class PlanillaComisionesPage implements OnDestroy {
    * más devuelve 400 y la vista muestra el error de carga — que es exactamente
    * lo que pasaba pidiendo 200.
    */
+  /** Solo se pide en la pestaña Reportes, y solo cuando ya hay periodo — el
+   *  desglose de un mes sin calcular no existe todavía. */
+  protected readonly desglose = httpResource<ReporteDesglose>(
+    () => {
+      const id = this.periodoId();
+      return id && this.pestana() === 'REPORTES' ? this.service.desgloseRequest(id) : undefined;
+    },
+    { defaultValue: { filas: [] } },
+  );
+
   protected readonly planesPaq = httpResource<RespuestaPaginada<VentaImportada>>(
     () => {
       const id = this.periodoId();
