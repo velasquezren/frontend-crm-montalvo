@@ -353,6 +353,16 @@
         <div class="flex flex-col gap-2">
           @for (n of [1,2,3,4,5,6]; track n) { <app-loading-skeleton height="38px" /> }
         </div>
+      } @else if (ventas.value().datos.length === 0 && filtroVendedoraFantasma()) {
+        <!-- El resumen por agente ignora el filtro de vendedora a propósito
+             (backend: whereSinVendedora), así que puede seguir mostrando a
+             las demás mientras la elegida ya no tiene ninguna venta bajo el
+             resto de filtros — sin este aviso parecía un filtro roto, sin
+             ninguna tarjeta activa a la vista para deseleccionarlo. -->
+        <app-empty-state icon="user-plus" title="Sin ventas para esta vendedora"
+          [description]="(nombreFiltroVendedora() ?? 'La vendedora elegida') + ' no tiene ventas que coincidan con el resto de los filtros.'">
+          <app-button variant="ghost" icon="x" (clicked)="quitarFiltroVendedora()">Quitar filtro de vendedora</app-button>
+        </app-empty-state>
       } @else if (ventas.value().datos.length === 0) {
         <app-empty-state icon="file-x" title="Sin resultados"
           description="Ninguna fila coincide con los filtros aplicados." />
@@ -375,7 +385,7 @@
                     type="button"
                     class="tarjeta-agente"
                     [class.tarjeta-agente-activa]="filtroVendedora() === a.vendedoraId"
-                    (click)="alternarVendedora(a.vendedoraId)">
+                    (click)="alternarVendedora(a.vendedoraId, a.nombre)">
                     <span class="tarjeta-agente-nombre">{{ a.nombre }}</span>
                     <span class="tarjeta-agente-monto">{{ a.monto | moneda }}</span>
                     <span class="tarjeta-agente-pie">

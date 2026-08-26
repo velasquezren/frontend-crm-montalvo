@@ -192,6 +192,8 @@ export class PlanillaComisionesPage implements OnDestroy {
    *  análisis que arrastra ese área (ver la nota de `tarifaDe()`). */
   protected readonly filtroUnidad = signal<UnidadNegocio | null>(null);
   protected readonly filtroVendedora = signal<string | null>(null);
+  /** Solo para el mensaje de "sin resultados" — ver `filtroVendedoraFantasma`. */
+  protected readonly nombreFiltroVendedora = signal<string | null>(null);
 
   /** Si hay algún filtro puesto, para que el pie no diga "del mes" cuando no lo es. */
   protected readonly hayFiltroActivo = computed(
@@ -229,33 +231,6 @@ export class PlanillaComisionesPage implements OnDestroy {
       const texto = this.busqueda();
       const id = setTimeout(() => this.busquedaDebounced.set(texto), 350);
       onCleanup(() => clearTimeout(id));
-    });
-
-    /*
-     * Bug real: filtrar por vendedora y DESPUÉS acotar por otro filtro
-     * (clasif/tipo/canal/unidad/búsqueda) bajo el que esa vendedora ya no
-     * tiene ninguna venta dejaba la tabla en "Ninguna fila coincide" —
-     * porque `where` (el listado) sí lleva `vendedoraId`, a diferencia de
-     * `whereSinVendedora` (el resumen por agente, backend
-     * `listarVentas` — a propósito, para que el selector no dependa de sí
-     * mismo). El resumen seguía mostrando agentes con ventas —los OTROS,
-     * bajo el filtro nuevo— así que parecía que había datos y sin embargo
-     * la tabla decía que no había ninguno: contradictorio y sin pista de
-     * qué pasaba, porque la tarjeta de la vendedora elegida ni siquiera
-     * aparecía ya en el resumen para poder deseleccionarla.
-     *
-     * `ventas.value().porVendedora` sale de `whereSinVendedora`, así que
-     * es la fuente correcta para saber si la selección sigue siendo válida
-     * bajo el resto de filtros — sin recalcular nada aparte ni pedir más al
-     * servidor. Se espera a que la petición en vuelo termine
-     * (`!isLoading()`) para no juzgar la respuesta vieja de un filtro que
-     * ya cambió.
-     */
-    effect(() => {
-      const filtro = this.filtroVendedora();
-      if (!filtro || this.ventas.isLoading()) return;
-      const sigueValida = this.ventas.value().porVendedora.some(a => a.vendedoraId === filtro);
-      if (!sigueValida) this.filtroVendedora.set(null);
     });
 
     // Al elegir otro periodo se recargan sus alertas y su reporte.
@@ -812,6 +787,7 @@ export class PlanillaComisionesPage implements OnDestroy {
     this.filtroCanal.set(null);
     this.filtroUnidad.set(null);
     this.filtroVendedora.set(null);
+    this.nombreFiltroVendedora.set(null);
     this.soloExcluidas.set(false);
     this.soloSinClasificar.set(false);
     this.pagina.set(1);
@@ -922,10 +898,44 @@ export class PlanillaComisionesPage implements OnDestroy {
   /** Pulsar la tarjeta de un agente acota la tabla a sus ventas, y volver a
    *  pulsarla la suelta. Es el gesto que esperaba administración: ver el total
    *  de alguien y entrar a su detalle sin buscar en un desplegable. */
-  protected alternarVendedora(id: string): void {
-    this.filtroVendedora.update(actual => (actual === id ? null : id));
+  protected alternarVendedora(id: string, nombre: string): void {
+    const yaElegida = this.filtroVendedora() === id;
+    this.filtroVendedora.set(yaElegida ? null : id);
+    this.nombreFiltroVendedora.set(yaElegida ? null : nombre);
     this.pagina.set(1);
   }
+
+  /**
+   * Deja el filtro de vendedora sin tocar el resto — para el botón del aviso
+   * "sin ventas para esta vendedora" (`filtroVendedoraFantasma`).
+   */
+  protected quitarFiltroVendedora(): void {
+    this.filtroVendedora.set(null);
+    this.nombreFiltroVendedora.set(null);
+    this.pagina.set(1);
+  }
+
+  /**
+   * `whereSinVendedora` del backend (`listarVentas`) calcula el resumen por
+   * agente SIN el filtro de vendedora, a propósito, para que el selector no
+   * dependa de sí mismo. Consecuencia: elegir una vendedora y DESPUÉS acotar
+   * por otro filtro (clasif/tipo/canal/unidad/búsqueda) bajo el que ya no
+   * tiene ninguna venta deja la tabla vacía, mientras el resumen sigue
+   * mostrando a las demás — parece que hay datos pero la tabla dice que no
+   * hay ninguno, y la tarjeta de la elegida ni siquiera sigue en el resumen
+   * para poder deseleccionarla a mano.
+   *
+   * En vez de corregirlo solo en segundo plano (esa versión pedía una
+   * petición de red EXTRA cada vez, y se sentía más lento) esto solo lee
+   * `porVendedora` de la respuesta que YA llegó — cero peticiones de más — y
+   * la plantilla usa el resultado para explicarlo y ofrecer un botón, no
+   * para adivinar ni recalcular nada.
+   */
+  protected readonly filtroVendedoraFantasma = computed(() => {
+    const id = this.filtroVendedora();
+    if (!id || this.ventas.isLoading()) return false;
+    return !this.ventas.value().porVendedora.some(a => a.vendedoraId === id);
+  });
 
   protected filtrarPorTipo(valor: string): void {
     this.filtroTipo.set(valor ? (valor as TipoComision) : null);
