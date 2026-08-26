@@ -479,6 +479,15 @@ export interface MesVendedora {
   readonly comisionUsd: number;
   readonly bonoTrimestralUsd: number;
   readonly totalBob: number;
+  /**
+   * El TC con el que se liquidó ESTE mes, no el vigente hoy.
+   *
+   * Hay que pasarlo explícito al pipe `moneda` (`| moneda:'USD':mes.tipoCambio`)
+   * al mostrar `montoVendido`: sin esto, togglear a Bs convertía con el TC en
+   * vivo del selector global, que puede diferir del de este mes en más de un
+   * 40 %.
+   */
+  readonly tipoCambio: number;
   /** false = ese mes todavía no se importó. */
   readonly importado: boolean;
   /** false = importado pero sin liquidar; el vendido sí es fiable. */
@@ -516,6 +525,14 @@ export interface ResumenAnual {
   readonly anio: number;
   readonly filas: readonly FilaAnual[];
   readonly totalesPorMes: readonly number[];
+  /**
+   * TC del último periodo del año (o el más reciente que haya). Para cifras
+   * que suman varios meses —el total anual, un trimestre— no existe "el" TC
+   * correcto, así que se usa este como aproximación, igual que ya hace el
+   * backend para convertir `bonoUsd` a `bonoBob`. Para una celda de un mes
+   * concreto, en cambio, usa el `tipoCambio` de ESE `MesVendedora`.
+   */
+  readonly tcReferencia: number;
 }
 
 /** Abreviaturas para las cabeceras de doce columnas. */

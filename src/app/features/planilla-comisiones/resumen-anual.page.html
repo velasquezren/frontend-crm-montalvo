@@ -28,7 +28,7 @@
       <span class="pill-meta">{{ mesesConDatos() }} de 12 meses importados</span>
       <span class="pill-meta">{{ res.filas.length }} vendedoras</span>
       <span class="pill-meta bg-primary/10 text-primary font-bold border-primary/20">
-        {{ totalAnual() | moneda }}
+        {{ totalAnual() | moneda: 'USD': tcReferencia() }}
       </span>
     </div>
   }
@@ -50,7 +50,7 @@
   <section class="grid-kpis-modern mb-6">
     <app-kpi-card
       label="Facturado Anual"
-      [valor]="totalAnual() | moneda"
+      [valor]="totalAnual() | moneda: 'USD': tcReferencia()"
       icon="wallet"
       tono="primary"
       [destacado]="true"
@@ -58,7 +58,7 @@
 
     <app-kpi-card
       label="Promedio Mensual"
-      [valor]="promedioMensual() | moneda"
+      [valor]="promedioMensual() | moneda: 'USD': tcReferencia()"
       icon="trending-up"
       tono="secondary"
       tonoValor="secondary"
@@ -66,7 +66,7 @@
 
     <app-kpi-card
       label="Bonos Trimestrales"
-      [valor]="totalBonosAnualUsd() | moneda"
+      [valor]="totalBonosAnualUsd() | moneda: 'USD': tcReferencia()"
       icon="award"
       tono="secondary"
       [pie]="vendedorasQueCobranBono() + ' vendedora(s) alcanzaron la meta'" />
@@ -76,7 +76,7 @@
       [valor]="resumen.value().filas.length"
       icon="users"
       tono="neutral"
-      [pie]="(totalComisionAnualUsd() | moneda) + ' en comisiones netas'" />
+      [pie]="(totalComisionAnualUsd() | moneda: 'USD': tcReferencia()) + ' en comisiones netas'" />
   </section>
 
   <!-- ══ 2. Gráfico de Evolución Mensual ══ -->
@@ -206,7 +206,7 @@
                   [class.celda-sin-liquidar]="mes.importado && !mes.liquidado">
                   @if (mes.importado) {
                     <span [class.font-semibold]="mes.montoVendido > 0">
-                      {{ mes.montoVendido | moneda }}
+                      {{ mes.montoVendido | moneda: 'USD': mes.tipoCambio }}
                     </span>
                   } @else {
                     <span class="text-text-muted/60">—</span>
@@ -215,7 +215,7 @@
               }
 
               <td class="text-right col-total font-mono text-xs font-bold text-primary whitespace-nowrap">
-                {{ f.totalVendido | moneda }}
+                {{ f.totalVendido | moneda: 'USD': tcReferencia() }}
               </td>
             </tr>
           } @empty {
@@ -237,17 +237,17 @@
                 <span class="block text-[10px] font-normal text-text-muted">solo lo filtrado</span>
               }
             </td>
-            @for (t of totalesPorMesFiltrados(); track $index) {
+            @for (t of totalesPorMesFiltrados(); track $index; let i = $index) {
               <td class="text-right col-mes font-mono font-bold text-[11px] whitespace-nowrap">
                 @if (t > 0) {
-                  {{ t | moneda }}
+                  {{ t | moneda: 'USD': tcPorMes()[i] }}
                 } @else {
                   <span class="text-text-muted/60">—</span>
                 }
               </td>
             }
             <td class="text-right col-total font-mono font-extrabold text-xs text-primary whitespace-nowrap">
-              {{ totalFiltrado() | moneda }}
+              {{ totalFiltrado() | moneda: 'USD': tcReferencia() }}
             </td>
           </tr>
         </tfoot>
@@ -340,7 +340,7 @@
 
                   <div class="flex items-baseline justify-between text-xs my-1">
                     <span class="text-text-muted text-[11px]">Promedio:</span>
-                    <span class="font-bold text-text-dark font-mono">{{ t.promedio | moneda }}</span>
+                    <span class="font-bold text-text-dark font-mono">{{ t.promedio | moneda: 'USD': tcReferencia() }}</span>
                   </div>
 
                   <div class="w-full h-1.5 bg-bg-light rounded-full overflow-hidden mb-1">
@@ -352,7 +352,7 @@
                   </div>
 
                   <p class="text-[10px] text-text-muted leading-tight font-mono">
-                    meta {{ t.objetivoUsd | moneda }}
+                    meta {{ t.objetivoUsd | moneda: 'USD': tcReferencia() }}
                   </p>
 
                   @if (leyendaTrimestre(t); as leyenda) {
@@ -362,7 +362,7 @@
                   @if (t.bonoUsd > 0) {
                     <div class="mt-2 pt-1.5 border-t border-border/40 flex items-center justify-between">
                       <span class="text-[10px] font-bold text-text-dark">Bono:</span>
-                      <span class="text-xs font-bold text-secondary font-mono">{{ t.bonoUsd | moneda }}</span>
+                      <span class="text-xs font-bold text-secondary font-mono">{{ t.bonoUsd | moneda: 'USD': tcReferencia() }}</span>
                     </div>
                   }
                 </div>

@@ -71,8 +71,28 @@ export class ResumenAnualPage {
 
   protected readonly resumen = httpResource<ResumenAnual>(
     () => this.planillaService.resumenAnualRequest(this.anio()),
-    { defaultValue: { anio: new Date().getFullYear(), filas: [], totalesPorMes: [] } },
+    { defaultValue: { anio: new Date().getFullYear(), filas: [], totalesPorMes: [], tcReferencia: 1 } },
   );
+
+  /**
+   * TC para cifras que suman varios meses (total anual, un trimestre): no
+   * existe un TC "correcto" para una suma entre periodos con TC distinto, así
+   * que se usa el del periodo más reciente del año — el mismo criterio que ya
+   * usa el backend para `bonoBob`.
+   */
+  protected readonly tcReferencia = computed(() => this.resumen.value().tcReferencia || 1);
+
+  /**
+   * El TC de cada uno de los 12 meses, para la fila de totales de la matriz.
+   * A diferencia de `tcReferencia()`, acá sí hay un TC exacto por columna —
+   * todas las vendedoras liquidan un mes dado con el mismo periodo—, así que
+   * se toma de la primera fila en vez de aproximar.
+   */
+  protected readonly tcPorMes = computed(() => {
+    const primera = this.resumen.value().filas[0];
+    const referencia = this.tcReferencia();
+    return Array.from({ length: 12 }, (_, i) => primera?.meses[i]?.tipoCambio ?? referencia);
+  });
 
   /** Total vendido del año en USD */
   protected readonly totalAnual = computed(() =>
