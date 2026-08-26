@@ -1,6 +1,7 @@
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 
+import { descargarArchivo } from '../../core/api/descargar-archivo';
 import { mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { ToastService } from '../../core/toast/toast.service';
@@ -272,13 +273,7 @@ export class AnaliticaPage {
     this.descargando.set(true);
     try {
       const { blob, nombre } = await this.service.descargarExcel(id);
-      const url = URL.createObjectURL(blob);
-      const enlace = document.createElement('a');
-      enlace.href = url;
-      enlace.download = nombre;
-      enlace.click();
-      // Sin revocar, el blob queda retenido en memoria hasta recargar la página.
-      URL.revokeObjectURL(url);
+      descargarArchivo(blob, nombre);
       this.toast.success(`${nombre} descargado.`, 'Informe listo');
     } catch (err) {
       this.toast.error(mensajeDeError(err, 'No se pudo generar el informe.'), 'Error');

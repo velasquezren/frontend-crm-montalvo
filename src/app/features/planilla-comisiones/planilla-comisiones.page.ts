@@ -15,6 +15,7 @@ import {
   viewChild,
 } from '@angular/core';
 
+import { descargarArchivo } from '../../core/api/descargar-archivo';
 import { mensajeDeError } from '../../core/api/http-error';
 import { AuthService } from '../../core/auth/auth.service';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
@@ -211,6 +212,7 @@ export class PlanillaComisionesPage implements OnDestroy {
   protected readonly alertas = signal<Alertas | null>(null);
   protected readonly consolidado = signal<ReporteConsolidado | null>(null);
   protected readonly configuracion = signal<ConfiguracionPlanilla | null>(null);
+  protected readonly descargandoExcel = signal(false);
 
   private readonly preventDefaultDrag = (e: DragEvent) => e.preventDefault();
 
@@ -914,6 +916,28 @@ export class PlanillaComisionesPage implements OnDestroy {
       this.consolidado.set(await this.service.obtenerConsolidado(id));
     } catch {
       this.consolidado.set(null);
+    }
+  }
+
+  /**
+   * Descarga el Excel completo del periodo: el mismo resumen que la pantalla,
+   * más lo que la tabla web no puede mostrar por falta de ancho — el
+   * desglose por tipo y sección y cada venta del mes, en una hoja aparte por
+   * vendedora.
+   */
+  protected async descargarExcel(): Promise<void> {
+    const id = this.periodoId();
+    if (!id || this.descargandoExcel()) return;
+
+    this.descargandoExcel.set(true);
+    try {
+      const { blob, nombre } = await this.service.descargarExcel(id);
+      descargarArchivo(blob, nombre);
+      this.toast.success(`${nombre} descargado.`, 'Excel listo');
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo generar el Excel.'), 'Error');
+    } finally {
+      this.descargandoExcel.set(false);
     }
   }
 }

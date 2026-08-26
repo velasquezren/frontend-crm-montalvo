@@ -146,6 +146,17 @@ export class PlanillaComisionesService {
     return this.api.post<ResultadoCalculo>(`/planilla-comisiones/periodos/${periodoId}/calcular`);
   }
 
+  /**
+   * El informe completo del mes en Excel: el mismo resumen/liquidación que la
+   * pantalla, más lo que la tabla web no puede mostrar por falta de ancho —
+   * el desglose por tipo y sección y cada venta del mes, en una hoja aparte
+   * por vendedora. Mismo endpoint que usa Analítica
+   * (`AnaliticaService.descargarExcel`); dos puntos de entrada al mismo libro.
+   */
+  descargarExcel(periodoId: string): Promise<{ blob: Blob; nombre: string }> {
+    return this.api.getBlob(`/planilla-comisiones/periodos/${periodoId}/exportar`);
+  }
+
   ajustarVenta(ventaId: string, ajuste: AjusteVenta): Promise<unknown> {
     return this.api.patch(`/planilla-comisiones/ventas/${ventaId}`, ajuste);
   }

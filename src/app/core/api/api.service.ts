@@ -61,6 +61,27 @@ export class ApiService {
   delete<T>(path: string): Promise<T> {
     return firstValueFrom(this.http.delete<T>(this.url(path)));
   }
+
+  /**
+   * Descarga binaria con nombre de archivo (Excel, PDF…).
+   *
+   * Va por `HttpClient` con `responseType: 'blob'` y no por un `<a href>`
+   * directo: el endpoint exige el Bearer, que solo añade `tokenInterceptor`
+   * sobre peticiones de `HttpClient`. Un enlace directo saldría sin cabecera
+   * de autorización y volvería 401.
+   */
+  async getBlob(path: string, params?: QueryParams): Promise<{ blob: Blob; nombre: string }> {
+    const respuesta = await firstValueFrom(
+      this.http.get(this.url(path), {
+        params: limpiarParams(params),
+        responseType: 'blob',
+        observe: 'response',
+      }),
+    );
+    const cabecera = respuesta.headers.get('content-disposition') ?? '';
+    const nombre = /filename="?([^"]+)"?/.exec(cabecera)?.[1] ?? 'descarga';
+    return { blob: respuesta.body as Blob, nombre };
+  }
 }
 
 function limpiarParams(params?: QueryParams): Record<string, string | number | boolean> {
