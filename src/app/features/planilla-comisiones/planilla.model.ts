@@ -50,6 +50,14 @@ export interface FotoConfiguracion {
   }>;
 }
 
+/** Mismo formato que arma el backend en `nombreArchivo()`
+ *  (`exportacion-comisiones.service.ts`) — red de seguridad para el nombre
+ *  del Excel descargado si `Content-Disposition` llegara vacío por algún
+ *  motivo (ver la nota de CORS en el `main.ts` del backend). */
+export function nombreArchivoComisiones(anio: number, mes: number): string {
+  return `comisiones-${anio}-${String(mes).padStart(2, '0')}.xlsx`;
+}
+
 export interface PeriodoComision {
   id: string;
   anio: number;
@@ -376,6 +384,16 @@ export interface ReglaClasificacion {
   prioridad: number;
   activa: boolean;
   notas: string | null;
+}
+
+/**
+ * Lo que devuelve `POST /configuracion/reglas`: la regla, más cuántas filas
+ * YA IMPORTADAS se reclasificaron en el acto — no solo se guardó para la
+ * próxima importación. Antes de esto había que reimportar el mes para que
+ * "Clasificar como…" surtiera efecto en lo que ya estaba cargado.
+ */
+export interface ReglaClasificacionCreada extends ReglaClasificacion {
+  filasActualizadas: number;
 }
 
 export interface ConfiguracionPlanilla {

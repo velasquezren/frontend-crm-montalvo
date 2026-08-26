@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
-import { ReporteConsolidado } from '../planilla-comisiones/planilla.model';
+import { nombreArchivoComisiones, ReporteConsolidado } from '../planilla-comisiones/planilla.model';
 
 /**
  * Informe mensual de comisiones — única fuente de URLs del dominio.
@@ -32,8 +32,12 @@ export class AnaliticaService {
   /** El mismo libro de siete hojas + una por vendedora que ve Liquidación
    *  (`PlanillaComisionesService.descargarExcel`) — un solo endpoint, dos
    *  puntos de entrada. */
-  descargarExcel(periodoId: string): Promise<{ blob: Blob; nombre: string }> {
-    return this.api.getBlob(`/planilla-comisiones/periodos/${periodoId}/exportar`);
+  descargarExcel(periodoId: string, anio: number, mes: number): Promise<{ blob: Blob; nombre: string }> {
+    return this.api.getBlob(
+      `/planilla-comisiones/periodos/${periodoId}/exportar`,
+      undefined,
+      nombreArchivoComisiones(anio, mes),
+    );
   }
 
   obtenerConsolidado(periodoId: string): Promise<ReporteConsolidado> {

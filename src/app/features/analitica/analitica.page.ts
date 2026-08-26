@@ -268,11 +268,12 @@ export class AnaliticaPage {
   /** Descarga el informe del mes en Excel y lo entrega al navegador. */
   protected async descargarExcel(): Promise<void> {
     const id = this.periodoIdEfectivo();
-    if (!id || this.descargando()) return;
+    const periodo = this.periodoActual();
+    if (!id || !periodo || this.descargando()) return;
 
     this.descargando.set(true);
     try {
-      const { blob, nombre } = await this.service.descargarExcel(id);
+      const { blob, nombre } = await this.service.descargarExcel(id, periodo.anio, periodo.mes);
       descargarArchivo(blob, nombre);
       this.toast.success(`${nombre} descargado.`, 'Informe listo');
     } catch (err) {

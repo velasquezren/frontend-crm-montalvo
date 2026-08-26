@@ -69,8 +69,17 @@ export class ApiService {
    * directo: el endpoint exige el Bearer, que solo añade `tokenInterceptor`
    * sobre peticiones de `HttpClient`. Un enlace directo saldría sin cabecera
    * de autorización y volvería 401.
+   *
+   * El nombre real sale de `Content-Disposition` (el backend ya lo expone
+   * por CORS — ver la nota en `main.ts`). `nombrePorDefecto` es solo la red
+   * de seguridad si esa cabecera llegara vacía; quien llama debería pasar
+   * algo más útil que "descarga" cuando lo sepa (el mes del informe, etc.).
    */
-  async getBlob(path: string, params?: QueryParams): Promise<{ blob: Blob; nombre: string }> {
+  async getBlob(
+    path: string,
+    params?: QueryParams,
+    nombrePorDefecto = 'descarga',
+  ): Promise<{ blob: Blob; nombre: string }> {
     const respuesta = await firstValueFrom(
       this.http.get(this.url(path), {
         params: limpiarParams(params),
@@ -79,7 +88,7 @@ export class ApiService {
       }),
     );
     const cabecera = respuesta.headers.get('content-disposition') ?? '';
-    const nombre = /filename="?([^"]+)"?/.exec(cabecera)?.[1] ?? 'descarga';
+    const nombre = /filename="?([^"]+)"?/.exec(cabecera)?.[1] ?? nombrePorDefecto;
     return { blob: respuesta.body as Blob, nombre };
   }
 }

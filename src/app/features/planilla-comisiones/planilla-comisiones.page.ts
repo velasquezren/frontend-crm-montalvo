@@ -723,12 +723,23 @@ export class PlanillaComisionesPage implements OnDestroy {
   /** Crea una regla del diccionario para que el servicio se clasifique solo. */
   protected async crearReglaDesdeServicio(detalle: string, clasif: ClasifComision): Promise<void> {
     try {
-      await this.service.crearRegla({ patron: detalle, clasif, prioridad: 50 });
-      this.toast.success(
-        `A partir de ahora "${detalle}" se clasificará como ${this.clasifLabel[clasif]}. Reimporta el mes para aplicarlo.`,
-        'Regla creada',
-      );
+      const regla = await this.service.crearRegla({ patron: detalle, clasif, prioridad: 50 });
+      /* La regla se aplica de inmediato a lo YA importado que seguía sin
+         clasificar (backend: `reclasificarConRegla`) — no hace falta
+         reimportar. Recalcular alcanza para que se refleje en la liquidación. */
+      const mensaje =
+        regla.filasActualizadas > 0
+          ? `"${detalle}" se clasificó como ${this.clasifLabel[clasif]} en ${regla.filasActualizadas} ` +
+            `fila${regla.filasActualizadas === 1 ? '' : 's'} ya importada${regla.filasActualizadas === 1 ? '' : 's'}. ` +
+            'Recalcula la planilla para que se refleje en la liquidación.'
+          : `A partir de ahora "${detalle}" se clasificará como ${this.clasifLabel[clasif]}.`;
+      this.toast.success(mensaje, 'Regla creada');
       await this.cargarConfiguracion();
+      // Las filas que se acaban de reclasificar ya no deberían salir en
+      // "Servicios no reconocidos" — sin esto, el aviso seguía mostrando el
+      // caso ya resuelto hasta la próxima navegación.
+      const id = this.periodoId();
+      if (id) await this.refrescarPanelesDelPeriodo(id);
     } catch (err) {
       this.toast.error(mensajeDeError(err, 'No se pudo crear la regla.'), 'Error');
     }
@@ -939,11 +950,12 @@ export class PlanillaComisionesPage implements OnDestroy {
    */
   protected async descargarExcel(): Promise<void> {
     const id = this.periodoId();
-    if (!id || this.descargandoExcel()) return;
+    const periodo = this.periodoActual();
+    if (!id || !periodo || this.descargandoExcel()) return;
 
     this.descargandoExcel.set(true);
     try {
-      const { blob, nombre } = await this.service.descargarExcel(id);
+      const { blob, nombre } = await this.service.descargarExcel(id, periodo.anio, periodo.mes);
       descargarArchivo(blob, nombre);
       this.toast.success(`${nombre} descargado.`, 'Excel listo');
     } catch (err) {

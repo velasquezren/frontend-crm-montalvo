@@ -8,9 +8,11 @@ import {
   TipoComision,
   ConfiguracionPlanilla,
   MapeoCaptacion,
+  nombreArchivoComisiones,
   Objetivo,
   PeriodoComision,
   ReglaClasificacion,
+  ReglaClasificacionCreada,
   ReporteConsolidado,
   RespuestaImportacion,
   ResultadoCalculo,
@@ -160,8 +162,12 @@ export class PlanillaComisionesService {
    * por vendedora. Mismo endpoint que usa Analítica
    * (`AnaliticaService.descargarExcel`); dos puntos de entrada al mismo libro.
    */
-  descargarExcel(periodoId: string): Promise<{ blob: Blob; nombre: string }> {
-    return this.api.getBlob(`/planilla-comisiones/periodos/${periodoId}/exportar`);
+  descargarExcel(periodoId: string, anio: number, mes: number): Promise<{ blob: Blob; nombre: string }> {
+    return this.api.getBlob(
+      `/planilla-comisiones/periodos/${periodoId}/exportar`,
+      undefined,
+      nombreArchivoComisiones(anio, mes),
+    );
   }
 
   ajustarVenta(ventaId: string, ajuste: AjusteVenta): Promise<unknown> {
@@ -307,8 +313,8 @@ export class PlanillaComisionesService {
     return this.api.delete(`/planilla-comisiones/configuracion/captacion/${encodeURIComponent(valor)}`);
   }
 
-  crearRegla(regla: Partial<ReglaClasificacion>): Promise<ReglaClasificacion> {
-    return this.api.post<ReglaClasificacion>('/planilla-comisiones/configuracion/reglas', regla);
+  crearRegla(regla: Partial<ReglaClasificacion>): Promise<ReglaClasificacionCreada> {
+    return this.api.post<ReglaClasificacionCreada>('/planilla-comisiones/configuracion/reglas', regla);
   }
 
   eliminarRegla(id: string): Promise<unknown> {
