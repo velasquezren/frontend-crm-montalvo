@@ -32,6 +32,17 @@
       @if (hayAlertas()) {
         <app-badge variant="critical" icon="alert-circle">Revisar antes de calcular</app-badge>
       }
+      <!-- En la barra superior porque acompaña al periodo, no a una pestaña
+           concreta: antes vivía escondido dentro de "Planilla por Persona",
+           en Reportes, y había que entrar ahí para encontrarlo. -->
+      <app-button
+        variant="secondary"
+        size="sm"
+        icon="download"
+        [loading]="descargandoExcel()"
+        (clicked)="descargarExcel()">
+        Descargar Excel
+      </app-button>
     </div>
   </div>
 }
@@ -161,6 +172,14 @@
                 <td class="text-right whitespace-nowrap" (click)="$event.stopPropagation()">
                   <div class="flex items-center justify-end gap-1">
                     <app-button variant="ghost" size="sm" icon="eye" (clicked)="abrirPeriodo(p.id)">Abrir</app-button>
+                    <app-button
+                      variant="ghost"
+                      size="sm"
+                      icon="download"
+                      [loading]="descargandoExcel()"
+                      (clicked)="descargarExcelDe(p)">
+                      Excel
+                    </app-button>
                     @if (p.estado !== 'CERRADO' && esSuperAdmin()) {
                       <app-button variant="ghost" size="sm" icon="trash" (clicked)="eliminarPeriodo(p)">Borrar</app-button>
                     }
@@ -799,20 +818,12 @@
 
       <!-- Planilla final por persona -->
       <section class="panel">
-        <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
-          <h3 class="text-sm font-bold text-text-dark">Planilla por Persona</h3>
-          <app-button
-            variant="secondary"
-            icon="download"
-            [loading]="descargandoExcel()"
-            (clicked)="descargarExcel()">
-            Descargar Excel completo
-          </app-button>
-        </div>
-        <p class="text-xs text-text-muted -mt-2 mb-3">
+        <h3 class="text-sm font-bold text-text-dark mb-1">Planilla por Persona</h3>
+        <p class="text-xs text-text-muted mb-3">
           La tabla de abajo resume cada vendedora en una fila. Para el desglose por tipo y
           sección de cada una, mira "Desglose por Tipo y Sección" más abajo, o descarga el
-          Excel completo: trae, además, una hoja aparte por vendedora con cada venta del mes.
+          Excel completo (botón junto al periodo, arriba): trae, además, una hoja aparte por
+          vendedora con cada venta del mes.
         </p>
         <app-tabla-liquidacion
           [filas]="rep.filas"

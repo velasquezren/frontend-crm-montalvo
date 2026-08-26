@@ -982,19 +982,30 @@ export class PlanillaComisionesPage implements OnDestroy {
   }
 
   /**
-   * Descarga el Excel completo del periodo: el mismo resumen que la pantalla,
-   * más lo que la tabla web no puede mostrar por falta de ancho — el
-   * desglose por tipo y sección y cada venta del mes, en una hoja aparte por
-   * vendedora.
+   * Descarga el Excel completo del periodo ACTIVO: el mismo resumen que la
+   * pantalla, más lo que la tabla web no puede mostrar por falta de ancho —
+   * el desglose por tipo y sección y cada venta del mes, en una hoja aparte
+   * por vendedora. Botón de la barra superior, visible en cualquier
+   * pestaña — antes vivía escondido dentro de "Planilla por Persona", en
+   * Reportes, y había que entrar ahí para encontrarlo.
    */
-  protected async descargarExcel(): Promise<void> {
-    const id = this.periodoId();
+  protected descargarExcel(): Promise<void> {
     const periodo = this.periodoActual();
-    if (!id || !periodo || this.descargandoExcel()) return;
+    return periodo ? this.descargarExcelDe(periodo) : Promise.resolve();
+  }
+
+  /**
+   * Un periodo cualquiera, no necesariamente el activo — botón por fila en
+   * "Planillas cargadas en el sistema" (pestaña Importar): antes había que
+   * abrir cada mes para descargar el suyo; ahora se puede desde el
+   * histórico directamente.
+   */
+  protected async descargarExcelDe(periodo: PeriodoComision): Promise<void> {
+    if (this.descargandoExcel()) return;
 
     this.descargandoExcel.set(true);
     try {
-      const { blob, nombre } = await this.service.descargarExcel(id, periodo.anio, periodo.mes);
+      const { blob, nombre } = await this.service.descargarExcel(periodo.id, periodo.anio, periodo.mes);
       descargarArchivo(blob, nombre);
       this.toast.success(`${nombre} descargado.`, 'Excel listo');
     } catch (err) {
