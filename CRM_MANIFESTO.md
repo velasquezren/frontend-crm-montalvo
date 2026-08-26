@@ -294,9 +294,11 @@ export class LeadService {
   médico" calmada en vez de un panel tipo semáforo. Los estados semánticos
   (éxito, info, neutral, crítico) reutilizan los tonos de marca — `critical`
   es negro, no rojo.
-- **Sin logo de marca**: el proyecto es agnóstico de marca. No inventar
-  iniciales, isotipos ni nombre de clínica en el código — el slot de logo
-  (topbar, login) queda vacío hasta que el cliente entregue el suyo.
+- ✅ **Marca definida (2026-08-21):** la clínica es **Clínica Montalvo** — el nombre se usa con
+  naturalidad en textos de interfaz, título de pestaña, metadatos y notificaciones. El logo
+  vigente en topbar y login es `public/favicon.svg` (y sus variantes `favicon.ico`,
+  `apple-touch-icon.png`, `web-app-manifest-*.png`). Esto ya no es una pregunta abierta: no
+  genericizar el nombre ni tratarlo como placeholder.
 
 ### 3.2 Geometría
 

@@ -304,8 +304,9 @@ interceptor cachea 60 s: se descargan una vez por sesión.
 
 ## Marca
 
-El proyecto es **agnóstico de marca**: no inventes logo, isotipo ni iniciales. El slot del logo
-(topbar, login) queda vacío hasta que el cliente entregue el suyo.
+La clínica es **Clínica Montalvo** — nombre y logo (`public/favicon.svg`) ya son definitivos
+(2026-08-21). Úsalo con naturalidad en topbar, login, título de pestaña y notificaciones; no
+hace falta genericizarlo ni tratarlo como placeholder.
 
 ## Mantenimiento
 
