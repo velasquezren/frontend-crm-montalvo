@@ -231,6 +231,33 @@ export class PlanillaComisionesPage implements OnDestroy {
       onCleanup(() => clearTimeout(id));
     });
 
+    /*
+     * Bug real: filtrar por vendedora y DESPUÉS acotar por otro filtro
+     * (clasif/tipo/canal/unidad/búsqueda) bajo el que esa vendedora ya no
+     * tiene ninguna venta dejaba la tabla en "Ninguna fila coincide" —
+     * porque `where` (el listado) sí lleva `vendedoraId`, a diferencia de
+     * `whereSinVendedora` (el resumen por agente, backend
+     * `listarVentas` — a propósito, para que el selector no dependa de sí
+     * mismo). El resumen seguía mostrando agentes con ventas —los OTROS,
+     * bajo el filtro nuevo— así que parecía que había datos y sin embargo
+     * la tabla decía que no había ninguno: contradictorio y sin pista de
+     * qué pasaba, porque la tarjeta de la vendedora elegida ni siquiera
+     * aparecía ya en el resumen para poder deseleccionarla.
+     *
+     * `ventas.value().porVendedora` sale de `whereSinVendedora`, así que
+     * es la fuente correcta para saber si la selección sigue siendo válida
+     * bajo el resto de filtros — sin recalcular nada aparte ni pedir más al
+     * servidor. Se espera a que la petición en vuelo termine
+     * (`!isLoading()`) para no juzgar la respuesta vieja de un filtro que
+     * ya cambió.
+     */
+    effect(() => {
+      const filtro = this.filtroVendedora();
+      if (!filtro || this.ventas.isLoading()) return;
+      const sigueValida = this.ventas.value().porVendedora.some(a => a.vendedoraId === filtro);
+      if (!sigueValida) this.filtroVendedora.set(null);
+    });
+
     // Al elegir otro periodo se recargan sus alertas y su reporte.
     effect(() => {
       const id = this.periodoId();
