@@ -583,9 +583,10 @@
                   </select>
                 </td>
                 <td class="text-center">
-                  <span class="tipo-pill" [title]="etiquetaTipoFila(v)">
-                    {{ v.tipo }}{{ v.tipo === 'A' && v.unidadNegocio === 'RA' ? ' RA' : '' }}
-                  </span>
+                  <span class="tipo-pill" [title]="etiquetaTipoFila(v)">{{ v.tipo }}</span>
+                  @if (v.tipo === 'A' && v.unidadNegocio === 'RA') {
+                    <span class="tipo-pill-ra" [title]="etiquetaTipoFila(v)">RA</span>
+                  }
                 </td>
                 <td class="text-right whitespace-nowrap">
                   <div class="flex items-center justify-end gap-1.5">

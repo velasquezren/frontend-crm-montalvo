@@ -295,6 +295,23 @@
   border-radius: 12px;
 }
 
+/*
+ * Distingue Tipo A (RA) de Tipo A · Planes sin ensanchar el círculo de
+ * `.tipo-pill` — que es de 26px, a propósito, para una sola letra. Meter
+ * "A RA" ahí dentro desbordaba la burbuja. Mismo patrón que ya usa esta
+ * tabla para "nivel X" bajo Cirugías: una etiqueta minúscula debajo, no
+ * dentro del badge principal.
+ */
+.tipo-pill-ra {
+  display: block;
+  margin-top: 2px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
 /* ── Móvil ────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .planilla-barra {
