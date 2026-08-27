@@ -134,7 +134,7 @@
 
   <!-- Lista de conversaciones -->
   <div class="sidebar-list">
-    @if (state.conversacionesRecurso.isLoading() && state.conversacionesRecurso.value().length === 0) {
+    @if (state.inbox.isLoading() && state.conversacionesFiltradas().length === 0) {
       @for (n of [1, 2, 3, 4, 5, 6]; track n) {
         <div class="chat-item-skeleton">
           <app-loading-skeleton shape="circle" width="40px" height="40px" />
@@ -144,7 +144,7 @@
           </div>
         </div>
       }
-    } @else if (state.conversacionesRecurso.error() && state.conversacionesRecurso.value().length === 0) {
+    } @else if (state.inbox.error() && state.conversacionesFiltradas().length === 0) {
       <app-empty-state
         icon="alert-circle"
         title="No se pudo cargar el inbox"
@@ -271,6 +271,24 @@
       } @empty {
         <app-empty-state icon="message-circle" title="Sin resultados"
           description="No hay conversaciones que coincidan con tu filtro." />
+      }
+
+      <!-- Paginación real: el inbox ya no se corta en 500 conversaciones.
+           Se dice cuántas quedan para que nadie tenga que adivinar si la que
+           busca "existe pero no se ve", que era justo el fallo anterior. -->
+      @if (state.hayMasConversaciones()) {
+        <div class="cargar-mas">
+          <app-button
+            variant="ghost"
+            icon="chevron-down"
+            [loading]="state.cargandoMas()"
+            (clicked)="state.cargarMas()">
+            Cargar más
+          </app-button>
+          <span class="cargar-mas__resto">
+            {{ state.conversacionesFiltradas().length }} de {{ state.totalFiltrado() }}
+          </span>
+        </div>
       }
     }
   </div>

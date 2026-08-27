@@ -47,9 +47,40 @@ decidir si se bloquea.
 
 ## 3. Arquitectura en Tiempo Real y Estado Frontend
 
+### El listado se pagina y se filtra EN EL SERVIDOR (desde 2026-08-27)
+
+`GET /conversaciones` devuelve `RespuestaPaginada` más los contadores de las
+cuatro pestañas. Las cuatro operaciones —ordenar, filtrar por pestaña, filtrar
+por agente y buscar— las resuelve Postgres.
+
+**No lo devuelvas a memoria por hacer que una pestaña cambie "más rápido".** Así
+estaba, y el precio fue este: el backend cortaba en las 500 más recientes y la
+vista filtraba y buscaba sobre ese corte, así que una conversación en el puesto
+501 **no aparecía al buscar a esa paciente por nombre**. La agente leía "sin
+resultados" y concluía que no estaba en el sistema. Un corte se lee como un dato.
+
+Dos piezas que sostienen esto y conviene no romper:
+
+- **`Conversacion.esperandoRespuesta`** es la pestaña "Sin responder", y está
+  desnormalizado porque "el último mensaje es ENTRANTE o automático" no se puede
+  poner en un `where` de Prisma. Lo escriben las cuatro transacciones que crean
+  un Mensaje. Si añades un quinto camino, escríbelo también.
+- **`estaSinResponder()`** en el frontend ahora prefiere ese campo del servidor y
+  solo lo deduce del último mensaje cuando no viene — el caso de una fila
+  construida en memoria por el envío optimista.
+
 ### Sincronización WebSocket (`RealtimeService`)
 - El canal WebSocket es la fuente primaria de eventos (`mensaje_entrante`, `mensaje_enviado`, `estado_mensaje`, `conversacion_actualizada`).
-- **Actualización Atómica**: Al recibir un mensaje, el estado local (`ConversacionesStateService`) actualiza la conversación en memoria, la reposiciona al inicio de la lista y actualiza el contador de no leídos sin disparar peticiones HTTP completas.
+- **Un aviso refresca UNA fila, no el inbox**: `refrescarFilaPorRealtime()` pide
+  `GET /conversaciones/:id/resumen` y la coloca arriba. Antes cada mensaje
+  entrante recargaba las 500 conversaciones (277,7 kB) para reflejar un cambio en
+  una sola; ahora son 0,6 kB. Ese endpoint recibe los filtros activos y responde
+  `conversacion: null` si la conversación dejó de encajar en la pestaña —le
+  contestaron y estabas en "Sin responder"—, para quitarla en vez de dejar una
+  fila que ya no corresponde.
+- **Actualización Atómica**: al enviar, `reconciliarEnvioLocal` actualiza la
+  conversación en memoria, la reposiciona al inicio y baja el contador de "sin
+  responder" sin disparar peticiones HTTP completas.
 - **Polling de Respaldo**: Se mantiene un intervalo de seguridad de **60 segundos** (ver `crm-rendimiento`) por si la conexión de sockets se interrumpe temporalmente.
 
 ### Envío Optimista (0 ms de Latencia Percibida)

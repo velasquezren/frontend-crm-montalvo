@@ -48,12 +48,19 @@ export interface ConversacionResumen {
   readonly agente: { id: string; nombre: string } | null;
   /** El listado incluye solo el último mensaje (take: 1, desc). */
   readonly mensajes: readonly MensajeApi[];
-  readonly _count: { mensajes: number };
+  /** No leídos del paciente. El backend ya lo expone así; `_count` no viaja. */
   readonly noLeidosCount?: number;
   readonly updatedAt: string;
+  /**
+   * Lo dice el servidor, no se deduce aquí: es la columna
+   * `Conversacion.esperandoRespuesta`, que existe para que la pestaña "Sin
+   * responder" se pueda filtrar y contar en SQL sobre TODAS las conversaciones
+   * y no solo sobre las que el navegador tenga cargadas.
+   */
+  readonly esperandoRespuesta?: boolean;
 }
 
-export interface ConversacionDetalle extends Omit<ConversacionResumen, 'mensajes' | '_count'> {
+export interface ConversacionDetalle extends Omit<ConversacionResumen, 'mensajes'> {
   /** El detalle incluye el hilo completo en orden cronológico. */
   readonly mensajes: readonly MensajeApi[];
 }
@@ -90,15 +97,52 @@ export interface PlantillaAgente {
 /** Filtros de la vista del inbox. */
 export type FiltroInbox = 'TODAS' | 'SIN_RESPONDER' | 'SIN_ASIGNAR' | 'MIS_CHATS';
 
+/** Los números de las cuatro pestañas, calculados por el servidor. */
+export interface ContadoresInbox {
+  readonly total: number;
+  readonly sinAsignar: number;
+  readonly misChats: number;
+  readonly sinResponder: number;
+}
+
+/** Filtros de vista que viajan al servidor con cada petición del listado. */
+export interface FiltrosInbox {
+  readonly tab: FiltroInbox;
+  readonly busqueda: string;
+  readonly agenteId: string | null;
+  readonly soloMios: boolean;
+}
+
+/** Lo que responde `GET /conversaciones`: una página más los contadores. */
+export interface PaginaInbox {
+  readonly datos: readonly ConversacionResumen[];
+  readonly total: number;
+  readonly pagina: number;
+  readonly limite: number;
+  readonly totalPaginas: number;
+  readonly contadores: ContadoresInbox;
+}
+
+/** Lo que responde `GET /conversaciones/:id/resumen`. */
+export interface ResumenInbox {
+  /** `null` si la conversación dejó de encajar en la vista activa. */
+  readonly conversacion: ConversacionResumen | null;
+  readonly contadores: ContadoresInbox;
+}
+
 /**
  * Una conversación está sin responder si el ÚLTIMO mensaje lo escribió el
  * paciente: si nadie contestó después, sigue esperando.
  *
- * Se resuelve con lo que el listado ya trae —el backend incluye el último
- * mensaje de cada conversación (`take: 1`)—, así que no cuesta ni una consulta
- * ni un byte extra.
+ * **El servidor ya manda esto en `esperandoRespuesta`** y esa es la fuente de
+ * verdad —es lo que filtra y cuenta la pestaña—; esta función solo lo deduce
+ * del último mensaje cuando el campo no viene, que es el caso de una fila
+ * construida en memoria por el envío optimista antes de que el servidor
+ * conteste.
  */
 export function estaSinResponder(c: ConversacionResumen): boolean {
+  if (c.esperandoRespuesta !== undefined) return c.esperandoRespuesta;
+
   const ultimo = c.mensajes[0];
   if (!ultimo) return false;
   /* Un acuse automático NO es una respuesta: si lo último que pasó es que el

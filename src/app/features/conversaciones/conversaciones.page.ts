@@ -106,7 +106,12 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
 
       if (timerReload) clearTimeout(timerReload);
       timerReload = setTimeout(() => {
-        this.state.conversacionesRecurso.reload();
+        /* Solo la fila que cambió, no el inbox entero. Antes esto recargaba las
+           500 conversaciones para reflejar un mensaje en una; ahora pide esa
+           conversación y la coloca arriba, que es donde el orden por
+           `updatedAt` la pondría igual. Si dejó de encajar en la pestaña
+           activa, el servidor lo dice y la fila se quita. */
+        void this.state.refrescarFilaPorRealtime(aviso.conversacionId);
 
         const chatSeleccionado = this.state.seleccionadaId() === aviso.conversacionId;
 
@@ -131,7 +136,7 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
       const n = this.realtimeService.reconectado();
       if (n === 0) return;
 
-      this.state.conversacionesRecurso.reload();
+      this.state.inbox.reload();
       if (this.state.seleccionadaId()) {
         this.state.detalle.reload();
       }
@@ -160,7 +165,13 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
 
       this.state.busqueda.set(q);
 
-      const chats = this.state.conversacionesRecurso.value();
+      /* Llegar desde Clientes o Leads con un teléfono ahora SÍ encuentra a la
+         paciente aunque su chat sea antiguo: la búsqueda la resuelve el
+         servidor sobre todas las conversaciones, no sobre las cargadas.
+         Este efecto se vuelve a ejecutar cuando llega el resultado —lee
+         `conversacionesFiltradas()`—, así que basta con esperar a que haya
+         algo que abrir. */
+      const chats = this.state.conversacionesFiltradas();
       if (chats.length > 0) {
         const queryNorm = q.trim().toLowerCase();
         const coincidencia = chats.find(
@@ -236,7 +247,7 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
   }
 
   private refrescar(): void {
-    this.state.conversacionesRecurso.reload();
+    this.state.inbox.reload();
     if (this.state.seleccionadaId()) {
       this.state.detalle.reload();
     }

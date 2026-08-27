@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, linkedSignal, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, linkedSignal, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { Router } from '@angular/router';
 
@@ -13,15 +13,55 @@ import {
   ConversacionResumen,
   estaSinResponder,
   FiltroInbox,
+  FiltrosInbox,
   ItemHilo,
   MensajeApi,
+  PaginaInbox,
   PlantillaAgente,
   PlantillaResumen,
+  ResumenInbox,
 } from '../conversacion.model';
 import { ConversacionesService } from '../conversaciones.service';
 import { CategoriaCliente } from '../../../shared/models/cliente-categoria.model';
 
 const LOTE_HISTORIAL = 50;
+
+/**
+ * Retardo del buscador del inbox.
+ *
+ * Antes la búsqueda era en memoria y no costaba nada teclear; ahora cada
+ * término es una consulta, y desde Bolivia cada ida y vuelta son ~190 ms. 300
+ * ms es lo que tarda en notarse una pausa al escribir, así que buscar sigue
+ * sintiéndose inmediato sin mandar una petición por tecla.
+ */
+const RETARDO_BUSQUEDA_MS = 300;
+
+/** Lo que se muestra mientras el inbox no ha contestado (o si falla). */
+const PAGINA_VACIA: PaginaInbox = {
+  datos: [],
+  total: 0,
+  pagina: 1,
+  limite: 50,
+  totalPaginas: 1,
+  contadores: { total: 0, sinAsignar: 0, misChats: 0, sinResponder: 0 },
+};
+
+/**
+ * Compara dos páginas por lo que de verdad cambia la pantalla.
+ *
+ * Evita repintar las ~50 filas cuando el respaldo de 60 s trae exactamente lo
+ * mismo, que es lo que pasa la mayoría de las veces.
+ */
+function mismasFilas(a: readonly ConversacionResumen[], b: readonly ConversacionResumen[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every(
+    (fila, i) =>
+      fila.id === b[i].id &&
+      fila.updatedAt === b[i].updatedAt &&
+      fila.noLeidosCount === b[i].noLeidosCount &&
+      fila.esperandoRespuesta === b[i].esperandoRespuesta,
+  );
+}
 
 /**
  * Gestor de Estado Centralizado para el módulo de Conversaciones.
@@ -44,28 +84,70 @@ export class ConversacionesStateService {
   readonly seleccionadaId = signal<string | null>(null);
 
   /* ── Listado & Filtros ─────────────────────────────────────────── */
+  /** Lo que la agente está tecleando ahora mismo. */
   readonly busqueda = signal('');
+  /** Lo mismo, pero con retardo: es esto lo que viaja al servidor. */
+  private readonly busquedaDebounced = signal('');
   readonly filtroTab = signal<FiltroInbox>('TODAS');
   readonly filtroAgenteId = signal<string | null>(null);
   readonly mostrarFiltroAgentes = signal(false);
   readonly dropdownAgenteAbierto = signal(false);
   readonly soloMisChatsAdmin = signal(false);
 
-  readonly conversacionesRecurso = httpResource<ConversacionResumen[]>(
-    () => this.conversacionesService.listarRequest(),
+  /**
+   * Lo que de verdad viaja al servidor. `busqueda` va con retardo (ver el
+   * `effect` del constructor): sin él, cada tecla sería una petición.
+   */
+  readonly filtros = computed<FiltrosInbox>(() => ({
+    tab: this.filtroTab(),
+    /* El filtro por agente solo aplica en "Todas", igual que antes en memoria:
+       combinarlo con "Mis chats" daría siempre vacío. */
+    agenteId: this.filtroTab() === 'TODAS' ? this.filtroAgenteId() : null,
+    busqueda: this.busquedaDebounced(),
+    soloMios: this.isAdmin() && this.soloMisChatsAdmin(),
+  }));
+
+  /**
+   * La PRIMERA página del inbox, ya filtrada por el servidor.
+   *
+   * Se re-pide sola al cambiar cualquier filtro porque `filtros()` se lee aquí
+   * dentro. Antes esto traía las 500 conversaciones más recientes de una vez y
+   * la vista filtraba en memoria; una conversación fuera de ese corte no
+   * aparecía ni al buscarla por nombre.
+   */
+  readonly inbox = httpResource<PaginaInbox>(
+    () => this.conversacionesService.listarRequest(this.filtros()),
     {
-      defaultValue: [],
-      equal: (a, b) => {
-        if (a.length !== b.length) return false;
-        for (let i = 0; i < a.length; i++) {
-          if (a[i].id !== b[i].id || a[i].updatedAt !== b[i].updatedAt || a[i].noLeidosCount !== b[i].noLeidosCount) {
-            return false;
-          }
-        }
-        return true;
-      },
+      defaultValue: PAGINA_VACIA,
+      equal: (a, b) =>
+        a.total === b.total &&
+        a.pagina === b.pagina &&
+        mismasFilas(a.datos, b.datos) &&
+        a.contadores.sinResponder === b.contadores.sinResponder &&
+        a.contadores.sinAsignar === b.contadores.sinAsignar &&
+        a.contadores.misChats === b.contadores.misChats,
     },
   );
+
+  /**
+   * Las páginas siguientes que la agente fue pidiendo con "cargar más".
+   *
+   * `linkedSignal` sobre los filtros: cambiar de pestaña o escribir en el
+   * buscador las descarta solas. Sin eso, al filtrar quedarían colgando filas
+   * de la búsqueda anterior debajo de los resultados nuevos.
+   */
+  private readonly paginasExtra = linkedSignal<FiltrosInbox, ConversacionResumen[]>({
+    source: this.filtros,
+    computation: () => [],
+  });
+
+  /** La última página que se llegó a pedir; vuelve a 1 con cada filtro nuevo. */
+  private readonly ultimaPagina = linkedSignal<FiltrosInbox, number>({
+    source: this.filtros,
+    computation: () => 1,
+  });
+
+  readonly cargandoMas = signal(false);
 
   readonly agentes = httpResource<AgenteResumen[]>(
     () => (this.isAdmin() ? this.conversacionesService.agentesRequest() : undefined),
@@ -140,52 +222,35 @@ export class ConversacionesStateService {
   );
 
   /* ── Señales Derivadas (Computed) ───────────────────────────────── */
-  readonly stats = computed(() => {
-    const lista = this.conversacionesRecurso.value();
-    const myId = this.currentUserId();
-    return {
-      total: lista.length,
-      sinAsignar: lista.filter(c => !c.agente).length,
-      misChats: lista.filter(c => c.agente?.id === myId).length,
-      sinResponder: lista.filter(c => estaSinResponder(c)).length,
-    };
-  });
 
-  readonly conversacionesFiltradas = computed(() => {
-    let lista = this.conversacionesRecurso.value();
-    const tab = this.filtroTab();
-    const query = this.busqueda().trim().toLowerCase();
-    const agente = this.filtroAgenteId();
-    const myId = this.currentUserId();
+  /**
+   * Los números de las cuatro pestañas, tal como los cuenta el servidor.
+   *
+   * Antes se calculaban aquí sobre la lista cargada, así que a partir de la
+   * conversación 501 el badge decía "500" para siempre y "Sin responder"
+   * escondía a las que llevaban más tiempo esperando — justo las que el número
+   * existe para hacer visibles.
+   */
+  readonly stats = computed(() => this.inbox.value().contadores);
 
-    if (tab === 'SIN_ASIGNAR') {
-      lista = lista.filter(c => !c.agente);
-    } else if (tab === 'MIS_CHATS') {
-      lista = lista.filter(c => c.agente?.id === myId);
-    } else if (tab === 'SIN_RESPONDER') {
-      lista = lista.filter(c => estaSinResponder(c));
-    }
+  /**
+   * Lo que se pinta: la primera página más lo que se haya ido cargando.
+   *
+   * Ya viene filtrado y ordenado por el servidor; aquí no se filtra nada. El
+   * nombre se conserva porque es el que usa la plantilla.
+   */
+  readonly conversacionesFiltradas = computed<readonly ConversacionResumen[]>(() => [
+    ...this.inbox.value().datos,
+    ...this.paginasExtra(),
+  ]);
 
-    if (agente && tab === 'TODAS') {
-      lista = lista.filter(c => c.agente?.id === agente);
-    }
+  /** Cuántas conversaciones cumplen el filtro actual, cargadas o no. */
+  readonly totalFiltrado = computed(() => this.inbox.value().total);
 
-    /* Filtro Míos del Super Admin: mis chats + pool sin asignar */
-    if (this.isAdmin() && this.soloMisChatsAdmin()) {
-      lista = lista.filter(c => !c.agente || c.agente.id === myId);
-    }
-
-    if (query) {
-      lista = lista.filter(
-        c =>
-          c.cliente.nombre.toLowerCase().includes(query) ||
-          c.cliente.telefono.includes(query) ||
-          (c.mensajes[0]?.contenido && c.mensajes[0].contenido.toLowerCase().includes(query)),
-      );
-    }
-
-    return lista;
-  });
+  /** Si queda algo por debajo de lo que se está mostrando. */
+  readonly hayMasConversaciones = computed(
+    () => this.conversacionesFiltradas().length < this.totalFiltrado(),
+  );
 
   readonly sugerenciasAtajo = computed(() => {
     const texto = this.mensajeNuevo().trim();
@@ -316,7 +381,86 @@ export class ConversacionesStateService {
     return result;
   });
 
+  constructor() {
+    /* Retardo del buscador. `onCleanup` cancela el temporizador anterior en
+       cada tecla, que es lo que impide una petición por pulsación y también
+       una fuga si la vista muere con uno pendiente. */
+    effect(onCleanup => {
+      const texto = this.busqueda();
+      const id = setTimeout(() => this.busquedaDebounced.set(texto), RETARDO_BUSQUEDA_MS);
+      onCleanup(() => clearTimeout(id));
+    });
+  }
+
   /* ── Métodos de Acción ─────────────────────────────────────────── */
+
+  /**
+   * Trae la siguiente página y la añade al final de la lista.
+   *
+   * No sustituye lo que ya está en pantalla: la agente puede seguir bajando sin
+   * perder el sitio. Al cambiar cualquier filtro, `paginasExtra` se vacía sola.
+   */
+  async cargarMas(): Promise<void> {
+    if (this.cargandoMas() || !this.hayMasConversaciones()) return;
+
+    const siguiente = this.ultimaPagina() + 1;
+    this.cargandoMas.set(true);
+    try {
+      const pagina = await this.conversacionesService.listarPagina(this.filtros(), siguiente);
+      /* Se descartan las que ya estén: entre que se pidió y que llegó, un
+         mensaje nuevo pudo subir una conversación a la primera página y
+         entonces vendría repetida. */
+      const yaVistas = new Set(this.conversacionesFiltradas().map(c => c.id));
+      const nuevas = pagina.datos.filter(c => !yaVistas.has(c.id));
+
+      this.paginasExtra.update(previas => [...previas, ...nuevas]);
+      this.ultimaPagina.set(siguiente);
+    } catch (err) {
+      this.toastService.error(mensajeDeError(err, 'No se pudieron cargar más conversaciones.'));
+    } finally {
+      this.cargandoMas.set(false);
+    }
+  }
+
+  /**
+   * Refresca UNA conversación tras un aviso de tiempo real.
+   *
+   * Antes cualquier mensaje entrante disparaba una recarga del inbox completo
+   * —500 conversaciones— para reflejar un cambio en una sola fila. Ahora se
+   * pide esa fila y se coloca arriba, que es donde el orden por `updatedAt` la
+   * pondría de todos modos.
+   *
+   * Si el servidor responde `conversacion: null`, la conversación dejó de
+   * encajar en la vista activa (le contestaron y estás en "Sin responder", se
+   * la reasignaron y estás en "Mis chats"): se quita en vez de dejar una fila
+   * que ya no corresponde.
+   */
+  async refrescarFilaPorRealtime(conversacionId: string): Promise<void> {
+    let respuesta: ResumenInbox;
+    try {
+      respuesta = await this.conversacionesService.resumenParaInbox(conversacionId, this.filtros());
+    } catch {
+      /* Un aviso de tiempo real que no se puede resolver no puede romper la
+         pantalla: el respaldo de 60 s acabará poniéndola al día. */
+      return;
+    }
+
+    const { conversacion, contadores } = respuesta;
+
+    /* Fuera de las páginas siguientes en los dos casos: si vuelve, sube al
+       tope; si no, es que ya no va. */
+    this.paginasExtra.update(lista => lista.filter(c => c.id !== conversacionId));
+
+    const pagina = this.inbox.value();
+    const sinEsta = pagina.datos.filter(c => c.id !== conversacionId);
+
+    this.inbox.set({
+      ...pagina,
+      datos: conversacion ? [conversacion, ...sinEsta] : sinEsta,
+      contadores,
+    });
+  }
+
   seleccionar(id: string): void {
     if (this.seleccionadaId() === id) return;
     this.router.navigate([], { queryParams: { id }, queryParamsHandling: 'merge' });
@@ -374,7 +518,7 @@ export class ConversacionesStateService {
     try {
       const actualizado = await this.conversacionesService.asignarAgente(id, agenteId);
       this.detalle.set(actualizado);
-      this.conversacionesRecurso.reload();
+      this.inbox.reload();
       this.dropdownAgenteAbierto.set(false);
       const agente = this.agentes.value().find(a => a.id === agenteId);
       this.toastService.success(
@@ -468,7 +612,7 @@ export class ConversacionesStateService {
       this.toastService.success('Ficha de cliente actualizada.');
       this.editandoFicha.set(false);
       this.detalle.reload();
-      this.conversacionesRecurso.reload();
+      this.inbox.reload();
     } catch (err) {
       this.toastService.error(mensajeDeError(err, 'No se pudo guardar la ficha.'));
     } finally {
@@ -503,7 +647,7 @@ export class ConversacionesStateService {
    * DESPUÉS por WebSocket ("se corrige en segundo plano... sin que el
    * agente tenga que refrescar", dice su propio comentario).
    *
-   * Antes de esto, el composer llamaba `conversacionesRecurso.reload()` +
+   * Antes de esto, el composer llamaba `inbox.reload()` +
    * `detalle.reload()` justo después del POST — dos peticiones completas
    * que Meta todavía no había contestado, así que en el mejor caso volvían
    * a traer lo mismo que el mensaje optimista ya mostraba, y en el peor
@@ -561,11 +705,12 @@ export class ConversacionesStateService {
       this.versionEnvioPropio.update(v => v + 1);
     }
 
-    const lista = this.conversacionesRecurso.value();
-    const idx = lista.findIndex(c => c.id === conversacionId);
-    if (idx === -1) return;
+    const pagina = this.inbox.value();
+    const actual =
+      pagina.datos.find(c => c.id === conversacionId) ??
+      this.paginasExtra().find(c => c.id === conversacionId);
+    if (!actual) return;
 
-    const actual = lista[idx];
     /* El backend reclama la conversación del pool al primer envío —ver la
        nota de `enviarMensaje()`— pero el POST no devuelve el `agente`
        resultante. La regla es determinista, así que se reproduce aquí en
@@ -576,9 +721,24 @@ export class ConversacionesStateService {
       mensajes: [real],
       updatedAt: real.createdAt,
       agente: actual.agente ?? { id: this.currentUserId(), nombre: this.authService.user()?.nombre ?? '' },
+      /* Acaba de contestar una persona: sale de "Sin responder". Es la misma
+         regla que aplica el backend en la transacción del mensaje, reproducida
+         aquí para que la fila no se contradiga hasta el próximo refresco. */
+      esperandoRespuesta: false,
     };
 
-    const resto = lista.filter((_, i) => i !== idx);
-    this.conversacionesRecurso.set([actualizada, ...resto]);
+    /* Si estaba en una página siguiente, sube al tope de la primera: el orden
+       por `updatedAt` la pondría ahí de todos modos. */
+    this.paginasExtra.update(lista => lista.filter(c => c.id !== conversacionId));
+
+    this.inbox.set({
+      ...pagina,
+      datos: [actualizada, ...pagina.datos.filter(c => c.id !== conversacionId)],
+      /* Si sale de "Sin responder", el badge tiene que bajar en el acto: es la
+         cuenta que la agente mira para saber a quién le falta contestar. */
+      contadores: estaSinResponder(actual)
+        ? { ...pagina.contadores, sinResponder: Math.max(0, pagina.contadores.sinResponder - 1) }
+        : pagina.contadores,
+    });
   }
 }

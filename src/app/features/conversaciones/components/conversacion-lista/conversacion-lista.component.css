@@ -198,3 +198,25 @@
   }
 }
 
+
+/*
+ * Pie de "cargar más" del inbox.
+ *
+ * Existe desde que el listado se pagina de verdad (antes se cortaba en 500 y no
+ * había nada que cargar: simplemente faltaban chats sin que nadie lo dijera).
+ * El "X de Y" no es decorativo — es lo que responde "¿está la que busco más
+ * abajo?" sin obligar a bajar hasta el fondo.
+ */
+.cargar-mas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px 16px;
+}
+
+.cargar-mas__resto {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.01em;
+}

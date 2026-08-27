@@ -1,7 +1,13 @@
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
-import { ConversacionDetalle, MensajeApi } from './conversacion.model';
+import {
+  ConversacionDetalle,
+  FiltrosInbox,
+  MensajeApi,
+  PaginaInbox,
+  ResumenInbox,
+} from './conversacion.model';
 
 /**
  * Conversaciones — WhatsApp Inbox (RF-09/RF-10).
@@ -15,8 +21,49 @@ export class ConversacionesService {
   private readonly api = inject(ApiService);
   private readonly cacheDetalles = new Map<string, ConversacionDetalle>();
 
-  listarRequest(soloMios = false): ResourceRequest {
-    return this.api.request('/conversaciones', { soloMios: soloMios ? 'true' : undefined });
+  /**
+   * Una página del inbox, con los filtros resueltos EN EL SERVIDOR.
+   *
+   * Antes esto pedía el listado entero (las 500 más recientes) y la vista
+   * filtraba y buscaba en memoria. Una conversación fuera de ese corte no
+   * aparecía al buscar a esa paciente por nombre, y la agente concluía que no
+   * existía. Ver `findAll` en el backend para la historia completa.
+   */
+  listarRequest(filtros: FiltrosInbox, pagina = 1): ResourceRequest {
+    return this.api.request('/conversaciones', {
+      tab: filtros.tab === 'TODAS' ? undefined : filtros.tab,
+      busqueda: filtros.busqueda.trim() || undefined,
+      agenteId: filtros.agenteId ?? undefined,
+      soloMios: filtros.soloMios ? 'true' : undefined,
+      pagina: pagina > 1 ? String(pagina) : undefined,
+    });
+  }
+
+  /** Una página del inbox como promesa — para el botón "cargar más". */
+  listarPagina(filtros: FiltrosInbox, pagina: number): Promise<PaginaInbox> {
+    return this.api.get<PaginaInbox>('/conversaciones', {
+      tab: filtros.tab === 'TODAS' ? undefined : filtros.tab,
+      busqueda: filtros.busqueda.trim() || undefined,
+      agenteId: filtros.agenteId ?? undefined,
+      soloMios: filtros.soloMios ? 'true' : undefined,
+      pagina: String(pagina),
+    });
+  }
+
+  /**
+   * Una sola fila del inbox, para refrescar por WebSocket lo que cambió.
+   *
+   * Los filtros viajan porque la respuesta depende de ellos: si la conversación
+   * dejó de encajar en la pestaña activa, vuelve `conversacion: null` y la
+   * vista la quita en vez de dejar una fila que ya no corresponde.
+   */
+  resumenParaInbox(id: string, filtros: FiltrosInbox): Promise<ResumenInbox> {
+    return this.api.get<ResumenInbox>(`/conversaciones/${id}/resumen`, {
+      tab: filtros.tab === 'TODAS' ? undefined : filtros.tab,
+      busqueda: filtros.busqueda.trim() || undefined,
+      agenteId: filtros.agenteId ?? undefined,
+      soloMios: filtros.soloMios ? 'true' : undefined,
+    });
   }
 
   detalleRequest(id: string): ResourceRequest {

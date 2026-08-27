@@ -74,18 +74,25 @@ Dos conclusiones que ahorran tiempo:
    mensajes es optimizar sobre cientos de filas: no hay nada que ganar ahí por mucho
    que el módulo sea el más complejo del proyecto.
 
-   > **Matiz agregado el 2026-08-26 — leelo antes de aplicar esa conclusión.**
-   > Sigue siendo cierto que las *consultas* del inbox no son el problema (325
-   > conversaciones, 2.186 mensajes: nada que ganar con índices ni con SQL). Lo
-   > que NO es cierto ya es que el inbox no tenga ningún problema de escala:
-   > `LIMITE_INBOX = 500` corta el listado y el frontend filtra **y busca** en
-   > memoria sobre ese corte, así que al cruzarlo los chats viejos desaparecen
-   > del buscador en silencio. Medido: +13,3 conversaciones/día, margen de 175
-   > → toca el tope alrededor del **8 de septiembre de 2026**.
+   > **Matiz — la distinción que hace útil esta conclusión (2026-08-27).**
+   > Es cierto para las *consultas*: con 325 conversaciones y 2.186 mensajes no
+   > hay nada que ganar con índices ni reescribiendo SQL. Lo que NO se sigue de
+   > ahí es que el inbox no tuviera un problema de escala, porque tenía uno
+   > grave y de otra naturaleza: `LIMITE_INBOX = 500` cortaba el listado y el
+   > frontend filtraba **y buscaba** en memoria sobre ese corte, así que al
+   > cruzarlo los chats viejos desaparecían del buscador en silencio. Medido el
+   > 26-ago: +13,3 conversaciones/día sobre 325, tope el ~8 de septiembre.
    >
-   > O sea: el inbox no necesita *optimización*, necesita **paginación real**.
-   > Son cosas distintas y solo una de las dos aparece en un perfilador. El
-   > detalle completo y las opciones están en `crm-backend-arquitectura` §7.
+   > **El inbox no necesitaba optimización: necesitaba paginación real.** Son
+   > cosas distintas y solo una aparece en un perfilador — un `take` fijo es
+   > rapidísimo justamente porque no trae lo que falta. Arreglado el 27-ago
+   > moviendo orden, pestañas, filtro por agente y búsqueda a Postgres; de paso
+   > la carga inicial bajó de 277,7 kB a 27,8 kB y un mensaje nuevo pasó de
+   > recargar 500 filas a pedir una (0,6 kB). Detalle en
+   > `crm-backend-arquitectura` §7.
+   >
+   > La lección para la próxima vez que este archivo diga "no hay nada que
+   > ganar": eso responde "¿es lento?", no "¿está todo lo que debería estar?".
 2. **El `ILIKE '%texto%'` de la búsqueda de pacientes NO es un problema**, aunque lo
    parezca: los índices GIN trigram (`Cliente_nombre_trgm_idx` y sus dos hermanos) lo
    resuelven en 4,6 ms en el peor caso. Si alguna vez desaparece `pg_trgm` o esos

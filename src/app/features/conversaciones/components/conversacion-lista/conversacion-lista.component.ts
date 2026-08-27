@@ -40,8 +40,16 @@ export class ConversacionListaComponent {
   protected readonly iniciales = generarIniciales;
 
   /* ── Agentes con chats para filtro rápido de Admin ──────────────── */
+  /**
+   * Agentes para el filtro rápido del admin.
+   *
+   * El conteo por agente sale de las conversaciones CARGADAS, así que es
+   * orientativo, no exacto — antes tampoco lo era (contaba sobre el corte de
+   * 500). La lista de agentes en sí viene completa de `/meta/agentes`, que es
+   * lo que hace falta para poder filtrar por cualquiera de ellas.
+   */
   protected readonly agentesConChats = computed(() => {
-    const lista = this.state.conversacionesRecurso.value();
+    const lista = this.state.conversacionesFiltradas();
     const todosAgentes = this.state.agentes.value();
     const conteos = new Map<string, number>();
 
@@ -129,6 +137,6 @@ export class ConversacionListaComponent {
   }
 
   protected recargarInbox(): void {
-    this.state.conversacionesRecurso.reload();
+    this.state.inbox.reload();
   }
 }
