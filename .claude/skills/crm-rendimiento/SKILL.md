@@ -73,6 +73,19 @@ Dos conclusiones que ahorran tiempo:
 1. **Solo `Cliente` y `Lead` son grandes.** Optimizar consultas de conversaciones o
    mensajes es optimizar sobre cientos de filas: no hay nada que ganar ahí por mucho
    que el módulo sea el más complejo del proyecto.
+
+   > **Matiz agregado el 2026-08-26 — leelo antes de aplicar esa conclusión.**
+   > Sigue siendo cierto que las *consultas* del inbox no son el problema (325
+   > conversaciones, 2.186 mensajes: nada que ganar con índices ni con SQL). Lo
+   > que NO es cierto ya es que el inbox no tenga ningún problema de escala:
+   > `LIMITE_INBOX = 500` corta el listado y el frontend filtra **y busca** en
+   > memoria sobre ese corte, así que al cruzarlo los chats viejos desaparecen
+   > del buscador en silencio. Medido: +13,3 conversaciones/día, margen de 175
+   > → toca el tope alrededor del **8 de septiembre de 2026**.
+   >
+   > O sea: el inbox no necesita *optimización*, necesita **paginación real**.
+   > Son cosas distintas y solo una de las dos aparece en un perfilador. El
+   > detalle completo y las opciones están en `crm-backend-arquitectura` §7.
 2. **El `ILIKE '%texto%'` de la búsqueda de pacientes NO es un problema**, aunque lo
    parezca: los índices GIN trigram (`Cliente_nombre_trgm_idx` y sus dos hermanos) lo
    resuelven en 4,6 ms en el peor caso. Si alguna vez desaparece `pg_trgm` o esos
@@ -105,6 +118,9 @@ Referencia del 2026-08-11: **436.79 kB brutos / 113.26 kB transferidos**.
 Referencia del 2026-08-20: **442.43 kB brutos / 115.69 kB transferidos** (+5.6 kB
 en nueve días de funcionalidad nueva; se anota para que la deriva se vea, no
 porque haya que arreglarla).
+Referencia del 2026-08-26: **441.96 kB brutos / 115.72 kB transferidos** — seis
+días más de trabajo con el bundle inicial plano. La deriva no es monótona: lo
+que se agrega dentro de una ruta *lazy* no toca esta cifra.
 
 Para un cambio que afecta a una vista concreta, compara además el tamaño de su
 *lazy chunk* en la misma tabla.
