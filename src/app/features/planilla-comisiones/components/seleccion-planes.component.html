@@ -37,10 +37,7 @@
   @if (cargando()) {
     <app-loading-skeleton shape="text" height="3rem" />
   } @else if (error()) {
-    <app-empty-state
-      icon="alert-circle"
-      title="No se pudieron cargar los planes"
-      description="Verifica que el servidor esté encendido y vuelve a intentarlo." />
+    <app-error-carga que="los planes del periodo" />
   } @else if (grupos().length > 0) {
     <div class="space-y-4">
       @for (grupo of grupos(); track grupo.clave) {

@@ -210,19 +210,34 @@
       <app-table [dense]="true">
         <thead>
           <tr>
-            <th class="text-left celda-sticky col-vendedora">Vendedora</th>
+            <th class="text-left celda-sticky col-vendedora">Vendedora & Tendencia</th>
             @for (m of mesesCortos; track m) {
               <th class="text-right col-mes">{{ m }}</th>
             }
-            <th class="text-right col-total">Total</th>
+            <th class="text-right col-total celda-sticky-der">Total Anual</th>
           </tr>
         </thead>
         <tbody>
           @for (f of filasFiltradas(); track f.vendedoraId) {
             <tr class="hover:bg-bg-light/60 transition-colors">
               <td class="celda-sticky col-vendedora">
-                <span class="font-semibold text-xs text-text-dark block truncate">{{ f.nombre }}</span>
-                <span class="block text-[10px] text-text-muted font-normal truncate">{{ f.tipo }} · {{ f.area }}</span>
+                <div class="flex items-center justify-between gap-2">
+                  <div class="min-w-0 flex-1">
+                    <span class="font-semibold text-xs text-text-dark block truncate">{{ f.nombre }}</span>
+                    <span class="block text-[10px] text-text-muted font-normal truncate">{{ f.tipo }} · {{ f.area }}</span>
+                  </div>
+                  <svg class="w-12 h-3.5 shrink-0 opacity-85" viewBox="0 0 48 14" aria-hidden="true" title="Tendencia mensual">
+                    @for (b of sparklineBarras(f.meses); track $index) {
+                      <rect
+                        [attr.x]="b.x"
+                        [attr.y]="b.y"
+                        [attr.width]="b.width"
+                        [attr.height]="b.height"
+                        rx="0.5"
+                        [attr.fill]="b.activa ? 'var(--color-primary)' : 'var(--color-border)'" />
+                    }
+                  </svg>
+                </div>
               </td>
 
               @for (mes of f.meses; track mes.mes) {
@@ -240,14 +255,17 @@
                 </td>
               }
 
-              <td class="text-right col-total font-mono text-xs font-bold text-primary whitespace-nowrap">
+              <td class="text-right col-total celda-sticky-der font-mono text-xs font-bold text-primary whitespace-nowrap">
                 {{ f.totalVendido | moneda: 'USD': tcReferencia() }}
               </td>
             </tr>
           } @empty {
             <tr>
-              <td [attr.colspan]="14" class="text-center py-6 text-text-muted text-xs">
-                No se encontraron vendedoras que coincidan con el filtro.
+              <td [attr.colspan]="14" class="py-6">
+                <app-empty-state
+                  icon="search"
+                  title="Sin coincidencias"
+                  description="No se encontraron vendedoras que coincidan con el filtro seleccionado." />
               </td>
             </tr>
           }
@@ -272,7 +290,7 @@
                 }
               </td>
             }
-            <td class="text-right col-total font-mono font-extrabold text-xs text-primary whitespace-nowrap">
+            <td class="text-right col-total celda-sticky-der font-mono font-extrabold text-xs text-primary whitespace-nowrap">
               {{ totalFiltrado() | moneda: 'USD': tcReferencia() }}
             </td>
           </tr>

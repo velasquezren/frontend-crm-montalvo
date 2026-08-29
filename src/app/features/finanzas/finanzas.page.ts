@@ -118,6 +118,13 @@ export class FinanzasPage {
     return this.tabs.find(t => t.id === activa) ?? this.tabs[0];
   });
 
+  /** Precarga predictiva al pasar el cursor (hover prefetching) para 0ms absolutos */
+  protected precargarTab(tab: TabFinanzas): void {
+    if (!this.visitadas().has(tab)) {
+      this.visitadas.update(vistas => new Set(vistas).add(tab));
+    }
+  }
+
   protected cambiarTab(nuevaTab: TabFinanzas): void {
     if (this.tabActiva() === nuevaTab) return;
     /* Se apuntan LAS DOS antes de navegar: la que se abre y la que se deja.

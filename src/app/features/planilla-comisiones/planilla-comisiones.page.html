@@ -316,6 +316,18 @@
 
     <!-- Panel principal de clasificación -->
     <section class="panel">
+      @if (modificacionPendienteRecalculo() && periodoActual()?.estado === 'CALCULADO') {
+        <div class="flex items-center justify-between gap-3 p-3.5 mb-4 rounded-xl border border-primary/30 bg-primary/5 flex-wrap animate-fade-scale">
+          <div class="flex items-center gap-2.5 text-xs font-semibold text-text-dark">
+            <app-icon name="alert-circle" [size]="16" class="text-primary shrink-0" />
+            <span>Hay cambios recientes en la clasificación o exclusiones. Recalcula la planilla para actualizar las comisiones.</span>
+          </div>
+          <app-button size="sm" icon="percent" [loading]="calculando()" (clicked)="calcular()">
+            Recalcular ahora
+          </app-button>
+        </div>
+      }
+
       <!-- Fila 1: búsqueda y filtros que acotan qué filas se ven. Clasificación
            y Tipo muestran cuántas filas trae cada opción — mismo criterio que
            los chips de abajo, que ya cuentan antes de tocarlos. -->
@@ -889,30 +901,44 @@
 
       @if (rev.estado === 'EN_REVISION') {
         <div class="cierre-firmas">
-          <div>
-            <p class="cierre-firmas-titulo">Aprobaron</p>
+          <div class="p-3 bg-bg-light/60 rounded-xl border border-border/70">
+            <p class="cierre-firmas-titulo flex items-center gap-1.5 text-primary">
+              <app-icon name="check-circle" [size]="12" /> Firmas registradas ({{ rev.aprobaron.length }})
+            </p>
             @if (rev.aprobaron.length === 0) {
-              <p class="text-xs text-text-muted">Todavía nadie.</p>
+              <p class="text-xs text-text-muted mt-1">Todavía ninguna firma.</p>
             } @else {
-              @for (a of rev.aprobaron; track a.id) {
-                <p class="text-sm text-text-dark">
-                  {{ a.nombre }}
-                  <span class="text-xs text-text-muted">· {{ a.fecha | date: 'd MMM, HH:mm' }}</span>
-                  @if (a.comentario) {
-                    <span class="block text-xs text-text-muted">{{ a.comentario }}</span>
-                  }
-                </p>
-              }
+              <div class="flex flex-col gap-2 mt-1.5">
+                @for (a of rev.aprobaron; track a.id) {
+                  <div class="flex items-start gap-2">
+                    <app-icon name="check-circle" [size]="14" class="text-primary shrink-0 mt-0.5" />
+                    <div>
+                      <span class="text-xs font-bold text-text-dark">{{ a.nombre }}</span>
+                      <span class="text-[11px] text-text-muted ml-1.5">· {{ a.fecha | date: 'd MMM, HH:mm' }}</span>
+                      @if (a.comentario) {
+                        <p class="text-xs text-text-muted/90 italic mt-0.5">"{{ a.comentario }}"</p>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
             }
           </div>
-          <div>
-            <p class="cierre-firmas-titulo">Falta</p>
+          <div class="p-3 bg-bg-workspace rounded-xl border border-border/70">
+            <p class="cierre-firmas-titulo flex items-center gap-1.5 text-text-muted">
+              <app-icon name="clock" [size]="12" /> Pendiente de firma ({{ rev.faltan.length }})
+            </p>
             @if (rev.faltan.length === 0) {
-              <p class="text-xs text-text-muted">Nadie: el mes se cierra con la última firma.</p>
+              <p class="text-xs text-secondary font-semibold mt-1">Nadie: el mes se cierra con la última firma.</p>
             } @else {
-              @for (f of rev.faltan; track f.id) {
-                <p class="text-sm text-text-dark">{{ f.nombre }}</p>
-              }
+              <div class="flex flex-col gap-2 mt-1.5">
+                @for (f of rev.faltan; track f.id) {
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-text-muted/40 shrink-0"></span>
+                    <span class="text-xs font-semibold text-text-dark">{{ f.nombre }}</span>
+                  </div>
+                }
+              </div>
             }
           </div>
         </div>

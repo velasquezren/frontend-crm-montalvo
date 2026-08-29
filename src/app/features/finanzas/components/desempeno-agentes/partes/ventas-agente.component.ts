@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
 
 import { BadgeComponent } from '../../../../../shared/components/badge/badge.component';
+import { EmptyStateComponent } from '../../../../../shared/components/empty-state/empty-state.component';
 import { FilterChipComponent } from '../../../../../shared/components/filter-chip/filter-chip.component';
 import { InputComponent } from '../../../../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../../../../shared/components/loading-skeleton/loading-skeleton.component';
@@ -44,6 +45,7 @@ type Canal = 'TODOS' | 'EMPRESA' | 'PROPIO';
     DatePipe,
     MonedaPipe,
     BadgeComponent,
+    EmptyStateComponent,
     FilterChipComponent,
     InputComponent,
     LoadingSkeletonComponent,

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { FilterChipComponent } from '../../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { InfoHintComponent } from '../../../shared/components/info-hint/info-hint.component';
@@ -33,7 +34,7 @@ type DireccionOrden = 'asc' | 'desc';
  */
 @Component({
   selector: 'app-desglose-comisiones',
-  imports: [MonedaPipe, TableComponent, FilterChipComponent, InfoHintComponent, IconComponent],
+  imports: [MonedaPipe, TableComponent, FilterChipComponent, InfoHintComponent, IconComponent, EmptyStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="desglose-filtros">
@@ -80,9 +81,12 @@ type DireccionOrden = 'asc' | 'desc';
     </div>
 
     @if (filasVisibles().length === 0) {
-      <p class="text-sm text-text-muted py-6 text-center">
-        Sin líneas para este filtro.
-      </p>
+      <div class="py-4">
+        <app-empty-state
+          icon="file-text"
+          title="Sin líneas para este filtro"
+          description="Prueba cambiando de subtipo o seleccionando otra vendedora." />
+      </div>
     } @else {
       <app-table [dense]="true">
         <thead>

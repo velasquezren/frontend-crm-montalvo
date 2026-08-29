@@ -823,6 +823,8 @@ export class PlanillaComisionesPage implements OnDestroy {
     this.confirmandoCalculo.set(false);
   }
 
+  protected readonly modificacionPendienteRecalculo = signal(false);
+
   protected async calcular(): Promise<void> {
     const id = this.periodoId();
     this.confirmandoCalculo.set(false);
@@ -831,6 +833,7 @@ export class PlanillaComisionesPage implements OnDestroy {
     this.calculando.set(true);
     try {
       const resultado = await this.service.calcular(id);
+      this.modificacionPendienteRecalculo.set(false);
       this.toast.success(
         `${resultado.vendedorasLiquidadas} vendedoras · $${resultado.totalComisionUsd} USD en comisiones.`,
         'Planilla calculada',
@@ -897,6 +900,9 @@ export class PlanillaComisionesPage implements OnDestroy {
     this.excluyendo.set(true);
     try {
       await this.service.ajustarVenta(venta.id, { comisionable, motivoExclusion });
+      if (this.periodoActual()?.estado === 'CALCULADO') {
+        this.modificacionPendienteRecalculo.set(true);
+      }
       this.toast.success(
         comisionable ? `"${venta.detalle}" vuelve al cálculo.` : `"${venta.detalle}" ya no comisiona.`,
         comisionable ? 'Comisión devuelta' : 'Comisión retirada',
@@ -917,6 +923,9 @@ export class PlanillaComisionesPage implements OnDestroy {
 
     try {
       await this.service.ajustarVenta(venta.id, { clasif });
+      if (this.periodoActual()?.estado === 'CALCULADO') {
+        this.modificacionPendienteRecalculo.set(true);
+      }
       this.toast.success(`"${venta.detalle}" → ${this.clasifLabel[clasif]}`, 'Clasificación ajustada');
       this.ventas.reload();
       const id = this.periodoId();
@@ -930,6 +939,9 @@ export class PlanillaComisionesPage implements OnDestroy {
   protected async crearReglaDesdeServicio(detalle: string, clasif: ClasifComision): Promise<void> {
     try {
       const regla = await this.service.crearRegla({ patron: detalle, clasif, prioridad: 50 });
+      if (this.periodoActual()?.estado === 'CALCULADO') {
+        this.modificacionPendienteRecalculo.set(true);
+      }
       /* La regla se aplica de inmediato a lo YA importado que seguía sin
          clasificar (backend: `reclasificarConRegla`) — no hace falta
          reimportar. Recalcular alcanza para que se refleje en la liquidación. */

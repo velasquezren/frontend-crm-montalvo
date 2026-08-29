@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { ErrorCargaComponent } from '../../../shared/components/error-carga/error-carga.component';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { InfoHintComponent } from '../../../shared/components/info-hint/info-hint.component';
 import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton/loading-skeleton.component';
@@ -28,6 +29,7 @@ import { GrupoPlanes, VentaImportada } from '../planilla.model';
     MonedaPipe,
     BadgeComponent,
     EmptyStateComponent,
+    ErrorCargaComponent,
     IconComponent,
     InfoHintComponent,
     LoadingSkeletonComponent,

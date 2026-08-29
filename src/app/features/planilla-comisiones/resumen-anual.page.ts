@@ -14,13 +14,21 @@ import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.comp
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { BarChartComponent, ChartItem } from '../../shared/components/charts/bar-chart.component';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
-import { FilaAnual, MESES_CORTOS, ResumenAnual, TrimestreVendedora } from './planilla.model';
+import { FilaAnual, MESES_CORTOS, MesVendedora, ResumenAnual, TrimestreVendedora } from './planilla.model';
 import { PlanillaComisionesService } from './planilla-comisiones.service';
 
 /** Cuántos años atrás se puede mirar desde el selector. */
 const ANIOS_HACIA_ATRAS = 4;
 
 export type FiltroBonoResumen = 'TODAS' | 'CON_BONO' | 'SIN_BONO';
+
+export interface SparklineBarra {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly activa: boolean;
+}
 
 /**
  * Resumen anual de comisiones — la única vista que cruza periodos.
@@ -247,6 +255,27 @@ export class ResumenAnualPage {
 
   protected esTrimestreCompleto(t: TrimestreVendedora): boolean {
     return t.mesesConDatos === 3;
+  }
+
+  /** Genera micro-barras para la celda sparkline de cada vendedora */
+  protected sparklineBarras(meses: readonly MesVendedora[]): readonly SparklineBarra[] {
+    const montos = meses.map(m => m.montoVendido);
+    const max = Math.max(...montos, 1);
+    const anchoBarra = 3;
+    const gap = 1;
+    const alto = 14;
+
+    return meses.map((m, idx) => {
+      const valor = m.montoVendido;
+      const h = m.importado && valor > 0 ? Math.max(2, Math.round((valor / max) * alto)) : 1;
+      return {
+        x: idx * (anchoBarra + gap),
+        y: alto - h,
+        width: anchoBarra,
+        height: h,
+        activa: m.importado && valor > 0,
+      };
+    });
   }
 
   protected idDeFila(_indice: number, fila: FilaAnual): string {

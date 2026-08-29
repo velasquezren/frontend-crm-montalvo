@@ -19,6 +19,8 @@
           [attr.aria-controls]="'panel-' + t.id"
           [id]="'tab-' + t.id"
           (click)="cambiarTab(t.id)"
+          (mouseenter)="precargarTab(t.id)"
+          (focus)="precargarTab(t.id)"
           class="finanzas-tab-btn"
           [class.finanzas-tab-btn--active]="tabActiva() === t.id">
           <app-icon [name]="t.icon" [size]="16" class="tab-icono" />

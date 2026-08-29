@@ -56,7 +56,12 @@
       }
     </div>
   } @else if (filtradas().length === 0) {
-    <p class="sin-resultados">No hay ventas que coincidan con el filtro.</p>
+    <div class="py-4">
+      <app-empty-state
+        icon="search"
+        title="Sin resultados"
+        description="No hay ventas que coincidan con el filtro o término de búsqueda." />
+    </div>
   } @else {
     <app-table [dense]="true" maxHeight="60vh">
       <thead>

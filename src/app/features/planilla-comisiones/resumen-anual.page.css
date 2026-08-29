@@ -137,9 +137,18 @@
   border-right: 1px solid var(--color-border);
 }
 
+.celda-sticky-der {
+  position: sticky;
+  right: 0;
+  z-index: 5;
+  background: var(--color-background);
+  box-shadow: -2px 0 6px -2px rgba(0, 0, 0, 0.08);
+  border-left: 1px solid var(--color-border);
+}
+
 .col-vendedora {
-  min-width: 160px;
-  max-width: 220px;
+  min-width: 190px;
+  max-width: 250px;
 }
 
 .col-mes {
@@ -147,7 +156,7 @@
 }
 
 .col-total {
-  min-width: 90px;
+  min-width: 96px;
 }
 
 .fila-totales {
@@ -155,7 +164,8 @@
   font-weight: 700;
 }
 
-.fila-totales .celda-sticky {
+.fila-totales .celda-sticky,
+.fila-totales .celda-sticky-der {
   background: color-mix(in srgb, var(--color-primary) 6%, white);
 }
 

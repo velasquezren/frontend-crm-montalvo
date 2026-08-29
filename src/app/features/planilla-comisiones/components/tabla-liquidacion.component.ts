@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { InfoHintComponent } from '../../../shared/components/info-hint/info-hint.component';
 import { InputComponent } from '../../../shared/components/input/input.component';
@@ -89,11 +90,16 @@ type DireccionOrden = 'asc' | 'desc';
  */
 @Component({
   selector: 'app-tabla-liquidacion',
-  imports: [MonedaPipe, TableComponent, InfoHintComponent, IconComponent, InputComponent],
+  imports: [MonedaPipe, TableComponent, InfoHintComponent, IconComponent, InputComponent, EmptyStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="tabla-liquidacion-buscador">
-      <app-input type="search" placeholder="Buscar vendedora…" [(value)]="busqueda" />
+    <div class="flex items-center justify-between gap-3 mb-2.5 flex-wrap">
+      <div class="tabla-liquidacion-buscador">
+        <app-input type="search" placeholder="Buscar vendedora…" [(value)]="busqueda" />
+      </div>
+      <div class="text-xs text-text-muted font-medium">
+        {{ filasVisibles().length }} de {{ filas().length }} vendedoras
+      </div>
     </div>
 
     <app-table [dense]="true" [maxHeight]="maxHeight()">
@@ -254,7 +260,7 @@ type DireccionOrden = 'asc' | 'desc';
               <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
             }
           </th>
-          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('totalGanado')">
+          <th class="text-right celda-fija-der cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('totalGanado')">
             A pagar
             @if (ordenCampo() === 'totalGanado') {
               <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
@@ -324,14 +330,17 @@ type DireccionOrden = 'asc' | 'desc';
             </td>
             <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ formatearBs(f.totalBob) }}</td>
             <td class="text-right text-text-muted whitespace-nowrap">{{ formatearBs(f.sueldoBase) }}</td>
-            <td class="text-right font-extrabold text-secondary text-base whitespace-nowrap">
+            <td class="text-right font-extrabold text-secondary text-base whitespace-nowrap celda-fija-der">
               {{ formatearBs(f.totalGanado) }}
             </td>
           </tr>
         } @empty {
           <tr>
-            <td [attr.colspan]="mostrarCirugias() ? 14 : 13" class="text-center text-sm text-text-muted py-6">
-              Ninguna vendedora coincide con "{{ busqueda() }}".
+            <td [attr.colspan]="mostrarCirugias() ? 14 : 13" class="py-6">
+              <app-empty-state
+                icon="search"
+                title="Sin coincidencias"
+                [description]="'Ninguna vendedora coincide con «' + busqueda() + '».'" />
             </td>
           </tr>
         }
@@ -354,7 +363,7 @@ type DireccionOrden = 'asc' | 'desc';
           <td class="text-right font-bold text-primary whitespace-nowrap">{{ formatearUsd(totales()['totalUsd']) }}</td>
           <td class="text-right font-bold whitespace-nowrap">{{ formatearBs(totales()['totalBob']) }}</td>
           <td class="text-right font-bold whitespace-nowrap">{{ formatearBs(totales()['sueldoBase']) }}</td>
-          <td class="text-right font-extrabold text-secondary text-base whitespace-nowrap">
+          <td class="text-right font-extrabold text-secondary text-base whitespace-nowrap celda-fija-der">
             {{ formatearBs(totales()['totalGanado']) }}
           </td>
         </tr>
@@ -369,16 +378,26 @@ type DireccionOrden = 'asc' | 'desc';
 
     .tabla-liquidacion-buscador {
       max-width: 280px;
-      margin-bottom: 10px;
     }
 
-    /* El nombre se queda fijo al desplazar en horizontal: con tantas columnas,
-       sin esto se pierde de vista de quién es cada cifra. */
+    /* El nombre se queda fijo al desplazar a la izquierda */
     .celda-fija {
       position: sticky;
       left: 0;
-      z-index: 2;
+      z-index: 3;
       background: var(--color-background);
+      box-shadow: 2px 0 6px -2px rgba(0, 0, 0, 0.08);
+      border-right: 1px solid var(--color-border);
+    }
+
+    /* La columna A PAGAR se queda fija a la derecha */
+    .celda-fija-der {
+      position: sticky;
+      right: 0;
+      z-index: 3;
+      background: var(--color-background);
+      box-shadow: -2px 0 6px -2px rgba(0, 0, 0, 0.08);
+      border-left: 1px solid var(--color-border);
     }
 
     .fila-totales {
@@ -386,7 +405,8 @@ type DireccionOrden = 'asc' | 'desc';
       font-weight: 700;
     }
 
-    .fila-totales .celda-fija {
+    .fila-totales .celda-fija,
+    .fila-totales .celda-fija-der {
       background: color-mix(in srgb, var(--color-primary) 5%, white);
     }
   `,
