@@ -73,7 +73,7 @@
 } @else if (consolidado.error()) {
   <app-error-carga que="el desempeño de las ejecutivas" (reintentar)="consolidado.reload()" />
 } @else if (vendedora(); as v) {
-  <div class="ficha animate-fade-scale">
+  <div class="ficha">
     <app-ficha-cabecera [fila]="v" [foto]="fotoActual()" />
 
     <app-metas-agente [fila]="v" [metas]="metas()" [tramos]="tramos()" />

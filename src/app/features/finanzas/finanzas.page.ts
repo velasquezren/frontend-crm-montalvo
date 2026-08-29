@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -57,7 +65,7 @@ const TABS: readonly TabConfig[] = [
  * Agrupa Liquidación Mensual, Desempeño de Agentes, Analítica Médica y Resumen Anual con:
  * - 0ms de cambio de pestaña (retención instantánea de estado en memoria)
  * - Sincronización 100% reactiva en URL (?tab=...)
- * - Diseño segmentado de alta fidelidad sin parpadeos
+ * - Cero parpadeos entre navegaciones y renderizado ultra-fluido
  */
 @Component({
   selector: 'app-finanzas',
@@ -82,34 +90,41 @@ export class FinanzasPage {
 
   private readonly queryParams = toSignal(this.route.queryParams);
 
-  /** Pestaña activa derivada reactivamente de la URL */
-  protected readonly tabActiva = computed<TabFinanzas>(() => {
-    const q = this.queryParams()?.['tab'] as string;
-    if (q === 'agentes' || q === 'analitica' || q === 'anual' || q === 'liquidacion' || q === 'tipo-cambio') {
-      return q;
-    }
-    return 'liquidacion';
-  });
+  /** Pestaña activa con cambio síncrono instantáneo a 0ms */
+  protected readonly tabActiva = signal<TabFinanzas>('liquidacion');
 
-  /**
-   * Pestañas ya visitadas. Una vez montada, se queda montada.
-   *
-   * Las cuatro se pintaban siempre con `[hidden]`, que solo aplica
-   * `display: none`: los cuatro componentes se instanciaban y **todas sus
-   * peticiones salían al entrar**, aunque solo se mirase una. Entrar en Finanzas
-   * cargaba Planilla, Desempeño, Analítica y Resumen Anual de golpe.
-   *
-   * Quitarlo del todo con `@if` habría costado la retención de estado que la
-   * pestaña buscaba —filtros y scroll se perderían al ir y volver—. Con este
-   * conjunto se tienen las dos cosas: al entrar solo se monta la activa, y a
-   * partir de la primera visita cada una permanece viva, así que volver sigue
-   * siendo instantáneo y sin pedir nada.
-   */
-  private readonly visitadas = signal<ReadonlySet<TabFinanzas>>(new Set());
+  /** Pestañas montadas en memoria */
+  private readonly visitadas = signal<ReadonlySet<TabFinanzas>>(new Set(['liquidacion']));
+
+  constructor() {
+    // 1. Lee la pestaña inicial desde la URL
+    const tabInicial = this.route.snapshot.queryParams['tab'] as string;
+    if (this.esTabValida(tabInicial)) {
+      this.tabActiva.set(tabInicial);
+      this.visitadas.set(new Set([tabInicial]));
+    }
+
+    // 2. Si el usuario usa las flechas Atrás/Adelante del navegador, sincroniza
+    effect(() => {
+      const q = this.queryParams()?.['tab'] as string;
+      if (this.esTabValida(q) && this.tabActiva() !== q) {
+        this.tabActiva.set(q);
+        this.visitadas.update(vistas => new Set(vistas).add(q));
+      }
+    });
+
+    // 3. Tras el primer pintado en pantalla (browser idle), precarga el resto de pestañas
+    afterNextRender(() => {
+      this.visitadas.set(new Set(this.tabs.map(t => t.id)));
+    });
+  }
+
+  private esTabValida(q: string | undefined): q is TabFinanzas {
+    return q === 'agentes' || q === 'analitica' || q === 'anual' || q === 'liquidacion' || q === 'tipo-cambio';
+  }
 
   protected readonly estaMontada = computed(() => {
-    const vistas = new Set(this.visitadas());
-    vistas.add(this.tabActiva());
+    const vistas = this.visitadas();
     return (tab: TabFinanzas): boolean => vistas.has(tab);
   });
 
@@ -118,7 +133,7 @@ export class FinanzasPage {
     return this.tabs.find(t => t.id === activa) ?? this.tabs[0];
   });
 
-  /** Precarga predictiva al pasar el cursor (hover prefetching) para 0ms absolutos */
+  /** Precarga predictiva al pasar el cursor (hover prefetching) */
   protected precargarTab(tab: TabFinanzas): void {
     if (!this.visitadas().has(tab)) {
       this.visitadas.update(vistas => new Set(vistas).add(tab));
@@ -127,16 +142,16 @@ export class FinanzasPage {
 
   protected cambiarTab(nuevaTab: TabFinanzas): void {
     if (this.tabActiva() === nuevaTab) return;
-    /* Se apuntan LAS DOS antes de navegar: la que se abre y la que se deja.
-       Sin apuntar la que se deja, la primera pestaña —que nunca pasó por aquí,
-       porque venía activa desde la URL— se desmontaría al salir de ella y
-       perdería su estado justo al volver, que es lo contrario de lo que se
-       busca. */
-    this.visitadas.update(vistas => new Set(vistas).add(this.tabActiva()).add(nuevaTab));
+    // Cambio síncrono instantáneo
+    this.tabActiva.set(nuevaTab);
+    this.visitadas.update(vistas => new Set(vistas).add(nuevaTab));
+
+    // Sincronización silenciosa en la URL
     void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { tab: nuevaTab },
       queryParamsHandling: 'merge',
+      replaceUrl: true,
     });
   }
 }
