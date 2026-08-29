@@ -40,7 +40,7 @@
   }
 </div>
 
-@if (analitica.isLoading() && !analitica.value()) {
+@if (estaCargando()) {
   <div class="grid-kpis-modern">
     @for (n of [1,2,3,4,5,6]; track n) { <app-loading-skeleton height="100px" /> }
   </div>

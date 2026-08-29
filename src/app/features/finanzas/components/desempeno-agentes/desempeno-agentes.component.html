@@ -64,7 +64,7 @@
   }
 </div>
 
-@if (consolidado.isLoading() && !consolidado.value()) {
+@if (estaCargando()) {
   <div class="flex flex-col gap-4">
     <app-loading-skeleton height="104px" />
     <app-loading-skeleton height="196px" />

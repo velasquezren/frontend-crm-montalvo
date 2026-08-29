@@ -164,6 +164,11 @@ export class AnaliticaPage {
     return this.periodos.value().datos.find(p => p.id === id) ?? null;
   });
 
+  /** Estado de carga global del informe (evita parpadeos de empty state durante la resolución inicial). */
+  protected readonly estaCargando = computed(
+    () => this.periodos.isLoading() || (this.analitica.isLoading() && !this.analitica.value()),
+  );
+
   protected readonly hayDatos = computed(() => this.analitica.value() !== undefined);
 
   /** Solo hay a dónde enviar si el mes ya se calculó. */

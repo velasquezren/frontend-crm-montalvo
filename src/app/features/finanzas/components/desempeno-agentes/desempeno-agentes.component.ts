@@ -185,6 +185,11 @@ export class DesempenoAgentesComponent implements OnDestroy {
     return (this.periodos.value()?.datos ?? []).find(p => p.id === id) ?? null;
   });
 
+  /** Estado de carga global de la ficha (evita parpadeos de empty state durante la resolución inicial). */
+  protected readonly estaCargando = computed(
+    () => this.periodos.isLoading() || (this.consolidado.isLoading() && !this.consolidado.value()),
+  );
+
   protected readonly vendedoras = computed<readonly FilaConsolidado[]>(
     () => this.consolidado.value()?.filas ?? [],
   );

@@ -89,21 +89,16 @@ export class FinanzasPage {
 
   private readonly queryParams = toSignal(this.route.queryParams);
 
+  private readonly tabInicial = this.resolverTabInicial();
+
   /** Pestaña activa con cambio síncrono instantáneo a 0ms */
-  protected readonly tabActiva = signal<TabFinanzas>('liquidacion');
+  protected readonly tabActiva = signal<TabFinanzas>(this.tabInicial);
 
   /** Pestañas montadas en memoria */
-  private readonly visitadas = signal<ReadonlySet<TabFinanzas>>(new Set(['liquidacion']));
+  private readonly visitadas = signal<ReadonlySet<TabFinanzas>>(new Set([this.tabInicial]));
 
   constructor() {
-    // 1. Lee la pestaña inicial desde la URL
-    const tabInicial = this.route.snapshot.queryParams['tab'] as string;
-    if (this.esTabValida(tabInicial)) {
-      this.tabActiva.set(tabInicial);
-      this.visitadas.set(new Set([tabInicial]));
-    }
-
-    // 2. Si el usuario usa las flechas Atrás/Adelante del navegador, sincroniza
+    // Si el usuario usa las flechas Atrás/Adelante del navegador, sincroniza
     effect(() => {
       const q = this.queryParams()?.['tab'] as string;
       if (this.esTabValida(q) && this.tabActiva() !== q) {
@@ -111,6 +106,11 @@ export class FinanzasPage {
         this.visitadas.update(vistas => new Set(vistas).add(q));
       }
     });
+  }
+
+  private resolverTabInicial(): TabFinanzas {
+    const q = this.route.snapshot.queryParams['tab'] as string;
+    return this.esTabValida(q) ? q : 'liquidacion';
   }
 
   private esTabValida(q: string | undefined): q is TabFinanzas {
