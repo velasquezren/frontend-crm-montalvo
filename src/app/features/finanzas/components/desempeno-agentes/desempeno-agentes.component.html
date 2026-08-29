@@ -80,11 +80,17 @@
 
     <app-composicion-pago [fila]="v" [tipoCambio]="tipoCambio()" />
 
-    <app-ventas-agente
-      [ventas]="ventasDelMes()"
-      [cargando]="ventas.isLoading()"
-      [codigoVendedora]="v.codigo"
-      [canales]="canales()" />
+    @defer (on viewport) {
+      <app-ventas-agente
+        [ventas]="ventasDelMes()"
+        [cargando]="ventas.isLoading()"
+        [codigoVendedora]="v.codigo"
+        [canales]="canales()" />
+    } @placeholder {
+      <div class="bg-background border border-border rounded-2xl p-6">
+        <app-loading-skeleton height="200px" />
+      </div>
+    }
   </div>
 } @else {
   <app-empty-state
