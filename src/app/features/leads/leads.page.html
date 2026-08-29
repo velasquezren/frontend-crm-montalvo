@@ -2,24 +2,32 @@
   <app-page-header
     title="Leads & Prospectos"
     subtitle="Gestiona el flujo de captación de pacientes desde redes sociales, WhatsApp y ventanilla.">
-    <!-- Toggle de vistas -->
-    <div class="inline-flex p-1 bg-bg-workspace border border-border rounded-xl shadow-subtle">
-      <button
-        type="button"
-        (click)="setVista('PIPELINE')"
-        class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-        [class]="modoVista() === 'PIPELINE' ? 'bg-white text-primary shadow-subtle' : 'text-text-muted hover:text-text-dark'">
-        <app-icon name="dashboard" [size]="14" />
-        Pipeline Kanban
-      </button>
-      <button
-        type="button"
-        (click)="setVista('LISTA')"
-        class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-        [class]="modoVista() === 'LISTA' ? 'bg-white text-primary shadow-subtle' : 'text-text-muted hover:text-text-dark'">
-        <app-icon name="menu" [size]="14" />
-        Vista Tabla
-      </button>
+    <!-- Controles de cabecera: Buscador en tiempo real + Toggle de vistas -->
+    <div class="flex items-center gap-3 flex-wrap">
+      <div class="w-72 max-w-full">
+        <app-input
+          type="search"
+          placeholder="Buscar paciente, teléfono o campaña…"
+          [(value)]="busqueda" />
+      </div>
+      <div class="inline-flex p-1 bg-bg-workspace border border-border rounded-xl shadow-subtle">
+        <button
+          type="button"
+          (click)="setVista('PIPELINE')"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+          [class]="modoVista() === 'PIPELINE' ? 'bg-white text-primary shadow-subtle' : 'text-text-muted hover:text-text-dark'">
+          <app-icon name="dashboard" [size]="14" />
+          Pipeline Kanban
+        </button>
+        <button
+          type="button"
+          (click)="setVista('LISTA')"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+          [class]="modoVista() === 'LISTA' ? 'bg-white text-primary shadow-subtle' : 'text-text-muted hover:text-text-dark'">
+          <app-icon name="menu" [size]="14" />
+          Vista Tabla
+        </button>
+      </div>
     </div>
   </app-page-header>
 
@@ -429,10 +437,19 @@
           (cambiar)="pagina.set($event)" />
       } @else {
         <div class="bg-white rounded-2xl border border-border p-12">
-          <app-empty-state
-            icon="user-plus"
-            title="Sin leads registrados"
-            description="No se encontraron prospectos para este canal." />
+          @if (busqueda()) {
+            <app-empty-state
+              icon="search"
+              title="Sin coincidencias"
+              [description]="'No se encontraron prospectos para «' + busqueda() + '».'">
+              <app-button variant="ghost" size="sm" icon="x" (clicked)="busqueda.set('')">Limpiar búsqueda</app-button>
+            </app-empty-state>
+          } @else {
+            <app-empty-state
+              icon="user-plus"
+              title="Sin leads registrados"
+              description="No se encontraron prospectos para este canal." />
+          }
         </div>
       }
     }

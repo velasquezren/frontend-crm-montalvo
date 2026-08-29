@@ -4,6 +4,8 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
+  EffectCleanupRegisterFn,
   inject,
   linkedSignal,
   OnDestroy,
@@ -107,6 +109,8 @@ export class LeadsPage implements OnDestroy {
   protected readonly modoVista = signal<'PIPELINE' | 'LISTA'>('PIPELINE');
   protected readonly filtro = signal<FiltroOrigen>('TODOS');
   protected readonly pagina = signal(1);
+  protected readonly busqueda = signal('');
+  private readonly busquedaDebounced = signal('');
 
   /**
    * "Importados" es el histórico de FileMaker: 15.000+ pacientes antiguos que
@@ -126,7 +130,10 @@ export class LeadsPage implements OnDestroy {
 
   private filtroActual(): FiltroLeads {
     const f = this.filtro();
-    return f === 'TODOS' ? {} : { origen: f };
+    const q = this.busquedaDebounced().trim();
+    const base: FiltroLeads = f === 'TODOS' ? {} : { origen: f };
+    if (q) base.q = q;
+    return base;
   }
 
   /* ── Datos del Servidor ────────────────────────────────────────── */
@@ -173,6 +180,15 @@ export class LeadsPage implements OnDestroy {
   }
 
   constructor() {
+    effect((onCleanup: EffectCleanupRegisterFn) => {
+      const texto = this.busqueda().trim();
+      const timer = setTimeout(() => {
+        this.busquedaDebounced.set(texto);
+        this.pagina.set(1);
+      }, 200);
+      onCleanup(() => clearTimeout(timer));
+    });
+
     const origenParam = this.route.snapshot.queryParamMap.get('origen');
     if (origenParam) {
       this.filtro.set(origenParam as FiltroOrigen);

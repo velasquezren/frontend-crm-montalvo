@@ -12,6 +12,8 @@ export interface CrearLeadPresencialDto {
 }
 
 export interface FiltroLeads {
+  q?: string;
+  agenteId?: string;
   origen?: OrigenLeadApi;
   estado?: EstadoLead;
   /** Leads de un cliente puntual — usado por el selector de "lead de origen" al registrar una venta. */
@@ -42,6 +44,8 @@ export class LeadsService {
 
   listarRequest(filtro: FiltroLeads = {}): ResourceRequest {
     return this.api.request('/leads', {
+      q: filtro.q?.trim() || undefined,
+      agenteId: filtro.agenteId,
       origen: filtro.origen,
       estado: filtro.estado,
       clienteId: filtro.clienteId,
@@ -53,6 +57,8 @@ export class LeadsService {
 
   resumenRequest(filtro: FiltroLeads = {}): ResourceRequest {
     return this.api.request('/leads/resumen', {
+      q: filtro.q?.trim() || undefined,
+      agenteId: filtro.agenteId,
       origen: filtro.origen,
       incluirImportacion: filtro.incluirImportacion ? 'true' : undefined,
     });
