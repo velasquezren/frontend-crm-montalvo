@@ -1215,6 +1215,35 @@ export class PlanillaComisionesPage implements OnDestroy {
     }
   }
 
+  protected readonly descargandoMetricas = signal(false);
+
+  /** Las métricas del periodo activo (botón de la barra superior). */
+  protected descargarMetricas(): Promise<void> {
+    const periodo = this.periodoActual();
+    return periodo ? this.descargarMetricasDe(periodo) : Promise.resolve();
+  }
+
+  /** Las métricas de un periodo cualquiera, también desde la tabla de planillas. */
+  protected async descargarMetricasDe(periodo: PeriodoComision): Promise<void> {
+    if (this.descargandoMetricas()) return;
+
+    this.descargandoMetricas.set(true);
+    try {
+      const { blob, nombre } = await this.service.descargarMetricas(
+        periodo.id,
+        periodo.anio,
+        periodo.mes,
+        this.incluirOcultas(),
+      );
+      descargarArchivo(blob, nombre);
+      this.toast.success(`${nombre} descargado.`, 'Métricas listas');
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudieron generar las métricas.'), 'Error');
+    } finally {
+      this.descargandoMetricas.set(false);
+    }
+  }
+
   /**
    * Si el periodo todavía admite cambios. Espejo de `esEditable()` del backend.
    *

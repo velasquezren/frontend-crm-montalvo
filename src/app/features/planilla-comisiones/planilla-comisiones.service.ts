@@ -214,6 +214,27 @@ export class PlanillaComisionesService {
     );
   }
 
+  /**
+   * Las métricas del mes en PDF: el acompañante del informe Word.
+   *
+   * El Word es el documento que se firma —cifras exactas y tres firmas—; este
+   * responde la otra pregunta, la que no se contesta con una tabla: quién
+   * vendió más, de dónde salió la comisión de cada quien y quién cumplió su
+   * objetivo. Se imprime y se adjunta, no se edita: por eso va en PDF.
+   */
+  descargarMetricas(
+    periodoId: string,
+    anio: number,
+    mes: number,
+    incluirOcultas = false,
+  ): Promise<{ blob: Blob; nombre: string }> {
+    return this.api.getBlob(
+      `/planilla-comisiones/periodos/${periodoId}/exportar-metricas`,
+      { incluirOcultas: incluirOcultas ? true : undefined },
+      `metricas-comisiones-${anio}-${String(mes).padStart(2, '0')}.pdf`,
+    );
+  }
+
   ajustarVenta(ventaId: string, ajuste: AjusteVenta): Promise<unknown> {
     return this.api.patch(`/planilla-comisiones/ventas/${ventaId}`, ajuste);
   }

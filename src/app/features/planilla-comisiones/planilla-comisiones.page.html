@@ -54,6 +54,16 @@
         (clicked)="descargarInforme()">
         Informe Word
       </app-button>
+      <!-- Las métricas acompañan al informe: se imprimen juntas cuando se
+           presenta la liquidación del mes. -->
+      <app-button
+        variant="ghost"
+        size="sm"
+        icon="bar-chart"
+        [loading]="descargandoMetricas()"
+        (clicked)="descargarMetricas()">
+        Métricas PDF
+      </app-button>
       <!-- El Excel sale con lo mismo que hay en pantalla, así que cuando el
            informe lleva a las dadas de baja hay que decirlo aquí: es el archivo
            que se imprime y se firma, y esa diferencia no se ve al abrirlo. -->
@@ -207,6 +217,14 @@
                       [loading]="descargandoInforme()"
                       (clicked)="descargarInformeDe(p)">
                       Informe
+                    </app-button>
+                    <app-button
+                      variant="ghost"
+                      size="sm"
+                      icon="bar-chart"
+                      [loading]="descargandoMetricas()"
+                      (clicked)="descargarMetricasDe(p)">
+                      Métricas
                     </app-button>
                     <!-- Borrar solo mientras el mes siga siendo editable: en
                          revisión, cerrado o pagado el backend lo rechaza. -->
