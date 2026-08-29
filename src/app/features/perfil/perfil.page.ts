@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  ViewChild,
+  computed,
+  effect,
+  EffectCleanupRegisterFn,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { mensajeDeError } from '../../core/api/http-error';
@@ -58,6 +68,7 @@ export class PerfilPage {
 
   /* ── Memoria Personal (Biblioteca Privada 30 MB) ──────────────── */
   protected readonly busquedaMemoria = signal('');
+  private readonly busquedaMemoriaDebounced = signal('');
   protected readonly filtroTipoMemoria = signal('');
   protected readonly tituloNuevoMemoria = signal('');
   protected readonly contenidoNuevoMemoria = signal('');
@@ -80,7 +91,7 @@ export class PerfilPage {
   private readonly recursosMemoriaRecurso = httpResource<RespuestaPaginada<RecursoMemoria>>(
     () =>
       this.memoriaService.listarRequest({
-        busqueda: this.busquedaMemoria(),
+        busqueda: this.busquedaMemoriaDebounced(),
         tipo: this.filtroTipoMemoria(),
       }),
     { defaultValue: paginaVacia<RecursoMemoria>() },
@@ -106,6 +117,14 @@ export class PerfilPage {
   });
 
   constructor() {
+    effect((onCleanup: EffectCleanupRegisterFn) => {
+      const texto = this.busquedaMemoria().trim();
+      const timer = setTimeout(() => {
+        this.busquedaMemoriaDebounced.set(texto);
+      }, 200);
+      onCleanup(() => clearTimeout(timer));
+    });
+
     const tabParam = this.route.snapshot.queryParamMap.get('tab');
     if (tabParam === 'memoria') {
       this.tabActiva.set('memoria');

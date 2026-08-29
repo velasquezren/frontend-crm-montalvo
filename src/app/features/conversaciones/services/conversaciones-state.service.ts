@@ -1,4 +1,12 @@
-import { computed, effect, inject, Injectable, linkedSignal, signal } from '@angular/core';
+import {
+  computed,
+  effect,
+  EffectCleanupRegisterFn,
+  inject,
+  Injectable,
+  linkedSignal,
+  signal,
+} from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { Router } from '@angular/router';
 
@@ -385,7 +393,7 @@ export class ConversacionesStateService {
     /* Retardo del buscador. `onCleanup` cancela el temporizador anterior en
        cada tecla, que es lo que impide una petición por pulsación y también
        una fuga si la vista muere con uno pendiente. */
-    effect(onCleanup => {
+    effect((onCleanup: EffectCleanupRegisterFn) => {
       const texto = this.busqueda();
       const id = setTimeout(() => this.busquedaDebounced.set(texto), RETARDO_BUSQUEDA_MS);
       onCleanup(() => clearTimeout(id));
