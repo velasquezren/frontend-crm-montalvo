@@ -1,5 +1,4 @@
 import {
-  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -112,11 +111,6 @@ export class FinanzasPage {
         this.visitadas.update(vistas => new Set(vistas).add(q));
       }
     });
-
-    // 3. Tras el primer pintado en pantalla (browser idle), precarga el resto de pestañas
-    afterNextRender(() => {
-      this.visitadas.set(new Set(this.tabs.map(t => t.id)));
-    });
   }
 
   private esTabValida(q: string | undefined): q is TabFinanzas {
@@ -124,7 +118,8 @@ export class FinanzasPage {
   }
 
   protected readonly estaMontada = computed(() => {
-    const vistas = this.visitadas();
+    const vistas = new Set(this.visitadas());
+    vistas.add(this.tabActiva());
     return (tab: TabFinanzas): boolean => vistas.has(tab);
   });
 
