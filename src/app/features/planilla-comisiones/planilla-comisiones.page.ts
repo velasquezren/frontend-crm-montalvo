@@ -1190,8 +1190,10 @@ export class PlanillaComisionesPage implements OnDestroy {
     const [alertas, consolidado] = await Promise.allSettled(tareas);
 
     this.alertas.set(alertas.status === 'fulfilled' ? alertas.value : null);
-    if (consolidado.status === 'fulfilled' && consolidado.value !== null) {
+    if (consolidado.status === 'fulfilled') {
       this.consolidado.set(consolidado.value);
+    } else {
+      this.consolidado.set(null);
     }
   }
 

@@ -172,12 +172,12 @@ export class DesempenoAgentesComponent implements OnDestroy {
 
   /* ── Selección ──────────────────────────────────────────────────────── */
 
-  /** El periodo elegido a mano, o el más reciente que ya esté calculado. */
+  /** El periodo elegido a mano, o el más reciente que ya esté liquidado/calculado. */
   protected readonly periodoId = computed<string | null>(() => {
     const manual = this.periodoSeleccionado();
     if (manual) return manual;
     const lista = this.periodos.value()?.datos ?? [];
-    return (lista.find(p => p.estado === 'CALCULADO') ?? lista[0])?.id ?? null;
+    return (lista.find(p => p.estado !== 'BORRADOR') ?? lista[0])?.id ?? null;
   });
 
   protected readonly periodo = computed<PeriodoComision | null>(() => {
