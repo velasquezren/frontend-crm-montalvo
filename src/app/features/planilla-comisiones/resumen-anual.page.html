@@ -60,7 +60,7 @@
   }
 </div>
 
-@if (resumen.isLoading()) {
+@if (resumen.isLoading() && resumen.value().filas.length === 0) {
   <div class="grid-kpis-modern mb-6">
     @for (n of [1,2,3,4]; track n) { <app-loading-skeleton height="100px" shape="card" /> }
   </div>
@@ -68,7 +68,7 @@
     <app-loading-skeleton shape="text" height="2rem" />
     <app-loading-skeleton shape="text" height="2rem" />
   </div>
-} @else if (resumen.error()) {
+} @else if (resumen.error() && resumen.value().filas.length === 0) {
   <app-error-carga que="el resumen anual de comisiones" (reintentar)="resumen.reload()" />
 } @else if (resumen.value().filas.length > 0) {
 

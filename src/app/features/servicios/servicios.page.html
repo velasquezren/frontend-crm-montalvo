@@ -70,13 +70,13 @@
       [hidden]="pestana() !== 'DASHBOARD'"
       class="servicios-tab-panel"
       role="tabpanel">
-  @if (dashboard.isLoading()) {
+  @if (dashboard.isLoading() && !dashboard.value()) {
     <div class="grid-kpis-modern">
       @for (n of [1, 2, 3, 4, 5]; track n) {
         <app-loading-skeleton height="100px" />
       }
     </div>
-  } @else if (dashboard.error()) {
+  } @else if (dashboard.error() && !dashboard.value()) {
     <app-empty-state
       icon="alert-circle"
       title="No se pudo cargar el resumen"

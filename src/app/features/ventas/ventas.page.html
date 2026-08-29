@@ -38,13 +38,13 @@
 
   <!-- ── Tabla de ventas (carga diferida reactiva) ────────────────── -->
   @defer (on viewport) {
-    @if (ventas.isLoading()) {
+    @if (ventas.isLoading() && ventas.value().datos.length === 0) {
       <div class="bg-white rounded-2xl shadow-subtle p-6 flex flex-col gap-4">
         @for (fila of [1, 2, 3, 4]; track fila) {
           <app-loading-skeleton shape="text" height="2.5rem" />
         }
       </div>
-    } @else if (ventas.error()) {
+    } @else if (ventas.error() && ventas.value().datos.length === 0) {
       <div class="bg-white rounded-2xl shadow-subtle">
         <app-empty-state icon="alert-circle" title="No se pudo cargar las ventas"
           description="Verifica que el servidor del CRM esté encendido e intenta de nuevo." />

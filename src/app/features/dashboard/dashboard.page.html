@@ -29,14 +29,14 @@
     </div>
   </div>
 
-  @if (kpiData.isLoading()) {
+  @if (kpiData.isLoading() && kpis().length === 0) {
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
       <app-loading-skeleton shape="card" height="120px" />
       <app-loading-skeleton shape="card" height="120px" />
       <app-loading-skeleton shape="card" height="120px" />
       <app-loading-skeleton shape="card" height="120px" />
     </div>
-  } @else if (kpiData.error()) {
+  } @else if (kpiData.error() && kpis().length === 0) {
     <app-error-carga que="los indicadores" (reintentar)="kpiData.reload()" />
   } @else {
     <!-- ── 1. KPIs Operativos y Comerciales ──────────────────────────── -->

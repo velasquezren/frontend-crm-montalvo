@@ -64,13 +64,13 @@
   }
 </div>
 
-@if (consolidado.isLoading()) {
+@if (consolidado.isLoading() && !consolidado.value()) {
   <div class="flex flex-col gap-4">
     <app-loading-skeleton height="104px" />
     <app-loading-skeleton height="196px" />
     <app-loading-skeleton height="260px" />
   </div>
-} @else if (consolidado.error()) {
+} @else if (consolidado.error() && !consolidado.value()) {
   <app-error-carga que="el desempeño de las ejecutivas" (reintentar)="consolidado.reload()" />
 } @else if (vendedora(); as v) {
   <div class="ficha">

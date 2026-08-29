@@ -41,7 +41,7 @@
 
   <!-- PESTAÑA 1: Configuración de Perfil -->
   @if (tabActiva() === 'perfil') {
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-scale">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <!-- Panel de Avatar / Foto -->
       <div class="bg-white rounded-2xl border border-border p-6 flex flex-col items-center text-center space-y-4 shadow-subtle">
         <h3 class="text-xs font-bold text-text-muted uppercase tracking-wider">Foto de Perfil</h3>
@@ -144,7 +144,7 @@
 
   <!-- PESTAÑA 2: Dashboard de Memoria Personal (30 MB) -->
   @if (tabActiva() === 'memoria') {
-    <div class="space-y-6 animate-fade-scale">
+    <div class="space-y-6">
 
       <!-- Storage Banner Card -->
       @if (cuotaMemoria.value(); as cuota) {

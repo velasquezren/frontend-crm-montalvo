@@ -60,7 +60,7 @@
     }
   </div>
 
-  @if (leads.isLoading()) {
+  @if (leads.isLoading() && leads.value().datos.length === 0) {
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       @for (col of [1, 2, 3, 4]; track col) {
         <div class="bg-white rounded-2xl border border-border p-4 flex flex-col gap-3">
@@ -70,7 +70,7 @@
         </div>
       }
     </div>
-  } @else if (leads.error()) {
+  } @else if (leads.error() && leads.value().datos.length === 0) {
     <div class="bg-white rounded-2xl border border-border p-12">
       <app-empty-state
         icon="alert-circle"

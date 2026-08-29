@@ -170,11 +170,9 @@
 @keyframes fadeInScale {
   0% {
     opacity: 0;
-    transform: scale(0.96);
   }
   100% {
     opacity: 1;
-    transform: scale(1);
   }
 }
 
@@ -190,13 +188,13 @@
 }
 
 .animate-modal-pop {
-  animation: modalPop 0.14s var(--ease-spring-smooth) forwards;
+  animation: modalPop 0.12s var(--ease-spring-smooth) forwards;
   will-change: transform, opacity;
 }
 
 .animate-fade-scale {
-  animation: fadeInScale 0.22s var(--ease-spring-smooth) forwards;
-  will-change: transform, opacity;
+  animation: fadeInScale 0.12s ease-out forwards;
+  will-change: opacity;
 }
 
 .animate-toast-slide {

@@ -60,7 +60,7 @@
        ══════════════════════════════════════════════════════════════════════ -->
   <!-- Mobile Backdrop Overlay -->
   @if (sidebarExpanded()) {
-    <div (click)="toggleSidebar($event)" class="fixed inset-0 bg-text-dark/40 z-30 md:hidden animate-fade-scale" aria-hidden="true"></div>
+    <div (click)="toggleSidebar($event)" class="fixed inset-0 bg-text-dark/40 z-30 md:hidden transition-opacity" aria-hidden="true"></div>
   }
 
   <aside class="sidebar" [class.sidebar-expanded]="sidebarExpanded()">

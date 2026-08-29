@@ -34,9 +34,9 @@
     </div>
   </div>
 
-  @if (cargando()) {
+  @if (cargando() && grupos().length === 0) {
     <app-loading-skeleton shape="text" height="3rem" />
-  } @else if (error()) {
+  } @else if (error() && grupos().length === 0) {
     <app-error-carga que="los planes del periodo" />
   } @else if (grupos().length > 0) {
     <div class="space-y-4">

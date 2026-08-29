@@ -67,7 +67,7 @@
 
 <!-- ── Tabla Principal / Skeleton / State Vacio ──────────────────────── -->
 <div class="w-full">
-  @if (clientes.isLoading()) {
+  @if (clientes.isLoading() && clientes.value().datos.length === 0) {
     <div class="bg-white rounded-2xl p-6 shadow-subtle flex flex-col gap-4">
       <app-loading-skeleton height="48px" />
       <app-loading-skeleton height="48px" />
@@ -75,7 +75,7 @@
       <app-loading-skeleton height="48px" />
       <app-loading-skeleton height="48px" />
     </div>
-  } @else if (clientes.error()) {
+  } @else if (clientes.error() && clientes.value().datos.length === 0) {
     <app-error-carga que="los clientes" (reintentar)="clientes.reload()" />
   } @else if (clientes.value().datos.length > 0) {
     <app-table>

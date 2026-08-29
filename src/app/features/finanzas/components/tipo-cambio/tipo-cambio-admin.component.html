@@ -133,13 +133,13 @@
   }
 
   <!-- ── Tabla del mes (carga / error / vacío / contenido) ─────────────── -->
-  @if (dias.isLoading()) {
+  @if (dias.isLoading() && dias.value().length === 0) {
     <div class="bg-white rounded-2xl shadow-subtle p-6 flex flex-col gap-3">
       @for (fila of [1, 2, 3, 4, 5]; track fila) {
         <app-loading-skeleton shape="text" height="2rem" />
       }
     </div>
-  } @else if (dias.error()) {
+  } @else if (dias.error() && dias.value().length === 0) {
     <div class="bg-white rounded-2xl shadow-subtle">
       <app-error-carga que="el historial de tipo de cambio" (reintentar)="dias.reload()" />
     </div>

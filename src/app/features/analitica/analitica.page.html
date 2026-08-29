@@ -40,11 +40,11 @@
   }
 </div>
 
-@if (analitica.isLoading()) {
+@if (analitica.isLoading() && !analitica.value()) {
   <div class="grid-kpis-modern">
     @for (n of [1,2,3,4,5,6]; track n) { <app-loading-skeleton height="100px" /> }
   </div>
-} @else if (analitica.error()) {
+} @else if (analitica.error() && !analitica.value()) {
   <app-error-carga que="el informe" (reintentar)="analitica.reload()" />
 } @else if (!hayDatos()) {
   <app-empty-state icon="bar-chart" title="Sin datos para este mes"
