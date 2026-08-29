@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { DecimalPipe } from '@angular/common';
 
+import { RespuestaPaginada } from '../../core/api/pagination.model';
 import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { InfoHintComponent } from '../../shared/components/info-hint/info-hint.component';
@@ -14,7 +15,7 @@ import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.comp
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { BarChartComponent, ChartItem } from '../../shared/components/charts/bar-chart.component';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
-import { FilaAnual, MESES_CORTOS, MesVendedora, ResumenAnual, TrimestreVendedora } from './planilla.model';
+import { FilaAnual, MESES_CORTOS, MesVendedora, PeriodoComision, ResumenAnual, TrimestreVendedora } from './planilla.model';
 import { PlanillaComisionesService } from './planilla-comisiones.service';
 
 /** Cuántos años atrás se puede mirar desde el selector. */
@@ -71,10 +72,17 @@ export class ResumenAnualPage {
   /** IDs de vendedoras cuyos detalles trimestrales están desplegados. */
   protected readonly vendedorasExpandidas = signal<Set<string>>(new Set());
 
-  /** Años ofrecidos en el selector, del actual hacia atrás. */
+  protected readonly periodos = httpResource<RespuestaPaginada<PeriodoComision>>(() =>
+    this.planillaService.periodosRequest(),
+  );
+
+  /** Años ofrecidos en el selector, combinando los predeterminados con los que existen en la BD. */
   protected readonly anios = computed(() => {
     const actual = new Date().getFullYear();
-    return Array.from({ length: ANIOS_HACIA_ATRAS + 1 }, (_, i) => actual - i);
+    const defaults = Array.from({ length: ANIOS_HACIA_ATRAS + 1 }, (_, i) => actual - i);
+    const desdePeriodos = (this.periodos.value()?.datos ?? []).map(p => p.anio);
+    const set = new Set([...defaults, ...desdePeriodos]);
+    return [...set].sort((a, b) => b - a);
   });
 
   protected readonly resumen = httpResource<ResumenAnual>(
@@ -89,6 +97,21 @@ export class ResumenAnualPage {
       },
     },
   );
+
+  constructor() {
+    // Si el año inicial (ej. actual) no tiene periodos pero la BD sí tiene años previos con datos, selecciona el año más reciente con datos
+    effect(() => {
+      const lista = this.periodos.value()?.datos ?? [];
+      if (lista.length > 0) {
+        const aniosConDatos = [...new Set(lista.map(p => p.anio))].sort((a, b) => b - a);
+        const anioActual = this.anio();
+        const tieneEnActual = lista.some(p => p.anio === anioActual);
+        if (!tieneEnActual && aniosConDatos[0] !== undefined) {
+          this.anio.set(aniosConDatos[0]);
+        }
+      }
+    });
+  }
 
   /**
    * TC para cifras que suman varios meses (total anual, un trimestre): no

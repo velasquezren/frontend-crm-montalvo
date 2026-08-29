@@ -24,39 +24,41 @@
   </div>
 
   @if (resumen.value(); as res) {
-    <div class="flex items-center gap-2 flex-wrap">
-      <span class="pill-meta">{{ mesesConDatos() }} de 12 meses importados</span>
-      <span class="pill-meta">{{ res.filas.length }} vendedoras</span>
-      <!-- La matriz anual es un informe: las dadas de baja no se listan. Pero la
-           ausencia se declara, y con nombres — si no, el año pasado y este no
-           cuadran entre sí y no hay forma de saber por qué. -->
-      @if (res.ocultas.length > 0) {
-        <span class="pill-meta inline-flex items-center gap-1">
-          <app-icon name="eye-off" [size]="12" />
-          {{ res.ocultas.length }} dada{{ res.ocultas.length === 1 ? '' : 's' }} de baja, sin listar
-          <app-info-hint titulo="Vendedoras dadas de baja">
-            <p>
-              @for (v of res.ocultas; track v.vendedoraId) {
-                <strong>{{ v.nombre }}</strong>{{ $last ? '' : ', ' }}
-              }
-              ya no {{ res.ocultas.length === 1 ? 'trabaja' : 'trabajan' }} en la clínica, así que
-              no {{ res.ocultas.length === 1 ? 'aparece' : 'aparecen' }} en esta matriz.
-            </p>
-            <p>
-              <strong>No se ha borrado nada.</strong> Sus meses siguen guardados: se ven en la
-              liquidación del mes marcando «mostrarlas», y en su ficha de desempeño.
-            </p>
-            <p>
-              Se da de baja y se reincorpora desde <strong>Liquidación → Configuración →
-              Vendedoras</strong>.
-            </p>
-          </app-info-hint>
+    @if (!resumen.isLoading() && res.filas.length > 0) {
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="pill-meta">{{ mesesConDatos() }} de 12 meses importados</span>
+        <span class="pill-meta">{{ res.filas.length }} vendedoras</span>
+        <!-- La matriz anual es un informe: las dadas de baja no se listan. Pero la
+             ausencia se declara, y con nombres — si no, el año pasado y este no
+             cuadran entre sí y no hay forma de saber por qué. -->
+        @if (res.ocultas.length > 0) {
+          <span class="pill-meta inline-flex items-center gap-1">
+            <app-icon name="eye-off" [size]="12" />
+            {{ res.ocultas.length }} dada{{ res.ocultas.length === 1 ? '' : 's' }} de baja, sin listar
+            <app-info-hint titulo="Vendedoras dadas de baja">
+              <p>
+                @for (v of res.ocultas; track v.vendedoraId) {
+                  <strong>{{ v.nombre }}</strong>{{ $last ? '' : ', ' }}
+                }
+                ya no {{ res.ocultas.length === 1 ? 'trabaja' : 'trabajan' }} en la clínica, así que
+                no {{ res.ocultas.length === 1 ? 'aparece' : 'aparecen' }} en esta matriz.
+              </p>
+              <p>
+                <strong>No se ha borrado nada.</strong> Sus meses siguen guardados: se ven en la
+                liquidación del mes marcando «mostrarlas», y en su ficha de desempeño.
+              </p>
+              <p>
+                Se da de baja y se reincorpora desde <strong>Liquidación → Configuración →
+                Vendedoras</strong>.
+              </p>
+            </app-info-hint>
+          </span>
+        }
+        <span class="pill-meta bg-primary/10 text-primary font-bold border-primary/20">
+          {{ totalAnual() | moneda: 'USD': tcReferencia() }}
         </span>
-      }
-      <span class="pill-meta bg-primary/10 text-primary font-bold border-primary/20">
-        {{ totalAnual() | moneda: 'USD': tcReferencia() }}
-      </span>
-    </div>
+      </div>
+    }
   }
 </div>
 
