@@ -25,15 +25,26 @@
     }
   </div>
 
-  <!-- ── Filtro por estado ────────────────────────────────────────── -->
-  <div class="flex flex-wrap items-center gap-2">
-    @for (opcion of filtros; track opcion) {
-      <app-filter-chip
-        [active]="filtro() === opcion"
-        (clicked)="cambiarFiltro(opcion)">
-        {{ opcion === 'TODAS' ? 'Todas' : estadoLabel[opcion] }}
-      </app-filter-chip>
-    }
+  <!-- ── Barra de herramientas: Búsqueda y Filtro por estado ──────── -->
+  <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+    <!-- Búsqueda con debounce (200ms) -->
+    <div class="w-full sm:w-80">
+      <app-input
+        placeholder="Buscar paciente, teléfono, servicio o médico…"
+        icon="search"
+        [(value)]="busqueda" />
+    </div>
+
+    <!-- Filtro por estado -->
+    <div class="flex flex-wrap items-center gap-2">
+      @for (opcion of filtros; track opcion) {
+        <app-filter-chip
+          [active]="filtro() === opcion"
+          (clicked)="cambiarFiltro(opcion)">
+          {{ opcion === 'TODAS' ? 'Todas' : estadoLabel[opcion] }}
+        </app-filter-chip>
+      }
+    </div>
   </div>
 
   <!-- ── Tabla de ventas (carga diferida reactiva) ────────────────── -->
@@ -182,8 +193,15 @@
         (cambiar)="pagina.set($event)" />
     } @else {
       <div class="bg-white rounded-2xl shadow-subtle">
-        <app-empty-state icon="shopping-bag" title="Sin ventas en este estado"
-          description="Registra un cierre con el botón «Registrar venta»." />
+        @if (busqueda()) {
+          <app-empty-state icon="search" title="Sin coincidencias"
+            [description]="'No se encontraron ventas para «' + busqueda() + '».'">
+            <app-button variant="ghost" size="sm" icon="x" (clicked)="busqueda.set('')">Limpiar búsqueda</app-button>
+          </app-empty-state>
+        } @else {
+          <app-empty-state icon="shopping-bag" title="Sin ventas en este estado"
+            description="Registra un cierre con el botón «Registrar venta»." />
+        }
       </div>
     }
   } @placeholder {

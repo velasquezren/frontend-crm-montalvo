@@ -4,6 +4,7 @@ import {
   Component,
   computed,
   effect,
+  EffectCleanupRegisterFn,
   inject,
   OnDestroy,
   signal,
@@ -120,6 +121,8 @@ export class VentasPage implements OnDestroy {
   protected readonly filtros: readonly FiltroVenta[] = ['TODAS', 'GANADA', 'EN_PROCESO', 'PERDIDA'];
 
   protected readonly pagina = signal(1);
+  protected readonly busqueda = signal('');
+  private readonly busquedaDebounced = signal('');
 
   protected readonly ventas = httpResource<RespuestaPaginada<Venta>>(
     () => {
@@ -127,6 +130,8 @@ export class VentasPage implements OnDestroy {
       return this.ventasService.listarRequest(
         filtro === 'TODAS' ? undefined : filtro,
         this.pagina(),
+        25,
+        this.busquedaDebounced(),
       );
     },
     { defaultValue: paginaVacia<Venta>() },
@@ -170,6 +175,15 @@ export class VentasPage implements OnDestroy {
   protected readonly lightboxNombre = signal<string | null>(null);
 
   constructor() {
+    effect((onCleanup: EffectCleanupRegisterFn) => {
+      const texto = this.busqueda().trim();
+      const timer = setTimeout(() => {
+        this.busquedaDebounced.set(texto);
+        this.pagina.set(1);
+      }, 200);
+      onCleanup(() => clearTimeout(timer));
+    });
+
     effect(() => {
       const qp = this.route.snapshot.queryParams;
       const clienteId = qp['clienteId'];

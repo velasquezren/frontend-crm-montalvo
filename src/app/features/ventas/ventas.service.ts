@@ -39,8 +39,13 @@ export interface ComprobanteSubido {
 export class VentasService {
   private readonly api = inject(ApiService);
 
-  listarRequest(estado?: EstadoVenta, pagina?: number, limite?: number): ResourceRequest {
-    return this.api.request('/ventas', { estado, pagina, limite });
+  listarRequest(estado?: EstadoVenta, pagina?: number, limite?: number, q?: string): ResourceRequest {
+    return this.api.request('/ventas', {
+      q: q?.trim() || undefined,
+      estado,
+      pagina,
+      limite,
+    });
   }
 
   /**
