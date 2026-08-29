@@ -43,6 +43,17 @@
         (clicked)="descargarExcel()">
         Descargar Excel
       </app-button>
+      <!-- El PDF no es el Excel en otro formato: es el informe de una página
+           que se imprime y se firma. Va al lado porque se descargan en el
+           mismo momento y para lo mismo — cerrar el mes. -->
+      <app-button
+        variant="ghost"
+        size="sm"
+        icon="file-text"
+        [loading]="descargandoPdf()"
+        (clicked)="descargarPdf()">
+        Informe PDF
+      </app-button>
       <!-- El Excel sale con lo mismo que hay en pantalla, así que cuando el
            informe lleva a las dadas de baja hay que decirlo aquí: es el archivo
            que se imprime y se firma, y esa diferencia no se ve al abrirlo. -->

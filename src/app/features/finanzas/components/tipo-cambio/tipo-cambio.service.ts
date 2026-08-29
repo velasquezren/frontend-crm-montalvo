@@ -1,7 +1,22 @@
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../../../core/api/api.service';
-import { FuenteTipoCambio } from '../../../../core/api/db-enums';
+import { FuenteTipoCambio, ModoTipoCambio } from '../../../../core/api/db-enums';
+
+/**
+ * El criterio con el que TODO el CRM convierte entre Bs y dólares.
+ *
+ * `FIJO` = la clínica opera a un valor pactado (6,97), que es como se liquidan
+ * las comisiones. `AUTOMATICO` = sigue la serie diaria del BCB. La serie se
+ * guarda igual en los dos modos: cambiar a fijo no apaga la recolección.
+ */
+export interface ConfiguracionTipoCambio {
+  readonly modo: ModoTipoCambio;
+  readonly valorFijo: number;
+  /** El último oficial registrado, se use o no — para poder compararlos. */
+  readonly oficialDelDia: number | null;
+  readonly actualizadoEn: string | null;
+}
 
 /** Un día de la serie histórica. `valor` llega como texto: Prisma serializa Decimal así. */
 export interface DiaTipoCambio {
@@ -9,6 +24,8 @@ export interface DiaTipoCambio {
   readonly valor: string;
   readonly fuente: FuenteTipoCambio;
 }
+
+export type { ModoTipoCambio };
 
 export type MotivoSincronizacion =
   | 'ok'
@@ -36,6 +53,18 @@ export class TipoCambioAdminService {
 
   historialRequest(anio: number, mes: number): ResourceRequest {
     return this.api.request('/tipo-cambio/historial', { anio, mes });
+  }
+
+  configuracionRequest(): ResourceRequest {
+    return this.api.request('/tipo-cambio/configuracion');
+  }
+
+  /** Cambia el criterio de conversión de todo el CRM. Solo SUPER_ADMIN. */
+  guardarConfiguracion(datos: {
+    modo?: ModoTipoCambio;
+    valorFijo?: number;
+  }): Promise<ConfiguracionTipoCambio> {
+    return this.api.patch<ConfiguracionTipoCambio>('/tipo-cambio/configuracion', datos);
   }
 
   corregir(fecha: string, valor: number): Promise<DiaTipoCambio> {

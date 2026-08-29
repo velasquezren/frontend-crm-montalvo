@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
-import { MonedaService, MonedaVisualizacion } from '../../../core/moneda/moneda.service';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { formatearNumero, MonedaService, MonedaVisualizacion } from '../../../core/moneda/moneda.service';
 
 /**
  * Componente atómico de selector de moneda (Bs / $us).
@@ -42,7 +42,7 @@ import { MonedaService, MonedaVisualizacion } from '../../../core/moneda/moneda.
         [class.text-text-muted]="!monedaService.esUsd()"
         [class.hover:text-text-dark]="!monedaService.esUsd()"
         [class.hover:bg-white/60]="!monedaService.esUsd()"
-        title="Visualizar montos en Dólares ($us)">
+        [title]="tituloUsd()">
         <span>$us</span>
         @if (mostrarDetalle()) {
           <span class="text-[10px] font-normal opacity-80">(USD)</span>
@@ -56,6 +56,21 @@ export class MonedaToggleComponent {
 
   readonly size = input<'sm' | 'md'>('sm');
   readonly mostrarDetalle = input<boolean>(false);
+
+  /**
+   * Con qué se convierte, en el tooltip del botón de dólares.
+   *
+   * El toggle solo decía "Visualizar montos en Dólares", y con qué tasa era
+   * invisible — justo el dato que hace falta para no confundir un monto
+   * convertido al valor pactado de la clínica con uno convertido al oficial
+   * del día, que en agosto de 2026 se diferencian en un 71 %.
+   */
+  protected readonly tituloUsd = computed(() => {
+    const tc = formatearNumero(this.monedaService.tipoCambio());
+    return this.monedaService.esTipoCambioFijo()
+      ? `Visualizar montos en Dólares ($us) — convertido a Bs ${tc} (tipo de cambio fijo de la clínica)`
+      : `Visualizar montos en Dólares ($us) — convertido a Bs ${tc}`;
+  });
 
   protected cambiarMoneda(moneda: MonedaVisualizacion): void {
     this.monedaService.setMoneda(moneda);

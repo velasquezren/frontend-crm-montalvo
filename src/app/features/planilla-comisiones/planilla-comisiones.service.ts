@@ -191,6 +191,28 @@ export class PlanillaComisionesService {
     );
   }
 
+  /**
+   * El informe del mes en PDF: el documento que se imprime y se firma.
+   *
+   * No es "el Excel en otro formato". El Excel trae las 20 columnas y una hoja
+   * por vendedora para auditar cómo se llegó a cada cifra; el PDF responde otra
+   * pregunta —cuánto se le paga a cada quien— en una página, con las tres
+   * firmas. `Elaborado` y `Revisado` los rellena el backend con el usuario de
+   * la sesión, así que acá no hay nada que mandarle.
+   */
+  descargarPdf(
+    periodoId: string,
+    anio: number,
+    mes: number,
+    incluirOcultas = false,
+  ): Promise<{ blob: Blob; nombre: string }> {
+    return this.api.getBlob(
+      `/planilla-comisiones/periodos/${periodoId}/exportar-pdf`,
+      { incluirOcultas: incluirOcultas ? true : undefined },
+      `informe-comisiones-${anio}-${String(mes).padStart(2, '0')}.pdf`,
+    );
+  }
+
   ajustarVenta(ventaId: string, ajuste: AjusteVenta): Promise<unknown> {
     return this.api.patch(`/planilla-comisiones/ventas/${ventaId}`, ajuste);
   }

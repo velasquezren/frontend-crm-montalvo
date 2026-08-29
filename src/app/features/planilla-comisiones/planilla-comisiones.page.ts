@@ -1178,6 +1178,36 @@ export class PlanillaComisionesPage implements OnDestroy {
    * abrir cada mes para descargar el suyo; ahora se puede desde el
    * histórico directamente.
    */
+  protected readonly descargandoPdf = signal(false);
+
+  /**
+   * El informe firmable del periodo activo.
+   *
+   * Respeta el mismo interruptor de "incluir dadas de baja" que el Excel y la
+   * pantalla: lo que se ve es lo que se imprime. Un PDF que no coincidiera con
+   * la tabla de arriba sería peor que no tenerlo, porque es el que se archiva.
+   */
+  protected async descargarPdf(): Promise<void> {
+    const periodo = this.periodoActual();
+    if (!periodo || this.descargandoPdf()) return;
+
+    this.descargandoPdf.set(true);
+    try {
+      const { blob, nombre } = await this.service.descargarPdf(
+        periodo.id,
+        periodo.anio,
+        periodo.mes,
+        this.incluirOcultas(),
+      );
+      descargarArchivo(blob, nombre);
+      this.toast.success(`${nombre} descargado.`, 'Informe listo');
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo generar el informe PDF.'), 'Error');
+    } finally {
+      this.descargandoPdf.set(false);
+    }
+  }
+
   protected async descargarExcelDe(periodo: PeriodoComision): Promise<void> {
     if (this.descargandoExcel()) return;
 

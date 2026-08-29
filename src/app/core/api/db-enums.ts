@@ -65,4 +65,6 @@ export type AreaVendedora = 'EJECUTIVA' | 'RA' | 'PUBLICIDAD';
 
 export type EstadoPeriodo = 'BORRADOR' | 'CALCULADO' | 'EN_REVISION' | 'CERRADO' | 'PAGADO';
 
+export type ModoTipoCambio = 'FIJO' | 'AUTOMATICO';
+
 export type FuenteTipoCambio = 'AUTOMATICO' | 'MANUAL';

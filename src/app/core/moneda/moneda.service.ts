@@ -40,7 +40,8 @@ export function formatearNumero(valor: number): string {
 interface TipoCambioVigente {
   tipoCambio: number;
   fecha: string | null;
-  fuente: 'AUTOMATICO' | 'MANUAL' | 'RESPALDO';
+  /** `FIJO` = la clínica opera a un valor pactado, no al oficial del día. */
+  fuente: 'AUTOMATICO' | 'MANUAL' | 'RESPALDO' | 'FIJO';
 }
 
 /**
@@ -55,14 +56,26 @@ export class MonedaService {
   private readonly _moneda = signal<MonedaVisualizacion>(this.cargarMonedaInicial());
   private readonly _tipoCambio = signal<number>(TIPO_CAMBIO_DE_RESPALDO);
   private readonly _tipoCambioGlobal = signal<number>(TIPO_CAMBIO_DE_RESPALDO);
-  private readonly _fuente = signal<'backend' | 'respaldo'>('respaldo');
+  private readonly _fuente = signal<'backend' | 'respaldo' | 'fijo'>('respaldo');
 
   /** Moneda activa actualmente: 'BOB' (Bolivianos) o 'USD' (Dólares). */
   readonly moneda = this._moneda.asReadonly();
   /** Tipo de cambio con el que se convierte ahora mismo. */
   readonly tipoCambio = this._tipoCambio.asReadonly();
-  /** 'respaldo' mientras el backend no haya contestado. Para poder avisarlo. */
+  /**
+   * De dónde salió el TC que se está usando.
+   *
+   * - `backend`: el oficial del día (serie del BCB o corregido a mano).
+   * - `fijo`: el valor pactado con el que opera la clínica. **No es un
+   *   respaldo ni un fallo** — es la configuración elegida, y por eso se
+   *   distingue: avisar de "no se pudo cargar" sobre un valor correcto es
+   *   ruido que enseña a ignorar el aviso de cuando sí falla.
+   * - `respaldo`: el backend no contestó.
+   */
   readonly fuente = this._fuente.asReadonly();
+
+  /** true = se convierte con el valor pactado de la clínica, no con el oficial. */
+  readonly esTipoCambioFijo = computed(() => this._fuente() === 'fijo');
 
   /** True si la visualización activa es en Bolivianos. */
   readonly esBob = computed(() => this._moneda() === 'BOB');
@@ -97,7 +110,9 @@ export class MonedaService {
       if (!(vigente?.tipoCambio > 0)) return;
 
       this._tipoCambioGlobal.set(vigente.tipoCambio);
-      this._fuente.set(vigente.fuente === 'RESPALDO' ? 'respaldo' : 'backend');
+      this._fuente.set(
+        vigente.fuente === 'RESPALDO' ? 'respaldo' : vigente.fuente === 'FIJO' ? 'fijo' : 'backend',
+      );
       this._tipoCambio.set(vigente.tipoCambio);
     } catch {
       /* Sin sesión todavía, o backend caído: se sigue con el de respaldo. */

@@ -1,5 +1,86 @@
 <div class="flex flex-col gap-6">
 
+  <!-- ── Criterio de conversión ────────────────────────────────────────────
+       Va lo PRIMERO porque decide para qué sirve todo lo de abajo: con el modo
+       fijo, la serie diaria se sigue registrando pero no gobierna ninguna
+       conversión de la app. Sin este panel arriba, la pantalla parecería estar
+       administrando el número que se usa, y no es así. -->
+  @if (configuracion.isLoading() && !configuracion.value()) {
+    <app-loading-skeleton height="110px" shape="card" />
+  } @else if (configuracion.error()) {
+    <app-error-carga que="el criterio de tipo de cambio" (reintentar)="configuracion.reload()" />
+  } @else if (configuracion.value(); as config) {
+    <section class="bg-white rounded-2xl shadow-subtle p-5 border border-primary/20">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div class="min-w-0">
+          <h3 class="text-sm font-bold text-text-dark flex items-center gap-2">
+            Criterio de conversión Bs / $us
+            <app-badge [variant]="esFijo() ? 'success' : 'info'">
+              {{ esFijo() ? 'Fijo' : 'Oficial del día' }}
+            </app-badge>
+          </h3>
+          <p class="text-xs text-text-muted mt-1 max-w-xl">
+            @if (esFijo()) {
+              Todo el CRM convierte a <strong>Bs {{ config.valorFijo }}</strong>, el valor con el
+              que opera la clínica y con el que se liquidan las comisiones. El oficial se sigue
+              registrando abajo, pero no se usa para convertir.
+            } @else {
+              Todo el CRM convierte con el <strong>último oficial registrado</strong>. Ojo: las
+              comisiones se liquidan al valor pactado, así que las cifras en Bs de fuera de una
+              liquidación pueden no coincidir con lo que se pagó.
+            }
+          </p>
+
+          <!-- La diferencia, en números. Es el dato que explica por qué existe
+               este interruptor y por qué conviene mirarlo antes de cambiarlo. -->
+          @if (desvioOficial(); as desvio) {
+            <p class="text-xs text-text-muted mt-1.5">
+              Hoy el oficial está en <strong>Bs {{ config.oficialDelDia }}</strong>
+              — un {{ desvio > 0 ? '+' : '' }}{{ desvio }}% respecto del valor pactado.
+            </p>
+          }
+        </div>
+
+        @if (esSuperAdmin()) {
+          <div class="flex flex-col items-end gap-2 shrink-0">
+            <div class="flex items-center gap-1.5" role="group" aria-label="Criterio de conversión">
+              <app-filter-chip
+                size="sm"
+                [active]="esFijo()"
+                (clicked)="cambiarModo('FIJO')">
+                Fijo
+              </app-filter-chip>
+              <app-filter-chip
+                size="sm"
+                [active]="!esFijo()"
+                (clicked)="cambiarModo('AUTOMATICO')">
+                Oficial del día
+              </app-filter-chip>
+            </div>
+
+            @if (esFijo()) {
+              <div class="flex items-end gap-2">
+                <app-input
+                  label="Valor pactado (Bs por $us)"
+                  type="number"
+                  [placeholder]="config.valorFijo + ''"
+                  [(value)]="valorFijoEditado" />
+                <app-button
+                  size="sm"
+                  variant="secondary"
+                  [loading]="guardandoModo()"
+                  [disabled]="valorFijoEditado().trim().length === 0"
+                  (clicked)="guardarValorFijo()">
+                  Guardar
+                </app-button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  }
+
   <!-- ── Cabecera: navegación de mes + sincronizar ────────────────────── -->
   <div class="flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-2">

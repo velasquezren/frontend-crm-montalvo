@@ -152,6 +152,42 @@ La magnitud no es cosmética: enero de 2026 se liquidó a **6,97** y el vigente 
 agosto ronda **10**. Convertir enero con el TC de agosto da ~40 % de error, en
 una pantalla de remuneración que las ejecutivas leen para saber cuánto cobran.
 
+### Antes que nada: el CRM opera a un tipo de cambio FIJO
+
+`ConfiguracionTipoCambio` (fila única, módulo `tipo-cambio`) decide con qué
+convierte **todo** el CRM:
+
+| Modo | `GET /tipo-cambio/vigente` devuelve |
+|---|---|
+| `FIJO` (por defecto, 6,97) | el valor pactado con el que opera la clínica |
+| `AUTOMATICO` | el último de la serie diaria del BCB |
+
+Está en FIJO porque **así se liquidan las comisiones**: los seis periodos de
+2026 se calcularon a 6,97 y así viene el `tc` del Excel de FileMaker. El TCO
+oficial se despegó —11,92 el 29/8/2026, un **+71 %**— y mientras `vigente()`
+devolvía la serie diaria, el selector Bs/$us convertía toda la app con un número
+que no se corresponde con ninguna cifra pagada.
+
+Tres cosas que conviene no deshacer:
+
+- **La serie se sigue recolectando en modo FIJO.** No se apaga el
+  sincronizador: cambiar de modo es un clic desde la pantalla, sin desplegar,
+  para el día que la clínica pase a operar al oficial. Por eso es una tabla y
+  no una variable de entorno.
+- **Cambiar el modo NO reescribe nada.** Cada liquidación guarda su
+  `PeriodoComision.tipoCambio` y las vistas de un periodo lo siguen usando —
+  todo lo de abajo sobre el pineo sigue vigente y es lo que protege el
+  histórico el día que se vuelva a AUTOMATICO.
+- **`fuente: 'FIJO'` se declara, no se disfraza de oficial.** `MonedaService`
+  lo distingue de `respaldo`: avisar de "no se pudo cargar" sobre un valor
+  correcto enseña a ignorar el aviso de cuando sí falla.
+
+**Al importar, el Excel dejó de mandar sobre el TC** (`resolverTipoCambio()`):
+en modo FIJO el periodo se liquida con el valor configurado y solo se registra
+un `warn` si el archivo traía otro. El `tc` de FileMaker es una celda que
+alguien teclea cada mes, y de ahí salía el número por el que se multiplica todo
+lo que se paga — un dedazo ahí no da error, da una planilla entera mal.
+
 ### Los dos mecanismos, y cuándo va cada uno
 
 **1. Vista de UN periodo → pinear el TC de ese periodo.** `setTipoCambio(tc)` al
@@ -362,8 +398,78 @@ Y como "no hay nadie a quien pagarle" es un estado silencioso, hay dos señales:
 un `warn` en el cálculo cuando el pote queda sin repartir, y un aviso en el
 directorio de vendedoras cuando no hay nadie en el área.
 
+### En el Excel va en un bloque aparte
+
+La hoja "Liquidación" se parte en dos: la tabla de ventas con su
+`TOTAL EQUIPO DE VENTAS`, el bloque `EQUIPO DE MARKETING` debajo con su
+`TOTAL MARKETING`, y un `TOTAL GENERAL A PAGAR` que junta los dos. No es
+estética: la fila de marketing tiene 14 de 20 columnas en cero y mezclada entre
+las ejecutivas obliga a leer fila por fila para entender por qué. La planilla de
+administración ya lo resuelve así.
+
+Tres detalles que no son adorno:
+
+- **Mismas columnas, no una tabla suelta**: así "Bonos", "Sueldo base" y
+  "A PAGAR" siguen alineadas de arriba abajo para toda la planilla.
+- **Las columnas que no aplican van VACÍAS, no en `$ 0,00`** — en las filas y
+  también en el subtotal. Un cero dice "vendió y no llegó"; el hueco dice "esto
+  no le corresponde", que es lo cierto.
+- **Cada pie suma las filas que tiene encima** (`sumarFilas()`), no
+  `consolidado.totales`: ese número es del periodo entero y con la hoja partida
+  serviría para el total general y para ninguno de los dos subtotales.
+
+Marketing tampoco entra en la hoja "Tipo A (RA)" (no tiene ingreso de ese cubo)
+ni recibe hoja individual (saldría vacía). Y si no hay nadie en marketing, la
+hoja no cambia de vocabulario: el pie se sigue llamando `TOTALES`.
+
+De paso se arregló que la fila de totales dejaba en blanco la columna "Sueldo
+base" mientras "A PAGAR" sí incluía los sueldos: el pie de la única hoja que se
+firma no cuadraba a ojo.
+
 Pruebas: `marketing-bono.spec.ts`, que reconstruye el pote de diciembre desde
-los excedentes reales y fija los 33,35 USD por persona.
+los excedentes reales y fija los 33,35 USD por persona, y el bloque `equipo de
+marketing` de `exportacion-ocultas.spec.ts`, que lo comprueba sobre el .xlsx
+generado de verdad.
+
+## 8c. El informe PDF: el documento que se firma
+
+`GET /periodos/:id/exportar-pdf`. **No es el Excel en otro formato** — el Excel
+sirve para auditar (20 columnas, hoja por vendedora, cada venta), el PDF para
+pagar (13 columnas, una página, tres firmas).
+
+**PDFKit, nunca Puppeteer.** `crm_backend.service` corre con `MemoryMax=400M`
+sobre un VPS de 1,7 GB compartido: un Chrome headless pide más que eso él solo,
+y pasarse del techo no degrada el servicio, systemd lo mata. PDFKit es JS puro,
+dibuja sobre el stream de la respuesta y usa las Helvetica incrustadas en el
+estándar PDF —sin archivos de fuente que desplegar, y su WinAnsi cubre acentos
+y eñes—.
+
+La lógica vive en `informe-pdf.ts` (puro: qué fila va en qué bloque, cuánto suma
+cada pie, quién firma) y el dibujo en `exportacion-pdf.service.ts`. Separados
+para poder probar las reglas sin generar un PDF.
+
+Cuatro decisiones que no son estéticas:
+
+- **Se quitan 7 columnas** (Tipo, Área, Planes, Cumple objetivo, Cirugías
+  acumuladas, los dos niveles): todas explican *cómo se llegó* a la cifra, y en
+  papel cada columna de más obliga a bajar el cuerpo de letra.
+- **`Elaborado` y `Revisado` salen del usuario de la sesión**; `Autorizado` es
+  fijo (`AUTORIZA_PLANILLA`). Sin usuario la línea queda **en blanco** para
+  firmar a mano: poner "Sistema" sería atribuir una revisión que nadie hizo.
+- **Cabecera con el estado del periodo**, y `PRELIMINAR` si no está
+  CERRADO/PAGADO. Sin eso el informe de un borrador sale idéntico al definitivo
+  y las cifras de un mes sin cerrar todavía pueden cambiar.
+- **`formatearNumero()` a mano, no `Intl`.** Si el proceso arrancara sin ICU
+  completo, `Intl` cae a `en-US` en silencio y la planilla sale con los
+  separadores cambiados —`1,396.62` por `1.396,62`—, que en un documento de
+  pagos se lee como otra cifra.
+
+**Trampa de PDFKit**: escribir texto por debajo del margen inferior hace que
+abra una página nueva él solo. La primera versión ponía la aclaración del tipo
+de cambio al pie y el informe salía **siempre** con una segunda hoja en blanco
+—sin fallar, con el contenido correcto—. Por eso la aclaración va encima de las
+firmas y `informe-pdf.spec.ts` fija que la planilla del equipo cabe en UNA
+página (leyendo el `/Count` del nodo `/Pages`).
 
 ## 9. Vendedoras dadas de baja: se oculta la persona, nunca el dinero
 
