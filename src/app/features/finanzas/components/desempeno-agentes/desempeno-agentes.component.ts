@@ -90,6 +90,17 @@ export class DesempenoAgentesComponent implements OnDestroy {
   /** Oculta su propio `<app-page-header>` cuando vive dentro del hub de Finanzas. */
   readonly embedded = input(false);
 
+  /**
+   * Si esta ficha es la pestaña que el usuario está mirando ahora mismo.
+   *
+   * Mismo motivo que en `planilla-comisiones.page.ts`: las dos pantallas fijan
+   * el TC de su periodo en el `MonedaService`, que es global, y en el hub están
+   * montadas a la vez. Sin este interruptor, pasar el cursor por esta pestaña
+   * —que ya la monta— le cambiaba las cifras en bolivianos a la pestaña que se
+   * estaba mirando.
+   */
+  readonly activo = input(true);
+
   private readonly service = inject(PlanillaComisionesService);
   private readonly monedaService = inject(MonedaService);
 
@@ -106,6 +117,7 @@ export class DesempenoAgentesComponent implements OnDestroy {
    */
   constructor() {
     effect(() => {
+      if (!this.activo()) return;
       const tc = Number(this.periodo()?.tipoCambio);
       if (tc > 0) this.monedaService.setTipoCambio(tc);
     });

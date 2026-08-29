@@ -31,18 +31,30 @@
   </header>
 
   <!-- ── Vistas: se montan al visitarlas y se quedan montadas ──────────
-       `@if` decide si el componente EXISTE (y por tanto si pide datos);
-       `[hidden]` decide si se ve. Antes solo estaba el `[hidden]`, así que las
-       cuatro pantallas pedían sus datos al entrar aunque se mirase una. -->
+       `@if` decide si el componente EXISTE (y por tanto si pide datos); la
+       clase `--oculto` decide si se ve. Antes solo estaba el `@if`, así que las
+       cuatro pantallas pedían sus datos al entrar aunque se mirase una.
+
+       **No se usa `[hidden]` (o sea `display: none`) a propósito**: sacar del
+       renderizado un panel ya montado obliga al navegador a rehacerle el
+       layout entero al volver, reinicia las animaciones CSS de dentro (las
+       porciones de las donas de Analítica se redibujaban desde cero en cada
+       visita), pierde el scroll horizontal de la matriz de doce meses y hace
+       que un `@defer (on viewport)` se dispare justo al mostrar la pestaña.
+       Eso es el parpadeo. Con `visibility: hidden` fuera de flujo el panel
+       conserva su layout y su estado de pintado, así que volver a él no
+       redibuja nada — y sigue fuera del árbol de accesibilidad y del orden de
+       tabulación, que es lo que daba `hidden`. -->
   <main class="finanzas-cuerpo">
     @if (estaMontada()('liquidacion')) {
       <div
         id="panel-liquidacion"
         aria-labelledby="tab-liquidacion"
-        [hidden]="tabActiva() !== 'liquidacion'"
         class="finanzas-tab-panel"
+        [class.finanzas-tab-panel--oculto]="tabActiva() !== 'liquidacion'"
+        [attr.inert]="tabActiva() === 'liquidacion' ? null : ''"
         role="tabpanel">
-        <app-planilla-comisiones [embedded]="true" />
+        <app-planilla-comisiones [embedded]="true" [activo]="tabActiva() === 'liquidacion'" />
       </div>
     }
 
@@ -50,10 +62,11 @@
       <div
         id="panel-agentes"
         aria-labelledby="tab-agentes"
-        [hidden]="tabActiva() !== 'agentes'"
         class="finanzas-tab-panel"
+        [class.finanzas-tab-panel--oculto]="tabActiva() !== 'agentes'"
+        [attr.inert]="tabActiva() === 'agentes' ? null : ''"
         role="tabpanel">
-        <app-desempeno-agentes [embedded]="true" />
+        <app-desempeno-agentes [embedded]="true" [activo]="tabActiva() === 'agentes'" />
       </div>
     }
 
@@ -61,8 +74,9 @@
       <div
         id="panel-analitica"
         aria-labelledby="tab-analitica"
-        [hidden]="tabActiva() !== 'analitica'"
         class="finanzas-tab-panel"
+        [class.finanzas-tab-panel--oculto]="tabActiva() !== 'analitica'"
+        [attr.inert]="tabActiva() === 'analitica' ? null : ''"
         role="tabpanel">
         <app-analitica [embedded]="true" />
       </div>
@@ -72,8 +86,9 @@
       <div
         id="panel-anual"
         aria-labelledby="tab-anual"
-        [hidden]="tabActiva() !== 'anual'"
         class="finanzas-tab-panel"
+        [class.finanzas-tab-panel--oculto]="tabActiva() !== 'anual'"
+        [attr.inert]="tabActiva() === 'anual' ? null : ''"
         role="tabpanel">
         <app-resumen-anual [embedded]="true" />
       </div>
@@ -83,8 +98,9 @@
       <div
         id="panel-tipo-cambio"
         aria-labelledby="tab-tipo-cambio"
-        [hidden]="tabActiva() !== 'tipo-cambio'"
         class="finanzas-tab-panel"
+        [class.finanzas-tab-panel--oculto]="tabActiva() !== 'tipo-cambio'"
+        [attr.inert]="tabActiva() === 'tipo-cambio' ? null : ''"
         role="tabpanel">
         <app-tipo-cambio-admin />
       </div>

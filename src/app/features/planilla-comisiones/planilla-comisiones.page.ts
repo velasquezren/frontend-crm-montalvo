@@ -146,6 +146,18 @@ function ultimoPrimero(a: VentaImportada, b: VentaImportada): number {
 export class PlanillaComisionesPage implements OnDestroy {
   readonly embedded = input(false);
 
+  /**
+   * Si esta vista es la que el usuario está mirando ahora mismo.
+   *
+   * Dentro del hub de Finanzas las cuatro pestañas están montadas a la vez, y
+   * esta pantalla y la de Desempeño imponen el tipo de cambio de SU periodo al
+   * `MonedaService`, que es global. Con las dos vivas, montar una (basta pasar
+   * el cursor por su pestaña) le cambiaba el TC a la otra: las cifras en
+   * bolivianos de la pantalla que se estaba mirando saltaban solas a otro
+   * número. Solo la pestaña activa impone su TC.
+   */
+  readonly activo = input(true);
+
   private readonly service = inject(PlanillaComisionesService);
   private readonly toast = inject(ToastService);
   private readonly authService = inject(AuthService);
@@ -435,6 +447,7 @@ export class PlanillaComisionesPage implements OnDestroy {
      * global en `ngOnDestroy`.
      */
     effect(() => {
+      if (!this.activo()) return;
       const tc = Number(this.periodoActual()?.tipoCambio);
       if (tc > 0) this.monedaService.setTipoCambio(tc);
     });

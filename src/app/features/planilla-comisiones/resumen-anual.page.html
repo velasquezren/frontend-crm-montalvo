@@ -62,7 +62,7 @@
   }
 </div>
 
-@if (resumen.isLoading() && resumen.value().filas.length === 0) {
+@if (estaCargando()) {
   <div class="grid-kpis-modern mb-6">
     @for (n of [1,2,3,4]; track n) { <app-loading-skeleton height="100px" shape="card" /> }
   </div>

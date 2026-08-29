@@ -80,17 +80,16 @@
 
     <app-composicion-pago [fila]="v" [tipoCambio]="tipoCambio()" />
 
-    @defer (on viewport) {
-      <app-ventas-agente
-        [ventas]="ventasDelMes()"
-        [cargando]="ventas.isLoading()"
-        [codigoVendedora]="v.codigo"
-        [canales]="canales()" />
-    } @placeholder {
-      <div class="bg-background border border-border rounded-2xl p-6">
-        <app-loading-skeleton height="200px" />
-      </div>
-    }
+    <!-- Sin `@defer (on viewport)`: dentro del hub esta ficha vive en un panel
+         que no entra en el viewport hasta que se pulsa su pestaña, así que el
+         disparador coincidía exactamente con el cambio de pestaña — bajar el
+         trozo y cambiar el esqueleto por la tabla ERA el parpadeo. La tabla ya
+         pinta su propio estado de carga con `[cargando]`. -->
+    <app-ventas-agente
+      [ventas]="ventasDelMes()"
+      [cargando]="ventas.isLoading()"
+      [codigoVendedora]="v.codigo"
+      [canales]="canales()" />
   </div>
 } @else {
   <app-empty-state

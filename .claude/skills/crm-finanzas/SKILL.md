@@ -31,23 +31,51 @@ El módulo consolida tres vistas operativas en una sola experiencia fluida bajo 
 
 ## 2. Retención de Estado Instantánea (0 ms) & Reactividad
 
-- **Paneles con `[hidden]`**: Las tres vistas permanecen montadas en memoria. Alternar entre pestañas toma **0 milisegundos**, sin parpadeos, sin peticiones de red repetidas y preservando intacto el mes seleccionado y la posición del usuario.
-- **Sincronización Reactiva con `toSignal`**:
-  ```ts
-  private readonly queryParams = toSignal(this.route.queryParams);
+- **Montaje bajo demanda, y una vez montado no se desmonta.** `@if (estaMontada()(tab))`
+  decide si el componente EXISTE —y por tanto si pide sus datos—; se enciende al
+  visitar la pestaña o al pasar el cursor por encima (`precargarTab`), y ya no se
+  apaga. Alternar entre pestañas no repite ninguna petición y conserva el mes
+  elegido y la posición del usuario.
+- **Ocultar NO es `display: none`.** El panel inactivo lleva la clase
+  `.finanzas-tab-panel--oculto`: fuera de flujo, `height: 0`, `overflow: hidden`,
+  `visibility: hidden` y el atributo `inert`.
 
-  protected readonly tabActiva = computed<TabFinanzas>(() => {
-    const q = this.queryParams()?.['tab'] as string;
-    return (q === 'analitica' || q === 'anual' || q === 'liquidacion') ? q : 'liquidacion';
-  });
-  ```
+  > **Esta es la cicatriz del parpadeo.** El hub usó `[hidden]` desde el
+  > principio, o sea `display: none`, y eso no oculta un panel: lo saca del
+  > renderizado. Al volver a él el navegador rehace su layout entero, y con eso
+  > venían tres cosas visibles a la vez —**reinicia las animaciones CSS de
+  > dentro** (las porciones de las donas de Analítica se redibujaban desde cero
+  > en cada visita), **pierde el scroll horizontal** de las tablas anchas, y
+  > **dispara cualquier `@defer (on viewport)`** justo en el instante del cambio
+  > de pestaña, porque hasta entonces el bloque no había estado nunca en el
+  > viewport. Eso era el parpadeo, y por eso los cinco intentos anteriores de
+  > quitarlo tocando esqueletos y animaciones no lo quitaron: ninguno tocaba la
+  > causa.
+  >
+  > `visibility: hidden` conserva el layout y el estado de pintado —volver es un
+  > cambio de visibilidad, no un reconstruir— y sigue sacando el contenido del
+  > árbol de accesibilidad y del orden de tabulación, que era lo único que
+  > aportaba `hidden`. El `position: absolute` + `height: 0` + `overflow: hidden`
+  > es lo que impide que el panel oculto aporte altura al hub o alargue la barra
+  > de scroll del área de trabajo.
+  >
+  > **Corolario: dentro del hub no se pone `@defer (on viewport)`.** El
+  > disparador no puede cumplirse antes de que la pestaña se muestre, así que
+  > por construcción coincide con el cambio de pestaña.
+- **Sincronización Reactiva con `toSignal`**: `tabActiva` es un `signal` que se
+  fija de forma síncrona al pulsar (0 ms) y un `effect` lo re-sincroniza si el
+  usuario usa Atrás/Adelante del navegador. La URL se actualiza después, con
+  `replaceUrl`, para que la navegación del router no sea lo que pinta.
 - **Redirecciones Transparentes**: Marcadores y enlaces anteriores (`/reportes`, `/planilla-comisiones`, `/comisiones-anual`) redirigen limpiamente a `/finanzas` sin romper enlaces guardados.
 
 ---
 
-## 3. Patrón de Vistas Embebidas (`embedded`)
+## 3. Vistas embebidas: `embedded` y `activo`
 
-Para evitar la duplicación de cabeceras (`<app-page-header>`) cuando una vista se incrusta dentro del Hub:
+Las cuatro vistas del hub son además rutas propias, así que cada una recibe dos
+interruptores del hub. **Son cosas distintas y hacen falta las dos.**
+
+`embedded` evita duplicar la cabecera:
 
 ```ts
 export class PlanillaComisionesPage {
@@ -55,12 +83,37 @@ export class PlanillaComisionesPage {
 }
 ```
 
-En la plantilla HTML:
 ```html
 @if (!embedded()) {
   <app-page-header title="..." subtitle="..." />
 }
 ```
+
+`activo` dice cuál es la pestaña que se está mirando, y **solo lo llevan las dos
+vistas que escriben el tipo de cambio global**: `PlanillaComisionesPage` y
+`DesempenoAgentesComponent`.
+
+```ts
+readonly activo = input(true);
+
+effect(() => {
+  if (!this.activo()) return;
+  const tc = Number(this.periodoActual()?.tipoCambio);
+  if (tc > 0) this.monedaService.setTipoCambio(tc);
+});
+```
+
+> **Por qué.** Las dos imponen el TC de SU periodo al `MonedaService`, que es
+> global (§E de GEMINI.md: una liquidación se lee con el TC del mes con que se
+> liquidó, no con el de hoy). En el hub están montadas a la vez, así que sin este
+> interruptor bastaba pasar el cursor por la pestaña de Desempeño —que ya la
+> monta— para que las cifras en bolivianos de la pestaña que se estaba mirando
+> saltaran solas a otro número.
+>
+> El efecto **solo escribe cuando está activo; no restaura al desactivarse**. Con
+> las dos vistas vivas, un "restaurar al desactivarme" compite con el "fijar el
+> mío" de la otra en el mismo ciclo y gana el que corra último. El global se
+> restaura donde no hay carrera: en `ngOnDestroy`, al salir del hub.
 
 ---
 

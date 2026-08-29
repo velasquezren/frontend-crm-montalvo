@@ -71,6 +71,7 @@
 }
 
 .finanzas-cuerpo {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -82,8 +83,42 @@
   width: 100%;
 }
 
-.finanzas-tab-panel[hidden] {
-  display: none !important;
+/* El panel oculto mide 0 de alto (ver abajo) y sin esto su contenido se
+   aplastaría con él: un contenedor flex en columna encoge a sus hijos para
+   caber. Aplastarlo sería justo el rehacer-el-layout que se quiere evitar. En
+   el panel visible no cambia nada, porque ahí la altura ya la marca el
+   contenido. */
+.finanzas-tab-panel > * {
+  flex-shrink: 0;
+}
+
+/*
+ * La pestaña que no se mira se aparta, NO se apaga.
+ *
+ * Con `display: none` el navegador tira el layout del panel y lo rehace entero
+ * al volver: se reinician las animaciones CSS de dentro, se pierde el scroll
+ * horizontal de las tablas anchas y un `@defer (on viewport)` se dispara justo
+ * en el momento del cambio de pestaña. Los tres se ven como un parpadeo.
+ *
+ * `visibility: hidden` mantiene el layout ya calculado y el estado de pintado
+ * —volver es un cambio de visibilidad, no un reconstruir—, y sigue sacando el
+ * contenido del árbol de accesibilidad y del orden de tabulación igual que
+ * hacía `hidden`. El `position: absolute` es lo que impide que el panel oculto
+ * siga aportando altura al contenedor.
+ */
+.finanzas-tab-panel--oculto {
+  /* Fuera de flujo y de alto cero: ni aporta altura al hub ni alarga la barra
+     de scroll del área de trabajo con el contenido que no se está mirando. */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  overflow: hidden;
+  /* `visibility` es lo que lo saca del árbol de accesibilidad y del orden de
+     tabulación —lo que antes daba `hidden`—, sin tirar su layout. */
+  visibility: hidden;
+  pointer-events: none;
 }
 
 @media (max-width: 768px) {

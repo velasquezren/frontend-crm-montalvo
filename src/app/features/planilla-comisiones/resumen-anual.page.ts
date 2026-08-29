@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { DecimalPipe } from '@angular/common';
 
@@ -64,7 +64,6 @@ export class ResumenAnualPage {
   private readonly planillaService = inject(PlanillaComisionesService);
 
   protected readonly mesesCortos = MESES_CORTOS;
-  protected readonly anio = signal(new Date().getFullYear());
   protected readonly busqueda = signal('');
   protected readonly filtroBono = signal<FiltroBonoResumen>('TODAS');
   protected readonly mostrarGrafico = signal(true);
@@ -75,6 +74,42 @@ export class ResumenAnualPage {
   protected readonly periodos = httpResource<RespuestaPaginada<PeriodoComision>>(() =>
     this.planillaService.periodosRequest(),
   );
+
+  /**
+   * Los años que de verdad tienen planillas importadas, como clave de texto.
+   *
+   * Se compara como cadena y no como arreglo a propósito: un `computed` que
+   * devuelve un arreglo nuevo con los mismos números cuenta como cambio, y eso
+   * bastaría para que `anio` de abajo descartara el año que el usuario acaba de
+   * elegir cada vez que alguien recarga la lista de periodos.
+   */
+  private readonly claveAniosConDatos = computed(() =>
+    [...new Set((this.periodos.value()?.datos ?? []).map(p => p.anio))]
+      .sort((a, b) => b - a)
+      .join(','),
+  );
+
+  /**
+   * El año que se está mirando: elegido a mano, o el más reciente CON DATOS.
+   *
+   * Antes esto era un `signal` en el año actual más un `effect` que lo corregía
+   * al resolverse los periodos, y esa corrección llegaba un ciclo tarde: la
+   * pantalla alcanzaba a pintar "Sin datos para 2026" antes de saltar a 2025 y
+   * volver al esqueleto. Un `linkedSignal` lo resuelve en el mismo cálculo en
+   * que llegan los periodos, así que ese fotograma intermedio no existe.
+   */
+  protected readonly anio = linkedSignal<string, number>({
+    source: this.claveAniosConDatos,
+    computation: (clave, previo) => {
+      const disponibles = clave ? clave.split(',').map(Number) : [];
+      const elegido = previo?.value;
+      /* Una elección manual manda mientras siga habiendo datos de ese año. */
+      if (elegido !== undefined && disponibles.includes(elegido)) return elegido;
+      const actual = new Date().getFullYear();
+      if (disponibles.includes(actual)) return actual;
+      return disponibles[0] ?? elegido ?? actual;
+    },
+  });
 
   /** Años ofrecidos en el selector, combinando los predeterminados con los que existen en la BD. */
   protected readonly anios = computed(() => {
@@ -98,20 +133,19 @@ export class ResumenAnualPage {
     },
   );
 
-  constructor() {
-    // Si el año inicial (ej. actual) no tiene periodos pero la BD sí tiene años previos con datos, selecciona el año más reciente con datos
-    effect(() => {
-      const lista = this.periodos.value()?.datos ?? [];
-      if (lista.length > 0) {
-        const aniosConDatos = [...new Set(lista.map(p => p.anio))].sort((a, b) => b - a);
-        const anioActual = this.anio();
-        const tieneEnActual = lista.some(p => p.anio === anioActual);
-        if (!tieneEnActual && aniosConDatos[0] !== undefined) {
-          this.anio.set(aniosConDatos[0]);
-        }
-      }
-    });
-  }
+  /**
+   * Mientras no se sepa QUÉ año mirar, no se decide que no hay nada que mostrar.
+   *
+   * La lista de periodos y el resumen se piden en paralelo, así que el resumen
+   * del año por defecto puede volver vacío antes de que los periodos digan cuál
+   * es el año bueno. Sin esta condición, ese instante se pintaba como el estado
+   * vacío completo y desaparecía solo.
+   */
+  protected readonly estaCargando = computed(
+    () =>
+      this.periodos.isLoading() ||
+      (this.resumen.isLoading() && this.resumen.value().filas.length === 0),
+  );
 
   /**
    * TC para cifras que suman varios meses (total anual, un trimestre): no
