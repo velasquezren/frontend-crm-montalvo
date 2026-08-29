@@ -6,6 +6,7 @@ import {
   Component,
   computed,
   effect,
+  EffectCleanupRegisterFn,
   inject,
   signal,
   TemplateRef,
@@ -184,7 +185,7 @@ export class ServiciosPage {
   private overlayMedico: OverlayRef | null = null;
 
   constructor() {
-    effect(onCleanup => {
+    effect((onCleanup: EffectCleanupRegisterFn) => {
       const texto = this.busquedaPacientes();
       const id = setTimeout(() => {
         this.pacientesDebounced.set(texto);
@@ -193,7 +194,7 @@ export class ServiciosPage {
       onCleanup(() => clearTimeout(id));
     });
 
-    effect(onCleanup => {
+    effect((onCleanup: EffectCleanupRegisterFn) => {
       const texto = this.busquedaMedicos();
       const id = setTimeout(() => {
         this.medicosDebounced.set(texto);
