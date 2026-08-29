@@ -71,7 +71,15 @@ export class ResumenAnualPage {
 
   protected readonly resumen = httpResource<ResumenAnual>(
     () => this.planillaService.resumenAnualRequest(this.anio()),
-    { defaultValue: { anio: new Date().getFullYear(), filas: [], totalesPorMes: [], tcReferencia: 1 } },
+    {
+      defaultValue: {
+        anio: new Date().getFullYear(),
+        filas: [],
+        totalesPorMes: [],
+        tcReferencia: 1,
+        ocultas: [],
+      },
+    },
   );
 
   /**

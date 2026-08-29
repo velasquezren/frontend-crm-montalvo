@@ -55,6 +55,11 @@
         sola en su dueña; si no, la vendedora se crea aparte y queda <strong>sin configurar</strong>.
       </p>
       <p>Una vendedora sin sueldo base ni tipo asignado no puede liquidarse bien.</p>
+      <p>
+        <strong>Marketing es la excepción</strong>: no vende, así que no tiene código en
+        FileMaker y nunca se da de alta sola. Se añade a mano con «Añadir persona» y cobra
+        solo su parte del bono de jefatura.
+      </p>
     </app-info-hint>
   </h3>
   <p class="text-xs text-text-muted mb-3">
@@ -63,6 +68,56 @@
     nada a mano. Fíjales tipo, área y sueldo base para que la liquidación sea correcta.
   </p>
 
+  <div class="flex flex-wrap items-center gap-2 mb-3" role="group" aria-label="Qué vendedoras mostrar">
+    <app-filter-chip
+      size="sm"
+      [active]="!verDadasDeBaja()"
+      [count]="vendedorasEnEquipo().length"
+      (clicked)="verDadasDeBaja.set(false)">
+      En el equipo
+    </app-filter-chip>
+    <app-filter-chip
+      size="sm"
+      [active]="verDadasDeBaja()"
+      [count]="vendedorasDadasDeBaja().length"
+      (clicked)="verDadasDeBaja.set(true)">
+      Dadas de baja
+    </app-filter-chip>
+    <app-button size="sm" variant="secondary" icon="user-plus" (clicked)="abrirAlta()">
+      Añadir persona
+    </app-button>
+    <app-info-hint titulo="Qué hace dar de baja a una vendedora">
+      <p>
+        Es para quien <strong>ya no trabaja en la clínica</strong>. Deja de aparecer en la
+        planilla del mes, en el desglose, en el Excel del informe y en la matriz anual.
+      </p>
+      <p>
+        <strong>No se borra ni se pierde nada.</strong> Sus ventas siguen contando en la
+        facturación de la clínica y sus liquidaciones de los meses en que sí trabajó quedan
+        guardadas: se pueden ver marcando «incluir dadas de baja» al ver o descargar un mes.
+      </p>
+      <p>
+        Es reversible en un clic y el motivo queda registrado, así que dentro de seis meses se
+        sabe por qué falta del informe.
+      </p>
+    </app-info-hint>
+  </div>
+
+  @if (faltaEquipoMarketing()) {
+    <div class="aviso-marketing">
+      <app-icon name="alert-circle" [size]="16" class="shrink-0 mt-px text-text-muted" />
+      <div>
+        <p class="text-sm font-semibold text-text-dark">Nadie en el área de Marketing</p>
+        <p class="text-xs text-text-muted mt-0.5">
+          El bono de jefatura se paga <strong>dos veces</strong>: íntegro a la jefa y otro
+          tanto repartido entre Marketing. Sin nadie en esa área, esa segunda mitad no se
+          emite en ningún mes. Si la clínica tiene equipo de marketing, añádelo con
+          «Añadir persona».
+        </p>
+      </div>
+    </div>
+  }
+
   @if (cargandoVendedoras()) {
     <app-loading-skeleton height="120px" />
   } @else if (vendedoras().length === 0) {
@@ -70,6 +125,11 @@
       icon="users"
       title="Sin vendedoras"
       description="Aparecerán aquí en cuanto importes el primer Excel." />
+  } @else if (vendedorasVisibles().length === 0) {
+    <app-empty-state
+      icon="users"
+      title="Ninguna vendedora dada de baja"
+      description="Aquí aparecen las que ya no trabajan en la clínica. Puedes dar de baja a cualquiera desde la lista «En el equipo»." />
   } @else {
     <app-table [dense]="true">
       <thead>
@@ -81,11 +141,12 @@
           <th class="text-center">Área</th>
           <th class="text-right">Sueldo Base (Bs)</th>
           <th class="text-center">Estado</th>
+          <th class="text-right">Informes</th>
         </tr>
       </thead>
       <tbody>
-        @for (v of vendedoras(); track v.id) {
-          <tr [class.fila-pendiente]="!v.configurada">
+        @for (v of vendedorasVisibles(); track v.id) {
+          <tr [class.fila-pendiente]="!v.configurada" [class.fila-dada-de-baja]="v.oculta">
             <td class="text-left font-semibold text-sm text-text-dark">{{ v.nombre }}</td>
             <td class="text-left text-xs font-mono text-text-muted">{{ v.codigo }}</td>
             <td class="text-left">
@@ -112,7 +173,7 @@
                 (change)="cambiarAreaVendedora(v, $any($event.target).value)">
                 <option value="EJECUTIVA" [selected]="v.area === 'EJECUTIVA'">Ejecutiva</option>
                 <option value="RA" [selected]="v.area === 'RA'">Coordinadora RA</option>
-                <option value="PUBLICIDAD" [selected]="v.area === 'PUBLICIDAD'">Publicidad</option>
+                <option value="PUBLICIDAD" [selected]="v.area === 'PUBLICIDAD'">Marketing</option>
               </select>
             </td>
             <td class="text-right">
@@ -127,11 +188,30 @@
               </div>
             </td>
             <td class="text-center">
-              @if (v.configurada) {
+              @if (v.oculta) {
+                <!-- La baja manda sobre "configurada": si ya no trabaja aquí, que
+                     tenga o no tipo y sueldo asignados dejó de ser accionable. -->
+                <app-badge variant="neutral" icon="eye-off">Dada de baja</app-badge>
+                @if (v.motivoOculta) {
+                  <span class="block text-[10px] text-text-muted mt-0.5">{{ v.motivoOculta }}</span>
+                }
+              } @else if (v.configurada) {
                 <app-badge variant="success">Configurada</app-badge>
               } @else {
                 <app-badge variant="critical">Pendiente</app-badge>
               }
+            </td>
+            <td class="text-right">
+              <div class="flex justify-end">
+                <app-button
+                  variant="ghost"
+                  size="sm"
+                  [icon]="v.oculta ? 'eye' : 'eye-off'"
+                  [loading]="visibilidadEnCurso() === v.id"
+                  (clicked)="alternarVisibilidad(v)">
+                  {{ v.oculta ? 'Reincorporar' : 'Dar de baja' }}
+                </app-button>
+              </div>
             </td>
           </tr>
         }
@@ -707,3 +787,142 @@
     <app-loading-skeleton height="200px" />
   </section>
 }
+
+<!-- ══════════════ DAR DE BAJA A UNA VENDEDORA ══════════════
+     Va por DialogService (CDK Overlay) y no con un @if suelto: proyectado a
+     document.body cubre el viewport entero sin pelear con el z-index del
+     sidebar ni de la cabecera. El motivo es obligatorio —el backend rechaza la
+     petición sin él— porque el efecto es que una persona desaparece de la
+     planilla que administración firma, y meses después nadie recuerda si fue un
+     despido, una renuncia o un clic equivocado. -->
+<ng-template #modalOcultar>
+  @if (vendedoraAOcultar(); as v) {
+    <div class="pointer-events-auto w-full max-w-lg bg-background rounded-2xl shadow-lifted p-5 animate-modal-pop">
+      <h3 class="text-base font-bold text-text-dark">Dar de baja de los informes</h3>
+      <p class="text-xs text-text-muted mt-1">
+        Para quien ya no trabaja en la clínica. Puedes reincorporarla cuando quieras.
+      </p>
+
+      <div class="mt-4 p-3 rounded-xl border border-border bg-bg-workspace">
+        <p class="text-sm font-semibold text-text-dark">{{ v.nombre }}</p>
+        <p class="text-xs text-text-muted mt-0.5">
+          {{ v.codigo }} · Sueldo base {{ +v.sueldoBase | moneda:'BOB' }}
+        </p>
+      </div>
+
+      <!-- Lo que más se malinterpreta de esta acción es si borra algo. Se dice
+           aquí, antes de confirmar, y no en un tooltip que nadie abre. -->
+      <ul class="mt-4 space-y-1.5 text-xs text-text-muted">
+        <li class="flex gap-2">
+          <app-icon name="eye-off" [size]="14" class="text-text-muted shrink-0 mt-px" />
+          <span>Deja de salir en la planilla del mes, el desglose, el Excel del informe y la matriz anual.</span>
+        </li>
+        <li class="flex gap-2">
+          <app-icon name="check-circle" [size]="14" class="text-primary shrink-0 mt-px" />
+          <span>
+            <strong class="text-text-dark">Sus ventas siguen contando</strong> en la facturación
+            de la clínica, y sus liquidaciones pasadas quedan guardadas: se recuperan marcando
+            «incluir dadas de baja».
+          </span>
+        </li>
+      </ul>
+
+      <div class="mt-4">
+        <app-input
+          label="Motivo (queda en el registro de auditoría)"
+          placeholder="Ej. Ya no trabaja en la clínica, renuncia de marzo…"
+          [(value)]="motivoOculta" />
+        <p class="text-[11px] text-text-muted mt-1">
+          Mínimo 3 caracteres. Se imprime en el Excel del informe, junto a la lista de
+          quiénes se dejaron fuera.
+        </p>
+      </div>
+
+      <div class="flex justify-end gap-2 mt-5">
+        <app-button variant="ghost" (clicked)="cerrarOcultar()">Cancelar</app-button>
+        <app-button
+          variant="primary"
+          [disabled]="motivoOculta().trim().length < 3"
+          [loading]="ocultando()"
+          (clicked)="confirmarOcultar()">
+          Dar de baja
+        </app-button>
+      </div>
+    </div>
+  }
+</ng-template>
+
+<!-- ══════════════ AÑADIR UNA PERSONA A LA PLANILLA ══════════════
+     Solo hace falta para quien cobra pero no vende: el equipo de marketing.
+     Todas las demás aparecen solas al importar el Excel, porque cada fila de
+     venta trae su `vendedora_pk`. Marketing no tiene ninguna fila, así que sin
+     esta alta manual no había forma de que el pote de jefatura les llegara. -->
+<ng-template #modalAlta>
+  <div class="pointer-events-auto w-full max-w-lg bg-background rounded-2xl shadow-lifted p-5 animate-modal-pop">
+    <h3 class="text-base font-bold text-text-dark">Añadir persona a la planilla</h3>
+    <p class="text-xs text-text-muted mt-1">
+      Para quien cobra por planilla pero <strong>no vende</strong> — el equipo de marketing.
+      Las vendedoras aparecen solas al importar el Excel.
+    </p>
+
+    <div class="mt-4 grid gap-3">
+      <app-input
+        label="Código"
+        placeholder="El identificador que ya usa la empresa (carnet o código interno)"
+        [(value)]="nuevoCodigo" />
+      <!-- El código es la clave que cruza con el agente del CRM. Se explica acá
+           porque quien la da de alta no tiene por qué saber para qué sirve. -->
+      <p class="text-[11px] text-text-muted -mt-2">
+        Tiene que ser único. Es lo que enlaza a esta persona con su usuario del CRM, si
+        algún día tiene uno.
+      </p>
+
+      <app-input label="Nombre y apellidos" placeholder="Ej. Cespedes Soto Cristel Nedenka" [(value)]="nuevoNombre" />
+
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block">
+          <span class="text-xs font-semibold text-text-dark">Área</span>
+          <select
+            class="select-base w-full mt-1"
+            [value]="nuevaArea()"
+            (change)="nuevaArea.set($any($event.target).value)">
+            <option value="PUBLICIDAD">Marketing</option>
+            <option value="EJECUTIVA">Ejecutiva</option>
+            <option value="RA">Coordinadora RA</option>
+          </select>
+        </label>
+        <label class="block">
+          <span class="text-xs font-semibold text-text-dark">Tipo</span>
+          <select
+            class="select-base w-full mt-1"
+            [value]="nuevoTipo()"
+            (change)="nuevoTipo.set($any($event.target).value)">
+            <option value="VENDEDORA">Vendedora</option>
+            <option value="JEFA">Jefa</option>
+          </select>
+        </label>
+      </div>
+
+      <app-input label="Sueldo base (Bs)" type="number" placeholder="0.00" [(value)]="nuevoSueldo" />
+    </div>
+
+    <div class="mt-4 p-3 rounded-xl border border-border bg-bg-light">
+      <p class="text-xs text-text-dark">
+        Si la añades al área <strong>Marketing</strong>, entrará en la liquidación con las
+        comisiones en cero y cobrará su parte del bono de jefatura.
+        <strong>Recalcula el mes</strong> para que aparezca.
+      </p>
+    </div>
+
+    <div class="flex justify-end gap-2 mt-5">
+      <app-button variant="ghost" (clicked)="cerrarAlta()">Cancelar</app-button>
+      <app-button
+        variant="primary"
+        [disabled]="!altaValida()"
+        [loading]="guardandoAlta()"
+        (clicked)="confirmarAlta()">
+        Añadir
+      </app-button>
+    </div>
+  </div>
+</ng-template>

@@ -559,3 +559,78 @@
   color: var(--color-text-dark);
   font-variant-numeric: tabular-nums;
 }
+
+/*
+ * Aviso de vendedoras dadas de baja, arriba del consolidado.
+ *
+ * Mismo vocabulario que `.reglas-usadas`, que es la otra barra informativa de
+ * esta misma pestaña: borde sutil, radio de tarjeta y `bg-light`. No lleva
+ * `critical-bg` a propósito — dar de baja a alguien que se fue no es un error
+ * que haya que corregir, es una decisión tomada; pintarla de alarma haría que
+ * se ignorara igual que se ignoran las alarmas que salen todos los meses.
+ */
+.aviso-ocultas {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-bg-light);
+}
+
+/* Los nombres van en línea y separados por punto medio, no en lista: casi
+   siempre es una sola persona y una lista de un elemento se ve rota. */
+.aviso-ocultas-nombre:not(:last-child)::after {
+  content: ' · ';
+  color: var(--color-text-muted);
+}
+
+/* ── Panel de cierre del mes ─────────────────────────────────────────── */
+.cierre-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/*
+ * Lo que impide mandar el mes a revisión.
+ *
+ * `bg-light` y no un fondo de alarma: no es un error del sistema, es trabajo
+ * que falta. La paleta de esta app no tiene ámbar ni rojo a propósito (ver
+ * `crm-design-system`), y pintar de crítico algo que aparece todos los meses
+ * es la forma más rápida de que se deje de leer.
+ */
+.cierre-bloqueos {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg-light);
+  font-size: 0.75rem;
+  color: var(--color-text-dark);
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.cierre-firmas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.cierre-firmas-titulo {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-bottom: 0.25rem;
+}

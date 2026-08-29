@@ -23,7 +23,7 @@
     </div>
 
     <div class="flex items-center gap-3 flex-wrap">
-      <app-badge [variant]="periodo.estado === 'CALCULADO' ? 'success' : periodo.estado === 'CERRADO' ? 'neutral' : 'info'">
+      <app-badge [variant]="estadoPeriodoBadge[periodo.estado]">
         {{ estadoLabel[periodo.estado] }}
       </app-badge>
       <span class="text-xs font-semibold text-text-muted bg-bg-light px-2.5 py-1 rounded-full border border-border">
@@ -43,6 +43,12 @@
         (clicked)="descargarExcel()">
         Descargar Excel
       </app-button>
+      <!-- El Excel sale con lo mismo que hay en pantalla, así que cuando el
+           informe lleva a las dadas de baja hay que decirlo aquí: es el archivo
+           que se imprime y se firma, y esa diferencia no se ve al abrirlo. -->
+      @if (incluirOcultas()) {
+        <app-badge variant="neutral" icon="eye">Incluye dadas de baja</app-badge>
+      }
     </div>
   </div>
 }
@@ -161,7 +167,7 @@
                 (click)="abrirPeriodo(p.id)">
                 <td class="text-left font-semibold text-text-dark">{{ nombreMes(p.mes) }} {{ p.anio }}</td>
                 <td class="text-center">
-                  <app-badge [variant]="p.estado === 'CALCULADO' ? 'success' : 'neutral'">
+                  <app-badge [variant]="estadoPeriodoBadge[p.estado]">
                     {{ estadoLabel[p.estado] }}
                   </app-badge>
                 </td>
@@ -758,6 +764,147 @@
     </div>
   }
 
+  <!-- ══ Cierre del mes ══
+       Va antes que las cifras porque decide si se pueden tocar: quien entra a
+       Reportes tiene que ver en qué punto está el mes ANTES de leer números que
+       quizá ya estén firmados. Los estados y los saltos legales los decide el
+       backend (`estados-periodo.ts`); acá solo se pintan y se ofrecen botones. -->
+  @if (periodoId()) {
+    @if (revision.isLoading() && !revision.value()) {
+      <app-loading-skeleton height="96px" shape="card" />
+    } @else if (revision.error()) {
+      <!-- Sin esta rama, un backend caído deja la pantalla SIN panel de cierre y
+           eso se lee como "este mes no tiene flujo de aprobación", que es una
+           mentira más cara que un hueco: alguien podría dar por cerrado a mano
+           un mes que en realidad nadie firmó. -->
+      <app-error-carga
+        que="el estado de cierre del mes"
+        (reintentar)="revision.reload()" />
+    } @else if (revision.value(); as rev) {
+    <section class="panel mb-4">
+      <div class="cierre-cabecera">
+        <div class="min-w-0">
+          <h3 class="text-sm font-bold text-text-dark flex items-center gap-2">
+            Cierre del mes
+            <app-badge [variant]="estadoPeriodoBadge[rev.estado]">
+              {{ estadoPeriodoLabel[rev.estado] }}
+            </app-badge>
+          </h3>
+          <p class="text-xs text-text-muted mt-1">{{ estadoPeriodoAyuda[rev.estado] }}</p>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap justify-end">
+          @if (rev.estado === 'CALCULADO') {
+            <app-button
+              variant="primary"
+              size="sm"
+              icon="send"
+              [disabled]="rev.bloqueos.length > 0"
+              [loading]="enviandoARevision()"
+              (clicked)="enviarARevision()">
+              Enviar a revisión
+            </app-button>
+          } @else if (rev.estado === 'EN_REVISION') {
+            <!-- Aprobar y rechazar son de SUPER_ADMIN. El backend corta igual;
+                 esconderlos evita ofrecerle a un ADMIN un botón que solo le
+                 puede devolver un 403. -->
+            @if (esSuperAdmin()) {
+              <app-button variant="ghost" size="sm" icon="x-circle" (clicked)="abrirAccionConMotivo('RECHAZAR')">
+                Rechazar
+              </app-button>
+              <app-button variant="primary" size="sm" icon="check-circle" [loading]="aprobando()" (clicked)="aprobar()">
+                Aprobar
+              </app-button>
+            }
+          } @else if (rev.estado === 'CERRADO' && esSuperAdmin()) {
+            <app-button variant="ghost" size="sm" icon="edit" (clicked)="abrirAccionConMotivo('REABRIR')">
+              Reabrir
+            </app-button>
+            <app-button variant="primary" size="sm" icon="wallet" (clicked)="registrarPago()">
+              Registrar pago
+            </app-button>
+          }
+        </div>
+      </div>
+
+      <!-- Qué falta para poder revisar. Se muestra ANTES de pulsar: enterarse
+           por un error al intentar avanzar obliga a adivinar dónde ir. -->
+      @if (rev.estado === 'CALCULADO' && rev.bloqueos.length > 0) {
+        <ul class="cierre-bloqueos">
+          @for (b of rev.bloqueos; track b.clave) {
+            <li class="flex gap-2">
+              <app-icon name="alert-circle" [size]="14" class="shrink-0 mt-px" />
+              <span>{{ b.detalle }}</span>
+            </li>
+          }
+        </ul>
+      }
+
+      @if (rev.estado === 'EN_REVISION') {
+        <div class="cierre-firmas">
+          <div>
+            <p class="cierre-firmas-titulo">Aprobaron</p>
+            @if (rev.aprobaron.length === 0) {
+              <p class="text-xs text-text-muted">Todavía nadie.</p>
+            } @else {
+              @for (a of rev.aprobaron; track a.id) {
+                <p class="text-sm text-text-dark">
+                  {{ a.nombre }}
+                  <span class="text-xs text-text-muted">· {{ a.fecha | date: 'd MMM, HH:mm' }}</span>
+                  @if (a.comentario) {
+                    <span class="block text-xs text-text-muted">{{ a.comentario }}</span>
+                  }
+                </p>
+              }
+            }
+          </div>
+          <div>
+            <p class="cierre-firmas-titulo">Falta</p>
+            @if (rev.faltan.length === 0) {
+              <p class="text-xs text-text-muted">Nadie: el mes se cierra con la última firma.</p>
+            } @else {
+              @for (f of rev.faltan; track f.id) {
+                <p class="text-sm text-text-dark">{{ f.nombre }}</p>
+              }
+            }
+          </div>
+        </div>
+
+        @if (esSuperAdmin()) {
+          <div class="mt-3">
+            <app-input
+              label="Comentario de la aprobación (opcional)"
+              placeholder="Ej. revisado contra el Excel de administración"
+              [(value)]="comentarioAprobacion" />
+          </div>
+        }
+
+        <!-- La lista de aprobadores se recalcula en cada lectura contra los
+             SUPER_ADMIN activos: si alguien baja a ADMIN deja de bloquear, y si
+             entra uno nuevo el mes vuelve a quedar pendiente. Decirlo evita que
+             un cambio aparentemente espontáneo parezca un fallo. -->
+        <p class="text-[11px] text-text-muted mt-3">
+          Firman los SUPER_ADMIN activos en este momento. Si alguno cambia de rol, la lista se
+          ajusta sola.
+        </p>
+      }
+
+      @if (rev.estado === 'CERRADO' || rev.estado === 'PAGADO') {
+        <p class="text-xs text-text-muted mt-2">
+          @if (rev.cerradoEn) {
+            Cerrado el {{ rev.cerradoEn | date: 'd MMM y, HH:mm' }}.
+          } @else {
+            Cerrado antes de que se registrara quién lo hizo.
+          }
+          @if (rev.pagadoEn) {
+            · Pagado el {{ rev.pagadoEn | date: 'd MMM y, HH:mm' }}.
+          }
+        </p>
+      }
+    </section>
+    }
+  }
+
   @if (!periodoId()) {
     <app-selector-periodo-empty
       titulo="Elige un periodo para ver la liquidación"
@@ -786,6 +933,51 @@
     </div>
   } @else {
     @if (consolidado(); as rep) {
+      <!-- ── Vendedoras dadas de baja ──────────────────────────────────────
+           Va ARRIBA del consolidado, no en un pie, porque afecta a todas las
+           cifras de la pestaña: los totales de aquí abajo son la suma de las
+           filas listadas, así que cuadran perfectamente aunque falte gente.
+           Sin este aviso, quien cotejara el informe contra su propio Excel
+           buscaría un error de cálculo que no existe.
+
+           Solo aparece si el periodo TIENE alguna dada de baja liquidada: en la
+           clínica lo normal es que no haya ninguna y la barra sobraría. -->
+      @if (rep.ocultas.length > 0) {
+        <div class="aviso-ocultas">
+          <app-icon [name]="rep.incluyeOcultas ? 'eye' : 'eye-off'" [size]="16" class="shrink-0 text-text-muted" />
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-text-dark">
+              @if (rep.incluyeOcultas) {
+                Estos informes incluyen {{ rep.ocultas.length }}
+                vendedora{{ rep.ocultas.length === 1 ? '' : 's' }} dada{{ rep.ocultas.length === 1 ? '' : 's' }} de baja
+              } @else {
+                No se {{ rep.ocultas.length === 1 ? 'muestra' : 'muestran' }} {{ rep.ocultas.length }}
+                vendedora{{ rep.ocultas.length === 1 ? '' : 's' }} dada{{ rep.ocultas.length === 1 ? '' : 's' }} de baja
+              }
+            </p>
+            <p class="text-xs text-text-muted mt-0.5">
+              @for (v of rep.ocultas; track v.vendedoraId) {
+                <span class="aviso-ocultas-nombre">
+                  {{ v.nombre }}
+                  @if (v.motivoOculta) { <span class="text-text-muted/70">· {{ v.motivoOculta }}</span> }
+                </span>
+              }
+            </p>
+            <p class="text-[11px] text-text-muted mt-1">
+              Sus ventas siguen contando en la facturación del mes; lo que cambia es si su
+              liquidación figura aquí y en el Excel que descargues.
+            </p>
+          </div>
+          <app-button
+            variant="ghost"
+            size="sm"
+            [icon]="rep.incluyeOcultas ? 'eye-off' : 'eye'"
+            (clicked)="alternarOcultas()">
+            {{ rep.incluyeOcultas ? 'Volver a ocultarlas' : 'Mostrarlas' }}
+          </app-button>
+        </div>
+      }
+
       <!-- Totales del equipo -->
       <section class="panel mb-4">
         <h3 class="text-sm font-bold text-text-dark mb-3">
@@ -910,6 +1102,54 @@
           [loading]="excluyendo()"
           (clicked)="confirmarExclusion()">
           Quitar comisión
+        </app-button>
+      </div>
+    </div>
+  }
+</ng-template>
+
+<!-- ══════════════ RECHAZAR O REABRIR UN MES ══════════════
+     Un solo modal para las dos acciones: piden exactamente lo mismo —un
+     motivo— y difieren solo en el texto. Dos plantillas casi idénticas es cómo
+     se acaba arreglando una y no la otra.
+
+     El motivo es obligatorio (el backend responde 400 sin él) porque los dos
+     saltos deshacen algo que otra persona ya dio por bueno: rechazar borra las
+     firmas de todos, y reabrir descarta la foto de las reglas con las que se
+     cerró el mes. -->
+<ng-template #modalMotivo>
+  @if (accionConMotivo(); as accion) {
+    <div class="pointer-events-auto w-full max-w-lg bg-background rounded-2xl shadow-lifted p-5 animate-modal-pop">
+      <h3 class="text-base font-bold text-text-dark">
+        {{ accion === 'RECHAZAR' ? 'Rechazar la revisión' : 'Reabrir el mes cerrado' }}
+      </h3>
+      <p class="text-xs text-text-muted mt-1">
+        {{
+          accion === 'RECHAZAR'
+            ? 'El mes vuelve a edición y se borran todas las aprobaciones, también las de quien ya había firmado.'
+            : 'El mes vuelve a edición. Se guarda en la auditoría la configuración con la que se había cerrado, porque recalcular la reemplaza.'
+        }}
+      </p>
+
+      <div class="mt-4">
+        <app-input
+          label="Motivo (queda en el registro de auditoría)"
+          [placeholder]="accion === 'RECHAZAR' ? 'Ej. falta la cirugía del 12' : 'Ej. el Excel traía dos filas repetidas'"
+          [(value)]="motivoAccion" />
+        <p class="text-[11px] text-text-muted mt-1">
+          Mínimo 3 caracteres. Dentro de tres meses esta es la única forma de saber por qué el
+          mes volvió atrás.
+        </p>
+      </div>
+
+      <div class="flex justify-end gap-2 mt-5">
+        <app-button variant="ghost" (clicked)="cerrarAccionConMotivo()">Cancelar</app-button>
+        <app-button
+          variant="primary"
+          [disabled]="motivoAccion().trim().length < 3"
+          [loading]="guardandoMotivo()"
+          (clicked)="confirmarAccionConMotivo()">
+          {{ accion === 'RECHAZAR' ? 'Rechazar' : 'Reabrir' }}
         </app-button>
       </div>
     </div>

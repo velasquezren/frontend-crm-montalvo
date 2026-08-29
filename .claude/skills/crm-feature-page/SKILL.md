@@ -224,6 +224,20 @@ agentes comparten el mismo equipo.
 Si añades un endpoint a esa lista, pregúntate qué se ve si llega un minuto tarde.
 Si la respuesta incomoda, no va.
 
+**La coincidencia es por ruta EXACTA, no por prefijo** (`esDeReferencia()`).
+Hasta el 2026-08-28 era `url.includes(ruta)`, e `includes` no distingue una
+colección de sus hijos: `/planilla-comisiones/periodos` casaba también con
+`/periodos/:id/ventas`, `/alertas`, `/reporte/consolidado`, `/revision` y hasta
+con el `/exportar` que devuelve el Excel. Todos ellos son operación del día —lo
+que esta misma lista declara que NO entra— y se servían hasta un minuto tarde.
+
+Cuesta verlo porque cualquier escritura vacía la caché entera: trabajando solo
+casi nunca sale nada viejo. **Se nota cuando el cambio lo hace otra persona**,
+que es la situación normal en la clínica. El caso real: dos SUPER_ADMIN
+revisando el mismo mes, uno aprueba y el otro sigue viendo "falta su firma" con
+el botón de aprobar puesto sobre un mes ya cerrado. Lo fija
+`cache.interceptor.spec.ts`.
+
 ## Tiempo real: `RealtimeService` en vez de polling ciego
 
 Un `setInterval` que recarga todo cada N segundos, siempre, haya o no algo

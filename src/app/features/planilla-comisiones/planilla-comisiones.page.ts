@@ -48,6 +48,8 @@ import {
   ClasifComision,
   CLASIF_LABEL,
   ConfiguracionPlanilla,
+  ESTADO_PERIODO_AYUDA,
+  ESTADO_PERIODO_BADGE,
   ESTADO_PERIODO_LABEL,
   etiquetaTipoFila,
   GrupoPlanes,
@@ -56,6 +58,7 @@ import {
   PeriodoComision,
   ReporteConsolidado,
   ReporteDesglose,
+  RevisionPeriodo,
   ResumenImportacion,
   TIPO_LABEL,
   TipoComision,
@@ -217,6 +220,165 @@ export class PlanillaComisionesPage implements OnDestroy {
 
   protected readonly alertas = signal<Alertas | null>(null);
   protected readonly consolidado = signal<ReporteConsolidado | null>(null);
+
+  /**
+   * Si los informes de esta pantalla incluyen a las vendedoras dadas de baja.
+   *
+   * Arranca en `false`: para eso se las dio de baja. Es un interruptor y no una
+   * casilla escondida en el diálogo de descarga porque **lo que se ve es lo que
+   * se exporta** — el Excel usa este mismo valor. Tener dos controles distintos
+   * (uno para la pantalla y otro para el archivo) es cómo se acaba descargando
+   * un informe que no se parece al que se estaba mirando.
+   *
+   * El filtro lo aplica el SERVIDOR, así que cambiarlo vuelve a pedir el
+   * consolidado y el desglose: los totales del pie tienen que seguir siendo la
+   * suma exacta de las filas que se ven.
+   */
+  protected readonly incluirOcultas = signal(false);
+
+  /* ── Cierre del mes ────────────────────────────────────────────────────
+   *
+   * El ciclo completo vive en el backend (`estados-periodo.ts`): qué salto es
+   * legal, qué bloquea la revisión y cuándo se da por aprobada. Acá NO se
+   * reimplementa ninguna de esas reglas — se piden y se pintan. Duplicar la
+   * tabla de transiciones en la interfaz solo serviría para que un día las dos
+   * copias digan cosas distintas y gane la que no manda.
+   *
+   * Lo único que decide esta página es qué botón ofrecer, y siempre como
+   * conveniencia: el backend rechaza igual lo que no corresponda.
+   */
+  protected readonly revision = httpResource<RevisionPeriodo | undefined>(
+    () => {
+      const id = this.periodoId();
+      return id && this.pestana() === 'REPORTES' ? this.service.revisionRequest(id) : undefined;
+    },
+    { defaultValue: undefined },
+  );
+
+  protected readonly estadoPeriodoLabel = ESTADO_PERIODO_LABEL;
+  protected readonly estadoPeriodoBadge = ESTADO_PERIODO_BADGE;
+  protected readonly estadoPeriodoAyuda = ESTADO_PERIODO_AYUDA;
+
+  protected readonly enviandoARevision = signal(false);
+  protected readonly aprobando = signal(false);
+  protected readonly comentarioAprobacion = signal('');
+
+  /** Rechazar y reabrir comparten modal: los dos piden lo mismo, un motivo. */
+  protected readonly accionConMotivo = signal<'RECHAZAR' | 'REABRIR' | null>(null);
+  protected readonly motivoAccion = signal('');
+  protected readonly guardandoMotivo = signal(false);
+  private readonly plantillaMotivo = viewChild<TemplateRef<unknown>>('modalMotivo');
+  private overlayMotivo: OverlayRef | null = null;
+
+  protected async enviarARevision(): Promise<void> {
+    const id = this.periodoId();
+    if (!id) return;
+
+    this.enviandoARevision.set(true);
+    try {
+      await this.service.enviarARevision(id);
+      this.toast.success(
+        'El mes queda congelado hasta que se apruebe o se rechace.',
+        'Enviado a revisión',
+      );
+      await this.refrescarCierre(id);
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo enviar a revisión.'), 'Error');
+    } finally {
+      this.enviandoARevision.set(false);
+    }
+  }
+
+  protected async aprobar(): Promise<void> {
+    const id = this.periodoId();
+    if (!id) return;
+
+    this.aprobando.set(true);
+    try {
+      const resultado = await this.service.aprobarPeriodo(id, this.comentarioAprobacion());
+      /* El mensaje distingue los dos desenlaces porque desde la pantalla son
+         indistinguibles: en los dos casos el botón desaparece. */
+      if (resultado.cerrado) {
+        this.toast.success('El mes queda cerrado con las cifras revisadas.', 'Cerrado');
+      } else {
+        this.toast.success(
+          `Falta ${resultado.faltan.map(f => f.nombre).join(', ')} para cerrar el mes.`,
+          'Aprobación registrada',
+        );
+      }
+      this.comentarioAprobacion.set('');
+      await this.refrescarCierre(id);
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo aprobar el periodo.'), 'Error');
+    } finally {
+      this.aprobando.set(false);
+    }
+  }
+
+  protected async registrarPago(): Promise<void> {
+    const id = this.periodoId();
+    if (!id) return;
+
+    try {
+      await this.service.registrarPago(id);
+      this.toast.success('El mes queda como pagado y ya no se modifica.', 'Pago registrado');
+      await this.refrescarCierre(id);
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo registrar el pago.'), 'Error');
+    }
+  }
+
+  protected abrirAccionConMotivo(accion: 'RECHAZAR' | 'REABRIR'): void {
+    this.motivoAccion.set('');
+    this.accionConMotivo.set(accion);
+    const tpl = this.plantillaMotivo();
+    if (!tpl) return;
+    this.overlayMotivo?.dispose();
+    this.overlayMotivo = this.dialogService.openTemplate(tpl, this.vcr);
+    this.overlayMotivo.backdropClick().subscribe(() => this.cerrarAccionConMotivo());
+  }
+
+  protected cerrarAccionConMotivo(): void {
+    this.accionConMotivo.set(null);
+    this.overlayMotivo?.dispose();
+    this.overlayMotivo = null;
+  }
+
+  protected async confirmarAccionConMotivo(): Promise<void> {
+    const id = this.periodoId();
+    const accion = this.accionConMotivo();
+    const motivo = this.motivoAccion().trim();
+    if (!id || !accion || motivo.length < 3) return;
+
+    this.guardandoMotivo.set(true);
+    try {
+      if (accion === 'RECHAZAR') {
+        await this.service.rechazarPeriodo(id, motivo);
+        this.toast.success('El mes vuelve a edición y se borran las aprobaciones.', 'Rechazado');
+      } else {
+        await this.service.reabrirPeriodo(id, motivo);
+        this.toast.success('El mes vuelve a edición. Queda registrado quién y por qué.', 'Reabierto');
+      }
+      this.cerrarAccionConMotivo();
+      await this.refrescarCierre(id);
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo completar la acción.'), 'Error');
+    } finally {
+      this.guardandoMotivo.set(false);
+    }
+  }
+
+  /**
+   * Tras un cambio de estado hay que refrescar TODO lo que depende de él: el
+   * panel de cierre, el periodo (que pinta el badge de la barra superior) y las
+   * alertas. Sin el `periodos.reload()` la cabecera seguía diciendo "Calculado"
+   * sobre un mes ya cerrado.
+   */
+  private async refrescarCierre(id: string): Promise<void> {
+    this.revision.reload();
+    this.periodos.reload();
+    await this.refrescarPanelesDelPeriodo(id);
+  }
   protected readonly configuracion = signal<ConfiguracionPlanilla | null>(null);
   protected readonly descargandoExcel = signal(false);
 
@@ -314,7 +476,9 @@ export class PlanillaComisionesPage implements OnDestroy {
   protected readonly desglose = httpResource<ReporteDesglose>(
     () => {
       const id = this.periodoId();
-      return id && this.pestana() === 'REPORTES' ? this.service.desgloseRequest(id) : undefined;
+      return id && this.pestana() === 'REPORTES'
+        ? this.service.desgloseRequest(id, this.incluirOcultas())
+        : undefined;
     },
     { defaultValue: { filas: [] } },
   );
@@ -961,7 +1125,7 @@ export class PlanillaComisionesPage implements OnDestroy {
     const tareas: [Promise<Alertas>, Promise<ReporteConsolidado | null>] = [
       this.service.obtenerAlertas(id),
       this.pestana() === 'REPORTES' || this.consolidado() !== null
-        ? this.service.obtenerConsolidado(id).catch(() => null)
+        ? this.service.obtenerConsolidado(id, this.incluirOcultas()).catch(() => null)
         : Promise.resolve(null),
     ];
 
@@ -975,10 +1139,24 @@ export class PlanillaComisionesPage implements OnDestroy {
 
   private async cargarConsolidado(id: string): Promise<void> {
     try {
-      this.consolidado.set(await this.service.obtenerConsolidado(id));
+      this.consolidado.set(await this.service.obtenerConsolidado(id, this.incluirOcultas()));
     } catch {
       this.consolidado.set(null);
     }
+  }
+
+  /**
+   * Muestra u oculta a las vendedoras dadas de baja en los informes del mes.
+   *
+   * Vuelve a pedir el consolidado en vez de filtrar lo que ya está en memoria:
+   * los totales los calcula el servidor sobre las filas que devuelve, y
+   * recortarlos aquí obligaría a re-sumar las doce columnas de dinero por
+   * nuestra cuenta — el desglose se recarga solo, porque lee este signal.
+   */
+  protected async alternarOcultas(): Promise<void> {
+    this.incluirOcultas.update(v => !v);
+    const id = this.periodoId();
+    if (id) await this.cargarConsolidado(id);
   }
 
   /**
@@ -1005,7 +1183,12 @@ export class PlanillaComisionesPage implements OnDestroy {
 
     this.descargandoExcel.set(true);
     try {
-      const { blob, nombre } = await this.service.descargarExcel(periodo.id, periodo.anio, periodo.mes);
+      const { blob, nombre } = await this.service.descargarExcel(
+        periodo.id,
+        periodo.anio,
+        periodo.mes,
+        this.incluirOcultas(),
+      );
       descargarArchivo(blob, nombre);
       this.toast.success(`${nombre} descargado.`, 'Excel listo');
     } catch (err) {

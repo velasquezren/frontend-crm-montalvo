@@ -14,9 +14,12 @@ import {
   ReglaClasificacion,
   ReglaClasificacionCreada,
   ReporteConsolidado,
+  ResultadoAprobacion,
+  RevisionPeriodo,
   RespuestaImportacion,
   ResultadoCalculo,
   CambiosVendedora,
+  NuevaVendedora,
   TipoVendedora,
   Vendedora,
 } from './planilla.model';
@@ -113,15 +116,28 @@ export class PlanillaComisionesService {
     return this.api.request(`/planilla-comisiones/periodos/${periodoId}/alertas`);
   }
 
-  consolidadoRequest(periodoId: string): ResourceRequest {
-    return this.api.request(`/planilla-comisiones/periodos/${periodoId}/reporte/consolidado`);
+  /**
+   * La liquidación del mes por persona.
+   *
+   * `incluirOcultas` decide si entran las vendedoras dadas de baja. **El filtro
+   * lo aplica el servidor, no la pantalla**, y es a propósito: los totales del
+   * pie tienen que ser la suma de las filas que se ven, y recalcularlos aquí
+   * sería duplicar el criterio del backend justo en las cifras que se pagan.
+   * Cambiar el interruptor vuelve a pedir el informe.
+   */
+  consolidadoRequest(periodoId: string, incluirOcultas = false): ResourceRequest {
+    return this.api.request(`/planilla-comisiones/periodos/${periodoId}/reporte/consolidado`, {
+      incluirOcultas: incluirOcultas ? true : undefined,
+    });
   }
 
   /** Todas las líneas de desglose (tipo/canal/unidad de negocio) de todas las
    *  vendedoras liquidadas — para filtrar por un cubo concreto y ver la
    *  sumatoria, sin abrir el Excel. */
-  desgloseRequest(periodoId: string): ResourceRequest {
-    return this.api.request(`/planilla-comisiones/periodos/${periodoId}/reporte/desglose`);
+  desgloseRequest(periodoId: string, incluirOcultas = false): ResourceRequest {
+    return this.api.request(`/planilla-comisiones/periodos/${periodoId}/reporte/desglose`, {
+      incluirOcultas: incluirOcultas ? true : undefined,
+    });
   }
 
   /** Resumen anual por vendedora: doce meses y cuatro trimestres. Solo ADMIN. */
@@ -162,10 +178,15 @@ export class PlanillaComisionesService {
    * por vendedora. Mismo endpoint que usa Analítica
    * (`AnaliticaService.descargarExcel`); dos puntos de entrada al mismo libro.
    */
-  descargarExcel(periodoId: string, anio: number, mes: number): Promise<{ blob: Blob; nombre: string }> {
+  descargarExcel(
+    periodoId: string,
+    anio: number,
+    mes: number,
+    incluirOcultas = false,
+  ): Promise<{ blob: Blob; nombre: string }> {
     return this.api.getBlob(
       `/planilla-comisiones/periodos/${periodoId}/exportar`,
-      undefined,
+      { incluirOcultas: incluirOcultas ? true : undefined },
       nombreArchivoComisiones(anio, mes),
     );
   }
@@ -186,11 +207,56 @@ export class PlanillaComisionesService {
     return this.api.delete(`/planilla-comisiones/periodos/${periodoId}`);
   }
 
-  cambiarEstadoPeriodo(periodoId: string, estado: string): Promise<PeriodoComision> {
-    return this.api.patch<PeriodoComision>(
-      `/planilla-comisiones/periodos/${periodoId}/estado`,
-      { estado },
+  /* ── Cierre del mes ─────────────────────────────────────────────────
+   *
+   * **No hay un método que reciba el estado destino**, y su ausencia es
+   * intencional: el backend tampoco lo tiene. Cada paso es su propia ruta con
+   * sus permisos y los datos que exige, y la tabla de transiciones decide si el
+   * salto es legal desde donde está el mes. El endpoint genérico que había
+   * aceptaba cualquier valor del enum, así que `CERRADO → BORRADOR` pasaba.
+   */
+
+  revisionRequest(periodoId: string): ResourceRequest {
+    return this.api.request(`/planilla-comisiones/periodos/${periodoId}/revision`);
+  }
+
+  obtenerRevision(periodoId: string): Promise<RevisionPeriodo> {
+    return this.api.get<RevisionPeriodo>(`/planilla-comisiones/periodos/${periodoId}/revision`);
+  }
+
+  enviarARevision(periodoId: string): Promise<PeriodoComision> {
+    return this.api.post<PeriodoComision>(`/planilla-comisiones/periodos/${periodoId}/revision`);
+  }
+
+  /** Si esta firma completa el conjunto, el backend cierra el mes en el acto. */
+  aprobarPeriodo(periodoId: string, comentario?: string): Promise<ResultadoAprobacion> {
+    return this.api.post<ResultadoAprobacion>(
+      `/planilla-comisiones/periodos/${periodoId}/aprobar`,
+      { comentario },
     );
+  }
+
+  rechazarPeriodo(periodoId: string, motivo: string): Promise<PeriodoComision> {
+    return this.api.post<PeriodoComision>(
+      `/planilla-comisiones/periodos/${periodoId}/rechazar`,
+      { motivo },
+    );
+  }
+
+  reabrirPeriodo(periodoId: string, motivo: string): Promise<PeriodoComision> {
+    return this.api.post<PeriodoComision>(
+      `/planilla-comisiones/periodos/${periodoId}/reabrir`,
+      { motivo },
+    );
+  }
+
+  registrarPago(periodoId: string): Promise<PeriodoComision> {
+    return this.api.post<PeriodoComision>(`/planilla-comisiones/periodos/${periodoId}/pagar`);
+  }
+
+  /** Alta manual, para quien cobra por planilla pero no vende (marketing). */
+  crearVendedora(datos: NuevaVendedora): Promise<Vendedora> {
+    return this.api.post<Vendedora>('/planilla-comisiones/vendedoras', datos);
   }
 
   actualizarVendedora(id: string, cambios: CambiosVendedora): Promise<Vendedora> {
@@ -203,9 +269,10 @@ export class PlanillaComisionesService {
     return this.api.get<ConfiguracionPlanilla>('/planilla-comisiones/configuracion');
   }
 
-  obtenerConsolidado(periodoId: string): Promise<ReporteConsolidado> {
+  obtenerConsolidado(periodoId: string, incluirOcultas = false): Promise<ReporteConsolidado> {
     return this.api.get<ReporteConsolidado>(
       `/planilla-comisiones/periodos/${periodoId}/reporte/consolidado`,
+      { incluirOcultas: incluirOcultas ? true : undefined },
     );
   }
 

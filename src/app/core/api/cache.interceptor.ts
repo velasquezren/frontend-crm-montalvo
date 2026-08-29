@@ -30,6 +30,31 @@ const REFERENCIA = [
   '/servicios/medicos',
 ];
 
+/**
+ * Solo la ruta EXACTA, nunca lo que cuelga de ella.
+ *
+ * Antes esto era `req.url.includes(ruta)`, y `includes` no distingue una
+ * colección de sus hijos: `/planilla-comisiones/periodos` casaba también con
+ * `/periodos/:id/ventas`, `/periodos/:id/alertas`,
+ * `/periodos/:id/reporte/consolidado` y hasta con el `/exportar` que devuelve
+ * el Excel. Todos ellos son datos de la operación del día —justo lo que este
+ * archivo declara que NO debe entrar— y se estaban sirviendo hasta un minuto
+ * tarde.
+ *
+ * No saltaba a la vista porque cualquier escritura vacía la caché entera, así
+ * que trabajando solo casi nunca se ve viejo. Se nota cuando el cambio lo hace
+ * OTRA persona: dos SUPER_ADMIN revisando el mismo mes, uno aprueba y el otro
+ * sigue viendo "falta su firma" durante un minuto, con el botón de aprobar
+ * puesto sobre un mes que ya está cerrado.
+ *
+ * `URL` en vez de comparar cadenas para que los parámetros no se cuelen en la
+ * comparación: `/periodos?limite=100` tiene que seguir cacheándose.
+ */
+export function esDeReferencia(url: string): boolean {
+  const ruta = new URL(url, 'http://local').pathname;
+  return REFERENCIA.some(referencia => ruta === referencia || ruta.endsWith(referencia));
+}
+
 /** Vida de una entrada. Corta a propósito: ante la duda, que pese la frescura. */
 const TTL_MS = 60_000;
 
@@ -57,7 +82,7 @@ export const cacheInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
-  if (!REFERENCIA.some(ruta => req.url.includes(ruta))) {
+  if (!esDeReferencia(req.url)) {
     return next(req);
   }
 

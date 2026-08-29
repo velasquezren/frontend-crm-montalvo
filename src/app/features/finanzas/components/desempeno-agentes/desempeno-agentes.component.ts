@@ -121,9 +121,20 @@ export class DesempenoAgentesComponent implements OnDestroy {
     this.service.periodosRequest(),
   );
 
+  /**
+   * Si el selector de ejecutivas incluye a las dadas de baja.
+   *
+   * Arranca en `false` como el resto de los informes, pero **acá el interruptor
+   * es imprescindible, no una comodidad**: esta lista de chips es la única
+   * forma de llegar a una ficha, así que sin él una vendedora dada de baja
+   * quedaría irrecuperable desde la interfaz — y dar de baja tiene que
+   * significar "no aparece por defecto", nunca "dejó de existir".
+   */
+  protected readonly incluirOcultas = signal(false);
+
   protected readonly consolidado = httpResource<ReporteConsolidado>(() => {
     const id = this.periodoId();
-    return id ? this.service.consolidadoRequest(id) : undefined;
+    return id ? this.service.consolidadoRequest(id, this.incluirOcultas()) : undefined;
   });
 
   /**
@@ -183,6 +194,19 @@ export class DesempenoAgentesComponent implements OnDestroy {
     const id = this.vendedoraSeleccionada();
     return (id ? lista.find(v => v.vendedoraId === id) : null) ?? lista[0] ?? null;
   });
+
+  /** Las dadas de baja que este periodo tiene liquidadas, se listen o no. */
+  protected readonly ocultasDelPeriodo = computed(
+    () => this.consolidado.value()?.ocultas ?? [],
+  );
+
+  protected alternarOcultas(): void {
+    /* Al volver a ocultarlas, la seleccionada puede ser justo una de ellas: se
+       suelta la selección para que la ficha caiga en la primera del equipo en
+       vez de quedarse en blanco sin decir por qué. */
+    if (this.incluirOcultas()) this.vendedoraSeleccionada.set(null);
+    this.incluirOcultas.update(v => !v);
+  }
 
   /**
    * Foto de la ejecutiva que se está viendo, o `null`.

@@ -44,7 +44,20 @@
           [active]="vendedora()?.vendedoraId === v.vendedoraId"
           size="sm"
           (clicked)="elegirVendedora(v.vendedoraId)">
-          {{ v.nombre }}
+          {{ v.nombre }}@if (v.oculta) { <span class="text-text-muted"> · de baja</span> }
+        </app-filter-chip>
+      }
+      <!-- Estos chips son la ÚNICA puerta a una ficha, así que el interruptor
+           no es una comodidad: sin él, una vendedora dada de baja no se podría
+           consultar nunca más, y dar de baja significa "no aparece por
+           defecto", no "dejó de existir". -->
+      @if (ocultasDelPeriodo().length > 0) {
+        <app-filter-chip
+          size="sm"
+          [active]="incluirOcultas()"
+          [count]="ocultasDelPeriodo().length"
+          (clicked)="alternarOcultas()">
+          Dadas de baja
         </app-filter-chip>
       }
     </div>

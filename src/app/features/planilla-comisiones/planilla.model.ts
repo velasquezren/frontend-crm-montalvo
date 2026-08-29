@@ -76,6 +76,12 @@ export interface PeriodoComision {
    * hoy como si hubieran sido las suyas.
    */
   configuracionUsada: FotoConfiguracion | null;
+  /** Cuándo entró a revisión. `null` si no está ni pasó por ahí. */
+  enRevisionDesde: string | null;
+  cerradoEn: string | null;
+  cerradoPor: string | null;
+  pagadoEn: string | null;
+  pagadoPor: string | null;
   createdAt: string;
   _count?: { ventas: number; resultados: number };
 }
@@ -177,6 +183,21 @@ export interface Vendedora {
   sueldoBase: string;
   activa: boolean;
   configurada: boolean;
+  /**
+   * true = dada de baja: no sale en los informes, pero sigue existiendo.
+   *
+   * **No es `activa`.** `activa: false` la saca del motor de cálculo, así que
+   * recalcular un mes en el que sí trabajó le borra la comisión de ese mes.
+   * `oculta` no toca ni un número: sus ventas siguen sumando a la facturación
+   * de la clínica y sus liquidaciones pasadas siguen ahí — solo deja de
+   * listarse donde la protagonista es la persona (planilla, desglose, Excel y
+   * matriz anual). Es lo que hace falta cuando alguien se va de la clínica.
+   */
+  oculta: boolean;
+  /** Cuándo se la ocultó (ISO). `null` si nunca se la ocultó. */
+  ocultaDesde: string | null;
+  /** Por qué. El backend lo exige al ocultar y lo borra al volver a mostrarla. */
+  motivoOculta: string | null;
   agente: AgenteDelCrm | null;
 }
 
@@ -196,6 +217,24 @@ export interface CambiosVendedora {
   sueldoBase?: number;
   activa?: boolean;
   configurada?: boolean;
+  oculta?: boolean;
+  /** Obligatorio cuando `oculta` es `true`: el backend responde 400 sin él. */
+  motivoOculta?: string;
+}
+
+/**
+ * Alta a mano de alguien que cobra por planilla pero **nunca vende**.
+ *
+ * Es el caso del equipo de marketing: cobran la mitad del pote de jefatura cada
+ * una, pero no tienen `vendedora_pk` ni aparecen en ninguna fila del Excel de
+ * ventas, así que el alta automática de la importación nunca las crea.
+ */
+export interface NuevaVendedora {
+  codigo: string;
+  nombre: string;
+  tipo: TipoVendedora;
+  area: AreaVendedora;
+  sueldoBase: number;
 }
 
 export interface AgenteDelCrm {
@@ -256,12 +295,87 @@ export interface FilaConsolidado {
   sueldoBase: number;
   totalGanado: number;
   pctComision: number;
+  /** Solo puede venir en `true` si se pidió el informe con las dadas de baja. */
+  oculta: boolean;
+  ocultaDesde: string | null;
+  motivoOculta: string | null;
+}
+
+/** Una vendedora dada de baja que el periodo tiene pero el informe no lista. */
+export interface VendedoraOcultaDelInforme {
+  vendedoraId: string;
+  nombre: string;
+  codigo: string;
+  motivoOculta: string | null;
+  /** Lo que habría cobrado — para que la exclusión se pueda dimensionar. */
+  totalGanado: number;
+}
+
+/* ── Cierre del mes ─────────────────────────────────────────────────── */
+
+/** Quien puede dar el visto bueno: un SUPER_ADMIN activo AHORA. */
+export interface Aprobador {
+  readonly id: string;
+  readonly nombre: string;
+}
+
+export interface AprobacionPeriodo extends Aprobador {
+  readonly comentario: string | null;
+  readonly fecha: string;
+}
+
+/** Algo que hay que resolver antes de poder mandar el mes a revisión. */
+export interface BloqueoRevision {
+  readonly clave: string;
+  readonly detalle: string;
+}
+
+/**
+ * El panel de cierre: en qué punto está el mes, quién firmó y qué falta.
+ *
+ * `aprobaron` y `faltan` se recalculan en cada lectura contra los SUPER_ADMIN
+ * **activos ahora**, no contra una lista congelada al abrir la revisión: uno
+ * puede bajar a ADMIN en cualquier momento, y una lista congelada dejaría el
+ * mes esperando para siempre una firma que ya nadie puede dar.
+ */
+export interface RevisionPeriodo {
+  readonly estado: EstadoPeriodo;
+  readonly aprobaron: readonly AprobacionPeriodo[];
+  readonly faltan: readonly Aprobador[];
+  /** true = no falta nadie y hay al menos una firma; el mes ya se cerró. */
+  readonly completa: boolean;
+  /** Vacío = se puede mandar a revisión. */
+  readonly bloqueos: readonly BloqueoRevision[];
+  readonly enRevisionDesde: string | null;
+  readonly cerradoEn: string | null;
+  readonly cerradoPor: string | null;
+  readonly pagadoEn: string | null;
+  readonly pagadoPor: string | null;
+}
+
+/** Lo que devuelve aprobar: si esa firma fue la que cerró el mes. */
+export interface ResultadoAprobacion {
+  readonly cerrado: boolean;
+  readonly aprobaron: readonly AprobacionPeriodo[];
+  readonly faltan: readonly Aprobador[];
+  readonly completa: boolean;
 }
 
 export interface ReporteConsolidado {
   periodo: PeriodoComision;
   filas: FilaConsolidado[];
   totales: Record<string, number>;
+  /**
+   * Las dadas de baja que SÍ tienen liquidación en este periodo.
+   *
+   * Llega siempre, se incluyan o no en `filas`: es lo que permite decir en
+   * pantalla cuántas se dejaron fuera. Un total que cuadra con sus filas y aun
+   * así le falta gente es peor que uno incompleto — quien lo cuadra contra su
+   * Excel busca un error de cálculo que no existe.
+   */
+  ocultas: VendedoraOcultaDelInforme[];
+  /** true = las de arriba van dentro de `filas` y de `totales`. */
+  incluyeOcultas: boolean;
 }
 
 /**
@@ -457,11 +571,22 @@ export const UNIDAD_LABEL: Record<UnidadNegocio, string> = {
   VARIOS: 'Varios',
 };
 
-export const ESTADO_PERIODO_LABEL: Record<EstadoPeriodo, string> = {
-  BORRADOR: 'Borrador',
-  CALCULADO: 'Calculado',
-  CERRADO: 'Cerrado',
-};
+/*
+ * Las etiquetas, colores y ayudas de `EstadoPeriodo` viven en
+ * `shared/models/estados.model.ts`, junto a las de lead y venta — es el sitio
+ * que declara el sistema de diseño para cualquier estado que se pinte como
+ * badge, y ya lo importaban desde acá tres vistas y un átomo compartido.
+ *
+ * Se re-exportan para no romper esos imports, pero la definición es una sola:
+ * la copia que había aquí se quedó con tres estados cuando el backend pasó a
+ * cinco, y `Record<EstadoPeriodo, string>` no avisa de las claves que faltan
+ * hasta que alguien las lee y obtiene `undefined` en pantalla.
+ */
+export {
+  ESTADO_PERIODO_AYUDA,
+  ESTADO_PERIODO_BADGE,
+  ESTADO_PERIODO_LABEL,
+} from '../../shared/models/estados.model';
 
 export const MESES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -533,6 +658,8 @@ export interface ResumenAnual {
    * concreto, en cambio, usa el `tipoCambio` de ESE `MesVendedora`.
    */
   readonly tcReferencia: number;
+  /** Dadas de baja que no se listan en la matriz. Ver `ReporteConsolidado.ocultas`. */
+  readonly ocultas: ReadonlyArray<{ vendedoraId: string; nombre: string; codigo: string }>;
 }
 
 /** Abreviaturas para las cabeceras de doce columnas. */

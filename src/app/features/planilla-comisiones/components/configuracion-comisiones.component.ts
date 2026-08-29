@@ -1,3 +1,4 @@
+import { OverlayRef } from '@angular/cdk/overlay';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -6,6 +7,9 @@ import {
   input,
   output,
   signal,
+  TemplateRef,
+  ViewContainerRef,
+  viewChild,
 } from '@angular/core';
 
 import { mensajeDeError } from '../../../core/api/http-error';
@@ -15,6 +19,8 @@ import { BadgeComponent } from '../../../shared/components/badge/badge.component
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { FilterChipComponent } from '../../../shared/components/filter-chip/filter-chip.component';
+import { DialogService } from '../../../shared/components/dialog/dialog.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { InfoHintComponent } from '../../../shared/components/info-hint/info-hint.component';
 import { InputComponent } from '../../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton/loading-skeleton.component';
@@ -22,6 +28,7 @@ import { TableComponent } from '../../../shared/components/table/table.component
 import { MonedaPipe } from '../../../shared/pipes/moneda.pipe';
 import { PlanillaComisionesService } from '../planilla-comisiones.service';
 import {
+  AreaVendedora,
   CambiosVendedora,
   ClasifComision,
   CLASIF_LABEL,
@@ -56,6 +63,7 @@ import {
     ButtonComponent,
     EmptyStateComponent,
     FilterChipComponent,
+    IconComponent,
     InfoHintComponent,
     InputComponent,
     LoadingSkeletonComponent,
@@ -77,6 +85,8 @@ export class ConfiguracionComisionesComponent {
   private readonly service = inject(PlanillaComisionesService);
   private readonly toast = inject(ToastService);
   private readonly authService = inject(AuthService);
+  private readonly dialogService = inject(DialogService);
+  private readonly vcr = inject(ViewContainerRef);
 
   protected readonly esSuperAdmin = this.authService.isSuperAdmin;
   protected readonly clasifLabel = CLASIF_LABEL;
@@ -172,6 +182,196 @@ export class ConfiguracionComisionesComponent {
       this.configuracionModificada.emit();
     } catch (err) {
       this.toast.error(mensajeDeError(err, 'No se pudo guardar el parámetro.'), 'Parámetros');
+    }
+  }
+
+  /* ── Directorio: quién sigue en el equipo y quién ya no ────────────────
+   *
+   * El directorio muestra un grupo por vez porque son dos preguntas distintas:
+   * "a quién le estoy pagando este mes" y "a quién di de baja". Mezclarlas en
+   * una sola lista hacía que, con el tiempo, hubiera que leer la columna de
+   * estado fila por fila para saber cuál era cuál.
+   *
+   * El contador va en el chip aunque esté en cero: así se ve que la baja existe
+   * como opción y, sobre todo, se ve cuánta gente hay escondida sin tener que
+   * ir a buscarla. Una vendedora dada de baja que nadie recuerda es exactamente
+   * la que después aparece "perdida" en un informe.
+   */
+  protected readonly verDadasDeBaja = signal(false);
+
+  protected readonly vendedorasEnEquipo = computed(() =>
+    this.vendedoras().filter(v => !v.oculta),
+  );
+
+  protected readonly vendedorasDadasDeBaja = computed(() =>
+    this.vendedoras().filter(v => v.oculta),
+  );
+
+  protected readonly vendedorasVisibles = computed(() =>
+    this.verDadasDeBaja() ? this.vendedorasDadasDeBaja() : this.vendedorasEnEquipo(),
+  );
+
+  /**
+   * Nadie en marketing = el pote de jefatura se paga solo una vez.
+   *
+   * El pote se paga DOS veces —íntegro a la jefatura y otro tanto repartido
+   * entre marketing—, así que sin nadie en esa área la mitad del pago
+   * sencillamente no se emite. No falla nada: el cálculo deja un aviso en el
+   * log del servidor y sigue. Esta línea es la única señal que ve una persona.
+   *
+   * Se mira sobre las que están en el equipo, no sobre todas: una persona de
+   * marketing dada de baja no cobra, así que tampoco tapa el hueco.
+   */
+  protected readonly faltaEquipoMarketing = computed(
+    () =>
+      this.vendedoras().length > 0 &&
+      !this.vendedorasEnEquipo().some(v => v.area === 'PUBLICIDAD'),
+  );
+
+  /* ── Ocultar / devolver a los informes ─────────────────────────────────
+   *
+   * Ocultar pasa por un modal con motivo obligatorio —el backend rechaza la
+   * petición sin él— porque el efecto es que una persona desaparece de la
+   * planilla que se firma. Devolverla no pregunta nada: se vuelve al estado
+   * normal, y el backend borra el motivo solo.
+   */
+  protected readonly vendedoraAOcultar = signal<Vendedora | null>(null);
+  protected readonly motivoOculta = signal('');
+  protected readonly ocultando = signal(false);
+  /** Quién tiene un cambio de visibilidad en vuelo: solo SU botón se bloquea. */
+  protected readonly visibilidadEnCurso = signal<string | null>(null);
+  private readonly plantillaOcultar = viewChild<TemplateRef<unknown>>('modalOcultar');
+  private overlayOcultar: OverlayRef | null = null;
+
+  protected alternarVisibilidad(vendedora: Vendedora): void {
+    if (!vendedora.oculta) {
+      this.motivoOculta.set('');
+      this.vendedoraAOcultar.set(vendedora);
+      const tpl = this.plantillaOcultar();
+      if (!tpl) return;
+      this.overlayOcultar?.dispose();
+      this.overlayOcultar = this.dialogService.openTemplate(tpl, this.vcr);
+      this.overlayOcultar.backdropClick().subscribe(() => this.cerrarOcultar());
+      return;
+    }
+    void this.devolverAInformes(vendedora);
+  }
+
+  protected cerrarOcultar(): void {
+    this.vendedoraAOcultar.set(null);
+    this.overlayOcultar?.dispose();
+    this.overlayOcultar = null;
+  }
+
+  protected async confirmarOcultar(): Promise<void> {
+    const vendedora = this.vendedoraAOcultar();
+    const motivo = this.motivoOculta().trim();
+    if (!vendedora || motivo.length < 3) return;
+
+    this.ocultando.set(true);
+    this.visibilidadEnCurso.set(vendedora.id);
+    try {
+      await this.service.actualizarVendedora(vendedora.id, { oculta: true, motivoOculta: motivo });
+      this.toast.success(
+        `${vendedora.nombre} ya no aparece en los informes. Sus ventas siguen contando.`,
+        'Dada de baja',
+      );
+      this.vendedoraModificada.emit();
+      this.cerrarOcultar();
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo ocultar a la vendedora.'), 'Error');
+    } finally {
+      this.ocultando.set(false);
+      this.visibilidadEnCurso.set(null);
+    }
+  }
+
+  private async devolverAInformes(vendedora: Vendedora): Promise<void> {
+    this.visibilidadEnCurso.set(vendedora.id);
+    try {
+      await this.service.actualizarVendedora(vendedora.id, { oculta: false });
+      this.toast.success(`${vendedora.nombre} vuelve a los informes.`, 'Reincorporada');
+      this.vendedoraModificada.emit();
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo reincorporar a la vendedora.'), 'Error');
+    } finally {
+      this.visibilidadEnCurso.set(null);
+    }
+  }
+
+  /* ── Alta manual de quien cobra sin vender ─────────────────────────────
+   *
+   * Todas las vendedoras se dan de alta solas al importar, porque cada fila del
+   * Excel trae su `vendedora_pk`. El equipo de marketing no: no vende, así que
+   * no tiene código en FileMaker ni aparece en ninguna fila — y sin embargo
+   * cobra la mitad del pote de jefatura cada una. Sin este formulario la única
+   * forma de meterlas era escribir en la base a mano.
+   */
+  protected readonly creandoVendedora = signal(false);
+  protected readonly guardandoAlta = signal(false);
+  protected readonly nuevoCodigo = signal('');
+  protected readonly nuevoNombre = signal('');
+  protected readonly nuevoTipo = signal<TipoVendedora>('VENDEDORA');
+  protected readonly nuevaArea = signal<AreaVendedora>('PUBLICIDAD');
+  protected readonly nuevoSueldo = signal('');
+  private readonly plantillaAlta = viewChild<TemplateRef<unknown>>('modalAlta');
+  private overlayAlta: OverlayRef | null = null;
+
+  protected readonly altaValida = computed(
+    () => this.nuevoCodigo().trim().length > 0 && this.nuevoNombre().trim().length > 0,
+  );
+
+  protected abrirAlta(): void {
+    this.nuevoCodigo.set('');
+    this.nuevoNombre.set('');
+    this.nuevoTipo.set('VENDEDORA');
+    /* Se preselecciona marketing porque es el único caso que NO puede darse de
+       alta solo: una ejecutiva aparece en cuanto vende. */
+    this.nuevaArea.set('PUBLICIDAD');
+    this.nuevoSueldo.set('');
+    this.creandoVendedora.set(true);
+
+    const tpl = this.plantillaAlta();
+    if (!tpl) return;
+    this.overlayAlta?.dispose();
+    this.overlayAlta = this.dialogService.openTemplate(tpl, this.vcr);
+    this.overlayAlta.backdropClick().subscribe(() => this.cerrarAlta());
+  }
+
+  protected cerrarAlta(): void {
+    this.creandoVendedora.set(false);
+    this.overlayAlta?.dispose();
+    this.overlayAlta = null;
+  }
+
+  protected async confirmarAlta(): Promise<void> {
+    if (!this.altaValida()) return;
+
+    const sueldoBase = Number(this.nuevoSueldo() || 0);
+    if (!Number.isFinite(sueldoBase) || sueldoBase < 0) {
+      this.toast.error('El sueldo base debe ser un número positivo.', 'Dato inválido');
+      return;
+    }
+
+    this.guardandoAlta.set(true);
+    try {
+      const creada = await this.service.crearVendedora({
+        codigo: this.nuevoCodigo().trim(),
+        nombre: this.nuevoNombre().trim(),
+        tipo: this.nuevoTipo(),
+        area: this.nuevaArea(),
+        sueldoBase,
+      });
+      this.toast.success(
+        `${creada.nombre} entra en la planilla. Recalcula el mes para que aparezca.`,
+        'Persona añadida',
+      );
+      this.cerrarAlta();
+      this.vendedoraModificada.emit();
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo dar de alta.'), 'Error');
+    } finally {
+      this.guardandoAlta.set(false);
     }
   }
 
