@@ -18,6 +18,7 @@ import { ToastService } from '../../../core/toast/toast.service';
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { ErrorCargaComponent } from '../../../shared/components/error-carga/error-carga.component';
 import { FilterChipComponent } from '../../../shared/components/filter-chip/filter-chip.component';
 import { DialogService } from '../../../shared/components/dialog/dialog.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
@@ -62,6 +63,7 @@ import {
     BadgeComponent,
     ButtonComponent,
     EmptyStateComponent,
+    ErrorCargaComponent,
     FilterChipComponent,
     IconComponent,
     InfoHintComponent,
@@ -78,9 +80,12 @@ export class ConfiguracionComisionesComponent {
   readonly configuracion = input<ConfiguracionPlanilla | null>(null);
   readonly vendedoras = input<readonly Vendedora[]>([]);
   readonly cargandoVendedoras = input(false);
+  /** true = la configuración no se pudo cargar. Distinto de "todavía cargando". */
+  readonly errorConfiguracion = input(false);
 
   readonly configuracionModificada = output<void>();
   readonly vendedoraModificada = output<void>();
+  readonly reintentarConfiguracion = output<void>();
 
   private readonly service = inject(PlanillaComisionesService);
   private readonly toast = inject(ToastService);

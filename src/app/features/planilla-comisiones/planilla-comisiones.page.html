@@ -198,7 +198,15 @@
                 <td class="text-left text-xs text-text-muted">{{ p.calculadoEn ? (p.calculadoEn | date: 'dd/MM/yy HH:mm') : '—' }}</td>
                 <td class="text-right whitespace-nowrap" (click)="$event.stopPropagation()">
                   <div class="flex items-center justify-end gap-1">
-                    <app-button variant="ghost" size="sm" icon="eye" (clicked)="abrirPeriodo(p.id)">Abrir</app-button>
+                    <!-- Sin botón "Abrir": la fila entera ya lleva
+                         `(click)="abrirPeriodo(p.id)"` y `fila-interactiva`, así
+                         que era un botón para hacer lo que hace pulsar al lado
+                         del botón — y le quitaba sitio a las tres descargas.
+
+                         Las etiquetas son las mismas que las de la barra
+                         superior (Excel · Word · Métricas) a propósito: es la
+                         misma acción desde otro sitio, y dos nombres para lo
+                         mismo obligan a comprobar cuál es cuál. -->
                     <app-button
                       variant="ghost"
                       size="sm"
@@ -207,16 +215,13 @@
                       (clicked)="descargarExcelDe(p)">
                       Excel
                     </app-button>
-                    <!-- El informe firmable, sin tener que abrir el mes: desde
-                         acá se bajan los de varios meses seguidos, que es como
-                         se piden cuando administración cierra un trimestre. -->
                     <app-button
                       variant="ghost"
                       size="sm"
                       icon="file-text"
                       [loading]="descargandoInforme()"
                       (clicked)="descargarInformeDe(p)">
-                      Informe
+                      Word
                     </app-button>
                     <app-button
                       variant="ghost"
@@ -1098,6 +1103,8 @@
     [configuracion]="configuracion()"
     [vendedoras]="vendedoras.value()"
     [cargandoVendedoras]="vendedoras.isLoading()"
+    [errorConfiguracion]="configuracionFallo()"
+    (reintentarConfiguracion)="cargarConfiguracion()"
     (configuracionModificada)="cargarConfiguracion()"
     (vendedoraModificada)="recargarVendedoras()" />
 }

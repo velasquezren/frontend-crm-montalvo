@@ -198,6 +198,69 @@ Los siete que entran hoy, y la lista es exhaustiva:
 socket se cae. Un `setInterval` corto recargando "por si acaso" es exactamente el
 patrón que el socket vino a sustituir.
 
+## El fallo más caro que ha tenido este CRM: un `effect` que se realimenta
+
+Un `effect()` se suscribe a **todo signal que se lea de forma síncrona durante
+su ejecución**, incluidos los que lee una función a la que llama. Si esa función
+además ESCRIBE uno de ellos, el effect se dispara solo, para siempre.
+
+Pasó en `planilla-comisiones.page.ts`:
+
+```ts
+effect(() => {
+  const id = this.periodoId();
+  if (!id) return;
+  void this.refrescarPanelesDelPeriodo(id);   // lee consolidado() … y lo escribe
+});
+```
+
+`refrescarPanelesDelPeriodo()` decide si pide el consolidado leyendo
+`pestana()` y `consolidado()` — **antes de cualquier `await`, o sea dentro del
+contexto de seguimiento** — y al terminar hace `consolidado.set()`. Cada
+escritura vuelve a disparar el effect.
+
+**Por qué nadie lo vio en meses**: no cuelga el navegador. La página funciona,
+los datos son correctos, y el bucle se estabiliza a la velocidad de la red. Se
+ve solo mirando el servidor.
+
+Medido sobre tres días de uso real (`journalctl`, que registra una línea por
+petición con su duración):
+
+| Endpoint | Peticiones | |
+|---|---|---|
+| `/reporte/consolidado` | **1.079** | ← el bucle |
+| `/alertas` | **1.069** | ← el bucle |
+| `/ventas` | 214 | uso normal |
+| `/periodos` | 105 | uso normal |
+
+**240 peticiones por minuto sostenidas.** Los dos contadores casi idénticos son
+la firma: solo se piden juntas en esa función. Arrancaba en cuanto `consolidado`
+dejaba de ser `null` —después de visitar Reportes una vez— y seguía mientras la
+pestaña estuviera abierta.
+
+El arreglo es `untracked()` alrededor de la llamada: la intención del effect era
+depender **solo** de `periodoId`.
+
+```ts
+effect(() => {
+  const id = this.periodoId();
+  if (!id) return;
+  untracked(() => void this.refrescarPanelesDelPeriodo(id));
+});
+```
+
+**Cómo evitarlo**: si un `effect` llama a un método que escribe signals, o lo
+envuelves en `untracked()`, o te aseguras de que ese método no lea ninguno de
+los que escribe. Y si no estás seguro, la comprobación que no falla es contar
+peticiones en el servidor con la página abierta y sin tocar nada:
+
+```bash
+journalctl -u crm_backend.service --since '5 min ago' --no-pager \
+  | grep -oE 'GET [^ ]+ [0-9]+ [0-9]+ms' | awk '{print $2}' | sort | uniq -c | sort -rn
+```
+
+Con la página quieta, ese contador tiene que quedarse quieto.
+
 ## Rendimiento de mentira
 
 Cosas que parecen optimización y no lo son. Todas aparecieron ya en este repo:

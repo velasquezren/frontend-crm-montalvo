@@ -782,6 +782,14 @@
       </tbody>
     </app-table>
   </section>
+} @else if (errorConfiguracion()) {
+  <!-- Sin esta rama, un fallo al cargar la configuración dejaba el esqueleto de
+       carga girando PARA SIEMPRE: la petición ya había terminado —mal— y nada
+       lo decía salvo un toast que se desvanece a los segundos. Un esqueleto
+       eterno se lee como "está tardando", no como "esto no se cargó". -->
+  <app-error-carga
+    que="la configuración de comisiones"
+    (reintentar)="reintentarConfiguracion.emit()" />
 } @else {
   <section class="panel">
     <app-loading-skeleton height="200px" />
