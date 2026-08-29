@@ -6,6 +6,7 @@ import {
   Component,
   computed,
   effect,
+  EffectCleanupRegisterFn,
   inject,
   input,
   OnDestroy,
@@ -392,9 +393,9 @@ export class PlanillaComisionesPage implements OnDestroy {
       window.addEventListener('drop', this.preventDefaultDrag);
     }
 
-    effect(onCleanup => {
+    effect((onCleanup: EffectCleanupRegisterFn) => {
       const texto = this.busqueda();
-      const id = setTimeout(() => this.busquedaDebounced.set(texto), 350);
+      const id = setTimeout(() => this.busquedaDebounced.set(texto), 200);
       onCleanup(() => clearTimeout(id));
     });
 
