@@ -48,7 +48,7 @@
   <!-- Búsqueda con debounce (300ms) -->
   <div class="w-full sm:w-80">
     <app-input
-      placeholder="Buscar por nombre, teléfono o correo…"
+      placeholder="Buscar por nombre, teléfono, CI o PAC…"
       icon="search"
       [(value)]="busqueda" />
   </div>
@@ -103,8 +103,16 @@
               <div class="flex items-center gap-3">
                 <app-avatar [initials]="iniciales(cliente.nombre)" size="sm" />
                 <div>
-                  <p class="font-medium text-text-dark leading-tight">{{ cliente.nombre }}</p>
+                  <div class="flex items-center gap-2">
+                    <p class="font-medium text-text-dark leading-tight">{{ cliente.nombre }}</p>
+                    @if (cliente.pac) {
+                      <span class="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20" title="Código PAC">{{ cliente.pac }}</span>
+                    }
+                  </div>
                   <div class="flex items-center gap-2 text-xs text-text-muted mt-0.5">
+                    @if (cliente.ci) {
+                      <span class="font-mono text-[11px] text-text-muted">CI: {{ cliente.ci }}</span>
+                    }
                     @if (cliente.email) {
                       <span>{{ cliente.email }}</span>
                     }
