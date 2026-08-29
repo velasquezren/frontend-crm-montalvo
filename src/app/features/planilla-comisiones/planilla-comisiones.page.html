@@ -43,16 +43,16 @@
         (clicked)="descargarExcel()">
         Descargar Excel
       </app-button>
-      <!-- El PDF no es el Excel en otro formato: es el informe de una página
-           que se imprime y se firma. Va al lado porque se descargan en el
-           mismo momento y para lo mismo — cerrar el mes. -->
+      <!-- El informe no es el Excel en otro formato: es el documento de una
+           hoja que administración revisa, edita si hace falta y firma. Va al
+           lado porque se descargan en el mismo momento y para lo mismo. -->
       <app-button
         variant="ghost"
         size="sm"
         icon="file-text"
-        [loading]="descargandoPdf()"
-        (clicked)="descargarPdf()">
-        Informe PDF
+        [loading]="descargandoInforme()"
+        (clicked)="descargarInforme()">
+        Informe Word
       </app-button>
       <!-- El Excel sale con lo mismo que hay en pantalla, así que cuando el
            informe lleva a las dadas de baja hay que decirlo aquí: es el archivo
@@ -197,7 +197,20 @@
                       (clicked)="descargarExcelDe(p)">
                       Excel
                     </app-button>
-                    @if (p.estado !== 'CERRADO' && esSuperAdmin()) {
+                    <!-- El informe firmable, sin tener que abrir el mes: desde
+                         acá se bajan los de varios meses seguidos, que es como
+                         se piden cuando administración cierra un trimestre. -->
+                    <app-button
+                      variant="ghost"
+                      size="sm"
+                      icon="file-text"
+                      [loading]="descargandoInforme()"
+                      (clicked)="descargarInformeDe(p)">
+                      Informe
+                    </app-button>
+                    <!-- Borrar solo mientras el mes siga siendo editable: en
+                         revisión, cerrado o pagado el backend lo rechaza. -->
+                    @if (esEditable(p) && esSuperAdmin()) {
                       <app-button variant="ghost" size="sm" icon="trash" (clicked)="eliminarPeriodo(p)">Borrar</app-button>
                     }
                   </div>

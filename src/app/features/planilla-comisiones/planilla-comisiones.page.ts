@@ -1178,22 +1178,29 @@ export class PlanillaComisionesPage implements OnDestroy {
    * abrir cada mes para descargar el suyo; ahora se puede desde el
    * histórico directamente.
    */
-  protected readonly descargandoPdf = signal(false);
+  protected readonly descargandoInforme = signal(false);
+
+  /** El informe firmable del periodo ACTIVO (botón de la barra superior). */
+  protected descargarInforme(): Promise<void> {
+    const periodo = this.periodoActual();
+    return periodo ? this.descargarInformeDe(periodo) : Promise.resolve();
+  }
 
   /**
-   * El informe firmable del periodo activo.
+   * El informe firmable de un periodo cualquiera — también desde la tabla de
+   * planillas cargadas, sin tener que abrir el mes primero.
    *
    * Respeta el mismo interruptor de "incluir dadas de baja" que el Excel y la
-   * pantalla: lo que se ve es lo que se imprime. Un PDF que no coincidiera con
-   * la tabla de arriba sería peor que no tenerlo, porque es el que se archiva.
+   * pantalla: lo que se ve es lo que se firma. Un informe que no coincidiera
+   * con la tabla de arriba sería peor que no tenerlo, porque es el que se
+   * archiva.
    */
-  protected async descargarPdf(): Promise<void> {
-    const periodo = this.periodoActual();
-    if (!periodo || this.descargandoPdf()) return;
+  protected async descargarInformeDe(periodo: PeriodoComision): Promise<void> {
+    if (this.descargandoInforme()) return;
 
-    this.descargandoPdf.set(true);
+    this.descargandoInforme.set(true);
     try {
-      const { blob, nombre } = await this.service.descargarPdf(
+      const { blob, nombre } = await this.service.descargarInforme(
         periodo.id,
         periodo.anio,
         periodo.mes,
@@ -1202,10 +1209,21 @@ export class PlanillaComisionesPage implements OnDestroy {
       descargarArchivo(blob, nombre);
       this.toast.success(`${nombre} descargado.`, 'Informe listo');
     } catch (err) {
-      this.toast.error(mensajeDeError(err, 'No se pudo generar el informe PDF.'), 'Error');
+      this.toast.error(mensajeDeError(err, 'No se pudo generar el informe.'), 'Error');
     } finally {
-      this.descargandoPdf.set(false);
+      this.descargandoInforme.set(false);
     }
+  }
+
+  /**
+   * Si el periodo todavía admite cambios. Espejo de `esEditable()` del backend.
+   *
+   * La tabla de planillas comparaba con `CERRADO` a mano, así que al aparecer
+   * EN_REVISION y PAGADO seguía ofreciendo "Borrar" sobre meses que el backend
+   * ya rechaza — un botón que solo puede devolver un 409.
+   */
+  protected esEditable(periodo: PeriodoComision): boolean {
+    return periodo.estado === 'BORRADOR' || periodo.estado === 'CALCULADO';
   }
 
   protected async descargarExcelDe(periodo: PeriodoComision): Promise<void> {

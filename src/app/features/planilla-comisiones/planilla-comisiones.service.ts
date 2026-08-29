@@ -192,24 +192,25 @@ export class PlanillaComisionesService {
   }
 
   /**
-   * El informe del mes en PDF: el documento que se imprime y se firma.
+   * El informe del mes en Word: el documento que administración revisa, edita
+   * si hace falta y firma.
    *
    * No es "el Excel en otro formato". El Excel trae las 20 columnas y una hoja
-   * por vendedora para auditar cómo se llegó a cada cifra; el PDF responde otra
-   * pregunta —cuánto se le paga a cada quien— en una página, con las tres
-   * firmas. `Elaborado` y `Revisado` los rellena el backend con el usuario de
-   * la sesión, así que acá no hay nada que mandarle.
+   * por vendedora para auditar cómo se llegó a cada cifra; el informe responde
+   * otra pregunta —cuánto se le paga a cada quien— en una hoja vertical, con
+   * las tres firmas. `Elaborado` y `Revisado` los rellena el backend con el
+   * usuario de la sesión, así que acá no hay nada que mandarle.
    */
-  descargarPdf(
+  descargarInforme(
     periodoId: string,
     anio: number,
     mes: number,
     incluirOcultas = false,
   ): Promise<{ blob: Blob; nombre: string }> {
     return this.api.getBlob(
-      `/planilla-comisiones/periodos/${periodoId}/exportar-pdf`,
+      `/planilla-comisiones/periodos/${periodoId}/exportar-word`,
       { incluirOcultas: incluirOcultas ? true : undefined },
-      `informe-comisiones-${anio}-${String(mes).padStart(2, '0')}.pdf`,
+      `informe-comisiones-${anio}-${String(mes).padStart(2, '0')}.docx`,
     );
   }
 

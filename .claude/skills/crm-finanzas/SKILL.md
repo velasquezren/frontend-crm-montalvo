@@ -431,45 +431,56 @@ los excedentes reales y fija los 33,35 USD por persona, y el bloque `equipo de
 marketing` de `exportacion-ocultas.spec.ts`, que lo comprueba sobre el .xlsx
 generado de verdad.
 
-## 8c. El informe PDF: el documento que se firma
+## 8c. El informe de liquidación: el documento que se firma
 
-`GET /periodos/:id/exportar-pdf`. **No es el Excel en otro formato** — el Excel
-sirve para auditar (20 columnas, hoja por vendedora, cada venta), el PDF para
-pagar (13 columnas, una página, tres firmas).
+`GET /periodos/:id/exportar-word` → un **.docx vertical de una hoja**. No es el
+Excel en otro formato: el Excel sirve para auditar (20 columnas, hoja por
+vendedora, cada venta) y el informe para pagar (7 columnas, tres firmas).
 
-**PDFKit, nunca Puppeteer.** `crm_backend.service` corre con `MemoryMax=400M`
-sobre un VPS de 1,7 GB compartido: un Chrome headless pide más que eso él solo,
-y pasarse del techo no degrada el servicio, systemd lo mata. PDFKit es JS puro,
-dibuja sobre el stream de la respuesta y usa las Helvetica incrustadas en el
-estándar PDF —sin archivos de fuente que desplegar, y su WinAnsi cubre acentos
-y eñes—.
+**Word y no PDF**, y lo pidió administración: el informe se revisa y a veces se
+anota o se corrige un nombre antes de firmarlo, y un PDF obliga a rehacerlo
+desde el sistema por cualquier retoque. Un .docx se edita y se exporta a PDF
+desde Word o LibreOffice cuando toca archivarlo. Hubo una versión en PDFKit
+antes de eso; el módulo puro no cambió al migrar, porque no depende del formato.
 
-La lógica vive en `informe-pdf.ts` (puro: qué fila va en qué bloque, cuánto suma
-cada pie, quién firma) y el dibujo en `exportacion-pdf.service.ts`. Separados
-para poder probar las reglas sin generar un PDF.
+**Nada de navegador.** `docx` es JS puro y arma un documento de ~10 KB en
+milisegundos. Puppeteer está descartado en este servidor: `crm_backend.service`
+corre con `MemoryMax=400M` sobre un VPS de 1,7 GB compartido, y un Chrome
+headless pide más que eso él solo. A diferencia del Excel no va en streaming
+—un .docx es un ZIP y se arma entero— pero son diez filas, no las 500 del
+detalle.
 
-Cuatro decisiones que no son estéticas:
+La lógica vive en `informe-liquidacion.ts` (puro: qué fila va en qué bloque,
+cuánto suma cada pie, quién firma) y la maquetación en
+`exportacion-word.service.ts`.
 
-- **Se quitan 7 columnas** (Tipo, Área, Planes, Cumple objetivo, Cirugías
-  acumuladas, los dos niveles): todas explican *cómo se llegó* a la cifra, y en
-  papel cada columna de más obliga a bajar el cuerpo de letra.
+Decisiones que no son estéticas:
+
+- **Vertical, y por eso siete columnas.** En A4 vertical caben ~17 cm de tabla;
+  las 20 de la hoja "Liquidación" necesitarían el triple. Las cuatro comisiones
+  van sumadas en una (`comisionesDe()`) y **no hay columna "Total ($us)"**: es
+  exactamente `Comisiones + Bonos`, con sus dos sumandos al lado.
+- **La columna de nombre se lleva el 31 %.** Con menos, "Canedo Villamor Claudia
+  Marcela" se partía en cuatro líneas y la tabla parecía un formulario a medio
+  llenar.
+- **Sobrio a propósito**: gris muy claro en cabeceras, filetes finos, negro
+  sobre blanco. El color de marca es de la interfaz, no del papel — un informe
+  con franjas de color se ve de juguete al lado de la planilla que ya usa
+  administración.
 - **`Elaborado` y `Revisado` salen del usuario de la sesión**; `Autorizado` es
   fijo (`AUTORIZA_PLANILLA`). Sin usuario la línea queda **en blanco** para
   firmar a mano: poner "Sistema" sería atribuir una revisión que nadie hizo.
-- **Cabecera con el estado del periodo**, y `PRELIMINAR` si no está
-  CERRADO/PAGADO. Sin eso el informe de un borrador sale idéntico al definitivo
-  y las cifras de un mes sin cerrar todavía pueden cambiar.
-- **`formatearNumero()` a mano, no `Intl`.** Si el proceso arrancara sin ICU
-  completo, `Intl` cae a `en-US` en silencio y la planilla sale con los
-  separadores cambiados —`1,396.62` por `1.396,62`—, que en un documento de
-  pagos se lee como otra cifra.
+- **Aviso `DOCUMENTO PRELIMINAR`** si el periodo no está CERRADO/PAGADO. Importa
+  más que en un PDF: este archivo es editable y va a circular.
+- **`formatearNumero()` a mano, no `Intl`.** Sin ICU completo, `Intl` cae a
+  `en-US` en silencio y la planilla sale con `1,396.62` por `1.396,62`.
+- **Las firmas van en una tabla sin bordes**, no con tabulaciones: administración
+  va a editar el archivo, y unas columnas hechas con tabuladores se desmontan en
+  cuanto alguien cambia un nombre por otro más largo.
 
-**Trampa de PDFKit**: escribir texto por debajo del margen inferior hace que
-abra una página nueva él solo. La primera versión ponía la aclaración del tipo
-de cambio al pie y el informe salía **siempre** con una segunda hoja en blanco
-—sin fallar, con el contenido correcto—. Por eso la aclaración va encima de las
-firmas y `informe-pdf.spec.ts` fija que la planilla del equipo cabe en UNA
-página (leyendo el `/Count` del nodo `/Pages`).
+Se descarga desde la barra del periodo y desde cada fila de "Planillas cargadas
+en el sistema", para bajar varios meses seguidos sin abrirlos.
+Pruebas: `informe-liquidacion.spec.ts`.
 
 ## 9. Vendedoras dadas de baja: se oculta la persona, nunca el dinero
 
