@@ -46,7 +46,7 @@
        redibuja nada — y sigue fuera del árbol de accesibilidad y del orden de
        tabulación, que es lo que daba `hidden`. -->
   <main class="finanzas-cuerpo">
-    @if (estaMontada()('liquidacion')) {
+    @if (estaMontada('liquidacion')) {
       <div
         id="panel-liquidacion"
         aria-labelledby="tab-liquidacion"
@@ -58,7 +58,7 @@
       </div>
     }
 
-    @if (estaMontada()('agentes')) {
+    @if (estaMontada('agentes')) {
       <div
         id="panel-agentes"
         aria-labelledby="tab-agentes"
@@ -70,7 +70,7 @@
       </div>
     }
 
-    @if (estaMontada()('analitica')) {
+    @if (estaMontada('analitica')) {
       <div
         id="panel-analitica"
         aria-labelledby="tab-analitica"
@@ -82,7 +82,7 @@
       </div>
     }
 
-    @if (estaMontada()('anual')) {
+    @if (estaMontada('anual')) {
       <div
         id="panel-anual"
         aria-labelledby="tab-anual"
@@ -94,7 +94,7 @@
       </div>
     }
 
-    @if (estaMontada()('tipo-cambio')) {
+    @if (estaMontada('tipo-cambio')) {
       <div
         id="panel-tipo-cambio"
         aria-labelledby="tab-tipo-cambio"

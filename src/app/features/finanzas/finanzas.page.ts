@@ -113,15 +113,24 @@ export class FinanzasPage {
     return this.esTabValida(q) ? q : 'liquidacion';
   }
 
+  /** Contra `TABS`, no contra una lista aparte — dar de alta una pestaña
+   *  nueva solo en `TABS` y no acá era la forma obvia de que esto mintiera.
+   *  Cinco elementos: un `.some()` no necesita el `Set` que sí valdría la
+   *  pena con una lista larga. */
   private esTabValida(q: string | undefined): q is TabFinanzas {
-    return q === 'agentes' || q === 'analitica' || q === 'anual' || q === 'liquidacion' || q === 'tipo-cambio';
+    return !!q && TABS.some(t => t.id === q);
   }
 
-  protected readonly estaMontada = computed(() => {
-    const vistas = new Set(this.visitadas());
-    vistas.add(this.tabActiva());
-    return (tab: TabFinanzas): boolean => vistas.has(tab);
-  });
+  /**
+   * `cambiarTab()` y el efecto de atrás/adelante son los dos únicos que
+   * tocan `tabActiva`, y los dos agregan a `visitadas` en el mismo gesto
+   * (igual que `tabInicial` ya nace dentro del `Set` inicial) — la pestaña
+   * activa SIEMPRE está en `visitadas`, así que no hace falta reconstruir un
+   * `Set` nuevo en cada lectura solo para agregarla "por si acaso".
+   */
+  protected estaMontada(tab: TabFinanzas): boolean {
+    return this.visitadas().has(tab);
+  }
 
   protected readonly tabInfoActual = computed<TabConfig>(() => {
     const activa = this.tabActiva();

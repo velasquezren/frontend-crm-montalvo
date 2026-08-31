@@ -3,15 +3,13 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   inject,
   input,
-  OnDestroy,
   signal,
 } from '@angular/core';
 
 import { RespuestaPaginada } from '../../../../core/api/pagination.model';
-import { MonedaService } from '../../../../core/moneda/moneda.service';
+import { usarTipoCambioDePeriodo } from '../../../../core/moneda/usar-tipo-cambio-de-periodo';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { ErrorCargaComponent } from '../../../../shared/components/error-carga/error-carga.component';
 import { FilterChipComponent } from '../../../../shared/components/filter-chip/filter-chip.component';
@@ -86,7 +84,7 @@ interface VentasConCanales extends RespuestaPaginada<VentaImportada> {
   templateUrl: './desempeno-agentes.component.html',
   styleUrl: './desempeno-agentes.component.css',
 })
-export class DesempenoAgentesComponent implements OnDestroy {
+export class DesempenoAgentesComponent {
   /** Oculta su propio `<app-page-header>` cuando vive dentro del hub de Finanzas. */
   readonly embedded = input(false);
 
@@ -97,34 +95,19 @@ export class DesempenoAgentesComponent implements OnDestroy {
    * el TC de su periodo en el `MonedaService`, que es global, y en el hub están
    * montadas a la vez. Sin este interruptor, pasar el cursor por esta pestaña
    * —que ya la monta— le cambiaba las cifras en bolivianos a la pestaña que se
-   * estaba mirando.
+   * estaba mirando. Lo lee `usarTipoCambioDePeriodo()`, en el constructor.
    */
   readonly activo = input(true);
 
   private readonly service = inject(PlanillaComisionesService);
-  private readonly monedaService = inject(MonedaService);
 
   protected readonly periodoSeleccionado = signal<string | null>(null);
   protected readonly vendedoraSeleccionada = signal<string | null>(null);
 
-  /*
-   * Esta ficha convierte con el TC del periodo que se está viendo, no con el
-   * global — mismo razonamiento que `planilla-comisiones.page.ts`. Las cifras
-   * en bolivianos que muestran `ficha-cabecera` y `composicion-pago` son las
-   * que el backend liquidó con el TC de ESE mes, así que togglear a $us con
-   * el TC vigente de hoy daría un número que no cuadra con la liquidación.
-   * Al salir se restaura el global en `ngOnDestroy`.
-   */
   constructor() {
-    effect(() => {
-      if (!this.activo()) return;
-      const tc = Number(this.periodo()?.tipoCambio);
-      if (tc > 0) this.monedaService.setTipoCambio(tc);
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.monedaService.restaurarTipoCambioGlobal();
+    /* Esta ficha convierte con el TC del periodo que se está viendo, no con
+       el global — ver el docblock de `usarTipoCambioDePeriodo`. */
+    usarTipoCambioDePeriodo(this.activo, this.periodo);
   }
 
   /* ── Datos remotos ──────────────────────────────────────────────────── */

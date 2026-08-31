@@ -37,7 +37,7 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { SelectorPeriodoEmptyComponent } from '../../shared/components/selector-periodo-empty/selector-periodo-empty.component';
 import { TableComponent } from '../../shared/components/table/table.component';
-import { MonedaService } from '../../core/moneda/moneda.service';
+import { usarTipoCambioDePeriodo } from '../../core/moneda/usar-tipo-cambio-de-periodo';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import { SubtotalVendedora, TotalesVentas, PlanillaComisionesService } from './planilla-comisiones.service';
 import { TablaLiquidacionComponent } from './components/tabla-liquidacion.component';
@@ -163,7 +163,6 @@ export class PlanillaComisionesPage implements OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly dialogService = inject(DialogService);
   private readonly vcr = inject(ViewContainerRef);
-  protected readonly monedaService = inject(MonedaService);
 
   /** Importar y borrar planillas queda reservado al super admin. */
   protected readonly esSuperAdmin = this.authService.isSuperAdmin;
@@ -437,24 +436,13 @@ export class PlanillaComisionesPage implements OnDestroy {
       untracked(() => void this.refrescarPanelesDelPeriodo(id));
     });
 
-    /*
-     * Esta pantalla convierte con el TC de SU periodo, no con el global.
-     *
-     * Las cifras en bolivianos que muestra son las que el backend liquidó
-     * multiplicando por el tipo de cambio de ese mes concreto. Pasarlas a
-     * dólares dividiendo por el de otro mes daría un número que no cuadra con la
-     * liquidación que administración tiene delante. Al salir se restaura el
-     * global en `ngOnDestroy`.
-     */
-    effect(() => {
-      if (!this.activo()) return;
-      const tc = Number(this.periodoActual()?.tipoCambio);
-      if (tc > 0) this.monedaService.setTipoCambio(tc);
-    });
+    /* Esta pantalla convierte con el TC de SU periodo, no con el global —
+       ver el docblock de `usarTipoCambioDePeriodo`. Restaura el global sola
+       al destruirse, así que no hace falta nada más aquí para eso. */
+    usarTipoCambioDePeriodo(this.activo, this.periodoActual);
   }
 
   ngOnDestroy(): void {
-    this.monedaService.restaurarTipoCambioGlobal();
     if (typeof window !== 'undefined') {
       window.removeEventListener('dragover', this.preventDefaultDrag);
       window.removeEventListener('drop', this.preventDefaultDrag);
