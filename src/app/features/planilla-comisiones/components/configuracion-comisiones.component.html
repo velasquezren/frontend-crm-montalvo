@@ -147,7 +147,13 @@
       <tbody>
         @for (v of vendedorasVisibles(); track v.id) {
           <tr [class.fila-pendiente]="!v.configurada" [class.fila-dada-de-baja]="v.oculta">
-            <td class="text-left font-semibold text-sm text-text-dark">{{ v.nombre }}</td>
+            <td class="text-left">
+              <input
+                type="text"
+                class="input-mini input-mini--nombre"
+                [value]="v.nombre"
+                (change)="guardarNombre(v, $any($event.target).value)" />
+            </td>
             <td class="text-left text-xs font-mono text-text-muted">{{ v.codigo }}</td>
             <td class="text-left">
               @if (v.agente; as ag) {

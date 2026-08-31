@@ -24,10 +24,10 @@
   </div>
 
   @if (resumen.value(); as res) {
-    @if (!resumen.isLoading() && res.filas.length > 0) {
+    @if (!resumen.isLoading() && filasBase().length > 0) {
       <div class="flex items-center gap-2 flex-wrap">
         <span class="pill-meta">{{ mesesConDatos() }} de 12 meses importados</span>
-        <span class="pill-meta">{{ res.filas.length }} vendedoras</span>
+        <span class="pill-meta">{{ filasBase().length }} vendedoras</span>
         <!-- La matriz anual es un informe: las dadas de baja no se listan. Pero la
              ausencia se declara, y con nombres — si no, el año pasado y este no
              cuadran entre sí y no hay forma de saber por qué. -->
@@ -70,9 +70,9 @@
     <app-loading-skeleton shape="text" height="2rem" />
     <app-loading-skeleton shape="text" height="2rem" />
   </div>
-} @else if (resumen.error() && resumen.value().filas.length === 0) {
+} @else if (resumen.error() && filasBase().length === 0) {
   <app-error-carga que="el resumen anual de comisiones" (reintentar)="resumen.reload()" />
-} @else if (resumen.value().filas.length > 0) {
+} @else if (filasBase().length > 0) {
 
   <!-- ══ 1. Cifras del Año (KPI Cards) ══ -->
   <section class="grid-kpis-modern mb-6">
@@ -101,7 +101,7 @@
 
     <app-kpi-card
       label="Vendedoras Liquidadas"
-      [valor]="resumen.value().filas.length"
+      [valor]="filasBase().length"
       icon="users"
       tono="neutral"
       [pie]="(totalComisionAnualUsd() | moneda: 'USD': tcReferencia()) + ' en comisiones netas'" />
@@ -185,7 +185,7 @@
           <app-filter-chip
             [active]="filtroBono() === 'TODAS'"
             size="sm"
-            [count]="resumen.value().filas.length"
+            [count]="filasBase().length"
             (clicked)="filtroBono.set('TODAS')">
             Todas
           </app-filter-chip>
@@ -199,7 +199,7 @@
           <app-filter-chip
             [active]="filtroBono() === 'SIN_BONO'"
             size="sm"
-            [count]="resumen.value().filas.length - vendedorasQueCobranBono()"
+            [count]="filasBase().length - vendedorasQueCobranBono()"
             (clicked)="filtroBono.set('SIN_BONO')">
             Sin Bono
           </app-filter-chip>

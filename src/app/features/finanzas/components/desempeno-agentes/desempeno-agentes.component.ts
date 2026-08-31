@@ -202,8 +202,14 @@ export class DesempenoAgentesComponent implements OnDestroy {
     () => this.periodos.isLoading() || (this.consolidado.isLoading() && !this.consolidado.value()),
   );
 
+  /**
+   * Sin marketing: esta ficha explica en qué gastó su mes cada ejecutiva —
+   * planes, cirugías, tramos— y marketing no vende, así que su ficha sería
+   * puros ceros y un chip que no lleva a ningún sitio útil. Cobra su bono de
+   * jefatura aparte, visible en Liquidación.
+   */
   protected readonly vendedoras = computed<readonly FilaConsolidado[]>(
-    () => this.consolidado.value()?.filas ?? [],
+    () => (this.consolidado.value()?.filas ?? []).filter(f => f.area !== 'PUBLICIDAD'),
   );
 
   protected readonly vendedora = computed<FilaConsolidado | null>(() => {

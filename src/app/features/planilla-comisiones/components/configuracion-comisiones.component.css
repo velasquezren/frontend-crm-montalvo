@@ -98,6 +98,14 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
+/* Mismo trato que `.input-mini`, pero para el nombre: un código o un sueldo
+   caben en 96px, un nombre y apellido no. */
+.input-mini--nombre {
+  width: 100%;
+  min-width: 160px;
+  font-weight: 700;
+}
+
 /*
  * Aviso de que falta el equipo de marketing.
  *

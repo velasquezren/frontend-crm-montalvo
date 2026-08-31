@@ -98,7 +98,12 @@ type DireccionOrden = 'asc' | 'desc';
         <app-input type="search" placeholder="Buscar vendedora…" [(value)]="busqueda" />
       </div>
       <div class="text-xs text-text-muted font-medium">
-        {{ filasVisibles().length }} de {{ filas().length }} vendedoras
+        {{ filasVisibles().length }} de {{ filas().length - filasMarketing().length }} vendedoras
+        @if (filasMarketing().length > 0) {
+          <span class="block text-[10px] text-text-muted/80 mt-0.5">
+            + {{ filasMarketing().length }} de Marketing (solo bono, sin comisión) — en el Excel del informe
+          </span>
+        }
       </div>
     </div>
 
@@ -349,22 +354,22 @@ type DireccionOrden = 'asc' | 'desc';
       <tfoot>
         <tr class="fila-totales">
           <td class="text-left font-bold celda-fija">TOTALES</td>
-          <td class="text-right font-bold whitespace-nowrap">{{ totales()['montoVendido'] | moneda: 'USD' : tipoCambio() }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ totalesMostrados()['montoVendido'] | moneda: 'USD' : tipoCambio() }}</td>
           <td></td>
           @if (mostrarCirugias()) {
             <td></td>
           }
-          <td class="text-right font-bold whitespace-nowrap">{{ totales()['comisionA'] | moneda: 'USD' : tipoCambio() }}</td>
-          <td class="text-right font-bold whitespace-nowrap">{{ totales()['comisionTipoARA'] | moneda: 'USD' : tipoCambio() }}</td>
-          <td class="text-right font-bold whitespace-nowrap">{{ totales()['comisionB'] | moneda: 'USD' : tipoCambio() }}</td>
-          <td class="text-right font-bold whitespace-nowrap">{{ totales()['comisionC'] | moneda: 'USD' : tipoCambio() }}</td>
-          <td class="text-right font-bold whitespace-nowrap">{{ totales()['bonoTrimestral'] | moneda: 'USD' : tipoCambio() }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ totalesMostrados()['comisionA'] | moneda: 'USD' : tipoCambio() }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ totalesMostrados()['comisionTipoARA'] | moneda: 'USD' : tipoCambio() }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ totalesMostrados()['comisionB'] | moneda: 'USD' : tipoCambio() }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ totalesMostrados()['comisionC'] | moneda: 'USD' : tipoCambio() }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ totalesMostrados()['bonoTrimestral'] | moneda: 'USD' : tipoCambio() }}</td>
           <td class="text-right font-bold whitespace-nowrap">{{ otrosBonos() | moneda: 'USD' : tipoCambio() }}</td>
-          <td class="text-right font-bold text-primary whitespace-nowrap">{{ formatearUsd(totales()['totalUsd']) }}</td>
-          <td class="text-right font-bold whitespace-nowrap">{{ formatearBs(totales()['totalBob']) }}</td>
-          <td class="text-right font-bold whitespace-nowrap">{{ formatearBs(totales()['sueldoBase']) }}</td>
+          <td class="text-right font-bold text-primary whitespace-nowrap">{{ formatearUsd(totalesMostrados()['totalUsd']) }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ formatearBs(totalesMostrados()['totalBob']) }}</td>
+          <td class="text-right font-bold whitespace-nowrap">{{ formatearBs(totalesMostrados()['sueldoBase']) }}</td>
           <td class="text-right font-extrabold text-secondary text-base whitespace-nowrap celda-fija-der">
-            {{ formatearBs(totales()['totalGanado']) }}
+            {{ formatearBs(totalesMostrados()['totalGanado']) }}
           </td>
         </tr>
       </tfoot>
@@ -434,22 +439,72 @@ export class TablaLiquidacionComponent {
 
   /** Jefatura + publicidad. El backend manda `bonos` con los tres sumados. */
   protected readonly otrosBonos = computed(() => {
-    const t = this.totales();
+    const t = this.totalesMostrados();
     return (t['bonos'] ?? 0) - (t['bonoTrimestral'] ?? 0);
+  });
+
+  /**
+   * Marketing no vende: su fila es Tipo A/B/C en cero y solo cobra su parte
+   * del bono de jefatura, así que listarla acá es puro ruido — ese detalle
+   * vive en el Excel y el Word del informe, tal como salen hoy. Se guarda
+   * aparte (no se descarta) para poder restar su aporte de `totales()` más
+   * abajo: el pie de esta tabla tiene que sumar justo lo que las filas
+   * muestran, o parece un error de cálculo en vez de un filtro.
+   */
+  protected readonly filasMarketing = computed<readonly FilaConsolidado[]>(() =>
+    this.filas().filter(f => f.area === 'PUBLICIDAD'),
+  );
+
+  private readonly filasSinMarketing = computed<readonly FilaConsolidado[]>(() =>
+    this.filas().filter(f => f.area !== 'PUBLICIDAD'),
+  );
+
+  /**
+   * `totales()` llega del servidor con marketing incluido —el mismo
+   * `reporteConsolidado()` alimenta el Excel del periodo, que sí necesita
+   * verla—, así que aquí se resta lo que aportó cada persona de marketing
+   * (sueldo y bono de jefatura/publicidad; el resto de columnas ya es 0
+   * porque no vende) para que el pie cuadre con las filas visibles.
+   */
+  protected readonly totalesMostrados = computed<Record<string, number>>(() => {
+    const marketing = this.filasMarketing();
+    if (marketing.length === 0) return this.totales();
+
+    const totales = { ...this.totales() };
+    const restar = (clave: string, valor: number) => {
+      totales[clave] = (totales[clave] ?? 0) - valor;
+    };
+    for (const f of marketing) {
+      restar('montoVendido', f.montoVendido);
+      restar('baseCalculo', f.baseCalculo);
+      restar('comisionA', f.comisionA);
+      restar('comisionB', f.comisionB);
+      restar('comisionC', f.comisionC);
+      restar('comisionTipoARA', f.comisionTipoARA);
+      restar('bonoTrimestral', f.bonoTrimestral);
+      restar('bonos', f.bonoJefatura + f.bonoPublicidad + f.bonoTrimestral);
+      restar('totalUsd', f.totalUsd);
+      restar('totalBob', f.totalBob);
+      restar('sueldoBase', f.sueldoBase);
+      restar('totalGanado', f.totalGanado);
+    }
+    return totales;
   });
 
   /**
    * Filas buscadas y ordenadas. Todo en memoria: `filas()` ya trae el
    * consolidado completo del periodo, así que ni el filtro ni el orden dejan
-   * fuera nada que no esté también fuera de la vista.
+   * fuera nada que no esté también fuera de la vista — salvo marketing, que
+   * se excluye antes por lo explicado arriba.
    */
   protected readonly filasVisibles = computed<readonly FilaConsolidado[]>(() => {
     const texto = this.busqueda().trim().toLowerCase();
+    const base = this.filasSinMarketing();
     const filtradas = texto
-      ? this.filas().filter(
+      ? base.filter(
           f => f.nombre.toLowerCase().includes(texto) || f.codigo.toLowerCase().includes(texto),
         )
-      : this.filas();
+      : base;
 
     const campo = this.ordenCampo();
     const signo = this.ordenDireccion() === 'asc' ? 1 : -1;

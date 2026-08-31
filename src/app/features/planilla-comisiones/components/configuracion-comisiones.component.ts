@@ -401,6 +401,16 @@ export class ConfiguracionComisionesComponent {
     void this.guardarVendedora(vendedora, { area: area as Vendedora['area'] });
   }
 
+  protected guardarNombre(vendedora: Vendedora, valor: string): void {
+    const nombre = valor.trim();
+    if (!nombre) {
+      this.toast.error('El nombre no puede quedar vacío.', 'Dato inválido');
+      return;
+    }
+    if (nombre === vendedora.nombre) return;
+    void this.guardarVendedora(vendedora, { nombre });
+  }
+
   protected guardarSueldo(vendedora: Vendedora, valor: string): void {
     const sueldoBase = Number(valor);
     if (!Number.isFinite(sueldoBase) || sueldoBase < 0) {

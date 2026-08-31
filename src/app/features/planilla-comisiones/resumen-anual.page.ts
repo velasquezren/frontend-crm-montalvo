@@ -167,19 +167,33 @@ export class ResumenAnualPage {
     return Array.from({ length: 12 }, (_, i) => primera?.meses[i]?.tipoCambio ?? referencia);
   });
 
+  /**
+   * Marketing fuera de esta vista: no vende, así que su fila es de ceros en
+   * las doce columnas y el único trimestre que "gana" siempre da 0 — pura
+   * fila en blanco que no aporta nada a leer. Cobra su bono de jefatura
+   * aparte (ver Liquidación), que esta matriz ni siquiera modela por
+   * vendedora. Se filtra ACÁ, una sola vez, antes de la búsqueda y del
+   * filtro de bono: todo lo que lee `resumen.value().filas` de aquí en
+   * adelante pasa por este mismo embudo para que un KPI no cuente cabezas
+   * que la tabla de al lado no muestra.
+   */
+  protected readonly filasBase = computed(() =>
+    this.resumen.value().filas.filter(f => f.area !== 'PUBLICIDAD'),
+  );
+
   /** Total vendido del año en USD */
   protected readonly totalAnual = computed(() =>
-    this.resumen.value().filas.reduce((suma, f) => suma + f.totalVendido, 0),
+    this.filasBase().reduce((suma, f) => suma + f.totalVendido, 0),
   );
 
   /** Total comisiones ganadas en USD */
   protected readonly totalComisionAnualUsd = computed(() =>
-    this.resumen.value().filas.reduce((suma, f) => suma + f.totalComisionUsd, 0),
+    this.filasBase().reduce((suma, f) => suma + f.totalComisionUsd, 0),
   );
 
   /** Total bonos trimestrales en USD */
   protected readonly totalBonosAnualUsd = computed(() =>
-    this.resumen.value().filas.reduce((suma, f) => suma + f.totalBonoTrimestralUsd, 0),
+    this.filasBase().reduce((suma, f) => suma + f.totalBonoTrimestralUsd, 0),
   );
 
   /** Cuántos meses del año tienen datos. */
@@ -195,7 +209,7 @@ export class ResumenAnualPage {
 
   /** Vendedoras que alcanzaron al menos un bono trimestral. */
   protected readonly vendedorasQueCobranBono = computed(() =>
-    this.resumen.value().filas.filter(f => f.totalBonoTrimestralUsd > 0).length,
+    this.filasBase().filter(f => f.totalBonoTrimestralUsd > 0).length,
   );
 
   /** Transforma la facturación mensual para el gráfico de barras. */
@@ -215,7 +229,7 @@ export class ResumenAnualPage {
   protected readonly filasFiltradas = computed(() => {
     const query = this.busqueda().trim().toLowerCase();
     const filtro = this.filtroBono();
-    let lista = this.resumen.value().filas;
+    let lista = this.filasBase();
 
     if (query) {
       lista = lista.filter(
