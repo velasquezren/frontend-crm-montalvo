@@ -43,6 +43,13 @@ export class SeleccionPlanesComponent {
   readonly cargando = input(false);
   readonly error = input<unknown>(null);
   readonly esSuperAdmin = input(false);
+  /**
+   * Si el periodo todavía admite cambios (espejo de `periodoEditable()` de la
+   * página). Sin esto, un SUPER_ADMIN podía seguir forzando planes en un mes
+   * ya CERRADO o PAGADO: el botón solo miraba el rol, nunca el estado, y el
+   * backend terminaba rechazando con 409 lo que aquí parecía haber funcionado.
+   */
+  readonly editable = input(true);
 
   readonly planAlternado = output<VentaImportada>();
 }

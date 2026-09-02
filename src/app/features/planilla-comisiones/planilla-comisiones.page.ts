@@ -615,7 +615,26 @@ export class PlanillaComisionesPage implements OnDestroy {
     return this.periodos.value().datos.find(p => p.id === id) ?? null;
   });
 
+  /**
+   * Atajo de `esEditable(periodoActual())` para la plantilla — ahí no se puede
+   * llamar un método con el resultado de otro computed sin repetirlo en cada
+   * `@if`. Ver `esEditable` para por qué EN_REVISION, CERRADO y PAGADO cuentan
+   * igual de "no editable" aunque solo PAGADO sea terminal.
+   */
+  protected readonly periodoEditable = computed(() => {
+    const p = this.periodoActual();
+    return p !== null && this.esEditable(p);
+  });
+
+  /**
+   * "Revisión pendiente antes de calcular" solo tiene sentido MIENTRAS se
+   * puede seguir calculando. Antes se mostraba con el `estado` del periodo
+   * sin mirar: una vez EN_REVISION, CERRADO o PAGADO, la venta ya está
+   * cerrada/pagada y este panel (con su botón de excluir y sus selects de
+   * clasificación) seguía ofreciendo acciones que el backend rechaza con 409.
+   */
   protected readonly hayAlertas = computed(() => {
+    if (!this.periodoEditable()) return false;
     const a = this.alertas();
     if (!a) return false;
     const t = a.totales;

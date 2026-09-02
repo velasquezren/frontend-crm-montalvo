@@ -93,7 +93,8 @@
                   type="button"
                   class="fila-plan"
                   [class.fila-plan-elegida]="grupo.elegidos?.has(plan.id)"
-                  [disabled]="!esSuperAdmin()"
+                  [disabled]="!esSuperAdmin() || !editable()"
+                  [title]="!esSuperAdmin() ? 'Solo SUPER_ADMIN puede forzar un plan' : (!editable() ? 'El periodo ya no admite cambios' : '')"
                   (click)="planAlternado.emit(plan)">
                   <span class="flex items-center gap-2 min-w-0">
                     <span class="orden-plan" [class.orden-plan-elegido]="grupo.elegidos?.has(plan.id)">

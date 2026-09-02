@@ -402,7 +402,7 @@
            empujen ni compitan por espacio con ella en una sola hilera. El
            selector de moneda ya vive una sola vez, en el topbar (global). -->
       <div class="filtros filtros-fila-acciones">
-        @if (periodoActual()?.estado !== 'CERRADO') {
+        @if (periodoEditable()) {
           @if (confirmandoCalculo()) {
             <div class="confirmar-calculo">
               <p class="confirmar-calculo-texto">
@@ -703,9 +703,11 @@
                     <!-- Quitar o devolver la comisión de una fila. El backend
                          exige motivo al excluir y lo deja en la auditoría, así
                          que dentro de tres meses se puede saber quién la sacó y
-                         por qué. Solo super admin, y nunca en un periodo
-                         CERRADO: eso ya se pagó. -->
-                    @if (esSuperAdmin() && periodoActual()?.estado !== 'CERRADO') {
+                         por qué. Solo super admin, y nunca fuera de un periodo
+                         editable (EN_REVISION/CERRADO/PAGADO): esto comparaba
+                         solo contra CERRADO y por eso una venta ya PAGADA
+                         seguía mostrando la X para quitarla del cálculo. -->
+                    @if (esSuperAdmin() && periodoEditable()) {
                       <button
                         type="button"
                         class="boton-comision"
@@ -777,6 +779,7 @@
       [cargando]="planesPaq.isLoading() || planesNin.isLoading()"
       [error]="planesPaq.error() || planesNin.error()"
       [esSuperAdmin]="esSuperAdmin()"
+      [editable]="periodoEditable()"
       (planAlternado)="alternarPlan($event)" />
   }
 }
