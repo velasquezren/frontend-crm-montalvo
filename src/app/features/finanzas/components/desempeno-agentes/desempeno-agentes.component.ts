@@ -127,9 +127,20 @@ export class DesempenoAgentesComponent {
    */
   protected readonly incluirOcultas = signal(false);
 
+  /**
+   * Se pide siempre CON ocultas, sin importar el chip.
+   *
+   * `reporteConsolidado` en el backend hace la MISMA consulta a la base pase lo
+   * que pase — filtra a las dadas de baja en memoria, después de traerlas
+   * (ver su cabecera) — así que pedir dos veces solo porque el chip cambió
+   * era una petición de red que no cambiaba lo que ya teníamos. Antes
+   * `incluirOcultas()` vivía dentro de esta función y cada clic disparaba un
+   * `httpResource` nuevo, con su parpadeo de recarga. Ahora la única entrada
+   * reactiva es `periodoId()`, y `vendedoras()` filtra `filas` en memoria.
+   */
   protected readonly consolidado = httpResource<ReporteConsolidado>(() => {
     const id = this.periodoId();
-    return id ? this.service.consolidadoRequest(id, this.incluirOcultas()) : undefined;
+    return id ? this.service.consolidadoRequest(id, true) : undefined;
   });
 
   /**
@@ -190,10 +201,16 @@ export class DesempenoAgentesComponent {
    * planes, cirugías, tramos— y marketing no vende, así que su ficha sería
    * puros ceros y un chip que no lleva a ningún sitio útil. Cobra su bono de
    * jefatura aparte, visible en Liquidación.
+   *
+   * El chip "Dadas de baja" ya no dispara una petición (ver `consolidado`):
+   * `filas` siempre trae a todo el mundo con su `oculta` puesto, así que
+   * incluirlas o no es filtrar aquí, no volver a pedir.
    */
-  protected readonly vendedoras = computed<readonly FilaConsolidado[]>(
-    () => (this.consolidado.value()?.filas ?? []).filter(f => f.area !== 'PUBLICIDAD'),
-  );
+  protected readonly vendedoras = computed<readonly FilaConsolidado[]>(() => {
+    const filas = this.consolidado.value()?.filas ?? [];
+    const conOcultas = this.incluirOcultas() ? filas : filas.filter(f => !f.oculta);
+    return conOcultas.filter(f => f.area !== 'PUBLICIDAD');
+  });
 
   protected readonly vendedora = computed<FilaConsolidado | null>(() => {
     const lista = this.vendedoras();
