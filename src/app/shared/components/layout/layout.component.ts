@@ -9,6 +9,7 @@ import { ModoInmersivoService } from '../../../core/ui/modo-inmersivo.service';
 import { AvatarComponent } from '../avatar/avatar.component';
 import { IconComponent } from '../icon/icon.component';
 import { MonedaToggleComponent } from '../moneda-toggle/moneda-toggle.component';
+import { NotificacionesBellComponent } from '../notificaciones-bell/notificaciones-bell.component';
 import { NAV_GROUPS, NAV_ITEMS } from './nav-items';
 
 /**
@@ -25,6 +26,7 @@ import { NAV_GROUPS, NAV_ITEMS } from './nav-items';
     IconComponent,
     AvatarComponent,
     MonedaToggleComponent,
+    NotificacionesBellComponent,
     ToastContainerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -26,6 +26,7 @@
 
     <!-- Acciones — moneda + perfil + logout -->
     <div class="flex items-center gap-3">
+      <app-notificaciones-bell />
       <app-moneda-toggle size="sm" />
       @if (user(); as currentUser) {
         <div class="flex items-center gap-3">

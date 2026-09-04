@@ -1,0 +1,26 @@
+/* Contador superpuesto sobre el ícono — no es <app-badge> (esa es una
+   píldora de línea, no un punto absoluto sobre otro elemento). Mismo criterio
+   que "cuando lo que se repite es solo estilo, no marcado, es una utilidad,
+   no un átomo" (crm-design-system): esto es un solo lugar, no se repite. */
+.crm-bell-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  color: var(--color-background);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  border: 2px solid var(--color-background);
+}
+
+/* Negro, no rojo — "critical" en esta paleta es negro a propósito (ver
+   crm-design-system §Estados semánticos): marca lo vencido, no es una alarma. */
+.crm-bell-badge--critica {
+  background: var(--color-text-critical);
+}

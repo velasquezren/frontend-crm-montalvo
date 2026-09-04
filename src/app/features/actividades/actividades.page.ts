@@ -59,6 +59,7 @@ import { PaginatorComponent } from '../../shared/components/paginator/paginator.
 import { TableComponent } from '../../shared/components/table/table.component';
 import {
   Actividad,
+  esActividadVencida,
   ESTADO_ACTIVIDAD_LABEL,
   EstadoActividad,
   FRECUENCIA_LABEL,
@@ -123,15 +124,11 @@ const TRADUCCION_ES = {
   CW: 'Sem',
 };
 
-function esVencida(a: Pick<Actividad, 'estado' | 'fechaProgramada'>): boolean {
-  return a.estado === 'PENDIENTE' && new Date(a.fechaProgramada).getTime() < Date.now();
-}
-
 /** El `calendarId` decide el color del evento — solo tonos de la paleta cerrada (ver `crm-design-system`). */
 function calendarioDe(a: Actividad): string {
   if (a.estado === 'CANCELADA') return 'neutral';
   if (a.estado === 'COMPLETADA') return 'secundaria';
-  return esVencida(a) ? 'critica' : 'primaria';
+  return esActividadVencida(a) ? 'critica' : 'primaria';
 }
 
 function aEventoCalendario(a: Actividad): CalendarEventExternal {
@@ -192,7 +189,7 @@ export class ActividadesPage {
   protected readonly estadoLabel = ESTADO_ACTIVIDAD_LABEL;
   protected readonly estadoBadge = ESTADO_BADGE;
   protected readonly tipos = TIPOS;
-  protected readonly esVencida = esVencida;
+  protected readonly esVencida = esActividadVencida;
   protected readonly origenLabel = ORIGEN_LABEL;
 
   /* ── Vista y filtros ───────────────────────────────────────────── */

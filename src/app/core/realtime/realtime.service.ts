@@ -12,6 +12,15 @@ export interface ActividadConversacion {
   readonly ts: number;
 }
 
+/** Un recordatorio de `Actividad` (módulo Actividades) entró en su ventana de
+ *  aviso. `agenteId` viaja para descartar sin pedir nada si no es de quien
+ *  mira — ver la nota en `conversaciones.gateway.ts` del backend. */
+export interface RecordatorioActividad {
+  readonly actividadId: string;
+  readonly agenteId: string;
+  readonly ts: number;
+}
+
 /**
  * RealtimeService — cliente de WebSocket para el inbox de Conversaciones.
  *
@@ -33,6 +42,9 @@ export class RealtimeService {
 
   /** Último aviso recibido; un `effect()` en la página lo consume y decide qué recargar. */
   readonly actividad = signal<ActividadConversacion | null>(null);
+
+  /** Último recordatorio de Actividad recibido — lo consume `app-notificaciones-bell`. */
+  readonly recordatorioActividad = signal<RecordatorioActividad | null>(null);
 
   /** Contador de reconexiones (0 = todavía ninguna). Sube cada vez que el socket
    *  vuelve a conectar tras una caída — un wifi que parpadea, la laptop que se
@@ -64,6 +76,9 @@ export class RealtimeService {
       });
       this.socket.on('conversacion:actividad', (payload: { conversacionId: string }) => {
         this.actividad.set({ conversacionId: payload.conversacionId, ts: Date.now() });
+      });
+      this.socket.on('actividad:recordatorio', (payload: { actividadId: string; agenteId: string }) => {
+        this.recordatorioActividad.set({ ...payload, ts: Date.now() });
       });
       this.socket.on('connect', () => {
         this.conectado.set(true);

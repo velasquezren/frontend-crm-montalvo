@@ -69,6 +69,11 @@ export class ActividadesService {
     return this.api.request('/actividades/resumen', { ...filtro });
   }
 
+  /** Detalle puntual — lo usa la campana de notificaciones al recibir un aviso por socket. */
+  obtener(id: string): Promise<Actividad> {
+    return this.api.get<Actividad>(`/actividades/${id}`);
+  }
+
   crear(dto: CrearActividadDto): Promise<Actividad> {
     return this.api.post<Actividad>('/actividades', dto);
   }

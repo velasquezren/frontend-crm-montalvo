@@ -1,0 +1,71 @@
+<div class="relative">
+  <button
+    type="button"
+    (click)="toggle()"
+    [attr.aria-expanded]="abierto()"
+    aria-label="Recordatorios y notificaciones"
+    class="relative w-9 h-9 rounded-lg flex items-center justify-center text-text-muted hover:text-primary hover:bg-bg-light transition-all duration-200 cursor-pointer">
+    <app-icon name="bell" [size]="18" />
+    @if (totalUrgentes() > 0) {
+      <span
+        class="crm-bell-badge"
+        [class.crm-bell-badge--critica]="hayVencidas()"
+        [attr.aria-label]="totalUrgentes() + ' recordatorios pendientes'">
+        {{ totalUrgentes() > 9 ? '9+' : totalUrgentes() }}
+      </span>
+    }
+  </button>
+
+  @if (abierto()) {
+    <div class="absolute right-0 top-full mt-2 w-80 max-w-[90vw] bg-background rounded-2xl border border-border shadow-lifted overflow-hidden animate-fade-scale z-50">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-border">
+        <h3 class="text-sm font-bold text-text-dark">Recordatorios</h3>
+        <app-button variant="ghost" size="sm" (clicked)="irAActividades()">Ver todas</app-button>
+      </div>
+
+      <div class="max-h-96 overflow-y-auto">
+        @if (items.isLoading()) {
+          <p class="px-4 py-6 text-center text-xs text-text-muted">Cargando…</p>
+        } @else if (items.error()) {
+          <p class="px-4 py-6 text-center text-xs text-text-muted">No se pudo cargar. Intenta de nuevo.</p>
+        } @else if (items.value().datos.length > 0) {
+          <ul class="divide-y divide-border">
+            @for (actividad of items.value().datos; track actividad.id) {
+              <li class="flex items-center gap-2 px-3 py-2.5 hover:bg-bg-light transition-colors">
+                <button type="button" (click)="irAActividades()" class="flex items-center gap-2.5 min-w-0 flex-1 text-left cursor-pointer">
+                  <div
+                    class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                    [class.bg-critical-bg]="esVencida(actividad)"
+                    [class.text-critical]="esVencida(actividad)"
+                    [class.bg-bg-light]="!esVencida(actividad)"
+                    [class.text-primary]="!esVencida(actividad)">
+                    <app-icon [name]="tipoIcono[actividad.tipo]" [size]="14" />
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs font-semibold text-text-dark truncate">{{ actividad.titulo }}</p>
+                    <p class="text-[11px] text-text-muted truncate">
+                      {{ actividad.cliente.nombre }} ·
+                      <span [class.text-critical]="esVencida(actividad)" [class.font-semibold]="esVencida(actividad)">
+                        {{ actividad.fechaProgramada | date: 'HH:mm' }}
+                      </span>
+                    </p>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  (click)="completar(actividad)"
+                  class="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-text-muted hover:text-primary hover:bg-white transition-colors cursor-pointer"
+                  title="Marcar como completada"
+                  aria-label="Marcar como completada">
+                  <app-icon name="check" [size]="14" />
+                </button>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="px-4 py-6 text-center text-xs text-text-muted">Sin recordatorios pendientes para hoy.</p>
+        }
+      </div>
+    </div>
+  }
+</div>

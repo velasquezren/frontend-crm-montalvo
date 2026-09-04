@@ -67,3 +67,12 @@ export interface ResumenActividades {
   readonly hoy: number;
   readonly proximaSemana: number;
 }
+
+/**
+ * Compartida entre `ActividadesPage` (calendario y tabla) y
+ * `NotificacionesBellComponent` (panel de la campana) — una sola definición
+ * de "vencida" para que las dos vistas coincidan siempre.
+ */
+export function esActividadVencida(a: Pick<Actividad, 'estado' | 'fechaProgramada'>): boolean {
+  return a.estado === 'PENDIENTE' && new Date(a.fechaProgramada).getTime() < Date.now();
+}
