@@ -31,6 +31,16 @@ export interface ComprobanteSubido {
   comprobanteUrl: string;
 }
 
+export interface FiltroVentas {
+  readonly q?: string;
+  readonly estado?: EstadoVenta;
+  readonly agenteId?: string;
+  readonly desde?: string;
+  readonly hasta?: string;
+  readonly pagina?: number;
+  readonly limite?: number;
+}
+
 /**
  * Ventas — registro de cierres (RF-11/RF-12).
  * Una venta GANADA dispara comisión y recategorización del cliente en el backend.
@@ -39,13 +49,21 @@ export interface ComprobanteSubido {
 export class VentasService {
   private readonly api = inject(ApiService);
 
-  listarRequest(estado?: EstadoVenta, pagina?: number, limite?: number, q?: string): ResourceRequest {
+  listarRequest(filtro?: FiltroVentas): ResourceRequest {
     return this.api.request('/ventas', {
-      q: q?.trim() || undefined,
-      estado,
-      pagina,
-      limite,
+      q: filtro?.q?.trim() || undefined,
+      estado: filtro?.estado,
+      agenteId: filtro?.agenteId,
+      desde: filtro?.desde,
+      hasta: filtro?.hasta,
+      pagina: filtro?.pagina,
+      limite: filtro?.limite,
     });
+  }
+
+  /** Lista de agentes para filtro (ADMIN / SUPER_ADMIN). */
+  agentesRequest(): ResourceRequest {
+    return this.api.request('/conversaciones/meta/agentes');
   }
 
   /**

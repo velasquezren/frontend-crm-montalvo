@@ -1,211 +1,431 @@
-<div class="flex flex-col gap-8">
+<div class="flex flex-col gap-6">
 
+  <!-- Header con botón de nuevo registro -->
   <app-page-header
     title="Ventas"
-    subtitle="Cierres registrados por agente — el agente responsable es inalterable">
+    subtitle="Cierres registrados por ejecutiva — trazabilidad comercial y clínica inalterable">
     <app-button icon="plus" (clicked)="abrirFormulario(modalVentaTemplate)">
       Registrar venta
     </app-button>
   </app-page-header>
 
-  <!-- ── Resumen del periodo ──────────────────────────────────────── -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    @for (item of resumen(); track item.label) {
-      <app-card [hoverable]="true" class="transition-all">
-        <div class="flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 text-primary">
-            <app-icon [name]="item.icon" [size]="22" />
-          </div>
-          <div>
-            <p class="text-xs text-text-muted font-bold uppercase tracking-wider">{{ item.label }}</p>
-            <p class="text-2xl font-extrabold text-text-dark mt-0.5 tracking-tight">{{ item.valor }}</p>
-          </div>
+  <!-- ── Resumen de KPIs Médicos y Comerciales ───────────────────── -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <app-kpi-card
+      label="Facturación Cerrada"
+      [valor]="resumenKpis().totalCerrado"
+      icon="trending-up"
+      tono="primary"
+      [destacado]="true"
+      [pie]="resumenKpis().pieCerrado" />
+
+    <app-kpi-card
+      label="Ventas Ganadas"
+      [valor]="resumenKpis().conteoGanadas"
+      icon="check-circle"
+      tono="primary"
+      [pie]="resumenKpis().tasaCierre" />
+
+    <app-kpi-card
+      label="En Seguimiento"
+      [valor]="resumenKpis().conteoEnProceso"
+      icon="clock"
+      tono="secondary"
+      [pie]="resumenKpis().montoEnProceso" />
+
+    <app-kpi-card
+      label="Ticket Promedio"
+      [valor]="resumenKpis().ticketPromedio"
+      icon="shopping-bag"
+      tono="neutral"
+      pie="Por cierre ganado" />
+  </div>
+
+  <!-- ── Barra de Navegación de Vistas y Filtros Avanzados ────────── -->
+  <div class="bg-white rounded-2xl border border-border shadow-subtle p-4.5 space-y-4">
+    
+    <!-- Fila 1: Búsqueda global multi-campo, Selector de Vistas y Limpiar -->
+    <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+      <!-- Búsqueda con debounce (200ms) -->
+      <div class="w-full lg:w-96">
+        <app-input
+          placeholder="Buscar por paciente, teléfono, PAC, servicio, médico…"
+          icon="search"
+          [(value)]="busqueda" />
+      </div>
+
+      <!-- Selector de Modo de Visualización (Pestañas) & Reset -->
+      <div class="flex items-center gap-2 self-end lg:self-auto">
+        <div class="flex items-center p-1 bg-bg-workspace rounded-xl border border-border">
+          <button
+            type="button"
+            (click)="vistaActiva.set('tabla')"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            [class.bg-white]="vistaActiva() === 'tabla'"
+            [class.text-primary]="vistaActiva() === 'tabla'"
+            [class.shadow-subtle]="vistaActiva() === 'tabla'"
+            [class.text-text-muted]="vistaActiva() !== 'tabla'">
+            <app-icon name="file-text" [size]="14" />
+            <span>Listado</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-bg-workspace text-text-dark border border-border">
+              {{ ventas.value().total }}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            (click)="vistaActiva.set('analitica')"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            [class.bg-white]="vistaActiva() === 'analitica'"
+            [class.text-primary]="vistaActiva() === 'analitica'"
+            [class.shadow-subtle]="vistaActiva() === 'analitica'"
+            [class.text-text-muted]="vistaActiva() !== 'analitica'">
+            <app-icon name="pie-chart" [size]="14" />
+            <span>Distribución</span>
+          </button>
         </div>
-      </app-card>
-    }
-  </div>
 
-  <!-- ── Barra de herramientas: Búsqueda y Filtro por estado ──────── -->
-  <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-    <!-- Búsqueda con debounce (200ms) -->
-    <div class="w-full sm:w-80">
-      <app-input
-        placeholder="Buscar paciente, teléfono, servicio o médico…"
-        icon="search"
-        [(value)]="busqueda" />
-    </div>
-
-    <!-- Filtro por estado -->
-    <div class="flex flex-wrap items-center gap-2">
-      @for (opcion of filtros; track opcion) {
-        <app-filter-chip
-          [active]="filtro() === opcion"
-          (clicked)="cambiarFiltro(opcion)">
-          {{ opcion === 'TODAS' ? 'Todas' : estadoLabel[opcion] }}
-        </app-filter-chip>
-      }
-    </div>
-  </div>
-
-  <!-- ── Tabla de ventas (carga diferida reactiva) ────────────────── -->
-  @defer (on viewport) {
-    @if (ventas.isLoading() && ventas.value().datos.length === 0) {
-      <div class="bg-white rounded-2xl shadow-subtle p-6 flex flex-col gap-4">
-        @for (fila of [1, 2, 3, 4]; track fila) {
-          <app-loading-skeleton shape="text" height="2.5rem" />
+        @if (hayFiltrosActivos()) {
+          <app-button
+            variant="ghost"
+            size="sm"
+            icon="x"
+            (clicked)="limpiarTodosLosFiltros()">
+            Limpiar ({{ totalFiltrosActivos() }})
+          </app-button>
         }
       </div>
-    } @else if (ventas.error() && ventas.value().datos.length === 0) {
-      <div class="bg-white rounded-2xl shadow-subtle">
-        <app-empty-state icon="alert-circle" title="No se pudo cargar las ventas"
-          description="Verifica que el servidor del CRM esté encendido e intenta de nuevo." />
+    </div>
+
+    <!-- Fila 2: Chips de Estado Comercial y Selector de Período Temporal -->
+    <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-2 border-t border-border">
+      <!-- Chips de Estado Comercial -->
+      <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Filtro por estado de venta">
+        @for (opcion of filtros; track opcion) {
+          <app-filter-chip
+            [active]="filtro() === opcion"
+            (clicked)="cambiarFiltro(opcion)">
+            {{ opcion === 'TODAS' ? 'Todas' : estadoLabel[opcion] }}
+          </app-filter-chip>
+        }
       </div>
-    } @else if (ventas.value().datos.length > 0) {
-      <app-table>
-        <thead>
-          <tr>
-            <th>Paciente</th>
-            <th>Procedimiento / Servicio</th>
-            <th>Monto</th>
-            <th>Pago & Comprobante</th>
-            <th>Médico</th>
-            <th>Agente</th>
-            <th>Fecha</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (venta of ventas.value().datos; track venta.id) {
+
+      <!-- Controles de Período y Agente -->
+      <div class="flex flex-wrap items-center gap-2.5">
+        <!-- Selector de Período -->
+        <div class="flex items-center gap-1.5 text-xs text-text-muted">
+          <app-icon name="calendar" [size]="14" class="text-primary" />
+          <select
+            [value]="presetPeriodo()"
+            (change)="cambiarPresetPeriodo($any($event.target).value)"
+            class="bg-bg-workspace border border-border rounded-xl px-2.5 py-1.5 text-xs font-semibold text-text-dark focus:outline-none focus:border-primary cursor-pointer">
+            @for (p of presetsPeriodo; track p.id) {
+              <option [value]="p.id">{{ p.label }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Selector de Agente (ADMIN / SUPER_ADMIN) -->
+        @if (esAdmin()) {
+          <div class="flex items-center gap-1.5 text-xs text-text-muted">
+            <app-icon name="user" [size]="14" class="text-primary" />
+            <select
+              [value]="agenteSeleccionadoId()"
+              (change)="cambiarAgente($event)"
+              class="bg-bg-workspace border border-border rounded-xl px-2.5 py-1.5 text-xs font-semibold text-text-dark focus:outline-none focus:border-primary cursor-pointer">
+              <option value="TODOS">Todos los agentes</option>
+              @for (ag of agentes.value(); track ag.id) {
+                <option [value]="ag.id">{{ ag.nombre }}</option>
+              }
+            </select>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Rango Libre Personalizado (si está activo) -->
+    @if (presetPeriodo() === 'PERSONALIZADO') {
+      <div class="flex flex-wrap items-center gap-3 p-3 rounded-xl bg-bg-workspace border border-border">
+        <div class="w-40">
+          <app-input
+            type="date"
+            label="Fecha desde"
+            [(value)]="fechaDesdePersonalizada" />
+        </div>
+        <div class="w-40">
+          <app-input
+            type="date"
+            label="Fecha hasta"
+            [(value)]="fechaHastaPersonalizada" />
+        </div>
+        <p class="text-xs text-text-muted self-end pb-2">
+          Filtro temporal sobre fecha de registro de venta.
+        </p>
+      </div>
+    }
+
+    <!-- Fila 3: Filtros Rápidos en Memoria (Método de pago & Comprobante) -->
+    <div class="flex flex-wrap items-center gap-4 text-xs pt-2 border-t border-border">
+      <div class="flex items-center gap-1.5">
+        <span class="text-text-muted font-medium">Pago:</span>
+        <button
+          type="button"
+          (click)="cambiarMetodoPagoFiltro('TODOS')"
+          class="px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-colors cursor-pointer"
+          [class.bg-primary]="metodoPagoFiltro() === 'TODOS'"
+          [class.text-white]="metodoPagoFiltro() === 'TODOS'"
+          [class.border-primary]="metodoPagoFiltro() === 'TODOS'"
+          [class.bg-white]="metodoPagoFiltro() !== 'TODOS'"
+          [class.text-text-muted]="metodoPagoFiltro() !== 'TODOS'"
+          [class.border-border]="metodoPagoFiltro() !== 'TODOS'">
+          Todos
+        </button>
+        @for (mp of metodosPago; track mp.id) {
+          <button
+            type="button"
+            (click)="cambiarMetodoPagoFiltro(mp.id)"
+            class="px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-colors cursor-pointer"
+            [class.bg-primary]="metodoPagoFiltro() === mp.id"
+            [class.text-white]="metodoPagoFiltro() === mp.id"
+            [class.border-primary]="metodoPagoFiltro() === mp.id"
+            [class.bg-white]="metodoPagoFiltro() !== mp.id"
+            [class.text-text-muted]="metodoPagoFiltro() !== mp.id"
+            [class.border-border]="metodoPagoFiltro() !== mp.id">
+            {{ mp.label }}
+          </button>
+        }
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <span class="text-text-muted font-medium">Comprobante:</span>
+        <button
+          type="button"
+          (click)="cambiarComprobanteFiltro('TODOS')"
+          class="px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-colors cursor-pointer"
+          [class.bg-primary]="comprobanteFiltro() === 'TODOS'"
+          [class.text-white]="comprobanteFiltro() === 'TODOS'"
+          [class.border-primary]="comprobanteFiltro() === 'TODOS'"
+          [class.bg-white]="comprobanteFiltro() !== 'TODOS'"
+          [class.text-text-muted]="comprobanteFiltro() !== 'TODOS'"
+          [class.border-border]="comprobanteFiltro() !== 'TODOS'">
+          Todos
+        </button>
+        <button
+          type="button"
+          (click)="cambiarComprobanteFiltro('CON_COMPROBANTE')"
+          class="px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-colors cursor-pointer"
+          [class.bg-primary]="comprobanteFiltro() === 'CON_COMPROBANTE'"
+          [class.text-white]="comprobanteFiltro() === 'CON_COMPROBANTE'"
+          [class.border-primary]="comprobanteFiltro() === 'CON_COMPROBANTE'"
+          [class.bg-white]="comprobanteFiltro() !== 'CON_COMPROBANTE'"
+          [class.text-text-muted]="comprobanteFiltro() !== 'CON_COMPROBANTE'"
+          [class.border-border]="comprobanteFiltro() !== 'CON_COMPROBANTE'">
+          Con comprobante
+        </button>
+        <button
+          type="button"
+          (click)="cambiarComprobanteFiltro('SIN_COMPROBANTE')"
+          class="px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-colors cursor-pointer"
+          [class.bg-primary]="comprobanteFiltro() === 'SIN_COMPROBANTE'"
+          [class.text-white]="comprobanteFiltro() === 'SIN_COMPROBANTE'"
+          [class.border-primary]="comprobanteFiltro() === 'SIN_COMPROBANTE'"
+          [class.bg-white]="comprobanteFiltro() !== 'SIN_COMPROBANTE'"
+          [class.text-text-muted]="comprobanteFiltro() !== 'SIN_COMPROBANTE'"
+          [class.border-border]="comprobanteFiltro() !== 'SIN_COMPROBANTE'">
+          Pendiente
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modo Analítico: Gráficos de Distribución ─────────────────── -->
+  @if (vistaActiva() === 'analitica') {
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-white rounded-2xl border border-border shadow-subtle p-5">
+        <app-donut-chart
+          title="Métodos de Pago"
+          subtitle="Distribución por forma de pago acordada"
+          etiquetaTotal="Transacciones"
+          [items]="chartMetodosPago()"
+          (segmentClick)="onChartSegmentClick($event, 'metodo')" />
+      </div>
+
+      <div class="bg-white rounded-2xl border border-border shadow-subtle p-5">
+        <app-bar-chart
+          title="Módulos Clínicos"
+          subtitle="Servicios por unidad operativa (LAB, CONSULTA, PLANES, etc.)"
+          mode="BAR"
+          [items]="chartModulos()"
+          (segmentClick)="onChartSegmentClick($event, 'modulo')" />
+      </div>
+    </div>
+  }
+
+  <!-- ── Modo Listado: Tabla Operativa de Ventas ──────────────────── -->
+  @if (vistaActiva() === 'tabla') {
+    @defer (on viewport) {
+      @if (ventas.isLoading() && ventas.value().datos.length === 0) {
+        <div class="bg-white rounded-2xl shadow-subtle p-6 flex flex-col gap-4">
+          @for (fila of [1, 2, 3, 4, 5]; track fila) {
+            <app-loading-skeleton shape="text" height="2.5rem" />
+          }
+        </div>
+      } @else if (ventas.error() && ventas.value().datos.length === 0) {
+        <app-error-carga que="las ventas" (reintentar)="ventas.reload()" />
+      } @else if (ventasFiltradas().length > 0) {
+        <app-table [dense]="true" maxHeight="calc(100dvh - 280px)">
+          <thead>
             <tr>
-              <td>
-                <div class="flex items-center gap-3">
-                  <app-avatar [initials]="iniciales(venta.cliente.nombre)" size="sm" />
-                  <div class="min-w-0">
-                    <p class="font-semibold text-text-dark leading-tight">{{ venta.cliente.nombre }}</p>
-                    <div class="flex items-center gap-1.5 mt-0.5">
-                      <span class="text-xs text-text-muted font-mono">{{ venta.cliente.telefono }}</span>
-                      @if (venta.cliente.pac) {
-                        <span class="text-[9px] font-mono font-semibold px-1 py-0.2 rounded bg-primary/10 text-primary">
-                          {{ venta.cliente.pac }}
-                        </span>
-                      }
+              <th>Paciente</th>
+              <th>Procedimiento / Servicio</th>
+              <th>Monto</th>
+              <th>Pago & Comprobante</th>
+              <th>Médico</th>
+              <th>Agente</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (venta of ventasFiltradas(); track venta.id) {
+              <tr
+                class="fila-clicable"
+                tabindex="0"
+                role="button"
+                (keydown.enter)="abrirDetalleVenta(venta, drawerDetalleTemplate)"
+                (click)="abrirDetalleVenta(venta, drawerDetalleTemplate)">
+                <td>
+                  <div class="flex items-center gap-3">
+                    <app-avatar [initials]="iniciales(venta.cliente.nombre)" size="sm" />
+                    <div class="min-w-0">
+                      <p class="font-semibold text-text-dark leading-tight truncate">{{ venta.cliente.nombre }}</p>
+                      <div class="flex items-center gap-1.5 mt-0.5">
+                        <span class="text-xs text-text-muted font-mono">{{ venta.cliente.telefono }}</span>
+                        @if (venta.cliente.pac) {
+                          <span class="text-[9px] font-mono font-semibold px-1 py-0.2 rounded bg-primary/10 text-primary">
+                            {{ venta.cliente.pac }}
+                          </span>
+                        }
+                      </div>
                     </div>
                   </div>
-                </div>
-              </td>
-              <td>
-                <div class="flex flex-col gap-0.5">
-                  <p class="font-medium text-text-dark text-sm">{{ venta.producto }}</p>
-                  @if (venta.modulo) {
-                    <span class="text-[10px] font-semibold text-text-muted bg-bg-light px-1.5 py-0.5 rounded w-fit">
-                      {{ venta.modulo }}
-                    </span>
-                  }
-                </div>
-              </td>
-              <td class="font-bold text-primary whitespace-nowrap tabular-nums">
-                {{ +venta.monto | moneda:'BOB' }}
-              </td>
-              <td>
-                <div class="flex flex-col gap-1">
-                  @if (venta.metodoPago) {
-                    <span class="text-[10px] font-semibold text-text-dark bg-neutral-bg px-2 py-0.5 rounded-full border border-border w-fit inline-flex items-center gap-1">
-                      <app-icon name="dollar-sign" [size]="10" class="text-primary" />
-                      {{ venta.metodoPago }}
-                    </span>
-                  }
-                  @if (venta.comprobanteUrl) {
-                    <button
-                      type="button"
-                      (click)="abrirLightbox(lightboxTemplate, venta.comprobanteUrl, venta.comprobanteNombre || venta.comprobante)"
-                      class="text-[10px] font-medium text-primary hover:underline inline-flex items-center gap-1 cursor-pointer w-fit"
-                      title="Ver comprobante adjunto">
-                      <app-icon name="image" [size]="11" />
-                      <span>Ver adjunto</span>
-                    </button>
-                  } @else if (venta.comprobante) {
-                    <span class="text-[10px] font-mono text-text-muted">
-                      #{{ venta.comprobante }}
-                    </span>
-                  }
-                </div>
-              </td>
-              <td>
-                <span class="text-xs text-text-muted">
-                  {{ venta.medico || '—' }}
-                </span>
-              </td>
-              <td class="text-text-muted text-xs whitespace-nowrap">{{ venta.agente.nombre }}</td>
-              <td class="text-text-muted text-xs whitespace-nowrap">{{ venta.createdAt | date: 'dd/MM/yy HH:mm' }}</td>
-              <td>
-                <div class="flex items-center gap-1.5">
-                  <span [title]="venta.estado === 'PERDIDA' ? venta.motivoPerdida : null">
-                    <app-badge [variant]="estadoBadge[venta.estado]">
-                      {{ estadoLabel[venta.estado] }}
-                    </app-badge>
+                </td>
+                <td>
+                  <div class="flex flex-col gap-0.5">
+                    <p class="font-medium text-text-dark text-sm leading-tight">{{ venta.producto }}</p>
+                    @if (venta.modulo) {
+                      <span class="text-[10px] font-semibold text-text-muted bg-bg-light px-1.5 py-0.5 rounded w-fit">
+                        {{ venta.modulo }}
+                      </span>
+                    }
+                  </div>
+                </td>
+                <td class="font-bold text-primary whitespace-nowrap tabular-nums">
+                  {{ +venta.monto | moneda:'BOB' }}
+                </td>
+                <td>
+                  <div class="flex flex-col gap-1">
+                    @if (venta.metodoPago) {
+                      <span class="text-[10px] font-semibold text-text-dark bg-neutral-bg px-2 py-0.5 rounded-full border border-border w-fit inline-flex items-center gap-1">
+                        <app-icon name="dollar-sign" [size]="10" class="text-primary" />
+                        {{ venta.metodoPago }}
+                      </span>
+                    }
+                    @if (venta.comprobanteUrl) {
+                      <button
+                        type="button"
+                        (click)="$event.stopPropagation(); abrirVisorImagen(venta.comprobanteUrl, venta.comprobanteNombre || venta.comprobante)"
+                        class="text-[10px] font-medium text-primary hover:underline inline-flex items-center gap-1 cursor-pointer w-fit"
+                        title="Ver comprobante adjunto">
+                        <app-icon name="image" [size]="11" />
+                        <span>Ver adjunto</span>
+                      </button>
+                    } @else if (venta.comprobante) {
+                      <span class="text-[10px] font-mono text-text-muted">
+                        #{{ venta.comprobante }}
+                      </span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <span class="text-xs text-text-muted">
+                    {{ venta.medico || '—' }}
                   </span>
-                  @if (esAdmin()) {
-                    <div class="flex items-center gap-0.5">
-                      @if (venta.estado !== 'GANADA') {
-                        <button
-                          type="button"
-                          [disabled]="cambiandoEstado()"
-                          (click)="cambiarEstadoVenta(venta, 'GANADA')"
-                          title="Marcar ganada"
-                          class="w-6 h-6 rounded-lg flex items-center justify-center text-text-muted hover:text-success hover:bg-success-bg transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                          <app-icon name="check-circle" [size]="13" />
-                        </button>
-                      }
-                      @if (venta.estado !== 'EN_PROCESO') {
-                        <button
-                          type="button"
-                          [disabled]="cambiandoEstado()"
-                          (click)="cambiarEstadoVenta(venta, 'EN_PROCESO')"
-                          title="Marcar en proceso"
-                          class="w-6 h-6 rounded-lg flex items-center justify-center text-text-muted hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                          <app-icon name="clock" [size]="13" />
-                        </button>
-                      }
-                      @if (venta.estado !== 'PERDIDA') {
-                        <button
-                          type="button"
-                          [disabled]="cambiandoEstado()"
-                          (click)="cambiarEstadoVenta(venta, 'PERDIDA')"
-                          title="Marcar perdida"
-                          class="w-6 h-6 rounded-lg flex items-center justify-center text-text-muted hover:text-critical hover:bg-critical-bg transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                          <app-icon name="x-circle" [size]="13" />
-                        </button>
-                      }
-                    </div>
-                  }
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </app-table>
+                </td>
+                <td class="text-text-muted text-xs whitespace-nowrap">{{ venta.agente.nombre }}</td>
+                <td class="text-text-muted text-xs whitespace-nowrap">{{ venta.createdAt | date: 'dd/MM/yy HH:mm' }}</td>
+                <td>
+                  <div class="flex items-center gap-1.5" (click)="$event.stopPropagation()">
+                    <span [title]="venta.estado === 'PERDIDA' ? venta.motivoPerdida : null">
+                      <app-badge [variant]="estadoBadge[venta.estado]">
+                        {{ estadoLabel[venta.estado] }}
+                      </app-badge>
+                    </span>
+                    @if (esAdmin()) {
+                      <div class="flex items-center gap-0.5">
+                        @if (venta.estado !== 'GANADA') {
+                          <button
+                            type="button"
+                            [disabled]="cambiandoEstado()"
+                            (click)="cambiarEstadoVenta(venta, 'GANADA')"
+                            title="Marcar ganada"
+                            class="w-6 h-6 rounded-lg flex items-center justify-center text-text-muted hover:text-success hover:bg-success-bg transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                            <app-icon name="check-circle" [size]="13" />
+                          </button>
+                        }
+                        @if (venta.estado !== 'EN_PROCESO') {
+                          <button
+                            type="button"
+                            [disabled]="cambiandoEstado()"
+                            (click)="cambiarEstadoVenta(venta, 'EN_PROCESO')"
+                            title="Marcar en proceso"
+                            class="w-6 h-6 rounded-lg flex items-center justify-center text-text-muted hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                            <app-icon name="clock" [size]="13" />
+                          </button>
+                        }
+                        @if (venta.estado !== 'PERDIDA') {
+                          <button
+                            type="button"
+                            [disabled]="cambiandoEstado()"
+                            (click)="cambiarEstadoVenta(venta, 'PERDIDA')"
+                            title="Marcar perdida"
+                            class="w-6 h-6 rounded-lg flex items-center justify-center text-text-muted hover:text-critical hover:bg-critical-bg transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                            <app-icon name="x-circle" [size]="13" />
+                          </button>
+                        }
+                      </div>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </app-table>
 
-      <app-paginator
-        [pagina]="ventas.value().pagina"
-        [totalPaginas]="ventas.value().totalPaginas"
-        [total]="ventas.value().total"
-        [limite]="ventas.value().limite"
-        (cambiar)="pagina.set($event)" />
-    } @else {
-      <div class="bg-white rounded-2xl shadow-subtle">
-        @if (busqueda()) {
-          <app-empty-state icon="search" title="Sin coincidencias"
-            [description]="'No se encontraron ventas para «' + busqueda() + '».'">
-            <app-button variant="ghost" size="sm" icon="x" (clicked)="busqueda.set('')">Limpiar búsqueda</app-button>
-          </app-empty-state>
-        } @else {
-          <app-empty-state icon="shopping-bag" title="Sin ventas en este estado"
-            description="Registra un cierre con el botón «Registrar venta»." />
-        }
-      </div>
+        <app-paginator
+          [pagina]="ventas.value().pagina"
+          [totalPaginas]="ventas.value().totalPaginas"
+          [total]="ventas.value().total"
+          [limite]="ventas.value().limite"
+          (cambiar)="pagina.set($event)" />
+      } @else {
+        <div class="bg-white rounded-2xl shadow-subtle p-6">
+          @if (busqueda() || hayFiltrosActivos()) {
+            <app-empty-state icon="search" title="Sin coincidencias para los filtros"
+              description="Intenta cambiar los términos de búsqueda o restablecer los filtros.">
+              <app-button variant="ghost" size="sm" icon="x" (clicked)="limpiarTodosLosFiltros()">
+                Restablecer todos los filtros
+              </app-button>
+            </app-empty-state>
+          } @else {
+            <app-empty-state icon="shopping-bag" title="Sin ventas registradas"
+              description="Registra un cierre comercial con el botón «Registrar venta»." />
+          }
+        </div>
+      }
+    } @placeholder {
+      <app-loading-skeleton shape="card" height="240px" />
     }
-  } @placeholder {
-    <app-loading-skeleton shape="card" height="240px" />
   }
 
   <!-- ── Modal Template: Registro de Venta (CDK Overlay) ─────────── -->
@@ -462,43 +682,279 @@
     </div>
   </ng-template>
 
-  <!-- ── Lightbox Template (CDK Overlay) ──────────────────────────── -->
-  <ng-template #lightboxTemplate>
-    <div
-      class="bg-white rounded-2xl shadow-lifted max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto border border-border animate-modal-pop"
-      (click)="$event.stopPropagation()">
-      <div class="flex items-center justify-between p-4 border-b border-border bg-white">
-        <div class="flex items-center gap-2 min-w-0">
-          <app-icon name="image" [size]="18" class="text-primary" />
-          <h3 class="text-xs font-bold text-text-dark truncate">{{ lightboxNombre() }}</h3>
+  <!-- ── Cajón Lateral: Detalle 360° de la Venta (CDK Overlay) ───── -->
+  <ng-template #drawerDetalleTemplate>
+    @if (ventaSeleccionada(); as venta) {
+      <aside
+        class="h-full w-full sm:w-[500px] lg:w-[540px] bg-white shadow-lifted border-l border-border flex flex-col pointer-events-auto animate-drawer-in"
+        role="dialog"
+        aria-label="Detalle de venta">
+
+        <!-- Header -->
+        <header class="flex items-center justify-between px-6 py-4.5 border-b border-border bg-white shrink-0">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+              <app-icon name="shopping-bag" [size]="18" />
+            </div>
+            <div class="min-w-0">
+              <h2 class="text-sm font-bold text-text-dark tracking-tight leading-tight truncate">
+                Detalle de Venta #{{ venta.id.slice(-6).toUpperCase() }}
+              </h2>
+              <p class="text-xs text-text-muted leading-tight mt-0.5">
+                Registrada el {{ venta.createdAt | date:'dd/MM/yyyy HH:mm' }}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            (click)="cerrarDetalleVenta()"
+            class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
+            aria-label="Cerrar detalle">
+            <app-icon name="x" [size]="18" />
+          </button>
+        </header>
+
+        <!-- Body -->
+        <div class="p-6 overflow-y-auto space-y-5 flex-1 bg-bg-workspace/30">
+
+          <!-- 1. Tarjeta Resumen Económico / Estado -->
+          <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle flex flex-col gap-3">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-text-muted block">Monto Transaccionado</span>
+                <span class="text-2xl font-black text-primary tabular-nums tracking-tight">
+                  {{ +venta.monto | moneda:'BOB' }}
+                </span>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-text-muted">Estado Actual</span>
+                <app-badge [variant]="estadoBadge[venta.estado]">
+                  {{ estadoLabel[venta.estado] }}
+                </app-badge>
+              </div>
+            </div>
+
+            <!-- Acciones de Estado (para Administradores) -->
+            @if (esAdmin()) {
+              <div class="pt-2.5 border-t border-border/70 flex items-center justify-between gap-2">
+                <span class="text-[11px] font-medium text-text-muted">Cambiar estado:</span>
+                <div class="flex items-center gap-1.5">
+                  @if (venta.estado !== 'GANADA') {
+                    <button
+                      type="button"
+                      [disabled]="cambiandoEstado()"
+                      (click)="cambiarEstadoVenta(venta, 'GANADA')"
+                      class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-success-bg text-text-dark hover:bg-success/20 border border-border transition-colors cursor-pointer flex items-center gap-1 disabled:opacity-40">
+                      <app-icon name="check-circle" [size]="12" class="text-success" />
+                      <span>Ganada</span>
+                    </button>
+                  }
+                  @if (venta.estado !== 'EN_PROCESO') {
+                    <button
+                      type="button"
+                      [disabled]="cambiandoEstado()"
+                      (click)="cambiarEstadoVenta(venta, 'EN_PROCESO')"
+                      class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 border border-border transition-colors cursor-pointer flex items-center gap-1 disabled:opacity-40">
+                      <app-icon name="clock" [size]="12" />
+                      <span>En proceso</span>
+                    </button>
+                  }
+                  @if (venta.estado !== 'PERDIDA') {
+                    <button
+                      type="button"
+                      [disabled]="cambiandoEstado()"
+                      (click)="cambiarEstadoVenta(venta, 'PERDIDA')"
+                      class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-critical-bg text-text-dark hover:bg-critical/20 border border-border transition-colors cursor-pointer flex items-center gap-1 disabled:opacity-40">
+                      <app-icon name="x-circle" [size]="12" class="text-critical" />
+                      <span>Perdida</span>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (venta.estado === 'PERDIDA' && venta.motivoPerdida) {
+              <div class="p-3 rounded-xl bg-critical-bg/50 border border-border text-xs text-text-dark">
+                <div class="flex items-center gap-1.5 font-bold text-critical text-[11px] mb-0.5">
+                  <app-icon name="alert-circle" [size]="12" />
+                  <span>Motivo de Pérdida</span>
+                </div>
+                <p class="leading-relaxed">{{ venta.motivoPerdida }}</p>
+              </div>
+            }
+          </div>
+
+          <!-- 2. Información del Paciente / Cliente -->
+          <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-text-muted">Paciente / Cliente</h3>
+              @if (venta.cliente.pac) {
+                <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary">
+                  PAC {{ venta.cliente.pac }}
+                </span>
+              }
+            </div>
+
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3 min-w-0">
+                <app-avatar [initials]="iniciales(venta.cliente.nombre)" size="md" />
+                <div class="min-w-0">
+                  <p class="text-sm font-bold text-text-dark truncate">{{ venta.cliente.nombre }}</p>
+                  <p class="text-xs text-text-muted font-mono mt-0.5">{{ venta.cliente.telefono }}</p>
+                </div>
+              </div>
+
+              @if (venta.cliente.telefono) {
+                <a
+                  [href]="getWhatsappLink(venta.cliente.telefono)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="px-3 py-1.5 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors inline-flex items-center gap-1.5 shrink-0 shadow-subtle"
+                  title="Abrir conversación de WhatsApp">
+                  <app-icon name="message-circle" [size]="13" />
+                  <span>WhatsApp</span>
+                </a>
+              }
+            </div>
+          </div>
+
+          <!-- 3. Servicio y Detalle Clínico -->
+          <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-text-muted">Procedimiento & Clínica</h3>
+            
+            <div class="space-y-2 text-xs">
+              <div class="flex items-center justify-between py-1 border-b border-border/50">
+                <span class="text-text-muted">Servicio / Procedimiento</span>
+                <span class="font-bold text-text-dark text-right">{{ venta.producto }}</span>
+              </div>
+              <div class="flex items-center justify-between py-1 border-b border-border/50">
+                <span class="text-text-muted">Módulo FileMaker</span>
+                @if (venta.modulo) {
+                  <span class="font-semibold text-text-dark bg-bg-light px-2 py-0.5 rounded-md">
+                    {{ venta.modulo }}
+                  </span>
+                } @else {
+                  <span class="text-text-muted">—</span>
+                }
+              </div>
+              <div class="flex items-center justify-between py-1 border-b border-border/50">
+                <span class="text-text-muted">Médico Tratante</span>
+                <span class="font-semibold text-text-dark">{{ venta.medico || 'No especificado' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Pago y Comprobante Digital -->
+          <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-text-muted">Pago & Respaldo</h3>
+
+            <div class="space-y-2 text-xs">
+              <div class="flex items-center justify-between py-1 border-b border-border/50">
+                <span class="text-text-muted">Método de Pago</span>
+                <span class="font-semibold text-text-dark inline-flex items-center gap-1 bg-neutral-bg px-2 py-0.5 rounded-full border border-border">
+                  <app-icon name="dollar-sign" [size]="11" class="text-primary" />
+                  {{ venta.metodoPago || 'No especificado' }}
+                </span>
+              </div>
+              @if (venta.comprobante) {
+                <div class="flex items-center justify-between py-1 border-b border-border/50">
+                  <span class="text-text-muted">Nº de Recibo / Ref.</span>
+                  <span class="font-mono font-semibold text-text-dark">#{{ venta.comprobante }}</span>
+                </div>
+              }
+            </div>
+
+            <!-- Previsualización de Comprobante / Voucher -->
+            @if (venta.comprobanteUrl) {
+              <div class="mt-3 pt-3 border-t border-border">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[11px] font-bold text-text-dark flex items-center gap-1">
+                    <app-icon name="file-text" [size]="13" class="text-primary" />
+                    <span>Voucher Digital</span>
+                  </span>
+                  <button
+                    type="button"
+                    (click)="abrirVisorImagen(venta.comprobanteUrl, venta.comprobanteNombre || venta.comprobante)"
+                    class="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 cursor-pointer">
+                    <app-icon name="maximize" [size]="12" />
+                    <span>Expandir visor</span>
+                  </button>
+                </div>
+                <div
+                  (click)="abrirVisorImagen(venta.comprobanteUrl, venta.comprobanteNombre || venta.comprobante)"
+                  class="rounded-xl border border-border overflow-hidden bg-bg-workspace max-h-44 flex items-center justify-center p-2 cursor-pointer group hover:border-primary transition-colors">
+                  <img
+                    [src]="venta.comprobanteUrl"
+                    [alt]="venta.comprobanteNombre || 'Comprobante de pago'"
+                    class="max-h-40 object-contain rounded-lg group-hover:scale-[1.02] transition-transform duration-200" />
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- 5. Trazabilidad Comercial y Comisiones -->
+          <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-text-muted">Atribución & Auditoría</h3>
+
+            <div class="space-y-2 text-xs">
+              <div class="flex items-center justify-between py-1 border-b border-border/50">
+                <span class="text-text-muted">Agente Comercial</span>
+                <span class="font-semibold text-text-dark">{{ venta.agente.nombre }}</span>
+              </div>
+              @if (venta.comision) {
+                <div class="flex items-center justify-between py-1 border-b border-border/50">
+                  <span class="text-text-muted">Comisión Calculada</span>
+                  <div class="flex items-center gap-1.5">
+                    <span class="font-bold text-primary tabular-nums">
+                      {{ +venta.comision.monto | moneda:'BOB' }}
+                    </span>
+                    <span class="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-bg-light text-primary">
+                      {{ venta.comision.estado }}
+                    </span>
+                  </div>
+                </div>
+              }
+              @if (venta.lead) {
+                <div class="flex items-center justify-between py-1 border-b border-border/50">
+                  <span class="text-text-muted">Lead / Canal de Origen</span>
+                  <span class="font-semibold text-text-dark">
+                    {{ origenLabel[venta.lead.origen] || venta.lead.origen }}
+                  </span>
+                </div>
+              }
+              @if (venta.notas) {
+                <div class="pt-2">
+                  <span class="text-text-muted block text-[11px] mb-1">Observaciones / Notas:</span>
+                  <p class="text-text-dark bg-bg-workspace p-2.5 rounded-xl border border-border leading-relaxed">
+                    {{ venta.notas }}
+                  </p>
+                </div>
+              }
+            </div>
+          </div>
+
         </div>
-        <button
-          type="button"
-          (click)="cerrarLightbox()"
-          class="w-8 h-8 rounded-lg hover:bg-bg-light text-text-muted hover:text-text-dark flex items-center justify-center cursor-pointer transition-colors">
-          <app-icon name="x" [size]="18" />
-        </button>
-      </div>
-      <div class="p-4 flex items-center justify-center bg-bg-workspace overflow-auto max-h-[70vh]">
-        @if (lightboxUrl(); as url) {
-          <img [src]="url" [alt]="lightboxNombre()" class="max-w-full max-h-[65vh] object-contain rounded-lg shadow-subtle" />
-        }
-      </div>
-      <div class="flex items-center justify-end gap-2 p-3 border-t border-border bg-white">
-        @if (lightboxUrl(); as url) {
-          <a
-            [href]="url"
-            target="_blank"
-            download
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors">
-            <app-icon name="download" [size]="14" />
-            <span>Descargar comprobante</span>
-          </a>
-        }
-        <app-button variant="ghost" size="sm" (clicked)="cerrarLightbox()">Cerrar</app-button>
-      </div>
-    </div>
+
+        <!-- Footer -->
+        <footer class="p-4 border-t border-border bg-white flex items-center justify-between gap-3 shrink-0">
+          <div class="text-[11px] text-text-muted font-mono">
+            ID: {{ venta.id.slice(0, 8) }}…
+          </div>
+          <app-button variant="ghost" size="sm" (clicked)="cerrarDetalleVenta()">
+            Cerrar
+          </app-button>
+        </footer>
+
+      </aside>
+    }
   </ng-template>
+
+  <!-- ── Visor de Comprobante (<app-image-viewer>) ──────────────────── -->
+  <app-image-viewer
+    [imageUrl]="visorImagenUrl()"
+    [title]="visorImagenTitulo() || 'Comprobante de pago'"
+    (closed)="cerrarVisorImagen()" />
+
 
   <!-- ── Modal Template: Motivo de pérdida (CDK Overlay) ──────────── -->
   <ng-template #modalMotivoPerdidaTemplate>

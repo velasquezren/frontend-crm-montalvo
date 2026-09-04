@@ -12,6 +12,15 @@ export interface ComprobanteSubido {
   readonly comprobanteUrl: string;
 }
 
+export interface AgenteResumenVenta {
+  readonly id: string;
+  readonly nombre: string;
+  readonly email?: string;
+  readonly rol?: string;
+}
+
+export type PresetPeriodo = 'TODAS' | 'HOY' | '7DIAS' | 'ESTE_MES' | 'MES_ANTERIOR' | 'PERSONALIZADO';
+
 /** Respuesta de GET /ventas. Prisma serializa Decimal como string. */
 export interface Venta {
   readonly id: string;
