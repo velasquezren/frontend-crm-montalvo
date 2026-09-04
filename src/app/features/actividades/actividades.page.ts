@@ -27,6 +27,7 @@ import { Temporal } from 'temporal-polyfill';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales } from '../../core/auth/user.model';
+import { aDatetimeLocal } from '../../core/api/fecha';
 import { mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { ToastService } from '../../core/toast/toast.service';
@@ -83,12 +84,6 @@ interface ClienteMinimo {
 
 /** Huso horario del navegador — usado solo para pintar los eventos del calendario. */
 const ZONA = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-/** `YYYY-MM-DDTHH:mm` en hora LOCAL — lo que espera un `<input type="datetime-local">`. */
-function aDatetimeLocal(fecha: Date): string {
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${fecha.getFullYear()}-${p(fecha.getMonth() + 1)}-${p(fecha.getDate())}T${p(fecha.getHours())}:${p(fecha.getMinutes())}`;
-}
 
 function esVencida(a: Pick<Actividad, 'estado' | 'fechaProgramada'>): boolean {
   return a.estado === 'PENDIENTE' && new Date(a.fechaProgramada).getTime() < Date.now();

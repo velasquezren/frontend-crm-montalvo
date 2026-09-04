@@ -36,25 +36,36 @@ let nextId = 0;
       }
 
       <div class="relative">
-        <input
-          [id]="id"
-          [type]="resolvedType()"
-          [placeholder]="placeholder()"
-          [value]="value()"
-          (input)="value.set($any($event.target).value)"
-          [autocomplete]="autocomplete()"
-          [disabled]="disabled()"
-          [class]="inputClasses()" />
+        @if (multiline()) {
+          <textarea
+            [id]="id"
+            [placeholder]="placeholder()"
+            [value]="value()"
+            (input)="value.set($any($event.target).value)"
+            [disabled]="disabled()"
+            [rows]="rows()"
+            [class]="inputClasses()"></textarea>
+        } @else {
+          <input
+            [id]="id"
+            [type]="resolvedType()"
+            [placeholder]="placeholder()"
+            [value]="value()"
+            (input)="value.set($any($event.target).value)"
+            [autocomplete]="autocomplete()"
+            [disabled]="disabled()"
+            [class]="inputClasses()" />
 
-        @if (type() === 'password') {
-          <button
-            type="button"
-            (click)="showPassword.set(!showPassword())"
-            class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary
-                   transition-colors cursor-pointer"
-            [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'">
-            <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="18" />
-          </button>
+          @if (type() === 'password') {
+            <button
+              type="button"
+              (click)="showPassword.set(!showPassword())"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary
+                     transition-colors cursor-pointer"
+              [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+              <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="18" />
+            </button>
+          }
         }
       </div>
 
@@ -73,6 +84,15 @@ export class InputComponent {
   readonly autocomplete = input<string>('off');
   readonly disabled = input(false);
   readonly error = input<string | undefined>(undefined);
+
+  /**
+   * `<textarea>` en vez de `<input>` — mismo wrapper, label y estado de
+   * error, para un campo de texto libre que sí necesita más de una línea
+   * (notas). Sin esto el texto largo se desplaza en horizontal dentro de una
+   * sola línea y se ve "cortado" en vez de simplemente envolver.
+   */
+  readonly multiline = input(false);
+  readonly rows = input(3);
 
   readonly value = model<string>('');
 
@@ -93,7 +113,8 @@ export class InputComponent {
       : 'border-border focus:border-primary focus:ring-4 focus:ring-primary/10';
 
     const padding = this.type() === 'password' ? 'pr-11' : '';
+    const resize = this.multiline() ? 'resize-none leading-relaxed' : '';
 
-    return [base, border, padding].join(' ');
+    return [base, border, padding, resize].join(' ');
   });
 }

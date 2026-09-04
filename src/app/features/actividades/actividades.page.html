@@ -20,10 +20,10 @@
 
 <!-- Barra de filtros + cambio de vista -->
 <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+  <!-- "Vencidas"/"Hoy"/"Próxima semana" ya se filtran desde las tarjetas de
+       arriba — repetirlos aquí como chip es el mismo control dos veces. -->
   <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Filtro rápido de actividades">
     <app-filter-chip [active]="filtroRapido() === 'PENDIENTES'" (clicked)="cambiarFiltroRapido('PENDIENTES')">Pendientes</app-filter-chip>
-    <app-filter-chip [active]="filtroRapido() === 'VENCIDAS'" (clicked)="cambiarFiltroRapido('VENCIDAS')">Vencidas</app-filter-chip>
-    <app-filter-chip [active]="filtroRapido() === 'HOY'" (clicked)="cambiarFiltroRapido('HOY')">Hoy</app-filter-chip>
     <app-filter-chip [active]="filtroRapido() === 'COMPLETADAS'" (clicked)="cambiarFiltroRapido('COMPLETADAS')">Completadas</app-filter-chip>
     <app-filter-chip [active]="filtroRapido() === 'TODAS'" (clicked)="cambiarFiltroRapido('TODAS')">Todas</app-filter-chip>
   </div>
@@ -156,10 +156,24 @@
 <ng-template #modalForm>
   <div class="pointer-events-auto bg-background rounded-2xl shadow-lifted w-full max-w-lg max-h-[90dvh] flex flex-col animate-modal-pop">
     <div class="flex items-center justify-between px-6 py-4 border-b border-border">
-      <h2 class="text-base font-semibold text-text-dark">
-        {{ actividadEditando() ? 'Editar actividad' : 'Nueva actividad' }}
-      </h2>
-      <button type="button" (click)="cerrarModal()" class="text-text-muted hover:text-critical p-1 rounded-lg transition-colors cursor-pointer">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+          <app-icon [name]="actividadEditando() ? 'edit' : 'calendar'" [size]="18" />
+        </div>
+        <div>
+          <h2 class="text-sm font-bold text-text-dark tracking-tight leading-tight">
+            {{ actividadEditando() ? 'Editar actividad' : 'Nueva actividad' }}
+          </h2>
+          <p class="text-xs text-text-muted leading-tight mt-0.5">
+            {{ actividadEditando() ? 'Ajusta el recordatorio o su estado' : 'Un recordatorio o tarea de seguimiento' }}
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        (click)="cerrarModal()"
+        class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer shrink-0"
+        aria-label="Cerrar modal">
         <app-icon name="x" [size]="18" />
       </button>
     </div>
@@ -235,18 +249,28 @@
         </div>
       }
 
-      <app-input label="Título *" placeholder="Ej. Llamar para confirmar cita" [(value)]="formTitulo" />
-
-      <div class="space-y-1.5">
-        <label class="block text-sm font-medium text-text-dark">Fecha y hora *</label>
-        <app-input type="datetime-local" [(value)]="formFecha" />
+      <!-- Título + fecha: los dos datos que definen "cuándo hacer qué" -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div class="space-y-1.5">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Título *</label>
+          <app-input placeholder="Ej. Llamar para confirmar cita" [(value)]="formTitulo" />
+        </div>
+        <div class="space-y-1.5">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Fecha y hora *</label>
+          <app-input type="datetime-local" [(value)]="formFecha" />
+        </div>
       </div>
 
-      <app-input label="Notas" placeholder="Opcional" [(value)]="formNotas" />
+      <div class="space-y-1.5">
+        <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Notas (opcional)</label>
+        <app-input [multiline]="true" [rows]="3" placeholder="Detalles para recordar al retomar el contacto…" [(value)]="formNotas" />
+      </div>
 
-      <div class="flex items-center justify-end gap-2 pt-2 -mb-2 sticky bottom-0 bg-background">
-        <app-button type="button" variant="ghost" (clicked)="cerrarModal()">Cancelar</app-button>
-        <app-button type="submit" variant="primary" [loading]="guardando()">
+      <!-- Footer del formulario: NO sticky — un pie fijo dentro de un contenedor con
+           scroll queda por encima del último campo y lo tapa a medio escribir. -->
+      <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
+        <app-button type="button" variant="ghost" size="sm" (clicked)="cerrarModal()">Cancelar</app-button>
+        <app-button type="submit" variant="primary" size="sm" [loading]="guardando()">
           {{ actividadEditando() ? 'Guardar cambios' : 'Agendar' }}
         </app-button>
       </div>

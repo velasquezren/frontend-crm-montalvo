@@ -99,7 +99,7 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 | Componente | Selector | API |
 |---|---|---|
 | Button | `<app-button>` | `variant` (primary/secondary/ghost), `size`, `type`, `icon`, `loading`, `disabled`, `fullWidth`, `circle` · `(clicked)` |
-| Input | `<app-input>` | `label`, `type` (incl. password con toggle), `placeholder`, `autocomplete`, `error`, `disabled` · `[(value)]` |
+| Input | `<app-input>` | `label`, `type` (incl. password con toggle), `placeholder`, `autocomplete`, `error`, `disabled`, `multiline` (renderiza `<textarea>` en vez de `<input>`, mismo wrapper/label/error), `rows` (solo con `multiline`) · `[(value)]` |
 | Badge | `<app-badge>` | `variant` (success/info/neutral/critical), `icon` |
 | Card | `<app-card>` | `padding` (sm/md/lg), `hoverable` |
 | KpiCard | `<app-kpi-card>` | `label`, `valor` (requeridos; número → lo formatea el átomo), `icon`, `tono` (primary/secondary/neutral/critical), `tonoValor`, `destacado`, `compacto`, `pie`, `pieIcono` + contenido proyectado |

@@ -5,8 +5,15 @@ import { AvatarComponent } from '../../../../shared/components/avatar/avatar.com
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { DialogService } from '../../../../shared/components/dialog/dialog.service';
+import { FilterChipComponent } from '../../../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { InputComponent } from '../../../../shared/components/input/input.component';
+import {
+  TIPO_ACTIVIDAD_ICONO,
+  TIPO_ACTIVIDAD_LABEL,
+  TipoActividad,
+} from '../../../actividades/actividad.model';
+import { ActividadesService } from '../../../actividades/actividades.service';
 import {
   CATEGORIA_BADGE,
   CATEGORIA_ICON,
@@ -15,6 +22,7 @@ import {
 import { generarIniciales } from '../../../../core/auth/user.model';
 import { ROL_LABEL } from '../../../../core/auth/roles';
 import { calcularEdad } from '../../../../core/api/edad';
+import { aDatetimeLocal } from '../../../../core/api/fecha';
 import { listaExtra, textoExtra } from '../../../../core/api/datos-extra';
 import { mensajeDeError } from '../../../../core/api/http-error';
 import { ToastService } from '../../../../core/toast/toast.service';
@@ -49,6 +57,7 @@ function soloDigitos(telefono: string): string {
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,
+    FilterChipComponent,
     IconComponent,
     InputComponent,
   ],
@@ -275,5 +284,73 @@ export class ConversacionSidebarComponent {
 
   protected toggleDropdownAgente(): void {
     this.state.dropdownAgenteAbierto.update(v => !v);
+  }
+
+  /**
+   * ── Modal de Actividad Rápida desde el Chat ──────────────────────
+   *
+   * Mismo criterio que "Venta Rápida" arriba: la agente ya está viendo al
+   * paciente, no tiene que ir a /actividades y volver a buscarlo. A
+   * propósito NO incluye buscador de cliente ni selector de lead — el
+   * cliente ya se conoce por la conversación abierta, y complicar un
+   * "recordatorio rápido" con más campos es la forma más segura de que
+   * nadie lo use.
+   */
+  private readonly actividadesService = inject(ActividadesService);
+
+  protected readonly tiposActividad: readonly TipoActividad[] = ['LLAMADA', 'REUNION', 'TAREA', 'RECORDATORIO'];
+  protected readonly tipoActividadLabel = TIPO_ACTIVIDAD_LABEL;
+  protected readonly tipoActividadIcono = TIPO_ACTIVIDAD_ICONO;
+
+  protected readonly modalActividadAbierto = signal(false);
+  protected readonly tipoActividad = signal<TipoActividad>('LLAMADA');
+  protected readonly tituloActividad = signal('');
+  protected readonly fechaActividad = signal('');
+  protected readonly notasActividad = signal('');
+  protected readonly guardandoActividad = signal(false);
+  protected readonly errorActividad = signal('');
+
+  protected abrirModalActividad(template: TemplateRef<unknown>): void {
+    this.tipoActividad.set('LLAMADA');
+    this.tituloActividad.set('');
+    this.fechaActividad.set(aDatetimeLocal(new Date(Date.now() + 60 * 60 * 1000)));
+    this.notasActividad.set('');
+    this.errorActividad.set('');
+    this.modalActividadAbierto.set(true);
+    this.activeOverlayRef?.dispose();
+    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+  }
+
+  protected cerrarModalActividad(): void {
+    this.modalActividadAbierto.set(false);
+    this.activeOverlayRef?.dispose();
+    this.activeOverlayRef = undefined;
+  }
+
+  protected async guardarActividadRapida(event: Event, clienteId: string): Promise<void> {
+    event.preventDefault();
+    this.errorActividad.set('');
+
+    if (this.tituloActividad().trim().length < 3) {
+      this.errorActividad.set('El título necesita al menos 3 caracteres.');
+      return;
+    }
+
+    this.guardandoActividad.set(true);
+    try {
+      await this.actividadesService.crear({
+        tipo: this.tipoActividad(),
+        titulo: this.tituloActividad().trim(),
+        notas: this.notasActividad().trim() || undefined,
+        fechaProgramada: new Date(this.fechaActividad()).toISOString(),
+        clienteId,
+      });
+      this.toast.success('Recordatorio agendado.');
+      this.cerrarModalActividad();
+    } catch (err) {
+      this.errorActividad.set(mensajeDeError(err, 'No se pudo agendar la actividad.'));
+    } finally {
+      this.guardandoActividad.set(false);
+    }
   }
 }
