@@ -1,0 +1,243 @@
+<app-page-header title="Actividades" subtitle="Recordatorios y seguimiento comercial sobre tus clientes y leads.">
+  <app-button icon="plus" (clicked)="abrirCreacion()">Nueva actividad</app-button>
+</app-page-header>
+
+<!-- Resumen: mismo criterio que el kanban de Leads (RF-17) — el número real, no cuántas tarjetas cargó. -->
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
+  <button type="button" class="crm-resumen-chip" [class.crm-resumen-chip--activo]="filtroRapido() === 'VENCIDAS'" (click)="cambiarFiltroRapido('VENCIDAS')">
+    <span class="crm-resumen-chip-valor text-critical">{{ resumen.value().vencidas }}</span>
+    <span class="crm-resumen-chip-label">Vencidas</span>
+  </button>
+  <button type="button" class="crm-resumen-chip" [class.crm-resumen-chip--activo]="filtroRapido() === 'HOY'" (click)="cambiarFiltroRapido('HOY')">
+    <span class="crm-resumen-chip-valor text-primary">{{ resumen.value().hoy }}</span>
+    <span class="crm-resumen-chip-label">Hoy</span>
+  </button>
+  <button type="button" class="crm-resumen-chip" [class.crm-resumen-chip--activo]="filtroRapido() === 'PROXIMA_SEMANA'" (click)="cambiarFiltroRapido('PROXIMA_SEMANA')">
+    <span class="crm-resumen-chip-valor text-secondary">{{ resumen.value().proximaSemana }}</span>
+    <span class="crm-resumen-chip-label">Próximos 7 días</span>
+  </button>
+</div>
+
+<!-- Barra de filtros + cambio de vista -->
+<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+  <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Filtro rápido de actividades">
+    <app-filter-chip [active]="filtroRapido() === 'PENDIENTES'" (clicked)="cambiarFiltroRapido('PENDIENTES')">Pendientes</app-filter-chip>
+    <app-filter-chip [active]="filtroRapido() === 'VENCIDAS'" (clicked)="cambiarFiltroRapido('VENCIDAS')">Vencidas</app-filter-chip>
+    <app-filter-chip [active]="filtroRapido() === 'HOY'" (clicked)="cambiarFiltroRapido('HOY')">Hoy</app-filter-chip>
+    <app-filter-chip [active]="filtroRapido() === 'COMPLETADAS'" (clicked)="cambiarFiltroRapido('COMPLETADAS')">Completadas</app-filter-chip>
+    <app-filter-chip [active]="filtroRapido() === 'TODAS'" (clicked)="cambiarFiltroRapido('TODAS')">Todas</app-filter-chip>
+  </div>
+
+  <div class="flex items-center gap-2 shrink-0" role="group" aria-label="Vista">
+    <app-filter-chip size="sm" [active]="vista() === 'LISTA'" (clicked)="vista.set('LISTA')">
+      <app-icon name="file-text" [size]="12" /> Lista
+    </app-filter-chip>
+    <app-filter-chip size="sm" [active]="vista() === 'CALENDARIO'" (clicked)="vista.set('CALENDARIO')">
+      <app-icon name="calendar" [size]="12" /> Calendario
+    </app-filter-chip>
+  </div>
+</div>
+
+@if (vista() === 'LISTA') {
+  <div class="mb-4 max-w-sm">
+    <app-input type="search" placeholder="Buscar por título, notas o cliente…" [(value)]="busqueda" />
+  </div>
+
+  @if (actividades.isLoading()) {
+    <app-loading-skeleton shape="text" height="20rem" />
+  } @else if (actividades.error()) {
+    <app-error-carga que="las actividades" (reintentar)="actividades.reload()" />
+  } @else if (actividades.value().datos.length > 0) {
+    <app-table>
+      <thead>
+        <tr>
+          <th class="text-left">Tipo</th>
+          <th class="text-left">Título</th>
+          <th class="text-left">Cliente</th>
+          <th class="text-left">Programada</th>
+          @if (esAdmin()) {
+            <th class="text-left">Agente</th>
+          }
+          <th class="text-left">Estado</th>
+          <th class="text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (actividad of actividades.value().datos; track actividad.id) {
+          <tr>
+            <td class="text-left">
+              <span class="inline-flex items-center gap-1.5 text-text-muted">
+                <app-icon [name]="tipoIcono[actividad.tipo]" [size]="14" />
+                {{ tiposLabel[actividad.tipo] }}
+              </span>
+            </td>
+            <td class="text-left">
+              <p class="font-medium text-text-dark">{{ actividad.titulo }}</p>
+              @if (actividad.notas) {
+                <p class="text-xs text-text-muted mt-0.5 line-clamp-1">{{ actividad.notas }}</p>
+              }
+            </td>
+            <td class="text-left">
+              <div class="flex items-center gap-2">
+                <app-avatar [initials]="iniciales(actividad.cliente.nombre)" size="sm" />
+                <span>{{ actividad.cliente.nombre }}</span>
+              </div>
+            </td>
+            <td class="text-left">
+              <span [class.text-critical]="esVencida(actividad)" [class.font-semibold]="esVencida(actividad)">
+                {{ actividad.fechaProgramada | date: 'd MMM, HH:mm' }}
+              </span>
+            </td>
+            @if (esAdmin()) {
+              <td class="text-left">{{ actividad.agente.nombre }}</td>
+            }
+            <td class="text-left">
+              <app-badge [variant]="estadoBadge[actividad.estado]">{{ estadoLabel[actividad.estado] }}</app-badge>
+            </td>
+            <td class="text-right">
+              <div class="flex items-center justify-end gap-1">
+                @if (actividad.estado === 'PENDIENTE') {
+                  <app-button variant="ghost" size="sm" [circle]="true" icon="check" title="Completar" (clicked)="cambiarEstado(actividad, 'COMPLETADA')" />
+                  <app-button variant="ghost" size="sm" [circle]="true" icon="x" title="Cancelar" (clicked)="cambiarEstado(actividad, 'CANCELADA')" />
+                }
+                <app-button variant="ghost" size="sm" [circle]="true" icon="edit" title="Editar" (clicked)="abrirEdicion(actividad)" />
+                <app-button variant="ghost" size="sm" [circle]="true" icon="trash" title="Eliminar" (clicked)="eliminar(actividad)" />
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </app-table>
+
+    <div class="mt-4">
+      <app-paginator
+        [pagina]="actividades.value().pagina"
+        [totalPaginas]="actividades.value().totalPaginas"
+        [total]="actividades.value().total"
+        [limite]="actividades.value().limite"
+        (cambiar)="pagina.set($event)" />
+    </div>
+  } @else {
+    <app-empty-state icon="calendar" title="Sin actividades" description="No hay recordatorios ni tareas con este filtro. Agenda una desde 'Nueva actividad'." />
+  }
+} @else {
+  @if (actividadesCalendario.isLoading()) {
+    <app-loading-skeleton shape="text" height="32rem" />
+  } @else if (actividadesCalendario.error()) {
+    <app-error-carga que="las actividades" (reintentar)="actividadesCalendario.reload()" />
+  } @else {
+    @if (actividadesCalendario.value().total > actividadesCalendario.value().datos.length) {
+      <div class="mb-3 px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
+        <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
+        <span>
+          Mostrando {{ actividadesCalendario.value().datos.length }} de {{ actividadesCalendario.value().total }} actividades — usa la vista Lista con filtros de fecha para ver el resto.
+        </span>
+      </div>
+    }
+    <div class="crm-calendario-wrapper">
+      <sx-calendar [calendarApp]="calendarApp" />
+    </div>
+  }
+}
+
+<!-- Modal crear/editar -->
+<ng-template #modalForm>
+  <div class="pointer-events-auto bg-background rounded-2xl shadow-lifted w-full max-w-lg max-h-[90dvh] flex flex-col animate-modal-pop">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-border">
+      <h2 class="text-base font-semibold text-text-dark">
+        {{ actividadEditando() ? 'Editar actividad' : 'Nueva actividad' }}
+      </h2>
+      <button type="button" (click)="cerrarModal()" class="text-text-muted hover:text-critical p-1 rounded-lg transition-colors cursor-pointer">
+        <app-icon name="x" [size]="18" />
+      </button>
+    </div>
+
+    <form (submit)="guardar($event)" class="p-6 overflow-y-auto space-y-4 flex-1">
+      @if (errorForm()) {
+        <div class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
+          <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
+          <span>{{ errorForm() }}</span>
+        </div>
+      }
+
+      <!-- Tipo -->
+      <div class="space-y-1.5">
+        <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Tipo</label>
+        <div class="flex flex-wrap gap-1.5" role="group" aria-label="Tipo de actividad">
+          @for (t of tipos; track t) {
+            <app-filter-chip size="sm" [active]="formTipo() === t" (clicked)="formTipo.set(t)">
+              <app-icon [name]="tipoIcono[t]" [size]="12" /> {{ tiposLabel[t] }}
+            </app-filter-chip>
+          }
+        </div>
+      </div>
+
+      <!-- Cliente -->
+      <div class="space-y-1.5">
+        <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Cliente *</label>
+        @if (clienteElegido(); as elegido) {
+          <div class="flex items-center justify-between gap-3 bg-bg-light/70 rounded-xl px-3.5 py-2.5 border border-border">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <app-avatar [initials]="iniciales(elegido.nombre)" size="sm" />
+              <div class="min-w-0">
+                <p class="text-xs font-semibold text-text-dark truncate">{{ elegido.nombre }}</p>
+                <p class="text-[11px] text-text-muted font-mono leading-tight mt-0.5">{{ elegido.telefono }}</p>
+              </div>
+            </div>
+            @if (!actividadEditando()) {
+              <button type="button" (click)="limpiarCliente()" class="text-text-muted hover:text-critical p-1 rounded-lg transition-colors cursor-pointer shrink-0" title="Cambiar cliente">
+                <app-icon name="x" [size]="16" />
+              </button>
+            }
+          </div>
+        } @else {
+          <app-input type="search" placeholder="Buscar por nombre o teléfono…" [(value)]="busquedaCliente" />
+          @if (resultadosCliente.value().length > 0) {
+            <div class="border border-border rounded-xl divide-y divide-border max-h-40 overflow-y-auto shadow-subtle bg-background mt-1">
+              @for (cliente of resultadosCliente.value(); track cliente.id) {
+                <button type="button" (click)="elegirCliente(cliente)" class="w-full flex items-center gap-2.5 px-3.5 py-2 text-left cursor-pointer hover:bg-bg-light transition-colors">
+                  <app-avatar [initials]="iniciales(cliente.nombre)" size="sm" />
+                  <div class="min-w-0">
+                    <p class="text-xs font-medium text-text-dark truncate">{{ cliente.nombre }}</p>
+                    <p class="text-[10px] text-text-muted font-mono leading-tight">{{ cliente.telefono }}</p>
+                  </div>
+                </button>
+              }
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Lead de origen (opcional) -->
+      @if (leadsAbiertosDelCliente().length > 0) {
+        <div class="space-y-1.5">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Lead vinculado (opcional)</label>
+          <div class="flex flex-wrap gap-1.5">
+            <app-filter-chip size="sm" [active]="formLeadId() === null" (clicked)="formLeadId.set(null)">Ninguno</app-filter-chip>
+            @for (lead of leadsAbiertosDelCliente(); track lead.id) {
+              <app-filter-chip size="sm" [active]="formLeadId() === lead.id" (clicked)="formLeadId.set(lead.id)">
+                {{ origenLabel[lead.origen] }}
+              </app-filter-chip>
+            }
+          </div>
+        </div>
+      }
+
+      <app-input label="Título *" placeholder="Ej. Llamar para confirmar cita" [(value)]="formTitulo" />
+
+      <div class="space-y-1.5">
+        <label class="block text-sm font-medium text-text-dark">Fecha y hora *</label>
+        <app-input type="datetime-local" [(value)]="formFecha" />
+      </div>
+
+      <app-input label="Notas" placeholder="Opcional" [(value)]="formNotas" />
+
+      <div class="flex items-center justify-end gap-2 pt-2 -mb-2 sticky bottom-0 bg-background">
+        <app-button type="button" variant="ghost" (clicked)="cerrarModal()">Cancelar</app-button>
+        <app-button type="submit" variant="primary" [loading]="guardando()">
+          {{ actividadEditando() ? 'Guardar cambios' : 'Agendar' }}
+        </app-button>
+      </div>
+    </form>
+  </div>
+</ng-template>

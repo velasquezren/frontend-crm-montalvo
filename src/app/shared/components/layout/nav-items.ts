@@ -25,6 +25,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       { path: '/conversaciones', label: 'WhatsApp', icon: 'message-circle' },
       { path: '/clientes', label: 'Clientes y Pacientes', icon: 'users' },
       { path: '/leads', label: 'Leads y Prospectos', icon: 'user-plus' },
+      { path: '/actividades', label: 'Actividades', icon: 'calendar' },
     ],
   },
   {

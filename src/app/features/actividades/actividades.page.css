@@ -1,0 +1,76 @@
+/* Chips de resumen (Vencidas/Hoy/Próximos 7 días) — mismo look que <app-kpi-card>
+   pero como botón filtrable, así que no reutiliza ese átomo directamente. */
+.crm-resumen-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-subtle);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.crm-resumen-chip:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+}
+
+.crm-resumen-chip--activo {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-lifted);
+}
+
+.crm-resumen-chip-valor {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.crm-resumen-chip-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+/* ── Schedule-X: se reestylea por variables CSS, nunca por sus clases
+   hasheadas (misma lección que dejó FullCalendar en Agenda Médica). Los
+   valores de abajo son SIEMPRE var(--color-*) o uno de los nueve hex de la
+   paleta cerrada — nunca un tono nuevo. */
+.crm-calendario-wrapper {
+  --sx-color-primary: var(--color-primary);
+  --sx-color-on-primary: var(--color-background);
+  --sx-color-primary-container: var(--color-bg-light);
+  --sx-color-on-primary-container: var(--color-primary);
+  --sx-color-secondary: var(--color-secondary);
+  --sx-color-on-secondary: var(--color-background);
+  --sx-color-secondary-container: var(--color-bg-light);
+  --sx-color-on-secondary-container: var(--color-primary);
+  --sx-color-surface: var(--color-background);
+  --sx-color-surface-dim: var(--color-bg-workspace);
+  --sx-color-surface-bright: var(--color-background);
+  --sx-color-on-surface: var(--color-text-dark);
+  --sx-color-surface-container: var(--color-bg-workspace);
+  --sx-color-surface-container-low: var(--color-bg-workspace);
+  --sx-color-surface-container-high: var(--color-bg-light);
+  --sx-color-background: var(--color-background);
+  --sx-color-on-background: var(--color-text-dark);
+  --sx-color-outline: var(--color-border);
+  --sx-color-outline-variant: var(--color-border);
+  --sx-color-neutral: var(--color-text-muted);
+  --sx-color-neutral-variant: var(--color-border);
+
+  height: calc(100dvh - 340px);
+  min-height: 32rem;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow-subtle);
+}
+
+.crm-calendario-wrapper sx-calendar {
+  display: block;
+  height: 100%;
+}

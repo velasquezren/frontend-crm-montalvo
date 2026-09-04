@@ -68,3 +68,7 @@ export type EstadoPeriodo = 'BORRADOR' | 'CALCULADO' | 'EN_REVISION' | 'CERRADO'
 export type ModoTipoCambio = 'FIJO' | 'AUTOMATICO';
 
 export type FuenteTipoCambio = 'AUTOMATICO' | 'MANUAL';
+
+export type TipoActividad = 'LLAMADA' | 'REUNION' | 'TAREA' | 'RECORDATORIO';
+
+export type EstadoActividad = 'PENDIENTE' | 'COMPLETADA' | 'CANCELADA';

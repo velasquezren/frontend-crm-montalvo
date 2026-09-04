@@ -124,6 +124,11 @@ export const routes: Routes = [
           import('./features/leads/leads.page').then(m => m.LeadsPage),
       },
       {
+        path: 'actividades',
+        loadComponent: () =>
+          import('./features/actividades/actividades.page').then(m => m.ActividadesPage),
+      },
+      {
         path: 'leads/registro-presencial',
         loadComponent: () =>
           import('./features/leads/registro-presencial/registro-presencial.page').then(
