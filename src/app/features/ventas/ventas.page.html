@@ -246,6 +246,7 @@
           title="Métodos de Pago"
           subtitle="Distribución por forma de pago acordada"
           etiquetaTotal="Transacciones"
+          formatType="number"
           [items]="chartMetodosPago()"
           (segmentClick)="onChartSegmentClick($event, 'metodo')" />
       </div>
@@ -255,6 +256,7 @@
           title="Módulos Clínicos"
           subtitle="Servicios por unidad operativa (LAB, CONSULTA, PLANES, etc.)"
           mode="BAR"
+          formatType="number"
           [items]="chartModulos()"
           (segmentClick)="onChartSegmentClick($event, 'modulo')" />
       </div>
