@@ -5,20 +5,25 @@ import {
   Component,
   EffectCleanupRegisterFn,
   TemplateRef,
-  ViewChild,
   ViewContainerRef,
   computed,
   effect,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 
 import { OverlayRef } from '@angular/cdk/overlay';
 import { CalendarApp, CalendarEventExternal, createCalendar, createViewMonthGrid, createViewWeek } from '@schedule-x/calendar';
 import { createEventsServicePlugin } from '@schedule-x/events-service';
 import { CalendarComponent as SxCalendarComponent } from '@schedule-x/angular';
 import { Temporal } from 'temporal-polyfill';
-import '@schedule-x/theme-default/dist/index.css';
+/* El CSS del tema vive en angular.json (styles globales), no como import de
+   este archivo: un import CSS desde un componente lazy-loaded genera el
+   chunk .css en dist/ pero esbuild no lo enlaza con ningún <link> al cargar
+   la ruta — el archivo queda huérfano y la vista se ve sin estilos. Ver
+   `crm-design-system` §Schedule-X. */
 
 import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales } from '../../core/auth/user.model';
@@ -143,6 +148,7 @@ export class ActividadesPage {
   private readonly toast = inject(ToastService);
   private readonly dialogService = inject(DialogService);
   private readonly vcr = inject(ViewContainerRef);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly esAdmin = this.authService.isAdmin;
   protected readonly iniciales = generarIniciales;
@@ -162,6 +168,7 @@ export class ActividadesPage {
   protected readonly pagina = signal(1);
 
   private activeOverlayRef?: OverlayRef;
+  private queryParamsProcesados = false;
 
   constructor() {
     effect((onCleanup: EffectCleanupRegisterFn) => {
@@ -178,6 +185,32 @@ export class ActividadesPage {
     effect(() => {
       if (this.vista() !== 'CALENDARIO') return;
       this.eventosServicio.set(this.actividadesCalendario.value().datos.map(aEventoCalendario));
+    });
+
+    /**
+     * Llegada desde "Agendar" en la ficha de un Lead (mismo patrón que
+     * `ventas.page.ts` con "Registrar Venta"): abre el modal de creación con
+     * el cliente/lead ya elegidos, sin pasar por el buscador. `modalFormTpl`
+     * es un `viewChild()` (signal) y no un `@ViewChild` clásico justo para
+     * que este efecto pueda reaccionar cuando la plantilla queda disponible
+     * tras el primer render — los query params ya están ahí desde el
+     * arranque, pero la plantilla del modal todavía no.
+     */
+    effect(() => {
+      const tpl = this.modalFormTpl();
+      if (!tpl || this.queryParamsProcesados) return;
+
+      const qp = this.route.snapshot.queryParams;
+      if (qp['nuevo'] !== '1' || !qp['clienteId'] || !qp['clienteNombre']) return;
+
+      this.queryParamsProcesados = true;
+      this.abrirCreacion();
+      this.elegirCliente({
+        id: qp['clienteId'],
+        nombre: qp['clienteNombre'],
+        telefono: qp['clienteTelefono'] ?? '',
+      });
+      if (qp['leadId']) this.formLeadId.set(qp['leadId']);
     });
   }
 
@@ -260,11 +293,13 @@ export class ActividadesPage {
    * Sin `template` como parámetro de `abrirCreacion`/`abrirEdicion`: el clic
    * en un evento del calendario dispara `onEventClick` desde el `callbacks`
    * de `calendarApp` (arriba), que se arma en el constructor — antes de que
-   * exista ninguna referencia `#modalForm` de la plantilla para pasarle. El
-   * `@ViewChild` sí está listo para entonces, porque el callback solo corre
-   * cuando el usuario ya hizo clic en un evento ya renderizado.
+   * exista ninguna referencia `#modalForm` de la plantilla para pasarle.
+   * `viewChild()` (signal, no el `@ViewChild` clásico) sí está resuelto para
+   * entonces, porque el callback solo corre cuando el usuario ya hizo clic en
+   * un evento ya renderizado — y de paso permite que el efecto de query
+   * params (constructor) reaccione en cuanto la plantilla queda disponible.
    */
-  @ViewChild('modalForm') private readonly modalFormTpl!: TemplateRef<unknown>;
+  protected readonly modalFormTpl = viewChild<TemplateRef<unknown>>('modalForm');
 
   /* ── Formulario crear/editar ───────────────────────────────────── */
   protected readonly guardando = signal(false);
@@ -322,7 +357,7 @@ export class ActividadesPage {
     this.formLeadId.set(null);
     this.limpiarCliente();
     this.errorForm.set('');
-    this.abrirModal(this.modalFormTpl);
+    this.abrirModal(this.modalFormTpl());
   }
 
   protected abrirEdicion(actividad: Actividad): void {
@@ -335,10 +370,12 @@ export class ActividadesPage {
     this.clienteElegido.set(actividad.cliente);
     this.busquedaCliente.set(actividad.cliente.nombre);
     this.errorForm.set('');
-    this.abrirModal(this.modalFormTpl);
+    this.abrirModal(this.modalFormTpl());
   }
 
-  private abrirModal(template: TemplateRef<unknown>): void {
+  /** `undefined` solo en el instante antes del primer render — se ignora sin más. */
+  private abrirModal(template: TemplateRef<unknown> | undefined): void {
+    if (!template) return;
     this.activeOverlayRef?.dispose();
     this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
   }

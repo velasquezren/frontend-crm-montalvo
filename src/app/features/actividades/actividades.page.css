@@ -35,6 +35,40 @@
   font-weight: 500;
 }
 
+/* Leyenda de colores del calendario — los mismos cuatro tonos que
+   `calendarioDe()` en el .ts, siempre var(--color-*), nunca un hex nuevo. */
+.crm-leyenda-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.crm-leyenda-punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.crm-leyenda-punto--primaria {
+  background: var(--color-primary);
+}
+
+.crm-leyenda-punto--secundaria {
+  background: var(--color-secondary);
+}
+
+.crm-leyenda-punto--critica {
+  background: var(--color-text-critical);
+}
+
+.crm-leyenda-punto--neutral {
+  background: var(--color-text-muted);
+}
+
 /* ── Schedule-X: se reestylea por variables CSS, nunca por sus clases
    hasheadas (misma lección que dejó FullCalendar en Agenda Médica). Los
    valores de abajo son SIEMPRE var(--color-*) o uno de los nueve hex de la

@@ -537,10 +537,21 @@
             <span>WhatsApp</span>
           </a>
           <a
+            [routerLink]="['/actividades']"
+            [queryParams]="{ clienteId: l.cliente.id, clienteNombre: l.cliente.nombre, clienteTelefono: l.cliente.telefono, leadId: l.id, nuevo: '1' }"
+            (click)="cerrarFichaLead()"
+            class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer"
+            title="Agendar una llamada, tarea o recordatorio para este lead">
+            <app-icon name="calendar" [size]="14" />
+            <span>Agendar</span>
+          </a>
+        </div>
+        <div class="pt-2">
+          <a
             [routerLink]="['/ventas']"
             [queryParams]="{ clienteId: l.cliente.id, clienteNombre: l.cliente.nombre, clienteTelefono: l.cliente.telefono, leadId: l.id, nuevo: '1' }"
             (click)="cerrarFichaLead()"
-            class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-white bg-primary hover:bg-primary/90 transition-colors cursor-pointer shadow-subtle">
+            class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-white bg-primary hover:bg-primary/90 transition-colors cursor-pointer shadow-subtle">
             <app-icon name="shopping-bag" [size]="14" />
             <span>Registrar Venta</span>
           </a>

@@ -284,6 +284,15 @@
                   <app-icon name="shopping-bag" [size]="12" />
                   <span>Registrar Venta</span>
                 </a>
+                <a
+                  [routerLink]="['/actividades']"
+                  [queryParams]="{ clienteId: cli.id, clienteNombre: cli.nombre, clienteTelefono: cli.telefono, nuevo: '1' }"
+                  class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer"
+                  (click)="cerrarEdicion()"
+                  title="Agendar una llamada, tarea o recordatorio para este paciente">
+                  <app-icon name="calendar" [size]="12" />
+                  <span>Agendar</span>
+                </a>
               </div>
             </div>
           }
