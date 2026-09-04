@@ -15,7 +15,16 @@ import {
 import { ActivatedRoute } from '@angular/router';
 
 import { OverlayRef } from '@angular/cdk/overlay';
-import { CalendarApp, CalendarEventExternal, createCalendar, createViewMonthGrid, createViewWeek } from '@schedule-x/calendar';
+import {
+  CalendarApp,
+  CalendarEventExternal,
+  createCalendar,
+  createViewDay,
+  createViewMonthGrid,
+  createViewList,
+  createViewWeek,
+} from '@schedule-x/calendar';
+import { createCurrentTimePlugin } from '@schedule-x/current-time';
 import { createEventsServicePlugin } from '@schedule-x/events-service';
 import { CalendarComponent as SxCalendarComponent } from '@schedule-x/angular';
 import { Temporal } from 'temporal-polyfill';
@@ -52,7 +61,10 @@ import {
   Actividad,
   ESTADO_ACTIVIDAD_LABEL,
   EstadoActividad,
+  FRECUENCIA_LABEL,
+  FrecuenciaRepeticion,
   ResumenActividades,
+  TIPO_ACTIVIDAD_DURACION_SUGERIDA,
   TIPO_ACTIVIDAD_ICONO,
   TIPO_ACTIVIDAD_LABEL,
   TipoActividad,
@@ -85,6 +97,32 @@ interface ClienteMinimo {
 /** Huso horario del navegador — usado solo para pintar los eventos del calendario. */
 const ZONA = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+/**
+ * Schedule-X no trae español de fábrica — sin esto "Today"/"Month"/"Week"
+ * quedaban en inglés sueltos en medio de un CRM en español. `locale: 'es-ES'`
+ * solo gobierna el formato de fechas (vía Intl), no los textos de su propia
+ * barra de navegación; esos se traducen aparte, por clave exacta.
+ */
+const TRADUCCION_ES = {
+  Today: 'Hoy',
+  Month: 'Mes',
+  Week: 'Semana',
+  Day: 'Día',
+  List: 'Lista',
+  'Select View': 'Elegir vista',
+  View: 'Vista',
+  '+ {{n}} events': '+ {{n}} más',
+  '+ 1 event': '+ 1 más',
+  'No events': 'Sin actividades',
+  'Next period': 'Siguiente',
+  'Previous period': 'Anterior',
+  to: 'a',
+  'Full day- and multiple day events': 'Actividades de todo el día o varios días',
+  'Link to {{n}} more events on {{date}}': 'Ver {{n}} más el {{date}}',
+  'Link to 1 more event on {{date}}': 'Ver 1 más el {{date}}',
+  CW: 'Sem',
+};
+
 function esVencida(a: Pick<Actividad, 'estado' | 'fechaProgramada'>): boolean {
   return a.estado === 'PENDIENTE' && new Date(a.fechaProgramada).getTime() < Date.now();
 }
@@ -102,7 +140,9 @@ function aEventoCalendario(a: Actividad): CalendarEventExternal {
     id: a.id,
     title: a.titulo,
     start: inicio,
-    end: inicio.add({ minutes: 30 }),
+    // Duración real, no un bloque fijo — una llamada de 15 min no debe verse
+    // igual de alta que una reunión de una hora en las vistas de semana/día.
+    end: inicio.add({ minutes: Math.max(a.duracionMinutos, 5) }),
     description: a.cliente.nombre,
     calendarId: calendarioDe(a),
   };
@@ -263,10 +303,15 @@ export class ActividadesPage {
   /* ── Calendario (Schedule-X) ───────────────────────────────────── */
   private readonly eventosServicio = createEventsServicePlugin();
   protected readonly calendarApp: CalendarApp = createCalendar({
-    views: [createViewMonthGrid(), createViewWeek()],
+    // Mes para el panorama, semana/día para el detalle de la agenda del día
+    // (con línea de "ahora" — createCurrentTimePlugin), y Lista para leer
+    // todo en texto sin contar cuadrículas. Schedule-X pinta su propia
+    // barra de navegación con estas cuatro vistas — no hay que maquetarla.
+    views: [createViewMonthGrid(), createViewWeek(), createViewDay(), createViewList()],
     defaultView: 'month-grid',
     timezone: ZONA,
     locale: 'es-ES',
+    translations: { 'es-ES': TRADUCCION_ES },
     firstDayOfWeek: 1,
     calendars: {
       // Las cuatro únicas superficies de color en la paleta cerrada — nunca
@@ -282,7 +327,7 @@ export class ActividadesPage {
         if (actividad) this.abrirEdicion(actividad);
       },
     },
-  }, [this.eventosServicio]);
+  }, [this.eventosServicio, createCurrentTimePlugin()]);
 
   /**
    * Sin `template` como parámetro de `abrirCreacion`/`abrirEdicion`: el clic
@@ -305,7 +350,16 @@ export class ActividadesPage {
   protected readonly formTitulo = signal('');
   protected readonly formNotas = signal('');
   protected readonly formFecha = signal(aDatetimeLocal(new Date(Date.now() + 60 * 60 * 1000)));
+  protected readonly formDuracion = signal(TIPO_ACTIVIDAD_DURACION_SUGERIDA['TAREA']);
+  /** Si la persona ya tocó la duración a mano, cambiar el tipo deja de pisarla. */
+  private formDuracionTocada = false;
   protected readonly formLeadId = signal<string | null>(null);
+
+  /** Solo aplica al crear — ver `RepetirActividadDto` en el backend. */
+  protected readonly frecuencias: readonly FrecuenciaRepeticion[] = ['SEMANAL', 'QUINCENAL', 'MENSUAL'];
+  protected readonly frecuenciaLabel = FRECUENCIA_LABEL;
+  protected readonly formRepetir = signal<FrecuenciaRepeticion | null>(null);
+  protected readonly formRepetirVeces = signal(4);
 
   /* Búsqueda de cliente — mismo patrón que `ventas.page.ts` (RF de registrar venta) */
   protected readonly busquedaCliente = signal('');
@@ -331,6 +385,28 @@ export class ActividadesPage {
     this.leadsDelCliente.value().datos.filter(l => l.estado === 'NUEVO' || l.estado === 'CONTACTADO'),
   );
 
+  /** Presets de duración — un stepper de minutos a mano invita a "37" donde nadie agenda así. */
+  protected readonly duracionesPreset: readonly number[] = [5, 15, 30, 45, 60, 90, 120];
+
+  protected formatearDuracion(minutos: number): string {
+    if (minutos < 60) return `${minutos} min`;
+    const horas = Math.floor(minutos / 60);
+    const resto = minutos % 60;
+    return resto === 0 ? `${horas} h` : `${horas} h ${resto}`;
+  }
+
+  protected elegirTipo(tipo: TipoActividad): void {
+    this.formTipo.set(tipo);
+    // Cambiar el tipo actualiza la duración sugerida — pero solo mientras la
+    // persona no la haya tocado a mano; si ya la tocó, respeta su elección.
+    if (!this.formDuracionTocada) this.formDuracion.set(TIPO_ACTIVIDAD_DURACION_SUGERIDA[tipo]);
+  }
+
+  protected elegirDuracion(minutos: number): void {
+    this.formDuracionTocada = true;
+    this.formDuracion.set(minutos);
+  }
+
   protected elegirCliente(cliente: ClienteMinimo): void {
     this.clienteElegido.set(cliente);
     this.busquedaCliente.set(cliente.nombre);
@@ -349,7 +425,11 @@ export class ActividadesPage {
     this.formTitulo.set('');
     this.formNotas.set('');
     this.formFecha.set(aDatetimeLocal(new Date(Date.now() + 60 * 60 * 1000)));
+    this.formDuracion.set(TIPO_ACTIVIDAD_DURACION_SUGERIDA['TAREA']);
+    this.formDuracionTocada = false;
     this.formLeadId.set(null);
+    this.formRepetir.set(null);
+    this.formRepetirVeces.set(4);
     this.limpiarCliente();
     this.errorForm.set('');
     this.abrirModal(this.modalFormTpl());
@@ -361,7 +441,12 @@ export class ActividadesPage {
     this.formTitulo.set(actividad.titulo);
     this.formNotas.set(actividad.notas ?? '');
     this.formFecha.set(aDatetimeLocal(new Date(actividad.fechaProgramada)));
+    this.formDuracion.set(actividad.duracionMinutos);
+    // Al editar, la duración ya es la real (no una sugerencia) — que cambiar
+    // el tipo no la pise es lo correcto acá.
+    this.formDuracionTocada = true;
     this.formLeadId.set(actividad.lead?.id ?? null);
+    this.formRepetir.set(null);
     this.clienteElegido.set(actividad.cliente);
     this.busquedaCliente.set(actividad.cliente.nombre);
     this.errorForm.set('');
@@ -405,19 +490,26 @@ export class ActividadesPage {
           titulo: this.formTitulo().trim(),
           notas: this.formNotas().trim() || undefined,
           fechaProgramada,
+          duracionMinutos: this.formDuracion(),
           leadId: this.formLeadId(),
         });
         this.toast.show('Actividad actualizada.', 'success');
       } else {
+        const frecuencia = this.formRepetir();
         await this.actividadesService.crear({
           tipo: this.formTipo(),
           titulo: this.formTitulo().trim(),
           notas: this.formNotas().trim() || undefined,
           fechaProgramada,
+          duracionMinutos: this.formDuracion(),
           clienteId: cliente.id,
           leadId: this.formLeadId() ?? undefined,
+          repetir: frecuencia ? { frecuencia, veces: this.formRepetirVeces() } : undefined,
         });
-        this.toast.show('Actividad agendada.', 'success');
+        this.toast.show(
+          frecuencia ? `Actividad agendada — ${this.formRepetirVeces()} veces.` : 'Actividad agendada.',
+          'success',
+        );
       }
 
       this.cerrarModal();

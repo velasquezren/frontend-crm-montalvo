@@ -10,6 +10,7 @@ import { IconComponent } from '../../../../shared/components/icon/icon.component
 import { InputComponent } from '../../../../shared/components/input/input.component';
 import {
   TIPO_ACTIVIDAD_ICONO,
+  TIPO_ACTIVIDAD_DURACION_SUGERIDA,
   TIPO_ACTIVIDAD_LABEL,
   TipoActividad,
 } from '../../../actividades/actividad.model';
@@ -343,6 +344,9 @@ export class ConversacionSidebarComponent {
         titulo: this.tituloActividad().trim(),
         notas: this.notasActividad().trim() || undefined,
         fechaProgramada: new Date(this.fechaActividad()).toISOString(),
+        // Sin control propio en este modal rápido — se sugiere sola por tipo,
+        // igual que el modal completo antes de que la persona la toque.
+        duracionMinutos: TIPO_ACTIVIDAD_DURACION_SUGERIDA[this.tipoActividad()],
         clienteId,
       });
       this.toast.success('Recordatorio agendado.');

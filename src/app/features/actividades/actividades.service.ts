@@ -1,7 +1,16 @@
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
-import { Actividad, EstadoActividad, TipoActividad } from './actividad.model';
+import { Actividad, EstadoActividad, FrecuenciaRepeticion, TipoActividad } from './actividad.model';
+
+/**
+ * Repetir al crear: `veces` filas independientes (2-12), sin serie enlazada
+ * — ver el DTO homónimo del backend (`RepetirActividadDto`) para el porqué.
+ */
+export interface RepetirActividadDto {
+  frecuencia: FrecuenciaRepeticion;
+  veces: number;
+}
 
 export interface FiltroActividades {
   tipo?: TipoActividad;
@@ -23,10 +32,14 @@ export interface CrearActividadDto {
   notas?: string;
   /** ISO 8601. */
   fechaProgramada: string;
+  /** Minutos; si se omite, el backend guarda 30. */
+  duracionMinutos?: number;
   clienteId: string;
   leadId?: string;
   /** Solo tiene efecto si quien llama es ADMIN+. */
   agenteId?: string;
+  /** Solo al crear — genera filas adicionales independientes. */
+  repetir?: RepetirActividadDto;
 }
 
 export interface ActualizarActividadDto {
@@ -34,6 +47,7 @@ export interface ActualizarActividadDto {
   titulo?: string;
   notas?: string;
   fechaProgramada?: string;
+  duracionMinutos?: number;
   clienteId?: string;
   leadId?: string | null;
 }

@@ -27,6 +27,7 @@
     "@angular/service-worker": "^21.2.0",
     "@schedule-x/angular": "^4.1.0",
     "@schedule-x/calendar": "^4.7.0",
+    "@schedule-x/current-time": "^4.7.0",
     "@schedule-x/events-service": "^4.7.0",
     "@schedule-x/theme-default": "^4.7.0",
     "rxjs": "~7.8.0",

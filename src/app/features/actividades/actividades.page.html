@@ -87,6 +87,7 @@
               <span [class.text-critical]="esVencida(actividad)" [class.font-semibold]="esVencida(actividad)">
                 {{ actividad.fechaProgramada | date: 'd MMM, HH:mm' }}
               </span>
+              <span class="text-text-muted"> · {{ formatearDuracion(actividad.duracionMinutos) }}</span>
             </td>
             @if (esAdmin()) {
               <td class="text-left">{{ actividad.agente.nombre }}</td>
@@ -186,15 +187,27 @@
         </div>
       }
 
-      <!-- Tipo -->
-      <div class="space-y-1.5">
-        <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Tipo</label>
-        <div class="flex flex-wrap gap-1.5" role="group" aria-label="Tipo de actividad">
-          @for (t of tipos; track t) {
-            <app-filter-chip size="sm" [active]="formTipo() === t" (clicked)="formTipo.set(t)">
-              <app-icon [name]="tipoIcono[t]" [size]="12" /> {{ tiposLabel[t] }}
-            </app-filter-chip>
-          }
+      <!-- Tipo + duración: van juntos porque uno sugiere al otro -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div class="space-y-1.5">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Tipo</label>
+          <div class="flex flex-wrap gap-1.5" role="group" aria-label="Tipo de actividad">
+            @for (t of tipos; track t) {
+              <app-filter-chip size="sm" [active]="formTipo() === t" (clicked)="elegirTipo(t)">
+                <app-icon [name]="tipoIcono[t]" [size]="12" /> {{ tiposLabel[t] }}
+              </app-filter-chip>
+            }
+          </div>
+        </div>
+        <div class="space-y-1.5">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Duración</label>
+          <div class="flex flex-wrap gap-1.5" role="group" aria-label="Duración de la actividad">
+            @for (min of duracionesPreset; track min) {
+              <app-filter-chip size="sm" [active]="formDuracion() === min" (clicked)="elegirDuracion(min)">
+                {{ formatearDuracion(min) }}
+              </app-filter-chip>
+            }
+          </div>
         </div>
       </div>
 
@@ -260,6 +273,38 @@
           <app-input type="datetime-local" [(value)]="formFecha" />
         </div>
       </div>
+
+      <!-- Repetir: solo al crear — filas independientes, no una serie enlazada
+           (ver crm-backend-module). Editar una ya creada nunca genera otras. -->
+      @if (!actividadEditando()) {
+        <div class="space-y-1.5">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Repetir (opcional)</label>
+          <div class="flex flex-wrap gap-1.5" role="group" aria-label="Frecuencia de repetición">
+            <app-filter-chip size="sm" [active]="formRepetir() === null" (clicked)="formRepetir.set(null)">No repetir</app-filter-chip>
+            @for (f of frecuencias; track f) {
+              <app-filter-chip size="sm" [active]="formRepetir() === f" (clicked)="formRepetir.set(f)">
+                {{ frecuenciaLabel[f] }}
+              </app-filter-chip>
+            }
+          </div>
+          @if (formRepetir(); as frecuencia) {
+            <div class="flex items-center gap-2 pt-1">
+              <span class="text-xs text-text-muted shrink-0">Durante</span>
+              <div class="flex flex-wrap gap-1.5">
+                @for (n of [2, 4, 6, 8, 12]; track n) {
+                  <app-filter-chip size="sm" [active]="formRepetirVeces() === n" (clicked)="formRepetirVeces.set(n)">
+                    {{ n }}
+                  </app-filter-chip>
+                }
+              </div>
+              <span class="text-xs text-text-muted shrink-0">veces</span>
+            </div>
+            <p class="text-[11px] text-text-muted leading-relaxed">
+              Se crean {{ formRepetirVeces() }} actividades independientes, {{ frecuenciaLabel[frecuencia].toLowerCase() }} — cada una se puede completar, mover o cancelar por separado.
+            </p>
+          }
+        </div>
+      }
 
       <div class="space-y-1.5">
         <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Notas (opcional)</label>
