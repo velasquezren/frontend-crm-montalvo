@@ -492,12 +492,11 @@
      Estética unificada con Ventas, Clientes y Servicios (max-w-xl)
      ═════════════════════════════════════════════════════════════════════════════ -->
 <ng-template #modalCrearLeadTemplate>
-  <div
-    class="bg-white rounded-2xl shadow-lifted border border-border max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto animate-modal-pop"
+  <aside
+    class="h-full w-full sm:w-[500px] lg:w-[560px] bg-white shadow-lifted border-l border-border flex flex-col pointer-events-auto animate-drawer-in"
     role="dialog"
     aria-modal="true"
-    aria-labelledby="titulo-crear-lead"
-    (click)="$event.stopPropagation()">
+    aria-labelledby="titulo-crear-lead">
 
     <!-- Header -->
     <div class="flex items-center justify-between px-6 py-4.5 border-b border-border bg-white shrink-0">
@@ -589,14 +588,17 @@
         </app-button>
       </div>
     </form>
-  </div>
+  </aside>
 </ng-template>
 
 <!-- ═════════════════════════════════════════════════════════════════════════════
      MODAL / DIÁLOGO DE DETALLE DEL LEAD (Espacioso, Enterprise, 360°)
      ═════════════════════════════════════════════════════════════════════════════ -->
 <ng-template #modalFichaLead>
-  <div class="pointer-events-auto w-full max-w-xl bg-white rounded-2xl shadow-lifted border border-border max-h-[90vh] overflow-hidden flex flex-col animate-modal-pop">
+  <aside
+    class="h-full w-full sm:w-[500px] lg:w-[580px] bg-white shadow-lifted border-l border-border flex flex-col pointer-events-auto animate-drawer-in"
+    role="dialog"
+    aria-label="Detalle del lead">
     @if (leadSeleccionado(); as l) {
       <!-- Header -->
       <div class="flex items-center justify-between px-6 py-4.5 border-b border-border bg-white shrink-0">
@@ -743,7 +745,7 @@
         </app-button>
       </div>
     }
-  </div>
+  </aside>
 </ng-template>
 
 <!-- ═════════════════════════════════════════════════════════════════════════════

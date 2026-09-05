@@ -232,6 +232,7 @@ export class LeadsPage implements OnDestroy {
     this.leadSeleccionado.set(lead);
     this.activeOverlayRef?.dispose();
     this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
+      panelClass: ['fixed', 'inset-0', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'],
       onClose: () => this.leadSeleccionado.set(null),
     });
   }
@@ -249,6 +250,7 @@ export class LeadsPage implements OnDestroy {
     this.errorCrearLead.set(null);
     this.activeOverlayRef?.dispose();
     this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
+      panelClass: ['fixed', 'inset-0', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'],
       onClose: () => this.cerrarCrearLead(),
     });
   }

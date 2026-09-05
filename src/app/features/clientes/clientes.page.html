@@ -216,12 +216,11 @@
      Estética enterprise unificada con Registro de Ventas y Servicios
      ══════════════════════════════════════════════════════════════════════ -->
 <ng-template #modalCrearCliente>
-  <div
-    class="bg-white rounded-2xl shadow-lifted border border-border max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto animate-modal-pop"
+  <aside
+    class="h-full w-full sm:w-[560px] lg:w-[640px] bg-white shadow-lifted border-l border-border flex flex-col pointer-events-auto animate-drawer-in"
     role="dialog"
     aria-modal="true"
-    aria-labelledby="titulo-crear-cliente"
-    (click)="$event.stopPropagation()">
+    aria-labelledby="titulo-crear-cliente">
 
     <!-- Header -->
     <div class="flex items-center justify-between px-6 py-4.5 border-b border-border bg-white shrink-0">
@@ -370,19 +369,18 @@
         </app-button>
       </div>
     </form>
-  </div>
+  </aside>
 </ng-template>
 
 <!-- ══════════════════════════════════════════════════════════════════════
      Modal Template: Ficha 360° de Paciente / Cliente (Proyectado en body)
      ══════════════════════════════════════════════════════════════════════ -->
 <ng-template #modalFicha>
-  <div
-    class="bg-white rounded-2xl shadow-lifted border border-border max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto animate-modal-pop"
+  <aside
+    class="h-full w-full sm:w-[600px] lg:w-[720px] bg-white shadow-lifted border-l border-border flex flex-col pointer-events-auto animate-drawer-in"
     role="dialog"
     aria-modal="true"
-    aria-labelledby="titulo-ficha"
-    (click)="$event.stopPropagation()">
+    aria-labelledby="titulo-ficha">
 
     @if (clienteSeleccionado(); as cli) {
       <!-- ── Cabecera Héroe con degradado médico sobrio ─────────── -->
@@ -668,5 +666,5 @@
         </footer>
       </form>
     }
-  </div>
+  </aside>
 </ng-template>

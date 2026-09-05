@@ -383,7 +383,10 @@ export class VentasPage implements OnDestroy {
 
   protected abrirFormulario(template: TemplateRef<unknown>): void {
     this.formularioAbierto.set(true);
-    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
+      panelClass: ['fixed', 'inset-0', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'],
+      onClose: () => this.cerrarFormulario(),
+    });
   }
 
   protected cerrarFormulario(): void {

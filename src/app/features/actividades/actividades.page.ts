@@ -591,7 +591,10 @@ export class ActividadesPage implements OnDestroy {
   private abrirModal(template: TemplateRef<unknown> | undefined): void {
     if (!template) return;
     this.activeOverlayRef?.dispose();
-    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
+      panelClass: ['fixed', 'inset-0', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'],
+      onClose: () => this.cerrarModal(),
+    });
   }
 
   protected cerrarModal(): void {

@@ -507,7 +507,10 @@
 
   <!-- ── Modal Template: Registro de Venta (CDK Overlay) ─────────── -->
   <ng-template #modalVentaTemplate>
-    <div class="bg-white rounded-2xl shadow-lifted border border-border max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto animate-modal-pop">
+    <aside
+      class="h-full w-full sm:w-[520px] lg:w-[580px] bg-white shadow-lifted border-l border-border flex flex-col pointer-events-auto animate-drawer-in"
+      role="dialog"
+      aria-label="Registrar Cierre de Venta">
       
       <!-- Header -->
       <div class="flex items-center justify-between px-6 py-4.5 border-b border-border bg-white shrink-0">
@@ -756,7 +759,7 @@
           </app-button>
         </div>
       </form>
-    </div>
+    </aside>
   </ng-template>
 
   <!-- ── Cajón Lateral: Detalle 360° de la Venta (CDK Overlay) ───── -->

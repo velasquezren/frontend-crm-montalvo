@@ -234,7 +234,10 @@ export class ClientesPage {
     this.modalEditarAbierto.set(true);
     if (template) {
       this.activeOverlayRef?.dispose();
-      this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+      this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
+        panelClass: ['fixed', 'inset-0', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'],
+        onClose: () => this.cerrarEdicion(),
+      });
     }
   }
 
@@ -264,7 +267,10 @@ export class ClientesPage {
     this.modalEditarAbierto.set(true);
     if (template) {
       this.activeOverlayRef?.dispose();
-      this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+      this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
+        panelClass: ['fixed', 'inset-0', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'],
+        onClose: () => this.cerrarEdicion(),
+      });
     }
   }
 
