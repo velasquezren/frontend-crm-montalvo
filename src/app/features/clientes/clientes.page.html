@@ -216,61 +216,42 @@
      Estética enterprise unificada con Registro de Ventas y Servicios
      ══════════════════════════════════════════════════════════════════════ -->
 <ng-template #modalCrearCliente>
-  <aside
-    class="h-full w-full sm:w-[560px] lg:w-[640px] bg-white shadow-lifted border-l border-border flex flex-col pointer-events-auto animate-drawer-in"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="titulo-crear-cliente">
+  <app-drawer
+    ancho="lg"
+    icono="user-plus"
+    titulo="Nuevo Paciente / Cliente"
+    subtitulo="Registra un nuevo contacto y vincula su historial médico"
+    (cerrar)="cerrarEdicion()">
 
-    <!-- Header -->
-    <div class="flex items-center justify-between px-6 py-4.5 border-b border-border bg-white shrink-0">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-          <app-icon name="user-plus" [size]="18" />
-        </div>
-        <div>
-          <h2 id="titulo-crear-cliente" class="text-sm font-bold text-text-dark tracking-tight leading-tight">
-            Nuevo Paciente / Cliente
-          </h2>
-          <p class="text-xs text-text-muted leading-tight mt-0.5">
-            Registra un nuevo contacto y vincula su historial médico
-          </p>
-        </div>
-      </div>
-      <button
-        type="button"
-        (click)="cerrarEdicion()"
-        class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
-        aria-label="Cerrar modal">
-        <app-icon name="x" [size]="18" />
-      </button>
-    </div>
-
-    <!-- Form Body -->
-    <form (submit)="guardarEdicion($event)" class="p-6 overflow-y-auto space-y-4.5 flex-1">
-      <!-- 1. Identidad Principal -->
-      <div class="space-y-3">
-        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">
-          1. Identidad y Contacto Principal
-        </span>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <app-input label="Nombre completo *" placeholder="Ej. Juan Pérez" [(value)]="editNombre" />
-          <app-input
-            label="Teléfono / WhatsApp *"
-            type="tel"
-            placeholder="Ej. +59170000000"
-            [(value)]="editTelefono" />
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <app-input
-            label="Código PAC (FileMaker)"
-            placeholder="Ej. PAC-1897"
-            [(value)]="editPac" />
-          <app-input
-            label="Cédula de Identidad (CI)"
-            placeholder="Ej. 6849201 SC"
-            [(value)]="editCi" />
-        </div>
+    <!-- El `<form>` es la columna que scrollea, no la caja entera: así el pie
+         con "Crear Paciente" queda fijo abajo y sigue enviando el formulario.
+         Antes vivía dentro del cuerpo con scroll y en un móvil había que bajar
+         hasta el final del formulario para encontrar el botón. -->
+    <form (submit)="guardarEdicion($event)" class="flex-1 min-h-0 flex flex-col">
+      <div class="p-6 overflow-y-auto space-y-4.5 flex-1">
+        <!-- 1. Identidad Principal -->
+        <div class="space-y-3">
+          <span class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">
+            1. Identidad y Contacto Principal
+          </span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <app-input label="Nombre completo *" placeholder="Ej. Juan Pérez" [(value)]="editNombre" />
+            <app-input
+              label="Teléfono / WhatsApp *"
+              type="tel"
+              placeholder="Ej. +59170000000"
+              [(value)]="editTelefono" />
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <app-input
+              label="Código PAC (FileMaker)"
+              placeholder="Ej. PAC-1897"
+              [(value)]="editPac" />
+            <app-input
+              label="Cédula de Identidad (CI)"
+              placeholder="Ej. 6849201 SC"
+              [(value)]="editCi" />
+          </div>
       </div>
 
       <!-- 2. Clasificación y Agente -->
@@ -361,128 +342,118 @@
         </div>
       </div>
 
+      </div>
+
       <!-- Footer botones -->
-      <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
+      <div class="flex items-center justify-end gap-2.5 px-6 py-3.5 bg-bg-workspace border-t border-border shrink-0">
         <app-button variant="ghost" size="sm" (clicked)="cerrarEdicion()">Cancelar</app-button>
         <app-button type="submit" size="sm" [loading]="guardando()">
           {{ guardando() ? 'Guardando…' : 'Crear Paciente' }}
         </app-button>
       </div>
     </form>
-  </aside>
+  </app-drawer>
 </ng-template>
 
 <!-- ══════════════════════════════════════════════════════════════════════
      Modal Template: Ficha 360° de Paciente / Cliente (Proyectado en body)
      ══════════════════════════════════════════════════════════════════════ -->
 <ng-template #modalFicha>
-  <aside
-    class="h-full w-full sm:w-[600px] lg:w-[720px] bg-white shadow-lifted border-l border-border flex flex-col pointer-events-auto animate-drawer-in"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="titulo-ficha">
+  @if (clienteSeleccionado(); as cli) {
+    <app-drawer
+      ancho="xl"
+      etiqueta="Ficha del paciente"
+      (cerrar)="cerrarEdicion()">
 
-    @if (clienteSeleccionado(); as cli) {
       <!-- ── Cabecera Héroe con degradado médico sobrio ─────────── -->
-      <header class="px-6 py-4.5 border-b border-border bg-white shrink-0">
-        <div class="flex items-start justify-between gap-4">
-          <div class="flex items-center gap-3.5 min-w-0">
-            <app-avatar [initials]="iniciales(cli.nombre)" size="lg" />
-            <div class="min-w-0">
-              <div class="flex items-center gap-2 flex-wrap">
-                <h2 id="titulo-ficha" class="text-base font-bold text-text-dark truncate leading-tight">
-                  {{ cli.nombre }}
-                </h2>
-                <app-badge
-                  [variant]="categoriaBadge[cli.categoria]"
-                  [icon]="categoriaIcon[cli.categoria]">
-                  {{ categoriaLabel[cli.categoria] }}
-                </app-badge>
-              </div>
-              <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-text-muted">
-                <span class="font-medium font-mono text-text-dark flex items-center gap-1">
-                  <app-icon name="phone" [size]="12" class="text-text-muted" />
-                  {{ cli.telefono }}
-                </span>
-                @if (cli.pac; as codigo) {
-                  <span class="text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.2 rounded-full font-mono">
-                    {{ codigo }}
-                  </span>
-                }
-                @if (cli.agente; as ag) {
-                  <span class="inline-flex items-center gap-1 px-2 py-0.2 rounded-full text-[10px] font-medium text-text-dark bg-bg-light border border-border">
-                    <app-icon name="user" [size]="10" class="text-primary" />
-                    <span>Agente: <strong class="font-semibold">{{ ag.nombre }}</strong></span>
-                  </span>
-                }
-                <a
-                  [routerLink]="['/conversaciones']"
-                  [queryParams]="{ clienteId: cli.id }"
-                  class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer"
-                  (click)="cerrarEdicion()"
-                  title="Abrir conversación de WhatsApp">
-                  <app-icon name="message-circle" [size]="12" />
-                  <span>WhatsApp</span>
-                </a>
-                <a
-                  [routerLink]="['/ventas']"
-                  [queryParams]="{ clienteId: cli.id, clienteNombre: cli.nombre, clienteTelefono: cli.telefono, nuevo: '1' }"
-                  class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer"
-                  (click)="cerrarEdicion()"
-                  title="Registrar una venta para este paciente">
-                  <app-icon name="shopping-bag" [size]="12" />
-                  <span>Registrar Venta</span>
-                </a>
-                <a
-                  [routerLink]="['/actividades']"
-                  [queryParams]="{ clienteId: cli.id, clienteNombre: cli.nombre, clienteTelefono: cli.telefono, nuevo: '1' }"
-                  class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer"
-                  (click)="cerrarEdicion()"
-                  title="Agendar una llamada, tarea o recordatorio para este paciente">
-                  <app-icon name="calendar" [size]="12" />
-                  <span>Agendar</span>
-                </a>
-              </div>
-            </div>
+      <div cabecera class="flex items-center gap-3.5 min-w-0">
+        <app-avatar [initials]="iniciales(cli.nombre)" size="lg" />
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h2 class="text-base font-bold text-text-dark truncate leading-tight">
+              {{ cli.nombre }}
+            </h2>
+            <app-badge
+              [variant]="categoriaBadge[cli.categoria]"
+              [icon]="categoriaIcon[cli.categoria]">
+              {{ categoriaLabel[cli.categoria] }}
+            </app-badge>
           </div>
-
-          <button
-            type="button"
-            (click)="cerrarEdicion()"
-            class="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
-            aria-label="Cerrar">
-            <app-icon name="x" [size]="18" />
-          </button>
+          <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-text-muted">
+            <span class="font-medium font-mono text-text-dark flex items-center gap-1">
+              <app-icon name="phone" [size]="12" class="text-text-muted" />
+              {{ cli.telefono }}
+            </span>
+            @if (cli.pac; as codigo) {
+              <span class="text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.2 rounded-full font-mono">
+                {{ codigo }}
+              </span>
+            }
+            @if (cli.agente; as ag) {
+              <span class="inline-flex items-center gap-1 px-2 py-0.2 rounded-full text-[10px] font-medium text-text-dark bg-bg-light border border-border">
+                <app-icon name="user" [size]="10" class="text-primary" />
+                <span>Agente: <strong class="font-semibold">{{ ag.nombre }}</strong></span>
+              </span>
+            }
+            <a
+              [routerLink]="['/conversaciones']"
+              [queryParams]="{ clienteId: cli.id }"
+              class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer"
+              (click)="cerrarEdicion()"
+              title="Abrir conversación de WhatsApp">
+              <app-icon name="message-circle" [size]="12" />
+              <span>WhatsApp</span>
+            </a>
+            <a
+              [routerLink]="['/ventas']"
+              [queryParams]="{ clienteId: cli.id, clienteNombre: cli.nombre, clienteTelefono: cli.telefono, nuevo: '1' }"
+              class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer"
+              (click)="cerrarEdicion()"
+              title="Registrar una venta para este paciente">
+              <app-icon name="shopping-bag" [size]="12" />
+              <span>Registrar Venta</span>
+            </a>
+            <a
+              [routerLink]="['/actividades']"
+              [queryParams]="{ clienteId: cli.id, clienteNombre: cli.nombre, clienteTelefono: cli.telefono, nuevo: '1' }"
+              class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer"
+              (click)="cerrarEdicion()"
+              title="Agendar una llamada, tarea o recordatorio para este paciente">
+              <app-icon name="calendar" [size]="12" />
+              <span>Agendar</span>
+            </a>
+          </div>
         </div>
+      </div>
 
-        <!-- ── Sub-navegación por Pestañas Sobria ─────────── -->
-        <nav class="flex gap-2 mt-4 pt-2 border-t border-border/60">
-          <button
-            type="button"
-            (click)="pestanaModal.set('EXPEDIENTE')"
-            class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
-            [class]="pestanaModal() === 'EXPEDIENTE' ? 'bg-primary text-white shadow-subtle' : 'text-text-muted hover:text-text-dark hover:bg-bg-light'">
-            <app-icon name="file-text" [size]="13" />
-            <span>Expediente Clínico</span>
-          </button>
-          <button
-            type="button"
-            (click)="pestanaModal.set('CONTACTO')"
-            class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
-            [class]="pestanaModal() === 'CONTACTO' ? 'bg-primary text-white shadow-subtle' : 'text-text-muted hover:text-text-dark hover:bg-bg-light'">
-            <app-icon name="user" [size]="13" />
-            <span>Datos de Contacto</span>
-          </button>
-          <button
-            type="button"
-            (click)="pestanaModal.set('NOTAS')"
-            class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
-            [class]="pestanaModal() === 'NOTAS' ? 'bg-primary text-white shadow-subtle' : 'text-text-muted hover:text-text-dark hover:bg-bg-light'">
-            <app-icon name="edit" [size]="13" />
-            <span>Perfil & Notas</span>
-          </button>
-        </nav>
-      </header>
+      <!-- ── Sub-navegación por Pestañas Sobria ─────────── -->
+      <nav subcabecera class="flex gap-2 mt-4 pt-2 border-t border-border/60">
+        <button
+          type="button"
+          (click)="pestanaModal.set('EXPEDIENTE')"
+          class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
+          [class]="pestanaModal() === 'EXPEDIENTE' ? 'bg-primary text-white shadow-subtle' : 'text-text-muted hover:text-text-dark hover:bg-bg-light'">
+          <app-icon name="file-text" [size]="13" />
+          <span>Expediente Clínico</span>
+        </button>
+        <button
+          type="button"
+          (click)="pestanaModal.set('CONTACTO')"
+          class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
+          [class]="pestanaModal() === 'CONTACTO' ? 'bg-primary text-white shadow-subtle' : 'text-text-muted hover:text-text-dark hover:bg-bg-light'">
+          <app-icon name="user" [size]="13" />
+          <span>Datos de Contacto</span>
+        </button>
+        <button
+          type="button"
+          (click)="pestanaModal.set('NOTAS')"
+          class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
+          [class]="pestanaModal() === 'NOTAS' ? 'bg-primary text-white shadow-subtle' : 'text-text-muted hover:text-text-dark hover:bg-bg-light'">
+          <app-icon name="edit" [size]="13" />
+          <span>Perfil & Notas</span>
+        </button>
+      </nav>
+
 
       <!-- ── Cuerpo del Formulario ─────────────────────────────────── -->
       <form (submit)="guardarEdicion($event)" class="flex flex-col flex-1 overflow-hidden">
@@ -665,6 +636,6 @@
           </app-button>
         </footer>
       </form>
-    }
-  </aside>
+    </app-drawer>
+  }
 </ng-template>

@@ -1,22 +1,13 @@
-<!-- Sin backdrop ni `fixed` propios: este cajón se proyecta a document.body con
-     DialogService (CDK Overlay), que pone el fondo y el apilado. Tenerlos aquí
-     lo dejaba dentro del árbol de la página peleando por z-index contra el
-     header, el sidebar y el FAB — y perdiendo. -->
-<!-- Ancho: hasta 72rem en vez de las 42rem de antes. Un historial clínico es
-     denso —ficha, KPIs y decenas de servicios— y en un panel estrecho todo
-     quedaba en una columna larguísima con la línea de tiempo encajonada en su
-     propio scroll. Con sitio de verdad cabe en dos columnas y se lee de un
-     vistazo. `94vw` evita que en un portátil quede pegado a los bordes. -->
-<aside
-  class="h-full w-full lg:w-[min(72rem,94vw)] bg-background shadow-lifted
-         flex flex-col pointer-events-auto animate-drawer-in">
-  <header class="flex items-start justify-between gap-3 p-5 border-b border-border">
-    <div>
-      <h2 class="text-lg font-bold text-text-dark">{{ historial().nombre }}</h2>
-      <p class="text-xs text-text-muted font-mono mt-0.5">{{ historial().pac }}</p>
-    </div>
-    <app-button variant="ghost" size="sm" icon="x" [circle]="true" (clicked)="cerrar.emit()" />
-  </header>
+<!-- El marco, el fondo, el apilado, la trampa de foco y el botón de cerrar son
+     de <app-drawer>; esta plantilla solo aporta el contenido. Ancho "ancho": un
+     historial clínico es denso —ficha, KPIs y decenas de servicios— y en un
+     panel estrecho todo quedaba en una columna larguísima con la línea de
+     tiempo encajonada en su propio scroll. -->
+<app-drawer
+  ancho="ancho"
+  [titulo]="historial().nombre"
+  [subtitulo]="historial().pac"
+  (cerrar)="cerrar.emit()">
 
   <!-- En pantalla ancha, dos columnas con UN scroll cada una: quién es a la
        izquierda, qué le hicieron a la derecha. En móvil se apilan y scrollea el
@@ -164,4 +155,4 @@
       }
     </div>
   </div>
-</aside>
+</app-drawer>

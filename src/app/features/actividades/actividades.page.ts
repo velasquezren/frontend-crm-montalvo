@@ -16,25 +16,8 @@ import {
 import { ActivatedRoute } from '@angular/router';
 
 import { OverlayRef } from '@angular/cdk/overlay';
-import {
-  CalendarApp,
-  CalendarEventExternal,
-  createCalendar,
-  createViewDay,
-  createViewMonthGrid,
-  createViewList,
-  createViewWeek,
-} from '@schedule-x/calendar';
-import { createCurrentTimePlugin } from '@schedule-x/current-time';
-import { createEventsServicePlugin } from '@schedule-x/events-service';
-import { CalendarComponent as SxCalendarComponent } from '@schedule-x/angular';
-import { Temporal } from 'temporal-polyfill';
-/* El CSS del tema vive en angular.json (styles globales), no como import de
-   este archivo: un import CSS desde un componente lazy-loaded genera el
-   chunk .css en dist/ pero esbuild no lo enlaza con ningún <link> al cargar
-   la ruta — el archivo queda huérfano y la vista se ve sin estilos. Ver
-   `crm-design-system` §Schedule-X. */
 
+import { ActividadesCalendarioComponent } from './components/actividades-calendario/actividades-calendario.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales } from '../../core/auth/user.model';
 import { aDatetimeLocal } from '../../core/api/fecha';
@@ -49,6 +32,7 @@ import { AvatarComponent } from '../../shared/components/avatar/avatar.component
 import { BadgeComponent, BadgeVariant } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
+import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
@@ -98,56 +82,6 @@ interface ClienteMinimo {
   readonly telefono: string;
 }
 
-/** Huso horario del navegador — usado solo para pintar los eventos del calendario. */
-const ZONA = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-/**
- * Schedule-X no trae español de fábrica — sin esto "Today"/"Month"/"Week"
- * quedaban en inglés sueltos en medio de un CRM en español. `locale: 'es-ES'`
- * solo gobierna el formato de fechas (vía Intl), no los textos de su propia
- * barra de navegación; esos se traducen aparte, por clave exacta.
- */
-const TRADUCCION_ES = {
-  Today: 'Hoy',
-  Month: 'Mes',
-  Week: 'Semana',
-  Day: 'Día',
-  List: 'Lista',
-  'Select View': 'Elegir vista',
-  View: 'Vista',
-  '+ {{n}} events': '+ {{n}} más',
-  '+ 1 event': '+ 1 más',
-  'No events': 'Sin actividades',
-  'Next period': 'Siguiente',
-  'Previous period': 'Anterior',
-  to: 'a',
-  'Full day- and multiple day events': 'Actividades de todo el día o varios días',
-  'Link to {{n}} more events on {{date}}': 'Ver {{n}} más el {{date}}',
-  'Link to 1 more event on {{date}}': 'Ver 1 más el {{date}}',
-  CW: 'Sem',
-};
-
-/** El `calendarId` decide el color del evento — solo tonos de la paleta cerrada (ver `crm-design-system`). */
-function calendarioDe(a: Actividad): string {
-  if (a.estado === 'CANCELADA') return 'neutral';
-  if (a.estado === 'COMPLETADA') return 'secundaria';
-  return esActividadVencida(a) ? 'critica' : 'primaria';
-}
-
-function aEventoCalendario(a: Actividad): CalendarEventExternal {
-  const inicio = Temporal.Instant.from(a.fechaProgramada).toZonedDateTimeISO(ZONA);
-  return {
-    id: a.id,
-    title: a.titulo,
-    start: inicio,
-    // Duración real, no un bloque fijo — una llamada de 15 min no debe verse
-    // igual de alta que una reunión de una hora en las vistas de semana/día.
-    end: inicio.add({ minutes: Math.max(a.duracionMinutos, 5) }),
-    description: a.cliente.nombre,
-    calendarId: calendarioDe(a),
-  };
-}
-
 /**
  * Seguimiento comercial: recordatorios y tareas de un agente sobre un
  * Cliente/Lead. NO es la agenda médica (horario clínico, app independiente) —
@@ -160,6 +94,8 @@ function aEventoCalendario(a: Actividad): CalendarEventExternal {
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,
+    ActividadesCalendarioComponent,
+    DrawerComponent,
     DatePipe,
     EmptyStateComponent,
     ErrorCargaComponent,
@@ -170,11 +106,9 @@ function aEventoCalendario(a: Actividad): CalendarEventExternal {
     LoadingSkeletonComponent,
     PageHeaderComponent,
     PaginatorComponent,
-    SxCalendarComponent,
-    TableComponent,
+      TableComponent,
   ],
   templateUrl: './actividades.page.html',
-  styleUrl: './actividades.page.css',
 })
 export class ActividadesPage implements OnDestroy {
   private readonly actividadesService = inject(ActividadesService);
@@ -226,13 +160,6 @@ export class ActividadesPage implements OnDestroy {
         this.pagina.set(1);
       }, 200);
       onCleanup(() => clearTimeout(timer));
-    });
-
-    // El calendario no repinta solo — hay que empujarle los eventos cada vez
-    // que cambian los datos o el usuario entra a la vista Calendario.
-    effect(() => {
-      if (this.vista() !== 'CALENDARIO') return;
-      this.eventosServicio.set(this.actividadesCalendario.value().datos.map(aEventoCalendario));
     });
 
     /**
@@ -333,48 +260,6 @@ export class ActividadesPage implements OnDestroy {
       });
     },
     { defaultValue: paginaVacia<Actividad>() },
-  );
-
-  /* ── Calendario (Schedule-X) ───────────────────────────────────── */
-  private readonly eventosServicio = createEventsServicePlugin();
-  protected readonly calendarApp: CalendarApp = createCalendar(
-    {
-      views: [createViewMonthGrid(), createViewWeek(), createViewDay(), createViewList()],
-      defaultView: 'month-grid',
-      timezone: ZONA,
-      locale: 'es-ES',
-      translations: { 'es-ES': TRADUCCION_ES },
-      firstDayOfWeek: 1,
-      calendars: {
-        primaria: {
-          colorName: 'primaria',
-          label: 'A tiempo',
-          lightColors: { main: '#006156', container: '#EAF7F5', onContainer: '#006156' },
-        },
-        secundaria: {
-          colorName: 'secundaria',
-          label: 'Completada',
-          lightColors: { main: '#39ADA3', container: '#EAF7F5', onContainer: '#006156' },
-        },
-        critica: {
-          colorName: 'critica',
-          label: 'Vencida',
-          lightColors: { main: '#000000', container: '#F8F9FA', onContainer: '#1F2937' },
-        },
-        neutral: {
-          colorName: 'neutral',
-          label: 'Cancelada',
-          lightColors: { main: '#6B7280', container: '#F8F9FA', onContainer: '#1F2937' },
-        },
-      },
-      callbacks: {
-        onEventClick: evento => {
-          const actividad = this.actividadesCalendario.value().datos.find(a => a.id === evento.id);
-          if (actividad) this.abrirDetalle(actividad);
-        },
-      },
-    },
-    [this.eventosServicio, createCurrentTimePlugin()],
   );
 
   protected readonly modalFormTpl = viewChild<TemplateRef<unknown>>('modalForm');
@@ -591,8 +476,7 @@ export class ActividadesPage implements OnDestroy {
   private abrirModal(template: TemplateRef<unknown> | undefined): void {
     if (!template) return;
     this.activeOverlayRef?.dispose();
-    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
-      panelClass: ['fixed', 'inset-0', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'],
+    this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
       onClose: () => this.cerrarModal(),
     });
   }
@@ -609,8 +493,7 @@ export class ActividadesPage implements OnDestroy {
     if (!tpl) return;
     this.actividadDetalle.set(actividad);
     this.activeDrawerRef?.dispose();
-    this.activeDrawerRef = this.dialogService.openTemplate(tpl, this.vcr, {
-      panelClass: ['fixed', 'inset-0', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'],
+    this.activeDrawerRef = this.dialogService.abrirCajon(tpl, this.vcr, {
       onClose: () => this.cerrarDetalle(),
     });
   }

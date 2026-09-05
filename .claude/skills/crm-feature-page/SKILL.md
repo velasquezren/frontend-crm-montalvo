@@ -187,6 +187,37 @@ navega a otra vista con el modal abierto sin cerrarlo, el overlay se destruye so
 dos páginas dejaban un fondo oscuro huérfano bloqueando clics en la siguiente vista; ahora es
 imposible que un nuevo modal reintroduzca ese bug, sin importar si la página se acuerda de limpiar.
 
+### Un panel que entra por la derecha es `<app-drawer>` + `abrirCajon()`
+
+```ts
+this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
+  onClose: () => this.cerrarFicha(),   // limpia la señal; corre con Escape y con clic al fondo
+});
+```
+
+```html
+<ng-template #fichaTpl>
+  @if (seleccionado(); as item) {
+    <app-drawer ancho="md" [titulo]="item.nombre" icono="user" (cerrar)="cerrarFicha()">
+      <div class="p-6 overflow-y-auto flex-1">…</div>
+      <div class="… border-t border-border shrink-0">…acciones…</div>
+    </app-drawer>
+  }
+</ng-template>
+```
+
+**`onClose` no es opcional en la práctica.** El overlay ya se destruye solo, pero la señal que
+decide si el cajón *debe* existir es tuya: sin `onClose`, cerrar con Escape deja la señal puesta y
+el cajón no vuelve a abrirse hasta cambiar de fila.
+
+**El `@if` va FUERA de `<app-drawer>`, no dentro.** Los slots `[cabecera]`/`[subcabecera]` se
+resuelven sobre los hijos directos del componente: metidos en un bloque de control de flujo no
+proyectan y el contenido acaba en el hueco por defecto, sin error de compilación.
+
+Escape y la trampa de foco ya no son cosa de la página: `DialogService` cierra con Escape **todo**
+overlay que no pase `disableClose`, y `<app-drawer>` lleva `cdkTrapFocus`. Si ves un
+`@HostListener('document:keydown.escape')` nuevo en una página, sobra.
+
 ## Rendimiento: el cuello de botella es la RED, no las consultas
 
 Medido contra producción el 2026-08-05, desde Bolivia:

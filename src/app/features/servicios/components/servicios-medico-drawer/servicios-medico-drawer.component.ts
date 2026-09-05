@@ -2,7 +2,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 
 import { MonedaService } from '../../../../core/moneda/moneda.service';
-import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { DrawerComponent } from '../../../../shared/components/drawer/drawer.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { KpiCardComponent } from '../../../../shared/components/kpi-card/kpi-card.component';
@@ -30,7 +30,7 @@ const MESES = [
     DatePipe,
     DecimalPipe,
     MonedaPipe,
-    ButtonComponent,
+    DrawerComponent,
     EmptyStateComponent,
     IconComponent,
     KpiCardComponent,

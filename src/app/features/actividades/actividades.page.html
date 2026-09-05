@@ -482,342 +482,316 @@
         title="Sin actividades en el calendario"
         description="No hay recordatorios ni tareas agendadas en esta vista. Agenda una desde 'Nueva actividad'." />
     } @else {
-      <!-- Leyenda de colores del calendario -->
-      <div class="flex flex-wrap items-center gap-4 mb-3 px-1" aria-hidden="true">
-        <span class="crm-leyenda-item"><span class="crm-leyenda-punto crm-leyenda-punto--primaria"></span>A tiempo</span>
-        <span class="crm-leyenda-item"><span class="crm-leyenda-punto crm-leyenda-punto--critica"></span>Vencida</span>
-        <span class="crm-leyenda-item"><span class="crm-leyenda-punto crm-leyenda-punto--secundaria"></span>Completada</span>
-        <span class="crm-leyenda-item"><span class="crm-leyenda-punto crm-leyenda-punto--neutral"></span>Cancelada</span>
-      </div>
-      <div class="crm-calendario-wrapper">
-        <sx-calendar [calendarApp]="calendarApp" />
-      </div>
+      <!-- Schedule-X y el polyfill de Temporal solo bajan al pulsar Calendario:
+           la vista por defecto es Lista y muchas agentes no entran nunca acá.
+           El esqueleto mide lo mismo que el calendario (32rem) para que la
+           página no salte al terminar la descarga. -->
+      @defer (when vista() === 'CALENDARIO') {
+        <app-actividades-calendario
+          [actividades]="actividadesCalendario.value().datos"
+          (seleccionada)="abrirDetalle($event)" />
+      } @placeholder {
+        <app-loading-skeleton shape="text" height="32rem" />
+      }
     }
   }
 }
 
 <!-- Modal crear/editar -->
 <ng-template #modalForm>
-  <aside
-    class="h-full w-full sm:w-[520px] lg:w-[580px] bg-white shadow-lifted border-l border-border flex flex-col pointer-events-auto animate-drawer-in"
-    role="dialog"
-    aria-label="Formulario de actividad">
-    <div class="flex items-center justify-between px-6 py-4.5 border-b border-border bg-white shrink-0">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-          <app-icon [name]="actividadEditando() ? 'edit' : 'calendar'" [size]="18" />
-        </div>
-        <div>
-          <h2 class="text-sm font-bold text-text-dark tracking-tight leading-tight">
-            {{ actividadEditando() ? 'Editar actividad' : 'Nueva actividad' }}
-          </h2>
-          <p class="text-xs text-text-muted leading-tight mt-0.5">
-            {{ actividadEditando() ? 'Ajusta el recordatorio o sus detalles' : 'Un recordatorio o tarea de seguimiento comercial' }}
-          </p>
-        </div>
-      </div>
-      <button
-        type="button"
-        (click)="cerrarModal()"
-        class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer shrink-0"
-        aria-label="Cerrar modal">
-        <app-icon name="x" [size]="18" />
-      </button>
-    </div>
+  <app-drawer
+    [icono]="actividadEditando() ? 'edit' : 'calendar'"
+    [titulo]="actividadEditando() ? 'Editar actividad' : 'Nueva actividad'"
+    [subtitulo]="actividadEditando() ? 'Ajusta el recordatorio o sus detalles' : 'Un recordatorio o tarea de seguimiento comercial'"
+    (cerrar)="cerrarModal()">
 
-    <form (submit)="guardar($event)" class="p-6 overflow-y-auto space-y-4 flex-1">
-      @if (errorForm()) {
-        <div class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
-          <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
-          <span>{{ errorForm() }}</span>
-        </div>
-      }
-
-      <!-- Tipo + duración: van juntos porque uno sugiere al otro -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-        <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Tipo</label>
-          <div class="flex flex-wrap gap-1.5" role="group" aria-label="Tipo de actividad">
-            @for (t of tipos; track t) {
-              <app-filter-chip size="sm" [active]="formTipo() === t" (clicked)="elegirTipo(t)">
-                <app-icon [name]="tipoIcono[t]" [size]="12" /> {{ tiposLabel[t] }}
-              </app-filter-chip>
-            }
+    <form (submit)="guardar($event)" class="flex-1 min-h-0 flex flex-col">
+      <div class="p-6 overflow-y-auto space-y-4 flex-1">
+        @if (errorForm()) {
+          <div class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
+            <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
+            <span>{{ errorForm() }}</span>
           </div>
-        </div>
-        <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Duración</label>
-          <div class="flex flex-wrap gap-1.5" role="group" aria-label="Duración de la actividad">
-            @for (min of duracionesPreset; track min) {
-              <app-filter-chip size="sm" [active]="formDuracion() === min" (clicked)="elegirDuracion(min)">
-                {{ formatearDuracion(min) }}
-              </app-filter-chip>
-            }
-          </div>
-        </div>
-      </div>
-
-      <!-- Cliente -->
-      <div class="space-y-1.5">
-        <div class="flex items-center justify-between">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Cliente / Paciente *</label>
-          @if (!clienteElegido() && !actividadEditando() && !modoNuevoCliente()) {
-            <button
-              type="button"
-              (click)="activarModoNuevoCliente()"
-              class="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer">
-              <app-icon name="user-plus" [size]="12" />
-              <span>+ Nuevo paciente express</span>
-            </button>
-          }
-        </div>
-
-        @if (clienteElegido(); as elegido) {
-          <div class="flex items-center justify-between gap-3 bg-bg-light/70 rounded-xl px-3.5 py-2.5 border border-border">
-            <div class="flex items-center gap-2.5 min-w-0">
-              <app-avatar [initials]="iniciales(elegido.nombre)" size="sm" />
-              <div class="min-w-0">
-                <p class="text-xs font-semibold text-text-dark truncate">{{ elegido.nombre }}</p>
-                <p class="text-[11px] text-text-muted font-mono leading-tight mt-0.5">{{ elegido.telefono }}</p>
-              </div>
-            </div>
-            @if (!actividadEditando()) {
-              <button type="button" (click)="limpiarCliente()" class="text-text-muted hover:text-critical p-1 rounded-lg transition-colors cursor-pointer shrink-0" title="Cambiar cliente">
-                <app-icon name="x" [size]="16" />
-              </button>
-            }
-          </div>
-        } @else if (modoNuevoCliente()) {
-          <!-- Tarjeta de Registro Express de Paciente Nuevo -->
-          <div class="p-3.5 rounded-xl border border-primary/30 bg-primary/5 space-y-3 animate-fade-in">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <div class="w-6 h-6 rounded-lg bg-primary/15 flex items-center justify-center text-primary">
-                  <app-icon name="user-plus" [size]="13" />
-                </div>
-                <span class="text-xs font-bold text-text-dark">Registrar nuevo paciente</span>
-              </div>
-              <button
-                type="button"
-                (click)="cancelarModoNuevoCliente()"
-                class="text-xs text-text-muted hover:text-text-dark cursor-pointer transition-colors">
-                Buscar existente
-              </button>
-            </div>
-
-            @if (errorNuevoCliente()) {
-              <div class="px-2.5 py-1.5 rounded-lg bg-critical-bg text-[11px] text-text-dark font-medium flex items-center gap-1.5 border border-border">
-                <app-icon name="alert-circle" [size]="12" class="text-critical shrink-0" />
-                <span>{{ errorNuevoCliente() }}</span>
-              </div>
-            }
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div class="space-y-1">
-                <label class="block text-[10px] font-semibold text-text-muted uppercase">Nombre completo *</label>
-                <app-input placeholder="Ej. Mariana López" [(value)]="nuevoClienteNombre" />
-              </div>
-              <div class="space-y-1">
-                <label class="block text-[10px] font-semibold text-text-muted uppercase">Celular / Teléfono *</label>
-                <app-input placeholder="Ej. 71234567 o +591…" [(value)]="nuevoClienteTelefono" />
-              </div>
-            </div>
-
-            <div class="flex items-center justify-between pt-1">
-              <span class="text-[10px] text-text-muted">Se guardará automáticamente en el CRM</span>
-              <app-button
-                type="button"
-                variant="primary"
-                size="sm"
-                [loading]="creandoCliente()"
-                (clicked)="registrarNuevoClienteExpress()">
-                Registrar y seleccionar
-              </app-button>
-            </div>
-          </div>
-        } @else {
-          <!-- Buscador de cliente existente -->
-          <app-input type="search" placeholder="Buscar por nombre, teléfono o PAC…" [(value)]="busquedaCliente" />
-          @if (busquedaCliente().trim().length >= 2) {
-            @if (resultadosCliente.value().length > 0) {
-              <div class="border border-border rounded-xl divide-y divide-border max-h-48 overflow-y-auto shadow-subtle bg-background mt-1">
-                @for (cliente of resultadosCliente.value(); track cliente.id) {
-                  <button type="button" (click)="elegirCliente(cliente)" class="w-full flex items-center justify-between gap-2.5 px-3.5 py-2 text-left cursor-pointer hover:bg-bg-light transition-colors">
-                    <div class="flex items-center gap-2.5 min-w-0">
-                      <app-avatar [initials]="iniciales(cliente.nombre)" size="sm" />
-                      <div class="min-w-0">
-                        <p class="text-xs font-medium text-text-dark truncate">{{ cliente.nombre }}</p>
-                        <p class="text-[10px] text-text-muted font-mono leading-tight">{{ cliente.telefono }}</p>
-                      </div>
-                    </div>
-                    @if (cliente.pac) {
-                      <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-primary/10 text-primary border border-primary/20 shrink-0">
-                        {{ cliente.pac }}
-                      </span>
-                    }
-                  </button>
-                }
-                <!-- Opción al pie de lista para crear nuevo -->
-                <button
-                  type="button"
-                  (click)="activarModoNuevoCliente()"
-                  class="w-full flex items-center gap-2 px-3.5 py-2.5 text-left text-xs font-semibold text-primary bg-primary/5 hover:bg-primary/10 transition-colors border-t border-border cursor-pointer">
-                  <app-icon name="user-plus" [size]="14" />
-                  <span>Registrar nuevo contacto: "{{ busquedaCliente() }}"</span>
-                </button>
-              </div>
-            } @else if (!resultadosCliente.isLoading()) {
-              <div class="p-3 border border-border rounded-xl bg-bg-light/60 mt-1 flex flex-col gap-2">
-                <p class="text-xs text-text-muted">
-                  No se encontró ningún paciente registrado con "{{ busquedaCliente() }}".
-                </p>
-                <button
-                  type="button"
-                  (click)="activarModoNuevoCliente()"
-                  class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary-hover transition-colors cursor-pointer self-start shadow-subtle">
-                  <app-icon name="user-plus" [size]="13" />
-                  <span>Registrar como nuevo paciente express</span>
-                </button>
-              </div>
-            }
-          }
         }
-      </div>
 
-      <!-- Lead de origen (opcional) -->
-      @if (leadsAbiertosDelCliente().length > 0) {
-        <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Lead vinculado (opcional)</label>
-          <div class="flex flex-wrap gap-1.5">
-            <app-filter-chip size="sm" [active]="formLeadId() === null" (clicked)="formLeadId.set(null)">Ninguno</app-filter-chip>
-            @for (lead of leadsAbiertosDelCliente(); track lead.id) {
-              <app-filter-chip size="sm" [active]="formLeadId() === lead.id" (clicked)="formLeadId.set(lead.id)">
-                {{ origenLabel[lead.origen] }}
-              </app-filter-chip>
-            }
+        <!-- Tipo + duración: van juntos porque uno sugiere al otro -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div class="space-y-1.5">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Tipo</label>
+            <div class="flex flex-wrap gap-1.5" role="group" aria-label="Tipo de actividad">
+              @for (t of tipos; track t) {
+                <app-filter-chip size="sm" [active]="formTipo() === t" (clicked)="elegirTipo(t)">
+                  <app-icon [name]="tipoIcono[t]" [size]="12" /> {{ tiposLabel[t] }}
+                </app-filter-chip>
+              }
+            </div>
+          </div>
+          <div class="space-y-1.5">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Duración</label>
+            <div class="flex flex-wrap gap-1.5" role="group" aria-label="Duración de la actividad">
+              @for (min of duracionesPreset; track min) {
+                <app-filter-chip size="sm" [active]="formDuracion() === min" (clicked)="elegirDuracion(min)">
+                  {{ formatearDuracion(min) }}
+                </app-filter-chip>
+              }
+            </div>
           </div>
         </div>
-      }
 
-      <!-- Título + sugerencias de horario + fecha -->
-      <div class="space-y-2">
-        <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Título *</label>
-          <app-input placeholder="Ej. Llamar para confirmar cita o cotización" [(value)]="formTitulo" />
-        </div>
-
+        <!-- Cliente -->
         <div class="space-y-1.5">
           <div class="flex items-center justify-between">
-            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Fecha y hora *</label>
-            <div class="flex items-center gap-1">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Cliente / Paciente *</label>
+            @if (!clienteElegido() && !actividadEditando() && !modoNuevoCliente()) {
               <button
                 type="button"
-                (click)="aplicarPresetFecha('1H')"
-                class="text-[10px] font-semibold text-primary px-1.5 py-0.5 rounded hover:bg-primary/10 transition-colors cursor-pointer">
-                +1 h
+                (click)="activarModoNuevoCliente()"
+                class="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer">
+                <app-icon name="user-plus" [size]="12" />
+                <span>+ Nuevo paciente express</span>
               </button>
-              <button
-                type="button"
-                (click)="aplicarPresetFecha('HOY_TARDE')"
-                class="text-[10px] font-semibold text-primary px-1.5 py-0.5 rounded hover:bg-primary/10 transition-colors cursor-pointer">
-                Hoy 16:00
-              </button>
-              <button
-                type="button"
-                (click)="aplicarPresetFecha('MANANA_MANANA')"
-                class="text-[10px] font-semibold text-primary px-1.5 py-0.5 rounded hover:bg-primary/10 transition-colors cursor-pointer">
-                Mañana 09:30
-              </button>
-              <button
-                type="button"
-                (click)="aplicarPresetFecha('EN_2_DIAS')"
-                class="text-[10px] font-semibold text-primary px-1.5 py-0.5 rounded hover:bg-primary/10 transition-colors cursor-pointer">
-                En 2 días
-              </button>
-            </div>
-          </div>
-          <app-input type="datetime-local" [(value)]="formFecha" />
-        </div>
-      </div>
-
-      <!-- Repetir: solo al crear -->
-      @if (!actividadEditando()) {
-        <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Repetir (opcional)</label>
-          <div class="flex flex-wrap gap-1.5" role="group" aria-label="Frecuencia de repetición">
-            <app-filter-chip size="sm" [active]="formRepetir() === null" (clicked)="formRepetir.set(null)">No repetir</app-filter-chip>
-            @for (f of frecuencias; track f) {
-              <app-filter-chip size="sm" [active]="formRepetir() === f" (clicked)="formRepetir.set(f)">
-                {{ frecuenciaLabel[f] }}
-              </app-filter-chip>
             }
           </div>
-          @if (formRepetir(); as frecuencia) {
-            <div class="flex items-center gap-2 pt-1">
-              <span class="text-xs text-text-muted shrink-0">Durante</span>
-              <div class="flex flex-wrap gap-1.5">
-                @for (n of [2, 4, 6, 8, 12]; track n) {
-                  <app-filter-chip size="sm" [active]="formRepetirVeces() === n" (clicked)="formRepetirVeces.set(n)">
-                    {{ n }}
-                  </app-filter-chip>
-                }
+
+          @if (clienteElegido(); as elegido) {
+            <div class="flex items-center justify-between gap-3 bg-bg-light/70 rounded-xl px-3.5 py-2.5 border border-border">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <app-avatar [initials]="iniciales(elegido.nombre)" size="sm" />
+                <div class="min-w-0">
+                  <p class="text-xs font-semibold text-text-dark truncate">{{ elegido.nombre }}</p>
+                  <p class="text-[11px] text-text-muted font-mono leading-tight mt-0.5">{{ elegido.telefono }}</p>
+                </div>
               </div>
-              <span class="text-xs text-text-muted shrink-0">veces</span>
+              @if (!actividadEditando()) {
+                <button type="button" (click)="limpiarCliente()" class="text-text-muted hover:text-critical p-1 rounded-lg transition-colors cursor-pointer shrink-0" title="Cambiar cliente">
+                  <app-icon name="x" [size]="16" />
+                </button>
+              }
             </div>
-            <p class="text-[11px] text-text-muted leading-relaxed">
-              Se crean {{ formRepetirVeces() }} actividades independientes, {{ frecuenciaLabel[frecuencia].toLowerCase() }} — cada una se puede completar, mover o cancelar por separado.
-            </p>
+          } @else if (modoNuevoCliente()) {
+            <!-- Tarjeta de Registro Express de Paciente Nuevo -->
+            <div class="p-3.5 rounded-xl border border-primary/30 bg-primary/5 space-y-3 animate-fade-in">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-lg bg-primary/15 flex items-center justify-center text-primary">
+                    <app-icon name="user-plus" [size]="13" />
+                  </div>
+                  <span class="text-xs font-bold text-text-dark">Registrar nuevo paciente</span>
+                </div>
+                <button
+                  type="button"
+                  (click)="cancelarModoNuevoCliente()"
+                  class="text-xs text-text-muted hover:text-text-dark cursor-pointer transition-colors">
+                  Buscar existente
+                </button>
+              </div>
+
+              @if (errorNuevoCliente()) {
+                <div class="px-2.5 py-1.5 rounded-lg bg-critical-bg text-[11px] text-text-dark font-medium flex items-center gap-1.5 border border-border">
+                  <app-icon name="alert-circle" [size]="12" class="text-critical shrink-0" />
+                  <span>{{ errorNuevoCliente() }}</span>
+                </div>
+              }
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div class="space-y-1">
+                  <label class="block text-[10px] font-semibold text-text-muted uppercase">Nombre completo *</label>
+                  <app-input placeholder="Ej. Mariana López" [(value)]="nuevoClienteNombre" />
+                </div>
+                <div class="space-y-1">
+                  <label class="block text-[10px] font-semibold text-text-muted uppercase">Celular / Teléfono *</label>
+                  <app-input placeholder="Ej. 71234567 o +591…" [(value)]="nuevoClienteTelefono" />
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between pt-1">
+                <span class="text-[10px] text-text-muted">Se guardará automáticamente en el CRM</span>
+                <app-button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  [loading]="creandoCliente()"
+                  (clicked)="registrarNuevoClienteExpress()">
+                  Registrar y seleccionar
+                </app-button>
+              </div>
+            </div>
+          } @else {
+            <!-- Buscador de cliente existente -->
+            <app-input type="search" placeholder="Buscar por nombre, teléfono o PAC…" [(value)]="busquedaCliente" />
+            @if (busquedaCliente().trim().length >= 2) {
+              @if (resultadosCliente.value().length > 0) {
+                <div class="border border-border rounded-xl divide-y divide-border max-h-48 overflow-y-auto shadow-subtle bg-background mt-1">
+                  @for (cliente of resultadosCliente.value(); track cliente.id) {
+                    <button type="button" (click)="elegirCliente(cliente)" class="w-full flex items-center justify-between gap-2.5 px-3.5 py-2 text-left cursor-pointer hover:bg-bg-light transition-colors">
+                      <div class="flex items-center gap-2.5 min-w-0">
+                        <app-avatar [initials]="iniciales(cliente.nombre)" size="sm" />
+                        <div class="min-w-0">
+                          <p class="text-xs font-medium text-text-dark truncate">{{ cliente.nombre }}</p>
+                          <p class="text-[10px] text-text-muted font-mono leading-tight">{{ cliente.telefono }}</p>
+                        </div>
+                      </div>
+                      @if (cliente.pac) {
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-primary/10 text-primary border border-primary/20 shrink-0">
+                          {{ cliente.pac }}
+                        </span>
+                      }
+                    </button>
+                  }
+                  <!-- Opción al pie de lista para crear nuevo -->
+                  <button
+                    type="button"
+                    (click)="activarModoNuevoCliente()"
+                    class="w-full flex items-center gap-2 px-3.5 py-2.5 text-left text-xs font-semibold text-primary bg-primary/5 hover:bg-primary/10 transition-colors border-t border-border cursor-pointer">
+                    <app-icon name="user-plus" [size]="14" />
+                    <span>Registrar nuevo contacto: "{{ busquedaCliente() }}"</span>
+                  </button>
+                </div>
+              } @else if (!resultadosCliente.isLoading()) {
+                <div class="p-3 border border-border rounded-xl bg-bg-light/60 mt-1 flex flex-col gap-2">
+                  <p class="text-xs text-text-muted">
+                    No se encontró ningún paciente registrado con "{{ busquedaCliente() }}".
+                  </p>
+                  <button
+                    type="button"
+                    (click)="activarModoNuevoCliente()"
+                    class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary-hover transition-colors cursor-pointer self-start shadow-subtle">
+                    <app-icon name="user-plus" [size]="13" />
+                    <span>Registrar como nuevo paciente express</span>
+                  </button>
+                </div>
+              }
+            }
           }
         </div>
-      }
 
-      <div class="space-y-1.5">
-        <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Notas (opcional)</label>
-        <app-input [multiline]="true" [rows]="3" placeholder="Detalles para recordar al retomar el contacto…" [(value)]="formNotas" />
+        <!-- Lead de origen (opcional) -->
+        @if (leadsAbiertosDelCliente().length > 0) {
+          <div class="space-y-1.5">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Lead vinculado (opcional)</label>
+            <div class="flex flex-wrap gap-1.5">
+              <app-filter-chip size="sm" [active]="formLeadId() === null" (clicked)="formLeadId.set(null)">Ninguno</app-filter-chip>
+              @for (lead of leadsAbiertosDelCliente(); track lead.id) {
+                <app-filter-chip size="sm" [active]="formLeadId() === lead.id" (clicked)="formLeadId.set(lead.id)">
+                  {{ origenLabel[lead.origen] }}
+                </app-filter-chip>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Título + sugerencias de horario + fecha -->
+        <div class="space-y-2">
+          <div class="space-y-1.5">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Título *</label>
+            <app-input placeholder="Ej. Llamar para confirmar cita o cotización" [(value)]="formTitulo" />
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Fecha y hora *</label>
+              <div class="flex items-center gap-1">
+                <button
+                  type="button"
+                  (click)="aplicarPresetFecha('1H')"
+                  class="text-[10px] font-semibold text-primary px-1.5 py-0.5 rounded hover:bg-primary/10 transition-colors cursor-pointer">
+                  +1 h
+                </button>
+                <button
+                  type="button"
+                  (click)="aplicarPresetFecha('HOY_TARDE')"
+                  class="text-[10px] font-semibold text-primary px-1.5 py-0.5 rounded hover:bg-primary/10 transition-colors cursor-pointer">
+                  Hoy 16:00
+                </button>
+                <button
+                  type="button"
+                  (click)="aplicarPresetFecha('MANANA_MANANA')"
+                  class="text-[10px] font-semibold text-primary px-1.5 py-0.5 rounded hover:bg-primary/10 transition-colors cursor-pointer">
+                  Mañana 09:30
+                </button>
+                <button
+                  type="button"
+                  (click)="aplicarPresetFecha('EN_2_DIAS')"
+                  class="text-[10px] font-semibold text-primary px-1.5 py-0.5 rounded hover:bg-primary/10 transition-colors cursor-pointer">
+                  En 2 días
+                </button>
+              </div>
+            </div>
+            <app-input type="datetime-local" [(value)]="formFecha" />
+          </div>
+        </div>
+
+        <!-- Repetir: solo al crear -->
+        @if (!actividadEditando()) {
+          <div class="space-y-1.5">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Repetir (opcional)</label>
+            <div class="flex flex-wrap gap-1.5" role="group" aria-label="Frecuencia de repetición">
+              <app-filter-chip size="sm" [active]="formRepetir() === null" (clicked)="formRepetir.set(null)">No repetir</app-filter-chip>
+              @for (f of frecuencias; track f) {
+                <app-filter-chip size="sm" [active]="formRepetir() === f" (clicked)="formRepetir.set(f)">
+                  {{ frecuenciaLabel[f] }}
+                </app-filter-chip>
+              }
+            </div>
+            @if (formRepetir(); as frecuencia) {
+              <div class="flex items-center gap-2 pt-1">
+                <span class="text-xs text-text-muted shrink-0">Durante</span>
+                <div class="flex flex-wrap gap-1.5">
+                  @for (n of [2, 4, 6, 8, 12]; track n) {
+                    <app-filter-chip size="sm" [active]="formRepetirVeces() === n" (clicked)="formRepetirVeces.set(n)">
+                      {{ n }}
+                    </app-filter-chip>
+                  }
+                </div>
+                <span class="text-xs text-text-muted shrink-0">veces</span>
+              </div>
+              <p class="text-[11px] text-text-muted leading-relaxed">
+                Se crean {{ formRepetirVeces() }} actividades independientes, {{ frecuenciaLabel[frecuencia].toLowerCase() }} — cada una se puede completar, mover o cancelar por separado.
+              </p>
+            }
+          </div>
+        }
+
+        <div class="space-y-1.5">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Notas (opcional)</label>
+          <app-input [multiline]="true" [rows]="3" placeholder="Detalles para recordar al retomar el contacto…" [(value)]="formNotas" />
+        </div>
+
       </div>
 
-      <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
+      <div class="flex items-center justify-end gap-2.5 px-6 py-3.5 bg-bg-workspace border-t border-border shrink-0">
         <app-button type="button" variant="ghost" size="sm" (clicked)="cerrarModal()">Cancelar</app-button>
         <app-button type="submit" variant="primary" size="sm" [loading]="guardando()">
           {{ actividadEditando() ? 'Guardar cambios' : 'Agendar' }}
         </app-button>
       </div>
     </form>
-  </aside>
+  </app-drawer>
 </ng-template>
 
 <!-- ── Cajón Lateral: Detalle 360° de la Actividad (CDK Overlay) ───── -->
 <ng-template #drawerDetalleTemplate>
   @if (actividadDetalle(); as act) {
-    <aside
-      class="h-full w-full sm:w-[500px] lg:w-[540px] bg-white shadow-lifted border-l border-border flex flex-col pointer-events-auto animate-drawer-in"
-      role="dialog"
-      aria-label="Detalle 360° de la actividad">
+    <app-drawer
+      ancho="sm"
+      etiqueta="Detalle de la actividad"
+      (cerrar)="cerrarDetalle()">
 
-      <!-- Header del Drawer -->
-      <header class="flex items-center justify-between px-6 py-4.5 border-b border-border bg-white shrink-0">
-        <div class="flex items-center gap-3 min-w-0">
-          <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-            <app-icon [name]="tipoIcono[act.tipo]" [size]="20" />
-          </div>
-          <div class="min-w-0">
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold uppercase tracking-wider text-primary">{{ tiposLabel[act.tipo] }}</span>
-              <app-badge [variant]="estadoBadge[act.estado]">{{ estadoLabel[act.estado] }}</app-badge>
-            </div>
-            <h2 class="text-sm font-bold text-text-dark tracking-tight leading-tight truncate mt-0.5">
-              {{ act.titulo }}
-            </h2>
-          </div>
+      <div cabecera class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+          <app-icon [name]="tipoIcono[act.tipo]" [size]="20" />
         </div>
-        <button
-          type="button"
-          (click)="cerrarDetalle()"
-          class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
-          aria-label="Cerrar detalle">
-          <app-icon name="x" [size]="18" />
-        </button>
-      </header>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-primary">{{ tiposLabel[act.tipo] }}</span>
+            <app-badge [variant]="estadoBadge[act.estado]">{{ estadoLabel[act.estado] }}</app-badge>
+          </div>
+          <h2 class="text-sm font-bold text-text-dark tracking-tight leading-tight truncate mt-0.5">
+            {{ act.titulo }}
+          </h2>
+        </div>
+      </div>
+
 
       <!-- Cuerpo del Drawer con scroll -->
       <div class="p-6 overflow-y-auto space-y-5 flex-1 bg-bg-workspace/30">
@@ -1008,7 +982,7 @@
           }
         </div>
       </div>
-    </aside>
+    </app-drawer>
   }
 </ng-template>
 

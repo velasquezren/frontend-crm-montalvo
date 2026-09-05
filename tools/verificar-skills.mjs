@@ -97,16 +97,47 @@ function verificarSelectores(skill, texto) {
 }
 
 // ── 3. Inputs y outputs de la tabla de inventario ─────────────────────────────
-/** Mapa selector → API pública declarada en el componente. */
+/**
+ * Mapa selector → API pública declarada en el componente.
+ *
+ * Un slot de proyección (`<ng-content select="[cabecera]">`) es API igual que un
+ * `input()`: la vista de fuera tiene que saber que existe y cómo se llama, y si
+ * se renombra, las plantillas que lo usan dejan de proyectar **en silencio** —
+ * el contenido se cae al slot por defecto y aparece en otro sitio, sin error de
+ * compilación. Por eso cuenta para las dos direcciones del chequeo.
+ */
 function apiDelComponente(selector) {
   const archivo = ARCHIVOS.filter(a => a.endsWith('.component.ts')).find(a =>
     readFileSync(a, 'utf8').includes(`selector: '${selector}'`),
   );
   if (!archivo) return null;
   const fuente = readFileSync(archivo, 'utf8');
-  return new Set(
-    [...fuente.matchAll(/readonly\s+(\w+)\s*=\s*(?:input|output|model)\b/g)].map(m => m[1]),
-  );
+  return new Set([
+    ...[...fuente.matchAll(/readonly\s+(\w+)\s*=\s*(?:input|output|model)\b/g)].map(m => m[1]),
+    ...[...fuente.matchAll(/<ng-content\s+select="\[([\w-]+)\]"/g)].map(m => m[1]),
+  ]);
+}
+
+/**
+ * Las filas del inventario, y **solo** esas.
+ *
+ * Antes bastaba con que una fila de tabla nombrara un `<app-algo>` para que se
+ * leyera como inventario. La tabla de animaciones cita `<app-drawer>` en su
+ * descripción ("la pone `<app-drawer>`, no la escribas a mano"), y esa fila
+ * entraba al chequeo con la columna de API vacía: el validador concluía que el
+ * átomo no documentaba ninguno de sus seis miembros. El inventario tiene una
+ * forma fija —`| Nombre | <selector> | API |`— y exigirla quita el falso
+ * positivo sin perder nada.
+ */
+function filasDeInventario(texto) {
+  const filas = [];
+  for (const fila of texto.split('\n')) {
+    if (!fila.startsWith('|')) continue;
+    const columnas = fila.split('|');
+    const selector = columnas[2]?.trim().replace(/^`|`$/g, '').match(/^<(app-[a-z-]+)>$/)?.[1];
+    if (selector) filas.push({ selector, columnaApi: columnas.slice(3).join('|') });
+  }
+  return filas;
 }
 
 /**
@@ -122,9 +153,9 @@ function apiDelComponente(selector) {
  * sin fila, junto a otros tres que llevaban más tiempo sin documentar.
  */
 function verificarInventarioCompleto(skill, texto) {
-  const documentados = new Set(
-    [...texto.matchAll(/<(app-[a-z-]+)>/g)].map(m => m[1]),
-  );
+  /* Citarlo de pasada en la prosa no es documentarlo: lo que se lee para decidir
+     si un átomo ya existe es la tabla, así que solo cuenta tener fila propia. */
+  const documentados = new Set(filasDeInventario(texto).map(f => f.selector));
 
   for (const archivo of ARCHIVOS) {
     if (!archivo.includes('/shared/components/')) continue;
@@ -140,14 +171,10 @@ function verificarInventarioCompleto(skill, texto) {
 }
 
 function verificarInventario(skill, texto) {
-  for (const fila of texto.split('\n')) {
-    const selector = fila.match(/<(app-[a-z-]+)>/)?.[1];
-    if (!selector || !fila.startsWith('|')) continue;
-
+  for (const { selector, columnaApi } of filasDeInventario(texto)) {
     const api = apiDelComponente(selector);
     if (!api) continue; // el chequeo de selectores ya lo reportó
 
-    const columnaApi = fila.split('|').slice(3).join('|');
     const miembros = entrecomillado(columnaApi)
       .map(t => t.replace(/^\[?\(?|\)?\]?$/g, '')) // (clicked) y [(value)] → clicked, value
       .filter(t => /^[a-zA-Z]\w*$/.test(t));
@@ -341,6 +368,49 @@ function verificarCodigo() {
   for (const rel of Object.keys(DEUDA)) {
     if (!existsSync(resolve(base, rel))) {
       señalaCodigo(`DEUDA menciona ${rel}, que ya no existe — bórrala.`);
+    }
+  }
+}
+
+// ── 8. El cajón lateral se usa, no se reescribe ──────────────────────────────
+// La conversión de modales a cajones (2026-09-05) dejó diez `<aside … 
+// animate-drawer-in>` en seis plantillas con cinco anchos distintos, seis copias
+// de la misma cabecera y nueve del mismo `panelClass`. Nada falló: compilaba,
+// los tipos pasaban y se veía bien. Lo que se rompió fue lo invisible — ningún
+// cajón atrapaba el foco pese a declarar `aria-modal="true"`, y solo dos de las
+// once páginas cerraban con Escape.
+//
+// Es el fallo típico de este proyecto: no explota, se dispersa. Por eso la regla
+// no pide "reutiliza el átomo" en un documento, sino que hace imposible lo otro:
+// la animación del cajón y el panel del overlay tienen UN dueño cada uno, y
+// cualquier otro archivo que los escriba tumba el build.
+function verificarCajonUnico() {
+  const base = resolve(RAIZ, 'src', 'app');
+  const señala_ = mensaje => problemas.push({ skill: 'crm-design-system', mensaje });
+
+  /** clave → { patron, dueño, arreglo } */
+  const EXCLUSIVOS = {
+    'animate-drawer-in': {
+      patron: /animate-drawer-in/,
+      dueño: 'shared/components/drawer/',
+      arreglo:
+        'usa <app-drawer> (ancho sm/md/lg/xl/ancho) en vez de escribir el <aside> del cajón a mano',
+    },
+    'panel del overlay del cajón': {
+      patron: /'justify-end'/,
+      dueño: 'shared/components/dialog/',
+      arreglo: 'ábrelo con DialogService.abrirCajon(), que ya trae ese panelClass',
+    },
+  };
+
+  for (const ruta of indexar(base)) {
+    const rel = relative(base, ruta);
+    if (!/\.(ts|html|css)$/.test(ruta)) continue;
+    const codigo = readFileSync(ruta, 'utf8');
+
+    for (const [que, { patron, dueño, arreglo }] of Object.entries(EXCLUSIVOS)) {
+      if (rel.startsWith(dueño) || !patron.test(codigo)) continue;
+      señala_(`${rel}: escribe \`${que}\` a mano, y eso solo vive en ${dueño} — ${arreglo}.`);
     }
   }
 }
@@ -551,6 +621,7 @@ for (const nombre of readdirSync(SKILLS)) {
 
 /* Globales, no por skill: miran el código, no la documentación. */
 verificarCodigo();
+verificarCajonUnico();
 verificarCssEncapsulado();
 verificarRendimiento();
 

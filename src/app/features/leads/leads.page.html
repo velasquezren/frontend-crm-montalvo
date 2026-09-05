@@ -492,141 +492,112 @@
      Estética unificada con Ventas, Clientes y Servicios (max-w-xl)
      ═════════════════════════════════════════════════════════════════════════════ -->
 <ng-template #modalCrearLeadTemplate>
-  <aside
-    class="h-full w-full sm:w-[500px] lg:w-[560px] bg-white shadow-lifted border-l border-border flex flex-col pointer-events-auto animate-drawer-in"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="titulo-crear-lead">
+  <app-drawer
+    ancho="sm"
+    icono="user-plus"
+    titulo="Registrar Nuevo Lead (Presencial / Entrada)"
+    subtitulo="Alta rápida de prospecto en recepción o por llamada comercial"
+    (cerrar)="cerrarCrearLead()">
 
-    <!-- Header -->
-    <div class="flex items-center justify-between px-6 py-4.5 border-b border-border bg-white shrink-0">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-          <app-icon name="user-plus" [size]="18" />
-        </div>
-        <div>
-          <h2 id="titulo-crear-lead" class="text-sm font-bold text-text-dark tracking-tight leading-tight">
-            Registrar Nuevo Lead (Presencial / Entrada)
-          </h2>
-          <p class="text-xs text-text-muted leading-tight mt-0.5">
-            Alta rápida de prospecto en recepción o por llamada comercial
-          </p>
-        </div>
-      </div>
-      <button
-        type="button"
-        (click)="cerrarCrearLead()"
-        class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
-        aria-label="Cerrar modal">
-        <app-icon name="x" [size]="18" />
-      </button>
-    </div>
+    <form (submit)="guardarNuevoLead($event)" class="flex-1 min-h-0 flex flex-col">
+      <div class="p-6 overflow-y-auto space-y-4.5 flex-1">
+        @if (errorCrearLead()) {
+          <div class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
+            <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
+            <span>{{ errorCrearLead() }}</span>
+          </div>
+        }
 
-    <!-- Form Body -->
-    <form (submit)="guardarNuevoLead($event)" class="p-6 overflow-y-auto space-y-4.5 flex-1">
-      @if (errorCrearLead()) {
-        <div class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
-          <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
-          <span>{{ errorCrearLead() }}</span>
+        <!-- 1. Datos de Contacto -->
+        <div class="space-y-3">
+          <span class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">
+            1. Datos del Prospecto
+          </span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <app-input
+              label="Nombre completo *"
+              placeholder="Ej. Valeria Mendoza"
+              [(value)]="nuevoLeadNombre" />
+            <app-input
+              label="Teléfono / WhatsApp *"
+              type="tel"
+              placeholder="Ej. +59178000000 o 78000000"
+              [(value)]="nuevoLeadTelefono" />
+          </div>
         </div>
-      }
 
-      <!-- 1. Datos de Contacto -->
-      <div class="space-y-3">
-        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">
-          1. Datos del Prospecto
-        </span>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <!-- 2. Interés o Servicio buscado -->
+        <div class="space-y-2 pt-2 border-t border-border/60">
+          <span class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">
+            2. Interés o Especialidad Consultada (Opcional)
+          </span>
           <app-input
-            label="Nombre completo *"
-            placeholder="Ej. Valeria Mendoza"
-            [(value)]="nuevoLeadNombre" />
-          <app-input
-            label="Teléfono / WhatsApp *"
-            type="tel"
-            placeholder="Ej. +59178000000 o 78000000"
-            [(value)]="nuevoLeadTelefono" />
+            placeholder="Ej. Parto Humanizado, Ecografía 5D, etc."
+            [(value)]="nuevoLeadInteres" />
+
+          <!-- Chips de sugerencias rápidas -->
+          <div class="flex flex-wrap gap-1.5 pt-1">
+            @for (sug of interesesSugeridos; track sug) {
+              <button
+                type="button"
+                (click)="elegirInteresSugerido(sug)"
+                class="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-bg-light hover:bg-primary/10 hover:text-primary text-text-dark border border-border transition-colors cursor-pointer"
+                [class.border-primary]="nuevoLeadInteres() === sug"
+                [class.text-primary]="nuevoLeadInteres() === sug"
+                [class.bg-primary/10]="nuevoLeadInteres() === sug">
+                + {{ sug }}
+              </button>
+            }
+          </div>
         </div>
-      </div>
 
-      <!-- 2. Interés o Servicio buscado -->
-      <div class="space-y-2 pt-2 border-t border-border/60">
-        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">
-          2. Interés o Especialidad Consultada (Opcional)
-        </span>
-        <app-input
-          placeholder="Ej. Parto Humanizado, Ecografía 5D, etc."
-          [(value)]="nuevoLeadInteres" />
-
-        <!-- Chips de sugerencias rápidas -->
-        <div class="flex flex-wrap gap-1.5 pt-1">
-          @for (sug of interesesSugeridos; track sug) {
-            <button
-              type="button"
-              (click)="elegirInteresSugerido(sug)"
-              class="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-bg-light hover:bg-primary/10 hover:text-primary text-text-dark border border-border transition-colors cursor-pointer"
-              [class.border-primary]="nuevoLeadInteres() === sug"
-              [class.text-primary]="nuevoLeadInteres() === sug"
-              [class.bg-primary/10]="nuevoLeadInteres() === sug">
-              + {{ sug }}
-            </button>
-          }
+        <!-- Nota de canal y asignación -->
+        <div class="flex items-center gap-2.5 p-3 rounded-xl bg-bg-light/70 border border-border/60 text-xs text-text-muted">
+          <app-icon name="shield" [size]="15" class="text-primary shrink-0" />
+          <span>El prospecto ingresará en etapa <strong>Nuevo</strong> asignado a tu usuario comercial activo con canal Presencial.</span>
         </div>
-      </div>
 
-      <!-- Nota de canal y asignación -->
-      <div class="flex items-center gap-2.5 p-3 rounded-xl bg-bg-light/70 border border-border/60 text-xs text-text-muted">
-        <app-icon name="shield" [size]="15" class="text-primary shrink-0" />
-        <span>El prospecto ingresará en etapa <strong>Nuevo</strong> asignado a tu usuario comercial activo con canal Presencial.</span>
       </div>
 
       <!-- Footer botones -->
-      <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
+      <div class="flex items-center justify-end gap-2.5 px-6 py-3.5 bg-bg-workspace border-t border-border shrink-0">
         <app-button variant="ghost" size="sm" (clicked)="cerrarCrearLead()">Cancelar</app-button>
         <app-button type="submit" size="sm" [loading]="guardandoLead()">
           {{ guardandoLead() ? 'Guardando…' : 'Registrar Lead' }}
         </app-button>
       </div>
     </form>
-  </aside>
+  </app-drawer>
 </ng-template>
 
 <!-- ═════════════════════════════════════════════════════════════════════════════
      MODAL / DIÁLOGO DE DETALLE DEL LEAD (Espacioso, Enterprise, 360°)
      ═════════════════════════════════════════════════════════════════════════════ -->
 <ng-template #modalFichaLead>
-  <aside
-    class="h-full w-full sm:w-[500px] lg:w-[580px] bg-white shadow-lifted border-l border-border flex flex-col pointer-events-auto animate-drawer-in"
-    role="dialog"
-    aria-label="Detalle del lead">
-    @if (leadSeleccionado(); as l) {
-      <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-4.5 border-b border-border bg-white shrink-0">
-        <div class="flex items-center gap-3.5 min-w-0">
-          <app-avatar [initials]="iniciales(l.cliente.nombre)" size="lg" />
-          <div class="min-w-0">
-            <div class="flex items-center gap-2 flex-wrap">
-              <h3 class="text-base font-bold text-text-dark leading-tight truncate">{{ l.cliente.nombre }}</h3>
-              @if (l.cliente.pac) {
-                <span class="text-[10px] font-mono font-bold text-primary bg-primary/10 px-2 py-0.2 rounded-full border border-primary/20">
-                  {{ l.cliente.pac }}
-                </span>
-              }
-              <span class="text-[10px] font-semibold text-text-muted bg-bg-light px-2 py-0.2 rounded-full border border-border">
-                {{ origenLabel[l.origen] }}
+  @if (leadSeleccionado(); as l) {
+    <app-drawer
+      ancho="md"
+      etiqueta="Detalle del lead"
+      (cerrar)="cerrarFichaLead()">
+
+      <div cabecera class="flex items-center gap-3.5 min-w-0">
+        <app-avatar [initials]="iniciales(l.cliente.nombre)" size="lg" />
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h3 class="text-base font-bold text-text-dark leading-tight truncate">{{ l.cliente.nombre }}</h3>
+            @if (l.cliente.pac) {
+              <span class="text-[10px] font-mono font-bold text-primary bg-primary/10 px-2 py-0.2 rounded-full border border-primary/20">
+                {{ l.cliente.pac }}
               </span>
-            </div>
-            <p class="text-xs text-text-muted font-mono mt-0.5">{{ l.cliente.telefono }}</p>
+            }
+            <span class="text-[10px] font-semibold text-text-muted bg-bg-light px-2 py-0.2 rounded-full border border-border">
+              {{ origenLabel[l.origen] }}
+            </span>
           </div>
+          <p class="text-xs text-text-muted font-mono mt-0.5">{{ l.cliente.telefono }}</p>
         </div>
-        <button
-          type="button"
-          (click)="cerrarFichaLead()"
-          class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
-          aria-label="Cerrar">
-          <app-icon name="x" [size]="18" />
-        </button>
       </div>
+
 
       <!-- Contenido espacioso y estructurado -->
       <div class="p-6 overflow-y-auto space-y-5 flex-1">
@@ -744,8 +715,8 @@
           Cerrar
         </app-button>
       </div>
-    }
-  </aside>
+    </app-drawer>
+  }
 </ng-template>
 
 <!-- ═════════════════════════════════════════════════════════════════════════════

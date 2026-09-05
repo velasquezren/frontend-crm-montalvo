@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, effect, HostListener, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 
 import { listaExtra, textoExtra, textoExtraOpcional } from '../../core/api/datos-extra';
@@ -35,6 +35,7 @@ import { ClientesService, OrdenCliente } from './clientes.service';
 import { ConversacionesService } from '../conversaciones/conversaciones.service';
 import { AgenteResumen } from '../conversaciones/conversacion.model';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
+import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { OverlayRef } from '@angular/cdk/overlay';
 import { TemplateRef, ViewContainerRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -57,6 +58,7 @@ type PestanaModal = 'EXPEDIENTE' | 'CONTACTO' | 'NOTAS';
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,
+    DrawerComponent,
     IconComponent,
     KpiCardComponent,
     EmptyStateComponent,
@@ -207,14 +209,6 @@ export class ClientesPage {
     return [...new Set([...directIntereses, ...tagsExtra])];
   }
 
-  /** Cerrar con Escape: comportamiento esperado en cualquier modal. */
-  @HostListener('document:keydown.escape')
-  protected onEscape(): void {
-    if (this.modalEditarAbierto()) {
-      this.cerrarEdicion();
-    }
-  }
-
   protected abrirCreacion(template: TemplateRef<unknown>): void {
     this.esCreacion.set(true);
     this.pestanaModal.set('CONTACTO');
@@ -234,8 +228,7 @@ export class ClientesPage {
     this.modalEditarAbierto.set(true);
     if (template) {
       this.activeOverlayRef?.dispose();
-      this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
-        panelClass: ['fixed', 'inset-0', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'],
+      this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
         onClose: () => this.cerrarEdicion(),
       });
     }
@@ -267,8 +260,7 @@ export class ClientesPage {
     this.modalEditarAbierto.set(true);
     if (template) {
       this.activeOverlayRef?.dispose();
-      this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
-        panelClass: ['fixed', 'inset-0', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'],
+      this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
         onClose: () => this.cerrarEdicion(),
       });
     }

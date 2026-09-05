@@ -555,15 +555,12 @@ export class ServiciosPage {
     if (!plantilla) return anterior;
     anterior?.dispose();
 
-    const ref = this.dialogService.openTemplate(plantilla, this.vcr, {
-      /* `justify-end` lo pega al borde derecho; `pointer-events-none` deja que
-         el clic atraviese hasta el backdrop, y el <aside> lo reactiva. */
-      panelClass: ['fixed', 'inset-0', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'],
-    });
-    /* `openTemplate` ya destruye el overlay al tocar el fondo; esto además
-       limpia la señal, que es lo que decide si el cajón debe existir. */
-    ref.backdropClick().subscribe(() => alCerrar());
-    return ref;
+    /* `onClose` corre tanto al tocar el fondo como al pulsar Escape, y es lo que
+       limpia la señal que decide si el cajón debe existir. Antes iba suelto en
+       un `backdropClick()`, así que cuando el servicio empezó a cerrar también
+       con Escape, esa salida habría dejado la señal puesta y el cajón imposible
+       de reabrir hasta cambiar de fila. */
+    return this.dialogService.abrirCajon(plantilla, this.vcr, { onClose: alCerrar });
   }
 
   protected ordenarPacientes(e: { orden: string; direccion: DireccionOrden }): void {

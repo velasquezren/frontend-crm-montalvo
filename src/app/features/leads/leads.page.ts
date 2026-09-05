@@ -29,6 +29,7 @@ import { AvatarComponent } from '../../shared/components/avatar/avatar.component
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
+import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
@@ -61,6 +62,7 @@ type FiltroOrigen = OrigenLeadApi | 'TODOS';
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,
+    DrawerComponent,
     EmptyStateComponent,
     InputComponent,
     LoadingSkeletonComponent,
@@ -231,8 +233,7 @@ export class LeadsPage implements OnDestroy {
   protected abrirFichaLead(lead: Lead, template: TemplateRef<unknown>): void {
     this.leadSeleccionado.set(lead);
     this.activeOverlayRef?.dispose();
-    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
-      panelClass: ['fixed', 'inset-0', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'],
+    this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
       onClose: () => this.leadSeleccionado.set(null),
     });
   }
@@ -249,8 +250,7 @@ export class LeadsPage implements OnDestroy {
     this.nuevoLeadInteres.set('');
     this.errorCrearLead.set(null);
     this.activeOverlayRef?.dispose();
-    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
-      panelClass: ['fixed', 'inset-0', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'],
+    this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
       onClose: () => this.cerrarCrearLead(),
     });
   }

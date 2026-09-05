@@ -129,8 +129,30 @@ Referencia del 2026-08-26: **441.96 kB brutos / 115.72 kB transferidos** — sei
 días más de trabajo con el bundle inicial plano. La deriva no es monótona: lo
 que se agrega dentro de una ruta *lazy* no toca esta cifra.
 
+Referencia del 2026-09-05: **424.37 kB brutos / 108.56 kB transferidos**.
+
 Para un cambio que afecta a una vista concreta, compara además el tamaño de su
-*lazy chunk* en la misma tabla.
+*lazy chunk* en la misma tabla. **Esa cifra puede importar más que el total
+inicial**, y el caso que lo demuestra es Actividades:
+
+| | Bruto | Transferido |
+|---|---|---|
+| `actividades-page` antes (2026-09-05) | 324.07 kB | **74.91 kB** |
+| `actividades-page` después | 59.69 kB | **12.21 kB** |
+| `actividades-calendario-component` (bajo demanda) | 265.01 kB | 63.22 kB |
+
+Schedule-X y `temporal-polyfill` estaban importados en `actividades.page.ts`, así
+que la librería del calendario viajaba en el chunk de la ruta — la agente la
+pagaba al abrir Actividades **aunque la vista por defecto sea Lista**. Extraer el
+calendario a su propio componente y cargarlo con `@defer (when vista() ===
+'CALENDARIO')` dejó la entrada en 12.21 kB: **−84 %**, sin tocar el bundle
+inicial (que ni se enteró, y por eso mirar solo el *Initial total* lo habría dado
+por invisible).
+
+La regla que sale de ahí: **una librería pesada detrás de una pestaña que no es la
+por defecto va en un componente aparte con `@defer`**. Importarla en el `.ts` de la
+página la mete en el chunk de la ruta aunque su plantilla esté dentro de un `@if`
+— el `@if` decide qué se pinta, no qué se descarga.
 
 ### Backend: `curl -w`, no impresiones
 

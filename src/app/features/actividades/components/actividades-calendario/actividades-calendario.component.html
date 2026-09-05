@@ -1,0 +1,10 @@
+<!-- Leyenda de colores del calendario -->
+<div class="flex flex-wrap items-center gap-4 mb-3 px-1" aria-hidden="true">
+  <span class="crm-leyenda-item"><span class="crm-leyenda-punto crm-leyenda-punto--primaria"></span>A tiempo</span>
+  <span class="crm-leyenda-item"><span class="crm-leyenda-punto crm-leyenda-punto--critica"></span>Vencida</span>
+  <span class="crm-leyenda-item"><span class="crm-leyenda-punto crm-leyenda-punto--secundaria"></span>Completada</span>
+  <span class="crm-leyenda-item"><span class="crm-leyenda-punto crm-leyenda-punto--neutral"></span>Cancelada</span>
+</div>
+<div class="crm-calendario-wrapper">
+  <sx-calendar [calendarApp]="calendarApp" />
+</div>

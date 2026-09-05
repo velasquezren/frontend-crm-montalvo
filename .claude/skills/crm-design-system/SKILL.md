@@ -81,10 +81,35 @@ Clases utilitarias definidas en `styles.css` — úsalas en vez de escribir `@ke
 | `animate-modal-pop` | Apertura de modales y popovers |
 | `animate-fade-scale` | Aparición suave de paneles |
 | `animate-toast-slide` | Entrada del toast |
-| `animate-drawer-in` | Entrada de un cajón lateral (historial, perfil del médico) |
+| `animate-drawer-in` | Entrada de un cajón lateral — **la pone `<app-drawer>`, no la escribas a mano** |
 
 Un cajón entra **desde su borde**, no desde el centro: `animate-fade-scale` lo hacía
 brotar del medio de la pantalla, que no dice de dónde viene ni hacia dónde se cierra.
+
+### El cajón lateral es un átomo, no un patrón que se copia
+
+Todo panel que entra por la derecha —formulario, ficha, detalle— es `<app-drawer>`
+abierto con `DialogService.abrirCajon()`. **Ninguna vista escribe su propio `<aside>`
+de cajón ni el `panelClass` del overlay**, y `check:skills` lo rechaza.
+
+La regla nació de un caso concreto: la conversión de modales a cajones
+(2026-09-05) dejó diez `<aside class="h-full w-full sm:w-[…] … animate-drawer-in">`
+en seis plantillas, con **cinco anchos distintos** inventados al copiar, seis copias
+de la misma cabecera y nueve del mismo `panelClass`. Ninguna traía trampa de foco
+pese a declarar `aria-modal="true"`, y solo dos páginas cerraban con Escape —las dos
+que se habían escrito su propio `@HostListener`—. Es el modo típico de fallo aquí:
+no se rompe nada visible, se rompe la consistencia y la accesibilidad en silencio.
+
+| Necesitas | Usa |
+|---|---|
+| Cabecera normal (icono + título + subtítulo) | `titulo` / `subtitulo` / `icono` |
+| Cabecera propia (avatar, badges, degradado) | slot `[cabecera]` + `etiqueta` para el nombre accesible |
+| Una barra de pestañas bajo el título | slot `[subcabecera]` |
+| Un pie de acciones fijo | un hijo con `shrink-0` al final; si hay `<form>`, que el form sea la columna (`flex-1 min-h-0 flex flex-col`) y el pie su último hijo |
+
+Los cuatro anchos (`sm` 500/540 · `md` 520/580 · `lg` 560/640 · `xl` 600/720) son la
+escala completa. Si uno nuevo no cabe en ella, la pregunta es por qué esa vista es
+distinta, no qué número poner.
 
 Curvas: `--ease-spring-smooth`, `--ease-spring-bounce`, `--ease-press`. Para hover y transiciones
 simples, `transition-all duration-200`.
@@ -98,10 +123,11 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 
 | Componente | Selector | API |
 |---|---|---|
-| Button | `<app-button>` | `variant` (primary/secondary/ghost), `size`, `type`, `icon`, `loading`, `disabled`, `fullWidth`, `circle` · `(clicked)` |
+| Button | `<app-button>` | `variant` (primary/secondary/ghost), `size`, `type`, `icon`, `loading`, `disabled`, `fullWidth`, `circle`, **`ariaLabel`** (obligatorio en los solo-ícono: sin texto proyectado el lector de pantalla solo dice "botón") · `(clicked)` |
 | Input | `<app-input>` | `label`, `type` (incl. password con toggle), `placeholder`, `autocomplete`, `error`, `disabled`, `multiline` (renderiza `<textarea>` en vez de `<input>`, mismo wrapper/label/error), `rows` (solo con `multiline`) · `[(value)]` |
 | Badge | `<app-badge>` | `variant` (success/info/neutral/critical), `icon` |
 | Card | `<app-card>` | `padding` (sm/md/lg), `hoverable` |
+| Drawer | `<app-drawer>` | `ancho` (sm/md/lg/xl), `titulo`, `subtitulo`, `icono`, `etiqueta` · `(cerrar)` · slots `[cabecera]` (fila del título) y `[subcabecera]` (bloque a todo el ancho) — **el único cajón lateral**; se abre con `DialogService.abrirCajon()` |
 | KpiCard | `<app-kpi-card>` | `label`, `valor` (requeridos; número → lo formatea el átomo), `icon`, `tono` (primary/secondary/neutral/critical), `tonoValor`, `destacado`, `compacto`, `pie`, `pieIcono` + contenido proyectado |
 | Avatar | `<app-avatar>` | `initials` (requerido), `size`, `variant` (light/solid), `imageUrl`, `nombre` |
 | Icon | `<app-icon>` | `name` (catálogo cerrado), `size`, `strokeWidth` |

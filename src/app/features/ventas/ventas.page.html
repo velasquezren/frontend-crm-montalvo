@@ -507,292 +507,253 @@
 
   <!-- ── Modal Template: Registro de Venta (CDK Overlay) ─────────── -->
   <ng-template #modalVentaTemplate>
-    <aside
-      class="h-full w-full sm:w-[520px] lg:w-[580px] bg-white shadow-lifted border-l border-border flex flex-col pointer-events-auto animate-drawer-in"
-      role="dialog"
-      aria-label="Registrar Cierre de Venta">
-      
-      <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-4.5 border-b border-border bg-white shrink-0">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-            <app-icon name="shopping-bag" [size]="18" />
-          </div>
-          <div>
-            <h2 class="text-sm font-bold text-text-dark tracking-tight leading-tight">Registrar Cierre de Venta</h2>
-            <p class="text-xs text-text-muted leading-tight mt-0.5">Ingresa los datos del servicio y comprobante acordado</p>
-          </div>
-        </div>
-        <button
-          type="button"
-          (click)="cerrarFormulario()"
-          class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
-          aria-label="Cerrar modal">
-          <app-icon name="x" [size]="18" />
-        </button>
-      </div>
+    <app-drawer
+      icono="shopping-bag"
+      titulo="Registrar Cierre de Venta"
+      subtitulo="Ingresa los datos del servicio y comprobante acordado"
+      (cerrar)="cerrarFormulario()">
 
-      <!-- Form Body -->
-      <form (submit)="guardar($event)" class="p-6 overflow-y-auto space-y-4.5 flex-1">
-        @if (errorForm()) {
-          <div class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
-            <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
-            <span>{{ errorForm() }}</span>
-          </div>
-        }
-
-        <!-- 1. Selección de cliente -->
-        <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Paciente / Cliente *</label>
-          @if (clienteElegido(); as elegido) {
-            <div class="flex items-center justify-between gap-3 bg-bg-light/70 rounded-xl px-3.5 py-2.5 border border-border">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <app-avatar [initials]="iniciales(elegido.nombre)" size="sm" />
-                <div class="min-w-0">
-                  <div class="flex items-center gap-1.5">
-                    <p class="text-xs font-semibold text-text-dark truncate">{{ elegido.nombre }}</p>
-                    @if (elegido.pac) {
-                      <span class="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded bg-primary/10 text-primary">
-                        {{ elegido.pac }}
-                      </span>
-                    }
-                  </div>
-                  <p class="text-[11px] text-text-muted font-mono leading-tight mt-0.5">{{ elegido.telefono }}</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                (click)="limpiarCliente()"
-                class="text-text-muted hover:text-critical p-1 rounded-lg hover:bg-white transition-colors cursor-pointer shrink-0"
-                title="Cambiar paciente">
-                <app-icon name="x" [size]="16" />
-              </button>
+      <form (submit)="guardar($event)" class="flex-1 min-h-0 flex flex-col">
+        <div class="p-6 overflow-y-auto space-y-4.5 flex-1">
+          @if (errorForm()) {
+            <div class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
+              <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
+              <span>{{ errorForm() }}</span>
             </div>
-          } @else {
-            <app-input
-              type="search"
-              placeholder="Buscar por nombre, teléfono, CI o PAC…"
-              [(value)]="busquedaCliente" />
-            @if (resultadosCliente.value().length > 0) {
-              <div class="border border-border rounded-xl divide-y divide-border max-h-48 overflow-y-auto shadow-subtle bg-white mt-1">
-                @for (cliente of resultadosCliente.value(); track cliente.id) {
+          }
+
+          <!-- 1. Selección de cliente -->
+          <div class="space-y-1.5">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Paciente / Cliente *</label>
+            @if (clienteElegido(); as elegido) {
+              <div class="flex items-center justify-between gap-3 bg-bg-light/70 rounded-xl px-3.5 py-2.5 border border-border">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <app-avatar [initials]="iniciales(elegido.nombre)" size="sm" />
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                      <p class="text-xs font-semibold text-text-dark truncate">{{ elegido.nombre }}</p>
+                      @if (elegido.pac) {
+                        <span class="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded bg-primary/10 text-primary">
+                          {{ elegido.pac }}
+                        </span>
+                      }
+                    </div>
+                    <p class="text-[11px] text-text-muted font-mono leading-tight mt-0.5">{{ elegido.telefono }}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  (click)="limpiarCliente()"
+                  class="text-text-muted hover:text-critical p-1 rounded-lg hover:bg-white transition-colors cursor-pointer shrink-0"
+                  title="Cambiar paciente">
+                  <app-icon name="x" [size]="16" />
+                </button>
+              </div>
+            } @else {
+              <app-input
+                type="search"
+                placeholder="Buscar por nombre, teléfono, CI o PAC…"
+                [(value)]="busquedaCliente" />
+              @if (resultadosCliente.value().length > 0) {
+                <div class="border border-border rounded-xl divide-y divide-border max-h-48 overflow-y-auto shadow-subtle bg-white mt-1">
+                  @for (cliente of resultadosCliente.value(); track cliente.id) {
+                    <button
+                      type="button"
+                      (click)="elegirCliente(cliente)"
+                      class="w-full flex items-center justify-between gap-3 px-3.5 py-2 text-left cursor-pointer hover:bg-bg-light transition-colors">
+                      <div class="flex items-center gap-2.5 min-w-0">
+                        <app-avatar [initials]="iniciales(cliente.nombre)" size="sm" />
+                        <div class="min-w-0">
+                          <p class="text-xs font-medium text-text-dark truncate">{{ cliente.nombre }}</p>
+                          <p class="text-[10px] text-text-muted font-mono leading-tight">{{ cliente.telefono }}</p>
+                        </div>
+                      </div>
+                      @if (cliente.pac) {
+                        <span class="text-[9px] font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">
+                          {{ cliente.pac }}
+                        </span>
+                      }
+                    </button>
+                  }
+                </div>
+              }
+            }
+          </div>
+
+          <!-- 1.5 Lead de origen (opcional) — de qué campaña/canal vino esta venta -->
+          @if (leadsAbiertosDelCliente().length > 0) {
+            <div class="space-y-1.5">
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                Lead de origen (opcional)
+              </label>
+              <div class="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  (click)="leadIdSeleccionado.set(null)"
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer"
+                  [class.bg-primary]="leadIdSeleccionado() === null"
+                  [class.text-white]="leadIdSeleccionado() === null"
+                  [class.border-primary]="leadIdSeleccionado() === null"
+                  [class.bg-bg-workspace]="leadIdSeleccionado() !== null"
+                  [class.text-text-dark]="leadIdSeleccionado() !== null"
+                  [class.border-border]="leadIdSeleccionado() !== null">
+                  Ninguno
+                </button>
+                @for (lead of leadsAbiertosDelCliente(); track lead.id) {
                   <button
                     type="button"
-                    (click)="elegirCliente(cliente)"
-                    class="w-full flex items-center justify-between gap-3 px-3.5 py-2 text-left cursor-pointer hover:bg-bg-light transition-colors">
-                    <div class="flex items-center gap-2.5 min-w-0">
-                      <app-avatar [initials]="iniciales(cliente.nombre)" size="sm" />
-                      <div class="min-w-0">
-                        <p class="text-xs font-medium text-text-dark truncate">{{ cliente.nombre }}</p>
-                        <p class="text-[10px] text-text-muted font-mono leading-tight">{{ cliente.telefono }}</p>
-                      </div>
-                    </div>
-                    @if (cliente.pac) {
-                      <span class="text-[9px] font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">
-                        {{ cliente.pac }}
-                      </span>
-                    }
+                    (click)="leadIdSeleccionado.set(lead.id)"
+                    class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer"
+                    [class.bg-primary]="leadIdSeleccionado() === lead.id"
+                    [class.text-white]="leadIdSeleccionado() === lead.id"
+                    [class.border-primary]="leadIdSeleccionado() === lead.id"
+                    [class.bg-bg-workspace]="leadIdSeleccionado() !== lead.id"
+                    [class.text-text-dark]="leadIdSeleccionado() !== lead.id"
+                    [class.border-border]="leadIdSeleccionado() !== lead.id">
+                    {{ origenLabel[lead.origen] }}
+                  </button>
+                }
+              </div>
+              <p class="text-[11px] text-text-muted">
+                Vincula la venta a la campaña/canal que trajo a este cliente, en vez de asumir que todos sus leads abiertos se cerraron por igual.
+              </p>
+            </div>
+          }
+
+          <!-- 2. Procedimiento / Tratamiento -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Procedimiento / Servicio *</label>
+              @if (moduloDetectado(); as mod) {
+                <span class="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                  Módulo {{ mod }}
+                </span>
+              }
+            </div>
+            <app-input
+              placeholder="Ej. Rinoplastia, Botox 50U, Plan Parto Gold…"
+              [(value)]="producto" />
+
+            @if (serviciosSugeridos().length > 0) {
+              <div class="flex flex-wrap gap-1.5 pt-1">
+                @for (sug of serviciosSugeridos().slice(0, 8); track sug.nombre) {
+                  <button
+                    type="button"
+                    (click)="seleccionarSugerencia(sug.nombre)"
+                    class="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-bg-light/80 hover:bg-primary/10 hover:text-primary text-text-dark border border-border transition-colors cursor-pointer">
+                    + {{ sug.nombre }}
                   </button>
                 }
               </div>
             }
-          }
-        </div>
+          </div>
 
-        <!-- 1.5 Lead de origen (opcional) — de qué campaña/canal vino esta venta -->
-        @if (leadsAbiertosDelCliente().length > 0) {
+          <!-- 3. Monto y Médico -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div class="space-y-1">
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Monto Acordado (Bs) *</label>
+              <app-input
+                type="text"
+                placeholder="Ej. 4800"
+                [(value)]="monto" />
+            </div>
+            <div class="space-y-1">
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Médico Tratante</label>
+              <app-input
+                placeholder="Ej. Dr. Montalvo"
+                [(value)]="medico" />
+            </div>
+          </div>
+
+          <!-- 4. Método de Pago -->
           <div class="space-y-1.5">
-            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">
-              Lead de origen (opcional)
-            </label>
-            <div class="flex flex-wrap gap-1.5">
-              <button
-                type="button"
-                (click)="leadIdSeleccionado.set(null)"
-                class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer"
-                [class.bg-primary]="leadIdSeleccionado() === null"
-                [class.text-white]="leadIdSeleccionado() === null"
-                [class.border-primary]="leadIdSeleccionado() === null"
-                [class.bg-bg-workspace]="leadIdSeleccionado() !== null"
-                [class.text-text-dark]="leadIdSeleccionado() !== null"
-                [class.border-border]="leadIdSeleccionado() !== null">
-                Ninguno
-              </button>
-              @for (lead of leadsAbiertosDelCliente(); track lead.id) {
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Método de Pago</label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              @for (mp of metodosPago; track mp.id) {
                 <button
                   type="button"
-                  (click)="leadIdSeleccionado.set(lead.id)"
-                  class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer"
-                  [class.bg-primary]="leadIdSeleccionado() === lead.id"
-                  [class.text-white]="leadIdSeleccionado() === lead.id"
-                  [class.border-primary]="leadIdSeleccionado() === lead.id"
-                  [class.bg-bg-workspace]="leadIdSeleccionado() !== lead.id"
-                  [class.text-text-dark]="leadIdSeleccionado() !== lead.id"
-                  [class.border-border]="leadIdSeleccionado() !== lead.id">
-                  {{ origenLabel[lead.origen] }}
+                  (click)="metodoPago.set(mp.id)"
+                  class="flex items-center justify-center gap-1.5 p-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer"
+                  [class.bg-primary]="metodoPago() === mp.id"
+                  [class.text-white]="metodoPago() === mp.id"
+                  [class.border-primary]="metodoPago() === mp.id"
+                  [class.bg-bg-workspace]="metodoPago() !== mp.id"
+                  [class.text-text-dark]="metodoPago() !== mp.id"
+                  [class.border-border]="metodoPago() !== mp.id">
+                  <app-icon [name]="mp.icon" [size]="13" />
+                  <span class="truncate">{{ mp.label }}</span>
                 </button>
               }
             </div>
-            <p class="text-[11px] text-text-muted">
-              Vincula la venta a la campaña/canal que trajo a este cliente, en vez de asumir que todos sus leads abiertos se cerraron por igual.
-            </p>
           </div>
-        }
 
-        <!-- 2. Procedimiento / Tratamiento -->
-        <div class="space-y-1.5">
-          <div class="flex items-center justify-between">
-            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Procedimiento / Servicio *</label>
-            @if (moduloDetectado(); as mod) {
-              <span class="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
-                Módulo {{ mod }}
-              </span>
-            }
-          </div>
-          <app-input
-            placeholder="Ej. Rinoplastia, Botox 50U, Plan Parto Gold…"
-            [(value)]="producto" />
-
-          @if (serviciosSugeridos().length > 0) {
-            <div class="flex flex-wrap gap-1.5 pt-1">
-              @for (sug of serviciosSugeridos().slice(0, 8); track sug.nombre) {
-                <button
-                  type="button"
-                  (click)="seleccionarSugerencia(sug.nombre)"
-                  class="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-bg-light/80 hover:bg-primary/10 hover:text-primary text-text-dark border border-border transition-colors cursor-pointer">
-                  + {{ sug.nombre }}
-                </button>
-              }
-            </div>
-          }
-        </div>
-
-        <!-- 3. Monto y Médico -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <div class="space-y-1">
-            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Monto Acordado (Bs) *</label>
+          <!-- 5. Comprobante / Recibo de Pago -->
+          <div class="space-y-1.5">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Comprobante de Pago (Opcional)</label>
             <app-input
-              type="text"
-              placeholder="Ej. 4800"
-              [(value)]="monto" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Médico Tratante</label>
-            <app-input
-              placeholder="Ej. Dr. Montalvo"
-              [(value)]="medico" />
-          </div>
-        </div>
+              placeholder="Nº Recibo, código QR o ref. transferencia"
+              [(value)]="comprobante" />
 
-        <!-- 4. Método de Pago -->
-        <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Método de Pago</label>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            @for (mp of metodosPago; track mp.id) {
-              <button
-                type="button"
-                (click)="metodoPago.set(mp.id)"
-                class="flex items-center justify-center gap-1.5 p-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer"
-                [class.bg-primary]="metodoPago() === mp.id"
-                [class.text-white]="metodoPago() === mp.id"
-                [class.border-primary]="metodoPago() === mp.id"
-                [class.bg-bg-workspace]="metodoPago() !== mp.id"
-                [class.text-text-dark]="metodoPago() !== mp.id"
-                [class.border-border]="metodoPago() !== mp.id">
-                <app-icon [name]="mp.icon" [size]="13" />
-                <span class="truncate">{{ mp.label }}</span>
-              </button>
-            }
-          </div>
-        </div>
-
-        <!-- 5. Comprobante / Recibo de Pago -->
-        <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Comprobante de Pago (Opcional)</label>
-          <app-input
-            placeholder="Nº Recibo, código QR o ref. transferencia"
-            [(value)]="comprobante" />
-
-          <div class="mt-1.5">
-            @if (comprobanteSubido(); as adj) {
-              <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-success-bg border border-border text-xs text-text-dark">
-                <div class="flex items-center gap-2 min-w-0">
-                  <app-icon name="check-circle" [size]="14" class="text-success shrink-0" />
-                  <span class="truncate font-medium">{{ adj.comprobanteNombre }}</span>
+            <div class="mt-1.5">
+              @if (comprobanteSubido(); as adj) {
+                <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-success-bg border border-border text-xs text-text-dark">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <app-icon name="check-circle" [size]="14" class="text-success shrink-0" />
+                    <span class="truncate font-medium">{{ adj.comprobanteNombre }}</span>
+                  </div>
+                  <button
+                    type="button"
+                    (click)="quitarComprobante()"
+                    class="text-text-muted hover:text-critical p-1 transition-colors cursor-pointer shrink-0"
+                    title="Eliminar archivo">
+                    <app-icon name="trash" [size]="14" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  (click)="quitarComprobante()"
-                  class="text-text-muted hover:text-critical p-1 transition-colors cursor-pointer shrink-0"
-                  title="Eliminar archivo">
-                  <app-icon name="trash" [size]="14" />
-                </button>
-              </div>
-            } @else {
-              <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-dashed border-border bg-bg-workspace hover:bg-bg-light text-xs text-text-muted cursor-pointer transition-colors">
-                <app-icon name="image" [size]="14" class="text-primary" />
-                <span>{{ subiendoComprobante() ? 'Subiendo comprobante…' : 'Adjuntar foto o PDF del comprobante' }}</span>
-                <input
-                  type="file"
-                  accept="image/*,application/pdf"
-                  class="hidden"
-                  [disabled]="subiendoComprobante()"
-                  (change)="onArchivoSeleccionado($event)" />
-              </label>
-            }
+              } @else {
+                <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-dashed border-border bg-bg-workspace hover:bg-bg-light text-xs text-text-muted cursor-pointer transition-colors">
+                  <app-icon name="image" [size]="14" class="text-primary" />
+                  <span>{{ subiendoComprobante() ? 'Subiendo comprobante…' : 'Adjuntar foto o PDF del comprobante' }}</span>
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    class="hidden"
+                    [disabled]="subiendoComprobante()"
+                    (change)="onArchivoSeleccionado($event)" />
+                </label>
+              }
+            </div>
           </div>
-        </div>
 
-        <!-- 6. Notas adicionales -->
-        <div class="space-y-1">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Observaciones / Notas (Opcional)</label>
-          <app-input
-            placeholder="Condiciones del paquete, fecha tentativa, etc."
-            [(value)]="notas" />
+          <!-- 6. Notas adicionales -->
+          <div class="space-y-1">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Observaciones / Notas (Opcional)</label>
+            <app-input
+              placeholder="Condiciones del paquete, fecha tentativa, etc."
+              [(value)]="notas" />
+          </div>
+
         </div>
 
         <!-- Footer botones -->
-        <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
+        <div class="flex items-center justify-end gap-2.5 px-6 py-3.5 bg-bg-workspace border-t border-border shrink-0">
           <app-button variant="ghost" size="sm" (clicked)="cerrarFormulario()">Cancelar</app-button>
           <app-button type="submit" size="sm" [loading]="guardando()">
             {{ guardando() ? 'Guardando…' : 'Confirmar Venta' }}
           </app-button>
         </div>
       </form>
-    </aside>
+    </app-drawer>
   </ng-template>
 
   <!-- ── Cajón Lateral: Detalle 360° de la Venta (CDK Overlay) ───── -->
   <ng-template #drawerDetalleTemplate>
     @if (ventaSeleccionada(); as venta) {
-      <aside
-        class="h-full w-full sm:w-[500px] lg:w-[540px] bg-white shadow-lifted border-l border-border flex flex-col pointer-events-auto animate-drawer-in"
-        role="dialog"
-        aria-label="Detalle de venta">
-
-        <!-- Header -->
-        <header class="flex items-center justify-between px-6 py-4.5 border-b border-border bg-white shrink-0">
-          <div class="flex items-center gap-3 min-w-0">
-            <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-              <app-icon name="shopping-bag" [size]="18" />
-            </div>
-            <div class="min-w-0">
-              <h2 class="text-sm font-bold text-text-dark tracking-tight leading-tight truncate">
-                Detalle de Venta #{{ venta.id.slice(-6).toUpperCase() }}
-              </h2>
-              <p class="text-xs text-text-muted leading-tight mt-0.5">
-                Registrada el {{ venta.createdAt | date:'dd/MM/yyyy HH:mm' }}
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            (click)="cerrarDetalleVenta()"
-            class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
-            aria-label="Cerrar detalle">
-            <app-icon name="x" [size]="18" />
-          </button>
-        </header>
+      <app-drawer
+        ancho="sm"
+        icono="shopping-bag"
+        [titulo]="'Detalle de Venta #' + venta.id.slice(-6).toUpperCase()"
+        [subtitulo]="'Registrada el ' + (venta.createdAt | date: 'dd/MM/yyyy HH:mm')"
+        (cerrar)="cerrarDetalleVenta()">
 
         <!-- Body -->
         <div class="p-6 overflow-y-auto space-y-5 flex-1 bg-bg-workspace/30">
@@ -1015,7 +976,7 @@
 
         </div>
 
-      </aside>
+      </app-drawer>
     }
   </ng-template>
 

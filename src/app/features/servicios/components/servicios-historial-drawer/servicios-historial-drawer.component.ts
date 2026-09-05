@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
-import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { DrawerComponent } from '../../../../shared/components/drawer/drawer.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { KpiCardComponent } from '../../../../shared/components/kpi-card/kpi-card.component';
@@ -16,7 +16,7 @@ import { HistorialPaciente } from '../../servicios.model';
   imports: [
     DatePipe,
     MonedaPipe,
-    ButtonComponent,
+    DrawerComponent,
     EmptyStateComponent,
     IconComponent,
     KpiCardComponent,

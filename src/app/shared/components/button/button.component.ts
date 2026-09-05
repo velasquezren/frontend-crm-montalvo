@@ -18,6 +18,7 @@ export type ButtonSize = 'sm' | 'md';
       [type]="type()"
       [disabled]="disabled() || loading()"
       [class]="classes()"
+      [attr.aria-label]="ariaLabel() || null"
       (click)="clicked.emit($event)">
       @if (loading()) {
         <app-icon name="loader" [size]="iconSize()" />
@@ -38,6 +39,13 @@ export class ButtonComponent {
   readonly fullWidth = input(false, { alias: 'fullWidth' });
   /** true → botón circular solo-ícono (ej. enviar mensaje en el chat) */
   readonly circle = input(false);
+  /**
+   * Nombre accesible. Obligatorio en los botones solo-ícono: sin texto
+   * proyectado, un `<button>` con un `<svg>` dentro se anuncia como "botón" a
+   * secas y el lector de pantalla no dice qué hace. `check:skills` lo exige
+   * cuando hay `icon` y no hay contenido entre las etiquetas.
+   */
+  readonly ariaLabel = input<string>('');
 
   readonly clicked = output<MouseEvent>();
 

@@ -30,6 +30,7 @@ import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.component';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
+import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
@@ -149,6 +150,7 @@ function calcularRangoFechas(
     IconComponent,
     InputComponent,
     ButtonComponent,
+    DrawerComponent,
     FilterChipComponent,
     TableComponent,
     AvatarComponent,
@@ -383,8 +385,7 @@ export class VentasPage implements OnDestroy {
 
   protected abrirFormulario(template: TemplateRef<unknown>): void {
     this.formularioAbierto.set(true);
-    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
-      panelClass: ['fixed', 'inset-0', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'],
+    this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
       onClose: () => this.cerrarFormulario(),
     });
   }
@@ -648,8 +649,7 @@ export class VentasPage implements OnDestroy {
     if (!tpl) return;
     this.ventaSeleccionada.set(venta);
     this.activeDrawerRef?.dispose();
-    this.activeDrawerRef = this.dialogService.openTemplate(tpl, this.vcr, {
-      panelClass: ['fixed', 'inset-0', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'],
+    this.activeDrawerRef = this.dialogService.abrirCajon(tpl, this.vcr, {
       onClose: () => this.cerrarDetalleVenta(),
     });
   }
