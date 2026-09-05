@@ -36,6 +36,7 @@ import { LoadingSkeletonComponent } from '../../shared/components/loading-skelet
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { SelectorPeriodoEmptyComponent } from '../../shared/components/selector-periodo-empty/selector-periodo-empty.component';
+import { SelectComponent } from '../../shared/components/select/select.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 import { usarTipoCambioDePeriodo } from '../../core/moneda/usar-tipo-cambio-de-periodo';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
@@ -136,6 +137,7 @@ function ultimoPrimero(a: VentaImportada, b: VentaImportada): number {
     LoadingSkeletonComponent,
     PageHeaderComponent,
     PaginatorComponent,
+    SelectComponent,
     SelectorPeriodoEmptyComponent,
     TableComponent,
   ],
@@ -957,9 +959,11 @@ export class PlanillaComisionesPage implements OnDestroy {
   }
 
   /** Crea una regla del diccionario para que el servicio se clasifique solo. */
-  protected async crearReglaDesdeServicio(detalle: string, clasif: ClasifComision): Promise<void> {
+  protected async crearReglaDesdeServicio(detalle: string, clasif: string): Promise<void> {
+    if (!clasif) return;
+    const clasifTyped = clasif as ClasifComision;
     try {
-      const regla = await this.service.crearRegla({ patron: detalle, clasif, prioridad: 50 });
+      const regla = await this.service.crearRegla({ patron: detalle, clasif: clasifTyped, prioridad: 50 });
       if (this.periodoActual()?.estado === 'CALCULADO') {
         this.modificacionPendienteRecalculo.set(true);
       }
@@ -968,10 +972,10 @@ export class PlanillaComisionesPage implements OnDestroy {
          reimportar. Recalcular alcanza para que se refleje en la liquidación. */
       const mensaje =
         regla.filasActualizadas > 0
-          ? `"${detalle}" se clasificó como ${this.clasifLabel[clasif]} en ${regla.filasActualizadas} ` +
+          ? `"${detalle}" se clasificó como ${this.clasifLabel[clasifTyped]} en ${regla.filasActualizadas} ` +
             `fila${regla.filasActualizadas === 1 ? '' : 's'} ya importada${regla.filasActualizadas === 1 ? '' : 's'}. ` +
             'Recalcula la planilla para que se refleje en la liquidación.'
-          : `A partir de ahora "${detalle}" se clasificará como ${this.clasifLabel[clasif]}.`;
+          : `A partir de ahora "${detalle}" se clasificará como ${this.clasifLabel[clasifTyped]}.`;
       this.toast.success(mensaje, 'Regla creada');
       await this.cargarConfiguracion();
       // Las filas que se acaban de reclasificar ya no deberían salir en

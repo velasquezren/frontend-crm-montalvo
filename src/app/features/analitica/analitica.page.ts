@@ -15,6 +15,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { SelectComponent } from '../../shared/components/select/select.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import {
@@ -59,6 +60,7 @@ type ColRanking = 'etiqueta' | 'cantidad' | 'montoVendido' | 'pctMonto';
     KpiCardComponent,
     LoadingSkeletonComponent,
     PageHeaderComponent,
+    SelectComponent,
     TableComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

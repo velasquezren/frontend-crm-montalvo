@@ -39,6 +39,7 @@ import { InputComponent } from '../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
+import { SelectComponent } from '../../shared/components/select/select.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 import { ImageViewerComponent } from '../../shared/components/image-viewer/image-viewer.component';
 import { DonutChartComponent } from '../../shared/components/charts/donut-chart.component';
@@ -163,6 +164,7 @@ function calcularRangoFechas(
     ErrorCargaComponent,
     LoadingSkeletonComponent,
     PaginatorComponent,
+    SelectComponent,
     ImageViewerComponent,
     DonutChartComponent,
     BarChartComponent,
@@ -607,24 +609,23 @@ export class VentasPage implements OnDestroy {
     this.pagina.set(1);
   }
 
-  protected cambiarPresetPeriodo(preset: PresetPeriodo): void {
-    this.presetPeriodo.set(preset);
+  protected cambiarPresetPeriodo(preset: string): void {
+    this.presetPeriodo.set(preset as PresetPeriodo);
     this.pagina.set(1);
   }
 
-  protected cambiarAgente(event: Event): void {
-    const val = (event.target as HTMLSelectElement).value;
+  protected cambiarAgente(val: string): void {
     this.agenteSeleccionadoId.set(val);
     this.pagina.set(1);
   }
 
-  protected cambiarMetodoPagoFiltro(metodo: MetodoPagoVenta | 'TODOS'): void {
-    this.metodoPagoFiltro.set(metodo);
+  protected cambiarMetodoPagoFiltro(metodo: string): void {
+    this.metodoPagoFiltro.set(metodo as MetodoPagoVenta | 'TODOS');
     this.pagina.set(1);
   }
 
-  protected cambiarComprobanteFiltro(tipo: 'TODOS' | 'CON_COMPROBANTE' | 'SIN_COMPROBANTE'): void {
-    this.comprobanteFiltro.set(tipo);
+  protected cambiarComprobanteFiltro(tipo: string): void {
+    this.comprobanteFiltro.set(tipo as 'TODOS' | 'CON_COMPROBANTE' | 'SIN_COMPROBANTE');
     this.pagina.set(1);
   }
 

@@ -41,6 +41,8 @@ import { httpResource } from '@angular/common/http';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
 import { ConversacionResumen } from '../../conversacion.model';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
+import { SelectComponent } from '../../../../shared/components/select/select.component';
+import { CategoriaCliente } from '../../../../shared/models/cliente-categoria.model';
 
 type ClienteChat = ConversacionResumen['cliente'];
 
@@ -56,6 +58,7 @@ function soloDigitos(telefono: string): string {
 @Component({
   selector: 'app-conversacion-sidebar',
   imports: [
+    SelectComponent,
     InicialesClientePipe,
     NombreClientePipe,
     AvatarComponent,
@@ -80,6 +83,11 @@ export class ConversacionSidebarComponent {
   protected readonly categoriaBadge = CATEGORIA_BADGE;
   protected readonly categoriaIcon = CATEGORIA_ICON;
   protected readonly iniciales = generarIniciales;
+
+  /** El átomo emite `string`; la señal quiere el enum. Un solo sitio donde cae el cast. */
+  protected cambiarCategoria(valor: string): void {
+    if (valor) this.state.editCategoria.set(valor as CategoriaCliente);
+  }
 
   protected enlaceWhatsApp(telefono: string): string {
     return `https://wa.me/${soloDigitos(telefono)}`;
@@ -131,9 +139,30 @@ export class ConversacionSidebarComponent {
   }
 
   protected copiarTexto(texto: string, label: string): void {
-    navigator.clipboard.writeText(texto).then(() => {
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(texto).then(
+        () => this.toast.success(`${label} copiado al portapapeles.`),
+        () => this.copiarFallback(texto, label),
+      );
+    } else {
+      this.copiarFallback(texto, label);
+    }
+  }
+
+  private copiarFallback(texto: string, label: string): void {
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = texto;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
       this.toast.success(`${label} copiado al portapapeles.`);
-    });
+    } catch {
+      this.toast.error(`No se pudo copiar ${label.toLowerCase()}.`);
+    }
   }
 
   protected tiempoRelativo(fecha: string): string {
@@ -202,7 +231,12 @@ export class ConversacionSidebarComponent {
     this.archivoNombre.set(null);
     this.comprobanteSubido.set(null);
     this.modalVentaAbierto.set(true);
-    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
+      onClose: () => {
+        this.modalVentaAbierto.set(false);
+        this.activeOverlayRef = undefined;
+      },
+    });
   }
 
   protected cerrarModalVenta(): void {
@@ -322,7 +356,12 @@ export class ConversacionSidebarComponent {
     this.errorActividad.set('');
     this.modalActividadAbierto.set(true);
     this.activeOverlayRef?.dispose();
-    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
+      onClose: () => {
+        this.modalActividadAbierto.set(false);
+        this.activeOverlayRef = undefined;
+      },
+    });
   }
 
   protected cerrarModalActividad(): void {

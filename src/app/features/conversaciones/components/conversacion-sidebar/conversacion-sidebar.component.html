@@ -69,15 +69,15 @@
               </div>
               <div>
                 <label class="edit-label">Categoría / Nivel</label>
-                <select
+                <app-select
                   [value]="state.editCategoria()"
-                  (change)="state.editCategoria.set($any($event.target).value)"
-                  class="edit-select">
+                  (valueChange)="cambiarCategoria($event)"
+                  ariaLabel="Categoría del paciente">
                   <option value="GOLD">Gold (VIP)</option>
                   <option value="SILVER">Silver</option>
                   <option value="BRONZE">Bronze</option>
                   <option value="PROSPECTO">Prospecto</option>
-                </select>
+                </app-select>
               </div>
               <div>
                 <label class="edit-label">Correo Electrónico</label>
@@ -507,7 +507,7 @@
         <!-- 1. Procedimiento / Tratamiento -->
         <div class="space-y-1.5">
           <div class="flex items-center justify-between">
-            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Procedimiento / Servicio *</label>
+            <label class="text-sm font-medium text-text-dark">Procedimiento / Servicio *</label>
             @if (moduloDetectado(); as mod) {
               <span class="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
                 Módulo {{ mod }}
@@ -534,29 +534,26 @@
 
         <!-- 2. Monto y Médico -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <div class="space-y-1">
-            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Monto Acordado (Bs) *</label>
-            <app-input
-              type="text"
-              placeholder="Ej. 4500"
-              [(value)]="montoVenta" />
-          </div>
-          <div class="space-y-1">
-            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Médico Tratante</label>
-            <app-input
-              placeholder="Ej. Dr. Montalvo"
-              [(value)]="medicoVenta" />
-          </div>
+          <app-input
+            label="Monto acordado (Bs) *"
+            type="text"
+            placeholder="Ej. 4500"
+            [(value)]="montoVenta" />
+          <app-input
+            label="Médico tratante"
+            placeholder="Ej. Dr. Montalvo"
+            [(value)]="medicoVenta" />
         </div>
 
         <!-- 3. Método de Pago -->
         <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Método de Pago</label>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <span class="text-sm font-medium text-text-dark">Método de pago</span>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" role="group" aria-label="Método de pago">
             @for (mp of metodosPago; track mp.id) {
               <button
                 type="button"
                 (click)="metodoPagoVenta.set(mp.id)"
+                [attr.aria-pressed]="metodoPagoVenta() === mp.id"
                 class="flex items-center justify-center gap-1.5 p-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer"
                 [class.bg-primary]="metodoPagoVenta() === mp.id"
                 [class.text-white]="metodoPagoVenta() === mp.id"
@@ -573,8 +570,8 @@
 
         <!-- 4. Comprobante / Recibo de Pago -->
         <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Comprobante de Pago (Opcional)</label>
           <app-input
+            label="Comprobante de pago (opcional)"
             placeholder="Nº Recibo, código QR o ref. transferencia"
             [(value)]="comprobanteVenta" />
 
@@ -609,12 +606,12 @@
         </div>
 
         <!-- 5. Notas adicionales -->
-        <div class="space-y-1">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Observaciones / Notas (Opcional)</label>
-          <app-input
-            placeholder="Condiciones del paquete, fecha tentativa, etc."
-            [(value)]="notasVenta" />
-        </div>
+        <app-input
+          label="Observaciones / notas (opcional)"
+          [multiline]="true"
+          [rows]="2"
+          placeholder="Condiciones del paquete, fecha tentativa, etc."
+          [(value)]="notasVenta" />
 
         <!-- Footer botones -->
         <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
@@ -661,7 +658,7 @@
         }
 
         <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Tipo</label>
+          <span class="text-sm font-medium text-text-dark">Tipo</span>
           <div class="flex flex-wrap gap-1.5" role="group" aria-label="Tipo de actividad">
             @for (t of tiposActividad; track t) {
               <app-filter-chip size="sm" [active]="tipoActividad() === t" (clicked)="tipoActividad.set(t)">
@@ -671,20 +668,11 @@
           </div>
         </div>
 
-        <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Título *</label>
-          <app-input placeholder="Ej. Llamar para confirmar cita" [(value)]="tituloActividad" />
-        </div>
+        <app-input label="Título *" placeholder="Ej. Llamar para confirmar cita" [(value)]="tituloActividad" />
 
-        <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Fecha y hora *</label>
-          <app-input type="datetime-local" [(value)]="fechaActividad" />
-        </div>
+        <app-input label="Fecha y hora *" type="datetime-local" [(value)]="fechaActividad" />
 
-        <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Notas (opcional)</label>
-          <app-input [multiline]="true" [rows]="2" placeholder="Detalles para recordar…" [(value)]="notasActividad" />
-        </div>
+        <app-input label="Notas (opcional)" [multiline]="true" [rows]="2" placeholder="Detalles para recordar…" [(value)]="notasActividad" />
 
         <!-- Footer botones -->
         <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-border">

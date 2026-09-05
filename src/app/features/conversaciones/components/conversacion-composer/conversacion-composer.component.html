@@ -31,6 +31,8 @@
             }
             {{ plantilla.titulo }}
           </button>
+        } @empty {
+          <span class="text-[11px] text-text-muted italic">Crea atajos para responder en 1 clic</span>
         }
       </div>
     </div>
@@ -114,7 +116,7 @@
         <span class="adjunto-nombre">{{ adj.mediaNombre }}</span>
         <app-button
           variant="ghost" size="sm" icon="x" [circle]="true"
-          aria-label="Quitar adjunto"
+          ariaLabel="Quitar adjunto"
           (clicked)="quitarAdjunto()" />
       </div>
     }
@@ -238,13 +240,11 @@
             <div class="mt-4 p-4 rounded-xl bg-bg-light border border-border space-y-3">
               <h4 class="text-xs font-bold text-text-dark uppercase tracking-wider">Completar variables</h4>
               @for (idx of variablesPlantilla(); track $index) {
-                <div>
-                  <label class="block text-[11px] font-medium text-text-muted mb-1">Variable {{ $index + 1 }}</label>
-                  <app-input
-                    placeholder="Valor para variable..."
-                    [value]="variablesPlantilla()[$index]"
-                    (valueChange)="setVariablePlantilla($index, $event)" />
-                </div>
+                <app-input
+                  [label]="'Variable ' + ($index + 1)"
+                  placeholder="Valor para variable..."
+                  [value]="variablesPlantilla()[$index]"
+                  (valueChange)="setVariablePlantilla($index, $event)" />
               }
             </div>
           }
@@ -295,23 +295,20 @@
         <h4 class="text-xs font-bold text-text-dark uppercase tracking-wider">
           {{ editandoPlantillaId() ? 'Editar Respuesta' : 'Nueva Respuesta Rápida' }}
         </h4>
-        <div>
-          <label class="edit-label">Título corto *</label>
-          <app-input placeholder="Ej: Horarios y Ubicación" [(value)]="formPlantillaTitulo" />
-        </div>
-        <div>
-          <label class="edit-label">Atajo /comando (opcional)</label>
-          <app-input placeholder="Ej: /horarios" [(value)]="formPlantillaAtajo" />
-        </div>
-        <div>
-          <label class="edit-label">Contenido * (usa {{ '{' }}{{ '{' }}nombre{{ '}' }}{{ '}' }} para autocompletar)</label>
-          <textarea
-            #txtTmplContent
-            [value]="formPlantillaContenido()"
-            (input)="formPlantillaContenido.set(txtTmplContent.value)"
-            placeholder="Escribe el mensaje completo…"
-            class="edit-textarea"></textarea>
-        </div>
+        <app-input
+          label="Título corto *"
+          placeholder="Ej: Horarios y Ubicación"
+          [(value)]="formPlantillaTitulo" />
+        <app-input
+          label="Atajo /comando (opcional)"
+          placeholder="Ej: /horarios"
+          [(value)]="formPlantillaAtajo" />
+        <app-input
+          label="Contenido * (usa {{ '{' }}{{ '{' }}nombre{{ '}' }}{{ '}' }} para autocompletar)"
+          [multiline]="true"
+          [rows]="3"
+          placeholder="Escribe el mensaje completo…"
+          [(value)]="formPlantillaContenido" />
         <div class="flex items-center justify-end gap-2 pt-1">
           @if (editandoPlantillaId()) {
             <button
@@ -400,11 +397,15 @@
         <div class="min-w-0 flex-1">
           <span class="text-[10px] uppercase font-bold text-text-muted block">Destinatario</span>
           <p class="text-xs font-bold text-text-dark truncate">
-            {{ state.detalle.value()?.cliente?.nombre || 'Paciente' }}
+            @if (state.detalle.value()?.cliente; as cli) {
+              {{ cli | nombreCliente }}
+            } @else {
+              Paciente
+            }
           </p>
         </div>
         @if (state.detalle.value()?.cliente?.telefono; as tel) {
-          <span class="text-xs font-mono text-text-muted shrink-0 ml-2">{{ tel }}</span>
+          <span class="crm-meta-clave text-xs text-text-muted shrink-0 ml-2">{{ tel }}</span>
         }
       </div>
 

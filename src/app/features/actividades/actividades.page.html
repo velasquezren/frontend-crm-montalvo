@@ -155,37 +155,35 @@
 
     <!-- Selectores secundarios: Tipo y Agente -->
     <div class="flex items-center gap-2 shrink-0 self-end lg:self-auto w-full sm:w-auto">
-      <div class="relative flex-1 sm:flex-initial">
-        <select
+      <div class="flex-1 sm:flex-initial sm:w-44">
+        <app-select
+          size="sm"
+          [fullWidth]="true"
+          [activo]="filtroTipo() !== 'TODOS'"
           [value]="filtroTipo()"
-          (change)="onCambiarTipo($event)"
-          class="h-8.5 w-full text-xs font-medium pl-2.5 pr-7 rounded-xl border border-border bg-white text-text-dark cursor-pointer hover:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary appearance-none transition-colors"
-          aria-label="Filtrar por tipo de actividad">
+          (valueChange)="onCambiarTipo($event)"
+          ariaLabel="Filtrar por tipo de actividad">
           <option value="TODOS">Todos los tipos</option>
           @for (t of tipos; track t) {
             <option [value]="t">{{ tiposLabel[t] }}</option>
           }
-        </select>
-        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-text-muted">
-          <app-icon name="chevron-down" [size]="13" />
-        </div>
+        </app-select>
       </div>
 
       @if (esAdmin() && agentes.value().length > 0) {
-        <div class="relative flex-1 sm:flex-initial">
-          <select
+        <div class="flex-1 sm:flex-initial sm:w-44">
+          <app-select
+            size="sm"
+            [fullWidth]="true"
+            [activo]="filtroAgenteId() !== 'TODOS'"
             [value]="filtroAgenteId()"
-            (change)="onCambiarAgente($event)"
-            class="h-8.5 w-full text-xs font-medium pl-2.5 pr-7 rounded-xl border border-border bg-white text-text-dark cursor-pointer hover:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary appearance-none transition-colors"
-            aria-label="Filtrar por agente comercial">
+            (valueChange)="onCambiarAgente($event)"
+            ariaLabel="Filtrar por agente comercial">
             <option value="TODOS">Todos los agentes</option>
             @for (ag of agentes.value(); track ag.id) {
               <option [value]="ag.id">{{ ag.nombre }}</option>
             }
-          </select>
-          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-text-muted">
-            <app-icon name="chevron-down" [size]="13" />
-          </div>
+          </app-select>
         </div>
       }
     </div>

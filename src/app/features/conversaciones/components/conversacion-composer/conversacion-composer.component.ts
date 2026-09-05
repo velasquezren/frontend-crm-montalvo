@@ -27,6 +27,7 @@ import { MemoriaAgenteService } from '../../../memoria-agente/memoria-agente.ser
 import { RecursoMemoria } from '../../../memoria-agente/memoria-agente.model';
 import { MensajeApi, PlantillaResumen } from '../../conversacion.model';
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
+import { NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 
 interface AdjuntoLocal {
   readonly mediaKey: string;
@@ -64,6 +65,7 @@ function tipoBase(mime: string): string {
     ButtonComponent,
     IconComponent,
     InputComponent,
+    NombreClientePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './conversacion-composer.component.html',
@@ -291,7 +293,11 @@ export class ConversacionComposerComponent implements OnDestroy {
     const tmpl = this.modalConfirmarMedia();
     if (!tmpl) return;
     this.overlayRef?.dispose();
-    this.overlayRef = this.dialogService.openTemplate(tmpl, this.vcr);
+    this.overlayRef = this.dialogService.openTemplate(tmpl, this.vcr, {
+      onClose: () => {
+        this.overlayRef = undefined;
+      },
+    });
   }
 
   protected cerrarConfirmarMedia(): void {
@@ -381,7 +387,13 @@ export class ConversacionComposerComponent implements OnDestroy {
     const tmpl = this.modalPlantillas();
     if (!tmpl) return;
     this.overlayRef?.dispose();
-    this.overlayRef = this.dialogService.openTemplate(tmpl, this.vcr);
+    this.overlayRef = this.dialogService.openTemplate(tmpl, this.vcr, {
+      onClose: () => {
+        this.plantillaSeleccionada.set(null);
+        this.variablesPlantilla.set([]);
+        this.overlayRef = undefined;
+      },
+    });
   }
 
   protected seleccionarPlantilla(p: PlantillaResumen): void {
@@ -433,7 +445,12 @@ export class ConversacionComposerComponent implements OnDestroy {
     if (!tmpl) return;
     this.resetFormPlantilla();
     this.overlayRef?.dispose();
-    this.overlayRef = this.dialogService.openTemplate(tmpl, this.vcr);
+    this.overlayRef = this.dialogService.openTemplate(tmpl, this.vcr, {
+      onClose: () => {
+        this.resetFormPlantilla();
+        this.overlayRef = undefined;
+      },
+    });
   }
 
   protected cerrarGestionPlantillas(): void {

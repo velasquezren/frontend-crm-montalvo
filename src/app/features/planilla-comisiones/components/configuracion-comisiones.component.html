@@ -164,23 +164,31 @@
               }
             </td>
             <td class="text-center">
-              <select
-                class="select-base select-mini font-medium"
-                [value]="v.tipo"
-                (change)="cambiarTipoVendedora(v, $any($event.target).value)">
-                <option value="VENDEDORA" [selected]="v.tipo === 'VENDEDORA'">Vendedora</option>
-                <option value="JEFA" [selected]="v.tipo === 'JEFA'">Jefa</option>
-              </select>
+              <div class="min-w-[130px]">
+                <app-select
+                  size="sm"
+                  [fullWidth]="true"
+                  [value]="v.tipo"
+                  (valueChange)="cambiarTipoVendedora(v, $event)"
+                  ariaLabel="Tipo de vendedora">
+                  <option value="VENDEDORA">Vendedora</option>
+                  <option value="JEFA">Jefa</option>
+                </app-select>
+              </div>
             </td>
             <td class="text-center">
-              <select
-                class="select-base select-mini font-medium"
-                [value]="v.area"
-                (change)="cambiarAreaVendedora(v, $any($event.target).value)">
-                <option value="EJECUTIVA" [selected]="v.area === 'EJECUTIVA'">Ejecutiva</option>
-                <option value="RA" [selected]="v.area === 'RA'">Coordinadora RA</option>
-                <option value="PUBLICIDAD" [selected]="v.area === 'PUBLICIDAD'">Marketing</option>
-              </select>
+              <div class="min-w-[150px]">
+                <app-select
+                  size="sm"
+                  [fullWidth]="true"
+                  [value]="v.area"
+                  (valueChange)="cambiarAreaVendedora(v, $event)"
+                  ariaLabel="Área de vendedora">
+                  <option value="EJECUTIVA">Ejecutiva</option>
+                  <option value="RA">Coordinadora RA</option>
+                  <option value="PUBLICIDAD">Marketing</option>
+                </app-select>
+              </div>
             </td>
             <td class="text-right">
               <div class="flex justify-end">
@@ -541,13 +549,17 @@
           <tr>
             <td class="text-left font-semibold text-text-dark font-mono">{{ c.valor }}</td>
             <td class="text-left">
-              <select
-                class="select-base"
-                [value]="c.canal"
-                (change)="guardarCaptacion(c.valor, $any($event.target).value)">
-                <option value="EMPRESA" [selected]="c.canal === 'EMPRESA'">Empresa (tarifa base)</option>
-                <option value="PROPIO" [selected]="c.canal === 'PROPIO'">Propia (tarifa alta)</option>
-              </select>
+              <div class="min-w-[200px]">
+                <app-select
+                  size="sm"
+                  [fullWidth]="true"
+                  [value]="c.canal"
+                  (valueChange)="guardarCaptacion(c.valor, $event)"
+                  ariaLabel="Canal de captación">
+                  <option value="EMPRESA">Empresa (tarifa base)</option>
+                  <option value="PROPIO">Propia (tarifa alta)</option>
+                </app-select>
+              </div>
             </td>
             <td class="text-right">
               <app-button
@@ -894,27 +906,25 @@
       <app-input label="Nombre y apellidos" placeholder="Ej. Cespedes Soto Cristel Nedenka" [(value)]="nuevoNombre" />
 
       <div class="grid grid-cols-2 gap-3">
-        <label class="block">
-          <span class="text-xs font-semibold text-text-dark">Área</span>
-          <select
-            class="select-base w-full mt-1"
-            [value]="nuevaArea()"
-            (change)="nuevaArea.set($any($event.target).value)">
-            <option value="PUBLICIDAD">Marketing</option>
-            <option value="EJECUTIVA">Ejecutiva</option>
-            <option value="RA">Coordinadora RA</option>
-          </select>
-        </label>
-        <label class="block">
-          <span class="text-xs font-semibold text-text-dark">Tipo</span>
-          <select
-            class="select-base w-full mt-1"
-            [value]="nuevoTipo()"
-            (change)="nuevoTipo.set($any($event.target).value)">
-            <option value="VENDEDORA">Vendedora</option>
-            <option value="JEFA">Jefa</option>
-          </select>
-        </label>
+        <app-select
+          label="Área"
+          size="sm"
+          [value]="nuevaArea()"
+          (valueChange)="onNuevaArea($event)"
+          ariaLabel="Área">
+          <option value="PUBLICIDAD">Marketing</option>
+          <option value="EJECUTIVA">Ejecutiva</option>
+          <option value="RA">Coordinadora RA</option>
+        </app-select>
+        <app-select
+          label="Tipo"
+          size="sm"
+          [value]="nuevoTipo()"
+          (valueChange)="onNuevoTipo($event)"
+          ariaLabel="Tipo">
+          <option value="VENDEDORA">Vendedora</option>
+          <option value="JEFA">Jefa</option>
+        </app-select>
       </div>
 
       <app-input label="Sueldo base (Bs)" type="number" placeholder="0.00" [(value)]="nuevoSueldo" />

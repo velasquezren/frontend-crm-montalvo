@@ -147,9 +147,30 @@ export class ConversacionThreadComponent {
   }
 
   protected copiarTexto(texto: string, label: string): void {
-    navigator.clipboard.writeText(texto).then(() => {
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(texto).then(
+        () => this.toast.success(`${label} copiado al portapapeles.`),
+        () => this.copiarFallback(texto, label),
+      );
+    } else {
+      this.copiarFallback(texto, label);
+    }
+  }
+
+  private copiarFallback(texto: string, label: string): void {
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = texto;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
       this.toast.success(`${label} copiado al portapapeles.`);
-    });
+    } catch {
+      this.toast.error(`No se pudo copiar ${label.toLowerCase()}.`);
+    }
   }
 
   protected esUrlImagen(url?: string | null): boolean {

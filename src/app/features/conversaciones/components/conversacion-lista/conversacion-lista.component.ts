@@ -15,6 +15,7 @@ import {
   FiltroInbox,
 } from '../../conversacion.model';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
+import { ConversacionPreviewComponent } from './conversacion-preview.component';
 
 /**
  * Panel lateral izquierdo con la bandeja de entrada (Inbox).
@@ -33,6 +34,7 @@ import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipe
     IconComponent,
     InputComponent,
     LoadingSkeletonComponent,
+    ConversacionPreviewComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './conversacion-lista.component.html',

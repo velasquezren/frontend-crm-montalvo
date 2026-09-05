@@ -9,17 +9,20 @@
   <div class="planilla-barra">
     <div class="periodo-selector">
       <label class="etiqueta-mini">Periodo</label>
-      <select
-        class="select-base font-semibold"
-        [value]="periodoId() || ''"
-        (change)="seleccionarPeriodo($any($event.target).value)">
-        <option value="" disabled [selected]="!periodoId()">Elegir mes…</option>
-        @for (p of periodos.value().datos; track p.id) {
-          <option [value]="p.id" [selected]="p.id === periodoId()">
-            {{ nombreMes(p.mes) }} {{ p.anio }} — {{ estadoLabel[p.estado] }} ({{ p.filasTotales }} filas)
-          </option>
-        }
-      </select>
+      <div class="min-w-[220px]">
+        <app-select
+          size="sm"
+          [value]="periodoId() || ''"
+          (valueChange)="seleccionarPeriodo($event)"
+          ariaLabel="Periodo">
+          <option value="" disabled>Elegir mes…</option>
+          @for (p of periodos.value().datos; track p.id) {
+            <option [value]="p.id">
+              {{ nombreMes(p.mes) }} {{ p.anio }} — {{ estadoLabel[p.estado] }} ({{ p.filasTotales }} filas)
+            </option>
+          }
+        </app-select>
+      </div>
     </div>
 
     <div class="flex items-center gap-3 flex-wrap">
@@ -283,12 +286,18 @@
                         Módulo: {{ s.modulo ?? 'General' }} · {{ s.veces }} venta(s) · {{ s.montoAfectado | moneda }}
                       </span>
                     </div>
-                    <select class="select-base select-mini font-medium" (change)="crearReglaDesdeServicio(s.detalle, $any($event.target).value)">
-                      <option value="" selected>Clasificar como…</option>
-                      @for (c of clasificaciones; track c) {
-                        <option [value]="c">{{ clasifLabel[c] }}</option>
-                      }
-                    </select>
+                    <div class="w-48 shrink-0">
+                      <app-select
+                        size="sm"
+                        [fullWidth]="true"
+                        ariaLabel="Clasificar como"
+                        (valueChange)="crearReglaDesdeServicio(s.detalle, $event)">
+                        <option value="" selected>Clasificar como…</option>
+                        @for (c of clasificaciones; track c) {
+                          <option [value]="c">{{ clasifLabel[c] }}</option>
+                        }
+                      </app-select>
+                    </div>
                   </div>
                 }
               </div>
@@ -335,18 +344,32 @@
         <div class="flex-1 min-w-[220px]">
           <app-input type="search" placeholder="Buscar por servicio o paciente…" [(value)]="busqueda" />
         </div>
-        <select class="select-base font-medium" [value]="filtroClasif() || ''" (change)="filtrarPorClasif($any($event.target).value)">
-          <option value="" [selected]="!filtroClasif()">Todas las clasificaciones</option>
-          @for (c of clasificaciones; track c) {
-            <option [value]="c" [selected]="c === filtroClasif()">{{ clasifLabel[c] }} ({{ conteoPorClasif().get(c) ?? 0 }})</option>
-          }
-        </select>
-        <select class="select-base font-medium" [value]="filtroTipo() || ''" (change)="filtrarPorTipo($any($event.target).value)">
-          <option value="" [selected]="!filtroTipo()">Todos los tipos</option>
-          @for (t of tipos; track t) {
-            <option [value]="t" [selected]="t === filtroTipo()">Tipo {{ t }} — {{ tipoLabel[t] }} ({{ conteoPorTipo().get(t) ?? 0 }})</option>
-          }
-        </select>
+        <div class="min-w-[200px]">
+          <app-select
+            size="sm"
+            [activo]="!!filtroClasif()"
+            [value]="filtroClasif() || ''"
+            (valueChange)="filtrarPorClasif($event)"
+            ariaLabel="Filtrar por clasificación">
+            <option value="">Todas las clasificaciones</option>
+            @for (c of clasificaciones; track c) {
+              <option [value]="c">{{ clasifLabel[c] }} ({{ conteoPorClasif().get(c) ?? 0 }})</option>
+            }
+          </app-select>
+        </div>
+        <div class="min-w-[200px]">
+          <app-select
+            size="sm"
+            [activo]="!!filtroTipo()"
+            [value]="filtroTipo() || ''"
+            (valueChange)="filtrarPorTipo($event)"
+            ariaLabel="Filtrar por tipo">
+            <option value="">Todos los tipos</option>
+            @for (t of tipos; track t) {
+              <option [value]="t">Tipo {{ t }} — {{ tipoLabel[t] }} ({{ conteoPorTipo().get(t) ?? 0 }})</option>
+            }
+          </app-select>
+        </div>
 
         <!-- Canal: el backend ya lo soportaba (cambia la tarifa aplicada, ver
              columna "Tarifa") pero no se podía acotar desde aquí. -->
@@ -675,12 +698,18 @@
                   </span>
                 </td>
                 <td class="text-left">
-                  <select class="select-base select-mini w-full font-medium" [value]="v.clasif"
-                    (change)="cambiarClasificacion(v, $any($event.target).value)">
-                    @for (c of clasificaciones; track c) {
-                      <option [value]="c" [selected]="c === v.clasif">{{ clasifLabel[c] }}</option>
-                    }
-                  </select>
+                  <div class="min-w-[150px]">
+                    <app-select
+                      size="sm"
+                      [fullWidth]="true"
+                      [value]="v.clasif"
+                      (valueChange)="cambiarClasificacion(v, $event)"
+                      ariaLabel="Clasificación de venta">
+                      @for (c of clasificaciones; track c) {
+                        <option [value]="c">{{ clasifLabel[c] }}</option>
+                      }
+                    </app-select>
+                  </div>
                 </td>
                 <td class="text-center">
                   <span class="tipo-pill" [title]="etiquetaTipoFila(v)">{{ v.tipo }}</span>

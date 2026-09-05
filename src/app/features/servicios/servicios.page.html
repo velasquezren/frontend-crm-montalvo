@@ -11,18 +11,18 @@
     @if (periodos.isLoading()) {
       <app-loading-skeleton width="200px" height="36px" />
     } @else {
-      <div class="contenedor-select-periodo">
-        <select
-          #selPeriodo
-          class="select-periodo"
+      <div class="min-w-[200px]">
+        <app-select
+          size="sm"
+          [fullWidth]="true"
+          ariaLabel="Seleccionar periodo"
           [value]="periodoId() || ''"
-          (change)="seleccionarPeriodo(selPeriodo.value)">
+          (valueChange)="seleccionarPeriodo($event)">
           <option value="">Todo el historial</option>
           @for (p of periodos.value().datos; track p.id) {
             <option [value]="p.id">{{ nombreMes(p.mes) }} {{ p.anio }}</option>
           }
-        </select>
-        <app-icon name="chevron-down" [size]="16" class="select-icono-flecha" />
+        </app-select>
       </div>
     }
   </div>

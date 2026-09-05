@@ -40,6 +40,7 @@ import { OverlayRef } from '@angular/cdk/overlay';
 import { TemplateRef, ViewContainerRef } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
+import { SelectComponent } from '../../shared/components/select/select.component';
 
 type FiltroCategoria = CategoriaCliente | 'TODOS';
 type PestanaModal = 'EXPEDIENTE' | 'CONTACTO' | 'NOTAS';
@@ -51,6 +52,7 @@ type PestanaModal = 'EXPEDIENTE' | 'CONTACTO' | 'NOTAS';
 @Component({
   selector: 'app-clientes',
   imports: [
+    SelectComponent,
     InicialesClientePipe,
     NombreClientePipe,
     PageHeaderComponent,
@@ -331,16 +333,16 @@ export class ClientesPage {
     this.activeOverlayRef = undefined;
   }
 
-  protected onCambiarCategoria(event: Event): void {
-    const target = event.target as HTMLSelectElement | null;
-    if (target?.value) {
-      this.editCategoria.set(target.value as CategoriaCliente);
-    }
+  /* `<app-select>` emite el valor ya, no el Event: el desempaquetado que había
+     acá (`event.target as HTMLSelectElement`) lo hace el átomo una vez. Lo que
+     queda es lo único propio de esta vista — el estrechamiento de tipo y que
+     "sin agente" se guarda como null, no como cadena vacía. */
+  protected onCambiarCategoria(valor: string): void {
+    if (valor) this.editCategoria.set(valor as CategoriaCliente);
   }
 
-  protected onCambiarAgente(event: Event): void {
-    const target = event.target as HTMLSelectElement | null;
-    this.editAgenteId.set(target?.value ? target.value : null);
+  protected onCambiarAgente(valor: string): void {
+    this.editAgenteId.set(valor || null);
   }
 
   protected async guardarEdicion(event: Event): Promise<void> {

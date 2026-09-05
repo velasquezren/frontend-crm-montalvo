@@ -16,6 +16,7 @@ import { FilterChipComponent } from '../../../../shared/components/filter-chip/f
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
+import { SelectComponent } from '../../../../shared/components/select/select.component';
 import { PlanillaComisionesService } from '../../../planilla-comisiones/planilla-comisiones.service';
 import {
   ConfiguracionPlanilla,
@@ -75,6 +76,7 @@ interface VentasConCanales extends RespuestaPaginada<VentaImportada> {
     EmptyStateComponent,
     ErrorCargaComponent,
     LoadingSkeletonComponent,
+    SelectComponent,
     FichaCabeceraComponent,
     MetasAgenteComponent,
     ComposicionPagoComponent,

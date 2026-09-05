@@ -14,20 +14,20 @@
     @if (periodos.isLoading()) {
       <app-loading-skeleton width="200px" height="36px" />
     } @else {
-      <span class="envoltura-select">
-        <select
-          class="select-periodo"
-          aria-label="Periodo a consultar"
+      <div class="min-w-[220px]">
+        <app-select
+          size="sm"
+          [fullWidth]="true"
+          ariaLabel="Periodo a consultar"
           [value]="periodoId() || ''"
-          (change)="elegirPeriodo($any($event.target).value)">
+          (valueChange)="elegirPeriodo($event)">
           @for (p of periodos.value()?.datos ?? []; track p.id) {
-            <option [value]="p.id" [selected]="p.id === periodoId()">
+            <option [value]="p.id">
               {{ nombreMes(p.mes) }} {{ p.anio }} — {{ etiquetaEstado(p.estado) }}
             </option>
           }
-        </select>
-        <app-icon name="chevron-down" [size]="16" class="flecha-select" />
-      </span>
+        </app-select>
+      </div>
     }
 
     @if (periodo(); as p) {

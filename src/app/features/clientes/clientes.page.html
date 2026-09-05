@@ -263,31 +263,31 @@
           <!-- Categoría -->
           <div class="space-y-1">
             <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Categoría / Nivel</label>
-            <select
+            <app-select
               [value]="editCategoria()"
-              (change)="onCambiarCategoria($event)"
-              class="w-full h-10 px-3 rounded-xl border border-border bg-white text-xs text-text-dark font-medium transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/10">
+              (valueChange)="onCambiarCategoria($event)"
+              ariaLabel="Categoría del paciente">
               <option value="GOLD">Gold (VIP)</option>
               <option value="SILVER">Silver</option>
               <option value="BRONZE">Bronze</option>
               <option value="PROSPECTO">Prospecto</option>
-            </select>
+            </app-select>
           </div>
 
           <!-- Agente Asignado -->
           <div class="space-y-1">
             <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Agente Asignado</label>
-            <select
+            <app-select
               [value]="editAgenteId() || ''"
-              (change)="onCambiarAgente($event)"
-              class="w-full h-10 px-3 rounded-xl border border-border bg-white text-xs text-text-dark font-medium transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/10">
+              (valueChange)="onCambiarAgente($event)"
+              ariaLabel="Agente asignado">
               <option value="" [selected]="!editAgenteId()">Sin Asignar (Pool General)</option>
               @for (ag of listaAgentes(); track ag.id) {
                 <option [value]="ag.id" [selected]="editAgenteId() === ag.id">
                   {{ ag.nombre }} ({{ ag.rol }})
                 </option>
               }
-            </select>
+            </app-select>
           </div>
         </div>
       </div>
@@ -515,30 +515,30 @@
 
                 <div class="space-y-1">
                   <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Categoría / Nivel</label>
-                  <select
+                  <app-select
                     [value]="editCategoria()"
-                    (change)="onCambiarCategoria($event)"
-                    class="w-full h-10 px-3 rounded-xl border border-border bg-white text-xs text-text-dark font-medium transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/10">
+                    (valueChange)="onCambiarCategoria($event)"
+                    ariaLabel="Categoría del paciente">
                     <option value="GOLD">Gold (VIP)</option>
                     <option value="SILVER">Silver</option>
                     <option value="BRONZE">Bronze</option>
                     <option value="PROSPECTO">Prospecto</option>
-                  </select>
+                  </app-select>
                 </div>
 
                 <div class="space-y-1">
                   <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Agente Asignado</label>
-                  <select
+                  <app-select
                     [value]="editAgenteId() || ''"
-                    (change)="onCambiarAgente($event)"
-                    class="w-full h-10 px-3 rounded-xl border border-border bg-white text-xs text-text-dark font-medium transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/10">
+                    (valueChange)="onCambiarAgente($event)"
+                    ariaLabel="Agente asignado">
                     <option value="" [selected]="!editAgenteId()">Sin Asignar (Pool General)</option>
                     @for (ag of listaAgentes(); track ag.id) {
                       <option [value]="ag.id" [selected]="editAgenteId() === ag.id">
                         {{ ag.nombre }} ({{ ag.rol }})
                       </option>
                     }
-                  </select>
+                  </app-select>
                 </div>
               </div>
 

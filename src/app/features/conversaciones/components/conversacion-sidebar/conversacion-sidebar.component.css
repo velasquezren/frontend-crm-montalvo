@@ -195,30 +195,6 @@
   background: var(--color-background);
 }
 
-/* Custom select for the edit form */
-.edit-select {
-  width: 100%;
-  font-size: 13px;
-  padding: 9px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  outline: none;
-  background: var(--color-background);
-  color: var(--color-text-dark);
-  font-weight: 500;
-  font-family: inherit;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 4 4 4 4-4'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 32px;
-}
-
-.edit-select:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
-}
 
 /* Custom textarea for the edit form */
 .edit-textarea {

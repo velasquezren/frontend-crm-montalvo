@@ -20,19 +20,21 @@
             type="button"
             (click)="copiarTexto(chat.cliente.telefono, 'Teléfono')"
             class="text-text-muted hover:text-primary transition-colors cursor-pointer shrink-0"
-            title="Copiar número de teléfono">
+            title="Copiar número de teléfono"
+            aria-label="Copiar número de teléfono">
             <app-icon name="copy" [size]="12" />
           </button>
           @if (chat.cliente.pac) {
             <span class="text-text-muted/40">·</span>
-            <span class="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20 shrink-0" title="Código PAC en FileMaker">
+            <span class="crm-meta-clave text-[11px] shrink-0" title="Código PAC en FileMaker">
               {{ chat.cliente.pac }}
             </span>
             <button
               type="button"
               (click)="copiarTexto(chat.cliente.pac, 'Código PAC')"
               class="text-text-muted hover:text-primary transition-colors cursor-pointer shrink-0"
-              title="Copiar código PAC">
+              title="Copiar código PAC"
+              aria-label="Copiar código PAC">
               <app-icon name="copy" [size]="12" />
             </button>
           }
@@ -61,17 +63,17 @@
           }
           <app-button
             variant="ghost" size="sm" icon="chevron-down" [circle]="true"
-            aria-label="Coincidencia siguiente"
+            ariaLabel="Coincidencia siguiente"
             (clicked)="irACoincidencia(1)" />
           <app-button
             variant="ghost" size="sm" icon="x" [circle]="true"
-            aria-label="Cerrar búsqueda"
+            ariaLabel="Cerrar búsqueda"
             (clicked)="cerrarBusquedaChat()" />
         </div>
       } @else {
         <app-button
           variant="ghost" size="sm" icon="search" [circle]="true"
-          aria-label="Buscar en esta conversación"
+          ariaLabel="Buscar en esta conversación"
           (clicked)="abrirBusquedaChat()" />
       }
 
@@ -229,7 +231,7 @@
                 @if (item.mensaje.mediaUrl) {
                   <video [src]="item.mensaje.mediaUrl" controls preload="none" class="rounded-lg max-w-full max-h-72 mb-1"></video>
                 } @else {
-                  <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando video…</div>
+                  <div class="media-cargando"><app-icon name="video" [size]="16" /> Descargando video…</div>
                 }
               }
               @case ('AUDIO') {
@@ -258,7 +260,7 @@
                     </div>
                   </div>
                 } @else {
-                  <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando audio…</div>
+                  <div class="media-cargando"><app-icon name="volume-2" [size]="16" /> Descargando audio…</div>
                 }
               }
               @case ('DOCUMENTO') {

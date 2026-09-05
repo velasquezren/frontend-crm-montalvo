@@ -15,14 +15,17 @@
     } @else if (periodos.value().datos.length === 0) {
       <span class="text-sm text-text-muted font-medium">Todavía no hay ninguna planilla importada</span>
     } @else {
-      <div class="contenedor-select-periodo">
-        <select class="select-periodo" [value]="periodoIdEfectivo() || ''"
-          (change)="seleccionarPeriodo($any($event.target).value)">
+      <div class="min-w-[200px]">
+        <app-select
+          size="sm"
+          [fullWidth]="true"
+          ariaLabel="Seleccionar periodo"
+          [value]="periodoIdEfectivo() || ''"
+          (valueChange)="seleccionarPeriodo($event)">
           @for (p of periodos.value().datos; track p.id) {
-            <option [value]="p.id" [selected]="p.id === periodoIdEfectivo()">{{ nombreMes(p.mes) }} {{ p.anio }}</option>
+            <option [value]="p.id">{{ nombreMes(p.mes) }} {{ p.anio }}</option>
           }
-        </select>
-        <app-icon name="chevron-down" [size]="16" class="select-icono-flecha" />
+        </app-select>
       </div>
     }
   </div>

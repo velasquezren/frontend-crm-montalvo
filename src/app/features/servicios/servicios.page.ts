@@ -29,6 +29,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InfoHintComponent } from '../../shared/components/info-hint/info-hint.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { SelectComponent } from '../../shared/components/select/select.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 import { MonedaService } from '../../core/moneda/moneda.service';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
@@ -107,6 +108,7 @@ const TABS_SERVICIOS: readonly TabServicioConfig[] = [
     InfoHintComponent,
     LoadingSkeletonComponent,
     PageHeaderComponent,
+    SelectComponent,
     TableComponent,
     AvatarComponent,
     ServiciosKpisComponent,

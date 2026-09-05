@@ -30,42 +30,6 @@
   flex-shrink: 0;
 }
 
-.contenedor-select-periodo {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.select-periodo {
-  padding: 8px 36px 8px 14px;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--color-text-dark);
-  background: var(--color-bg-workspace);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  cursor: pointer;
-  appearance: none;
-  font-variant-numeric: tabular-nums;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.select-periodo:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
-}
-
-.select-periodo:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
-}
-
-.select-icono-flecha {
-  position: absolute;
-  right: 12px;
-  pointer-events: none;
-  color: var(--color-text-muted);
-}
 
 .pill-meta {
   font-size: 12px;

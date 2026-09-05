@@ -8,6 +8,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
 import { InfoHintComponent } from '../../shared/components/info-hint/info-hint.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { SelectComponent } from '../../shared/components/select/select.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
@@ -43,6 +44,7 @@ export interface SparklineBarra {
     DecimalPipe,
     MonedaPipe,
     PageHeaderComponent,
+    SelectComponent,
     TableComponent,
     BadgeComponent,
     IconComponent,

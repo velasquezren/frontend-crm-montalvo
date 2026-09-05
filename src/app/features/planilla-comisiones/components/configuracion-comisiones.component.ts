@@ -25,6 +25,7 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { InfoHintComponent } from '../../../shared/components/info-hint/info-hint.component';
 import { InputComponent } from '../../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton/loading-skeleton.component';
+import { SelectComponent } from '../../../shared/components/select/select.component';
 import { TableComponent } from '../../../shared/components/table/table.component';
 import { MonedaPipe } from '../../../shared/pipes/moneda.pipe';
 import { PlanillaComisionesService } from '../planilla-comisiones.service';
@@ -69,6 +70,7 @@ import {
     InfoHintComponent,
     InputComponent,
     LoadingSkeletonComponent,
+    SelectComponent,
     TableComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -325,6 +327,14 @@ export class ConfiguracionComisionesComponent {
   protected readonly altaValida = computed(
     () => this.nuevoCodigo().trim().length > 0 && this.nuevoNombre().trim().length > 0,
   );
+
+  protected onNuevaArea(val: string): void {
+    if (val) this.nuevaArea.set(val as AreaVendedora);
+  }
+
+  protected onNuevoTipo(val: string): void {
+    if (val) this.nuevoTipo.set(val as TipoVendedora);
+  }
 
   protected abrirAlta(): void {
     this.nuevoCodigo.set('');

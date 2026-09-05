@@ -10,16 +10,17 @@
     <div class="icono-periodo">
       <app-icon name="calendar" [size]="18" />
     </div>
-    <div class="contenedor-select-periodo">
-      <select
-        class="select-periodo"
-        [value]="anio()"
-        (change)="cambiarAnio($any($event.target).value)">
+    <div class="min-w-[120px]">
+      <app-select
+        size="sm"
+        [fullWidth]="true"
+        ariaLabel="Seleccionar año"
+        [value]="'' + anio()"
+        (valueChange)="cambiarAnio($event)">
         @for (a of anios(); track a) {
-          <option [value]="a" [selected]="a === anio()">{{ a }}</option>
+          <option [value]="a">{{ a }}</option>
         }
-      </select>
-      <app-icon name="chevron-down" [size]="16" class="select-icono-flecha" />
+      </app-select>
     </div>
   </div>
 

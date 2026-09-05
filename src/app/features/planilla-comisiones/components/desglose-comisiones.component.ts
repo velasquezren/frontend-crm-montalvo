@@ -4,6 +4,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 import { FilterChipComponent } from '../../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { InfoHintComponent } from '../../../shared/components/info-hint/info-hint.component';
+import { SelectComponent } from '../../../shared/components/select/select.component';
 import { TableComponent } from '../../../shared/components/table/table.component';
 import { formatearUsd, MonedaPipe } from '../../../shared/pipes/moneda.pipe';
 import { CANAL_LABEL, CLASIF_LABEL, LineaDesgloseVendedora, SUBTIPO_LABEL, UNIDAD_LABEL } from '../planilla.model';
@@ -34,7 +35,7 @@ type DireccionOrden = 'asc' | 'desc';
  */
 @Component({
   selector: 'app-desglose-comisiones',
-  imports: [MonedaPipe, TableComponent, FilterChipComponent, InfoHintComponent, IconComponent, EmptyStateComponent],
+  imports: [MonedaPipe, TableComponent, FilterChipComponent, InfoHintComponent, IconComponent, EmptyStateComponent, SelectComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="desglose-filtros">
@@ -68,15 +69,19 @@ type DireccionOrden = 'asc' | 'desc';
       </div>
 
       @if (vendedoras().length > 1) {
-        <select
-          class="select-base select-mini font-medium"
-          [value]="filtroVendedora() ?? ''"
-          (change)="filtroVendedora.set($any($event.target).value || null)">
-          <option value="">Todas las vendedoras</option>
-          @for (v of vendedoras(); track v.id) {
-            <option [value]="v.id">{{ v.nombre }}</option>
-          }
-        </select>
+        <div class="min-w-[200px]">
+          <app-select
+            size="sm"
+            [activo]="filtroVendedora() !== null"
+            [value]="filtroVendedora() ?? ''"
+            (valueChange)="onCambiarVendedora($event)"
+            ariaLabel="Filtrar por vendedora">
+            <option value="">Todas las vendedoras</option>
+            @for (v of vendedoras(); track v.id) {
+              <option [value]="v.id">{{ v.nombre }}</option>
+            }
+          </app-select>
+        </div>
       }
     </div>
 
@@ -206,6 +211,11 @@ export class DesgloseComisionesComponent {
 
   protected readonly filtroSubtipo = signal<Subtipo | null>(null);
   protected readonly filtroVendedora = signal<string | null>(null);
+
+  protected onCambiarVendedora(valor: string): void {
+    this.filtroVendedora.set(valor || null);
+  }
+
   protected readonly ordenCampo = signal<CampoOrden>('comisionUsd');
   protected readonly ordenDireccion = signal<DireccionOrden>('desc');
 

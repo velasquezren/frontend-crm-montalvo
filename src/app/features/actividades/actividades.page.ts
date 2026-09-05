@@ -42,6 +42,7 @@ import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.comp
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
+import { SelectComponent } from '../../shared/components/select/select.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 import {
   Actividad,
@@ -110,7 +111,8 @@ interface ClienteMinimo {
     LoadingSkeletonComponent,
     PageHeaderComponent,
     PaginatorComponent,
-      TableComponent,
+    SelectComponent,
+    TableComponent,
   ],
   templateUrl: './actividades.page.html',
 })
@@ -690,18 +692,16 @@ export class ActividadesPage implements OnDestroy {
     this.pagina.set(1);
   }
 
-  protected onCambiarTipo(e: Event): void {
-    const target = e.target as HTMLSelectElement | null;
-    if (target) {
-      this.filtroTipo.set(target.value as TipoActividad | 'TODOS');
+  protected onCambiarTipo(valor: string): void {
+    if (valor) {
+      this.filtroTipo.set(valor as TipoActividad | 'TODOS');
       this.pagina.set(1);
     }
   }
 
-  protected onCambiarAgente(e: Event): void {
-    const target = e.target as HTMLSelectElement | null;
-    if (target) {
-      this.filtroAgenteId.set(target.value);
+  protected onCambiarAgente(valor: string): void {
+    if (valor) {
+      this.filtroAgenteId.set(valor);
       this.pagina.set(1);
     }
   }

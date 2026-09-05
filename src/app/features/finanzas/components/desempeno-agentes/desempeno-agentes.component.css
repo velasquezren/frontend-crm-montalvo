@@ -29,37 +29,6 @@
   color: var(--color-primary);
 }
 
-.envoltura-select {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-}
-
-.select-periodo {
-  appearance: none;
-  background-color: var(--color-bg-workspace);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 0.45rem 2rem 0.45rem 0.75rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-text-dark);
-  cursor: pointer;
-  outline: none;
-  transition: border-color 0.15s ease;
-}
-
-.select-periodo:hover,
-.select-periodo:focus-visible {
-  border-color: var(--color-primary);
-}
-
-.flecha-select {
-  position: absolute;
-  right: 0.6rem;
-  pointer-events: none;
-  color: var(--color-text-muted);
-}
 
 .pildora-tc {
   font-size: 0.75rem;

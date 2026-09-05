@@ -57,6 +57,7 @@ export type IconName =
   | 'pin'
   | 'download'
   | 'volume-2'
+  | 'video'
   | 'zoom-in'
   | 'zoom-out'
   | 'rotate-cw'
@@ -330,6 +331,10 @@ export type IconName =
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
           <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
           <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+        }
+        @case ('video') {
+          <polygon points="23 7 16 12 23 17 23 7" />
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
         }
         @case ('zoom-in') {
           <circle cx="11" cy="11" r="8" />

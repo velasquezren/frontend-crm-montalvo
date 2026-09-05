@@ -124,6 +124,7 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 | Componente | Selector | API |
 |---|---|---|
 | Button | `<app-button>` | `variant` (primary/secondary/ghost), `size`, `type`, `icon`, `loading`, `disabled`, `fullWidth`, `circle`, **`ariaLabel`** (obligatorio en los solo-ícono: sin texto proyectado el lector de pantalla solo dice "botón") · `(clicked)` |
+| Select | `<app-select>` | `label`, `size` (sm=filtro de barra / md=campo de formulario), `icono`, `disabled`, `fullWidth`, `ariaLabel`, `activo` (filtro con valor puesto: se tiñe de primario) · `[(value)]` · proyecta sus `<option>` — **el único desplegable**; no escribas un `<select>` a mano |
 | Input | `<app-input>` | `label`, `type` (incl. password con toggle), `placeholder`, `autocomplete`, `error`, `disabled`, `multiline` (renderiza `<textarea>` en vez de `<input>`, mismo wrapper/label/error), `rows` (solo con `multiline`) · `[(value)]` |
 | Badge | `<app-badge>` | `variant` (success/info/neutral/critical), `icon` |
 | Card | `<app-card>` | `padding` (sm/md/lg), `hoverable` |

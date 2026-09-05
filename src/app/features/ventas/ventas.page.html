@@ -116,82 +116,66 @@
       <!-- Menús Desplegables de Filtros Especializados -->
       <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto">
         <!-- Selector de Período -->
-        <div class="relative flex items-center w-full sm:w-auto min-w-0">
-          <app-icon name="calendar" [size]="13" class="absolute left-2.5 pointer-events-none text-text-muted shrink-0" />
-          <select
+        <div class="w-full sm:w-auto sm:min-w-[150px]">
+          <app-select
+            size="sm"
+            icono="calendar"
+            [activo]="presetPeriodo() !== 'TODAS'"
             [value]="presetPeriodo()"
-            (change)="cambiarPresetPeriodo($any($event.target).value)"
-            class="w-full sm:w-auto min-w-0 truncate pl-7 pr-6 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer appearance-none bg-bg-workspace focus:outline-none focus:border-primary"
-            [class.border-primary]="presetPeriodo() !== 'TODAS'"
-            [class.text-primary]="presetPeriodo() !== 'TODAS'"
-            [class.bg-bg-light]="presetPeriodo() !== 'TODAS'"
-            [class.border-border]="presetPeriodo() === 'TODAS'"
-            [class.text-text-dark]="presetPeriodo() === 'TODAS'">
+            (valueChange)="cambiarPresetPeriodo($event)"
+            ariaLabel="Filtrar por período">
             @for (p of presetsPeriodo; track p.id) {
               <option [value]="p.id">{{ p.label }}</option>
             }
-          </select>
-          <app-icon name="chevron-down" [size]="11" class="absolute right-2 pointer-events-none text-text-muted shrink-0" />
+          </app-select>
         </div>
 
         <!-- Selector de Método de Pago -->
-        <div class="relative flex items-center w-full sm:w-auto min-w-0">
-          <app-icon name="wallet" [size]="13" class="absolute left-2.5 pointer-events-none text-text-muted shrink-0" />
-          <select
+        <div class="w-full sm:w-auto sm:min-w-[160px]">
+          <app-select
+            size="sm"
+            icono="wallet"
+            [activo]="metodoPagoFiltro() !== 'TODOS'"
             [value]="metodoPagoFiltro()"
-            (change)="cambiarMetodoPagoFiltro($any($event.target).value)"
-            class="w-full sm:w-auto min-w-0 truncate pl-7 pr-6 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer appearance-none bg-bg-workspace focus:outline-none focus:border-primary"
-            [class.border-primary]="metodoPagoFiltro() !== 'TODOS'"
-            [class.text-primary]="metodoPagoFiltro() !== 'TODOS'"
-            [class.bg-bg-light]="metodoPagoFiltro() !== 'TODOS'"
-            [class.border-border]="metodoPagoFiltro() === 'TODOS'"
-            [class.text-text-dark]="metodoPagoFiltro() === 'TODOS'">
+            (valueChange)="cambiarMetodoPagoFiltro($event)"
+            ariaLabel="Filtrar por método de pago">
             <option value="TODOS">Todos los pagos</option>
             @for (mp of metodosPago; track mp.id) {
               <option [value]="mp.id">{{ mp.label }}</option>
             }
-          </select>
-          <app-icon name="chevron-down" [size]="11" class="absolute right-2 pointer-events-none text-text-muted shrink-0" />
+          </app-select>
         </div>
 
         <!-- Selector de Comprobante -->
-        <div class="relative flex items-center w-full sm:w-auto min-w-0" [class.col-span-2]="!esAdmin()" [class.sm:col-span-1]="!esAdmin()">
-          <app-icon name="file-text" [size]="13" class="absolute left-2.5 pointer-events-none text-text-muted shrink-0" />
-          <select
+        <div class="w-full sm:w-auto sm:min-w-[170px]" [class.col-span-2]="!esAdmin()" [class.sm:col-span-1]="!esAdmin()">
+          <app-select
+            size="sm"
+            icono="file-text"
+            [activo]="comprobanteFiltro() !== 'TODOS'"
             [value]="comprobanteFiltro()"
-            (change)="cambiarComprobanteFiltro($any($event.target).value)"
-            class="w-full sm:w-auto min-w-0 truncate pl-7 pr-6 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer appearance-none bg-bg-workspace focus:outline-none focus:border-primary"
-            [class.border-primary]="comprobanteFiltro() !== 'TODOS'"
-            [class.text-primary]="comprobanteFiltro() !== 'TODOS'"
-            [class.bg-bg-light]="comprobanteFiltro() !== 'TODOS'"
-            [class.border-border]="comprobanteFiltro() === 'TODOS'"
-            [class.text-text-dark]="comprobanteFiltro() === 'TODOS'">
+            (valueChange)="cambiarComprobanteFiltro($event)"
+            ariaLabel="Filtrar por estado de comprobante">
             <option value="TODOS">Comprobante: Todos</option>
             <option value="CON_COMPROBANTE">Con comprobante</option>
             <option value="SIN_COMPROBANTE">Pendiente</option>
-          </select>
-          <app-icon name="chevron-down" [size]="11" class="absolute right-2 pointer-events-none text-text-muted shrink-0" />
+          </app-select>
         </div>
 
         <!-- Selector de Agente (ADMIN / SUPER_ADMIN) -->
         @if (esAdmin()) {
-          <div class="relative flex items-center w-full sm:w-auto min-w-0">
-            <app-icon name="user" [size]="13" class="absolute left-2.5 pointer-events-none text-text-muted shrink-0" />
-            <select
+          <div class="w-full sm:w-auto sm:min-w-[160px]">
+            <app-select
+              size="sm"
+              icono="user"
+              [activo]="agenteSeleccionadoId() !== 'TODOS'"
               [value]="agenteSeleccionadoId()"
-              (change)="cambiarAgente($event)"
-              class="w-full sm:w-auto min-w-0 truncate pl-7 pr-6 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer appearance-none bg-bg-workspace focus:outline-none focus:border-primary"
-              [class.border-primary]="agenteSeleccionadoId() !== 'TODOS'"
-              [class.text-primary]="agenteSeleccionadoId() !== 'TODOS'"
-              [class.bg-bg-light]="agenteSeleccionadoId() !== 'TODOS'"
-              [class.border-border]="agenteSeleccionadoId() === 'TODOS'"
-              [class.text-text-dark]="agenteSeleccionadoId() === 'TODOS'">
+              (valueChange)="cambiarAgente($event)"
+              ariaLabel="Filtrar por agente comercial">
               <option value="TODOS">Todos los agentes</option>
               @for (ag of agentes.value(); track ag.id) {
                 <option [value]="ag.id">{{ ag.nombre }}</option>
               }
-            </select>
-            <app-icon name="chevron-down" [size]="11" class="absolute right-2 pointer-events-none text-text-muted shrink-0" />
+            </app-select>
           </div>
         }
       </div>
