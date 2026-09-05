@@ -412,8 +412,7 @@
       </div>
 
       <!-- Footer botones -->
-      <div class="flex items-center justify-end gap-2.5 px-6 py-3.5 bg-bg-workspace border-t border-border shrink-0">
-        <app-button variant="ghost" size="sm" (clicked)="cerrarCrearLead()">Cancelar</app-button>
+      <div class="flex items-center justify-end px-6 py-3.5 bg-bg-workspace border-t border-border shrink-0">
         <app-button type="submit" size="sm" [loading]="guardandoLead()">
           {{ guardandoLead() ? 'Guardando…' : 'Registrar Lead' }}
         </app-button>
@@ -571,13 +570,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Footer -->
-      <div class="flex items-center justify-end px-6 py-3.5 bg-bg-workspace border-t border-border shrink-0">
-        <app-button variant="ghost" size="sm" (clicked)="cerrarFichaLead()">
-          Cerrar
-        </app-button>
-      </div>
     </app-drawer>
   }
 </ng-template>
@@ -616,8 +608,7 @@
           Mínimo 3 caracteres. El motivo es requerido por trazabilidad comercial para comprender las razones de no cierre.
         </p>
 
-        <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
-          <app-button variant="ghost" size="sm" (clicked)="cerrarMotivoPerdida()">Cancelar</app-button>
+        <div class="flex items-center justify-end pt-3 border-t border-border">
           <app-button
             variant="primary"
             size="sm"

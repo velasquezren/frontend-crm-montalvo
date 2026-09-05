@@ -277,10 +277,7 @@
         </div>
       </div>
 
-      <div class="flex items-center justify-end gap-3 pt-3 border-t border-border">
-        <app-button variant="secondary" (clicked)="cerrarModal()">
-          Cancelar
-        </app-button>
+      <div class="flex items-center justify-end pt-3 border-t border-border">
         <app-button type="submit" [loading]="guardando()">
           Guardar Agente
         </app-button>
@@ -435,8 +432,7 @@
           </p>
         </section>
 
-        <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-5 border-t border-border">
-          <app-button variant="secondary" (clicked)="cerrarEdicion()">Cancelar</app-button>
+        <div class="flex justify-end pt-5 border-t border-border">
           <app-button type="submit" [loading]="guardando()">
             {{ guardando() ? 'Guardando…' : 'Guardar cambios' }}
           </app-button>

@@ -345,8 +345,7 @@
       </div>
 
       <!-- Footer botones -->
-      <div class="flex items-center justify-end gap-2.5 px-6 py-3.5 bg-bg-workspace border-t border-border shrink-0">
-        <app-button variant="ghost" size="sm" (clicked)="cerrarEdicion()">Cancelar</app-button>
+      <div class="flex items-center justify-end px-6 py-3.5 bg-bg-workspace border-t border-border shrink-0">
         <app-button type="submit" size="sm" [loading]="guardando()">
           {{ guardando() ? 'Guardando…' : 'Crear Paciente' }}
         </app-button>
@@ -612,22 +611,17 @@
 
         </div>
 
-        <!-- ── Pie Fijo de Acciones ─────────────────────────────────── -->
-        <footer class="flex items-center justify-end gap-2.5 px-6 py-3.5 bg-bg-workspace border-t border-border shrink-0">
-          <app-button
-            type="button"
-            variant="ghost"
-            size="sm"
-            (clicked)="cerrarEdicion()">
-            Cancelar
-          </app-button>
-          <app-button
-            type="submit"
-            size="sm"
-            [loading]="guardando()">
-            Guardar Cambios
-          </app-button>
-        </footer>
+        <!-- ── Pie Fijo de Acciones (solo en pestañas editables) ── -->
+        @if (pestanaModal() !== 'EXPEDIENTE') {
+          <footer class="flex items-center justify-end px-6 py-3.5 bg-bg-workspace border-t border-border shrink-0">
+            <app-button
+              type="submit"
+              size="sm"
+              [loading]="guardando()">
+              Guardar Cambios
+            </app-button>
+          </footer>
+        }
       </form>
     </app-drawer>
   }

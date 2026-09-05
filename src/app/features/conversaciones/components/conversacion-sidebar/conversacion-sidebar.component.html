@@ -614,8 +614,7 @@
           [(value)]="notasVenta" />
 
         <!-- Footer botones -->
-        <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
-          <app-button variant="ghost" size="sm" (clicked)="cerrarModalVenta()">Cancelar</app-button>
+        <div class="flex items-center justify-end pt-3 border-t border-border">
           <app-button type="submit" size="sm" [loading]="guardandoVenta()">
             {{ guardandoVenta() ? 'Guardando…' : 'Confirmar Venta' }}
           </app-button>
@@ -675,8 +674,7 @@
         <app-input label="Notas (opcional)" [multiline]="true" [rows]="2" placeholder="Detalles para recordar…" [(value)]="notasActividad" />
 
         <!-- Footer botones -->
-        <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
-          <app-button type="button" variant="ghost" size="sm" (clicked)="cerrarModalActividad()">Cancelar</app-button>
+        <div class="flex items-center justify-end pt-3 border-t border-border">
           <app-button type="submit" size="sm" [loading]="guardandoActividad()">
             {{ guardandoActividad() ? 'Agendando…' : 'Agendar' }}
           </app-button>
