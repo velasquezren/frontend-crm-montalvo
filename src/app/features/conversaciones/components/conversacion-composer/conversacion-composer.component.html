@@ -79,7 +79,7 @@
             <div class="flex items-center justify-between gap-1">
               <span class="text-xs font-bold text-text-dark group-hover:text-primary transition-colors truncate">{{ item.titulo }}</span>
               @if (item.atajo) {
-                <span class="text-[9px] font-extrabold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full shrink-0">{{ item.atajo }}</span>
+                <span class="crm-atajo shrink-0">{{ item.atajo }}</span>
               }
             </div>
             @if (item.contenido) {
@@ -226,7 +226,7 @@
               [class]="plantillaSeleccionada()?.nombre === p.nombre ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border hover:border-primary/40 hover:bg-bg-light'">
               <div class="flex items-center justify-between gap-2">
                 <span class="text-xs font-bold text-text-dark">{{ p.nombre }}</span>
-                <span class="text-[10px] px-2 py-0.5 rounded-full bg-secondary/10 text-secondary font-semibold">{{ p.categoria }}</span>
+                <app-badge variant="info">{{ p.categoria }}</app-badge>
               </div>
               <p class="text-xs text-text-muted mt-1 whitespace-pre-wrap">{{ p.cuerpo }}</p>
             </button>
@@ -340,7 +340,7 @@
               <div class="flex items-center gap-2">
                 <span class="text-xs font-bold text-text-dark">{{ p.titulo }}</span>
                 @if (p.atajo) {
-                  <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{{ p.atajo }}</span>
+                  <span class="crm-atajo">{{ p.atajo }}</span>
                 }
               </div>
               <p class="text-xs text-text-muted mt-1 line-clamp-2">{{ p.contenido }}</p>

@@ -32,7 +32,7 @@
       <app-icon name="database" [size]="16" />
       <span>Mi Memoria Personal</span>
       @if (cuotaMemoria.value(); as cuota) {
-        <span class="text-[10px] px-2 py-0.5 rounded-full font-black bg-white/20">
+        <span class="crm-contador crm-contador-inverso">
           {{ cuota.megabytesUsados }} / {{ cuota.megabytesMaximos }} MB
         </span>
       }
@@ -317,7 +317,7 @@
                       </app-badge>
                     </div>
                     @if (item.atajo) {
-                      <span class="text-[10px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full shrink-0 border border-primary/20">
+                      <span class="crm-atajo shrink-0" title="Escribe esto en el chat para insertarlo">
                         {{ item.atajo }}
                       </span>
                     }

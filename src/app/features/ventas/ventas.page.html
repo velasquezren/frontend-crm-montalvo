@@ -68,7 +68,7 @@
             [class.text-text-muted]="vistaActiva() !== 'tabla'">
             <app-icon name="file-text" [size]="14" />
             <span>Listado</span>
-            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-bg-workspace text-text-dark border border-border">
+            <span class="crm-contador" [class.crm-contador-activo]="vistaActiva() === 'tabla'">
               {{ ventas.value().total }}
             </span>
           </button>
@@ -402,8 +402,8 @@
                 <td>
                   <div class="flex flex-col gap-1">
                     @if (venta.metodoPago) {
-                      <span class="text-[10px] font-semibold text-text-dark bg-neutral-bg px-2 py-0.5 rounded-full border border-border w-fit inline-flex items-center gap-1">
-                        <app-icon name="dollar-sign" [size]="10" class="text-primary" />
+                      <span class="inline-flex items-center gap-1 w-fit text-[10px] font-medium text-text-muted">
+                        <app-icon name="dollar-sign" [size]="10" class="text-primary shrink-0" />
                         {{ venta.metodoPago }}
                       </span>
                     }

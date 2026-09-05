@@ -1,0 +1,45 @@
+<div class="flex items-start justify-between gap-2">
+  <div class="min-w-0 flex-1">
+    <p class="text-xs font-bold text-text-dark leading-tight truncate">
+      {{ lead().cliente | nombreCliente }}
+    </p>
+    <div class="crm-meta crm-meta-sm mt-0.5">
+      <span class="crm-meta-clave">{{ lead().cliente.telefono }}</span>
+      @if (lead().cliente.pac; as codigo) {
+        <span class="crm-meta-clave">{{ codigo }}</span>
+      }
+    </div>
+  </div>
+
+  <a
+    [routerLink]="['/conversaciones']"
+    [queryParams]="{ busqueda: lead().cliente.telefono }"
+    (click)="$event.stopPropagation()"
+    class="p-1 rounded-lg text-text-muted hover:text-primary hover:bg-bg-light transition-colors inline-flex shrink-0"
+    title="Abrir chat en WhatsApp"
+    aria-label="Abrir chat en WhatsApp">
+    <app-icon name="message-circle" [size]="13" />
+  </a>
+</div>
+
+<div class="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-border/40">
+  <div class="crm-meta crm-meta-sm min-w-0">
+    <span class="whitespace-nowrap">{{ lead().createdAt | date: 'dd/MM HH:mm' }}</span>
+    <span class="truncate" [title]="origenLabel[lead().origen]">{{ canal() }}</span>
+  </div>
+
+  @if (lead().agente; as ag) {
+    <!-- Sin `.crm-meta`: son dos hijos (icono y nombre) y el separador `·` se
+         colaría entre ellos. Es un solo dato, no una lista. -->
+    <span
+      class="inline-flex items-center gap-1 text-[10px] text-text-muted shrink-0 max-w-[130px]"
+      [title]="ag.nombre">
+      <app-icon name="users" [size]="10" class="shrink-0 text-text-muted" />
+      <span class="truncate">{{ ag.nombre }}</span>
+    </span>
+  } @else {
+    <!-- Esto SÍ es estado, no un dato: un lead sin dueña es trabajo que nadie
+         está haciendo. Es la única píldora que queda en la tarjeta. -->
+    <app-badge variant="neutral" icon="alert-circle">Sin asignar</app-badge>
+  }
+</div>

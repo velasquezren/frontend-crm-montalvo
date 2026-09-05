@@ -29,9 +29,7 @@
         [class]="state.filtroTab() === 'TODAS' && !state.filtroAgenteId() ? 'text-primary font-bold border-b-2 border-primary -mb-[11px] pb-2' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent -mb-[11px] pb-2'"
         class="flex flex-col items-center gap-1 px-3 transition-all cursor-pointer">
         <span class="text-xs leading-tight">Todas</span>
-        <span
-          [class]="state.filtroTab() === 'TODAS' && !state.filtroAgenteId() ? 'text-primary bg-primary/10 font-bold' : 'text-text-muted bg-text-muted/10 font-semibold'"
-          class="text-[10px] px-2 py-0.5 rounded-full leading-none">
+        <span class="crm-contador" [class.crm-contador-activo]="state.filtroTab() === 'TODAS' && !state.filtroAgenteId()">
           {{ state.stats().total }}
         </span>
       </button>
@@ -45,9 +43,7 @@
         [class]="state.filtroTab() === 'SIN_RESPONDER' ? 'text-primary font-bold border-b-2 border-primary -mb-[11px] pb-2' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent -mb-[11px] pb-2'"
         class="flex flex-col items-center gap-1 px-3 transition-all cursor-pointer">
         <span class="text-xs leading-tight">Sin responder</span>
-        <span
-          [class]="state.filtroTab() === 'SIN_RESPONDER' ? 'text-primary bg-primary/10 font-bold' : 'text-text-muted bg-text-muted/10 font-semibold'"
-          class="text-[10px] px-2 py-0.5 rounded-full leading-none">
+        <span class="crm-contador" [class.crm-contador-activo]="state.filtroTab() === 'SIN_RESPONDER'">
           {{ state.stats().sinResponder }}
         </span>
       </button>
@@ -60,9 +56,7 @@
         [class]="state.filtroTab() === 'SIN_ASIGNAR' ? 'text-primary font-bold border-b-2 border-primary -mb-[11px] pb-2' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent -mb-[11px] pb-2'"
         class="flex flex-col items-center gap-1 px-3 transition-all cursor-pointer">
         <span class="text-xs leading-tight">Sin asignar</span>
-        <span
-          [class]="state.filtroTab() === 'SIN_ASIGNAR' ? 'text-primary bg-primary/10 font-bold' : 'text-text-muted bg-text-muted/10 font-semibold'"
-          class="text-[10px] px-2 py-0.5 rounded-full leading-none">
+        <span class="crm-contador" [class.crm-contador-activo]="state.filtroTab() === 'SIN_ASIGNAR'">
           {{ state.stats().sinAsignar }}
         </span>
       </button>
@@ -75,9 +69,7 @@
         [class]="state.filtroTab() === 'MIS_CHATS' ? 'text-primary font-bold border-b-2 border-primary -mb-[11px] pb-2' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent -mb-[11px] pb-2'"
         class="flex flex-col items-center gap-1 px-3 transition-all cursor-pointer">
         <span class="text-xs leading-tight">Mis chats</span>
-        <span
-          [class]="state.filtroTab() === 'MIS_CHATS' ? 'text-primary bg-primary/10 font-bold' : 'text-text-muted bg-text-muted/10 font-semibold'"
-          class="text-[10px] px-2 py-0.5 rounded-full leading-none">
+        <span class="crm-contador" [class.crm-contador-activo]="state.filtroTab() === 'MIS_CHATS'">
           {{ state.stats().misChats }}
         </span>
       </button>

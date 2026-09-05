@@ -235,7 +235,7 @@
                     size="sm"
                     [variant]="posicion === 0 ? 'solid' : 'light'" />
                   @if (agente.rankBadge; as badge) {
-                    <span class="absolute -top-1.5 -right-1.5 text-[9px] px-1 rounded-full border shadow-subtle font-extrabold" [class]="badge.colorClass">
+                    <span class="crm-medalla" [class]="badge.colorClass">
                       {{ badge.label }}
                     </span>
                   }

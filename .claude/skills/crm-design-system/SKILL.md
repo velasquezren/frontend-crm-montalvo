@@ -275,6 +275,32 @@ viven a la derecha de la fila de pestañas, solo-ícono (`<app-button [circle]>`
 con `ariaLabel`), porque son los mismos tres iconos del menú lateral y ya se
 leen sin etiqueta.
 
+### La cápsula diminuta tiene cinco nombres, y ninguno es "a mano"
+
+`rounded-full` + `text-[10px]` es la forma que toma acá un dato que alguien
+quiso destacar. Se escriben de a una y no rompen nada, así que se acumulan:
+llegaron a ser **dieciocho repartidas por nueve vistas**. El problema no era el
+número, era que la misma forma decía tres cosas incompatibles. Elegí cuál es:
+
+| Qué es | Con qué se escribe |
+|---|---|
+| Un **estado** (categoría, etapa, "Sin asignar") | `<app-badge>` |
+| Un **contador de pestaña** ("Todas · 325") | `.crm-contador`, con `.crm-contador-activo` o `.crm-contador-inverso` (sobre superficie primaria rellena) |
+| Un **dato de apoyo** (teléfono, PAC, canal, agente) | `.crm-meta` / `.crm-meta-clave`, y `.crm-meta-sm` en tarjetas |
+| Algo que la agente **teclea** (atajo de Mi Memoria) | `.crm-atajo` |
+| La **medalla** #1/#2/#3 sobre un avatar | `.crm-medalla` (el color sigue viniendo del `.ts`) |
+
+`check:skills` rechaza cualquier `class` que junte `rounded-full` con un tamaño
+de texto de 11px o menos, fuera de `shared/components/`. Los átomos arman sus
+clases en el `.ts`, así que no caen en la red.
+
+**Ojo con `.crm-meta` y la cascada**: vive fuera de toda `@layer` y Tailwind pone
+sus utilidades en `@layer utilities`, así que su `font-size` **le gana** a un
+`text-[10px]` puesto en la plantilla. Por eso la variante compacta es una clase
+propia (`.crm-meta-sm`) y no un ajuste desde el HTML. Y `.crm-meta` pone un `·`
+entre cada hijo: si el contenido es un solo dato con su icono, no es una lista y
+no lleva esa clase.
+
 ## Un contenedor que scrollea NO puede ser el que redondea
 
 `position: sticky` no queda recortado por el `border-radius` del contenedor que
@@ -401,6 +427,7 @@ rompa lo que este archivo declara ley**:
 | Hexadecimales | cualquier `#rrggbb` ajeno a los nueve de la paleta, en `.css` **y en `.ts`** |
 | Un solo cajón | `animate-drawer-in` o el `panelClass` del cajón fuera de su dueño — se usa `<app-drawer>` y `DialogService.abrirCajon()` |
 | Nombre de cliente | `{{ …cliente.nombre }}` o `iniciales(…cliente.nombre)` en crudo — va por `nombreCliente` / `inicialesCliente` |
+| Píldoras a mano | `rounded-full` + `text-[≤11px]` en un `class` fuera de `shared/components/` — usa el nombre que le corresponda |
 
 Existe porque el inbox había acumulado **17 desviaciones** —una escala ámbar completa donde la
 paleta excluye ámbares a propósito, cinco sombras ajenas, ocho radios distintos— sin que nada

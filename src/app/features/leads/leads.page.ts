@@ -29,6 +29,7 @@ import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
+import { LeadCardComponent } from './components/lead-card/lead-card.component';
 import { esNombreProvisional } from '../../shared/models/nombre-cliente';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
@@ -66,6 +67,7 @@ type FiltroOrigen = OrigenLeadApi | 'TODOS';
     BadgeComponent,
     ButtonComponent,
     DrawerComponent,
+    LeadCardComponent,
     EmptyStateComponent,
     InputComponent,
     LoadingSkeletonComponent,

@@ -26,6 +26,7 @@ import { ConversacionesService } from '../../conversaciones.service';
 import { MemoriaAgenteService } from '../../../memoria-agente/memoria-agente.service';
 import { RecursoMemoria } from '../../../memoria-agente/memoria-agente.model';
 import { MensajeApi, PlantillaResumen } from '../../conversacion.model';
+import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 
 interface AdjuntoLocal {
   readonly mediaKey: string;
@@ -58,6 +59,7 @@ function tipoBase(mime: string): string {
 @Component({
   selector: 'app-conversacion-composer',
   imports: [
+    BadgeComponent,
     RouterLink,
     ButtonComponent,
     IconComponent,

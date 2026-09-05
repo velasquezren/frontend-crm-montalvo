@@ -337,10 +337,103 @@ tr:hover .celda-sticky {
   color: var(--color-border);
 }
 
+/* Variante compacta para tarjetas (kanban), donde 12px no entra.
+   Va con doble clase a propósito: `.crm-meta` vive fuera de toda `@layer` y por
+   eso le gana en cascada a cualquier `text-[10px]` de Tailwind, que sí está en
+   `@layer utilities`. Intentar ajustarlo desde la plantilla no funcionaría. */
+.crm-meta.crm-meta-sm {
+  font-size: 10px;
+  gap: 0 6px;
+}
+
+.crm-meta.crm-meta-sm > * + *::before {
+  margin-right: 6px;
+}
+
 /* El dato que identifica —teléfono, PAC— se lee en cifras, no en prosa. */
 .crm-meta-clave {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-weight: 600;
   color: var(--color-text-dark);
   font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Contador dentro de una pestaña
+   ========================================================================== */
+
+/* "Todas (325)", "Sin responder (11)", "Listado (1.204)". Estaba escrito seis
+   veces con seis mezclas de utilidades —una por pestaña del inbox y otra en
+   Ventas, esta con `font-mono` y borde y las demás sin—, así que el mismo
+   contador se veía distinto según la pantalla.
+
+   Tres variantes, que son los tres fondos reales sobre los que se apoya: una
+   pestaña en reposo, una activa subrayada, y una activa RELLENA de primario
+   (Perfil), donde un tinte primario sobre primario no se vería. */
+.crm-contador {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-text-muted);
+  background: var(--color-bg-workspace);
+  font-variant-numeric: tabular-nums;
+}
+
+.crm-contador-activo {
+  color: var(--color-primary);
+  background: var(--color-bg-light);
+  font-weight: 700;
+}
+
+/* Sobre una superficie ya rellena de primario. */
+.crm-contador-inverso {
+  color: inherit;
+  background: rgb(255 255 255 / 0.2);
+  font-weight: 800;
+}
+
+/* ==========================================================================
+   Atajo de teclado / código que la agente teclea
+   ========================================================================== */
+
+/* El "atajo" de un recurso de Mi Memoria es literalmente lo que se escribe en
+   el chat para insertarlo. Es una tecla, no una etiqueta de estado: por eso va
+   en monoespaciada y con la forma de una tecla, no de una píldora de color. */
+.crm-atajo {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--color-primary);
+  background: var(--color-bg-light);
+}
+
+/* ==========================================================================
+   Medalla de posición sobre un avatar — ranking de ejecutivas (Dashboard)
+   ========================================================================== */
+
+/* Geometría y posición acá; el COLOR lo sigue poniendo `rankBadge.colorClass`
+   desde el .ts, porque la jerarquía #1/#2/#3 se lee por intensidad del verde de
+   marca y no por oro/plata/bronce — la paleta excluye ámbar y gris a propósito
+   (CRM_MANIFESTO.md §3.4). Separar las dos cosas deja el porqué en el .ts, que
+   es donde está escrito, y saca la forma del HTML. */
+.crm-medalla {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  padding: 0 4px;
+  border-radius: 9999px;
+  border-width: 1px;
+  border-style: solid;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.5;
+  box-shadow: var(--shadow-subtle);
 }

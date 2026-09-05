@@ -122,18 +122,24 @@ function apiDelComponente(selector) {
  * Las filas del inventario, y **solo** esas.
  *
  * Antes bastaba con que una fila de tabla nombrara un `<app-algo>` para que se
- * leyera como inventario. La tabla de animaciones cita `<app-drawer>` en su
- * descripción ("la pone `<app-drawer>`, no la escribas a mano"), y esa fila
- * entraba al chequeo con la columna de API vacía: el validador concluía que el
- * átomo no documentaba ninguno de sus seis miembros. El inventario tiene una
- * forma fija —`| Nombre | <selector> | API |`— y exigirla quita el falso
- * positivo sin perder nada.
+ * leyera como inventario, y el skill tiene otras dos tablas que citan
+ * componentes: la de animaciones ("la pone `<app-drawer>`, no la escribas a
+ * mano") y la que dice con qué se escribe cada cápsula, cuya segunda columna es
+ * exactamente `<app-badge>`. Ambas entraban al chequeo sin columna de API y el
+ * validador concluía que el átomo no documentaba ninguno de sus miembros.
+ *
+ * Lo que las distingue es la FORMA: el inventario tiene tres columnas
+ * (`| Nombre | <selector> | API |`) y las otras dos. Exigirlo quita los dos
+ * falsos positivos sin perder nada — y deja escribir tablas de referencia que
+ * citen componentes, que es lo que uno quiere poder hacer en un skill.
  */
 function filasDeInventario(texto) {
   const filas = [];
   for (const fila of texto.split('\n')) {
     if (!fila.startsWith('|')) continue;
     const columnas = fila.split('|');
+    /* '' + tres columnas + '' — una tabla de dos columnas da 4 y no es esta. */
+    if (columnas.length < 5) continue;
     const selector = columnas[2]?.trim().replace(/^`|`$/g, '').match(/^<(app-[a-z-]+)>$/)?.[1];
     if (selector) filas.push({ selector, columnaApi: columnas.slice(3).join('|') });
   }
@@ -369,6 +375,55 @@ function verificarCodigo() {
     if (!existsSync(resolve(base, rel))) {
       señalaCodigo(`DEUDA menciona ${rel}, que ya no existe — bórrala.`);
     }
+  }
+}
+
+// ── 8. Ninguna píldora suelta: o es un átomo, o es una utilidad con nombre ───
+// Una cápsula diminuta —`rounded-full` + `text-[10px]`— es la forma que toma en
+// este proyecto un dato que alguien quiso destacar. Se escriben de a una y no
+// rompen nada, así que se acumulan: llegaron a ser DIECIOCHO repartidas por
+// nueve vistas, y en la ficha del paciente había cinco juntas de colores
+// distintos. El usuario lo dijo mejor que ningún linter: "tanta información,
+// tantos botones".
+//
+// El problema de fondo es que la misma forma decía tres cosas incompatibles: un
+// estado (que es <app-badge>), un contador de pestaña, y un dato de apoyo (que
+// no debería ser cápsula en absoluto). Nombrarlas obliga a elegir cuál es:
+//
+//   estado                  → <app-badge>
+//   contador de pestaña     → .crm-contador (+ -activo / -inverso)
+//   dato de apoyo           → .crm-meta / .crm-meta-clave
+//   atajo que se teclea     → .crm-atajo
+//   medalla sobre un avatar → .crm-medalla
+//
+// Los átomos (button, badge, filter-chip) arman sus clases en el .ts y por eso
+// no caen acá; `shared/components/` queda exento para el día que uno necesite
+// una plantilla aparte.
+function verificarPildoras() {
+  const base = resolve(RAIZ, 'src', 'app');
+  const ATRIBUTO = /class="([^"]*)"/g;
+  const MINUSCULA = /\btext-\[(?:[0-9]|1[01])px\]/;
+
+  for (const ruta of indexar(base)) {
+    if (!/\.(html|ts)$/.test(ruta)) continue;
+    const rel = relative(base, ruta);
+    if (rel.startsWith('shared/components/')) continue;
+
+    const codigo = readFileSync(ruta, 'utf8');
+    const sueltas = [...codigo.matchAll(ATRIBUTO)]
+      .map(m => m[1])
+      .filter(clases => /\brounded-full\b/.test(clases) && MINUSCULA.test(clases));
+
+    if (sueltas.length === 0) continue;
+
+    problemas.push({
+      skill: 'crm-design-system',
+      mensaje:
+        `${rel}: ${sueltas.length} píldora(s) armada(s) a mano con utilidades ` +
+        '(`rounded-full` + `text-[≤11px]`). Decide qué es y usa su nombre: ' +
+        '<app-badge> si es un estado, `.crm-contador` si es un contador de pestaña, ' +
+        '`.crm-meta` si es un dato de apoyo, `.crm-atajo` si es algo que se teclea.',
+    });
   }
 }
 
@@ -657,6 +712,7 @@ for (const nombre of readdirSync(SKILLS)) {
 verificarCodigo();
 verificarCajonUnico();
 verificarNombreCliente();
+verificarPildoras();
 verificarCssEncapsulado();
 verificarRendimiento();
 

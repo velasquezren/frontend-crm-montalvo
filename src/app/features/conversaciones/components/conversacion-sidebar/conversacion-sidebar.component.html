@@ -166,16 +166,19 @@
               [icon]="categoriaIcon[chat.cliente.categoria]">
               {{ categoriaLabel[chat.cliente.categoria] }}
             </app-badge>
-            @if (chat.cliente.pac) {
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-mono text-[11px] font-bold" title="Código PAC (FileMaker)">
-                <app-icon name="file-text" [size]="10" />
-                {{ chat.cliente.pac }}
+            @if (chat.cliente.pac; as codigo) {
+              <!-- La categoría de arriba SÍ es estado y por eso es badge; el PAC
+                   es un dato, y se escribe como tal. El botón de copiar queda
+                   fuera del texto en vez de dentro de la cápsula. -->
+              <span class="inline-flex items-center gap-1" title="Código PAC (FileMaker)">
+                <span class="crm-meta-clave text-[11px]">{{ codigo }}</span>
                 <button
                   type="button"
-                  (click)="copiarTexto(chat.cliente.pac, 'Código PAC')"
-                  class="text-primary/70 hover:text-primary transition-colors cursor-pointer ml-0.5"
-                  title="Copiar PAC">
-                  <app-icon name="copy" [size]="10" />
+                  (click)="copiarTexto(codigo, 'Código PAC')"
+                  class="text-text-muted hover:text-primary transition-colors cursor-pointer"
+                  title="Copiar PAC"
+                  aria-label="Copiar código PAC">
+                  <app-icon name="copy" [size]="11" />
                 </button>
               </span>
             }
