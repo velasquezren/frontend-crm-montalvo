@@ -9,10 +9,10 @@
         title="Volver a la lista de chats">
         <app-icon name="chevron-left" [size]="20" />
       </button>
-      <app-avatar [initials]="iniciales(chat.cliente.nombre)" class="shrink-0" />
+      <app-avatar [initials]="chat.cliente | inicialesCliente" [nombre]="chat.cliente | nombreCliente" class="shrink-0" />
       <div class="min-w-0 flex-1">
         <p class="font-semibold text-text-dark text-xs sm:text-sm leading-tight truncate">
-          {{ chat.cliente.nombre }}
+          {{ chat.cliente | nombreCliente }}
         </p>
         <div class="flex items-center gap-1.5 mt-0.5 min-w-0">
           <span class="text-[11px] sm:text-xs text-text-muted leading-tight truncate max-w-[120px] sm:max-w-none">{{ chat.cliente.telefono }}</span>

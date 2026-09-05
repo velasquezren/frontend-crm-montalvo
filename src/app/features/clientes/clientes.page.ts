@@ -5,7 +5,6 @@ import { DatePipe } from '@angular/common';
 import { listaExtra, textoExtra, textoExtraOpcional } from '../../core/api/datos-extra';
 import { mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
-import { generarIniciales } from '../../core/auth/user.model';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -31,6 +30,7 @@ import {
   CategoriaCliente,
 } from '../../shared/models/cliente-categoria.model';
 import { Cliente } from './cliente.model';
+import { esNombreProvisional } from '../../shared/models/nombre-cliente';
 import { ClientesService, OrdenCliente } from './clientes.service';
 import { ConversacionesService } from '../conversaciones/conversaciones.service';
 import { AgenteResumen } from '../conversaciones/conversacion.model';
@@ -38,7 +38,8 @@ import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { OverlayRef } from '@angular/cdk/overlay';
 import { TemplateRef, ViewContainerRef } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 
 type FiltroCategoria = CategoriaCliente | 'TODOS';
 type PestanaModal = 'EXPEDIENTE' | 'CONTACTO' | 'NOTAS';
@@ -50,6 +51,8 @@ type PestanaModal = 'EXPEDIENTE' | 'CONTACTO' | 'NOTAS';
 @Component({
   selector: 'app-clientes',
   imports: [
+    InicialesClientePipe,
+    NombreClientePipe,
     PageHeaderComponent,
     InputComponent,
     FilterChipComponent,
@@ -77,13 +80,30 @@ export class ClientesPage {
   private readonly toast = inject(ToastService);
   private readonly dialogService = inject(DialogService);
   private readonly vcr = inject(ViewContainerRef);
+  private readonly router = inject(Router);
 
   private activeOverlayRef?: OverlayRef;
 
   protected readonly categoriaLabel = CATEGORIA_LABEL;
   protected readonly categoriaBadge = CATEGORIA_BADGE;
   protected readonly categoriaIcon = CATEGORIA_ICON;
-  protected readonly iniciales = generarIniciales;
+
+  /* Un contacto que llegó por WhatsApp sin dar su nombre se guarda como
+     "WhatsApp +591…", que no es un nombre. Ver `shared/models/nombre-cliente`. */
+  protected sinNombre(cliente: Cliente): boolean {
+    return esNombreProvisional(cliente.nombre);
+  }
+
+  /** Las tres pestañas de la ficha, en una tabla en vez de tres bloques iguales. */
+  protected readonly pestanasFicha: readonly {
+    id: PestanaModal;
+    etiqueta: string;
+    icono: IconName;
+  }[] = [
+    { id: 'EXPEDIENTE', etiqueta: 'Expediente Clínico', icono: 'file-text' },
+    { id: 'CONTACTO', etiqueta: 'Datos de Contacto', icono: 'user' },
+    { id: 'NOTAS', etiqueta: 'Perfil & Notas', icono: 'edit' },
+  ];
 
   protected readonly busqueda = signal('');
   protected readonly filtro = signal<FiltroCategoria>('TODOS');
@@ -207,6 +227,37 @@ export class ClientesPage {
     const directIntereses = cliente.intereses?.map(i => i.descripcion) ?? [];
     const tagsExtra = listaExtra(cliente.datosExtra, 'tags', 'intereses');
     return [...new Set([...directIntereses, ...tagsExtra])];
+  }
+
+  /* ── Acciones rápidas de la ficha ────────────────────────────────
+     Son comandos, no enlaces: además de navegar cierran el cajón y llevan al
+     paciente ya cargado al otro módulo. Por eso van con <app-button> y no con
+     <a routerLink>, que anunciaría un destino al que nunca se llega tal cual. */
+
+  private irACon(ruta: string, queryParams: Record<string, string>): void {
+    this.cerrarEdicion();
+    void this.router.navigate([ruta], { queryParams });
+  }
+
+  protected irAConversacion(cliente: Cliente): void {
+    this.irACon('/conversaciones', { clienteId: cliente.id });
+  }
+
+  protected irARegistrarVenta(cliente: Cliente): void {
+    this.irACon('/ventas', { ...this.contextoPaciente(cliente), nuevo: '1' });
+  }
+
+  protected irAAgendar(cliente: Cliente): void {
+    this.irACon('/actividades', { ...this.contextoPaciente(cliente), nuevo: '1' });
+  }
+
+  /** Lo que Ventas y Actividades necesitan para precargar al paciente. */
+  private contextoPaciente(cliente: Cliente): Record<string, string> {
+    return {
+      clienteId: cliente.id,
+      clienteNombre: cliente.nombre,
+      clienteTelefono: cliente.telefono,
+    };
   }
 
   protected abrirCreacion(template: TemplateRef<unknown>): void {

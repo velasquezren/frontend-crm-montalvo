@@ -304,3 +304,43 @@ tr:hover .celda-sticky {
   border-radius: 9999px;
   font-variant-numeric: tabular-nums;
 }
+
+/* ==========================================================================
+   Línea de datos secundarios — cabeceras de cajón y tarjetas de detalle
+   ========================================================================== */
+
+/* Teléfono, código PAC, agente asignada: datos de apoyo, no etiquetas de
+   estado. Estaban escritos como píldoras —cada uno con su borde, su fondo y su
+   `text-[10px]`— y una cabecera con cinco píldoras de colores distintos no se
+   lee: se mira. El estado sí es una píldora, y para eso está <app-badge>; el
+   resto es texto tranquilo separado por puntos.
+
+   Global porque la repiten la ficha del paciente y la del lead, y la heredará
+   cualquier cabecera nueva: es el criterio de `crm-design-system` (si la misma
+   clase la necesitan dos o tres plantillas, sube a global o se hace átomo). Es
+   layout y color puros, sin comportamiento, así que no da para átomo. */
+.crm-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+/* El separador es del CSS y no del HTML a propósito: así una plantilla puede
+   ocultar un dato con @if sin quedarse con un punto suelto al principio. */
+.crm-meta > * + *::before {
+  content: '·';
+  margin-right: 8px;
+  color: var(--color-border);
+}
+
+/* El dato que identifica —teléfono, PAC— se lee en cifras, no en prosa. */
+.crm-meta-clave {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  font-variant-numeric: tabular-nums;
+}

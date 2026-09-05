@@ -372,6 +372,40 @@ function verificarCodigo() {
   }
 }
 
+// ── 8. El nombre de un cliente se pinta con su pipe, nunca en crudo ──────────
+// Un contacto que escribe por WhatsApp sin dar su nombre se guarda como
+// "WhatsApp +59171836560". Interpolarlo tal cual deja la ficha diciendo el mismo
+// teléfono dos veces —una como título, otra como dato— y la palabra "WhatsApp"
+// haciendo de nombre de pila; y `generarIniciales` sobre eso da "W+", que no son
+// las iniciales de nadie.
+//
+// No es un fallo que se rompa: se ve mal en la vista que se olvidó, y se olvida
+// una a la vez. Estaba en quince sitios repartidos por seis vistas. Por eso la
+// regla no pide "acordate del pipe": prohíbe la forma cruda.
+function verificarNombreCliente() {
+  const base = resolve(RAIZ, 'src', 'app');
+  /* `algo.cliente.nombre` o `cliente.nombre` interpolado, y el mismo camino
+     pasado a `iniciales(...)`. Un `{{ ag.nombre }}` (agente) o un
+     `cliente.agente.nombre` no casan: solo el nombre DEL cliente. */
+  const CRUDO = /\{\{\s*(?:[\w$]+\.)*cliente\.nombre\s*(?:\|\s*\w+\s*)?\}\}|iniciales\(\s*(?:[\w$]+\.)*cliente\.nombre\s*\)/g;
+
+  for (const ruta of indexar(base).filter(r => r.endsWith('.html'))) {
+    const hallados = (readFileSync(ruta, 'utf8').match(CRUDO) ?? []).filter(
+      t => !/\|\s*(nombreCliente|inicialesCliente)/.test(t),
+    );
+    if (hallados.length === 0) continue;
+
+    problemas.push({
+      skill: 'crm-design-system',
+      mensaje:
+        `${relative(base, ruta)}: pinta el nombre del cliente en crudo ` +
+        `(${hallados.length} vez/veces). Usa \`{{ x.cliente | nombreCliente }}\` y ` +
+        '`[initials]="x.cliente | inicialesCliente"`, o un contacto sin nombre sale ' +
+        'como "WhatsApp +591…" y su avatar como "W+".',
+    });
+  }
+}
+
 // ── 8. El cajón lateral se usa, no se reescribe ──────────────────────────────
 // La conversión de modales a cajones (2026-09-05) dejó diez `<aside … 
 // animate-drawer-in>` en seis plantillas con cinco anchos distintos, seis copias
@@ -622,6 +656,7 @@ for (const nombre of readdirSync(SKILLS)) {
 /* Globales, no por skill: miran el código, no la documentación. */
 verificarCodigo();
 verificarCajonUnico();
+verificarNombreCliente();
 verificarCssEncapsulado();
 verificarRendimiento();
 

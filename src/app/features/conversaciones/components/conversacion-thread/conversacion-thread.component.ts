@@ -23,6 +23,7 @@ import { generarIniciales } from '../../../../core/auth/user.model';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
 import { ConversacionResumen } from '../../conversacion.model';
 import { textoExtra } from '../../../../core/api/datos-extra';
+import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 
 function soloDigitos(telefono: string): string {
   return telefono.replace(/\D/g, '');
@@ -36,6 +37,8 @@ function soloDigitos(telefono: string): string {
 @Component({
   selector: 'app-conversacion-thread',
   imports: [
+    InicialesClientePipe,
+    NombreClientePipe,
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,

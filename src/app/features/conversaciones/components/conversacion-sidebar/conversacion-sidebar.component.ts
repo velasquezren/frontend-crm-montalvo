@@ -40,6 +40,7 @@ import { CatalogoClinico } from '../../../ventas/venta.model';
 import { httpResource } from '@angular/common/http';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
 import { ConversacionResumen } from '../../conversacion.model';
+import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 
 type ClienteChat = ConversacionResumen['cliente'];
 
@@ -55,6 +56,8 @@ function soloDigitos(telefono: string): string {
 @Component({
   selector: 'app-conversacion-sidebar',
   imports: [
+    InicialesClientePipe,
+    NombreClientePipe,
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,

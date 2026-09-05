@@ -60,6 +60,8 @@ import {
   Venta,
 } from './venta.model';
 import { VentasService } from './ventas.service';
+import { esNombreProvisional } from '../../shared/models/nombre-cliente';
+import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 
 type FiltroVenta = EstadoVenta | 'TODAS';
 
@@ -145,6 +147,8 @@ function calcularRangoFechas(
 @Component({
   selector: 'app-ventas',
   imports: [
+    InicialesClientePipe,
+    NombreClientePipe,
     PageHeaderComponent,
     KpiCardComponent,
     IconComponent,
@@ -200,6 +204,13 @@ export class VentasPage implements OnDestroy {
   protected readonly estadoBadge = ESTADO_VENTA_BADGE;
   protected readonly estadoLabel = ESTADO_VENTA_LABEL;
   protected readonly iniciales = generarIniciales;
+
+  /* Un contacto que llegó por WhatsApp sin dar su nombre se guarda como
+     "WhatsApp +591…", y entonces el título YA es el teléfono: repetirlo debajo
+     era decir dos veces el mismo número. Ver `shared/models/nombre-cliente`. */
+  protected sinNombre(cliente: { nombre: string; telefono: string }): boolean {
+    return esNombreProvisional(cliente.nombre);
+  }
 
   protected readonly metodosPago = METODOS_PAGO;
   protected readonly presetsPeriodo = PRESETS_PERIODO;

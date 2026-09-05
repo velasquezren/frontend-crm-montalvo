@@ -23,13 +23,13 @@ import {
 
 import { mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
-import { generarIniciales } from '../../core/auth/user.model';
 import { ToastService } from '../../core/toast/toast.service';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
+import { esNombreProvisional } from '../../shared/models/nombre-cliente';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
@@ -46,6 +46,7 @@ import {
 import { Lead, ORIGEN_LABEL, OrigenLeadApi } from './lead.model';
 import { FiltroLeads, LeadsService, ResumenLeads } from './leads.service';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 
 type FiltroOrigen = OrigenLeadApi | 'TODOS';
 
@@ -56,6 +57,8 @@ type FiltroOrigen = OrigenLeadApi | 'TODOS';
 @Component({
   selector: 'app-leads',
   imports: [
+    InicialesClientePipe,
+    NombreClientePipe,
     PageHeaderComponent,
     FilterChipComponent,
     TableComponent,
@@ -123,7 +126,12 @@ export class LeadsPage implements OnDestroy {
   protected readonly estadoBadge = ESTADO_LEAD_BADGE;
   protected readonly estadoLabel = ESTADO_LEAD_LABEL;
   protected readonly origenLabel = ORIGEN_LABEL;
-  protected readonly iniciales = generarIniciales;
+
+  /* Un contacto que llegó por WhatsApp sin dar su nombre se guarda como
+     "WhatsApp +591…". Ver `shared/models/nombre-cliente`. */
+  protected sinNombre(cliente: { nombre: string; telefono: string }): boolean {
+    return esNombreProvisional(cliente.nombre);
+  }
 
   /* Modos de vista: 'PIPELINE' (Kanban) o 'LISTA' (Tabla) */
   protected readonly modoVista = signal<'PIPELINE' | 'LISTA'>('PIPELINE');

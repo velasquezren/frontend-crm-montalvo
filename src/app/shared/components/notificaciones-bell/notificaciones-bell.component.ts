@@ -28,6 +28,7 @@ import {
 import { ActividadesService } from '../../../features/actividades/actividades.service';
 import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
+import { NombreClientePipe } from '../../pipes/nombre-cliente.pipe';
 
 /** `HH:mm` del final del día de hoy, en ISO — "vencidas + hoy" en una sola consulta. */
 function finDeHoyIso(): string {
@@ -49,7 +50,8 @@ function finDeHoyIso(): string {
  */
 @Component({
   selector: 'app-notificaciones-bell',
-  imports: [ButtonComponent, DatePipe, IconComponent],
+  imports: [
+    NombreClientePipe,ButtonComponent, DatePipe, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './notificaciones-bell.component.html',
   styleUrl: './notificaciones-bell.component.css',

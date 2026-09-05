@@ -161,7 +161,7 @@
 
           <!-- Avatar con indicador de sin asignar -->
           <div class="relative">
-            <app-avatar [initials]="iniciales(chat.cliente.nombre)" />
+            <app-avatar [initials]="chat.cliente | inicialesCliente" [nombre]="chat.cliente | nombreCliente" />
             @if (!chat.agente) {
               <span class="unassigned-dot" title="Sin agente asignado"></span>
             }
@@ -172,7 +172,7 @@
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-1.5 min-w-0">
                 <p class="font-medium text-text-dark text-sm truncate leading-tight">
-                  {{ chat.cliente.nombre }}
+                  {{ chat.cliente | nombreCliente }}
                 </p>
                 @if (chat.cliente.pac) {
                   <span class="text-[9px] font-mono font-bold text-primary bg-primary/10 px-1 py-0.2 rounded border border-primary/20 shrink-0" title="Código PAC en FileMaker">

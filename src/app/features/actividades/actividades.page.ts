@@ -58,6 +58,8 @@ import {
   TipoActividad,
 } from './actividad.model';
 import { ActividadesService, FiltroActividades } from './actividades.service';
+import { esNombreProvisional } from '../../shared/models/nombre-cliente';
+import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 
 type FiltroRapido = 'PENDIENTES' | 'VENCIDAS' | 'HOY' | 'PROXIMA_SEMANA' | 'COMPLETADAS' | 'TODAS';
 type Vista = 'LISTA' | 'CALENDARIO';
@@ -91,6 +93,8 @@ interface ClienteMinimo {
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-actividades-page',
   imports: [
+    InicialesClientePipe,
+    NombreClientePipe,
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,
@@ -122,6 +126,13 @@ export class ActividadesPage implements OnDestroy {
 
   protected readonly esAdmin = this.authService.isAdmin;
   protected readonly iniciales = generarIniciales;
+
+  /* Un contacto que llegó por WhatsApp sin dar su nombre se guarda como
+     "WhatsApp +591…", y entonces el título YA es el teléfono: repetirlo debajo
+     era decir dos veces el mismo número. Ver `shared/models/nombre-cliente`. */
+  protected sinNombre(cliente: { nombre: string; telefono: string }): boolean {
+    return esNombreProvisional(cliente.nombre);
+  }
   protected readonly tiposLabel = TIPO_ACTIVIDAD_LABEL;
   protected readonly tipoIcono = TIPO_ACTIVIDAD_ICONO;
   protected readonly estadoLabel = ESTADO_ACTIVIDAD_LABEL;

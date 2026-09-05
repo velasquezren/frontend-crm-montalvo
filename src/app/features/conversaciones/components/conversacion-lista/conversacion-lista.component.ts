@@ -14,6 +14,7 @@ import {
   esperandoDesde,
   FiltroInbox,
 } from '../../conversacion.model';
+import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 
 /**
  * Panel lateral izquierdo con la bandeja de entrada (Inbox).
@@ -23,6 +24,8 @@ import {
 @Component({
   selector: 'app-conversacion-lista',
   imports: [
+    InicialesClientePipe,
+    NombreClientePipe,
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,

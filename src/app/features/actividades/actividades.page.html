@@ -235,10 +235,10 @@
               </td>
               <td class="text-left" (click)="$event.stopPropagation()">
                 <div class="flex items-center gap-2.5">
-                  <app-avatar [initials]="iniciales(actividad.cliente.nombre)" size="sm" />
+                  <app-avatar [initials]="actividad.cliente | inicialesCliente" [nombre]="actividad.cliente | nombreCliente" size="sm" />
                   <div class="min-w-0">
                     <div class="flex items-center gap-1.5">
-                      <span class="font-medium text-xs text-text-dark truncate">{{ actividad.cliente.nombre }}</span>
+                      <span class="font-medium text-xs text-text-dark truncate">{{ actividad.cliente | nombreCliente }}</span>
                       @if (actividad.cliente.pac) {
                         <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-primary/10 text-primary border border-primary/20 shrink-0">
                           {{ actividad.cliente.pac }}
@@ -368,10 +368,10 @@
           <!-- Paciente y Contacto Directo Móvil -->
           <div class="flex items-center justify-between gap-3 pt-2 border-t border-border/70" (click)="$event.stopPropagation()">
             <div class="flex items-center gap-2.5 min-w-0">
-              <app-avatar [initials]="iniciales(actividad.cliente.nombre)" size="sm" />
+              <app-avatar [initials]="actividad.cliente | inicialesCliente" [nombre]="actividad.cliente | nombreCliente" size="sm" />
               <div class="min-w-0">
                 <div class="flex items-center gap-1.5">
-                  <span class="text-xs font-semibold text-text-dark truncate">{{ actividad.cliente.nombre }}</span>
+                  <span class="text-xs font-semibold text-text-dark truncate">{{ actividad.cliente | nombreCliente }}</span>
                   @if (actividad.cliente.pac) {
                     <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-primary/10 text-primary border border-primary/20 shrink-0">
                       {{ actividad.cliente.pac }}
@@ -556,9 +556,9 @@
           @if (clienteElegido(); as elegido) {
             <div class="flex items-center justify-between gap-3 bg-bg-light/70 rounded-xl px-3.5 py-2.5 border border-border">
               <div class="flex items-center gap-2.5 min-w-0">
-                <app-avatar [initials]="iniciales(elegido.nombre)" size="sm" />
+                <app-avatar [initials]="elegido | inicialesCliente" size="sm" />
                 <div class="min-w-0">
-                  <p class="text-xs font-semibold text-text-dark truncate">{{ elegido.nombre }}</p>
+                  <p class="text-xs font-semibold text-text-dark truncate">{{ elegido | nombreCliente }}</p>
                   <p class="text-[11px] text-text-muted font-mono leading-tight mt-0.5">{{ elegido.telefono }}</p>
                 </div>
               </div>
@@ -625,9 +625,9 @@
                   @for (cliente of resultadosCliente.value(); track cliente.id) {
                     <button type="button" (click)="elegirCliente(cliente)" class="w-full flex items-center justify-between gap-2.5 px-3.5 py-2 text-left cursor-pointer hover:bg-bg-light transition-colors">
                       <div class="flex items-center gap-2.5 min-w-0">
-                        <app-avatar [initials]="iniciales(cliente.nombre)" size="sm" />
+                        <app-avatar [initials]="cliente | inicialesCliente" size="sm" />
                         <div class="min-w-0">
-                          <p class="text-xs font-medium text-text-dark truncate">{{ cliente.nombre }}</p>
+                          <p class="text-xs font-medium text-text-dark truncate">{{ cliente | nombreCliente }}</p>
                           <p class="text-[10px] text-text-muted font-mono leading-tight">{{ cliente.telefono }}</p>
                         </div>
                       </div>
@@ -800,17 +800,22 @@
         <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle flex flex-col gap-3">
           <div class="flex items-start justify-between gap-3">
             <div class="flex items-center gap-3 min-w-0">
-              <app-avatar [initials]="iniciales(act.cliente.nombre)" size="md" />
+              <app-avatar
+                [initials]="act.cliente | inicialesCliente"
+                [nombre]="act.cliente | nombreCliente"
+                size="md" />
               <div class="min-w-0">
-                <div class="flex items-center gap-2">
-                  <h3 class="text-sm font-bold text-text-dark truncate">{{ act.cliente.nombre }}</h3>
-                  @if (act.cliente.pac) {
-                    <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-primary/10 text-primary border border-primary/20 shrink-0">
-                      {{ act.cliente.pac }}
-                    </span>
+                <h3 class="text-sm font-bold text-text-dark truncate">{{ act.cliente | nombreCliente }}</h3>
+                <div class="crm-meta mt-0.5">
+                  @if (sinNombre(act.cliente)) {
+                    <span class="italic">Sin nombre registrado</span>
+                  } @else {
+                    <span class="crm-meta-clave">{{ act.cliente.telefono }}</span>
+                  }
+                  @if (act.cliente.pac; as codigo) {
+                    <span class="crm-meta-clave">{{ codigo }}</span>
                   }
                 </div>
-                <p class="text-xs text-text-muted font-mono mt-0.5">{{ act.cliente.telefono }}</p>
               </div>
             </div>
           </div>

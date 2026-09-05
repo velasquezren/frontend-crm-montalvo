@@ -240,6 +240,41 @@ regla CSS, es una utilidad. Las tres de `servicios` empezaron copiadas byte a
 byte en `servicios.page.css` y dos tablas de subcomponentes — subirlas a
 `styles.css` bastó, y de paso quedaron disponibles para cualquier tabla nueva.
 
+### Los datos de apoyo NO son píldoras — `.crm-meta`
+
+Una píldora dice *estado*: es lo que hace `<app-badge>` y por eso lleva color.
+Teléfono, código PAC, agente asignada, canal de origen **no son estados**: son
+datos de apoyo. Escritos como píldoras —cada uno con su borde, su fondo y su
+`text-[10px]`— una cabecera termina con cinco cápsulas de colores distintos que
+no se leen, se miran; y el nombre, que es lo único importante, pierde contra
+ellas.
+
+La cabecera de la ficha del paciente llegó a tener el estado, el PAC, la agente
+y **tres acciones** en la misma fila envuelta, todo con la misma forma. El
+usuario lo describió como "tanta información, tantos botones", que es
+exactamente el síntoma.
+
+```html
+<h2 class="text-base font-bold text-text-dark truncate">{{ cli | nombreCliente }}</h2>
+<app-badge class="shrink-0" [variant]="…">{{ … }}</app-badge>   <!-- el estado, y solo el estado -->
+
+<div class="crm-meta mt-1">
+  <span class="crm-meta-clave">{{ cli.telefono }}</span>
+  @if (cli.pac; as codigo) { <span class="crm-meta-clave">{{ codigo }}</span> }
+  @if (cli.agente; as ag) { <span>Agente: {{ ag.nombre }}</span> }
+</div>
+```
+
+`.crm-meta` pone los separadores `·` desde el CSS (`> * + *::before`), no desde
+el HTML: así una plantilla puede ocultar un dato con `@if` sin quedarse un punto
+suelto al principio. `.crm-meta-clave` es para lo que se lee en cifras —teléfono,
+PAC—, en monoespaciada y con `tabular-nums`.
+
+**Y las acciones no van mezcladas con los datos.** En la ficha del paciente
+viven a la derecha de la fila de pestañas, solo-ícono (`<app-button [circle]>`
+con `ariaLabel`), porque son los mismos tres iconos del menú lateral y ya se
+leen sin etiqueta.
+
 ## Un contenedor que scrollea NO puede ser el que redondea
 
 `position: sticky` no queda recortado por el `border-radius` del contenedor que
@@ -324,6 +359,14 @@ interceptor cachea 60 s: se descargan una vez por sesión.
 - `moneda.pipe.ts` → `{{ monto | moneda }}` o `formatearBs(n)`. **Moneda del sistema: Bs (es-BO).**
   Nunca formatees montos a mano.
 - `generarIniciales(nombre)` en `core/auth/user.model.ts` → iniciales para avatares.
+  **Sirve para agentes y médicos, NO para clientes** — ver la línea siguiente.
+- `shared/pipes/nombre-cliente.pipe.ts` → `{{ x.cliente | nombreCliente }}` y
+  `[initials]="x.cliente | inicialesCliente"`. **Obligatorio en todo cliente**, y el
+  build lo exige. Un contacto que escribe por WhatsApp sin dar su nombre se guarda
+  como `WhatsApp +59171836560`: interpolado en crudo deja la ficha diciendo el
+  mismo teléfono dos veces y `generarIniciales` sobre eso da `W+`. Los pipes son
+  **puros** a propósito — estas expresiones viven en tablas de 25 filas y en el
+  inbox, donde un método del componente se reevaluaría en cada ciclo.
 - `shared/models/estados.model.ts` → etiquetas y variantes de badge de Lead/Venta/Comisión.
 - `shared/models/cliente-categoria.model.ts` → Gold/Silver/Bronze/Prospecto.
 - `core/api/db-enums.ts` → enums espejo de Prisma, **generados** por `tools/generar-db-enums.mjs`.
@@ -356,6 +399,8 @@ rompa lo que este archivo declara ley**:
 | Sombras | cualquier `shadow-{xs,sm,md,lg,xl,2xl,inner}`; solo valen `subtle` y `lifted` |
 | Radios | cualquier `border-radius` que no sea 12px (inputs), 16px (tarjetas) o píldora |
 | Hexadecimales | cualquier `#rrggbb` ajeno a los nueve de la paleta, en `.css` **y en `.ts`** |
+| Un solo cajón | `animate-drawer-in` o el `panelClass` del cajón fuera de su dueño — se usa `<app-drawer>` y `DialogService.abrirCajon()` |
+| Nombre de cliente | `{{ …cliente.nombre }}` o `iniciales(…cliente.nombre)` en crudo — va por `nombreCliente` / `inicialesCliente` |
 
 Existe porque el inbox había acumulado **17 desviaciones** —una escala ámbar completa donde la
 paleta excluye ámbares a propósito, cinco sombras ajenas, ocho radios distintos— sin que nada

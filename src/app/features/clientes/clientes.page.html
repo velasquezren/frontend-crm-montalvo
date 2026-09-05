@@ -101,10 +101,10 @@
           <tr class="cursor-pointer hover:bg-bg-light/40 transition-colors" (click)="abrirEdicion(cliente, modalFicha)" title="Haga clic para ver/editar ficha">
             <td>
               <div class="flex items-center gap-3">
-                <app-avatar [initials]="iniciales(cliente.nombre)" size="sm" />
+                <app-avatar [initials]="cliente | inicialesCliente" [nombre]="cliente | nombreCliente" size="sm" />
                 <div>
                   <div class="flex items-center gap-2">
-                    <p class="font-medium text-text-dark leading-tight">{{ cliente.nombre }}</p>
+                    <p class="font-medium text-text-dark leading-tight">{{ cliente | nombreCliente }}</p>
                     @if (cliente.pac) {
                       <span class="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20" title="Código PAC">{{ cliente.pac }}</span>
                     }
@@ -365,94 +365,87 @@
       etiqueta="Ficha del paciente"
       (cerrar)="cerrarEdicion()">
 
-      <!-- ── Cabecera Héroe con degradado médico sobrio ─────────── -->
+      <!-- Identidad: UNA cosa es el título. El estado es la única píldora
+           (para eso está <app-badge>); teléfono, PAC y agente son datos de
+           apoyo y van en texto tranquilo, no en cinco píldoras de colores. -->
       <div cabecera class="flex items-center gap-3.5 min-w-0">
-        <app-avatar [initials]="iniciales(cli.nombre)" size="lg" />
+        <app-avatar
+          [initials]="cli | inicialesCliente"
+          [nombre]="cli | nombreCliente"
+          size="lg" />
         <div class="min-w-0">
-          <div class="flex items-center gap-2 flex-wrap">
+          <div class="flex items-center gap-2 min-w-0">
             <h2 class="text-base font-bold text-text-dark truncate leading-tight">
-              {{ cli.nombre }}
+              {{ cli | nombreCliente }}
             </h2>
             <app-badge
+              class="shrink-0"
               [variant]="categoriaBadge[cli.categoria]"
               [icon]="categoriaIcon[cli.categoria]">
               {{ categoriaLabel[cli.categoria] }}
             </app-badge>
           </div>
-          <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-text-muted">
-            <span class="font-medium font-mono text-text-dark flex items-center gap-1">
-              <app-icon name="phone" [size]="12" class="text-text-muted" />
-              {{ cli.telefono }}
-            </span>
+          <div class="crm-meta mt-1">
+            @if (sinNombre(cli)) {
+              <!-- El título YA es el teléfono: repetirlo aquí era decir dos
+                   veces el mismo número. Lo que falta saber es el nombre. -->
+              <span class="italic">Sin nombre registrado</span>
+            } @else {
+              <span class="crm-meta-clave">{{ cli.telefono }}</span>
+            }
             @if (cli.pac; as codigo) {
-              <span class="text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.2 rounded-full font-mono">
-                {{ codigo }}
-              </span>
+              <span class="crm-meta-clave">{{ codigo }}</span>
             }
             @if (cli.agente; as ag) {
-              <span class="inline-flex items-center gap-1 px-2 py-0.2 rounded-full text-[10px] font-medium text-text-dark bg-bg-light border border-border">
-                <app-icon name="user" [size]="10" class="text-primary" />
-                <span>Agente: <strong class="font-semibold">{{ ag.nombre }}</strong></span>
-              </span>
+              <span>Agente: {{ ag.nombre }}</span>
             }
-            <a
-              [routerLink]="['/conversaciones']"
-              [queryParams]="{ clienteId: cli.id }"
-              class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer"
-              (click)="cerrarEdicion()"
-              title="Abrir conversación de WhatsApp">
-              <app-icon name="message-circle" [size]="12" />
-              <span>WhatsApp</span>
-            </a>
-            <a
-              [routerLink]="['/ventas']"
-              [queryParams]="{ clienteId: cli.id, clienteNombre: cli.nombre, clienteTelefono: cli.telefono, nuevo: '1' }"
-              class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer"
-              (click)="cerrarEdicion()"
-              title="Registrar una venta para este paciente">
-              <app-icon name="shopping-bag" [size]="12" />
-              <span>Registrar Venta</span>
-            </a>
-            <a
-              [routerLink]="['/actividades']"
-              [queryParams]="{ clienteId: cli.id, clienteNombre: cli.nombre, clienteTelefono: cli.telefono, nuevo: '1' }"
-              class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer"
-              (click)="cerrarEdicion()"
-              title="Agendar una llamada, tarea o recordatorio para este paciente">
-              <app-icon name="calendar" [size]="12" />
-              <span>Agendar</span>
-            </a>
           </div>
         </div>
       </div>
 
-      <!-- ── Sub-navegación por Pestañas Sobria ─────────── -->
-      <nav subcabecera class="flex gap-2 mt-4 pt-2 border-t border-border/60">
-        <button
-          type="button"
-          (click)="pestanaModal.set('EXPEDIENTE')"
-          class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
-          [class]="pestanaModal() === 'EXPEDIENTE' ? 'bg-primary text-white shadow-subtle' : 'text-text-muted hover:text-text-dark hover:bg-bg-light'">
-          <app-icon name="file-text" [size]="13" />
-          <span>Expediente Clínico</span>
-        </button>
-        <button
-          type="button"
-          (click)="pestanaModal.set('CONTACTO')"
-          class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
-          [class]="pestanaModal() === 'CONTACTO' ? 'bg-primary text-white shadow-subtle' : 'text-text-muted hover:text-text-dark hover:bg-bg-light'">
-          <app-icon name="user" [size]="13" />
-          <span>Datos de Contacto</span>
-        </button>
-        <button
-          type="button"
-          (click)="pestanaModal.set('NOTAS')"
-          class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
-          [class]="pestanaModal() === 'NOTAS' ? 'bg-primary text-white shadow-subtle' : 'text-text-muted hover:text-text-dark hover:bg-bg-light'">
-          <app-icon name="edit" [size]="13" />
-          <span>Perfil & Notas</span>
-        </button>
-      </nav>
+      <!-- Navegación a la izquierda, acciones a la derecha, en la MISMA fila:
+           las tres acciones vivían mezcladas con el teléfono y el PAC, así que
+           un dato y un botón se veían igual. Son solo-ícono porque son los
+           mismos tres iconos del menú lateral (Conversaciones, Ventas,
+           Actividades) y ya se leen sin etiqueta. -->
+      <div subcabecera class="flex items-center justify-between gap-3 mt-4 pt-2 border-t border-border/60">
+        <nav class="flex gap-2 min-w-0 overflow-x-auto">
+          @for (p of pestanasFicha; track p.id) {
+            <button
+              type="button"
+              (click)="pestanaModal.set(p.id)"
+              class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
+              [class]="pestanaModal() === p.id ? 'bg-primary text-white shadow-subtle' : 'text-text-muted hover:text-text-dark hover:bg-bg-light'"
+              [attr.aria-current]="pestanaModal() === p.id ? 'page' : null">
+              <app-icon [name]="p.icono" [size]="13" />
+              <span>{{ p.etiqueta }}</span>
+            </button>
+          }
+        </nav>
+        <div class="flex items-center gap-1 shrink-0">
+          <app-button
+            variant="ghost"
+            size="sm"
+            icon="message-circle"
+            [circle]="true"
+            ariaLabel="Abrir la conversación de WhatsApp"
+            (clicked)="irAConversacion(cli)" />
+          <app-button
+            variant="ghost"
+            size="sm"
+            icon="shopping-bag"
+            [circle]="true"
+            ariaLabel="Registrar una venta para este paciente"
+            (clicked)="irARegistrarVenta(cli)" />
+          <app-button
+            variant="ghost"
+            size="sm"
+            icon="calendar"
+            [circle]="true"
+            ariaLabel="Agendar una llamada, tarea o recordatorio"
+            (clicked)="irAAgendar(cli)" />
+        </div>
+      </div>
 
 
       <!-- ── Cuerpo del Formulario ─────────────────────────────────── -->
