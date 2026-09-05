@@ -32,7 +32,14 @@
       <app-icon name="database" [size]="16" />
       <span>Mi Memoria Personal</span>
       @if (cuotaMemoria.value(); as cuota) {
-        <span class="crm-contador crm-contador-inverso">
+        <!-- La variante depende del fondo REAL de la pestaña, no de cuál es:
+             `-inverso` es blanco al 20 %, que sobre el primario relleno de la
+             pestaña activa se ve y sobre el fondo claro de la inactiva no. El
+             marcado original tenía `bg-white/20` fijo y arrastraba el mismo
+             defecto; al ponerle nombre a la clase quedó a la vista. -->
+        <span
+          class="crm-contador"
+          [class.crm-contador-inverso]="tabActiva() === 'memoria'">
           {{ cuota.megabytesUsados }} / {{ cuota.megabytesMaximos }} MB
         </span>
       }
