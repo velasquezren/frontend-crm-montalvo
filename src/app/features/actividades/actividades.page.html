@@ -1,114 +1,448 @@
-<app-page-header title="Actividades" subtitle="Recordatorios y seguimiento comercial sobre tus clientes y leads.">
-  <app-button icon="plus" (clicked)="abrirCreacion()">Nueva actividad</app-button>
+<app-page-header title="Actividades" subtitle="Recordatorios y seguimiento comercial sobre tus pacientes y prospectos.">
+  <div class="flex items-center gap-2">
+    @if (resumen.value().vencidas > 0) {
+      <span class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-critical-bg text-text-critical border border-border">
+        <app-icon name="alert-circle" [size]="13" />
+        {{ resumen.value().vencidas }} vencida{{ resumen.value().vencidas > 1 ? 's' : '' }}
+      </span>
+    }
+    <app-button icon="plus" (clicked)="abrirCreacion()">Nueva actividad</app-button>
+  </div>
 </app-page-header>
 
-<!-- Resumen: mismo criterio que el kanban de Leads (RF-17) — el número real, no cuántas tarjetas cargó. -->
-<div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
-  <button type="button" class="crm-resumen-chip" [class.crm-resumen-chip--activo]="filtroRapido() === 'VENCIDAS'" (click)="cambiarFiltroRapido('VENCIDAS')">
-    <span class="crm-resumen-chip-valor text-critical">{{ resumen.value().vencidas }}</span>
-    <span class="crm-resumen-chip-label">Vencidas</span>
+<!-- Resumen Ejecutivo: 4 Tarjetas KPI interactivas -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
+  <button
+    type="button"
+    class="text-left w-full rounded-2xl transition-all duration-200 focus:outline-none cursor-pointer hover:shadow-lifted"
+    [class.ring-2]="filtroRapido() === 'HOY'"
+    [class.ring-primary]="filtroRapido() === 'HOY'"
+    [class.shadow-lifted]="filtroRapido() === 'HOY'"
+    (click)="cambiarFiltroRapido('HOY')">
+    <app-kpi-card
+      label="Para Hoy"
+      [valor]="resumen.value().hoy"
+      icon="clock"
+      tono="primary"
+      [destacado]="filtroRapido() === 'HOY'"
+      pie="Compromisos del día" />
   </button>
-  <button type="button" class="crm-resumen-chip" [class.crm-resumen-chip--activo]="filtroRapido() === 'HOY'" (click)="cambiarFiltroRapido('HOY')">
-    <span class="crm-resumen-chip-valor text-primary">{{ resumen.value().hoy }}</span>
-    <span class="crm-resumen-chip-label">Hoy</span>
+
+  <button
+    type="button"
+    class="text-left w-full rounded-2xl transition-all duration-200 focus:outline-none cursor-pointer hover:shadow-lifted"
+    [class.ring-2]="filtroRapido() === 'VENCIDAS'"
+    [class.ring-critical]="filtroRapido() === 'VENCIDAS'"
+    [class.shadow-lifted]="filtroRapido() === 'VENCIDAS'"
+    (click)="cambiarFiltroRapido('VENCIDAS')">
+    <app-kpi-card
+      label="Vencidas"
+      [valor]="resumen.value().vencidas"
+      icon="alert-circle"
+      tono="critical"
+      [destacado]="filtroRapido() === 'VENCIDAS'"
+      pie="Requieren atención urgente" />
   </button>
-  <button type="button" class="crm-resumen-chip" [class.crm-resumen-chip--activo]="filtroRapido() === 'PROXIMA_SEMANA'" (click)="cambiarFiltroRapido('PROXIMA_SEMANA')">
-    <span class="crm-resumen-chip-valor text-secondary">{{ resumen.value().proximaSemana }}</span>
-    <span class="crm-resumen-chip-label">Próximos 7 días</span>
+
+  <button
+    type="button"
+    class="text-left w-full rounded-2xl transition-all duration-200 focus:outline-none cursor-pointer hover:shadow-lifted"
+    [class.ring-2]="filtroRapido() === 'PROXIMA_SEMANA'"
+    [class.ring-secondary]="filtroRapido() === 'PROXIMA_SEMANA'"
+    [class.shadow-lifted]="filtroRapido() === 'PROXIMA_SEMANA'"
+    (click)="cambiarFiltroRapido('PROXIMA_SEMANA')">
+    <app-kpi-card
+      label="Próximos 7 Días"
+      [valor]="resumen.value().proximaSemana"
+      icon="calendar"
+      tono="secondary"
+      [destacado]="filtroRapido() === 'PROXIMA_SEMANA'"
+      pie="Seguimientos agendados" />
+  </button>
+
+  <button
+    type="button"
+    class="text-left w-full rounded-2xl transition-all duration-200 focus:outline-none cursor-pointer hover:shadow-lifted"
+    [class.ring-2]="filtroRapido() === 'COMPLETADAS'"
+    [class.ring-primary]="filtroRapido() === 'COMPLETADAS'"
+    [class.shadow-lifted]="filtroRapido() === 'COMPLETADAS'"
+    (click)="cambiarFiltroRapido('COMPLETADAS')">
+    <app-kpi-card
+      label="Completadas"
+      [valor]="resumen.value().completadas ?? 0"
+      icon="check-circle"
+      tono="neutral"
+      [destacado]="filtroRapido() === 'COMPLETADAS'"
+      pie="Historial resuelto" />
   </button>
 </div>
 
-<!-- Barra de filtros + cambio de vista -->
-<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-  <!-- "Vencidas"/"Hoy"/"Próxima semana" ya se filtran desde las tarjetas de
-       arriba — repetirlos aquí como chip es el mismo control dos veces. -->
-  <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Filtro rápido de actividades">
-    <app-filter-chip [active]="filtroRapido() === 'PENDIENTES'" (clicked)="cambiarFiltroRapido('PENDIENTES')">Pendientes</app-filter-chip>
-    <app-filter-chip [active]="filtroRapido() === 'COMPLETADAS'" (clicked)="cambiarFiltroRapido('COMPLETADAS')">Completadas</app-filter-chip>
-    <app-filter-chip [active]="filtroRapido() === 'TODAS'" (clicked)="cambiarFiltroRapido('TODAS')">Todas</app-filter-chip>
+<!-- Centro Unificado de Búsqueda y Filtros -->
+<div class="bg-white rounded-2xl border border-border shadow-subtle p-3.5 sm:p-4 space-y-3.5 mb-5 w-full min-w-0 max-w-full">
+  <!-- Fila 1: Búsqueda reactiva principal + Selector de Vista + Limpieza -->
+  <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+    <div class="w-full sm:max-w-md lg:max-w-xl">
+      <app-input
+        placeholder="Buscar por paciente, teléfono, PAC, título o notas…"
+        icon="search"
+        [(value)]="busqueda" />
+    </div>
+
+    <div class="flex items-center justify-between sm:justify-end gap-2 sm:gap-2.5 w-full sm:w-auto">
+      <!-- Segmented Control de Vista -->
+      <div class="flex items-center p-1 bg-bg-workspace rounded-xl border border-border flex-1 sm:flex-initial" role="group" aria-label="Modo de visualización">
+        <button
+          type="button"
+          (click)="vista.set('LISTA')"
+          class="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex-1 sm:flex-initial"
+          [class.bg-white]="vista() === 'LISTA'"
+          [class.text-text-dark]="vista() === 'LISTA'"
+          [class.shadow-subtle]="vista() === 'LISTA'"
+          [class.text-text-muted]="vista() !== 'LISTA'">
+          <app-icon name="file-text" [size]="14" />
+          <span>Lista</span>
+        </button>
+        <button
+          type="button"
+          (click)="vista.set('CALENDARIO')"
+          class="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex-1 sm:flex-initial"
+          [class.bg-white]="vista() === 'CALENDARIO'"
+          [class.text-text-dark]="vista() === 'CALENDARIO'"
+          [class.shadow-subtle]="vista() === 'CALENDARIO'"
+          [class.text-text-muted]="vista() !== 'CALENDARIO'">
+          <app-icon name="calendar" [size]="14" />
+          <span>Calendario</span>
+        </button>
+      </div>
+
+      <!-- Botón Limpiar Filtros -->
+      @if (tieneFiltrosActivos()) {
+        <button
+          type="button"
+          (click)="limpiarTodosLosFiltros()"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-xs font-medium text-text-muted hover:text-critical hover:border-critical/30 hover:bg-critical-bg transition-colors cursor-pointer shrink-0"
+          title="Restablecer todos los filtros">
+          <app-icon name="x" [size]="13" />
+          <span class="hidden xs:inline">Limpiar</span>
+        </button>
+      }
+    </div>
   </div>
 
-  <div class="flex items-center gap-2 shrink-0" role="group" aria-label="Vista">
-    <app-filter-chip size="sm" [active]="vista() === 'LISTA'" (clicked)="vista.set('LISTA')">
-      <app-icon name="file-text" [size]="12" /> Lista
-    </app-filter-chip>
-    <app-filter-chip size="sm" [active]="vista() === 'CALENDARIO'" (clicked)="vista.set('CALENDARIO')">
-      <app-icon name="calendar" [size]="12" /> Calendario
-    </app-filter-chip>
+  <!-- Fila 2: Filtros de Estado / Momento + Tipo de Actividad + Agente (Admin) -->
+  <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-2 border-t border-border/60">
+    <!-- Chips de Estado / Temporalidad con scroll horizontal para móvil -->
+    <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1 min-w-0 max-w-full" role="group" aria-label="Filtro de estado y temporalidad">
+      <app-filter-chip size="sm" [active]="filtroRapido() === 'PENDIENTES'" (clicked)="cambiarFiltroRapido('PENDIENTES')">
+        Pendientes
+      </app-filter-chip>
+      <app-filter-chip size="sm" [active]="filtroRapido() === 'HOY'" [count]="resumen.value().hoy" (clicked)="cambiarFiltroRapido('HOY')">
+        Hoy
+      </app-filter-chip>
+      <app-filter-chip size="sm" [active]="filtroRapido() === 'VENCIDAS'" [count]="resumen.value().vencidas" (clicked)="cambiarFiltroRapido('VENCIDAS')">
+        Vencidas
+      </app-filter-chip>
+      <app-filter-chip size="sm" [active]="filtroRapido() === 'PROXIMA_SEMANA'" [count]="resumen.value().proximaSemana" (clicked)="cambiarFiltroRapido('PROXIMA_SEMANA')">
+        Próximos 7 días
+      </app-filter-chip>
+      <app-filter-chip size="sm" [active]="filtroRapido() === 'COMPLETADAS'" [count]="resumen.value().completadas ?? 0" (clicked)="cambiarFiltroRapido('COMPLETADAS')">
+        Completadas
+      </app-filter-chip>
+      <app-filter-chip size="sm" [active]="filtroRapido() === 'TODAS'" (clicked)="cambiarFiltroRapido('TODAS')">
+        Todas
+      </app-filter-chip>
+    </div>
+
+    <!-- Selectores secundarios: Tipo y Agente -->
+    <div class="flex items-center gap-2 shrink-0 self-end lg:self-auto w-full sm:w-auto">
+      <div class="relative flex-1 sm:flex-initial">
+        <select
+          [value]="filtroTipo()"
+          (change)="onCambiarTipo($event)"
+          class="h-8.5 w-full text-xs font-medium pl-2.5 pr-7 rounded-xl border border-border bg-white text-text-dark cursor-pointer hover:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary appearance-none transition-colors"
+          aria-label="Filtrar por tipo de actividad">
+          <option value="TODOS">Todos los tipos</option>
+          @for (t of tipos; track t) {
+            <option [value]="t">{{ tiposLabel[t] }}</option>
+          }
+        </select>
+        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-text-muted">
+          <app-icon name="chevron-down" [size]="13" />
+        </div>
+      </div>
+
+      @if (esAdmin() && agentes.value().length > 0) {
+        <div class="relative flex-1 sm:flex-initial">
+          <select
+            [value]="filtroAgenteId()"
+            (change)="onCambiarAgente($event)"
+            class="h-8.5 w-full text-xs font-medium pl-2.5 pr-7 rounded-xl border border-border bg-white text-text-dark cursor-pointer hover:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary appearance-none transition-colors"
+            aria-label="Filtrar por agente comercial">
+            <option value="TODOS">Todos los agentes</option>
+            @for (ag of agentes.value(); track ag.id) {
+              <option [value]="ag.id">{{ ag.nombre }}</option>
+            }
+          </select>
+          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-text-muted">
+            <app-icon name="chevron-down" [size]="13" />
+          </div>
+        </div>
+      }
+    </div>
   </div>
 </div>
 
 @if (vista() === 'LISTA') {
-  <div class="mb-4 max-w-sm">
-    <app-input type="search" placeholder="Buscar por título, notas o cliente…" [(value)]="busqueda" />
-  </div>
-
-  @if (actividades.isLoading()) {
+  @if (actividades.isLoading() && actividades.value().datos.length === 0) {
     <app-loading-skeleton shape="text" height="20rem" />
   } @else if (actividades.error()) {
     <app-error-carga que="las actividades" (reintentar)="actividades.reload()" />
   } @else if (actividades.value().datos.length > 0) {
-    <app-table>
-      <thead>
-        <tr>
-          <th class="text-left">Tipo</th>
-          <th class="text-left">Título</th>
-          <th class="text-left">Cliente</th>
-          <th class="text-left">Programada</th>
-          @if (esAdmin()) {
-            <th class="text-left">Agente</th>
-          }
-          <th class="text-left">Estado</th>
-          <th class="text-right">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (actividad of actividades.value().datos; track actividad.id) {
+
+    <!-- VISTA DESKTOP: Tabla de alta densidad (md y superior) -->
+    <div class="hidden md:block">
+      <app-table>
+        <thead>
           <tr>
-            <td class="text-left">
-              <span class="inline-flex items-center gap-1.5 text-text-muted">
-                <app-icon [name]="tipoIcono[actividad.tipo]" [size]="14" />
+            <th class="text-left">Tipo</th>
+            <th class="text-left">Actividad</th>
+            <th class="text-left">Paciente</th>
+            <th class="text-left">Programada</th>
+            @if (esAdmin()) {
+              <th class="text-left">Agente</th>
+            }
+            <th class="text-left">Estado</th>
+            <th class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (actividad of actividades.value().datos; track actividad.id) {
+            <tr
+              class="cursor-pointer hover:bg-bg-workspace/60 transition-colors"
+              [class.bg-critical-bg/20]="esVencida(actividad)"
+              (click)="abrirDetalle(actividad)">
+              <td class="text-left">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-bg-light border border-border/70 text-text-dark">
+                  <app-icon [name]="tipoIcono[actividad.tipo]" [size]="13" class="text-primary" />
+                  {{ tiposLabel[actividad.tipo] }}
+                </span>
+              </td>
+              <td class="text-left">
+                <p class="font-semibold text-text-dark text-xs sm:text-sm">{{ actividad.titulo }}</p>
+                @if (actividad.notas) {
+                  <p class="text-xs text-text-muted mt-0.5 line-clamp-1">{{ actividad.notas }}</p>
+                }
+              </td>
+              <td class="text-left" (click)="$event.stopPropagation()">
+                <div class="flex items-center gap-2.5">
+                  <app-avatar [initials]="iniciales(actividad.cliente.nombre)" size="sm" />
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-medium text-xs text-text-dark truncate">{{ actividad.cliente.nombre }}</span>
+                      @if (actividad.cliente.pac) {
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-primary/10 text-primary border border-primary/20 shrink-0">
+                          {{ actividad.cliente.pac }}
+                        </span>
+                      }
+                    </div>
+                    <div class="flex items-center gap-2 mt-0.5">
+                      <a
+                        [href]="getWhatsappLink(actividad.cliente.telefono)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+                        title="Abrir WhatsApp con paciente">
+                        <app-icon name="message-circle" [size]="11" />
+                        {{ actividad.cliente.telefono }}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td class="text-left">
+                @let rel = formatoFechaRelativa(actividad.fechaProgramada);
+                <div class="flex flex-col">
+                  <span
+                    class="text-xs font-semibold"
+                    [class.text-critical]="rel.urgente"
+                    [class.text-text-dark]="!rel.urgente">
+                    {{ rel.texto }}
+                  </span>
+                  <span class="text-[11px] text-text-muted">
+                    {{ actividad.fechaProgramada | date: 'd MMM, HH:mm' }} · {{ formatearDuracion(actividad.duracionMinutos) }}
+                  </span>
+                </div>
+              </td>
+              @if (esAdmin()) {
+                <td class="text-left">
+                  <span class="text-xs text-text-dark font-medium">{{ actividad.agente.nombre }}</span>
+                </td>
+              }
+              <td class="text-left">
+                <app-badge [variant]="estadoBadge[actividad.estado]">{{ estadoLabel[actividad.estado] }}</app-badge>
+              </td>
+              <td class="text-right" (click)="$event.stopPropagation()">
+                <div class="flex items-center justify-end gap-1">
+                  @if (actividad.estado === 'PENDIENTE') {
+                    <app-button
+                      variant="ghost"
+                      size="sm"
+                      [circle]="true"
+                      icon="check"
+                      title="Marcar completada"
+                      (clicked)="cambiarEstado(actividad, 'COMPLETADA')" />
+                    <app-button
+                      variant="ghost"
+                      size="sm"
+                      [circle]="true"
+                      icon="clock"
+                      title="Posponer 24 horas"
+                      (clicked)="reprogramarRapido(actividad, 24)" />
+                  }
+                  <app-button
+                    variant="ghost"
+                    size="sm"
+                    [circle]="true"
+                    icon="eye"
+                    title="Ver detalle 360°"
+                    (clicked)="abrirDetalle(actividad)" />
+                  <app-button
+                    variant="ghost"
+                    size="sm"
+                    [circle]="true"
+                    icon="edit"
+                    title="Editar"
+                    (clicked)="abrirEdicion(actividad)" />
+                  <app-button
+                    variant="ghost"
+                    size="sm"
+                    [circle]="true"
+                    icon="trash"
+                    title="Eliminar"
+                    (clicked)="eliminar(actividad)" />
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
+    </div>
+
+    <!-- VISTA MÓVIL: Feed de Tarjetas Táctiles Touch-Friendly (md:hidden) -->
+    <div class="block md:hidden space-y-3">
+      @for (actividad of actividades.value().datos; track actividad.id) {
+        @let rel = formatoFechaRelativa(actividad.fechaProgramada);
+        <div
+          class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-3 cursor-pointer hover:border-primary/40 transition-colors"
+          [class.border-l-4]="rel.urgente"
+          [class.border-l-text-critical]="rel.urgente"
+          (click)="abrirDetalle(actividad)">
+
+          <!-- Cabecera Móvil: Tipo + Momento + Estado -->
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold bg-bg-light text-primary border border-border">
+                <app-icon [name]="tipoIcono[actividad.tipo]" [size]="12" />
                 {{ tiposLabel[actividad.tipo] }}
               </span>
-            </td>
-            <td class="text-left">
-              <p class="font-medium text-text-dark">{{ actividad.titulo }}</p>
-              @if (actividad.notas) {
-                <p class="text-xs text-text-muted mt-0.5 line-clamp-1">{{ actividad.notas }}</p>
-              }
-            </td>
-            <td class="text-left">
-              <div class="flex items-center gap-2">
-                <app-avatar [initials]="iniciales(actividad.cliente.nombre)" size="sm" />
-                <span>{{ actividad.cliente.nombre }}</span>
-              </div>
-            </td>
-            <td class="text-left">
-              <span [class.text-critical]="esVencida(actividad)" [class.font-semibold]="esVencida(actividad)">
-                {{ actividad.fechaProgramada | date: 'd MMM, HH:mm' }}
+              <span
+                class="text-xs font-semibold"
+                [class.text-critical]="rel.urgente"
+                [class.text-text-muted]="!rel.urgente">
+                {{ rel.texto }}
               </span>
-              <span class="text-text-muted"> · {{ formatearDuracion(actividad.duracionMinutos) }}</span>
-            </td>
-            @if (esAdmin()) {
-              <td class="text-left">{{ actividad.agente.nombre }}</td>
+            </div>
+            <app-badge [variant]="estadoBadge[actividad.estado]">{{ estadoLabel[actividad.estado] }}</app-badge>
+          </div>
+
+          <!-- Título y Notas -->
+          <div>
+            <h3 class="text-sm font-bold text-text-dark leading-snug">{{ actividad.titulo }}</h3>
+            @if (actividad.notas) {
+              <p class="text-xs text-text-muted mt-1 line-clamp-2 bg-bg-workspace p-2 rounded-xl border border-border/60">
+                {{ actividad.notas }}
+              </p>
             }
-            <td class="text-left">
-              <app-badge [variant]="estadoBadge[actividad.estado]">{{ estadoLabel[actividad.estado] }}</app-badge>
-            </td>
-            <td class="text-right">
-              <div class="flex items-center justify-end gap-1">
-                @if (actividad.estado === 'PENDIENTE') {
-                  <app-button variant="ghost" size="sm" [circle]="true" icon="check" title="Completar" (clicked)="cambiarEstado(actividad, 'COMPLETADA')" />
-                  <app-button variant="ghost" size="sm" [circle]="true" icon="x" title="Cancelar" (clicked)="cambiarEstado(actividad, 'CANCELADA')" />
-                }
-                <app-button variant="ghost" size="sm" [circle]="true" icon="edit" title="Editar" (clicked)="abrirEdicion(actividad)" />
-                <app-button variant="ghost" size="sm" [circle]="true" icon="trash" title="Eliminar" (clicked)="eliminar(actividad)" />
+          </div>
+
+          <!-- Paciente y Contacto Directo Móvil -->
+          <div class="flex items-center justify-between gap-3 pt-2 border-t border-border/70" (click)="$event.stopPropagation()">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <app-avatar [initials]="iniciales(actividad.cliente.nombre)" size="sm" />
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs font-semibold text-text-dark truncate">{{ actividad.cliente.nombre }}</span>
+                  @if (actividad.cliente.pac) {
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-primary/10 text-primary border border-primary/20 shrink-0">
+                      {{ actividad.cliente.pac }}
+                    </span>
+                  }
+                </div>
+                <span class="text-[11px] text-text-muted font-mono">{{ actividad.cliente.telefono }}</span>
               </div>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </app-table>
+            </div>
+
+            <!-- Botones de Contacto Directo Móvil -->
+            <div class="flex items-center gap-1.5 shrink-0">
+              <a
+                [href]="getWhatsappLink(actividad.cliente.telefono)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors"
+                title="Abrir WhatsApp">
+                <app-icon name="message-circle" [size]="15" />
+              </a>
+              <a
+                [href]="'tel:' + actividad.cliente.telefono"
+                class="w-8 h-8 rounded-full bg-bg-light text-text-dark flex items-center justify-center hover:bg-border/60 transition-colors"
+                title="Llamar">
+                <app-icon name="phone" [size]="15" />
+              </a>
+            </div>
+          </div>
+
+          <!-- Pie Móvil: Horario exacto + Botones de Gestión Rápida -->
+          <div class="flex items-center justify-between pt-2 border-t border-border/50 text-xs" (click)="$event.stopPropagation()">
+            <span class="text-[11px] text-text-muted">
+              {{ actividad.fechaProgramada | date: 'd MMM, HH:mm' }} · {{ formatearDuracion(actividad.duracionMinutos) }}
+            </span>
+
+            <div class="flex items-center gap-1">
+              @if (actividad.estado === 'PENDIENTE') {
+                <button
+                  type="button"
+                  (click)="cambiarEstado(actividad, 'COMPLETADA')"
+                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary text-white hover:bg-primary-hover transition-colors shadow-subtle cursor-pointer">
+                  <app-icon name="check" [size]="12" />
+                  <span>Completar</span>
+                </button>
+                <button
+                  type="button"
+                  (click)="reprogramarRapido(actividad, 24)"
+                  class="p-1.5 rounded-full border border-border text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
+                  title="Posponer 24 h">
+                  <app-icon name="clock" [size]="14" />
+                </button>
+              }
+              <button
+                type="button"
+                (click)="abrirEdicion(actividad)"
+                class="p-1.5 rounded-full border border-border text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
+                title="Editar">
+                <app-icon name="edit" [size]="14" />
+              </button>
+              <button
+                type="button"
+                (click)="eliminar(actividad)"
+                class="p-1.5 rounded-full border border-border text-text-muted hover:text-critical hover:bg-critical-bg transition-colors cursor-pointer"
+                title="Eliminar">
+                <app-icon name="trash" [size]="14" />
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
 
     <div class="mt-4">
       <app-paginator
@@ -119,10 +453,17 @@
         (cambiar)="pagina.set($event)" />
     </div>
   } @else {
-    <app-empty-state icon="calendar" title="Sin actividades" description="No hay recordatorios ni tareas con este filtro. Agenda una desde 'Nueva actividad'." />
+    <app-empty-state
+      icon="calendar"
+      title="Sin actividades coincidentes"
+      description="No hay tareas ni recordatorios con estos filtros. Puedes limpiar los filtros o crear una nueva actividad.">
+      @if (tieneFiltrosActivos()) {
+        <app-button variant="secondary" size="sm" (clicked)="limpiarTodosLosFiltros()">Limpiar filtros</app-button>
+      }
+    </app-empty-state>
   }
 } @else {
-  @if (actividadesCalendario.isLoading()) {
+  @if (actividadesCalendario.isLoading() && actividadesCalendario.value().datos.length === 0) {
     <app-loading-skeleton shape="text" height="32rem" />
   } @else if (actividadesCalendario.error()) {
     <app-error-carga que="las actividades" (reintentar)="actividadesCalendario.reload()" />
@@ -136,10 +477,12 @@
       </div>
     }
     @if (actividadesCalendario.value().datos.length === 0) {
-      <app-empty-state icon="calendar" title="Sin actividades" description="No hay recordatorios ni tareas agendadas todavía. Agenda una desde 'Nueva actividad'." />
+      <app-empty-state
+        icon="calendar"
+        title="Sin actividades en el calendario"
+        description="No hay recordatorios ni tareas agendadas en esta vista. Agenda una desde 'Nueva actividad'." />
     } @else {
-      <!-- El color del calendario no se explica solo (ver crm-design-system: la
-           paleta cerrada no admite un quinto tono para esta leyenda). -->
+      <!-- Leyenda de colores del calendario -->
       <div class="flex flex-wrap items-center gap-4 mb-3 px-1" aria-hidden="true">
         <span class="crm-leyenda-item"><span class="crm-leyenda-punto crm-leyenda-punto--primaria"></span>A tiempo</span>
         <span class="crm-leyenda-item"><span class="crm-leyenda-punto crm-leyenda-punto--critica"></span>Vencida</span>
@@ -166,7 +509,7 @@
             {{ actividadEditando() ? 'Editar actividad' : 'Nueva actividad' }}
           </h2>
           <p class="text-xs text-text-muted leading-tight mt-0.5">
-            {{ actividadEditando() ? 'Ajusta el recordatorio o su estado' : 'Un recordatorio o tarea de seguimiento' }}
+            {{ actividadEditando() ? 'Ajusta el recordatorio o sus detalles' : 'Un recordatorio o tarea de seguimiento comercial' }}
           </p>
         </div>
       </div>
@@ -213,7 +556,19 @@
 
       <!-- Cliente -->
       <div class="space-y-1.5">
-        <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Cliente *</label>
+        <div class="flex items-center justify-between">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Cliente / Paciente *</label>
+          @if (!clienteElegido() && !actividadEditando() && !modoNuevoCliente()) {
+            <button
+              type="button"
+              (click)="activarModoNuevoCliente()"
+              class="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer">
+              <app-icon name="user-plus" [size]="12" />
+              <span>+ Nuevo paciente express</span>
+            </button>
+          }
+        </div>
+
         @if (clienteElegido(); as elegido) {
           <div class="flex items-center justify-between gap-3 bg-bg-light/70 rounded-xl px-3.5 py-2.5 border border-border">
             <div class="flex items-center gap-2.5 min-w-0">
@@ -229,20 +584,99 @@
               </button>
             }
           </div>
-        } @else {
-          <app-input type="search" placeholder="Buscar por nombre o teléfono…" [(value)]="busquedaCliente" />
-          @if (resultadosCliente.value().length > 0) {
-            <div class="border border-border rounded-xl divide-y divide-border max-h-40 overflow-y-auto shadow-subtle bg-background mt-1">
-              @for (cliente of resultadosCliente.value(); track cliente.id) {
-                <button type="button" (click)="elegirCliente(cliente)" class="w-full flex items-center gap-2.5 px-3.5 py-2 text-left cursor-pointer hover:bg-bg-light transition-colors">
-                  <app-avatar [initials]="iniciales(cliente.nombre)" size="sm" />
-                  <div class="min-w-0">
-                    <p class="text-xs font-medium text-text-dark truncate">{{ cliente.nombre }}</p>
-                    <p class="text-[10px] text-text-muted font-mono leading-tight">{{ cliente.telefono }}</p>
-                  </div>
-                </button>
-              }
+        } @else if (modoNuevoCliente()) {
+          <!-- Tarjeta de Registro Express de Paciente Nuevo -->
+          <div class="p-3.5 rounded-xl border border-primary/30 bg-primary/5 space-y-3 animate-fade-in">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-lg bg-primary/15 flex items-center justify-center text-primary">
+                  <app-icon name="user-plus" [size]="13" />
+                </div>
+                <span class="text-xs font-bold text-text-dark">Registrar nuevo paciente</span>
+              </div>
+              <button
+                type="button"
+                (click)="cancelarModoNuevoCliente()"
+                class="text-xs text-text-muted hover:text-text-dark cursor-pointer transition-colors">
+                Buscar existente
+              </button>
             </div>
+
+            @if (errorNuevoCliente()) {
+              <div class="px-2.5 py-1.5 rounded-lg bg-critical-bg text-[11px] text-text-dark font-medium flex items-center gap-1.5 border border-border">
+                <app-icon name="alert-circle" [size]="12" class="text-critical shrink-0" />
+                <span>{{ errorNuevoCliente() }}</span>
+              </div>
+            }
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div class="space-y-1">
+                <label class="block text-[10px] font-semibold text-text-muted uppercase">Nombre completo *</label>
+                <app-input placeholder="Ej. Mariana López" [(value)]="nuevoClienteNombre" />
+              </div>
+              <div class="space-y-1">
+                <label class="block text-[10px] font-semibold text-text-muted uppercase">Celular / Teléfono *</label>
+                <app-input placeholder="Ej. 71234567 o +591…" [(value)]="nuevoClienteTelefono" />
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-[10px] text-text-muted">Se guardará automáticamente en el CRM</span>
+              <app-button
+                type="button"
+                variant="primary"
+                size="sm"
+                [loading]="creandoCliente()"
+                (clicked)="registrarNuevoClienteExpress()">
+                Registrar y seleccionar
+              </app-button>
+            </div>
+          </div>
+        } @else {
+          <!-- Buscador de cliente existente -->
+          <app-input type="search" placeholder="Buscar por nombre, teléfono o PAC…" [(value)]="busquedaCliente" />
+          @if (busquedaCliente().trim().length >= 2) {
+            @if (resultadosCliente.value().length > 0) {
+              <div class="border border-border rounded-xl divide-y divide-border max-h-48 overflow-y-auto shadow-subtle bg-background mt-1">
+                @for (cliente of resultadosCliente.value(); track cliente.id) {
+                  <button type="button" (click)="elegirCliente(cliente)" class="w-full flex items-center justify-between gap-2.5 px-3.5 py-2 text-left cursor-pointer hover:bg-bg-light transition-colors">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      <app-avatar [initials]="iniciales(cliente.nombre)" size="sm" />
+                      <div class="min-w-0">
+                        <p class="text-xs font-medium text-text-dark truncate">{{ cliente.nombre }}</p>
+                        <p class="text-[10px] text-text-muted font-mono leading-tight">{{ cliente.telefono }}</p>
+                      </div>
+                    </div>
+                    @if (cliente.pac) {
+                      <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-primary/10 text-primary border border-primary/20 shrink-0">
+                        {{ cliente.pac }}
+                      </span>
+                    }
+                  </button>
+                }
+                <!-- Opción al pie de lista para crear nuevo -->
+                <button
+                  type="button"
+                  (click)="activarModoNuevoCliente()"
+                  class="w-full flex items-center gap-2 px-3.5 py-2.5 text-left text-xs font-semibold text-primary bg-primary/5 hover:bg-primary/10 transition-colors border-t border-border cursor-pointer">
+                  <app-icon name="user-plus" [size]="14" />
+                  <span>Registrar nuevo contacto: "{{ busquedaCliente() }}"</span>
+                </button>
+              </div>
+            } @else if (!resultadosCliente.isLoading()) {
+              <div class="p-3 border border-border rounded-xl bg-bg-light/60 mt-1 flex flex-col gap-2">
+                <p class="text-xs text-text-muted">
+                  No se encontró ningún paciente registrado con "{{ busquedaCliente() }}".
+                </p>
+                <button
+                  type="button"
+                  (click)="activarModoNuevoCliente()"
+                  class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary-hover transition-colors cursor-pointer self-start shadow-subtle">
+                  <app-icon name="user-plus" [size]="13" />
+                  <span>Registrar como nuevo paciente express</span>
+                </button>
+              </div>
+            }
           }
         }
       </div>
@@ -262,20 +696,48 @@
         </div>
       }
 
-      <!-- Título + fecha: los dos datos que definen "cuándo hacer qué" -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+      <!-- Título + sugerencias de horario + fecha -->
+      <div class="space-y-2">
         <div class="space-y-1.5">
           <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Título *</label>
-          <app-input placeholder="Ej. Llamar para confirmar cita" [(value)]="formTitulo" />
+          <app-input placeholder="Ej. Llamar para confirmar cita o cotización" [(value)]="formTitulo" />
         </div>
+
         <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Fecha y hora *</label>
+          <div class="flex items-center justify-between">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Fecha y hora *</label>
+            <div class="flex items-center gap-1">
+              <button
+                type="button"
+                (click)="aplicarPresetFecha('1H')"
+                class="text-[10px] font-semibold text-primary px-1.5 py-0.5 rounded hover:bg-primary/10 transition-colors cursor-pointer">
+                +1 h
+              </button>
+              <button
+                type="button"
+                (click)="aplicarPresetFecha('HOY_TARDE')"
+                class="text-[10px] font-semibold text-primary px-1.5 py-0.5 rounded hover:bg-primary/10 transition-colors cursor-pointer">
+                Hoy 16:00
+              </button>
+              <button
+                type="button"
+                (click)="aplicarPresetFecha('MANANA_MANANA')"
+                class="text-[10px] font-semibold text-primary px-1.5 py-0.5 rounded hover:bg-primary/10 transition-colors cursor-pointer">
+                Mañana 09:30
+              </button>
+              <button
+                type="button"
+                (click)="aplicarPresetFecha('EN_2_DIAS')"
+                class="text-[10px] font-semibold text-primary px-1.5 py-0.5 rounded hover:bg-primary/10 transition-colors cursor-pointer">
+                En 2 días
+              </button>
+            </div>
+          </div>
           <app-input type="datetime-local" [(value)]="formFecha" />
         </div>
       </div>
 
-      <!-- Repetir: solo al crear — filas independientes, no una serie enlazada
-           (ver crm-backend-module). Editar una ya creada nunca genera otras. -->
+      <!-- Repetir: solo al crear -->
       @if (!actividadEditando()) {
         <div class="space-y-1.5">
           <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Repetir (opcional)</label>
@@ -311,8 +773,6 @@
         <app-input [multiline]="true" [rows]="3" placeholder="Detalles para recordar al retomar el contacto…" [(value)]="formNotas" />
       </div>
 
-      <!-- Footer del formulario: NO sticky — un pie fijo dentro de un contenedor con
-           scroll queda por encima del último campo y lo tapa a medio escribir. -->
       <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
         <app-button type="button" variant="ghost" size="sm" (clicked)="cerrarModal()">Cancelar</app-button>
         <app-button type="submit" variant="primary" size="sm" [loading]="guardando()">
@@ -322,3 +782,230 @@
     </form>
   </div>
 </ng-template>
+
+<!-- ── Cajón Lateral: Detalle 360° de la Actividad (CDK Overlay) ───── -->
+<ng-template #drawerDetalleTemplate>
+  @if (actividadDetalle(); as act) {
+    <aside
+      class="h-full w-full sm:w-[500px] lg:w-[540px] bg-white shadow-lifted border-l border-border flex flex-col pointer-events-auto animate-drawer-in"
+      role="dialog"
+      aria-label="Detalle 360° de la actividad">
+
+      <!-- Header del Drawer -->
+      <header class="flex items-center justify-between px-6 py-4.5 border-b border-border bg-white shrink-0">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+            <app-icon [name]="tipoIcono[act.tipo]" [size]="20" />
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-primary">{{ tiposLabel[act.tipo] }}</span>
+              <app-badge [variant]="estadoBadge[act.estado]">{{ estadoLabel[act.estado] }}</app-badge>
+            </div>
+            <h2 class="text-sm font-bold text-text-dark tracking-tight leading-tight truncate mt-0.5">
+              {{ act.titulo }}
+            </h2>
+          </div>
+        </div>
+        <button
+          type="button"
+          (click)="cerrarDetalle()"
+          class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
+          aria-label="Cerrar detalle">
+          <app-icon name="x" [size]="18" />
+        </button>
+      </header>
+
+      <!-- Cuerpo del Drawer con scroll -->
+      <div class="p-6 overflow-y-auto space-y-5 flex-1 bg-bg-workspace/30">
+
+        <!-- 1. Tarjeta 360° de la Paciente -->
+        <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle flex flex-col gap-3">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <app-avatar [initials]="iniciales(act.cliente.nombre)" size="md" />
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-bold text-text-dark truncate">{{ act.cliente.nombre }}</h3>
+                  @if (act.cliente.pac) {
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-primary/10 text-primary border border-primary/20 shrink-0">
+                      {{ act.cliente.pac }}
+                    </span>
+                  }
+                </div>
+                <p class="text-xs text-text-muted font-mono mt-0.5">{{ act.cliente.telefono }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Acciones de contacto directo (WhatsApp & Llamada) -->
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-border/70">
+            <a
+              [href]="getWhatsappLink(act.cliente.telefono)"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+              <app-icon name="message-circle" [size]="15" />
+              <span>WhatsApp</span>
+            </a>
+            <a
+              [href]="'tel:' + act.cliente.telefono"
+              class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-bg-light text-text-dark hover:bg-border/60 transition-colors">
+              <app-icon name="phone" [size]="15" />
+              <span>Llamar</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- 2. Información del Compromiso / Agenda -->
+        <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-3">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">Horario y Asignación</h4>
+
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="p-2.5 rounded-xl bg-bg-workspace border border-border/60">
+              <span class="text-[11px] text-text-muted block">Programada para</span>
+              @let r = formatoFechaRelativa(act.fechaProgramada);
+              <span class="font-bold text-xs" [class.text-critical]="r.urgente" [class.text-text-dark]="!r.urgente">
+                {{ r.texto }}
+              </span>
+              <span class="text-[10px] text-text-muted block mt-0.5">
+                {{ act.fechaProgramada | date: 'd MMM yyyy, HH:mm' }}
+              </span>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-bg-workspace border border-border/60">
+              <span class="text-[11px] text-text-muted block">Duración estimada</span>
+              <span class="font-bold text-xs text-text-dark">{{ formatearDuracion(act.duracionMinutos) }}</span>
+              <span class="text-[10px] text-text-muted block mt-0.5">Bloque de calendario</span>
+            </div>
+          </div>
+
+          @if (esAdmin()) {
+            <div class="flex items-center justify-between p-2.5 rounded-xl bg-bg-workspace border border-border/60 text-xs">
+              <span class="text-text-muted">Responsable comercial</span>
+              <span class="font-semibold text-text-dark">{{ act.agente.nombre }}</span>
+            </div>
+          }
+
+          @if (act.lead) {
+            <div class="flex items-center justify-between p-2.5 rounded-xl bg-bg-workspace border border-border/60 text-xs">
+              <span class="text-text-muted">Lead asociado</span>
+              <span class="px-2 py-0.5 rounded-md bg-secondary/10 text-secondary font-semibold text-[11px]">
+                {{ labelOrigen(act.lead.origen) }} · {{ act.lead.estado }}
+              </span>
+            </div>
+          }
+        </div>
+
+        <!-- 3. Notas y Contexto -->
+        <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-2">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">Notas y Detalles</h4>
+          @if (act.notas) {
+            <p class="text-xs text-text-dark leading-relaxed whitespace-pre-wrap bg-bg-workspace p-3 rounded-xl border border-border/60">
+              {{ act.notas }}
+            </p>
+          } @else {
+            <p class="text-xs text-text-muted italic">Sin notas registradas para esta actividad.</p>
+          }
+        </div>
+
+        <!-- 4. Acciones Comerciales de Alto Impacto -->
+        <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-2.5">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">Acciones Rápidas</h4>
+
+          @if (act.estado === 'PENDIENTE') {
+            <!-- Super acción: Completar y agendar siguiente paso -->
+            <button
+              type="button"
+              (click)="completarYAgendarSiguiente(act)"
+              class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-hover shadow-subtle cursor-pointer transition-colors">
+              <app-icon name="check-circle" [size]="16" />
+              <span>Completar y agendar siguiente paso</span>
+            </button>
+
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button
+                type="button"
+                (click)="cambiarEstado(act, 'COMPLETADA')"
+                class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-semibold text-text-dark hover:bg-bg-light transition-colors cursor-pointer">
+                <app-icon name="check" [size]="14" class="text-primary" />
+                <span>Solo completar</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="reprogramarRapido(act, 24)"
+                class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-semibold text-text-dark hover:bg-bg-light transition-colors cursor-pointer">
+                <app-icon name="clock" [size]="14" class="text-secondary" />
+                <span>Posponer 24 h</span>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button
+                type="button"
+                (click)="cerrarDetalle(); abrirEdicion(act)"
+                class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-semibold text-text-dark hover:bg-bg-light transition-colors cursor-pointer">
+                <app-icon name="edit" [size]="14" />
+                <span>Editar detalles</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="cambiarEstado(act, 'CANCELADA')"
+                class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-critical/30 text-xs font-semibold text-critical hover:bg-critical-bg transition-colors cursor-pointer">
+                <app-icon name="x" [size]="14" />
+                <span>Cancelar actividad</span>
+              </button>
+            </div>
+
+            <div class="pt-1">
+              <button
+                type="button"
+                (click)="eliminar(act)"
+                class="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-medium text-text-muted hover:text-critical hover:bg-critical-bg transition-colors cursor-pointer">
+                <app-icon name="trash" [size]="14" />
+                <span>Eliminar actividad</span>
+              </button>
+            </div>
+          } @else if (act.estado === 'COMPLETADA') {
+            <div class="p-3 rounded-xl bg-primary/10 border border-primary/20 text-xs text-primary font-medium flex items-center gap-2">
+              <app-icon name="check-circle" [size]="16" />
+              <span>Actividad completada{{ act.completadaEn ? ' el ' + (act.completadaEn | date: 'd MMM, HH:mm') : '' }}.</span>
+            </div>
+
+            <button
+              type="button"
+              (click)="cerrarDetalle(); abrirCreacion(); elegirCliente({ id: act.cliente.id, nombre: act.cliente.nombre, telefono: act.cliente.telefono })"
+              class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-hover transition-colors cursor-pointer">
+              <app-icon name="plus" [size]="16" />
+              <span>Agendar nuevo seguimiento</span>
+            </button>
+
+            <button
+              type="button"
+              (click)="eliminar(act)"
+              class="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-medium text-text-muted hover:text-critical hover:bg-critical-bg transition-colors cursor-pointer">
+              <app-icon name="trash" [size]="14" />
+              <span>Eliminar actividad</span>
+            </button>
+          } @else {
+            <div class="p-3 rounded-xl bg-bg-light border border-border text-xs text-text-muted font-medium flex items-center gap-2">
+              <app-icon name="x-circle" [size]="16" />
+              <span>Actividad cancelada.</span>
+            </div>
+
+            <button
+              type="button"
+              (click)="eliminar(act)"
+              class="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-medium text-text-muted hover:text-critical hover:bg-critical-bg transition-colors cursor-pointer">
+              <app-icon name="trash" [size]="14" />
+              <span>Eliminar del registro</span>
+            </button>
+          }
+        </div>
+      </div>
+    </aside>
+  }
+</ng-template>
+

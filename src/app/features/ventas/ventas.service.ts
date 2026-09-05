@@ -37,6 +37,8 @@ export interface FiltroVentas {
   readonly agenteId?: string;
   readonly desde?: string;
   readonly hasta?: string;
+  readonly metodoPago?: string;
+  readonly comprobante?: string;
   readonly pagina?: number;
   readonly limite?: number;
 }
@@ -56,6 +58,8 @@ export class VentasService {
       agenteId: filtro?.agenteId,
       desde: filtro?.desde,
       hasta: filtro?.hasta,
+      metodoPago: filtro?.metodoPago && filtro?.metodoPago !== 'TODOS' ? filtro?.metodoPago : undefined,
+      comprobante: filtro?.comprobante && filtro?.comprobante !== 'TODOS' ? filtro?.comprobante : undefined,
       pagina: filtro?.pagina,
       limite: filtro?.limite,
     });

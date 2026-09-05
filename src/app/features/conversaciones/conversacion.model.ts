@@ -36,8 +36,9 @@ export interface ConversacionResumen {
     telefono: string;
     email: string | null;
     categoria: CategoriaCliente;
-    /* Columnas reales del paciente; solo llegan en el detalle, no en el listado. */
+    /* Columnas reales del paciente; viajan en listado y detalle. */
     pac?: string | null;
+    ci?: string | null;
     fechaNacimiento?: string | null;
     ocupacion?: string | null;
     empresaTrabajo?: string | null;

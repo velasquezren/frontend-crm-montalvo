@@ -54,7 +54,7 @@ export interface Actividad {
   readonly fechaProgramada: string;
   readonly duracionMinutos: number;
   readonly estado: EstadoActividad;
-  readonly cliente: { readonly id: string; readonly nombre: string; readonly telefono: string };
+  readonly cliente: { readonly id: string; readonly nombre: string; readonly telefono: string; readonly pac?: string | null };
   readonly lead: { readonly id: string; readonly estado: string; readonly origen: string } | null;
   readonly agente: { readonly id: string; readonly nombre: string };
   readonly completadaEn: string | null;
@@ -66,6 +66,7 @@ export interface ResumenActividades {
   readonly vencidas: number;
   readonly hoy: number;
   readonly proximaSemana: number;
+  readonly completadas?: number;
 }
 
 /**
@@ -75,4 +76,46 @@ export interface ResumenActividades {
  */
 export function esActividadVencida(a: Pick<Actividad, 'estado' | 'fechaProgramada'>): boolean {
   return a.estado === 'PENDIENTE' && new Date(a.fechaProgramada).getTime() < Date.now();
+}
+
+/**
+ * Retorna una etiqueta amigable y relativa para entender al instante la urgencia:
+ * "Vencida hace 2 h", "Hoy 15:30", "Mañana 09:00", o "12 Sep 10:00".
+ */
+export function formatoFechaRelativa(fechaIso: string): { texto: string; urgente: boolean } {
+  const fecha = new Date(fechaIso);
+  const ahora = new Date();
+  const diffMs = fecha.getTime() - ahora.getTime();
+  const diffMin = Math.round(diffMs / (60 * 1000));
+  const diffHoras = Math.round(diffMs / (60 * 60 * 1000));
+  const diffDias = Math.round(diffMs / (24 * 60 * 60 * 1000));
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const horaStr = `${pad(fecha.getHours())}:${pad(fecha.getMinutes())}`;
+
+  if (diffMs < 0) {
+    const minsAtras = Math.abs(diffMin);
+    const horasAtras = Math.abs(diffHoras);
+    const diasAtras = Math.abs(diffDias);
+
+    if (minsAtras < 60) return { texto: `Vencida hace ${minsAtras} min`, urgente: true };
+    if (horasAtras < 24) return { texto: `Vencida hace ${horasAtras} h`, urgente: true };
+    return { texto: `Vencida hace ${diasAtras} d`, urgente: true };
+  }
+
+  const esHoy = fecha.toDateString() === ahora.toDateString();
+  if (esHoy) {
+    if (diffMin <= 30) return { texto: `En ${diffMin} min (${horaStr})`, urgente: true };
+    return { texto: `Hoy ${horaStr}`, urgente: false };
+  }
+
+  const manana = new Date(ahora);
+  manana.setDate(manana.getDate() + 1);
+  if (fecha.toDateString() === manana.toDateString()) {
+    return { texto: `Mañana ${horaStr}`, urgente: false };
+  }
+
+  const dia = fecha.getDate();
+  const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  return { texto: `${dia} ${meses[fecha.getMonth()]} · ${horaStr}`, urgente: false };
 }

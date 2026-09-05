@@ -1,4 +1,4 @@
-<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-5 sm:gap-6 w-full min-w-0 max-w-full">
 
   <!-- Header con botón de nuevo registro -->
   <app-page-header
@@ -10,7 +10,7 @@
   </app-page-header>
 
   <!-- ── Resumen de KPIs Médicos y Comerciales ───────────────────── -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
     <app-kpi-card
       label="Facturación Cerrada"
       [valor]="resumenKpis().totalCerrado"
@@ -41,26 +41,27 @@
       pie="Por cierre ganado" />
   </div>
 
-  <!-- ── Barra de Navegación de Vistas y Filtros Avanzados ────────── -->
-  <div class="bg-white rounded-2xl border border-border shadow-subtle p-4.5 space-y-4">
+  <!-- ── Centro Unificado de Búsqueda y Filtros ──────────────────── -->
+  <div class="bg-white rounded-2xl border border-border shadow-subtle p-3.5 sm:p-4 space-y-3.5 w-full min-w-0 max-w-full">
     
-    <!-- Fila 1: Búsqueda global multi-campo, Selector de Vistas y Limpiar -->
-    <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-      <!-- Búsqueda con debounce (200ms) -->
-      <div class="w-full lg:w-96">
+    <!-- Fila 1: Búsqueda reactiva principal + Selector de Vista + Limpieza -->
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <!-- Input de búsqueda con debounce 200ms -->
+      <div class="w-full sm:max-w-md lg:max-w-xl">
         <app-input
           placeholder="Buscar por paciente, teléfono, PAC, servicio, médico…"
           icon="search"
           [(value)]="busqueda" />
       </div>
 
-      <!-- Selector de Modo de Visualización (Pestañas) & Reset -->
-      <div class="flex items-center gap-2 self-end lg:self-auto">
-        <div class="flex items-center p-1 bg-bg-workspace rounded-xl border border-border">
+      <!-- Selector de Modo de Visualización (Listado vs Distribución) & Acción Limpiar -->
+      <div class="flex items-center justify-between sm:justify-end gap-2 sm:gap-2.5 w-full sm:w-auto">
+        <!-- Segmented Control de Vista -->
+        <div class="flex items-center p-1 bg-bg-workspace rounded-xl border border-border flex-1 sm:flex-initial">
           <button
             type="button"
             (click)="vistaActiva.set('tabla')"
-            class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            class="flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
             [class.bg-white]="vistaActiva() === 'tabla'"
             [class.text-primary]="vistaActiva() === 'tabla'"
             [class.shadow-subtle]="vistaActiva() === 'tabla'"
@@ -75,7 +76,7 @@
           <button
             type="button"
             (click)="vistaActiva.set('analitica')"
-            class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            class="flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
             [class.bg-white]="vistaActiva() === 'analitica'"
             [class.text-primary]="vistaActiva() === 'analitica'"
             [class.shadow-subtle]="vistaActiva() === 'analitica'"
@@ -97,47 +98,100 @@
       </div>
     </div>
 
-    <!-- Fila 2: Chips de Estado Comercial y Selector de Período Temporal -->
-    <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-2 border-t border-border">
+    <!-- Fila 2: Chips de Estado (Izquierda) + Selectores Dropdown Estilizados (Derecha) -->
+    <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-3 border-t border-border">
       <!-- Chips de Estado Comercial -->
-      <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Filtro por estado de venta">
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 sm:flex-wrap no-scrollbar" role="group" aria-label="Filtro por estado de venta">
         @for (opcion of filtros; track opcion) {
-          <app-filter-chip
-            [active]="filtro() === opcion"
-            (clicked)="cambiarFiltro(opcion)">
-            {{ opcion === 'TODAS' ? 'Todas' : estadoLabel[opcion] }}
-          </app-filter-chip>
+          <div class="shrink-0 sm:shrink">
+            <app-filter-chip
+              [active]="filtro() === opcion"
+              (clicked)="cambiarFiltro(opcion)">
+              {{ opcion === 'TODAS' ? 'Todas' : estadoLabel[opcion] }}
+            </app-filter-chip>
+          </div>
         }
       </div>
 
-      <!-- Controles de Período y Agente -->
-      <div class="flex flex-wrap items-center gap-2.5">
+      <!-- Menús Desplegables de Filtros Especializados -->
+      <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto">
         <!-- Selector de Período -->
-        <div class="flex items-center gap-1.5 text-xs text-text-muted">
-          <app-icon name="calendar" [size]="14" class="text-primary" />
+        <div class="relative flex items-center w-full sm:w-auto min-w-0">
+          <app-icon name="calendar" [size]="13" class="absolute left-2.5 pointer-events-none text-text-muted shrink-0" />
           <select
             [value]="presetPeriodo()"
             (change)="cambiarPresetPeriodo($any($event.target).value)"
-            class="bg-bg-workspace border border-border rounded-xl px-2.5 py-1.5 text-xs font-semibold text-text-dark focus:outline-none focus:border-primary cursor-pointer">
+            class="w-full sm:w-auto min-w-0 truncate pl-7 pr-6 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer appearance-none bg-bg-workspace focus:outline-none focus:border-primary"
+            [class.border-primary]="presetPeriodo() !== 'TODAS'"
+            [class.text-primary]="presetPeriodo() !== 'TODAS'"
+            [class.bg-bg-light]="presetPeriodo() !== 'TODAS'"
+            [class.border-border]="presetPeriodo() === 'TODAS'"
+            [class.text-text-dark]="presetPeriodo() === 'TODAS'">
             @for (p of presetsPeriodo; track p.id) {
               <option [value]="p.id">{{ p.label }}</option>
             }
           </select>
+          <app-icon name="chevron-down" [size]="11" class="absolute right-2 pointer-events-none text-text-muted shrink-0" />
+        </div>
+
+        <!-- Selector de Método de Pago -->
+        <div class="relative flex items-center w-full sm:w-auto min-w-0">
+          <app-icon name="wallet" [size]="13" class="absolute left-2.5 pointer-events-none text-text-muted shrink-0" />
+          <select
+            [value]="metodoPagoFiltro()"
+            (change)="cambiarMetodoPagoFiltro($any($event.target).value)"
+            class="w-full sm:w-auto min-w-0 truncate pl-7 pr-6 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer appearance-none bg-bg-workspace focus:outline-none focus:border-primary"
+            [class.border-primary]="metodoPagoFiltro() !== 'TODOS'"
+            [class.text-primary]="metodoPagoFiltro() !== 'TODOS'"
+            [class.bg-bg-light]="metodoPagoFiltro() !== 'TODOS'"
+            [class.border-border]="metodoPagoFiltro() === 'TODOS'"
+            [class.text-text-dark]="metodoPagoFiltro() === 'TODOS'">
+            <option value="TODOS">Todos los pagos</option>
+            @for (mp of metodosPago; track mp.id) {
+              <option [value]="mp.id">{{ mp.label }}</option>
+            }
+          </select>
+          <app-icon name="chevron-down" [size]="11" class="absolute right-2 pointer-events-none text-text-muted shrink-0" />
+        </div>
+
+        <!-- Selector de Comprobante -->
+        <div class="relative flex items-center w-full sm:w-auto min-w-0" [class.col-span-2]="!esAdmin()" [class.sm:col-span-1]="!esAdmin()">
+          <app-icon name="file-text" [size]="13" class="absolute left-2.5 pointer-events-none text-text-muted shrink-0" />
+          <select
+            [value]="comprobanteFiltro()"
+            (change)="cambiarComprobanteFiltro($any($event.target).value)"
+            class="w-full sm:w-auto min-w-0 truncate pl-7 pr-6 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer appearance-none bg-bg-workspace focus:outline-none focus:border-primary"
+            [class.border-primary]="comprobanteFiltro() !== 'TODOS'"
+            [class.text-primary]="comprobanteFiltro() !== 'TODOS'"
+            [class.bg-bg-light]="comprobanteFiltro() !== 'TODOS'"
+            [class.border-border]="comprobanteFiltro() === 'TODOS'"
+            [class.text-text-dark]="comprobanteFiltro() === 'TODOS'">
+            <option value="TODOS">Comprobante: Todos</option>
+            <option value="CON_COMPROBANTE">Con comprobante</option>
+            <option value="SIN_COMPROBANTE">Pendiente</option>
+          </select>
+          <app-icon name="chevron-down" [size]="11" class="absolute right-2 pointer-events-none text-text-muted shrink-0" />
         </div>
 
         <!-- Selector de Agente (ADMIN / SUPER_ADMIN) -->
         @if (esAdmin()) {
-          <div class="flex items-center gap-1.5 text-xs text-text-muted">
-            <app-icon name="user" [size]="14" class="text-primary" />
+          <div class="relative flex items-center w-full sm:w-auto min-w-0">
+            <app-icon name="user" [size]="13" class="absolute left-2.5 pointer-events-none text-text-muted shrink-0" />
             <select
               [value]="agenteSeleccionadoId()"
               (change)="cambiarAgente($event)"
-              class="bg-bg-workspace border border-border rounded-xl px-2.5 py-1.5 text-xs font-semibold text-text-dark focus:outline-none focus:border-primary cursor-pointer">
+              class="w-full sm:w-auto min-w-0 truncate pl-7 pr-6 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer appearance-none bg-bg-workspace focus:outline-none focus:border-primary"
+              [class.border-primary]="agenteSeleccionadoId() !== 'TODOS'"
+              [class.text-primary]="agenteSeleccionadoId() !== 'TODOS'"
+              [class.bg-bg-light]="agenteSeleccionadoId() !== 'TODOS'"
+              [class.border-border]="agenteSeleccionadoId() === 'TODOS'"
+              [class.text-text-dark]="agenteSeleccionadoId() === 'TODOS'">
               <option value="TODOS">Todos los agentes</option>
               @for (ag of agentes.value(); track ag.id) {
                 <option [value]="ag.id">{{ ag.nombre }}</option>
               }
             </select>
+            <app-icon name="chevron-down" [size]="11" class="absolute right-2 pointer-events-none text-text-muted shrink-0" />
           </div>
         }
       </div>
@@ -145,97 +199,116 @@
 
     <!-- Rango Libre Personalizado (si está activo) -->
     @if (presetPeriodo() === 'PERSONALIZADO') {
-      <div class="flex flex-wrap items-center gap-3 p-3 rounded-xl bg-bg-workspace border border-border">
-        <div class="w-40">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:flex md:flex-wrap items-center gap-3 p-3 rounded-xl bg-bg-workspace border border-border text-xs">
+        <div class="w-full sm:w-44">
           <app-input
             type="date"
-            label="Fecha desde"
+            label="Desde"
             [(value)]="fechaDesdePersonalizada" />
         </div>
-        <div class="w-40">
+        <div class="w-full sm:w-44">
           <app-input
             type="date"
-            label="Fecha hasta"
+            label="Hasta"
             [(value)]="fechaHastaPersonalizada" />
         </div>
-        <p class="text-xs text-text-muted self-end pb-2">
-          Filtro temporal sobre fecha de registro de venta.
+        <p class="text-xs text-text-muted sm:self-end sm:pb-2.5">
+          Filtro sobre la fecha exacta de registro de venta.
         </p>
       </div>
     }
 
-    <!-- Fila 3: Filtros Rápidos en Memoria (Método de pago & Comprobante) -->
-    <div class="flex flex-wrap items-center gap-4 text-xs pt-2 border-t border-border">
-      <div class="flex items-center gap-1.5">
-        <span class="text-text-muted font-medium">Pago:</span>
-        <button
-          type="button"
-          (click)="cambiarMetodoPagoFiltro('TODOS')"
-          class="px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-colors cursor-pointer"
-          [class.bg-primary]="metodoPagoFiltro() === 'TODOS'"
-          [class.text-white]="metodoPagoFiltro() === 'TODOS'"
-          [class.border-primary]="metodoPagoFiltro() === 'TODOS'"
-          [class.bg-white]="metodoPagoFiltro() !== 'TODOS'"
-          [class.text-text-muted]="metodoPagoFiltro() !== 'TODOS'"
-          [class.border-border]="metodoPagoFiltro() !== 'TODOS'">
-          Todos
-        </button>
-        @for (mp of metodosPago; track mp.id) {
-          <button
-            type="button"
-            (click)="cambiarMetodoPagoFiltro(mp.id)"
-            class="px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-colors cursor-pointer"
-            [class.bg-primary]="metodoPagoFiltro() === mp.id"
-            [class.text-white]="metodoPagoFiltro() === mp.id"
-            [class.border-primary]="metodoPagoFiltro() === mp.id"
-            [class.bg-white]="metodoPagoFiltro() !== mp.id"
-            [class.text-text-muted]="metodoPagoFiltro() !== mp.id"
-            [class.border-border]="metodoPagoFiltro() !== mp.id">
-            {{ mp.label }}
-          </button>
-        }
-      </div>
+    <!-- Fila 3: Tira de Filtros Activos (Tags con botón de remoción rápida) -->
+    @if (hayFiltrosActivos()) {
+      <div class="flex flex-wrap items-center gap-1.5 pt-2.5 border-t border-border text-xs text-text-muted">
+        <span class="font-medium mr-1 text-[11px] uppercase tracking-wider text-text-muted">Filtros:</span>
 
-      <div class="flex items-center gap-1.5">
-        <span class="text-text-muted font-medium">Comprobante:</span>
+        @if (busqueda().trim()) {
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-bg-light text-primary border border-primary/20 text-xs font-medium max-w-full">
+            <span class="truncate">Búsqueda: "{{ busqueda() }}"</span>
+            <button
+              type="button"
+              (click)="busqueda.set('')"
+              class="hover:text-text-critical transition-colors cursor-pointer text-[13px] leading-none shrink-0"
+              title="Quitar búsqueda">
+              ✕
+            </button>
+          </span>
+        }
+
+        @if (filtro() !== 'TODAS') {
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-bg-light text-primary border border-primary/20 text-xs font-medium max-w-full">
+            <span class="truncate">Estado: {{ etiquetaEstadoActivo() }}</span>
+            <button
+              type="button"
+              (click)="cambiarFiltro('TODAS')"
+              class="hover:text-text-critical transition-colors cursor-pointer text-[13px] leading-none shrink-0"
+              title="Quitar filtro de estado">
+              ✕
+            </button>
+          </span>
+        }
+
+        @if (presetPeriodo() !== 'TODAS') {
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-bg-light text-primary border border-primary/20 text-xs font-medium max-w-full">
+            <span class="truncate">Período: {{ etiquetaPeriodoActivo() }}</span>
+            <button
+              type="button"
+              (click)="cambiarPresetPeriodo('TODAS')"
+              class="hover:text-text-critical transition-colors cursor-pointer text-[13px] leading-none shrink-0"
+              title="Quitar filtro de período">
+              ✕
+            </button>
+          </span>
+        }
+
+        @if (metodoPagoFiltro() !== 'TODOS') {
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-bg-light text-primary border border-primary/20 text-xs font-medium max-w-full">
+            <span class="truncate">Pago: {{ etiquetaMetodoPagoActivo() }}</span>
+            <button
+              type="button"
+              (click)="cambiarMetodoPagoFiltro('TODOS')"
+              class="hover:text-text-critical transition-colors cursor-pointer text-[13px] leading-none shrink-0"
+              title="Quitar filtro de pago">
+              ✕
+            </button>
+          </span>
+        }
+
+        @if (comprobanteFiltro() !== 'TODOS') {
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-bg-light text-primary border border-primary/20 text-xs font-medium max-w-full">
+            <span class="truncate">Comprobante: {{ comprobanteFiltro() === 'CON_COMPROBANTE' ? 'Con comprobante' : 'Pendiente' }}</span>
+            <button
+              type="button"
+              (click)="cambiarComprobanteFiltro('TODOS')"
+              class="hover:text-text-critical transition-colors cursor-pointer text-[13px] leading-none shrink-0"
+              title="Quitar filtro de comprobante">
+              ✕
+            </button>
+          </span>
+        }
+
+        @if (agenteSeleccionadoId() !== 'TODOS') {
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-bg-light text-primary border border-primary/20 text-xs font-medium max-w-full">
+            <span class="truncate">Agente: {{ nombreAgenteActivo() }}</span>
+            <button
+              type="button"
+              (click)="agenteSeleccionadoId.set('TODOS')"
+              class="hover:text-text-critical transition-colors cursor-pointer text-[13px] leading-none shrink-0"
+              title="Quitar filtro de agente">
+              ✕
+            </button>
+          </span>
+        }
+
         <button
           type="button"
-          (click)="cambiarComprobanteFiltro('TODOS')"
-          class="px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-colors cursor-pointer"
-          [class.bg-primary]="comprobanteFiltro() === 'TODOS'"
-          [class.text-white]="comprobanteFiltro() === 'TODOS'"
-          [class.border-primary]="comprobanteFiltro() === 'TODOS'"
-          [class.bg-white]="comprobanteFiltro() !== 'TODOS'"
-          [class.text-text-muted]="comprobanteFiltro() !== 'TODOS'"
-          [class.border-border]="comprobanteFiltro() !== 'TODOS'">
-          Todos
-        </button>
-        <button
-          type="button"
-          (click)="cambiarComprobanteFiltro('CON_COMPROBANTE')"
-          class="px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-colors cursor-pointer"
-          [class.bg-primary]="comprobanteFiltro() === 'CON_COMPROBANTE'"
-          [class.text-white]="comprobanteFiltro() === 'CON_COMPROBANTE'"
-          [class.border-primary]="comprobanteFiltro() === 'CON_COMPROBANTE'"
-          [class.bg-white]="comprobanteFiltro() !== 'CON_COMPROBANTE'"
-          [class.text-text-muted]="comprobanteFiltro() !== 'CON_COMPROBANTE'"
-          [class.border-border]="comprobanteFiltro() !== 'CON_COMPROBANTE'">
-          Con comprobante
-        </button>
-        <button
-          type="button"
-          (click)="cambiarComprobanteFiltro('SIN_COMPROBANTE')"
-          class="px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-colors cursor-pointer"
-          [class.bg-primary]="comprobanteFiltro() === 'SIN_COMPROBANTE'"
-          [class.text-white]="comprobanteFiltro() === 'SIN_COMPROBANTE'"
-          [class.border-primary]="comprobanteFiltro() === 'SIN_COMPROBANTE'"
-          [class.bg-white]="comprobanteFiltro() !== 'SIN_COMPROBANTE'"
-          [class.text-text-muted]="comprobanteFiltro() !== 'SIN_COMPROBANTE'"
-          [class.border-border]="comprobanteFiltro() !== 'SIN_COMPROBANTE'">
-          Pendiente
+          (click)="limpiarTodosLosFiltros()"
+          class="text-xs text-primary font-semibold hover:underline ml-1 cursor-pointer transition-colors whitespace-nowrap">
+          Limpiar todos
         </button>
       </div>
-    </div>
+    }
   </div>
 
   <!-- ── Modo Analítico: Gráficos de Distribución ─────────────────── -->
@@ -275,7 +348,8 @@
       } @else if (ventas.error() && ventas.value().datos.length === 0) {
         <app-error-carga que="las ventas" (reintentar)="ventas.reload()" />
       } @else if (ventasFiltradas().length > 0) {
-        <app-table [dense]="true" maxHeight="calc(100dvh - 280px)">
+        <div class="w-full min-w-0 max-w-full overflow-hidden">
+          <app-table [dense]="true" maxHeight="calc(100dvh - 280px)">
           <thead>
             <tr>
               <th>Paciente</th>
@@ -403,6 +477,7 @@
             }
           </tbody>
         </app-table>
+        </div>
 
         <app-paginator
           [pagina]="ventas.value().pagina"

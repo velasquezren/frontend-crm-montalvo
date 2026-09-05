@@ -168,6 +168,8 @@ export class ClientesPage {
   protected readonly editNombre = signal('');
   protected readonly editEmail = signal('');
   protected readonly editTelefono = signal('');
+  protected readonly editPac = signal('');
+  protected readonly editCi = signal('');
   protected readonly editEmpresa = signal('');
   protected readonly editFechaNacimiento = signal('');
   protected readonly editLugarNacimiento = signal('');
@@ -220,6 +222,8 @@ export class ClientesPage {
     this.editNombre.set('');
     this.editEmail.set('');
     this.editTelefono.set('');
+    this.editPac.set('');
+    this.editCi.set('');
     this.editEmpresa.set('');
     this.editFechaNacimiento.set('');
     this.editLugarNacimiento.set('');
@@ -241,6 +245,8 @@ export class ClientesPage {
     this.editNombre.set(cliente.nombre);
     this.editEmail.set(cliente.email || '');
     this.editTelefono.set(cliente.telefono);
+    this.editPac.set(cliente.pac || '');
+    this.editCi.set(cliente.ci || '');
     this.editAgenteId.set(cliente.agente?.id || cliente.agenteId || null);
     const datosExtra = cliente.datosExtra;
     this.editEmpresa.set(cliente.empresaTrabajo || textoExtra(datosExtra, 'empresa'));
@@ -294,12 +300,17 @@ export class ClientesPage {
         .map(t => t.trim())
         .filter(Boolean);
 
+      const pacTrim = this.editPac().trim().toUpperCase();
+      const ciTrim = this.editCi().trim();
+
       const payload = {
         nombre,
         telefono,
         email: this.editEmail().trim() || null,
         categoria: this.editCategoria(),
         agenteId: this.editAgenteId() || null,
+        pac: pacTrim || null,
+        ci: ciTrim || null,
         /* Con columna propia: van al primer nivel para que el backend
            los guarde donde la ficha luego los lee. */
         empresa: this.editEmpresa().trim(),

@@ -57,6 +57,16 @@
                 <label class="edit-label edit-label-required">Nombre Completo</label>
                 <app-input placeholder="Nombre completo" [(value)]="state.editNombre" />
               </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="edit-label">Código PAC (FileMaker)</label>
+                  <app-input placeholder="Ej. PAC-1897" [(value)]="state.editPac" />
+                </div>
+                <div>
+                  <label class="edit-label">Cédula Identidad (CI)</label>
+                  <app-input placeholder="Ej. 6849201" [(value)]="state.editCi" />
+                </div>
+              </div>
               <div>
                 <label class="edit-label">Categoría / Nivel</label>
                 <select
@@ -150,12 +160,25 @@
           <p class="font-semibold text-text-dark mt-3 text-center leading-tight">
             {{ chat.cliente.nombre }}
           </p>
-          <div class="mt-2 flex justify-center">
+          <div class="mt-2 flex flex-wrap items-center justify-center gap-1.5">
             <app-badge
               [variant]="categoriaBadge[chat.cliente.categoria]"
               [icon]="categoriaIcon[chat.cliente.categoria]">
               {{ categoriaLabel[chat.cliente.categoria] }}
             </app-badge>
+            @if (chat.cliente.pac) {
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-mono text-[11px] font-bold" title="Código PAC (FileMaker)">
+                <app-icon name="file-text" [size]="10" />
+                {{ chat.cliente.pac }}
+                <button
+                  type="button"
+                  (click)="copiarTexto(chat.cliente.pac, 'Código PAC')"
+                  class="text-primary/70 hover:text-primary transition-colors cursor-pointer ml-0.5"
+                  title="Copiar PAC">
+                  <app-icon name="copy" [size]="10" />
+                </button>
+              </span>
+            }
           </div>
 
           <!-- Botones de acción rápida: Registrar Venta / Agendar recordatorio -->
@@ -225,6 +248,22 @@
                 </button>
               </div>
             </div>
+            @if (chat.cliente.ci) {
+              <div class="detail-row-clean">
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <app-icon name="file-text" [size]="14" class="text-text-muted shrink-0" />
+                  <span class="text-xs text-text-muted shrink-0">C.I.:</span>
+                  <span class="text-xs font-medium text-text-dark truncate">{{ chat.cliente.ci }}</span>
+                </div>
+                <button
+                  type="button"
+                  (click)="copiarTexto(chat.cliente.ci!, 'C.I.')"
+                  class="p-1 text-text-muted hover:text-primary transition-colors cursor-pointer rounded-lg hover:bg-black/5"
+                  title="Copiar C.I.">
+                  <app-icon name="copy" [size]="12" />
+                </button>
+              </div>
+            }
             @if (chat.cliente.email) {
               <div class="detail-row-clean">
                 <div class="flex items-center gap-2 min-w-0 flex-1">

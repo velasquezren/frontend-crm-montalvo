@@ -49,9 +49,9 @@ Si realizas campañas en Bolivia con formularios integrados de Facebook Ads:
 
 Al operar a gran escala (miles de mensajes y leads mensuales), debes presupuestar el soporte del servidor:
 
-1. **Almacenamiento de fotos, audios y archivos (AWS S3):**
+1. **Almacenamiento de fotos, audios y archivos (Cloudflare R2 / S3 API):**
    * Los pacientes envían fotos de tratamientos o audios explicativos. Meta solo los retiene 30 días.
-   * El CRM los descarga y almacena en AWS S3. Costo: ~$0.023 USD por GB (~0.16 BOB - 0.23 BOB). Para 100,000 archivos mensuales, el costo aproximado será de **$3 USD (~21 BOB - 30 BOB) al mes**.
+   * El CRM los descarga y almacena de forma privada en **Cloudflare R2** (compatible con S3 API vía `aws4fetch` y URLs firmadas efímeras). Ventaja clave: **$0 de costos por transferencia saliente (egress)** y primer tramo gratuito de 10 GB al mes. Costo estimado: **$0.00 a $1.50 USD al mes**.
 2. **Servidor NestJS y Base de Datos PostgreSQL (VPS):**
    * Hosting del backend NestJS para responder webhooks en milisegundos: **$15 a $30 USD mensuales (~105 BOB a 300 BOB)**.
    * Base de datos (concurrencia de múltiples agentes y leads): **$25 a $50 USD mensuales (~174 BOB a 500 BOB)**.

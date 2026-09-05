@@ -47,8 +47,8 @@ Al operar a gran escala (miles de mensajes diarios y registro masivo de leads), 
 ### A. Almacenamiento de Archivos Multimedia (Media Storage)
 Los mensajes de WhatsApp no solo contienen texto; los pacientes envían audios, fotos y PDFs.
 * **El Reto:** Meta guarda los archivos multimedia en sus servidores solo por 30 días.
-* **La Solución:** Tu CRM debe descargar estos archivos y guardarlos en un bucket de nube (ej. **AWS S3** o **Google Cloud Storage**).
-* **Costo Estimado:** AWS S3 cobra ~$0.023 USD por GB almacenado. Para 100,000 fotos/audios al mes, el costo es insignificante (<$5 USD al mes), pero debes monitorear el ancho de banda de descarga (Data Transfer Out).
+* **La Solución:** Tu CRM descarga estos archivos y los guarda de forma privada en un bucket **Cloudflare R2** (compatible con S3 API vía `aws4fetch`), resolviendo claves privadas a URLs firmadas efímeras.
+* **Costo Estimado:** Cloudflare R2 ofrece **0 dólares por salida de datos (Zero Egress Fees)** y un tier gratuito de 10 GB/mes. Para 100,000 fotos/audios al mes, el costo estimado oscila entre **$0.00 y $2.00 USD mensuales** (significativamente más económico que AWS S3 estándar).
 
 ### B. Base de Datos (Base de Datos Relacional)
 Guardar el historial de chat de miles de pacientes genera millones de filas rápidamente.

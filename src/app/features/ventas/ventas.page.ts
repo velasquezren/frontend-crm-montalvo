@@ -230,6 +230,8 @@ export class VentasPage implements OnDestroy {
     () => {
       const estado = this.filtro() === 'TODAS' ? undefined : (this.filtro() as EstadoVenta);
       const agenteId = this.agenteSeleccionadoId() === 'TODOS' ? undefined : this.agenteSeleccionadoId();
+      const metodoPago = this.metodoPagoFiltro() === 'TODOS' ? undefined : this.metodoPagoFiltro();
+      const comprobante = this.comprobanteFiltro() === 'TODOS' ? undefined : this.comprobanteFiltro();
       const { desde, hasta } = calcularRangoFechas(
         this.presetPeriodo(),
         this.fechaDesdePersonalizada(),
@@ -242,6 +244,8 @@ export class VentasPage implements OnDestroy {
         agenteId,
         desde,
         hasta,
+        metodoPago,
+        comprobante,
         pagina: this.pagina(),
         limite: 25,
       });
@@ -255,18 +259,28 @@ export class VentasPage implements OnDestroy {
     { defaultValue: [] },
   );
 
-  /* ── Ventas Filtradas en Memoria (Página Actual) ────────────────── */
-  protected readonly ventasFiltradas = computed(() => {
-    const lista = this.ventas.value().datos;
-    const mp = this.metodoPagoFiltro();
-    const comp = this.comprobanteFiltro();
+  /* ── Ventas del Servidor (Garantiza Paginación Real y Exacta) ─── */
+  protected readonly ventasFiltradas = computed(() => this.ventas.value().datos);
 
-    return lista.filter(v => {
-      if (mp !== 'TODOS' && v.metodoPago !== mp) return false;
-      if (comp === 'CON_COMPROBANTE' && !v.comprobanteUrl && !v.comprobante) return false;
-      if (comp === 'SIN_COMPROBANTE' && (v.comprobanteUrl || v.comprobante)) return false;
-      return true;
-    });
+  /* Etiquetas amigables para filtros activos */
+  protected readonly etiquetaEstadoActivo = computed(() => {
+    const f = this.filtro();
+    return f === 'TODAS' ? 'Todas' : this.estadoLabel[f as EstadoVenta];
+  });
+
+  protected readonly etiquetaPeriodoActivo = computed(() => {
+    const p = PRESETS_PERIODO.find(item => item.id === this.presetPeriodo());
+    return p ? p.label : this.presetPeriodo();
+  });
+
+  protected readonly etiquetaMetodoPagoActivo = computed(() => {
+    const mp = METODOS_PAGO.find(item => item.id === this.metodoPagoFiltro());
+    return mp ? mp.label : this.metodoPagoFiltro();
+  });
+
+  protected readonly nombreAgenteActivo = computed(() => {
+    const ag = this.agentes.value().find(item => item.id === this.agenteSeleccionadoId());
+    return ag ? ag.nombre : this.agenteSeleccionadoId();
   });
 
   /* Contador de filtros activos */
@@ -591,10 +605,12 @@ export class VentasPage implements OnDestroy {
 
   protected cambiarMetodoPagoFiltro(metodo: MetodoPagoVenta | 'TODOS'): void {
     this.metodoPagoFiltro.set(metodo);
+    this.pagina.set(1);
   }
 
   protected cambiarComprobanteFiltro(tipo: 'TODOS' | 'CON_COMPROBANTE' | 'SIN_COMPROBANTE'): void {
     this.comprobanteFiltro.set(tipo);
+    this.pagina.set(1);
   }
 
   protected limpiarTodosLosFiltros(): void {

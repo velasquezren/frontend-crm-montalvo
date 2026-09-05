@@ -23,6 +23,19 @@
             title="Copiar número de teléfono">
             <app-icon name="copy" [size]="12" />
           </button>
+          @if (chat.cliente.pac) {
+            <span class="text-text-muted/40">·</span>
+            <span class="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20 shrink-0" title="Código PAC en FileMaker">
+              {{ chat.cliente.pac }}
+            </span>
+            <button
+              type="button"
+              (click)="copiarTexto(chat.cliente.pac, 'Código PAC')"
+              class="text-text-muted hover:text-primary transition-colors cursor-pointer shrink-0"
+              title="Copiar código PAC">
+              <app-icon name="copy" [size]="12" />
+            </button>
+          }
         </div>
       </div>
     </div>

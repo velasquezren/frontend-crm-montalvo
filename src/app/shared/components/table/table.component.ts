@@ -45,6 +45,13 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
     </div>
   `,
   styles: `
+    :host {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+    }
+
     /* Recorta y enmarca. NO scrollea: si scrolleara, volvería el problema. */
     .crm-table-marco {
       width: 100%;

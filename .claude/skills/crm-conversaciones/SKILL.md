@@ -38,9 +38,9 @@ decidir si se bloquea.
 
 ## 2. Visibilidad y Seguridad por Rol
 
-- **Super Admin (`ADMIN`)**:
-  - Visibilidad total: ve todas las conversaciones del centro, sin asignar y asignadas a cualquier vendedora/agente.
-  - Puede reasignar conversaciones entre agentes.
+- **Administrador y Super Admin (`ADMIN` / `SUPER_ADMIN`)**:
+  - Visibilidad total: ven todas las conversaciones del centro, sin asignar y asignadas a cualquier vendedora/agente.
+  - Pueden reasignar conversaciones entre agentes.
 - **Agente Comercial (`AGENTE`)**:
   - Visibilidad acotada: solo ve las conversaciones **asignadas a su propio ID** y las **conversaciones sin asignar** (pool general).
   - Toda consulta en el backend pasa obligatoriamente por `whereVisibilidad(soloAgenteId)`.

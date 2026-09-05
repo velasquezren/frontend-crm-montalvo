@@ -193,6 +193,8 @@ export class ConversacionesStateService {
   readonly editandoFicha = signal(false);
   readonly editNombre = signal('');
   readonly editEmail = signal('');
+  readonly editPac = signal('');
+  readonly editCi = signal('');
   readonly editEmpresa = signal('');
   readonly editFechaNacimiento = signal('');
   readonly editLugarNacimiento = signal('');
@@ -569,6 +571,8 @@ export class ConversacionesStateService {
     const c = chat.cliente;
     this.editNombre.set(c.nombre);
     this.editEmail.set(c.email || '');
+    this.editPac.set(c.pac || '');
+    this.editCi.set(c.ci || '');
     this.editEmpresa.set(c.empresaTrabajo || textoExtra(c.datosExtra, 'empresa'));
     this.editFechaNacimiento.set(c.fechaNacimiento?.slice(0, 10) ?? '');
     this.editLugarNacimiento.set(c.ciLugar || textoExtra(c.datosExtra, 'lugarNacimiento', 'CI.Lug.Pac'));
@@ -609,10 +613,18 @@ export class ConversacionesStateService {
         tags: tagsArray,
       };
 
+      const pacTrim = this.editPac().trim().toUpperCase();
+      const ciTrim = this.editCi().trim();
+
       const payload = {
         nombre,
         email: this.editEmail().trim() || null,
         categoria: this.editCategoria(),
+        pac: pacTrim || null,
+        ci: ciTrim || null,
+        empresa: this.editEmpresa().trim() || undefined,
+        fechaNacimiento: this.editFechaNacimiento() || undefined,
+        lugarNacimiento: this.editLugarNacimiento().trim() || undefined,
         datosExtra: nuevosDatosExtra,
       };
 

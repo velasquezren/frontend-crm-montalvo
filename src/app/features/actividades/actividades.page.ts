@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   EffectCleanupRegisterFn,
+  OnDestroy,
   TemplateRef,
   ViewContainerRef,
   computed,
@@ -53,6 +54,7 @@ import { ErrorCargaComponent } from '../../shared/components/error-carga/error-c
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InputComponent } from '../../shared/components/input/input.component';
+import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
@@ -62,6 +64,7 @@ import {
   esActividadVencida,
   ESTADO_ACTIVIDAD_LABEL,
   EstadoActividad,
+  formatoFechaRelativa,
   FRECUENCIA_LABEL,
   FrecuenciaRepeticion,
   ResumenActividades,
@@ -163,6 +166,7 @@ function aEventoCalendario(a: Actividad): CalendarEventExternal {
     FilterChipComponent,
     IconComponent,
     InputComponent,
+    KpiCardComponent,
     LoadingSkeletonComponent,
     PageHeaderComponent,
     PaginatorComponent,
@@ -172,7 +176,7 @@ function aEventoCalendario(a: Actividad): CalendarEventExternal {
   templateUrl: './actividades.page.html',
   styleUrl: './actividades.page.css',
 })
-export class ActividadesPage {
+export class ActividadesPage implements OnDestroy {
   private readonly actividadesService = inject(ActividadesService);
   private readonly clientesService = inject(ClientesService);
   private readonly leadsService = inject(LeadsService);
@@ -191,14 +195,26 @@ export class ActividadesPage {
   protected readonly tipos = TIPOS;
   protected readonly esVencida = esActividadVencida;
   protected readonly origenLabel = ORIGEN_LABEL;
+  protected readonly formatoFechaRelativa = formatoFechaRelativa;
+
+  protected labelOrigen(origen: string): string {
+    const mapa: Record<string, string> = this.origenLabel;
+    return mapa[origen] ?? origen;
+  }
 
   /* ── Vista y filtros ───────────────────────────────────────────── */
   protected readonly vista = signal<Vista>('LISTA');
   protected readonly filtroRapido = signal<FiltroRapido>('PENDIENTES');
+  protected readonly filtroTipo = signal<TipoActividad | 'TODOS'>('TODOS');
+  protected readonly filtroAgenteId = signal<string>('TODOS');
   protected readonly busqueda = signal('');
   protected readonly busquedaDebounced = signal('');
   protected readonly pagina = signal(1);
 
+  /* ── Detalle / Cajón Lateral (Drawer 360°) ─────────────────────── */
+  protected readonly actividadDetalle = signal<Actividad | null>(null);
+  protected readonly drawerDetalleTemplate = viewChild<TemplateRef<unknown>>('drawerDetalleTemplate');
+  private activeDrawerRef?: OverlayRef;
   private activeOverlayRef?: OverlayRef;
   private queryParamsProcesados = false;
 
@@ -222,11 +238,7 @@ export class ActividadesPage {
     /**
      * Llegada desde "Agendar" en la ficha de un Lead (mismo patrón que
      * `ventas.page.ts` con "Registrar Venta"): abre el modal de creación con
-     * el cliente/lead ya elegidos, sin pasar por el buscador. `modalFormTpl`
-     * es un `viewChild()` (signal) y no un `@ViewChild` clásico justo para
-     * que este efecto pueda reaccionar cuando la plantilla queda disponible
-     * tras el primer render — los query params ya están ahí desde el
-     * arranque, pero la plantilla del modal todavía no.
+     * el cliente/lead ya elegidos, sin pasar por el buscador.
      */
     effect(() => {
       const tpl = this.modalFormTpl();
@@ -245,6 +257,17 @@ export class ActividadesPage {
       if (qp['leadId']) this.formLeadId.set(qp['leadId']);
     });
   }
+
+  ngOnDestroy(): void {
+    this.activeOverlayRef?.dispose();
+    this.activeDrawerRef?.dispose();
+  }
+
+  /** Agentes comerciales activos para selector de filtrado (solo ADMIN). */
+  protected readonly agentes = httpResource<Array<{ id: string; nombre: string }>>(
+    () => (this.esAdmin() ? this.actividadesService.agentesRequest() : undefined),
+    { defaultValue: [] },
+  );
 
   /** Ventana de filtros derivada del chip rápido — mismo criterio que `ActividadesService.resumen`. */
   private readonly filtroFechas = computed<Pick<FiltroActividades, 'estado' | 'desde' | 'hasta'>>(() => {
@@ -270,72 +293,90 @@ export class ActividadesPage {
   });
 
   protected readonly resumen = httpResource<ResumenActividades>(
-    () => this.actividadesService.resumenRequest(),
-    { defaultValue: { vencidas: 0, hoy: 0, proximaSemana: 0 } },
+    () =>
+      this.actividadesService.resumenRequest(
+        this.filtroAgenteId() !== 'TODOS' ? { agenteId: this.filtroAgenteId() } : {},
+      ),
+    { defaultValue: { vencidas: 0, hoy: 0, proximaSemana: 0, completadas: 0 } },
   );
 
   protected readonly actividades = httpResource<RespuestaPaginada<Actividad>>(
-    () =>
-      this.actividadesService.listarRequest({
+    () => {
+      const tipo = this.filtroTipo();
+      const agenteId = this.filtroAgenteId();
+      return this.actividadesService.listarRequest({
         ...this.filtroFechas(),
+        tipo: tipo === 'TODOS' ? undefined : tipo,
+        agenteId: agenteId === 'TODOS' ? undefined : agenteId,
         q: this.busquedaDebounced() || undefined,
         pagina: this.pagina(),
         limite: 25,
-      }),
+      });
+    },
     { defaultValue: paginaVacia<Actividad>() },
   );
 
   /**
    * Vista Calendario: ventana amplia (sin paginar en la UI) para poder pintar
-   * un mes entero. Tope real del servidor: 100 filas — si algún día una
-   * agente acumula más pendientes que eso, el banner de abajo avisa en vez de
-   * fingir que no hay más (mismo criterio que el techo del inbox, ver
-   * `crm-backend-module`).
+   * un mes entero. Tope real del servidor: 100 filas.
    */
   protected readonly actividadesCalendario = httpResource<RespuestaPaginada<Actividad>>(
-    () => (this.vista() === 'CALENDARIO' ? this.actividadesService.listarRequest({ limite: 100 }) : undefined),
+    () => {
+      if (this.vista() !== 'CALENDARIO') return undefined;
+      const tipo = this.filtroTipo();
+      const agenteId = this.filtroAgenteId();
+      return this.actividadesService.listarRequest({
+        tipo: tipo === 'TODOS' ? undefined : tipo,
+        agenteId: agenteId === 'TODOS' ? undefined : agenteId,
+        q: this.busquedaDebounced() || undefined,
+        limite: 100,
+      });
+    },
     { defaultValue: paginaVacia<Actividad>() },
   );
 
   /* ── Calendario (Schedule-X) ───────────────────────────────────── */
   private readonly eventosServicio = createEventsServicePlugin();
-  protected readonly calendarApp: CalendarApp = createCalendar({
-    // Mes para el panorama, semana/día para el detalle de la agenda del día
-    // (con línea de "ahora" — createCurrentTimePlugin), y Lista para leer
-    // todo en texto sin contar cuadrículas. Schedule-X pinta su propia
-    // barra de navegación con estas cuatro vistas — no hay que maquetarla.
-    views: [createViewMonthGrid(), createViewWeek(), createViewDay(), createViewList()],
-    defaultView: 'month-grid',
-    timezone: ZONA,
-    locale: 'es-ES',
-    translations: { 'es-ES': TRADUCCION_ES },
-    firstDayOfWeek: 1,
-    calendars: {
-      // Las cuatro únicas superficies de color en la paleta cerrada — nunca
-      // un hex nuevo (ver `crm-design-system`). "critica" es negro, no rojo.
-      primaria: { colorName: 'primaria', label: 'A tiempo', lightColors: { main: '#006156', container: '#EAF7F5', onContainer: '#006156' } },
-      secundaria: { colorName: 'secundaria', label: 'Completada', lightColors: { main: '#39ADA3', container: '#EAF7F5', onContainer: '#006156' } },
-      critica: { colorName: 'critica', label: 'Vencida', lightColors: { main: '#000000', container: '#F8F9FA', onContainer: '#1F2937' } },
-      neutral: { colorName: 'neutral', label: 'Cancelada', lightColors: { main: '#6B7280', container: '#F8F9FA', onContainer: '#1F2937' } },
-    },
-    callbacks: {
-      onEventClick: evento => {
-        const actividad = this.actividadesCalendario.value().datos.find(a => a.id === evento.id);
-        if (actividad) this.abrirEdicion(actividad);
+  protected readonly calendarApp: CalendarApp = createCalendar(
+    {
+      views: [createViewMonthGrid(), createViewWeek(), createViewDay(), createViewList()],
+      defaultView: 'month-grid',
+      timezone: ZONA,
+      locale: 'es-ES',
+      translations: { 'es-ES': TRADUCCION_ES },
+      firstDayOfWeek: 1,
+      calendars: {
+        primaria: {
+          colorName: 'primaria',
+          label: 'A tiempo',
+          lightColors: { main: '#006156', container: '#EAF7F5', onContainer: '#006156' },
+        },
+        secundaria: {
+          colorName: 'secundaria',
+          label: 'Completada',
+          lightColors: { main: '#39ADA3', container: '#EAF7F5', onContainer: '#006156' },
+        },
+        critica: {
+          colorName: 'critica',
+          label: 'Vencida',
+          lightColors: { main: '#000000', container: '#F8F9FA', onContainer: '#1F2937' },
+        },
+        neutral: {
+          colorName: 'neutral',
+          label: 'Cancelada',
+          lightColors: { main: '#6B7280', container: '#F8F9FA', onContainer: '#1F2937' },
+        },
+      },
+      callbacks: {
+        onEventClick: evento => {
+          const actividad = this.actividadesCalendario.value().datos.find(a => a.id === evento.id);
+          if (actividad) this.abrirDetalle(actividad);
+        },
       },
     },
-  }, [this.eventosServicio, createCurrentTimePlugin()]);
+    [this.eventosServicio, createCurrentTimePlugin()],
+  );
 
-  /**
-   * Sin `template` como parámetro de `abrirCreacion`/`abrirEdicion`: el clic
-   * en un evento del calendario dispara `onEventClick` desde el `callbacks`
-   * de `calendarApp` (arriba), que se arma en el constructor — antes de que
-   * exista ninguna referencia `#modalForm` de la plantilla para pasarle.
-   * `viewChild()` (signal, no el `@ViewChild` clásico) sí está resuelto para
-   * entonces, porque el callback solo corre cuando el usuario ya hizo clic en
-   * un evento ya renderizado — y de paso permite que el efecto de query
-   * params (constructor) reaccione en cuanto la plantilla queda disponible.
-   */
   protected readonly modalFormTpl = viewChild<TemplateRef<unknown>>('modalForm');
 
   /* ── Formulario crear/editar ───────────────────────────────────── */
@@ -348,19 +389,88 @@ export class ActividadesPage {
   protected readonly formNotas = signal('');
   protected readonly formFecha = signal(aDatetimeLocal(new Date(Date.now() + 60 * 60 * 1000)));
   protected readonly formDuracion = signal(TIPO_ACTIVIDAD_DURACION_SUGERIDA['TAREA']);
-  /** Si la persona ya tocó la duración a mano, cambiar el tipo deja de pisarla. */
   private formDuracionTocada = false;
   protected readonly formLeadId = signal<string | null>(null);
 
-  /** Solo aplica al crear — ver `RepetirActividadDto` en el backend. */
   protected readonly frecuencias: readonly FrecuenciaRepeticion[] = ['SEMANAL', 'QUINCENAL', 'MENSUAL'];
   protected readonly frecuenciaLabel = FRECUENCIA_LABEL;
   protected readonly formRepetir = signal<FrecuenciaRepeticion | null>(null);
   protected readonly formRepetirVeces = signal(4);
 
-  /* Búsqueda de cliente — mismo patrón que `ventas.page.ts` (RF de registrar venta) */
+  /* Búsqueda de cliente */
   protected readonly busquedaCliente = signal('');
   protected readonly clienteElegido = signal<ClienteMinimo | null>(null);
+
+  /* ── Creación Express de Contacto / Paciente nuevo ────────────── */
+  protected readonly modoNuevoCliente = signal(false);
+  protected readonly nuevoClienteNombre = signal('');
+  protected readonly nuevoClienteTelefono = signal('');
+  protected readonly creandoCliente = signal(false);
+  protected readonly errorNuevoCliente = signal('');
+
+  protected activarModoNuevoCliente(valorInicial?: string): void {
+    this.modoNuevoCliente.set(true);
+    this.errorNuevoCliente.set('');
+    const texto = (valorInicial ?? this.busquedaCliente()).trim();
+    const soloDigitos = texto.replace(/\D/g, '');
+    if (soloDigitos.length >= 7) {
+      this.nuevoClienteTelefono.set(texto);
+      this.nuevoClienteNombre.set('');
+    } else {
+      this.nuevoClienteNombre.set(texto);
+      this.nuevoClienteTelefono.set('');
+    }
+  }
+
+  protected cancelarModoNuevoCliente(): void {
+    this.modoNuevoCliente.set(false);
+    this.errorNuevoCliente.set('');
+  }
+
+  protected normalizarTelefono(valor: string): string | null {
+    const limpio = valor.replace(/[^\d+]/g, '');
+    if (/^\+\d{9,13}$/.test(limpio)) {
+      return limpio;
+    }
+    if (/^\d{8}$/.test(limpio)) {
+      return `+591${limpio}`;
+    }
+    return null;
+  }
+
+  protected async registrarNuevoClienteExpress(): Promise<void> {
+    this.errorNuevoCliente.set('');
+    const nombre = this.nuevoClienteNombre().trim();
+    if (nombre.length < 2) {
+      this.errorNuevoCliente.set('El nombre requiere al menos 2 caracteres.');
+      return;
+    }
+
+    const telNormalizado = this.normalizarTelefono(this.nuevoClienteTelefono());
+    if (!telNormalizado) {
+      this.errorNuevoCliente.set('Ingresa un celular válido (8 dígitos locales o formato +591…).');
+      return;
+    }
+
+    this.creandoCliente.set(true);
+    try {
+      const nuevo = await this.clientesService.crear({
+        nombre,
+        telefono: telNormalizado,
+      });
+      this.toast.show(`Paciente "${nuevo.nombre}" registrado.`, 'success');
+      this.elegirCliente({
+        id: nuevo.id,
+        nombre: nuevo.nombre,
+        telefono: nuevo.telefono,
+      });
+      this.modoNuevoCliente.set(false);
+    } catch (err) {
+      this.errorNuevoCliente.set(mensajeDeError(err, 'No se pudo registrar el contacto.'));
+    } finally {
+      this.creandoCliente.set(false);
+    }
+  }
 
   protected readonly resultadosCliente = httpResource<readonly Cliente[]>(
     () => {
@@ -382,7 +492,6 @@ export class ActividadesPage {
     this.leadsDelCliente.value().datos.filter(l => l.estado === 'NUEVO' || l.estado === 'CONTACTADO'),
   );
 
-  /** Presets de duración — un stepper de minutos a mano invita a "37" donde nadie agenda así. */
   protected readonly duracionesPreset: readonly number[] = [5, 15, 30, 45, 60, 90, 120];
 
   protected formatearDuracion(minutos: number): string {
@@ -394,8 +503,6 @@ export class ActividadesPage {
 
   protected elegirTipo(tipo: TipoActividad): void {
     this.formTipo.set(tipo);
-    // Cambiar el tipo actualiza la duración sugerida — pero solo mientras la
-    // persona no la haya tocado a mano; si ya la tocó, respeta su elección.
     if (!this.formDuracionTocada) this.formDuracion.set(TIPO_ACTIVIDAD_DURACION_SUGERIDA[tipo]);
   }
 
@@ -408,12 +515,40 @@ export class ActividadesPage {
     this.clienteElegido.set(cliente);
     this.busquedaCliente.set(cliente.nombre);
     this.formLeadId.set(null);
+    this.modoNuevoCliente.set(false);
   }
 
   protected limpiarCliente(): void {
     this.clienteElegido.set(null);
     this.busquedaCliente.set('');
     this.formLeadId.set(null);
+    this.modoNuevoCliente.set(false);
+    this.errorNuevoCliente.set('');
+  }
+
+  protected aplicarPresetFecha(tipo: '1H' | 'HOY_TARDE' | 'MANANA_MANANA' | 'EN_2_DIAS'): void {
+    const ahora = new Date();
+    let target = new Date(ahora);
+    switch (tipo) {
+      case '1H':
+        target = new Date(ahora.getTime() + 60 * 60 * 1000);
+        break;
+      case 'HOY_TARDE':
+        target.setHours(16, 0, 0, 0);
+        if (target.getTime() <= ahora.getTime()) {
+          target = new Date(ahora.getTime() + 60 * 60 * 1000);
+        }
+        break;
+      case 'MANANA_MANANA':
+        target.setDate(target.getDate() + 1);
+        target.setHours(9, 30, 0, 0);
+        break;
+      case 'EN_2_DIAS':
+        target.setDate(target.getDate() + 2);
+        target.setHours(10, 0, 0, 0);
+        break;
+    }
+    this.formFecha.set(aDatetimeLocal(target));
   }
 
   protected abrirCreacion(): void {
@@ -428,6 +563,11 @@ export class ActividadesPage {
     this.formRepetir.set(null);
     this.formRepetirVeces.set(4);
     this.limpiarCliente();
+    this.modoNuevoCliente.set(false);
+    this.nuevoClienteNombre.set('');
+    this.nuevoClienteTelefono.set('');
+    this.creandoCliente.set(false);
+    this.errorNuevoCliente.set('');
     this.errorForm.set('');
     this.abrirModal(this.modalFormTpl());
   }
@@ -439,8 +579,6 @@ export class ActividadesPage {
     this.formNotas.set(actividad.notas ?? '');
     this.formFecha.set(aDatetimeLocal(new Date(actividad.fechaProgramada)));
     this.formDuracion.set(actividad.duracionMinutos);
-    // Al editar, la duración ya es la real (no una sugerencia) — que cambiar
-    // el tipo no la pise es lo correcto acá.
     this.formDuracionTocada = true;
     this.formLeadId.set(actividad.lead?.id ?? null);
     this.formRepetir.set(null);
@@ -450,7 +588,6 @@ export class ActividadesPage {
     this.abrirModal(this.modalFormTpl());
   }
 
-  /** `undefined` solo en el instante antes del primer render — se ignora sin más. */
   private abrirModal(template: TemplateRef<unknown> | undefined): void {
     if (!template) return;
     this.activeOverlayRef?.dispose();
@@ -462,13 +599,102 @@ export class ActividadesPage {
     this.activeOverlayRef = undefined;
   }
 
+  /* ── Detalle / Cajón Lateral (Drawer 360°) ─────────────────────── */
+
+  protected abrirDetalle(actividad: Actividad, template?: TemplateRef<unknown>): void {
+    const tpl = template ?? this.drawerDetalleTemplate();
+    if (!tpl) return;
+    this.actividadDetalle.set(actividad);
+    this.activeDrawerRef?.dispose();
+    this.activeDrawerRef = this.dialogService.openTemplate(tpl, this.vcr, {
+      panelClass: ['fixed', 'inset-0', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'],
+      onClose: () => this.cerrarDetalle(),
+    });
+  }
+
+  protected cerrarDetalle(): void {
+    this.actividadDetalle.set(null);
+    this.activeDrawerRef?.dispose();
+    this.activeDrawerRef = undefined;
+  }
+
+  protected getWhatsappLink(telefono: string, mensaje?: string): string {
+    const clean = telefono.replace(/\D/g, '');
+    const num = clean.startsWith('591') ? clean : `591${clean}`;
+    const text = mensaje ? encodeURIComponent(mensaje) : '';
+    return `https://wa.me/${num}${text ? `?text=${text}` : ''}`;
+  }
+
+  protected async reprogramarRapido(actividad: Actividad, horas: number): Promise<void> {
+    try {
+      const actual = new Date(actividad.fechaProgramada);
+      const nueva = new Date(actual.getTime() + horas * 60 * 60 * 1000);
+      const act = await this.actividadesService.actualizar(actividad.id, {
+        fechaProgramada: nueva.toISOString(),
+      });
+      this.toast.show(`Reprogramada para ${formatoFechaRelativa(nueva.toISOString()).texto}.`, 'success');
+      if (this.actividadDetalle()?.id === actividad.id) {
+        this.actividadDetalle.set(act);
+      }
+      this.actividades.reload();
+      this.actividadesCalendario.reload();
+      this.resumen.reload();
+    } catch (err) {
+      this.toast.show(mensajeDeError(err, 'No se pudo reprogramar la actividad.'), 'error');
+    }
+  }
+
+  protected async completarYAgendarSiguiente(actividad: Actividad): Promise<void> {
+    try {
+      await this.actividadesService.actualizarEstado(actividad.id, 'COMPLETADA');
+      this.toast.show('Actividad completada. Agenda el siguiente paso comercial.', 'success');
+      this.cerrarDetalle();
+      this.actividades.reload();
+      this.actividadesCalendario.reload();
+      this.resumen.reload();
+
+      // Abrir inmediatamente la siguiente actividad para este paciente
+      this.abrirCreacion();
+      this.elegirCliente({
+        id: actividad.cliente.id,
+        nombre: actividad.cliente.nombre,
+        telefono: actividad.cliente.telefono,
+      });
+      if (actividad.lead) {
+        this.formLeadId.set(actividad.lead.id);
+      }
+    } catch (err) {
+      this.toast.show(mensajeDeError(err, 'No se pudo completar la actividad.'), 'error');
+    }
+  }
+
   protected async guardar(evento: Event): Promise<void> {
     evento.preventDefault();
     this.errorForm.set('');
 
-    const cliente = this.clienteElegido();
+    let cliente = this.clienteElegido();
+    if (!cliente && this.modoNuevoCliente()) {
+      const nombre = this.nuevoClienteNombre().trim();
+      const tel = this.normalizarTelefono(this.nuevoClienteTelefono());
+      if (nombre.length >= 2 && tel) {
+        this.guardando.set(true);
+        try {
+          const creado = await this.clientesService.crear({ nombre, telefono: tel });
+          cliente = { id: creado.id, nombre: creado.nombre, telefono: creado.telefono };
+          this.elegirCliente(cliente);
+        } catch (err) {
+          this.errorForm.set(mensajeDeError(err, 'No se pudo registrar el nuevo paciente.'));
+          this.guardando.set(false);
+          return;
+        }
+      } else {
+        this.errorForm.set('Completa el nombre (mínimo 2 letras) y teléfono del nuevo paciente.');
+        return;
+      }
+    }
+
     if (!cliente) {
-      this.errorForm.set('Elige un cliente.');
+      this.errorForm.set('Elige o registra un cliente.');
       return;
     }
     if (this.formTitulo().trim().length < 3) {
@@ -482,7 +708,7 @@ export class ActividadesPage {
       const editando = this.actividadEditando();
 
       if (editando) {
-        await this.actividadesService.actualizar(editando.id, {
+        const actualizada = await this.actividadesService.actualizar(editando.id, {
           tipo: this.formTipo(),
           titulo: this.formTitulo().trim(),
           notas: this.formNotas().trim() || undefined,
@@ -490,6 +716,9 @@ export class ActividadesPage {
           duracionMinutos: this.formDuracion(),
           leadId: this.formLeadId(),
         });
+        if (this.actividadDetalle()?.id === editando.id) {
+          this.actividadDetalle.set(actualizada);
+        }
         this.toast.show('Actividad actualizada.', 'success');
       } else {
         const frecuencia = this.formRepetir();
@@ -520,10 +749,13 @@ export class ActividadesPage {
     }
   }
 
-  protected async cambiarEstado(actividad: Actividad, estado: EstadoActividad): Promise<void> {
+  protected async cambiarEstado(actividad: Actividad, estado: EstadoActividad, notas?: string): Promise<void> {
     try {
-      await this.actividadesService.actualizarEstado(actividad.id, estado);
+      const act = await this.actividadesService.actualizarEstado(actividad.id, estado, notas);
       this.toast.show(estado === 'COMPLETADA' ? 'Marcada como completada.' : 'Actividad cancelada.', 'success');
+      if (this.actividadDetalle()?.id === actividad.id) {
+        this.actividadDetalle.set(act);
+      }
       this.actividades.reload();
       this.actividadesCalendario.reload();
       this.resumen.reload();
@@ -533,9 +765,17 @@ export class ActividadesPage {
   }
 
   protected async eliminar(actividad: Actividad): Promise<void> {
+    const seguro = window.confirm(
+      `¿Deseas eliminar la actividad "${actividad.titulo}"? Esta acción no se puede deshacer.`,
+    );
+    if (!seguro) return;
+
     try {
       await this.actividadesService.eliminar(actividad.id);
       this.toast.show('Actividad eliminada.', 'success');
+      if (this.actividadDetalle()?.id === actividad.id) {
+        this.cerrarDetalle();
+      }
       this.actividades.reload();
       this.actividadesCalendario.reload();
       this.resumen.reload();
@@ -545,7 +785,46 @@ export class ActividadesPage {
   }
 
   protected cambiarFiltroRapido(filtro: FiltroRapido): void {
-    this.filtroRapido.set(filtro);
+    if (this.filtroRapido() === filtro && filtro !== 'PENDIENTES') {
+      this.filtroRapido.set('PENDIENTES');
+    } else {
+      this.filtroRapido.set(filtro);
+    }
+    this.pagina.set(1);
+  }
+
+  protected onCambiarTipo(e: Event): void {
+    const target = e.target as HTMLSelectElement | null;
+    if (target) {
+      this.filtroTipo.set(target.value as TipoActividad | 'TODOS');
+      this.pagina.set(1);
+    }
+  }
+
+  protected onCambiarAgente(e: Event): void {
+    const target = e.target as HTMLSelectElement | null;
+    if (target) {
+      this.filtroAgenteId.set(target.value);
+      this.pagina.set(1);
+    }
+  }
+
+  protected readonly tieneFiltrosActivos = computed(() => {
+    return (
+      this.busqueda().trim().length > 0 ||
+      this.filtroRapido() !== 'PENDIENTES' ||
+      this.filtroTipo() !== 'TODOS' ||
+      this.filtroAgenteId() !== 'TODOS'
+    );
+  });
+
+  protected limpiarTodosLosFiltros(): void {
+    this.busqueda.set('');
+    this.busquedaDebounced.set('');
+    this.filtroRapido.set('PENDIENTES');
+    this.filtroTipo.set('TODOS');
+    this.filtroAgenteId.set('TODOS');
     this.pagina.set(1);
   }
 }
+

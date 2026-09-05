@@ -26,6 +26,8 @@ export interface Lead {
     readonly nombre: string;
     readonly telefono: string;
     readonly categoria: CategoriaCliente;
+    readonly pac?: string | null;
+    readonly ci?: string | null;
     readonly agente?: { readonly id: string; readonly nombre: string } | null;
     readonly datosExtra?: DatosExtra | null;
   };

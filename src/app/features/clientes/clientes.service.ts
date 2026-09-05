@@ -31,6 +31,8 @@ export interface ActualizarClienteDto {
   email?: string | null;
   categoria?: CategoriaCliente;
   agenteId?: string | null;
+  pac?: string | null;
+  ci?: string | null;
   empresa?: string;
   fechaNacimiento?: string;
   lugarNacimiento?: string;
@@ -43,6 +45,8 @@ export interface CrearClienteDto {
   email?: string | null;
   categoria?: CategoriaCliente;
   agenteId?: string | null;
+  pac?: string | null;
+  ci?: string | null;
   empresa?: string;
   fechaNacimiento?: string;
   lugarNacimiento?: string;

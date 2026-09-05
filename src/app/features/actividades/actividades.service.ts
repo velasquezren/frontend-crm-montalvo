@@ -69,6 +69,11 @@ export class ActividadesService {
     return this.api.request('/actividades/resumen', { ...filtro });
   }
 
+  /** Lista de agentes activos para filtros de ADMIN. */
+  agentesRequest(): ResourceRequest {
+    return this.api.request('/conversaciones/meta/agentes');
+  }
+
   /** Detalle puntual — lo usa la campana de notificaciones al recibir un aviso por socket. */
   obtener(id: string): Promise<Actividad> {
     return this.api.get<Actividad>(`/actividades/${id}`);
@@ -82,8 +87,8 @@ export class ActividadesService {
     return this.api.patch<Actividad>(`/actividades/${id}`, cambios);
   }
 
-  actualizarEstado(id: string, estado: EstadoActividad): Promise<Actividad> {
-    return this.api.patch<Actividad>(`/actividades/${id}/estado`, { estado });
+  actualizarEstado(id: string, estado: EstadoActividad, notas?: string): Promise<Actividad> {
+    return this.api.patch<Actividad>(`/actividades/${id}/estado`, { estado, notas: notas?.trim() || undefined });
   }
 
   eliminar(id: string): Promise<{ ok: boolean }> {

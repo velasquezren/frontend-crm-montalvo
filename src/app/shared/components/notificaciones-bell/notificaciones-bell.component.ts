@@ -125,8 +125,9 @@ export class NotificacionesBellComponent {
   }
 
   private notificarEnPantalla(actividad: Actividad): void {
+    const sujeto = actividad.cliente?.nombre ?? actividad.lead?.origen ?? 'General';
     this.toast.show(
-      `${actividad.titulo} — ${actividad.cliente.nombre}`,
+      `${actividad.titulo} — ${sujeto}`,
       'info',
       'Recordatorio',
       10_000,

@@ -438,9 +438,20 @@
               </div>
             </div>
 
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <app-input
+                label="Código PAC (FileMaker)"
+                placeholder="Ej. PAC-1897"
+                [(value)]="editPac" />
+              <app-input
+                label="Cédula de Identidad (CI)"
+                placeholder="Ej. 6849201 SC"
+                [(value)]="editCi" />
+            </div>
+
             <div class="flex items-center gap-2 p-3 rounded-xl bg-bg-light/60 border border-border/60 text-xs text-text-muted">
               <app-icon name="shield" [size]="15" class="text-primary shrink-0" />
-              <span>El número de teléfono es el identificador único que enlaza WhatsApp y ventas.</span>
+              <span>El teléfono identifica al paciente en WhatsApp; el código PAC cruza su historial médico en FileMaker.</span>
             </div>
           </section>
         }

@@ -4,28 +4,28 @@
        TOPBAR — Barra superior compacta (64px)
        Ref: CRM_MANIFESTO.md §3.2
        ══════════════════════════════════════════════════════════════════════ -->
-  <header class="topbar flex items-center justify-between bg-white border-b border-border px-6">
+  <header class="topbar flex items-center justify-between bg-white border-b border-border px-4 sm:px-6">
 
     <!-- Logo interactivo (único botón para contraer/expandir el menú) -->
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-2 sm:gap-3 min-w-0">
       <button
         type="button"
         (click)="toggleSidebar($event)"
-        class="logo-toggle-btn p-1.5 -ml-1.5 rounded-xl hover:bg-bg-light
-               transition-all duration-200 cursor-pointer border border-transparent hover:border-border"
+        class="logo-toggle-btn p-1.5 -ml-1 rounded-xl hover:bg-bg-light
+               transition-all duration-200 cursor-pointer border border-transparent hover:border-border shrink-0"
         title="Hacer clic en el logo para abrir / cerrar el menú"
         aria-label="Toggle menú de navegación">
-        <img src="/favicon.svg" alt="Montalvo Logo" class="w-10 h-10 object-contain transition-transform duration-200 hover:scale-105" />
+        <img src="/favicon.svg" alt="Montalvo Logo" class="w-8 h-8 sm:w-10 sm:h-10 object-contain transition-transform duration-200 hover:scale-105" />
       </button>
 
-      <span class="text-base font-bold text-text-dark tracking-tight flex items-center gap-2">
-        Clínica Montalvo
-        <span class="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md">CRM</span>
+      <span class="text-sm sm:text-base font-bold text-text-dark tracking-tight flex items-center gap-1.5 sm:gap-2 truncate">
+        <span class="hidden sm:inline">Clínica </span>Montalvo
+        <span class="text-[10px] sm:text-xs font-semibold text-primary bg-primary/10 px-1.5 sm:px-2 py-0.5 rounded-md">CRM</span>
       </span>
     </div>
 
     <!-- Acciones — moneda + perfil + logout -->
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
       <app-notificaciones-bell />
       <app-moneda-toggle size="sm" />
       @if (user(); as currentUser) {
@@ -101,7 +101,7 @@
        Ref: CRM_MANIFESTO.md §3.2 — bg alternativo
        ══════════════════════════════════════════════════════════════════════ -->
   <main class="workspace bg-bg-workspace overflow-y-auto">
-    <div class="p-6 pb-28 md:pb-6">
+    <div class="p-4 sm:p-6 pb-28 md:pb-6 max-w-full">
       <router-outlet />
     </div>
   </main>
