@@ -282,6 +282,18 @@ export class ClientesPage {
     this.activeOverlayRef = undefined;
   }
 
+  protected onCambiarCategoria(event: Event): void {
+    const target = event.target as HTMLSelectElement | null;
+    if (target?.value) {
+      this.editCategoria.set(target.value as CategoriaCliente);
+    }
+  }
+
+  protected onCambiarAgente(event: Event): void {
+    const target = event.target as HTMLSelectElement | null;
+    this.editAgenteId.set(target?.value ? target.value : null);
+  }
+
   protected async guardarEdicion(event: Event): Promise<void> {
     event.preventDefault();
     if (this.guardando()) return;

@@ -96,6 +96,24 @@ export class LeadsPage implements OnDestroy {
   protected readonly guardandoMotivoPerdida = signal(false);
   private onConfirmarMotivoPerdida?: (motivo: string) => void;
 
+  /* ── Alta rápida de Lead (Presencial / Entrada) ────────────────────── */
+  protected readonly nuevoLeadNombre = signal('');
+  protected readonly nuevoLeadTelefono = signal('');
+  protected readonly nuevoLeadInteres = signal('');
+  protected readonly guardandoLead = signal(false);
+  protected readonly errorCrearLead = signal<string | null>(null);
+
+  protected readonly interesesSugeridos: readonly string[] = [
+    'Parto Humanizado',
+    'Cesárea',
+    'Ginecología',
+    'Ecografía 5D',
+    'Cirugía Plástica',
+    'Pediatría',
+    'Laboratorio',
+    'Consulta Médica',
+  ];
+
   ngOnDestroy(): void {
     this.activeOverlayRef?.dispose();
   }
@@ -222,6 +240,71 @@ export class LeadsPage implements OnDestroy {
     this.leadSeleccionado.set(null);
     this.activeOverlayRef?.dispose();
     this.activeOverlayRef = undefined;
+  }
+
+  protected abrirCrearLead(template: TemplateRef<unknown>): void {
+    this.nuevoLeadNombre.set('');
+    this.nuevoLeadTelefono.set('');
+    this.nuevoLeadInteres.set('');
+    this.errorCrearLead.set(null);
+    this.activeOverlayRef?.dispose();
+    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
+      onClose: () => this.cerrarCrearLead(),
+    });
+  }
+
+  protected cerrarCrearLead(): void {
+    this.activeOverlayRef?.dispose();
+    this.activeOverlayRef = undefined;
+    this.errorCrearLead.set(null);
+  }
+
+  protected elegirInteresSugerido(interes: string): void {
+    this.nuevoLeadInteres.set(interes);
+  }
+
+  protected async guardarNuevoLead(event: Event): Promise<void> {
+    event.preventDefault();
+    if (this.guardandoLead()) return;
+
+    const nombre = this.nuevoLeadNombre().trim();
+    let telefono = this.nuevoLeadTelefono().trim();
+    if (!nombre || !telefono) {
+      this.errorCrearLead.set('Nombre y teléfono son requeridos.');
+      return;
+    }
+
+    // Normalizar a formato E.164 (+591 para Bolivia) para satisfacer @IsPhoneNumber()
+    if (!telefono.startsWith('+')) {
+      const digitos = telefono.replace(/\D/g, '');
+      if (digitos.length === 8) {
+        telefono = `+591${digitos}`;
+      } else if (digitos.startsWith('591') && digitos.length === 11) {
+        telefono = `+${digitos}`;
+      }
+    }
+
+    this.guardandoLead.set(true);
+    this.errorCrearLead.set(null);
+
+    try {
+      const leadCreado = await this.leadsService.crearPresencial({
+        nombre,
+        telefono,
+        interes: this.nuevoLeadInteres().trim() || undefined,
+      });
+      this.toastService.success(
+        `Lead ${leadCreado.cliente.nombre} registrado correctamente`,
+        'Lead Creado',
+      );
+      this.cerrarCrearLead();
+      this.leads.reload();
+      this.resumen.reload();
+    } catch (err: unknown) {
+      this.errorCrearLead.set(mensajeDeError(err, 'No se pudo registrar el lead.'));
+    } finally {
+      this.guardandoLead.set(false);
+    }
   }
 
   protected cambiarEstadoLeadDirecto(nuevoEstado: EstadoLead): void {
