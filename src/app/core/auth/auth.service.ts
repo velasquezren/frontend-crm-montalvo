@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
@@ -39,6 +39,8 @@ export class AuthService {
   private readonly http = inject(HttpClient);
 
   private readonly currentUser = signal<User | null>(this.restaurarSesion());
+  private readonly revision = signal(0);
+  readonly generacionSesion = this.revision.asReadonly();
 
   readonly user = this.currentUser.asReadonly();
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
@@ -57,10 +59,16 @@ export class AuthService {
   }
 
   async login(email: string, password: string, rememberMe = true): Promise<boolean> {
+    this.revision.update(n => n + 1);
+    this.refrescoEnCurso = null;
+    const generacion = this.revision();
     try {
       const respuesta = await firstValueFrom(
-        this.http.post<LoginResponse>(`${API_URL}/auth/login`, { email, password, rememberMe }),
+        this.http.post<LoginResponse>(`${API_URL}/auth/login`, { email, password, rememberMe }, { withCredentials: true }),
       );
+      if (generacion !== this.revision()) return false;
+      this.revision.update(n => n + 1);
+      this.refrescoEnCurso = null;
 
       const usuario: User = {
         id: respuesta.usuario.sub,
@@ -116,20 +124,21 @@ export class AuthService {
    * interceptor cuando una petición vuelve con 401.
    *
    * Deduplicado a propósito: si varias peticiones expiran a la vez, todas
-   * esperan el mismo refresco en vez de pedir uno cada una. Nunca lanza —
-   * `null` significa que el refresh_token también venció, y de ahí en más
-   * cerrar sesión es cosa del interceptor, no de este método.
+   * esperan el mismo refresco. Solo 401 devuelve null; un fallo operativo se
+   * propaga y conserva la sesión. Una respuesta de otra generación se descarta.
    */
   refrescarToken(): Promise<string | null> {
+    if (!this.token) return Promise.resolve(null);
     if (!this.refrescoEnCurso) {
-      this.refrescoEnCurso = this.ejecutarRefresco().finally(() => {
-        this.refrescoEnCurso = null;
+      const pendiente = this.ejecutarRefresco(this.revision()).finally(() => {
+        if (this.refrescoEnCurso === pendiente) this.refrescoEnCurso = null;
       });
+      this.refrescoEnCurso = pendiente;
     }
     return this.refrescoEnCurso;
   }
 
-  private async ejecutarRefresco(): Promise<string | null> {
+  private async ejecutarRefresco(generacion: number): Promise<string | null> {
     try {
       const respuesta = await firstValueFrom(
         this.http.post<LoginResponse>(
@@ -138,6 +147,7 @@ export class AuthService {
           { withCredentials: true },
         ),
       );
+      if (generacion !== this.revision()) throw this.sesionCambio();
 
       const usuario: User = {
         id: respuesta.usuario.sub,
@@ -155,20 +165,23 @@ export class AuthService {
 
       this.currentUser.set(usuario);
       return respuesta.access_token;
-    } catch {
-      return null;
+    } catch (error) {
+      if (generacion !== this.revision()) throw this.sesionCambio();
+      if (error instanceof HttpErrorResponse && error.status === 401) return null;
+      throw error;
     }
   }
 
-  logout(): void {
-    /* Avisa al backend para que borre la cookie `refresh_token` (HttpOnly: este
-       código no puede tocarla). Sin esto, vaciar el storage dejaba una
-       credencial de 30 días viva en el navegador, canjeable en /auth/refresh
-       por una sesión nueva — y en la clínica el equipo se comparte.
+  private sesionCambio(): HttpErrorResponse {
+    return new HttpErrorResponse({ status: 409, statusText: 'La sesión cambió durante la petición' });
+  }
 
-       Sin esperar respuesta y sin propagar el error a propósito: salir nunca
-       puede quedarse a medias porque la red falle. El estado local se limpia
-       igual, que es lo que ve la agente. */
+  logout(): void {
+    this.revision.update(n => n + 1);
+    this.refrescoEnCurso = null;
+    /* Pide revocar esta sesión y borrar su cookie HttpOnly. El estado local se
+       limpia sin esperar a la red; si la petición falla, esa limpieza local no
+       demuestra que el servidor haya revocado la credencial. */
     this.http
       .post(`${API_URL}/auth/logout`, {}, { withCredentials: true })
       .subscribe({ error: () => undefined });
@@ -186,16 +199,15 @@ export class AuthService {
   /**
    * Comprueba contra el servidor si el rol guardado sigue siendo el real.
    *
-   * El rol viaja DENTRO del JWT (que dura 8h) y además se cachea en el
-   * navegador, así que un cambio de rol no se nota hasta volver a entrar: el
-   * menú muestra opciones que el backend rechazará, o esconde otras que la
-   * persona ya tiene. Al arrancar la app se contrasta con `/auth/perfil` y,
-   * si no coinciden, se cierra la sesión para que vuelva a entrar con un token
-   * coherente. Nunca cierra sesión por un fallo de red: solo si el servidor
-   * responde y el rol es distinto.
+   * El navegador conserva el usuario para pintar sin bloquear el arranque.
+   * El backend comprueba la versión de sesión y rechaza con 401 los tokens
+   * revocados por un cambio de rol; el interceptor resuelve ese caso. Aquí se
+   * actualiza el perfil visible y se descartan respuestas de otra sesión.
+   * Un fallo de red no borra el estado local.
    */
   async sincronizarRol(): Promise<{ rolCambio: boolean }> {
     const actual = this.currentUser();
+    const generacion = this.revision();
     if (!actual) return { rolCambio: false };
 
     try {
@@ -204,6 +216,7 @@ export class AuthService {
           `${API_URL}/auth/perfil`,
         ),
       );
+      if (generacion !== this.revision()) return { rolCambio: false };
 
       if (perfil.rol !== actual.rol) {
         this.logout();

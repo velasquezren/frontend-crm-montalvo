@@ -34,6 +34,7 @@ function montar(
   } = {},
 ) {
   const authService = {
+    generacionSesion: () => 0,
     // `??` trataría `null` como "sin valor" y volvería al default: acá `null`
     // es un caso real (sin sesión), así que solo `undefined` cae al default.
     token: opciones.token !== undefined ? opciones.token : 'access-token-viejo',

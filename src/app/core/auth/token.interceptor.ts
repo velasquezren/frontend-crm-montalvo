@@ -24,14 +24,15 @@ function esPeticionDeAutenticacion(url: string): boolean {
  * intenta un refresco silencioso una sola vez (vía `AuthService.refrescarToken`,
  * que a su vez pide el `access_token` nuevo con la cookie `refresh_token`) y
  * reintenta la petición original con el token nuevo. Solo cierra sesión y
- * redirige al login si ese refresco también falla —el `refresh_token` de 30
- * días también venció o no existe—. Además inspecciona cabeceras de versión
+ * redirige al login si ese refresco confirma credenciales inválidas. Un fallo
+ * de red o servidor se propaga sin salir. Además inspecciona cabeceras de versión
  * del backend.
  */
 export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const pwaUpdateService = inject(PwaUpdateService);
   const router = inject(Router);
+  const generacion = authService.generacionSesion();
 
   const token = authService.token;
   const peticion = token
@@ -46,12 +47,13 @@ export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
       }
     }),
     catchError(error => {
-      if (error?.status !== 401 || esPeticionDeAutenticacion(req.url)) {
+      if (error?.status !== 401 || esPeticionDeAutenticacion(req.url) || generacion !== authService.generacionSesion()) {
         return throwError(() => error);
       }
 
       return from(authService.refrescarToken()).pipe(
         switchMap(nuevoToken => {
+          if (generacion !== authService.generacionSesion()) return throwError(() => error);
           if (!nuevoToken) {
             authService.logout();
             router.navigate(['/auth/login']);
@@ -64,7 +66,7 @@ export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
                permisos revocados). Sin esto se propagaba el error y la agente
                se quedaba en una pantalla que fallaba en bucle sin explicación. */
             catchError(errorReintento => {
-              if (errorReintento?.status === 401) {
+              if (errorReintento?.status === 401 && generacion === authService.generacionSesion()) {
                 authService.logout();
                 router.navigate(['/auth/login']);
               }

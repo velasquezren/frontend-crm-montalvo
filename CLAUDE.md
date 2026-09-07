@@ -62,9 +62,11 @@ npm run sync:tipos     # regenera db-enums.ts desde el schema.prisma del backend
 `token.interceptor.ts` adjunta el JWT a cada petición y, ante un 401 ajeno a
 login/refresh/logout, intenta un refresco silencioso (`AuthService.refrescarToken()`,
 contra la cookie `HttpOnly` de 30 días que emite el backend) y reintenta la
-petición original una vez. Solo desloguea si ese refresco falla o si la
+petición original una vez. Solo desloguea si ese refresco responde 401 o si la
 petición reintentada con el token nuevo **vuelve** a dar 401 — sin ese freno,
-una sesión realmente inválida entraba en bucle. Detalle completo en
+una sesión realmente inválida entraba en bucle. Los fallos de red/5xx conservan
+la sesión; las respuestas de un login anterior se descartan por generación.
+Detalle completo en
 `crm-feature-page`.
 
 ## Rendimiento: el cuello de botella es la RED

@@ -331,7 +331,7 @@ resucitarla), intenta UN refresco silencioso vía `AuthService.refrescarToken()`
 y reintenta la petición original con el token nuevo. Solo desloguea y manda a
 `/auth/login` si:
 
-- el refresco en sí falla (el `refresh_token` de 30 días también venció), o
+- el refresco responde 401 (credencial inválida, revocada o expirada), o
 - la petición reintentada con el token **nuevo** vuelve a dar 401 — ahí el
   problema no es el token, es la sesión (usuario desactivado, permisos
   revocados), y sin este freno la agente quedaba en una pantalla que fallaba
@@ -344,6 +344,14 @@ MISMO refresco en vuelo en vez de disparar N peticiones a `/auth/refresh` para
 pedir, todas, lo mismo. Ver `crm-backend-module` (repo del backend) para el
 otro lado: por qué la cookie es `SameSite=None` en producción y qué hace
 `logout()` de verdad.
+
+Los errores de red y 5xx se propagan sin borrar la sesión. Cada login/logout
+cambia `generacionSesion`; el servicio y el interceptor descartan respuestas de
+una generación anterior. Login usa `withCredentials`, igual que refresh/logout,
+para recibir la cookie cross-site. No se lee ni guarda el refresh desde JavaScript.
+`RealtimeService` conserva un socket por sesión con conteo de consumidores, lee
+el access actual en cada handshake y comparte el refresh ante un rechazo 401.
+Los fallos transitorios reintentan con espera acotada; logout desconecta el socket.
 
 ## Roles y permisos
 
