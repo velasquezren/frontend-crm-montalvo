@@ -723,5 +723,6 @@ export class ActividadesPage implements OnDestroy {
     this.filtroAgenteId.set('TODOS');
     this.pagina.set(1);
   }
+
 }
 

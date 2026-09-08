@@ -461,9 +461,34 @@
     </app-empty-state>
   }
 } @else {
-  @if (actividadesCalendario.isLoading() && actividadesCalendario.value().datos.length === 0) {
-    <app-loading-skeleton shape="text" height="32rem" />
-  } @else if (actividadesCalendario.error()) {
+  <!-- Vista Calendario.
+       El calendario se monta en cuanto la vista es CALENDARIO: no cuelga del
+       estado del recurso ni de un @defer. Antes sí, y no se veía —reportado dos
+       veces desde producción, "le doy Calendario y no sale hasta que toco Hoy o
+       Vencidas"—. Esos botones no entran en la petición del calendario
+       (`cambiarFiltroRapido` solo mueve filtroRapido y pagina), así que lo único
+       que conseguían era forzar un repintado: el calendario ya estaba listo y
+       algo de la cadena de condicionales lo tenía escondido.
+
+       No se reproduce en pruebas ni compilando, así que en vez de seguir
+       afinando la cadena se quitó entera. Reglas de esta rama:
+
+       1. NADA se interpone entre `vista() === 'CALENDARIO'` y el componente,
+          salvo el estado de error. Ni carga, ni vacío, ni bloque diferido.
+       2. Un calendario sin eventos ES el estado vacío, y comunica más que un
+          cartel: enseña el mes, se puede navegar y se llena solo cuando llegan
+          los datos (el `effect` del componente los empuja al servicio de
+          eventos). Por eso ya no hay <app-empty-state> aquí.
+       3. Tampoco hay esqueleto de carga. Había dos idénticos de 32rem —el de
+          isLoading() y el @placeholder del @defer— indistinguibles en pantalla
+          pese a ser causas opuestas, y fue lo que impidió diagnosticar el bug
+          a distancia.
+
+       Lo que cuesta: Schedule-X y temporal-polyfill vuelven al chunk de la ruta
+       (~63 kB transferidos). Es un retroceso medido y deliberado sobre b6ba5f8,
+       y reversible: recuperar el @defer exige antes entender por qué no pintaba,
+       no volver a intentarlo a ciegas. Ver `crm-rendimiento`. -->
+  @if (actividadesCalendario.error()) {
     <app-error-carga que="las actividades" (reintentar)="actividadesCalendario.reload()" />
   } @else {
     @if (actividadesCalendario.value().total > actividadesCalendario.value().datos.length) {
@@ -474,24 +499,9 @@
         </span>
       </div>
     }
-    @if (actividadesCalendario.value().datos.length === 0) {
-      <app-empty-state
-        icon="calendar"
-        title="Sin actividades en el calendario"
-        description="No hay recordatorios ni tareas agendadas en esta vista. Agenda una desde 'Nueva actividad'." />
-    } @else {
-      <!-- Schedule-X y el polyfill de Temporal solo bajan al pulsar Calendario:
-           la vista por defecto es Lista y muchas agentes no entran nunca acá.
-           El esqueleto mide lo mismo que el calendario (32rem) para que la
-           página no salte al terminar la descarga. -->
-      @defer (when vista() === 'CALENDARIO') {
-        <app-actividades-calendario
-          [actividades]="actividadesCalendario.value().datos"
-          (seleccionada)="abrirDetalle($event)" />
-      } @placeholder {
-        <app-loading-skeleton shape="text" height="32rem" />
-      }
-    }
+    <app-actividades-calendario
+      [actividades]="actividadesCalendario.value().datos"
+      (seleccionada)="abrirDetalle($event)" />
   }
 }
 
