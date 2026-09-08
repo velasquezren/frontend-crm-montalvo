@@ -42,3 +42,13 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Secretos. El backend ya ignora `.env*` con una excepción para la plantilla
+# porque en el VPS había cinco copias `.env.bak.*` sin trackear pero SIN
+# ignorar; aquí no había ninguna regla, y este repo también acaba teniendo
+# variables (la URL de la API, claves VAPID públicas) en despliegues locales.
+.env*
+!.env.example
+
+# Caché incremental de TypeScript: se regenera y no debe viajar entre máquinas.
+*.tsbuildinfo

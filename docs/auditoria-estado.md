@@ -3,7 +3,7 @@
 El plan vive en el repo del **backend**, porque cubre los dos repos y allí están
 todos los informes por hallazgo:
 
-- `backend-crm-montalvo/docs/auditoria-estado.md` — qué fase está cerrada, en qué
+- `backend-crm-montalvo/docs/ESTADO_ACTUAL.md` — qué fase está cerrada, en qué
   commit, y qué sigue. **Leerlo antes de tocar nada**, junto con `git fetch` en
   los dos repos: se trabaja desde dos máquinas.
 - `backend-crm-montalvo/docs/auditoria-arquitectonica-2026-09-05.md` — el informe

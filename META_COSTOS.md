@@ -1,6 +1,15 @@
-# Análisis de Costos de Meta para Bolivia (WhatsApp & Leads)
+# Costos de Meta — WhatsApp y Lead Ads (Bolivia, +591)
 
-Este documento detalla la estructura de costos oficiales de Meta (WhatsApp Business Platform y Lead Ads) expresados en **Bolivianos (BOB)** y **Dólares (USD)** para operar el CRM a escala en Bolivia (+591).
+Estructura de costos oficiales de Meta (WhatsApp Business Platform y Lead Ads) en
+**Bolivianos (BOB)** y **Dólares (USD)** para operar el CRM a escala en Bolivia.
+
+> Consolida `META_COSTS_BOLIVIA.md` y `META_COSTS_ANALYSIS.md`, que decían lo
+> mismo con dos monedas distintas. Bolivia es el caso operativo real; del
+> documento general se conservan las partes que no estaban aquí —descuentos por
+> volumen, enlaces al tarifario oficial y el detalle de infraestructura—.
+>
+> **Las tarifas son de septiembre de 2026 y Meta las revisa.** Antes de
+> presupuestar, bajar el Excel oficial del enlace de la sección 8.
 
 ---
 
@@ -33,7 +42,16 @@ Meta cobra en base a la **plantilla entregada (Per-Message pricing)** según la 
 Para optimizar el presupuesto del CRM en Bolivia, debes aprovechar los dos tipos de ventanas gratuitas:
 
 * **Ventana de Servicio (24 horas):** Cuando un paciente te escribe preguntando por un servicio, se abre una ventana de 24 horas. Dentro de esa ventana, **no pagas nada** por enviar mensajes de texto libre, multimedia o plantillas de utilidad para responderle.
-* **Ventana de Anuncio (72 horas):** Si publicitas en Facebook/Instagram con anuncios del tipo "Enviar mensaje a WhatsApp" (Click-to-WhatsApp), cuando el usuario hace clic y te contacta, todos los mensajes (incluso plantillas de marketing) enviados a ese usuario durante las siguientes **72 horas son completamente gratuitos**.
+* **Ventana de Anuncio (72 horas, "Free Entry Point"):** Si publicitas con anuncios del tipo "Enviar mensaje a WhatsApp" (Click-to-WhatsApp) y el paciente hace clic y te contacta, las **plantillas** que le mandes durante las siguientes **72 horas no se cobran**.
+
+  **Ojo, que esto se entendió mal y llegó a estar mal escrito aquí:** la ventana
+  de 72 h **no** habilita texto libre ni sustituye a la de 24 h. Son
+  independientes. La única que permite escribir libremente es la CSW de 24 h
+  desde el último mensaje del paciente; pasadas esas 24 h solo salen plantillas,
+  y lo que decide la de 72 h es si esa plantilla se cobra o no. El código lo
+  refleja así: ver `ventana72hMetaActiva` y `fueraDeVentana24h` en
+  `src/app/features/conversaciones/services/conversaciones-state.service.ts`,
+  donde está anotado con la referencia a la documentación de Meta.
 
 ---
 
@@ -60,7 +78,15 @@ Al operar a gran escala (miles de mensajes y leads mensuales), debes presupuesta
 
 ---
 
-## 6. Proyección Mensual de Ejemplo (10,000 interacciones de Utilidad/Citas)
+## 6. Descuentos por Volumen (Volume Tiers)
+
+Meta reduce automáticamente la tarifa de **Utilidad** y **Autenticación** a medida
+que sube el volumen mensual de mensajes de la WABA. Los niveles se reinician cada
+mes. No hay que pedirlos ni configurarlos.
+
+---
+
+## 7. Proyección Mensual de Ejemplo (10,000 interacciones de Utilidad/Citas)
 
 Si envías **10,000 recordatorios de cita** automáticos al mes a pacientes en Bolivia fuera de la ventana de 24 horas:
 
@@ -72,6 +98,8 @@ Si envías **10,000 recordatorios de cita** automáticos al mes a pacientes en B
 
 ---
 
-## 7. Enlaces Oficiales de Referencia
-* **Configuración de Precios de Meta**: [Meta for Developers - WhatsApp Pricing](https://developers.facebook.com/docs/whatsapp/pricing) (aquí puedes descargar el tarifario Excel completo con el costo exacto por país).
-* **Guía de Formulario de Leads**: [Meta Lead Ads Graph API Docs](https://developers.facebook.com/docs/marketing-api/guides/lead-ads)
+## 8. Enlaces Oficiales de Referencia
+
+* **Precios de WhatsApp**: [Meta for Developers — WhatsApp Pricing](https://developers.facebook.com/docs/whatsapp/pricing). Desde ahí se descarga el **tarifario en Excel**, que Meta actualiza cada mes con el costo exacto por código de país. Es la fuente; esta tabla es una foto.
+* **Formularios de Leads**: [Meta Lead Ads Graph API Docs](https://developers.facebook.com/docs/marketing-api/guides/lead-ads)
+* **Cómo configurar todo esto en el portal de Meta**: [`META_INTEGRATION_GUIDE.md`](META_INTEGRATION_GUIDE.md)
