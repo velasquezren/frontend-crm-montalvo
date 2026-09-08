@@ -480,16 +480,35 @@
         title="Sin actividades en el calendario"
         description="No hay recordatorios ni tareas agendadas en esta vista. Agenda una desde 'Nueva actividad'." />
     } @else {
-      <!-- Schedule-X y el polyfill de Temporal solo bajan al pulsar Calendario:
+      <!-- Schedule-X y el polyfill de Temporal no viajan en el chunk de la ruta:
            la vista por defecto es Lista y muchas agentes no entran nunca acá.
            El esqueleto mide lo mismo que el calendario (32rem) para que la
-           página no salte al terminar la descarga. -->
-      @defer (when vista() === 'CALENDARIO') {
+           página no salte al terminar la descarga.
+
+           `prefetch on idle` descarga el chunk en cuanto el navegador queda
+           ocioso, sin esperar al clic. Sin él, los 63 kB empezaban a bajar
+           **en el instante del clic**, compitiendo con el Service Worker, que
+           con `registerImmediately` está prefetchando los 70+ chunks de la app
+           (ver `/*.js` en ngsw-config.json). Desde una conexión mediocre eso
+           dejaba el esqueleto puesto tanto rato que parecía roto — y como el
+           `@error` no existía, un fallo de verdad se veía exactamente igual.
+           Prefetch NO deshace la ganancia del @defer: el chunk sigue fuera de
+           `actividades-page`; solo se pide antes. -->
+      @defer (when vista() === 'CALENDARIO'; prefetch on idle) {
         <app-actividades-calendario
           [actividades]="actividadesCalendario.value().datos"
           (seleccionada)="abrirDetalle($event)" />
       } @placeholder {
         <app-loading-skeleton shape="text" height="32rem" />
+      } @error {
+        <!-- Recargar la página, no reintentar el bloque: verificado en el
+             código de Angular 21 (`triggerResourceLoading`) que un @defer que
+             falló queda FAILED para toda la sesión y no vuelve a pedir el
+             chunk, ni aunque se destruya y se recree el bloque. -->
+        <app-error-carga
+          titulo="No se pudo cargar el calendario"
+          descripcion="No llegó a bajar el componente del calendario. La vista Lista sigue funcionando; para reintentar hay que recargar la página."
+          (reintentar)="recargarPagina()" />
       }
     }
   }

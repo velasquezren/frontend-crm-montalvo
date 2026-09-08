@@ -154,6 +154,38 @@ por defecto va en un componente aparte con `@defer`**. Importarla en el `.ts` de
 página la mete en el chunk de la ruta aunque su plantilla esté dentro de un `@if`
 — el `@if` decide qué se pinta, no qué se descarga.
 
+#### La segunda mitad de la regla: `prefetch` y `@error`, o el diferido se ve roto
+
+Diferir sin más movió el coste, no lo eliminó: los 63 kB empezaban a bajar **en el
+instante del clic**, y la agente se quedaba mirando el `@placeholder`. Peor aún, en
+producción compiten con el Service Worker, que se registra con
+`registerImmediately` y prefetcha los 70+ chunks de la app (el `"/*.js"` de
+`ngsw-config.json`). Reportado como bug real: *"le doy Calendario la primera vez y
+no muestra nada"*.
+
+    @defer (when vista() === 'CALENDARIO'; prefetch on idle) { … }
+    @placeholder { <app-loading-skeleton height="32rem" /> }
+    @error        { <app-error-carga … /> }
+
+- **`prefetch on idle`** baja el chunk cuando el navegador queda ocioso, mucho
+  antes del clic. **No deshace la ganancia**: el chunk sigue fuera del de la ruta,
+  solo se pide antes. Sin esto, el diferido cambia "lento al abrir la página" por
+  "roto al abrir la pestaña", que se percibe peor.
+- **`@error` no es opcional, por la misma razón que el estado de error de una vista
+  con datos** (ver `crm-feature-page`). Verificado en el código de Angular 21: si
+  la carga falla y no hay `@error`, `applyDeferBlockState` no encuentra plantilla
+  para ese estado y **no hace nada** — el `@placeholder` se queda puesto para
+  siempre. Un fallo de red y una descarga lenta se ven idénticos, y no hay ni un
+  mensaje en consola en producción.
+- **Un `@defer` que falló no se reintenta solo.** `triggerResourceLoading` sale de
+  inmediato mientras el estado no sea `NOT_STARTED`, así que queda FAILED para toda
+  la sesión aunque el bloque se destruya y se recree. El botón del `@error` recarga
+  la página; ofrecer un "reintentar" que no vuelve a pedir nada es mentir.
+- **Dos esqueletos idénticos en la misma rama son un problema de diagnóstico.** En
+  Actividades, el de `isLoading()` y el del `@placeholder` miden los dos 32rem: al
+  reportarse el bug no se podía saber cuál se estaba viendo, y son causas opuestas
+  (la petición no vuelve / el chunk no baja).
+
 ### Backend: `curl -w`, no impresiones
 
 ```bash

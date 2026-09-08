@@ -723,5 +723,18 @@ export class ActividadesPage implements OnDestroy {
     this.filtroAgenteId.set('TODOS');
     this.pagina.set(1);
   }
+
+  /**
+   * Única salida cuando el `@defer` del calendario falla al bajar su chunk.
+   *
+   * No es pereza: Angular marca ese bloque como FAILED en la TView y
+   * `triggerResourceLoading` devuelve de inmediato mientras el estado no sea
+   * NOT_STARTED, así que el chunk no se vuelve a pedir en toda la sesión — ni
+   * destruyendo y recreando el bloque. Recargar es lo único que lo reintenta de
+   * verdad, y prometer un reintento que no ocurre es peor que pedir la recarga.
+   */
+  protected recargarPagina(): void {
+    window.location.reload();
+  }
 }
 
