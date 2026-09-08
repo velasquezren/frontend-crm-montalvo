@@ -73,17 +73,17 @@ function aEventoCalendario(a: Actividad): CalendarEventExternal {
 /**
  * Vista Calendario de Actividades — Schedule-X y todo lo que arrastra.
  *
- * **Existe para poder diferirlo.** Con el calendario dentro de
- * `actividades.page.ts`, sus cuatro paquetes (`@schedule-x/calendar`,
- * `/angular`, `/current-time`, `/events-service`) y el `temporal-polyfill`
- * viajaban en el chunk de la ruta: la agente pagaba la librería entera al abrir
- * Actividades aunque la vista por defecto sea **Lista** y muchas nunca toquen la
- * pestaña Calendario. En un CRM que se usa desde el móvil con conexión mediocre
- * —donde el 97 % de una navegación es red (ver CLAUDE.md)— eso es el peor sitio
- * posible para 250 kB.
+ * **Vivió detrás de un `@defer` y hubo que sacarlo.** Aislarlo aquí bajó el
+ * chunk de la ruta un 84 % (b6ba5f8) y la idea sigue siendo buena, pero en
+ * producción la pestaña Calendario no llegaba a pintarse: la agente pulsaba y
+ * se quedaba con el esqueleto hasta tocar otro filtro, que no pide datos nuevos
+ * y solo fuerza un repintado. Ni el build ni las pruebas lo reproducen. Se
+ * revirtió a un import normal en `actividades.page.html`, con el porqué escrito
+ * ahí y en `crm-rendimiento`.
  *
- * Aislado aquí y cargado con `@defer (when …)`, la librería solo baja cuando
- * alguien pulsa Calendario, y una vez cargada se queda.
+ * Si alguien vuelve a diferirlo: que sea con una reproducción del fallo
+ * primero, no a ciegas. El coste de tenerlo estático son ~63 kB transferidos en
+ * `actividades-page`; el de tenerlo diferido fue una vista que no se veía.
  *
  * El CSS del tema sigue siendo global (angular.json): mover el HTML sin su CSS
  * es la trampa que documenta el §8 de `check:skills`, y con una librería de

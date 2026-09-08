@@ -141,6 +141,11 @@ inicial**, y el caso que lo demuestra es Actividades:
 | `actividades-page` después | 59.69 kB | **12.21 kB** |
 | `actividades-calendario-component` (bajo demanda) | 265.01 kB | 63.22 kB |
 
+**Esa cifra ya no es la de hoy: el `@defer` de Actividades se revirtió el
+2026-09-08 porque la vista no se pintaba. El epílogo de abajo explica qué queda
+en pie de esta regla y qué no.** El razonamiento del ejemplo sigue siendo válido
+para cualquier otra vista.
+
 Schedule-X y `temporal-polyfill` estaban importados en `actividades.page.ts`, así
 que la librería del calendario viajaba en el chunk de la ruta — la agente la
 pagaba al abrir Actividades **aunque la vista por defecto sea Lista**. Extraer el
@@ -154,37 +159,47 @@ por defecto va en un componente aparte con `@defer`**. Importarla en el `.ts` de
 página la mete en el chunk de la ruta aunque su plantilla esté dentro de un `@if`
 — el `@if` decide qué se pinta, no qué se descarga.
 
-#### La segunda mitad de la regla: `prefetch` y `@error`, o el diferido se ve roto
+#### Y el epílogo: en Actividades hubo que revertirlo
 
-Diferir sin más movió el coste, no lo eliminó: los 63 kB empezaban a bajar **en el
-instante del clic**, y la agente se quedaba mirando el `@placeholder`. Peor aún, en
-producción compiten con el Service Worker, que se registra con
-`registerImmediately` y prefetcha los 70+ chunks de la app (el `"/*.js"` de
-`ngsw-config.json`). Reportado como bug real: *"le doy Calendario la primera vez y
-no muestra nada"*.
+**El `@defer` se quitó el 2026-09-08.** Con él, la pestaña Calendario no llegaba
+a pintarse en producción: la agente pulsaba y se quedaba el `@placeholder`
+puesto, y el calendario solo aparecía al tocar otro chip de filtro — que no entra
+en la petición del calendario y por tanto **solo fuerza un repintado**. Se probó
+primero `prefetch on idle` + `@error`, que descarta la descarga como causa
+(el chunk ya estaba bajado al pulsar) y aun así siguió sin verse.
 
-    @defer (when vista() === 'CALENDARIO'; prefetch on idle) { … }
-    @placeholder { <app-loading-skeleton height="32rem" /> }
-    @error        { <app-error-carga … /> }
+Ni `ng build` ni las pruebas lo reproducen: un repro en TestBed con la estructura
+exacta de la plantilla pasa, porque ahí el chunk se carga al instante. También se
+descartaron por lectura del código de Angular 21.2.22 el planificador zoneless
+(`markViewDirty` sí programa un tick) y el `cacheInterceptor` (no toca
+`/actividades`).
 
-- **`prefetch on idle`** baja el chunk cuando el navegador queda ocioso, mucho
-  antes del clic. **No deshace la ganancia**: el chunk sigue fuera del de la ruta,
-  solo se pide antes. Sin esto, el diferido cambia "lento al abrir la página" por
-  "roto al abrir la pestaña", que se percibe peor.
-- **`@error` no es opcional, por la misma razón que el estado de error de una vista
-  con datos** (ver `crm-feature-page`). Verificado en el código de Angular 21: si
-  la carga falla y no hay `@error`, `applyDeferBlockState` no encuentra plantilla
-  para ese estado y **no hace nada** — el `@placeholder` se queda puesto para
-  siempre. Un fallo de red y una descarga lenta se ven idénticos, y no hay ni un
-  mensaje en consola en producción.
+| | Bruto | Transferido |
+|---|---|---|
+| `actividades-page` con `@defer` | 60.02 kB | 12.51 kB |
+| `actividades-page` tras revertir | 323.96 kB | **75.11 kB** |
+
+Se paga porque una vista que no se ve vale cero, y porque el fallo llevaba dos
+reportes desde producción. **Las lecciones que sí quedan en pie:**
+
+- **Un `@defer` sin `@error` es la misma mentira que una vista sin estado de
+  error.** Verificado en el código de Angular: si la carga falla y no hay
+  `@error`, `applyDeferBlockState` no encuentra plantilla para ese estado y **no
+  hace nada** — el `@placeholder` se queda puesto para siempre, sin mensaje ni en
+  consola. Una descarga lenta y un fallo de red se ven idénticos.
 - **Un `@defer` que falló no se reintenta solo.** `triggerResourceLoading` sale de
-  inmediato mientras el estado no sea `NOT_STARTED`, así que queda FAILED para toda
-  la sesión aunque el bloque se destruya y se recree. El botón del `@error` recarga
-  la página; ofrecer un "reintentar" que no vuelve a pedir nada es mentir.
-- **Dos esqueletos idénticos en la misma rama son un problema de diagnóstico.** En
-  Actividades, el de `isLoading()` y el del `@placeholder` miden los dos 32rem: al
-  reportarse el bug no se podía saber cuál se estaba viendo, y son causas opuestas
-  (la petición no vuelve / el chunk no baja).
+  inmediato mientras el estado no sea `NOT_STARTED`: queda FAILED toda la sesión
+  aunque el bloque se destruya y se recree. Solo lo reintenta recargar la página.
+- **Diferir sin `prefetch` cambia "lento al abrir la página" por "lento al abrir
+  la pestaña"**, que se percibe peor porque llega después de un clic.
+- **No anides el contenido bajo tres condicionales del recurso.** En Actividades
+  el calendario colgaba de `isLoading` → `error` → `vacío` → `@defer`, con dos
+  esqueletos idénticos de 32rem en ramas distintas: indistinguibles en pantalla
+  pese a ser causas opuestas, y fue lo que impidió diagnosticar el bug a
+  distancia. Hoy solo el estado de error se interpone.
+
+**Antes de volver a diferir esa vista, hay que reproducir el fallo.** Repetir el
+intento a ciegas es cómo se llegó al segundo despliegue sin arreglo.
 
 ### Backend: `curl -w`, no impresiones
 
