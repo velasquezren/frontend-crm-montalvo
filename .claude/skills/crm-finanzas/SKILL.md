@@ -104,7 +104,7 @@ effect(() => {
 ```
 
 > **Por qué.** Las dos imponen el TC de SU periodo al `MonedaService`, que es
-> global (§E de GEMINI.md: una liquidación se lee con el TC del mes con que se
+> global (ver §6 de este skill: una liquidación se lee con el TC del mes con que se
 > liquidó, no con el de hoy). En el hub están montadas a la vez, así que sin este
 > interruptor bastaba pasar el cursor por la pestaña de Desempeño —que ya la
 > monta— para que las cifras en bolivianos de la pestaña que se estaba mirando

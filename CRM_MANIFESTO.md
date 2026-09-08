@@ -24,8 +24,10 @@
 > **Para cualquier IA que entre a este proyecto:** si tu herramienta lee
 > `.claude/skills/` (Claude Code), cargalos antes que este documento para
 > cualquier tarea concreta — tienen el código citado y verificado. Si tu
-> herramienta no los lee, este documento más `GEMINI.md` (raíz de `CRM/`) son
-> tu mejor resumen. Ante cualquier duda, **el código manda sobre los dos**.
+> herramienta no los carga automáticamente, lee los archivos directamente.
+> El punto de entrada es `CLAUDE.md` de cada repo y el único estado vive en
+> `../backend-crm-montalvo/docs/ESTADO_ACTUAL.md`. Ante una contradicción,
+> **el código y los checks mandan sobre la documentación**.
 
 ---
 

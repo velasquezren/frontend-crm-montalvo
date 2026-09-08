@@ -52,3 +52,11 @@ Thumbs.db
 
 # Caché incremental de TypeScript: se regenera y no debe viajar entre máquinas.
 *.tsbuildinfo
+
+# Salidas de pruebas y temporales locales; conservar lockfiles y migraciones.
+/build/
+/.cache/
+*.swp
+*.swo
+*~
+*.log

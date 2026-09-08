@@ -8,7 +8,9 @@ hay entorno de staging**.
 
 ## Levantarlo
 
-Node **>= 22** (`engines`), npm 10. Los dos repos van clonados bajo el mismo
+Node **22.23.2** (`.nvmrc`; mínimo de la rama 22: 22.12), npm 10 (comprobado: Node 22.23.2 / npm 10.9.8).
+El `>=22` del proyecto no expresa el mínimo más estricto de sus dependencias.
+Los dos repos van clonados bajo el mismo
 directorio padre —`check:skills` busca al hermano por ruta relativa y avisa si
 no lo encuentra, sin fallar—.
 
@@ -17,14 +19,13 @@ npm ci          # no `npm install`: reconstruye exactamente el lockfile
 npm start       # ng serve en http://localhost:4200
 ```
 
-Espera al backend en `http://localhost:3001`. Para levantarlo, ver el README de
-`backend-crm-montalvo`.
+Espera al backend en `http://localhost:3001`. Para levantarlo, ver [instalación local del backend](../backend-crm-montalvo/CLAUDE.md#instalación-y-arranque-local-linux--macos).
 
 ## Verificar
 
 ```bash
 npm run build   # check:tipos + check:skills + ng build — la compuerta real
-npm test        # Vitest
+npm test -- --watch=false  # Vitest, ejecución finita
 ```
 
 `npm run build` es lo que decide si un cambio está bien, y encadena tres cosas:
