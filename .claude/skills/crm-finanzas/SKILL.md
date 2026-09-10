@@ -11,18 +11,22 @@ Módulo centralizado para la administración contable, liquidación de comisione
 
 ## 1. Arquitectura del Hub Unificado
 
-El módulo consolida tres vistas operativas en una sola experiencia fluida bajo la ruta `/finanzas` (rol mínimo: `ADMIN`):
+El módulo consolida **cinco** vistas operativas en una sola experiencia fluida bajo la ruta `/finanzas` (rol mínimo: `ADMIN`). La lista viva es `TABS` en `finanzas.page.ts` — si no coincide con esto, manda el código:
 
 1. **Liquidación Mensual (`tab=liquidacion`)**:
    - Componente: `PlanillaComisionesPage` (`app-planilla-comisiones`)
    - Importación de Excel de FileMaker, cálculo de comisiones individuales, objetivos de paquetes (`PLANPAQ` y `PLANNIN`), retenciones y exportación.
-2. **Analítica Médica (`tab=analitica`)**:
+2. **Desempeño de Agentes (`tab=agentes`)**:
+   - Componente: `DesempenoAgentesComponent` (`app-desempeno-agentes`), en `features/finanzas/components/desempeno-agentes/`
+   - Ficha individual por vendedora: cabecera, metas, ventas del mes y composición del pago. Es una de las dos vistas que **escriben el TC global** (ver §3) y la **única** ruta para abrir la ficha de una vendedora dada de baja (ver §9).
+
+3. **Analítica Médica (`tab=analitica`)**:
    - Componente: `AnaliticaPage` (`app-analitica`), en `features/analitica/`
    - Distribución de ingresos por categoría de servicio, ranking de procedimientos más facturados, médicos tratantes y canales de captación.
-3. **Resumen Anual (`tab=anual`)**:
+4. **Resumen Anual (`tab=anual`)**:
    - Componente: `ResumenAnualPage` (`app-resumen-anual`)
    - Matriz histórica de facturación de 12 meses por vendedora y cálculo de bonos trimestrales (Q1, Q2, Q3, Q4).
-4. **Tipo de Cambio (`tab=tipo-cambio`, agregado 2026-08-25)**:
+5. **Tipo de Cambio (`tab=tipo-cambio`, agregado 2026-08-25)**:
    - Componente: `TipoCambioAdminComponent` (`app-tipo-cambio-admin`), en `features/finanzas/components/tipo-cambio/`
    - Historial diario del TC oficial USD→BOB (backend: módulo `tipo-cambio`, modelo `TipoCambioDiario`) — **no es lo mismo que** `PeriodoComision.tipoCambio`, que es el TC ya fijo de un mes de liquidación cerrado. Un intervalo en el backend intenta traer el valor del día cada 6h de un espejo público del BCB (`fuente: AUTOMATICO`); un ADMIN puede corregir cualquier día a mano (`fuente: MANUAL`), y lo manual siempre gana sobre lo automático de ese mismo día.
    - `MonedaService` (frontend, `core/moneda/`) lee de aquí (`GET /tipo-cambio/vigente`) el TC que usa en toda la app fuera de una liquidación abierta — antes de esto era una constante fija (6,97) que nadie actualizaba.
@@ -121,6 +125,55 @@ effect(() => {
 
 - **Prohibido el uso de `@keyframes` de entrada escalonada (`.aparecer`) o `pageFadeIn`**: Las vistas y tablas deben renderizarse en el acto de forma nativa e instantánea.
 - **Sin demoras**: Todo cambio de filtro, mes o pestaña debe reflejarse en tiempo real.
+
+## 4b. Las cachés del módulo, y quién tiene que tirarlas
+
+Tres cachés en memoria sirven este módulo, todas con
+`common/cache/cache-memoria.ts` y todas invisibles cuando fallan — sirven un
+número plausible y viejo, no un error:
+
+| Caché | Clave | TTL | Qué describe |
+|---|---|---|---|
+| `AnaliticaComisionesService` | `periodoId` | 60 s | los diez agregados de la pestaña Analítica |
+| `ResumenAnualService` | `año_vendedora` | 60 s | la matriz de doce meses |
+| `CatalogoClinicoService` | única | 1 h | los servicios que sugiere el modal de ventas |
+
+**La analítica no es solo una pestaña: es también el Excel.**
+`exportacion-comisiones.service.ts` llama a `analitica.analitica(periodoId)` —el
+método CACHEADO— para armar las hojas «Resumen», «Distribución» y «Rankings».
+Lo que esté viejo en la pestaña está viejo en el archivo que se firma.
+
+### El fallo que esto cierra (2026-09-10)
+
+`invalidar()` de la analítica **solo lo llamaba `calcular()`**. No lo llamaban
+importar, ajustar una fila, reclasificar con una regla nueva, borrar el periodo
+ni ninguna transición de estado. Durante 60 s:
+
+- Reimportar el mes dejaba la Analítica describiendo el archivo anterior.
+- Y el caso feo: `ajustarVenta()` llama a `invalidarCalculo()`, que **borra los
+  `ResultadoComision` del periodo**. Excluir una fila y descargar el Excel en
+  ese minuto producía un archivo cuyo «Resumen» declaraba una liquidación —
+  vendedoras liquidadas, comisión total en $us y Bs— que ya no existía en la
+  base.
+
+**La corrección es un solo punto**, `invalidarCachesDelPeriodo(periodoId)` en
+`PlanillaComisionesService`, y las nueve mutaciones que tocan un periodo pasan
+por ahí. Escribir `analitica.invalidar(id)` suelto al lado de cada
+`resumenAnual.invalidar()` es exactamente cómo se llega a la décima que se
+olvida — el mismo error que ya documentan las cinco comprobaciones de
+`esEditable()` (§8).
+
+Dos detalles que no son casualidad:
+
+- **La clave es el PERIODO, nunca la fila que se tocó.** En `ajustarVenta` el
+  parámetro `id` es el de la *venta*: invalidar con él no lanza, no deja log y
+  no borra nada — la caché se sigue sirviendo vieja igual que antes. Lo fija
+  `ajustar-venta.spec.ts`.
+- **Las mutaciones de vendedora NO la tiran.** `crearVendedora` y
+  `actualizarVendedora` solo invalidan la anual: la analítica agrega
+  `VentaImportada` y `ResultadoComision` sin mirar a `VendedoraComision` —ni
+  siquiera para filtrar las ocultas—, así que tirarla ahí sería recalcular diez
+  agregados para el mismo resultado.
 
 ## 4c. La pestaña Analítica tiene CINCO cubos, no cuatro
 
@@ -622,6 +675,43 @@ lleva firmas ni pide usuario.
 Los dos se descargan desde la barra del periodo y desde cada fila de "Planillas
 cargadas en el sistema", para bajar varios meses seguidos sin abrirlos.
 Pruebas: `informe-liquidacion.spec.ts`.
+
+## 8e. El Excel NO va en streaming, aunque el código lo dijera
+
+`exportacion-comisiones.service.ts` afirmaba que «un mes de 500 filas y uno de
+50.000 cuestan lo mismo en RAM». Es al revés: `new Workbook()` construye el
+libro entero en memoria y `libro.xlsx.write(salida)` solo vuelca lo ya
+construido. El streaming de verdad en ExcelJS es `stream.xlsx.WorkbookWriter`, y
+no se usa. El `LOTE_DETALLE` de 1.000 acota lo que se lee de PostgreSQL de una
+vez, **no** lo que ocupa el libro.
+
+Medido (Node 22, 21 hojas como las del export real):
+
+| filas de detalle | tiempo | heap tras construir | RSS al terminar |
+|---|---|---|---|
+| 500 (un mes real) | 0,27 s | +5 MB | 116 MB |
+| 2.000 | 0,64 s | +19 MB | 164 MB |
+| 10.000 | 2,7 s | +90 MB | **440 MB** |
+| 50.000 | 13,4 s | +452 MB | **1,96 GB** |
+
+`crm_backend.service` corre con `MemoryMax=400M`: a 10.000 filas systemd mata el
+proceso **durante la descarga**, llevándose por delante a quien estuviera usando
+el CRM. Hoy no es un problema —un mes ronda las 450-500 filas y suma ~450 al
+mes—, pero el margen es de años, no infinito. **El día que una exportación tarde
+varios segundos, el arreglo es `WorkbookWriter`, no subir el `MemoryMax`.**
+
+### Las hojas por vendedora ya no consultan una por una
+
+`hojasPorVendedora()` hacía un `findMany` por persona dentro del bucle: catorce
+vendedoras eran catorce consultas en serie dentro de la descarga, sobre la misma
+tabla que la hoja «Detalle» ya recorre entera. Ahora se piden las ventas del mes
+de una vez, acotadas a quien va a tener hoja, y se agrupan en memoria.
+
+El riesgo del cambio no es de rendimiento sino de **reparto** —que a alguien le
+aparezcan las ventas de otra en la hoja que lleva su nombre—, así que se fija
+sobre el .xlsx real en `exportacion-ocultas.spec.ts`, y con `incluirOcultas` para
+que las dos vendedoras tengan hoja: sin eso la consulta ya devuelve solo las
+filas de quien tiene hoja y un reparto roto pasaría por bueno.
 
 ## 9. Vendedoras dadas de baja: se oculta la persona, nunca el dinero
 
