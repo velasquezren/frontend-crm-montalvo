@@ -143,6 +143,27 @@
 }
 
 /* ==========================================================================
+   Schedule-X (calendario de Actividades)
+   ==========================================================================
+   Se oculta el selector de fecha de la cabecera. No hace falta: para moverse
+   ya están las flechas de anterior/siguiente, el botón de hoy y el selector de
+   vista (día / semana / mes / lista), que es lo que se usa de verdad. Además
+   era el único control que se salía de la caja del calendario y quedaba
+   recortado contra su `overflow: hidden`.
+
+   Va en el CSS global y no en el del componente porque Schedule-X monta su
+   propio DOM: la encapsulación Emulated de Angular no le añade el atributo del
+   componente, así que una regla con ámbito no lo alcanzaría nunca. Es el mismo
+   motivo por el que el tema de la librería se carga desde angular.json.
+
+   Se apoya en una clase pública de Schedule-X (`sx__…`), no en una generada. Si
+   algún día la renombran, el control vuelve a aparecer: un fallo visible, que
+   es el que se puede corregir. */
+.sx__calendar-header .sx__date-picker-wrapper {
+  display: none;
+}
+
+/* ==========================================================================
    Animaciones & Micro-interacciones (2026 Spring Easing & Hardware Accelerated)
    ========================================================================== */
 :root {
