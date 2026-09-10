@@ -55,23 +55,6 @@ const PAGINA_VACIA: PaginaInbox = {
 };
 
 /**
- * Compara dos páginas por lo que de verdad cambia la pantalla.
- *
- * Evita repintar las ~50 filas cuando el respaldo de 60 s trae exactamente lo
- * mismo, que es lo que pasa la mayoría de las veces.
- */
-function mismasFilas(a: readonly ConversacionResumen[], b: readonly ConversacionResumen[]): boolean {
-  if (a.length !== b.length) return false;
-  return a.every(
-    (fila, i) =>
-      fila.id === b[i].id &&
-      fila.updatedAt === b[i].updatedAt &&
-      fila.noLeidosCount === b[i].noLeidosCount &&
-      fila.esperandoRespuesta === b[i].esperandoRespuesta,
-  );
-}
-
-/**
  * Gestor de Estado Centralizado para el módulo de Conversaciones.
  * Centraliza la reactividad con Angular Signals y httpResource,
  * desacoplando la lógica de negocio de los componentes de presentación.
@@ -123,18 +106,11 @@ export class ConversacionesStateService {
    * la vista filtraba en memoria; una conversación fuera de ese corte no
    * aparecía ni al buscarla por nombre.
    */
+  // F07: conservar la igualdad por referencia de httpResource. La fecha de
+  // la conversación no versiona sus mensajes, ficha ni contadores.
   readonly inbox = httpResource<PaginaInbox>(
     () => this.conversacionesService.listarRequest(this.filtros()),
-    {
-      defaultValue: PAGINA_VACIA,
-      equal: (a, b) =>
-        a.total === b.total &&
-        a.pagina === b.pagina &&
-        mismasFilas(a.datos, b.datos) &&
-        a.contadores.sinResponder === b.contadores.sinResponder &&
-        a.contadores.sinAsignar === b.contadores.sinAsignar &&
-        a.contadores.misChats === b.contadores.misChats,
-    },
+    { defaultValue: PAGINA_VACIA },
   );
 
   /**
@@ -163,16 +139,15 @@ export class ConversacionesStateService {
   );
 
   /* ── Detalle de Conversación Activa ────────────────────────────── */
+  // Entregas, media y ficha pueden cambiar sin variar updatedAt ni la
+  // cantidad de mensajes: cada nueva respuesta debe llegar a los consumidores.
   readonly detalle = httpResource<ConversacionDetalle | null>(
     () => {
       const id = this.seleccionadaId();
       if (!id) return undefined;
       return this.conversacionesService.detalleRequest(id);
     },
-    {
-      defaultValue: null,
-      equal: (a, b) => a?.id === b?.id && a?.updatedAt === b?.updatedAt && a?.mensajes.length === b?.mensajes.length,
-    },
+    { defaultValue: null },
   );
 
   /* ── Paginación de Historial ────────────────────────────────────── */

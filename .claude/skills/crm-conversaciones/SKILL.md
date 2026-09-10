@@ -83,6 +83,20 @@ Dos piezas que sostienen esto y conviene no romper:
   responder" sin disparar peticiones HTTP completas.
 - **Polling de Respaldo**: Se mantiene un intervalo de seguridad de **60 segundos** (ver `crm-rendimiento`) por si la conexión de sockets se interrumpe temporalmente.
 
+### Igualdad del estado remoto (F07)
+
+`inbox` y `detalle` conservan la igualdad por referencia predeterminada de
+`httpResource`. No comparar solo ID, `Conversacion.updatedAt` y cantidad de
+mensajes: los acuses de entrega/lectura, la descarga de media, las URLs firmadas
+y la ficha del paciente cambian sin modificar esa triple clave. En el listado
+también pueden cambiar nombre, agente, último mensaje y contadores.
+
+Cada respuesta nueva debe llegar a las señales derivadas y a la vista. El
+`track` por ID de filas y mensajes conserva la identidad del DOM; no hace falta
+ignorar cambios del contenido para mantener esa identidad. La regresión está
+en `conversaciones-state.service.spec.ts`, con HTTP simulado y el servicio real,
+incluido el resumen realtime de una fila que ya estaba primera.
+
 ### Envío Optimista (0 ms de Latencia Percibida)
 - Al pulsar `Enter` o enviar, el mensaje se inserta inmediatamente en el hilo con un `idOptimista` temporal y estado `ENVIANDO`.
 - Al confirmar el servidor, se reemplaza el ID provisional por el definitivo y el estado cambia a `ENVIADO` con su check.
