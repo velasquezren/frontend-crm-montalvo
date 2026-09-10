@@ -40,6 +40,7 @@ import { SelectComponent } from '../../shared/components/select/select.component
 import { TableComponent } from '../../shared/components/table/table.component';
 import { usarTipoCambioDePeriodo } from '../../core/moneda/usar-tipo-cambio-de-periodo';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
+import { agruparPlanes } from './agrupar-planes';
 import { SubtotalVendedora, TotalesVentas, PlanillaComisionesService } from './planilla-comisiones.service';
 import { TablaLiquidacionComponent } from './components/tabla-liquidacion.component';
 import { ConfiguracionComisionesComponent } from './components/configuracion-comisiones.component';
@@ -57,7 +58,6 @@ import {
   etiquetaTipoFila,
   GrupoPlanes,
   MESES,
-  Objetivo,
   PeriodoComision,
   ReporteConsolidado,
   ReporteDesglose,
@@ -65,7 +65,6 @@ import {
   ResumenImportacion,
   TIPO_LABEL,
   TipoComision,
-  TipoPlan,
   UNIDAD_LABEL,
   UnidadNegocio,
   Vendedora,
@@ -85,34 +84,6 @@ type Pestana = 'IMPORTAR' | 'CLASIFICACION' | 'PLANES' | 'REPORTES' | 'CONFIGURA
 interface VentasConTotales extends RespuestaPaginada<VentaImportada> {
   readonly totales: TotalesVentas;
   readonly porVendedora: readonly SubtotalVendedora[];
-}
-
-/** El número dentro de un `Cod. Origen`: "VE1462" → 1462. */
-function correlativo(codOrigen: string | null | undefined): number | null {
-  if (!codOrigen) return null;
-  const digitos = codOrigen.replace(/\D+/g, '');
-  return digitos === '' ? null : Number(digitos);
-}
-
-/**
- * Ordena los planes del último registrado al primero, igual que el motor.
- *
- * Se compara el NÚMERO del correlativo, no el texto: como texto "VE999" iría
- * después de "VE1000" y el último plan del mes dejaría de serlo justo al cruzar
- * el millar. La fecha solo desempata cuando no hay correlativo, porque las dos
- * cosas se contradicen —en diciembre 2025 la venta VE1458 es del 22/12 y la
- * VE1462, posterior, del 13/12— y la planilla siempre siguió el correlativo.
- */
-function ultimoPrimero(a: VentaImportada, b: VentaImportada): number {
-  const ca = correlativo(a.codOrigen);
-  const cb = correlativo(b.codOrigen);
-  if (ca !== null && cb !== null && ca !== cb) return cb - ca;
-
-  const fa = a.fecha ? Date.parse(a.fecha) : NaN;
-  const fb = b.fecha ? Date.parse(b.fecha) : NaN;
-  if (!Number.isNaN(fa) && !Number.isNaN(fb) && fa !== fb) return fb - fa;
-
-  return b.id.localeCompare(a.id);
 }
 
 @Component({
@@ -554,56 +525,14 @@ export class PlanillaComisionesPage implements OnDestroy {
    * `seleccionarPlanesComisionables` en el backend hay que cambiarla aquí, o la
    * pantalla mostrará marcados unos planes y la liquidación pagará otros.
    */
-  protected readonly gruposDePlanes = computed<GrupoPlanes[]>(() => {
-    const objetivos: readonly Objetivo[] = this.configuracion()?.objetivos ?? [];
-    const porVendedora = new Map<string, GrupoPlanes>();
-
-    const agregar = (venta: VentaImportada, tipo: TipoPlan): void => {
-      if (!venta.vendedora) return;
-      const clave = `${venta.vendedora.id}·${tipo}`;
-      const grupo = porVendedora.get(clave) ?? {
-        clave,
-        vendedoraId: venta.vendedora.id,
-        vendedoraNombre: venta.vendedora.nombre,
-        tipo,
-        objetivo: 0,
-        cupo: 0,
-        planes: [],
-      };
-      grupo.planes.push(venta);
-      porVendedora.set(clave, grupo);
-    };
-
-    for (const venta of this.planesPaq.value().datos) agregar(venta, 'PLANPAQ');
-    for (const venta of this.planesNin.value().datos) agregar(venta, 'PLANNIN');
-
-    const vendedorasPorId = new Map(this.vendedoras.value().map(v => [v.id, v]));
-
-    return [...porVendedora.values()]
-      .map(grupo => {
-        const vendedora = vendedorasPorId.get(grupo.vendedoraId);
-        const meta = objetivos.find(objetivo => objetivo.tipo === (vendedora?.tipo ?? 'VENDEDORA'));
-        const objetivo =
-          grupo.tipo === 'PLANPAQ' ? (meta?.planpaqMinimos ?? 0) : (meta?.planninMinimos ?? 0);
-
-        // Mismo orden que usa el motor: del último registrado al primero.
-        const planes = [...grupo.planes].sort(ultimoPrimero);
-        const cupo = Math.max(0, planes.length - objetivo);
-
-        // Reproduce la selección del backend: lo marcado a mano primero.
-        const elegidos = new Set<string>();
-        for (const plan of planes) {
-          if (plan.comisionaPlan === true && elegidos.size < cupo) elegidos.add(plan.id);
-        }
-        for (const plan of planes) {
-          if (elegidos.size >= cupo) break;
-          if ((plan.comisionaPlan ?? null) === null) elegidos.add(plan.id);
-        }
-
-        return { ...grupo, objetivo, cupo, planes, elegidos };
-      })
-      .sort((a, b) => a.vendedoraNombre.localeCompare(b.vendedoraNombre) || a.tipo.localeCompare(b.tipo));
-  });
+  protected readonly gruposDePlanes = computed<GrupoPlanes[]>(() =>
+    agruparPlanes(
+      this.planesPaq.value().datos,
+      this.planesNin.value().datos,
+      this.vendedoras.value(),
+      this.configuracion()?.objetivos ?? [],
+    ),
+  );
 
   protected readonly vendedoras = httpResource<Vendedora[]>(
     () => this.service.vendedorasRequest(),

@@ -681,7 +681,28 @@ export interface GrupoPlanes {
   readonly objetivo: number;
   /** Cuántos comisionan: vendidos − objetivo. */
   readonly cupo: number;
+  /**
+   * Solo los COMISIONABLES. Un plan excluido del cálculo no cuenta.
+   *
+   * El motor arma sus candidatos con
+   * `where: { periodoId, comisionable: true, vendedoraId: { not: null } }`
+   * (`calculo-comisiones.service.ts`), así que una fila excluida —precio 0,
+   * plan sin aprobar, devolución— no entra ni al conteo ni al cupo. Esta
+   * pantalla los pedía todos y los contaba todos: con 5 paquetes de los que
+   * 1 estaba excluido y objetivo 4, marcaba 1 plan como «comisiona» mientras
+   * la liquidación pagaba **cero**. La pantalla desde la que administración
+   * decide qué plan cobra no puede decir una cosa distinta de la que paga.
+   */
   planes: VentaImportada[];
+  /**
+   * Cuántas filas de este grupo se dejaron fuera por estar excluidas.
+   *
+   * Se declara en vez de callarse, por lo mismo que el consolidado nombra a
+   * las vendedoras ocultas: quien cuente los planes en la pantalla de
+   * Clasificación y aquí tiene que poder explicarse la diferencia sin buscar
+   * un error de cálculo que no existe.
+   */
+  readonly excluidos: number;
   elegidos?: ReadonlySet<string>;
 }
 

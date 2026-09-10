@@ -56,6 +56,18 @@
               <app-badge [variant]="grupo.cupo > 0 ? 'info' : 'neutral'">
                 {{ grupo.cupo }} {{ grupo.cupo === 1 ? 'comisiona' : 'comisionan' }}
               </app-badge>
+              <!--
+                Los excluidos no se listan —el motor tampoco los ve— pero se
+                dicen: sin esto, quien cuente los planes en Clasificación y
+                aquí encuentra dos números distintos y busca un error de
+                cálculo que no existe.
+              -->
+              @if (grupo.excluidos > 0) {
+                <app-badge variant="critical">
+                  {{ grupo.excluidos }}
+                  {{ grupo.excluidos === 1 ? 'excluido' : 'excluidos' }} del cálculo
+                </app-badge>
+              }
               <app-info-hint titulo="Por qué no comisionan todos">
                 <p>
                   El objetivo es una <strong>franquicia</strong>, no una meta
