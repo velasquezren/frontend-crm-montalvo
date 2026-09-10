@@ -122,6 +122,27 @@ effect(() => {
 - **Prohibido el uso de `@keyframes` de entrada escalonada (`.aparecer`) o `pageFadeIn`**: Las vistas y tablas deben renderizarse en el acto de forma nativa e instantánea.
 - **Sin demoras**: Todo cambio de filtro, mes o pestaña debe reflejarse en tiempo real.
 
+## 4c. La pestaña Analítica tiene CINCO cubos, no cuatro
+
+`comisionTotalUsd = comisionA + comisionTipoARA + comisionB + comisionC + bonos`.
+
+El bloque «Comisión por tipo» mostraba cuatro tarjetas —A, B, C y Bonos— debajo
+de un KPI con el total. Faltaba **Tipo A (RA)**, así que las tarjetas sumaban
+menos que el número de arriba y nada lo decía. El backend lo devolvía desde que
+se implementó el cubo (22/8/2026); lo que no lo declaraba era
+`ResumenAnalitica` en `analitica.model.ts`, y un campo que no está en la
+interfaz llega en el JSON y se cae en silencio.
+
+Es el patrón de siempre con este cubo: se añadió al motor, al Excel («Tipo A
+(RA)») y al Word, y la pestaña se quedó atrás. **Si tocas los conceptos de
+comisión, la lista de sitios que los enumeran son cinco, no uno.**
+
+De paso: `analitica.model.ts` escribía a mano
+`estado: 'BORRADOR' | 'CALCULADO' | 'CERRADO'` cuando el ciclo de vida tiene
+cinco estados desde §8. Ahora usa `EstadoPeriodo` de `core/api/db-enums`, que se
+genera del `schema.prisma`. **Ninguna unión de estados se escribe a mano**: para
+eso existe `npm run sync:tipos`.
+
 ## 5. La base de comisión es SIEMPRE precio × 0,87
 
 Una sola regla, sin excepciones, y conviene desconfiar de cualquier código que
@@ -316,7 +337,6 @@ Para evitar código espagueti y archivos monolíticos, `PlanillaComisionesPage` 
 3. **`<app-seleccion-planes>` (`SeleccionPlanesComponent`)**:
    - Subcomponente que agrupa los planes por vendedora y tipo (`PLANPAQ`, `PLANNIN`).
    - Aplica la franquicia (`vendidos − objetivo`) y permite alternar planes elegidos a mano vs. automáticos (menor base).
-
 ---
 
 ## 8. Ciclo de vida de un mes: quién puede cerrarlo y cuándo
