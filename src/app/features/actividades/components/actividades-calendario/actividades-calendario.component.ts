@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, effect, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, output } from '@angular/core';
 import { CalendarComponent as SxCalendarComponent } from '@schedule-x/angular';
 import {
   CalendarApp,
-  CalendarEventExternal,
   createCalendar,
   createViewDay,
   createViewList,
@@ -11,17 +10,14 @@ import {
 } from '@schedule-x/calendar';
 import { createCurrentTimePlugin } from '@schedule-x/current-time';
 import { createEventsServicePlugin } from '@schedule-x/events-service';
-import { Temporal } from 'temporal-polyfill';
 /* El CSS del tema vive en angular.json (styles globales), no como import de
    este archivo: un import CSS desde un componente lazy-loaded genera el
    chunk .css en dist/ pero esbuild no lo enlaza con ningún <link> al cargar
    la ruta — el archivo queda huérfano y la vista se ve sin estilos. Ver
    `crm-design-system` §Schedule-X. */
 
-import { Actividad, esActividadVencida } from '../../actividad.model';
-
-/** Huso horario del navegador — usado solo para pintar los eventos del calendario. */
-const ZONA = Intl.DateTimeFormat().resolvedOptions().timeZone;
+import { Actividad } from '../../actividad.model';
+import { aEventoCalendario, ZONA } from './actividad-a-evento';
 
 /**
  * Schedule-X no trae español de fábrica — sin esto "Today"/"Month"/"Week"
@@ -50,25 +46,6 @@ const TRADUCCION_ES = {
 };
 
 /** El `calendarId` decide el color del evento — solo tonos de la paleta cerrada (ver `crm-design-system`). */
-function calendarioDe(a: Actividad): string {
-  if (a.estado === 'CANCELADA') return 'neutral';
-  if (a.estado === 'COMPLETADA') return 'secundaria';
-  return esActividadVencida(a) ? 'critica' : 'primaria';
-}
-
-function aEventoCalendario(a: Actividad): CalendarEventExternal {
-  const inicio = Temporal.Instant.from(a.fechaProgramada).toZonedDateTimeISO(ZONA);
-  return {
-    id: a.id,
-    title: a.titulo,
-    start: inicio,
-    // Duración real, no un bloque fijo — una llamada de 15 min no debe verse
-    // igual de alta que una reunión de una hora en las vistas de semana/día.
-    end: inicio.add({ minutes: Math.max(a.duracionMinutos, 5) }),
-    description: a.cliente.nombre,
-    calendarId: calendarioDe(a),
-  };
-}
 
 /**
  * Vista Calendario de Actividades — Schedule-X y todo lo que arrastra.
@@ -103,6 +80,26 @@ export class ActividadesCalendarioComponent {
 
   /** Clic en un evento — la página abre su cajón de detalle. */
   readonly seleccionada = output<Actividad>();
+
+  /**
+   * Índice por id para resolver el evento pulsado sin recorrer la lista.
+   *
+   * Antes era un `find` sobre el array en cada clic. Se cambia por dos motivos,
+   * y el segundo es el que importa:
+   *
+   * 1. El calendario carga hasta el tope de su consulta, así que el `find` crece
+   *    con el mes; un `Map` derivado se recalcula solo cuando cambian las
+   *    actividades, no una vez por clic.
+   * 2. **La clave se normaliza a `string`.** El `id` de un evento de Schedule-X
+   *    es `string | number` por contrato, y la comparación anterior era `===`
+   *    estricta contra el `id` de la actividad. Si la librería devolviera el id
+   *    con otro tipo, la comparación fallaría, el `if` se lo tragaría en
+   *    silencio y el clic no haría absolutamente nada — sin error, sin log y
+   *    sin forma de saber por qué.
+   */
+  private readonly porId = computed(
+    () => new Map(this.actividades().map(a => [String(a.id), a] as const)),
+  );
 
   private readonly eventosServicio = createEventsServicePlugin();
 
@@ -165,8 +162,13 @@ export class ActividadesCalendarioComponent {
         },
       },
       callbacks: {
+        /* Un clic en un evento abre EL MISMO cajón de detalle que una fila de
+           la lista: la página escucha `seleccionada` y llama a `abrirDetalle`,
+           igual que hacen los tres puntos de la vista de lista. La regla es que
+           el detalle de una actividad se pinta en un solo sitio; este
+           componente solo dice cuál se pulsó. */
         onEventClick: evento => {
-          const actividad = this.actividades().find(a => a.id === evento.id);
+          const actividad = this.porId().get(String(evento.id));
           if (actividad) this.seleccionada.emit(actividad);
         },
       },
