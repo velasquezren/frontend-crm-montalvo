@@ -64,9 +64,11 @@ const TRADUCCION_ES = {
  *
  * El CSS del tema sigue siendo global (angular.json): mover el HTML sin su CSS
  * es la trampa que documenta el §8 de `check:skills`, y con una librería de
- * terceros no avisa ni el compilador. Lo que sí viaja con este componente es su
- * `.css` propio —la leyenda y las variables `--sx-*`—, que es lo que reestiliza
- * Schedule-X sin tocar sus clases hasheadas.
+ * terceros no avisa ni el compilador. Con este componente viaja su `.css`
+ * propio, pero solo la leyenda y la CAJA del calendario: **las variables
+ * `--sx-color-*` de la marca viven en `styles.css`**, porque el selector de
+ * fecha se teleporta al `body` y desde fuera del envoltorio no heredaría
+ * ninguna — se pintaría con el morado por defecto de Schedule-X.
  */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
