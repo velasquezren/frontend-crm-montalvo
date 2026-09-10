@@ -110,6 +110,34 @@ export class ActividadesCalendarioComponent {
     {
       views: [createViewMonthGrid(), createViewWeek(), createViewDay(), createViewList()],
       defaultView: 'month-grid',
+      /*
+       * El selector de fecha de la cabecera se saca del componente y se cuelga
+       * del `body`.
+       *
+       * Sin esto se cortaba por abajo, y el motivo no está en Schedule-X sino
+       * aquí: `.crm-calendario-wrapper` lleva `overflow: hidden` —lo necesita
+       * para que el contenido respete sus esquinas redondeadas— y ese recorte
+       * también alcanza al popup, que es `position: absolute` y cuelga de la
+       * cabecera. O sea que el desplegable solo podía dibujarse DENTRO de la
+       * caja del calendario.
+       *
+       * Por eso se veía bien en la vista de semana y mal en la de mes: no es
+       * que el popup cambie, es cuánto sitio le queda por debajo antes del
+       * borde inferior del recorte.
+       *
+       * `teleportTo` es la salida que da la librería, y no es solo mover el
+       * nodo: al teleportarse pasa a `position: fixed` con las coordenadas
+       * calculadas del `getBoundingClientRect()` del disparador, y se
+       * reposiciona sola al hacer scroll. Así deja de depender del alto del
+       * calendario y funciona igual en las cuatro vistas.
+       *
+       * El `typeof document` es por el prerender de Vercel, donde no hay DOM;
+       * `teleportTo` es opcional, así que `undefined` es un valor válido. Mismo
+       * criterio que `api.constants.ts` con `window`.
+       */
+      datePicker: {
+        teleportTo: typeof document === 'undefined' ? undefined : document.body,
+      },
       timezone: ZONA,
       locale: 'es-ES',
       translations: { 'es-ES': TRADUCCION_ES },
