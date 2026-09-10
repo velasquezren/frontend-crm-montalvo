@@ -58,6 +58,10 @@ const ARCHIVOS = [
 /** Quita los bloques ``` para no confundir identificadores de código con rutas. */
 const sinCodigo = texto => texto.replace(/```[\s\S]*?```/g, '');
 
+/** Quita comentarios de un fuente TS/JS, para que una regla no se dispare con su
+    propia explicación. Basta con esto: solo se usa para evitar falsos positivos. */
+const sinComentarios = texto => texto.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
 /** Todo lo que va entre comillas invertidas. */
 const entrecomillado = texto => [...texto.matchAll(/`([^`\n]+)`/g)].map(m => m[1]);
 
@@ -680,6 +684,62 @@ function verificarRendimiento() {
   }
 }
 
+/**
+ * Un solo Service Worker, y que sea el de Angular.
+ *
+ * El CRM registraba DOS en el mismo scope `/`: el de Angular
+ * (`provideServiceWorker('ngsw-worker.js')` en app.config.ts) y uno propio
+ * (`navigator.serviceWorker.register('/sw.js')` en el servicio de
+ * notificaciones, disparado cada vez que una agente abría el inbox). Un scope
+ * solo admite UNA registración, así que se sustituían el uno al otro en cada
+ * carga, y cada mitad rompía la del otro:
+ *
+ * - con el propio activo moría `SwUpdate` — los avisos de versión nueva;
+ * - con el de Angular activo el push NO MOSTRABA NADA, porque `ngsw-worker.js`
+ *   hace `return` si el payload no trae `notification.title`.
+ *
+ * Ninguna de las dos daba un error. Se veía como "a veces no me llegan las
+ * notificaciones", que es lo que se ignora durante meses. F09.
+ *
+ * Va aquí y no en una prueba porque el fallo necesita un navegador de verdad
+ * con dos SW compitiendo —jsdom no lo reproduce— y porque quien lo reintroduzca
+ * lo hará escribiendo exactamente esa línea. Mismo criterio que la regla del
+ * backend que prohíbe un `void algo.metodo(` sin `enSegundoPlano`.
+ */
+function verificarServiceWorkerUnico() {
+  const señalaSw = mensaje => problemas.push({ skill: 'pwa (F09)', mensaje });
+  const base = resolve(RAIZ, 'src', 'app');
+
+  for (const ruta of indexar(base)) {
+    if (!/\.ts$/.test(ruta) || /\.spec\.ts$/.test(ruta)) continue;
+    /* Sin comentarios: la cicatriz se explica CITANDO la línea prohibida, y sin
+       esto la propia explicación dispara la regla. Pasó al escribirla. */
+    if (!/serviceWorker\s*\.\s*register\s*\(/.test(sinComentarios(readFileSync(ruta, 'utf8')))) continue;
+
+    señalaSw(
+      `${relative(base, ruta)}: registra un Service Worker a mano. Solo puede haber uno ` +
+        'y lo monta `provideServiceWorker` en app.config.ts; para push usa `SwPush` ' +
+        'sobre esa misma registración. Dos en el scope `/` se sustituyen y rompen ' +
+        'el push o SwUpdate, en silencio (F09).',
+    );
+  }
+
+  if (existsSync(resolve(RAIZ, 'public', 'sw.js'))) {
+    señalaSw(
+      'public/sw.js volvió a aparecer. Se sirve desde la raíz del sitio, así que ' +
+        'queda disponible para registrarse en el mismo scope que ngsw-worker.js (F09).',
+    );
+  }
+
+  const config = readFileSync(resolve(RAIZ, 'src', 'app', 'app.config.ts'), 'utf8');
+  if (!config.includes("provideServiceWorker('ngsw-worker.js'")) {
+    señalaSw(
+      'app.config.ts ya no monta ngsw-worker.js. `SwUpdate` y `SwPush` hablan con ' +
+        'ese worker: apuntarlo a otro script los deja sin interlocutor (F09).',
+    );
+  }
+}
+
 // ── Ejecución ─────────────────────────────────────────────────────────────────
 if (!existsSync(SKILLS)) {
   console.log('· No hay .claude/skills/ — nada que verificar.');
@@ -715,6 +775,7 @@ verificarNombreCliente();
 verificarPildoras();
 verificarCssEncapsulado();
 verificarRendimiento();
+verificarServiceWorkerUnico();
 
 if (problemas.length === 0) {
   console.log('✓ Los skills coinciden con el código.');

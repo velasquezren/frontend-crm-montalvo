@@ -1,4 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
+import { SwPush } from '@angular/service-worker';
+
 import { ApiService } from '../api/api.service';
 
 export interface NotificacionNativaOptions {
@@ -23,6 +25,7 @@ export interface NotificacionNativaOptions {
 @Injectable({ providedIn: 'root' })
 export class NotificacionNativaService {
   private readonly api = inject(ApiService);
+  private readonly swPush = inject(SwPush);
 
   readonly permiso = signal<NotificationPermission>(
     typeof Notification !== 'undefined' ? Notification.permission : 'default',
@@ -54,56 +57,48 @@ export class NotificacionNativaService {
   }
 
   /**
-   * Registra el Service Worker de la PWA (`/sw.js`) y realiza el enrolamiento VAPID Web Push.
-   * Permite recibir avisos incluso si el navegador/pestaña está cerrado por completo.
+   * Enrola el dispositivo en Web Push (VAPID) sobre el Service Worker de Angular.
+   *
+   * **Aquí NO se registra ningún Service Worker, y es el punto entero de F09.**
+   * Antes esto hacía `navigator.serviceWorker.register('/sw.js')`, y el
+   * `provideServiceWorker('ngsw-worker.js')` de `app.config.ts` registraba el
+   * suyo en el MISMO scope `/`. Un scope solo admite una registración, así que
+   * se sustituían: como esto se llama cada vez que una agente abre el inbox y
+   * ngsw se registra en cada carga, se turnaban a diario. Con ngsw activo el
+   * push no mostraba nada —`handlePush` hace `return` si el payload no trae
+   * `notification.title`— y con el propio activo moría `SwUpdate`, o sea los
+   * avisos de versión nueva. Las dos mitades rotas, alternándose, en silencio.
+   *
+   * Ahora hay un solo Service Worker, el de Angular, y `SwPush` se monta encima
+   * de él. **No vuelvas a llamar a `serviceWorker.register` desde el código de
+   * la app**: hay una prueba que lo comprueba (`sin-segundo-service-worker.spec.ts`).
+   *
+   * `requestSubscription` devuelve la suscripción existente si ya la había con
+   * la misma llave, así que llamarlo en cada visita al inbox es barato y
+   * además repara una suscripción que el navegador hubiera descartado.
    */
   async registrarServiceWorkerYVapid(): Promise<void> {
-    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
-      return;
-    }
+    /* Falso en desarrollo (`enabled: !isDevMode()`) y en navegadores sin SW. */
+    if (!this.swPush.isEnabled) return;
 
     try {
-      const reg = await navigator.serviceWorker.register('/sw.js');
-      await navigator.serviceWorker.ready;
-
-      // Obtener llave pública VAPID del backend
       const resKey = await this.api.get<{ publicKey: string }>('push/public-key');
       if (!resKey?.publicKey) return;
 
-      const subExistente = await reg.pushManager.getSubscription();
-      if (subExistente) {
-        // Enviar suscripción existente al backend
-        const subJson = subExistente.toJSON();
-        const keys = subJson.keys as Record<string, string> | undefined;
-        const p256dh = keys?.['p256dh'];
-        const auth = keys?.['auth'];
-        if (subJson.endpoint && p256dh && auth) {
-          await this.api.post('push/suscribir', {
-            endpoint: subJson.endpoint,
-            keys: { p256dh, auth },
-          });
-        }
-        return;
-      }
+      const sub = await this.swPush.requestSubscription({ serverPublicKey: resKey.publicKey });
 
-      // Crear nueva suscripción VAPID
-      const nuevaSub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(resKey.publicKey),
-      });
-
-      const nuevaSubJson = nuevaSub.toJSON();
-      const nKeys = nuevaSubJson.keys as Record<string, string> | undefined;
-      const nP256dh = nKeys?.['p256dh'];
-      const nAuth = nKeys?.['auth'];
-      if (nuevaSubJson.endpoint && nP256dh && nAuth) {
+      const subJson = sub.toJSON();
+      const keys = subJson.keys as Record<string, string> | undefined;
+      const p256dh = keys?.['p256dh'];
+      const auth = keys?.['auth'];
+      if (subJson.endpoint && p256dh && auth) {
         await this.api.post('push/suscribir', {
-          endpoint: nuevaSubJson.endpoint,
-          keys: { p256dh: nP256dh, auth: nAuth },
+          endpoint: subJson.endpoint,
+          keys: { p256dh, auth },
         });
       }
     } catch {
-      // Ignorar rechazos puntuales o modo privado
+      // Permiso denegado, modo privado, o el SW todavía no está listo.
     }
   }
 
@@ -185,16 +180,4 @@ export class NotificacionNativaService {
       }
     }
   }
-}
-
-/** Auxiliar para convertir llaves VAPID base64url a Uint8Array / BufferSource */
-function urlBase64ToUint8Array(base64String: string): BufferSource {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray.buffer as ArrayBuffer;
 }

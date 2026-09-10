@@ -267,6 +267,43 @@ Los siete que entran hoy, y la lista es exhaustiva:
 socket se cae. Un `setInterval` corto recargando "por si acaso" es exactamente el
 patrón que el socket vino a sustituir.
 
+## Un solo Service Worker, y es el de Angular
+
+El scope `/` admite **una** registración. Registrar un segundo script ahí no
+convive con el primero: lo sustituye.
+
+Aquí había dos —`provideServiceWorker('ngsw-worker.js')` en `app.config.ts` y un
+`navigator.serviceWorker.register('/sw.js')` en el servicio de notificaciones—
+y como el segundo se disparaba cada vez que una agente abría el inbox y el
+primero en cada carga, se turnaban a diario. Cada turno rompía la mitad del
+otro:
+
+| Activo | Push | `SwUpdate` |
+| --- | --- | --- |
+| el propio | funcionaba | **muerto**: sin avisos de versión nueva |
+| ngsw | **silencio**: `handlePush` hace `return` si el payload no trae `notification.title` | funcionaba |
+
+Ninguna de las dos daba un error. Se ve como "a veces no me llegan las
+notificaciones", que es lo que se ignora durante meses. F09.
+
+**Reglas que quedan:**
+
+- **Nunca `navigator.serviceWorker.register` desde el código de la app.** Para
+  push, `SwPush` sobre la registración que ya existe. `check:skills` lo rechaza,
+  ignorando comentarios — la propia explicación de arriba disparaba la regla.
+- **No vuelve a haber un Service Worker propio dentro de `public/`.** Cualquier
+  script ahí se sirve desde la raíz del sitio, y eso basta para que quede
+  disponible y alguien lo registre en el mismo scope. `check:skills` lo vigila.
+- **El payload del push lo decide el backend** (`common/push/cuerpo-push.ts`), y
+  ngsw solo muestra lo que venga dentro de `notification`, filtrado contra su
+  lista blanca `NOTIFICATION_OPTION_NAMES`. Una clave fuera de esa lista no da
+  error: no llega.
+- **Con la app cerrada, el clic lo maneja ngsw** y solo entiende
+  `data.onActionClick`. Sin eso la notificación abre la raíz.
+- Lo que se perdió a cambio: **`setAppBadge` con la app cerrada**. Solo un SW
+  propio puede ejecutarlo en el evento `push`; con la app abierta se sigue
+  actualizando desde `NotificacionNativaService`.
+
 ## El fallo más caro que ha tenido este CRM: un `effect` que se realimenta
 
 Un `effect()` se suscribe a **todo signal que se lea de forma síncrona durante
