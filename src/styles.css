@@ -143,43 +143,6 @@
 }
 
 /* ==========================================================================
-   Schedule-X (calendario de Actividades) — tema de la marca
-   ==========================================================================
-   Van en `:root` y no en `.crm-calendario-wrapper`, que sería su sitio natural,
-   por una razón concreta: el selector de fecha de la cabecera se teleporta al
-   `body` para que el `overflow: hidden` del envoltorio no lo recorte. Al salir
-   del envoltorio deja de heredar sus custom properties, y Schedule-X vuelve a
-   su tema por defecto — que es MORADO. Definidas aquí las hereda el calendario
-   y también el desplegable, esté donde esté.
-
-   Los valores son SIEMPRE var(--color-*) de la paleta cerrada, nunca un tono
-   nuevo. Si algún día el calendario deja de teleportar su selector, esto puede
-   volver al componente. */
-:root {
-  --sx-color-primary: var(--color-primary);
-  --sx-color-on-primary: var(--color-background);
-  --sx-color-primary-container: var(--color-bg-light);
-  --sx-color-on-primary-container: var(--color-primary);
-  --sx-color-secondary: var(--color-secondary);
-  --sx-color-on-secondary: var(--color-background);
-  --sx-color-secondary-container: var(--color-bg-light);
-  --sx-color-on-secondary-container: var(--color-primary);
-  --sx-color-surface: var(--color-background);
-  --sx-color-surface-dim: var(--color-bg-workspace);
-  --sx-color-surface-bright: var(--color-background);
-  --sx-color-on-surface: var(--color-text-dark);
-  --sx-color-surface-container: var(--color-bg-workspace);
-  --sx-color-surface-container-low: var(--color-bg-workspace);
-  --sx-color-surface-container-high: var(--color-bg-light);
-  --sx-color-background: var(--color-background);
-  --sx-color-on-background: var(--color-text-dark);
-  --sx-color-outline: var(--color-border);
-  --sx-color-outline-variant: var(--color-border);
-  --sx-color-neutral: var(--color-text-muted);
-  --sx-color-neutral-variant: var(--color-border);
-}
-
-/* ==========================================================================
    Animaciones & Micro-interacciones (2026 Spring Easing & Hardware Accelerated)
    ========================================================================== */
 :root {

@@ -32,13 +32,33 @@
   background: var(--color-text-muted);
 }
 
-/* ── Schedule-X: aquí solo la CAJA. Los colores (`--sx-color-*`) viven en
-   `styles.css`, no en esta clase, y el motivo está escrito allí: el selector
-   de fecha se teleporta al `body` para no quedar recortado, y desde fuera de
-   este envoltorio no heredaría nada. Se reestyliza por variables CSS, nunca
-   por sus clases hasheadas (misma lección que dejó FullCalendar en Agenda
-   Médica). */
+/* ── Schedule-X: se reestylea por variables CSS, nunca por sus clases
+   hasheadas (misma lección que dejó FullCalendar en Agenda Médica). Los
+   valores de abajo son SIEMPRE var(--color-*) o uno de los nueve hex de la
+   paleta cerrada — nunca un tono nuevo. */
 .crm-calendario-wrapper {
+  --sx-color-primary: var(--color-primary);
+  --sx-color-on-primary: var(--color-background);
+  --sx-color-primary-container: var(--color-bg-light);
+  --sx-color-on-primary-container: var(--color-primary);
+  --sx-color-secondary: var(--color-secondary);
+  --sx-color-on-secondary: var(--color-background);
+  --sx-color-secondary-container: var(--color-bg-light);
+  --sx-color-on-secondary-container: var(--color-primary);
+  --sx-color-surface: var(--color-background);
+  --sx-color-surface-dim: var(--color-bg-workspace);
+  --sx-color-surface-bright: var(--color-background);
+  --sx-color-on-surface: var(--color-text-dark);
+  --sx-color-surface-container: var(--color-bg-workspace);
+  --sx-color-surface-container-low: var(--color-bg-workspace);
+  --sx-color-surface-container-high: var(--color-bg-light);
+  --sx-color-background: var(--color-background);
+  --sx-color-on-background: var(--color-text-dark);
+  --sx-color-outline: var(--color-border);
+  --sx-color-outline-variant: var(--color-border);
+  --sx-color-neutral: var(--color-text-muted);
+  --sx-color-neutral-variant: var(--color-border);
+
   height: calc(100dvh - 340px);
   min-height: 32rem;
   border: 1px solid var(--color-border);
