@@ -30,6 +30,36 @@ bloqueo de `fueraDeVentana24h` es incondicional; `ventana72hMetaActiva` solo se
 lee para matizar el texto del aviso ("sale gratis" vs. se cobra), nunca para
 decidir si se bloquea.
 
+### Los ticks: "No enviado" y "Sin confirmar" NO son lo mismo
+
+`estadoEnvio` tiene cinco valores y dos de ellos se parecen sin serlo:
+
+| Estado | Cómo se pinta | Qué significa para la agente |
+| --- | --- | --- |
+| `ENVIADO` / `ENTREGADO` / `LEIDO` | tick, doble tick, doble tick en color | lo normal |
+| `FALLIDO` | **"No enviado"**, en crítico | consta que no llegó; se puede reenviar |
+| `INCIERTO` | **"Sin confirmar"**, en neutro | **no se sabe si llegó — no reenviar** |
+
+`INCIERTO` aparece cuando se cortó la conexión con Meta mientras el mensaje ya
+iba viajando. El backend no puede afirmar que falló, y **pintarlo como fallo es
+lo que hace daño**: la agente lo reenvía y la paciente recibe el mensaje dos
+veces. Se corrige solo cuando llega el `statuses` de Meta (minutos), así que el
+tooltip dice explícitamente que espere. Nunca le pongas color de error ni lo
+juntes con FALLIDO en un mismo `@case`.
+
+**Cicatriz real (corregida):** `conversacion.model.ts` tenía
+`EstadoEnvioMensaje` escrito **a mano** en vez de salir de `db-enums.ts`. Por eso
+añadir `INCIERTO` al enum del backend **no rompió el build de este repo** —el
+`check:tipos` no tenía nada que comparar— y el estado nuevo caía en el `@default`
+de las dos plantillas que pintan ticks, mostrándose como un envío normal. Es
+decir: la salvaguarda de "si el backend añade un valor a un enum, aquí el build
+falla" **no cubre un tipo duplicado a mano**. Si ves una unión de literales que
+huele a enum del backend, hazla salir de `db-enums.ts`.
+
+Los dos sitios que pintan ticks son
+`conversacion-thread.component.html` y `conversacion-preview.component.ts`: si
+añades un estado, se tocan **los dos** o el inbox y el hilo se contradicen.
+
 ### Tratamiento Seguro de Medios (R2 Storage)
 - **Las URLs de medios nunca se guardan como enlaces públicos permanentes en la base de datos.**
 - En la base de datos solo reside la `mediaKey` (ej. `wa/convId/msgId.jpg` o `memoria/userId/uuid.png`).

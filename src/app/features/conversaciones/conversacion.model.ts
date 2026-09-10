@@ -1,13 +1,20 @@
 import { DatosExtra } from '../../core/api/datos-extra';
 
-import { TipoMensaje } from '../../core/api/db-enums';
+import { EstadoMensaje, TipoMensaje } from '../../core/api/db-enums';
 
 export type { TipoMensaje };
 
 import { CategoriaCliente } from '../../shared/models/cliente-categoria.model';
 
-/** Ticks estilo WhatsApp — solo tiene sentido en mensajes SALIENTE. */
-export type EstadoEnvioMensaje = 'ENVIADO' | 'ENTREGADO' | 'LEIDO' | 'FALLIDO';
+/**
+ * Ticks estilo WhatsApp — solo tiene sentido en mensajes SALIENTE.
+ *
+ * Sale del enum GENERADO desde `schema.prisma`, no de una lista a mano. Estaba
+ * duplicado aquí y por eso `INCIERTO` no rompió el build al añadirse: el estado
+ * nuevo caía en el `@default` de las plantillas y se pintaba como un envío
+ * normal, que es justo la mentira que ese estado viene a evitar.
+ */
+export type EstadoEnvioMensaje = EstadoMensaje;
 
 /** Tipo de contenido del mensaje. */
 /** Respuestas de GET /conversaciones y GET /conversaciones/:id. */

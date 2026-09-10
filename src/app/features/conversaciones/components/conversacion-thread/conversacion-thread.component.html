@@ -316,6 +316,14 @@
                       <span class="text-[10px] font-semibold">No enviado</span>
                     </span>
                   }
+                  @case ('INCIERTO') {
+                    <span
+                      class="inline-flex items-center gap-0.5 ml-1 text-text-muted"
+                      title="No se pudo confirmar si llegó: se cortó la conexión con WhatsApp mientras se enviaba. NO lo reenvíes todavía — puede haberse entregado igual. Si salió, el tick se corrige solo en unos minutos.">
+                      <app-icon name="clock" [size]="12" />
+                      <span class="text-[10px] font-semibold">Sin confirmar</span>
+                    </span>
+                  }
                   @default {
                     <app-icon name="check" [size]="12" class="inline-block ml-0.5 -mt-px" title="Enviado" />
                   }

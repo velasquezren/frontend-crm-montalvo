@@ -25,6 +25,11 @@ import { MensajeApi } from '../../conversacion.model';
             @case ('FALLIDO') {
               <span class="text-text-critical font-semibold text-[11px] shrink-0 leading-none" title="Falló el envío">No enviado</span>
             }
+            @case ('INCIERTO') {
+              <span
+                class="text-text-muted font-semibold text-[11px] shrink-0 leading-none"
+                title="No se pudo confirmar si llegó; no lo reenvíes todavía">Sin confirmar</span>
+            }
             @default {
               <app-icon name="check" [size]="14" class="text-text-muted/70 shrink-0" title="Enviado" />
             }

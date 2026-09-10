@@ -28,7 +28,7 @@ export type DireccionMensaje = 'ENTRANTE' | 'SALIENTE';
 
 export type TipoMensaje = 'TEXTO' | 'IMAGEN' | 'DOCUMENTO' | 'AUDIO' | 'VIDEO' | 'STICKER';
 
-export type EstadoMensaje = 'ENVIADO' | 'ENTREGADO' | 'LEIDO' | 'FALLIDO';
+export type EstadoMensaje = 'ENVIADO' | 'ENTREGADO' | 'LEIDO' | 'FALLIDO' | 'INCIERTO';
 
 export type TipoRecursoMemoria = 'TEXTO' | 'IMAGEN' | 'DOCUMENTO' | 'ENLACE';
 
