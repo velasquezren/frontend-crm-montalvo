@@ -198,8 +198,8 @@ export class PlanillaComisionesService {
    * No es "el Excel en otro formato". El Excel trae las 20 columnas y una hoja
    * por vendedora para auditar cómo se llegó a cada cifra; el informe responde
    * otra pregunta —cuánto se le paga a cada quien— en una hoja vertical, con
-   * las tres firmas. `Elaborado` y `Revisado` los rellena el backend con el
-   * usuario de la sesión, así que acá no hay nada que mandarle.
+   * las tres firmas, que el backend pone fijas (siempre las mismas personas),
+   * así que acá no hay nada que mandarle.
    */
   descargarInforme(
     periodoId: string,

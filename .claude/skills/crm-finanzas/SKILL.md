@@ -629,9 +629,11 @@ Decisiones que no son estéticas:
   sobre blanco. El color de marca es de la interfaz, no del papel — un informe
   con franjas de color se ve de juguete al lado de la planilla que ya usa
   administración.
-- **`Elaborado` y `Revisado` salen del usuario de la sesión**; `Autorizado` es
-  fijo (`AUTORIZA_PLANILLA`). Sin usuario la línea queda **en blanco** para
-  firmar a mano: poner "Sistema" sería atribuir una revisión que nadie hizo.
+- **Las tres firmas son fijas** (`FIRMANTES_PLANILLA`, con `ELABORA_PLANILLA`,
+  `REVISA_PLANILLA` y `AUTORIZA_PLANILLA`): elabora la jefatura de ventas,
+  revisa administración y autoriza la dirección. **No dependen de la sesión** —
+  quien baja el archivo no es quien firma, y poner su nombre le atribuía una
+  responsabilidad que no es suya.
 - **Aviso `DOCUMENTO PRELIMINAR`** si el periodo no está CERRADO/PAGADO. Importa
   más que en un PDF: este archivo es editable y va a circular.
 - **`formatearNumero()` a mano, no `Intl`.** Sin ICU completo, `Intl` cae a
