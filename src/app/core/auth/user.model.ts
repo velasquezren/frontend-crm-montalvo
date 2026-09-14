@@ -6,7 +6,9 @@
  * Jerarquía: SUPER_ADMIN cubre todo lo que puede ADMIN, y ADMIN todo lo de AGENTE.
  * El backend es la autoridad (RolesGuard); esto solo decide qué se muestra.
  */
-export type RolUsuario = 'SUPER_ADMIN' | 'ADMIN' | 'AGENTE';
+import { Rol } from '../api/db-enums';
+
+export type RolUsuario = Rol;
 
 export interface User {
   readonly id: string;

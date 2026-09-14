@@ -14,6 +14,7 @@
         <p class="font-semibold text-text-dark text-xs sm:text-sm leading-tight truncate">
           {{ chat.cliente | nombreCliente }}
         </p>
+        <p class="text-xs text-secondary truncate">{{ chat.linea.nombre }} · {{ chat.linea.telefono }}</p>
         <div class="flex items-center gap-1.5 mt-0.5 min-w-0">
           <span class="text-[11px] sm:text-xs text-text-muted leading-tight truncate max-w-[120px] sm:max-w-none">{{ chat.cliente.telefono }}</span>
           <button

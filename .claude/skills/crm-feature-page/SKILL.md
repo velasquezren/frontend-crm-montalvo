@@ -355,7 +355,7 @@ Los fallos transitorios reintentan con espera acotada; logout desconecta el sock
 
 ## Roles y permisos
 
-Hay tres roles jerárquicos: `AGENTE` < `ADMIN` < `SUPER_ADMIN`. La jerarquía vive en
+Hay cuatro roles jerárquicos: `RECEPCION` < `AGENTE` < `ADMIN` < `SUPER_ADMIN`. Recepción entra en conversaciones y solo atiende sus líneas autorizadas; el backend aplica los permisos. La jerarquía vive en
 `core/auth/roles.ts` y es espejo de `common/auth/roles.ts` del backend — **si añades un rol,
 tócalo en los dos lados**.
 

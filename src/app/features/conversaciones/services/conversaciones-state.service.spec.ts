@@ -16,6 +16,7 @@ const MENSAJE: MensajeApi = {
   createdAt: FECHA, estadoEnvio: 'ENVIADO',
 };
 const CHAT: ConversacionDetalle = {
+  linea: { id: 'linea-1', nombre: 'Ventas', telefono: '+59170000000', comercial: true, activa: true },
   id: 'chat-1', updatedAt: FECHA, mensajes: [MENSAJE],
   cliente: {
     id: 'cliente-1', nombre: 'Paciente de prueba', telefono: '00000000',
@@ -52,7 +53,9 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
       providers: [
         provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
         { provide: AuthService, useValue: {
-          isAdmin: signal(false), user: signal({ id: 'agente-1', nombre: 'Agente de prueba' }),
+          isAdmin: signal(false),
+          generacionSesion: signal(1),
+          puedeGestionComercial: signal(true), user: signal({ id: 'agente-1', nombre: 'Agente de prueba' }),
         } },
       ],
     });
@@ -63,8 +66,11 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     TestBed.tick();
     responder('/conversaciones', structuredClone(PAGINA));
     responder('/conversaciones/chat-1', structuredClone(CHAT));
-    responder('/conversaciones/meta/plantillas', []);
     responder('/plantillas-agente', []);
+    responder('/lineas-whatsapp', { datos: [CHAT.linea], total: 1, pagina: 1, limite: 100, totalPaginas: 1 });
+    await vi.waitFor(() => { TestBed.tick(); expect(state.detalle.value()).not.toBeNull(); });
+    TestBed.tick();
+    responder('/conversaciones/meta/plantillas', []);
     await app.whenStable();
     // Leer los derivados antes de cambiar la respuesta: también deben invalidarse.
     expect(state.mensajesConFecha().some(item => item.tipo === 'mensaje')).toBe(true);
@@ -168,4 +174,33 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     state.reconciliarEnvioLocal(CHAT.id, 'optimista-1', MENSAJE);
     expect(state.detalle.value()?.mensajes).toEqual([MENSAJE]);
   });
+  it('descarta un resumen tardío de la línea anterior y limpia el borrador', async () => {
+    state.mensajeNuevo.set('Borrador de ventas');
+    const pendiente = state.refrescarFilaPorRealtime(CHAT.id);
+    state.cambiarLinea('linea-2');
+    responder('/conversaciones/chat-1/resumen', { conversacion: CHAT, contadores: PAGINA.contadores });
+    await pendiente;
+    TestBed.tick();
+    responder('/conversaciones', { ...PAGINA, datos: [], total: 0, contadores: { total: 0, misChats: 0, sinAsignar: 0, sinResponder: 0 } });
+    await app.whenStable();
+    expect(state.detalle.value()).toBeNull();
+    expect(state.conversacionesFiltradas()).toEqual([]);
+    expect(state.mensajeNuevo()).toBe('');
+  });
+
+  it('cambiar de sesión elimina el chat y descarta respuestas del usuario anterior', async () => {
+    const pendiente = state.refrescarFilaPorRealtime(CHAT.id);
+    const auth = TestBed.inject(AuthService) as unknown as { generacionSesion: { set: (v: number) => void } };
+    auth.generacionSesion.set(2);
+    TestBed.tick();
+    responder('/conversaciones/chat-1/resumen', { conversacion: CHAT, contadores: PAGINA.contadores });
+    await pendiente;
+    responder('/conversaciones', { ...PAGINA, datos: [], total: 0, contadores: { total: 0, misChats: 0, sinAsignar: 0, sinResponder: 0 } });
+    responder('/lineas-whatsapp', { datos: [], total: 0, pagina: 1, limite: 100, totalPaginas: 1 });
+    await app.whenStable();
+    expect(state.seleccionadaId()).toBeNull();
+    expect(state.detalle.value()).toBeNull();
+    expect(state.conversacionesFiltradas()).toEqual([]);
+  });
+
 });

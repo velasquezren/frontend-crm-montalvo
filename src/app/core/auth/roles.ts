@@ -12,6 +12,7 @@ import { RolUsuario } from './user.model';
  * si añades un rol allá, añádelo aquí.
  */
 export const RANGO_ROL: Readonly<Record<RolUsuario, number>> = {
+  RECEPCION: 0,
   AGENTE: 1,
   ADMIN: 2,
   SUPER_ADMIN: 3,
@@ -26,6 +27,7 @@ export function cubreRol(rol: RolUsuario | undefined, rolMinimo: RolUsuario): bo
 export const ROL_LABEL: Readonly<Record<RolUsuario, string>> = {
   SUPER_ADMIN: 'Super administrador',
   ADMIN: 'Administrador',
+  RECEPCION: 'Recepción',
   AGENTE: 'Agente',
 };
 
@@ -42,6 +44,6 @@ export function exigeRol(rolMinimo: RolUsuario): CanActivateFn {
     const authService = inject(AuthService);
     const router = inject(Router);
 
-    return cubreRol(authService.user()?.rol, rolMinimo) || router.createUrlTree(['/dashboard']);
+    return cubreRol(authService.user()?.rol, rolMinimo) || router.createUrlTree(['/conversaciones']);
   };
 }

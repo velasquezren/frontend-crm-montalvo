@@ -142,7 +142,7 @@ export class ClientesPage {
     const list = [...(this.agentes.value() || [])];
     const clienteAgente = this.clienteSeleccionado()?.agente;
     if (clienteAgente && !list.some(a => a.id === clienteAgente.id)) {
-      list.unshift({ id: clienteAgente.id, nombre: clienteAgente.nombre, rol: 'AGENTE' });
+      list.unshift({ id: clienteAgente.id, nombre: clienteAgente.nombre, rol: 'AGENTE', lineasWhatsapp: [] });
     }
     return list;
   });

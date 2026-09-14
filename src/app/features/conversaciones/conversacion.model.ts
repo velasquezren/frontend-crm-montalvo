@@ -1,3 +1,5 @@
+import { LineaWhatsapp } from '../lineas-whatsapp/linea-whatsapp.model';
+import { Rol } from '../../core/api/db-enums';
 import { DatosExtra } from '../../core/api/datos-extra';
 
 import { EstadoMensaje, TipoMensaje } from '../../core/api/db-enums';
@@ -36,6 +38,7 @@ export interface MensajeApi {
 }
 
 export interface ConversacionResumen {
+  readonly linea: Pick<LineaWhatsapp, 'id' | 'nombre' | 'telefono' | 'activa' | 'comercial'>;
   readonly id: string;
   readonly cliente: {
     id: string;
@@ -77,7 +80,8 @@ export interface ConversacionDetalle extends Omit<ConversacionResumen, 'mensajes
 export interface AgenteResumen {
   readonly id: string;
   readonly nombre: string;
-  readonly rol: 'SUPER_ADMIN' | 'ADMIN' | 'AGENTE';
+  readonly rol: Rol;
+  readonly lineasWhatsapp: readonly { lineaId: string }[];
 }
 
 /** Plantilla de WhatsApp aprobada (GET /conversaciones/meta/plantillas). */
@@ -115,6 +119,7 @@ export interface ContadoresInbox {
 
 /** Filtros de vista que viajan al servidor con cada petición del listado. */
 export interface FiltrosInbox {
+  readonly lineaId?: string | null;
   readonly tab: FiltroInbox;
   readonly busqueda: string;
   readonly agenteId: string | null;

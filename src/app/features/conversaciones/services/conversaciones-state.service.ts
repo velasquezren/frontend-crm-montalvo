@@ -1,3 +1,6 @@
+import { LineasWhatsappService } from '../../lineas-whatsapp/lineas-whatsapp.service';
+import { LineaWhatsapp } from '../../lineas-whatsapp/linea-whatsapp.model';
+import { paginaVacia, RespuestaPaginada } from '../../../core/api/pagination.model';
 import {
   computed,
   effect,
@@ -10,6 +13,7 @@ import {
 import { httpResource } from '@angular/common/http';
 import { Router } from '@angular/router';
 
+import { cubreRol } from '../../../core/auth/roles';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ToastService } from '../../../core/toast/toast.service';
 import { mensajeDeError } from '../../../core/api/http-error';
@@ -68,11 +72,17 @@ export class ConversacionesStateService {
   private readonly router = inject(Router);
 
   /* ── Estado de Usuario ─────────────────────────────────────────── */
+  readonly puedeGestionComercial = this.authService.puedeGestionComercial;
+  private readonly lineasService = inject(LineasWhatsappService);
+  readonly lineas = httpResource<RespuestaPaginada<LineaWhatsapp>>(() => this.lineasService.listarRequest(), { defaultValue: paginaVacia<LineaWhatsapp>() });
+  readonly filtroLineaId = signal<string | null>(null);
   readonly isAdmin = this.authService.isAdmin;
   readonly currentUserId = computed(() => this.authService.user()?.id ?? '');
 
   /* ── Selección & Navegación ────────────────────────────────────── */
   readonly seleccionadaId = signal<string | null>(null);
+  /** Referencia distinta por selección o sesión: descarta respuestas tardías. */
+  readonly contextoChat = computed(() => ({ id: this.seleccionadaId(), sesion: this.authService.generacionSesion() }));
 
   /* ── Listado & Filtros ─────────────────────────────────────────── */
   /** Lo que la agente está tecleando ahora mismo. */
@@ -89,14 +99,18 @@ export class ConversacionesStateService {
    * Lo que de verdad viaja al servidor. `busqueda` va con retardo (ver el
    * `effect` del constructor): sin él, cada tecla sería una petición.
    */
-  readonly filtros = computed<FiltrosInbox>(() => ({
+  readonly filtros = computed<FiltrosInbox>(() => {
+    this.authService.generacionSesion();
+    return ({
+    lineaId: this.filtroLineaId(),
     tab: this.filtroTab(),
     /* El filtro por agente solo aplica en "Todas", igual que antes en memoria:
        combinarlo con "Mis chats" daría siempre vacío. */
     agenteId: this.filtroTab() === 'TODAS' ? this.filtroAgenteId() : null,
     busqueda: this.busquedaDebounced(),
     soloMios: this.isAdmin() && this.soloMisChatsAdmin(),
-  }));
+  });
+  });
 
   /**
    * La PRIMERA página del inbox, ya filtrada por el servidor.
@@ -201,8 +215,11 @@ export class ConversacionesStateService {
     { defaultValue: [] },
   );
 
+  private readonly lineaSeleccionadaId = computed(() => this.detalle.value()?.linea.id);
+  readonly agentesParaChat = computed(() => this.agentes.value().filter(a => cubreRol(a.rol, 'ADMIN') || a.lineasWhatsapp.some(l => l.lineaId === this.lineaSeleccionadaId())));
+
   readonly plantillasWhatsApp = httpResource<PlantillaResumen[]>(
-    () => this.conversacionesService.plantillasRequest(),
+    () => { const lineaId = this.lineaSeleccionadaId(); return lineaId ? this.conversacionesService.plantillasRequest(lineaId) : undefined; },
     { defaultValue: [] },
   );
 
@@ -367,6 +384,18 @@ export class ConversacionesStateService {
   });
 
   constructor() {
+    let generacionAnterior = this.authService.generacionSesion();
+    effect(() => {
+      const generacion = this.authService.generacionSesion();
+      if (generacion === generacionAnterior) return;
+      generacionAnterior = generacion;
+      this.seleccionadaId.set(null);
+      this.filtroLineaId.set(null);
+      this.detalle.set(null);
+      this.mensajeNuevo.set('');
+      this.paginasExtra.set([]);
+      this.lineas.reload();
+    });
     /* Retardo del buscador. `onCleanup` cancela el temporizador anterior en
        cada tecla, que es lo que impide una petición por pulsación y también
        una fuga si la vista muere con uno pendiente. */
@@ -391,7 +420,9 @@ export class ConversacionesStateService {
     const siguiente = this.ultimaPagina() + 1;
     this.cargandoMas.set(true);
     try {
-      const pagina = await this.conversacionesService.listarPagina(this.filtros(), siguiente);
+      const filtros = this.filtros();
+      const pagina = await this.conversacionesService.listarPagina(filtros, siguiente);
+      if (filtros !== this.filtros()) return;
       /* Se descartan las que ya estén: entre que se pidió y que llegó, un
          mensaje nuevo pudo subir una conversación a la primera página y
          entonces vendría repetida. */
@@ -421,15 +452,17 @@ export class ConversacionesStateService {
    * que ya no corresponde.
    */
   async refrescarFilaPorRealtime(conversacionId: string): Promise<void> {
+    const filtros = this.filtros();
     let respuesta: ResumenInbox;
     try {
-      respuesta = await this.conversacionesService.resumenParaInbox(conversacionId, this.filtros());
+      respuesta = await this.conversacionesService.resumenParaInbox(conversacionId, filtros);
     } catch {
       /* Un aviso de tiempo real que no se puede resolver no puede romper la
          pantalla: el respaldo de 60 s acabará poniéndola al día. */
       return;
     }
 
+    if (filtros !== this.filtros()) return;
     const { conversacion, contadores } = respuesta;
 
     /* Fuera de las páginas siguientes en los dos casos: si vuelve, sube al
@@ -444,6 +477,14 @@ export class ConversacionesStateService {
       datos: conversacion ? [conversacion, ...sinEsta] : sinEsta,
       contadores,
     });
+  }
+
+  cambiarLinea(id: string): void {
+    this.filtroLineaId.set(id || null);
+    this.seleccionadaId.set(null);
+    this.detalle.set(null);
+    this.mensajeNuevo.set('');
+    this.deseleccionar();
   }
 
   seleccionar(id: string): void {
@@ -463,6 +504,7 @@ export class ConversacionesStateService {
     const primerMensaje = chat.mensajes[0];
     if (!primerMensaje) return 0;
 
+    const contexto = this.contextoChat();
     this.cargandoHistorial.set(true);
     try {
       const anteriores = await this.conversacionesService.obtenerMensajesAnteriores(
@@ -471,17 +513,19 @@ export class ConversacionesStateService {
         LOTE_HISTORIAL,
       );
 
+      if (this.contextoChat() !== contexto) return 0;
+      const actual = this.detalle.value();
+      if (!actual || actual.id !== id) return 0;
       if (anteriores.length < LOTE_HISTORIAL) {
         this.hayMasHistorial.set(false);
       }
 
       if (anteriores.length > 0) {
-        const idsExistentes = new Set(chat.mensajes.map(m => m.id));
+        const idsExistentes = new Set(actual.mensajes.map(m => m.id));
         const nuevos = anteriores.filter(m => !idsExistentes.has(m.id));
         if (nuevos.length > 0) {
-          const actualizados = [...nuevos, ...chat.mensajes];
-          const nuevoDetalle = { ...chat, mensajes: actualizados };
-          this.conversacionesService.setCachedDetalle(id, nuevoDetalle);
+          const actualizados = [...nuevos, ...actual.mensajes];
+          const nuevoDetalle = { ...actual, mensajes: actualizados };
           this.detalle.set(nuevoDetalle);
           return nuevos.length;
         }
@@ -501,8 +545,9 @@ export class ConversacionesStateService {
 
     this.asignando.set(true);
     try {
-      const actualizado = await this.conversacionesService.asignarAgente(id, agenteId);
-      this.detalle.set(actualizado);
+      await this.conversacionesService.asignarAgente(id, agenteId);
+      if (this.seleccionadaId() !== id) return;
+      this.detalle.reload();
       this.inbox.reload();
       this.dropdownAgenteAbierto.set(false);
       const agente = this.agentes.value().find(a => a.id === agenteId);
@@ -695,7 +740,6 @@ export class ConversacionesStateService {
             )
           : [...chat.mensajes, real];
       const nuevoDetalle = { ...chat, mensajes, updatedAt: real.createdAt };
-      this.conversacionesService.setCachedDetalle(conversacionId, nuevoDetalle);
       this.detalle.set(nuevoDetalle);
       this.versionEnvioPropio.update(v => v + 1);
     }

@@ -50,3 +50,7 @@ npm test -- --watch=false  # Vitest, ejecución finita
 
 El directorio padre que contiene ambos repos **no es un repositorio git**: nada
 que viva solo ahí sobrevive a un cambio de máquina.
+
+## Líneas de WhatsApp y recepción
+
+El administrador identifica cada chat por nombre y teléfono del canal. SUPER_ADMIN configura las líneas y asigna permisos desde Usuarios; RECEPCION solo atiende los números asignados y no accede a módulos comerciales. Se requiere desplegar la migración y el backend correspondiente antes de este frontend. Ver [guía de conexión y límites](../backend-crm-montalvo/docs/lineas-whatsapp.md): las tres líneas nuevas están registradas, pendientes de alta/configuración en Meta.

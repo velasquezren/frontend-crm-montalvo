@@ -54,10 +54,11 @@ export class LayoutComponent {
   protected readonly inmersivo = inject(ModoInmersivoService).activo;
 
   constructor() {
-    void this.moneda.cargarTipoCambio();
+    if (this.authService.puedeGestionComercial()) void this.moneda.cargarTipoCambio();
   }
 
   protected readonly user = this.authService.user;
+  protected readonly puedeGestionComercial = this.authService.puedeGestionComercial;
   protected readonly isAdmin = this.authService.isAdmin;
   /** Para la plantilla: nunca comparar `rol === 'ADMIN'` a mano (deja fuera a SUPER_ADMIN). */
   protected readonly rolLabel = ROL_LABEL;

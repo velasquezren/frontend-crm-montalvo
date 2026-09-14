@@ -136,6 +136,16 @@ export class ConversacionComposerComponent implements OnDestroy {
 
   constructor() {
     effect(() => {
+      this.state.contextoChat();
+      this.adjuntoPendiente.set(null);
+      this.state.mensajeNuevo.set('');
+      this.mostrarPopoverMemoria.set(false);
+      this.plantillaSeleccionada.set(null);
+      this.variablesPlantilla.set([]);
+      this.overlayRef?.dispose();
+      this.overlayRef = undefined;
+    });
+    effect(() => {
       const texto = this.state.mensajeNuevo();
       const id = this.state.seleccionadaId();
       if (!texto.trim() || !id || this.state.fueraDeVentana24h()) return;
@@ -244,9 +254,11 @@ export class ConversacionComposerComponent implements OnDestroy {
   }
 
   protected async subirAdjunto(file: File): Promise<void> {
+    const contexto = this.state.contextoChat();
     try {
       this.toast.info(`Subiendo "${file.name}"...`);
       const recurso = await this.memoriaService.subirBinario(file, { titulo: file.name });
+      if (contexto !== this.state.contextoChat()) return;
       if (recurso.mediaKey) {
         this.adjuntoPendiente.set({
           mediaKey: recurso.mediaKey,
@@ -322,6 +334,7 @@ export class ConversacionComposerComponent implements OnDestroy {
 
     if ((!texto && !adj) || !id || this.state.enviando()) return;
 
+    const contexto = this.state.contextoChat();
     this.state.enviando.set(true);
     const chatPrevio = this.state.detalle.value();
     const idOptimista = `temp-${Date.now()}`;
@@ -360,9 +373,10 @@ export class ConversacionComposerComponent implements OnDestroy {
 
       // Sin reload: reemplaza el mensaje optimista con el real, en memoria.
       // Ver el porqué en `reconciliarEnvioLocal`.
-      this.state.reconciliarEnvioLocal(id, idOptimista, real);
+      if (contexto === this.state.contextoChat()) this.state.reconciliarEnvioLocal(id, idOptimista, real);
     } catch (err) {
-      // Rollback optimista en caso de fallo
+      // Una respuesta tardía no restaura el borrador de otro canal.
+      if (contexto !== this.state.contextoChat()) return;
       if (chatPrevio) {
         this.state.detalle.set(chatPrevio);
       }
@@ -414,6 +428,7 @@ export class ConversacionComposerComponent implements OnDestroy {
     const id = this.state.seleccionadaId();
     if (!p || !id || this.enviandoPlantilla()) return;
 
+    const contexto = this.state.contextoChat();
     this.enviandoPlantilla.set(true);
     try {
       const real = await this.conversacionesService.enviarPlantilla(id, {
@@ -422,6 +437,7 @@ export class ConversacionComposerComponent implements OnDestroy {
         parametros: this.variablesPlantilla(),
         contenido: p.cuerpo,
       });
+      if (contexto !== this.state.contextoChat()) return;
       this.state.reconciliarEnvioLocal(id, null, real);
       this.toast.success('Plantilla de WhatsApp enviada.');
       this.cerrarModalPlantillas();

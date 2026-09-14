@@ -1,3 +1,7 @@
+import { LineasWhatsappService } from '../lineas-whatsapp/lineas-whatsapp.service';
+import { LineaWhatsapp } from '../lineas-whatsapp/linea-whatsapp.model';
+import { SelectorLineasComponent } from '../lineas-whatsapp/selector-lineas.component';
+import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, HostListener, inject, signal } from '@angular/core';
@@ -28,7 +32,7 @@ import { TemplateRef, ViewContainerRef } from '@angular/core';
  * Los tres roles, no dos: filtrar sin SUPER_ADMIN dejaba invisible justo al rol
  * que administra el sistema, y era imposible ver cuántos hay.
  */
-export type FiltroRolAgentes = 'TODOS' | 'SUPER_ADMIN' | 'ADMIN' | 'AGENTE';
+export type FiltroRolAgentes = 'TODOS' | RolUsuario;
 
 /**
  * Gestión de Agentes y Usuarios — Solo administradores
@@ -37,6 +41,7 @@ export type FiltroRolAgentes = 'TODOS' | 'SUPER_ADMIN' | 'ADMIN' | 'AGENTE';
 @Component({
   selector: 'app-agentes-page',
   imports: [
+    SelectorLineasComponent,
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,
@@ -52,6 +57,12 @@ export type FiltroRolAgentes = 'TODOS' | 'SUPER_ADMIN' | 'ADMIN' | 'AGENTE';
   styleUrl: './agentes.page.css',
 })
 export class AgentesPage {
+  private readonly lineasService = inject(LineasWhatsappService);
+  protected readonly lineas = httpResource<RespuestaPaginada<LineaWhatsapp>>(() => this.lineasService.listarRequest(), { defaultValue: paginaVacia<LineaWhatsapp>() });
+  protected readonly formLineas = signal<string[]>([]);
+  protected readonly editLineas = signal<string[]>([]);
+  protected readonly lineasCreacion = computed(() => this.lineas.value().datos.filter(l => this.formRol() !== 'RECEPCION' || !l.comercial));
+  protected readonly lineasEdicion = computed(() => this.lineas.value().datos.filter(l => this.editRol() !== 'RECEPCION' || !l.comercial));
   private readonly agentesService = inject(AgentesService);
   private readonly toastService = inject(ToastService);
   private readonly authService = inject(AuthService);
@@ -76,7 +87,7 @@ export class AgentesPage {
   protected readonly formNombre = signal('');
   protected readonly formEmail = signal('');
   protected readonly formPassword = signal('');
-  protected readonly formRol = signal<'ADMIN' | 'AGENTE'>('AGENTE');
+  protected readonly formRol = signal<RolUsuario>('AGENTE');
 
   /** Etiquetas de rol — vienen de core/auth/roles.ts, no se redefinen aquí. */
   protected readonly rolLabel = ROL_LABEL;
@@ -92,7 +103,7 @@ export class AgentesPage {
   /* ── Datos Derivados ───────────────────────────────────────────── */
   protected readonly stats = computed(() => {
     const lista: Agente[] = this.agentes.value() ?? [];
-    const porRol = { SUPER_ADMIN: 0, ADMIN: 0, AGENTE: 0 } as Record<RolUsuario, number>;
+    const porRol = { SUPER_ADMIN: 0, ADMIN: 0, AGENTE: 0, RECEPCION: 0 } as Record<RolUsuario, number>;
     for (const usuario of lista) porRol[usuario.rol] += 1;
 
     return {
@@ -117,6 +128,7 @@ export class AgentesPage {
       { valor: 'TODOS' as const, etiqueta: 'Todos', icono: 'users' as IconName, total },
       { valor: 'SUPER_ADMIN' as const, etiqueta: 'Super administradores', icono: 'shield' as IconName, total: porRol.SUPER_ADMIN },
       { valor: 'ADMIN' as const, etiqueta: 'Administradores', icono: 'shield' as IconName, total: porRol.ADMIN },
+      { valor: 'RECEPCION' as const, etiqueta: 'Recepción', icono: 'message-circle' as IconName, total: porRol.RECEPCION },
       { valor: 'AGENTE' as const, etiqueta: 'Agentes comerciales', icono: 'message-circle' as IconName, total: porRol.AGENTE },
     ];
   });
@@ -145,6 +157,7 @@ export class AgentesPage {
   });
 
   abrirModal(template?: TemplateRef<unknown>): void {
+    this.formLineas.set([]);
     this.formNombre.set('');
     this.formEmail.set('');
     this.formPassword.set('');
@@ -165,6 +178,7 @@ export class AgentesPage {
 
   crearAgente(event: Event): void {
     event.preventDefault();
+    if (this.lineas.isLoading() || this.lineas.error()) { this.errorMensaje.set('Espera a que se carguen las líneas autorizadas.'); return; }
     if (!this.formNombre().trim() || !this.formEmail().trim() || !this.formPassword().trim()) {
       this.errorMensaje.set('Completa todos los campos requeridos.');
       return;
@@ -183,6 +197,7 @@ export class AgentesPage {
       email: this.formEmail().trim().toLowerCase(),
       password: this.formPassword(),
       rol: this.formRol(),
+      lineaIds: this.formLineas().filter(id => this.lineasCreacion().some(l => l.id === id)),
     };
 
     this.agentesService
@@ -243,6 +258,7 @@ export class AgentesPage {
     this.editEmail.set(agente.email);
     this.editCodigo.set(agente.codigo ?? '');
     this.editRol.set(agente.rol);
+    this.editLineas.set(agente.lineasWhatsapp.map(l => l.lineaId));
     this.editPassword.set('');
     this.errorMensaje.set(null);
     this.modalEditarAbierto.set(true);
@@ -261,6 +277,7 @@ export class AgentesPage {
 
   guardarEdicion(event: Event): void {
     event.preventDefault();
+    if (this.lineas.isLoading() || this.lineas.error()) { this.errorMensaje.set('Espera a que se carguen las líneas autorizadas.'); return; }
     const agente = this.agenteEditando();
     if (!agente || this.guardando()) return;
 
@@ -285,6 +302,7 @@ export class AgentesPage {
         nombre,
         email,
         rol: this.editRol(),
+        lineaIds: this.editLineas().filter(id => this.lineasEdicion().some(l => l.id === id)),
         /* Vacío = se limpia el código (el backend lo guarda como NULL). */
         codigo: this.editCodigo().trim(),
         /* La contraseña solo se envía si el admin escribió una nueva. */

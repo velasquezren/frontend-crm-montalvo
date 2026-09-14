@@ -10,7 +10,7 @@
     </div>
 
     <app-button icon="user-plus" (clicked)="abrirModal(modalCrear)">
-      Nuevo Agente
+      Nuevo usuario
     </app-button>
   </header>
 
@@ -135,11 +135,7 @@
                 {{ agente.email }}
               </td>
               <td class="py-4 px-6">
-                @if (agente.rol === 'AGENTE') {
-                  <app-badge variant="neutral" icon="users">Agente</app-badge>
-                } @else {
-                  <app-badge variant="info" icon="shield">{{ rolLabel[agente.rol] }}</app-badge>
-                }
+                <app-badge [variant]="cubreRol(agente.rol, 'ADMIN') ? 'info' : 'neutral'">{{ rolLabel[agente.rol] }}</app-badge>
               </td>
               <td class="py-4 px-6">
                 <!-- Átomo del sistema en vez de una píldora a mano: hereda
@@ -217,7 +213,7 @@
      Ref: CRM_MANIFESTO.md §2.11
      ══════════════════════════════════════════════════════════════════════ -->
 
-<!-- Modal: Registrar Agente -->
+<!-- Modal: Registrar usuario -->
 <ng-template #modalCrear>
   <div
     class="bg-white w-full max-w-md rounded-2xl shadow-lifted border border-border p-6 space-y-5 animate-modal-pop pointer-events-auto"
@@ -227,7 +223,7 @@
         <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
           <app-icon name="user-plus" [size]="18" />
         </div>
-        <h2 class="text-lg font-bold text-text-dark">Registrar Agente</h2>
+        <h2 class="text-lg font-bold text-text-dark">Registrar usuario</h2>
       </div>
       <button type="button" (click)="cerrarModal()" class="text-text-muted hover:text-text-dark cursor-pointer"
             aria-label="Cerrar">
@@ -260,6 +256,7 @@
       <div>
         <label class="block text-xs font-semibold text-text-dark mb-1.5">Rol de Sistema</label>
         <div class="grid grid-cols-2 gap-2">
+          <app-button variant="secondary" (clicked)="formRol.set('RECEPCION')">Recepción</app-button>
           <button
             type="button"
             (click)="formRol.set('AGENTE')"
@@ -277,6 +274,10 @@
         </div>
       </div>
 
+      @if (lineas.isLoading()) { <p class="text-sm text-text-muted">Cargando líneas…</p> }
+      @else if (lineas.error()) { <app-error-carga que="las líneas" (reintentar)="lineas.reload()" /> }
+      @else if (cubreRol(formRol(), 'ADMIN')) { <p class="text-sm text-text-muted">Los administradores tienen acceso a todas las líneas.</p> }
+      @else { <app-selector-lineas [lineas]="lineasCreacion()" [(ids)]="formLineas" /> }
       <div class="flex items-center justify-end pt-3 border-t border-border">
         <app-button type="submit" [loading]="guardando()">
           Guardar Agente
@@ -367,6 +368,7 @@
           <div class="flex flex-col gap-1.5">
             <label class="text-sm font-medium text-text-dark">Rol</label>
             <div class="flex flex-wrap gap-2">
+              <app-button variant="secondary" [disabled]="editandoseASiMismo()" (clicked)="editRol.set('RECEPCION')">Recepción</app-button>
               <button
                 type="button"
                 (click)="editRol.set('AGENTE')"
@@ -416,6 +418,10 @@
           </div>
         </section>
 
+      @if (lineas.isLoading()) { <p class="text-sm text-text-muted">Cargando líneas…</p> }
+      @else if (lineas.error()) { <app-error-carga que="las líneas" (reintentar)="lineas.reload()" /> }
+      @else if (cubreRol(editRol(), 'ADMIN')) { <p class="text-sm text-text-muted">Los administradores tienen acceso a todas las líneas.</p> }
+      @else { <app-selector-lineas [lineas]="lineasEdicion()" [(ids)]="editLineas" /> }
         <!-- Contraseña -->
         <section class="flex flex-col gap-4 pt-2 border-t border-border">
           <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider pt-4">

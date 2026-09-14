@@ -41,6 +41,7 @@ export const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
         path: 'dashboard',
+        canActivate: [exigeRol('AGENTE')],
         loadComponent: () =>
           import('./features/dashboard/dashboard.page').then(
             m => m.DashboardPage,
@@ -115,21 +116,25 @@ export const routes: Routes = [
       },
       {
         path: 'clientes',
+        canActivate: [exigeRol('AGENTE')],
         loadComponent: () =>
           import('./features/clientes/clientes.page').then(m => m.ClientesPage),
       },
       {
         path: 'leads',
+        canActivate: [exigeRol('AGENTE')],
         loadComponent: () =>
           import('./features/leads/leads.page').then(m => m.LeadsPage),
       },
       {
         path: 'actividades',
+        canActivate: [exigeRol('AGENTE')],
         loadComponent: () =>
           import('./features/actividades/actividades.page').then(m => m.ActividadesPage),
       },
       {
         path: 'leads/registro-presencial',
+        canActivate: [exigeRol('AGENTE')],
         loadComponent: () =>
           import('./features/leads/registro-presencial/registro-presencial.page').then(
             m => m.RegistroPresencialPage,
@@ -144,6 +149,7 @@ export const routes: Routes = [
       },
       {
         path: 'ventas',
+        canActivate: [exigeRol('AGENTE')],
         loadComponent: () =>
           import('./features/ventas/ventas.page').then(m => m.VentasPage),
       },
@@ -166,6 +172,11 @@ export const routes: Routes = [
         canActivate: [exigeRol('SUPER_ADMIN')],
         loadComponent: () =>
           import('./features/agentes/agentes.page').then(m => m.AgentesPage),
+      },
+      {
+        path: 'lineas-whatsapp',
+        canActivate: [exigeRol('SUPER_ADMIN')],
+        loadComponent: () => import('./features/lineas-whatsapp/lineas-whatsapp.page').then(m => m.LineasWhatsappPage),
       },
       {
         path: 'perfil',

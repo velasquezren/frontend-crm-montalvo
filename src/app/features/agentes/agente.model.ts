@@ -6,6 +6,7 @@ export interface Agente {
   email: string;
   rol: RolUsuario;
   activo: boolean;
+  lineasWhatsapp: { lineaId: string }[];
   foto?: string | null;
   /**
    * Identificador que usa la empresa para esta persona (el `vendedora_pk` de
@@ -18,6 +19,7 @@ export interface Agente {
 }
 
 export interface CreateAgentePayload {
+  lineaIds: string[];
   nombre: string;
   email: string;
   password: string;

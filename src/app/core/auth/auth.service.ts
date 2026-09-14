@@ -45,6 +45,7 @@ export class AuthService {
   readonly user = this.currentUser.asReadonly();
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
   /** De ADMIN para arriba — un super admin puede todo lo que puede un admin. */
+  readonly puedeGestionComercial = computed(() => cubreRol(this.currentUser()?.rol, 'AGENTE'));
   readonly isAdmin = computed(() => cubreRol(this.currentUser()?.rol, 'ADMIN'));
   /** Solo el super admin: gestiona agentes (y sus códigos) e importa la planilla. */
   readonly isSuperAdmin = computed(() => cubreRol(this.currentUser()?.rol, 'SUPER_ADMIN'));

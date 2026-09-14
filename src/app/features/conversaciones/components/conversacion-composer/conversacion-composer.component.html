@@ -1,3 +1,6 @@
+@if (state.detalle.value()?.linea; as linea) {
+  <p class="text-xs text-text-muted px-4 py-2 border-t border-border">Respondiendo desde {{ linea.nombre }} · {{ linea.telefono }}</p>
+}
 <div
   class="composer-container"
   (dragover)="onDragOver($event)"

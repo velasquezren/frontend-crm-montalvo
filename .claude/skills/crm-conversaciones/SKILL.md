@@ -153,3 +153,7 @@ La vista `conversaciones` se estructura en submódulos desacoplados gobernados p
 
 ## 5. Acuse Automático Fuera de Horario
 - Si un mensaje entrante llega fuera del horario de atención comercial (`horario-atencion.ts`), el servicio `acuse-automatico.service.ts` emite una respuesta automática configurada con botones de navegación interactivos.
+
+## Líneas y recepción (2026-09-13)
+
+La bandeja recibe `linea` en cada conversación y filtra por `lineaId` en el servidor. `RECEPCION` solo ve las líneas de atención asignadas a su usuario; no ve rutas comerciales. Agentes también necesitan membresía de línea. Admins ven todas. Las plantillas se consultan con la línea del chat abierto. No conservar borradores, adjuntos ni respuestas HTTP de otro chat/sesión al cambiar de contexto. Reasignar cambia únicamente el chat de esa línea.

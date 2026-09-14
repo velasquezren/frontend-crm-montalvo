@@ -26,8 +26,10 @@
 
     <!-- Acciones — moneda + perfil + logout -->
     <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-      <app-notificaciones-bell />
-      <app-moneda-toggle size="sm" />
+      @if (puedeGestionComercial()) {
+        <app-notificaciones-bell />
+        <app-moneda-toggle size="sm" />
+      }
       @if (user(); as currentUser) {
         <div class="flex items-center gap-3">
           <a routerLink="/perfil" class="flex items-center gap-3 hover:opacity-90 transition-opacity cursor-pointer group" title="Ver mi perfil">
@@ -117,6 +119,7 @@
     <span>Chats</span>
   </a>
 
+  @if (puedeGestionComercial()) {
   <a routerLink="/leads" routerLinkActive="mobile-nav-active" class="mobile-nav-item">
     <app-icon name="user-plus" [size]="20" />
     <span>Leads</span>
@@ -132,6 +135,7 @@
     <span>Ventas</span>
   </a>
 
+  }
   <a routerLink="/perfil" routerLinkActive="mobile-nav-active" class="mobile-nav-item">
     <app-icon name="user" [size]="20" />
     <span>Perfil</span>
