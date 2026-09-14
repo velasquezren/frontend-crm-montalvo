@@ -11,6 +11,7 @@ import {
 import { DatePipe } from '@angular/common';
 
 import { CampanaOrigen, campanaOrigenDe } from '../../../../shared/models/campana-origen';
+import { enlaceWhatsApp } from '../../../../shared/models/telefono';
 import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
@@ -26,9 +27,6 @@ import { ConversacionResumen } from '../../conversacion.model';
 import { textoExtra } from '../../../../core/api/datos-extra';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 
-function soloDigitos(telefono: string): string {
-  return telefono.replace(/\D/g, '');
-}
 
 /**
  * Panel central del chat: cabecera del paciente, aviso clínico fijado,
@@ -156,7 +154,7 @@ export class ConversacionThreadComponent {
 
   /* ── Helpers ───────────────────────────────────────────────────── */
   protected enlaceWhatsApp(telefono: string): string {
-    return `https://wa.me/${soloDigitos(telefono)}`;
+    return enlaceWhatsApp(telefono);
   }
 
   protected copiarTexto(texto: string, label: string): void {

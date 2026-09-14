@@ -588,10 +588,10 @@ export {
   ESTADO_PERIODO_LABEL,
 } from '../../shared/models/estados.model';
 
-export const MESES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-] as const;
+/* Reexportados: la definición vive en `shared/models/meses.ts`. Estaban acá y
+   los importaban seis vistas, incluida una de `shared/` — un componente
+   compartido dependiendo de un feature. */
+export { MESES, MESES_CORTOS, nombreMes, nombreMesCorto } from '../../shared/models/meses';
 
 /* ── Resumen anual (GET /planilla-comisiones/anual) ─────────────────────────
    Espejo de `ResumenAnualService` del backend. Es la única vista que cruza
@@ -663,10 +663,6 @@ export interface ResumenAnual {
 }
 
 /** Abreviaturas para las cabeceras de doce columnas. */
-export const MESES_CORTOS = [
-  'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-  'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
-] as const;
 
 /** Los dos tipos de plan que tienen objetivo propio. */
 export type TipoPlan = 'PLANPAQ' | 'PLANNIN';

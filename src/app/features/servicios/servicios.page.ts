@@ -1,4 +1,5 @@
 import { OverlayRef } from '@angular/cdk/overlay';
+import { nombreMes } from '../../shared/models/meses';
 import { DecimalPipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import {
@@ -473,9 +474,8 @@ export class ServiciosPage {
     this.pestana.set(p);
   }
 
-  protected nombreMes(mes: number): string {
-    return this.meses[mes - 1] ?? String(mes);
-  }
+  /** Una sola definición: `shared/models/meses.ts`. */
+  protected readonly nombreMes = nombreMes;
 
   /**
    * El filtro por módulo es un interruptor: volver a tocar el activo lo quita.

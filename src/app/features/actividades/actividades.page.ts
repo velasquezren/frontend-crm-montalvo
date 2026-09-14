@@ -1,4 +1,5 @@
 import { DatePipe } from '@angular/common';
+import { enlaceWhatsApp } from '../../shared/models/telefono';
 import { httpResource } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -539,12 +540,9 @@ export class ActividadesPage implements OnDestroy {
     this.activeDrawerRef = undefined;
   }
 
-  protected getWhatsappLink(telefono: string, mensaje?: string): string {
-    const clean = telefono.replace(/\D/g, '');
-    const num = clean.startsWith('591') ? clean : `591${clean}`;
-    const text = mensaje ? encodeURIComponent(mensaje) : '';
-    return `https://wa.me/${num}${text ? `?text=${text}` : ''}`;
-  }
+  /** Una sola definición: `shared/models/telefono.ts`. Antes anteponía `591`
+   *  «si faltaba», lo que corrompía a cualquier paciente extranjera. */
+  protected readonly getWhatsappLink = enlaceWhatsApp;
 
   protected async reprogramarRapido(actividad: Actividad, horas: number): Promise<void> {
     try {

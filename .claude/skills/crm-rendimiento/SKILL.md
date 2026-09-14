@@ -300,6 +300,7 @@ Los siete que entran hoy, y la lista es exhaustiva:
 /planilla-comisiones/periodos
 /planilla-comisiones/configuracion
 /planilla-comisiones/vendedoras
+/lineas-whatsapp
 /servicios/demografia
 /servicios/dashboard
 /servicios/pacientes
@@ -311,6 +312,12 @@ Los siete que entran hoy, y la lista es exhaustiva:
 > y la de este archivo coincidan, justamente para que nadie amplíe la caché sin
 > pasar por esa pregunta. Los endpoints de `/servicios/*` se alimentan del Excel
 > importado y no cambian en vivo; cualquier mutación invalida la caché completa.
+>
+> `/lineas-whatsapp` entró el 14-09-2026 con la misma prueba: lo piden tres
+> sitios —el inbox en cada apertura, Usuarios y su propia pantalla— y solo
+> cambia cuando un SUPER_ADMIN configura una línea. Un minuto tarde se ve el
+> nombre anterior de una línea recién renombrada; a quien la renombra no le
+> afecta, porque su PATCH vacía la caché antes de que recargue.
 
 **4. La precarga de rutas mira el rol** (`core/auth/preload-por-rol.strategy.ts`).
 Antes era `PreloadAllModules`, que descarga la aplicación entera en cuanto

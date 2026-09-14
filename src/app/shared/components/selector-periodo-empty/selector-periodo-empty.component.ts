@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { nombreMes } from '../../models/meses';
 
 import { BadgeComponent } from '../badge/badge.component';
 import { IconComponent, IconName } from '../icon/icon.component';
 import { LoadingSkeletonComponent } from '../loading-skeleton/loading-skeleton.component';
 import {
   ESTADO_PERIODO_LABEL,
-  MESES,
   PeriodoComision,
 } from '../../../features/planilla-comisiones/planilla.model';
 
@@ -52,7 +52,6 @@ export class SelectorPeriodoEmptyComponent {
   private dragCounter = 0;
 
   protected readonly estadoLabel = ESTADO_PERIODO_LABEL;
-  protected readonly meses = MESES;
 
   /** El periodo más reciente registrado en el sistema. */
   protected readonly ultimoPeriodo = computed<PeriodoComision | null>(() => {
@@ -66,9 +65,9 @@ export class SelectorPeriodoEmptyComponent {
     return lista.slice(1, 7);
   });
 
-  protected nombreMes(mes: number): string {
-    return this.meses[mes - 1] ?? String(mes);
-  }
+  /** Una sola definición: `shared/models/meses.ts`. Este átomo importaba
+   *  `MESES` de `features/planilla-comisiones`, que es la dependencia al revés. */
+  protected readonly nombreMes = nombreMes;
 
   protected seleccionar(id: string): void {
     this.periodoSeleccionado.emit(id);

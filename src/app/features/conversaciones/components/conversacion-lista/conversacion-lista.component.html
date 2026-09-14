@@ -20,21 +20,43 @@
     </div>
   </div>
 
-  <div class="px-4 py-3 border-b border-border">
-    @if (state.lineas.isLoading()) { <app-loading-skeleton height="2rem" /> }
-    @else if (state.lineas.error()) {
-      <app-empty-state title="No se pudieron cargar las líneas">
-        <app-button variant="ghost" (clicked)="state.lineas.reload()">Reintentar</app-button>
-      </app-empty-state>
-    } @else if (state.lineas.value().datos.length) {
-      <label for="filtro-linea" class="text-xs font-medium text-text-muted">Línea de atención</label>
-      <select id="filtro-linea" #linea class="w-full mt-1 p-2 rounded-xl border border-border bg-bg-workspace text-sm"
-        [value]="state.filtroLineaId() || ''" (change)="state.cambiarLinea(linea.value)">
-        <option value="">Todas mis líneas</option>
-        @for (l of state.lineas.value().datos; track l.id) { <option [value]="l.id">{{ l.nombre }} · {{ l.telefono || 'Línea actual' }}</option> }
-      </select>
-    } @else { <p class="text-sm text-text-muted">Pide al administrador que asigne tu línea de atención.</p> }
-  </div>
+  <!-- Filtro por línea. Era un `<select>` escrito a mano —lo que el manifiesto
+       prohíbe: `<app-select>` es el único desplegable, y ya lo usan catorce
+       vistas— con su propia `<label>` y sin ningún estado de "filtro puesto",
+       así que no se distinguía de un vistazo si la bandeja estaba recortada o
+       completa. El átomo lo resuelve con `activo`.
+
+       El bloque entero desaparece cuando la agente tiene UNA sola línea: no hay
+       nada que filtrar y el control le robaba una banda del lateral para
+       ofrecerle una única opción. Esa decisión vive en `mostrarFiltroLinea()` y
+       no repartida por las ramas, para que el contenedor se escriba una vez. -->
+  @if (mostrarFiltroLinea()) {
+    <div class="px-4 py-3 border-b border-border">
+      @if (state.lineas.isLoading()) {
+        <app-loading-skeleton height="2rem" />
+      } @else if (state.lineas.error()) {
+        <app-empty-state title="No se pudieron cargar las líneas">
+          <app-button variant="ghost" size="sm" (clicked)="state.lineas.reload()">Reintentar</app-button>
+        </app-empty-state>
+      } @else if (state.lineas.value().datos.length) {
+        <app-select
+          size="sm"
+          icono="message-circle"
+          ariaLabel="Filtrar la bandeja por línea de WhatsApp"
+          [activo]="!!state.filtroLineaId()"
+          [value]="state.filtroLineaId() || ''"
+          (valueChange)="state.cambiarLinea($event)">
+          <option value="">Todas mis líneas</option>
+          @for (l of state.lineas.value().datos; track l.id) {
+            <option [value]="l.id">{{ l.nombre }}</option>
+          }
+        </app-select>
+      } @else {
+        <p class="text-xs text-text-muted">Pide al administrador que asigne tu línea de atención.</p>
+      }
+    </div>
+  }
+
   <!-- Filtro tabs: Taller vertical stack (Texto arriba, contador abajo) -->
   <div class="sidebar-filters">
     <div class="tabs-inbox flex items-center justify-around py-1.5">

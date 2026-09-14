@@ -1,4 +1,5 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
+import { nombreMes } from '../../shared/models/meses';
 import { httpResource } from '@angular/common/http';
 import { OverlayRef } from '@angular/cdk/overlay';
 import {
@@ -672,9 +673,8 @@ export class PlanillaComisionesPage implements OnDestroy {
     this.setPestana('CLASIFICACION');
   }
 
-  protected nombreMes(mes: number): string {
-    return this.meses[mes - 1] ?? String(mes);
-  }
+  /** Una sola definición: `shared/models/meses.ts`. */
+  protected readonly nombreMes = nombreMes;
 
   /** Sube el Excel elegido en el input de archivo. */
   protected async subirArchivo(evento: Event): Promise<void> {

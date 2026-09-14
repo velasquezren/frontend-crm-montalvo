@@ -1,4 +1,5 @@
 import { httpResource } from '@angular/common/http';
+import { nombreMes } from '../../shared/models/meses';
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 
 import { descargarArchivo } from '../../core/api/descargar-archivo';
@@ -314,9 +315,8 @@ export class AnaliticaPage {
     this.periodoId.set(id);
   }
 
-  protected nombreMes(mes: number): string {
-    return this.meses[mes - 1] ?? String(mes);
-  }
+  /** Una sola definición: `shared/models/meses.ts`. */
+  protected readonly nombreMes = nombreMes;
 
   /** Convierte porciones del backend en items del gráfico, con color estable. */
   private aSerie(porciones: readonly Porcion[] | undefined): ChartItem[] {

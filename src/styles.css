@@ -615,13 +615,18 @@ tr:hover .celda-sticky {
   color: var(--color-text-muted);
 }
 
+/* El punto va en `secondary` (#39ADA3), no en `primary` (#006156). No es
+   preferencia: la tabla de paleta declara `secondary` para «hover, barras
+   secundarias, INDICADORES», y esto es exactamente un indicador. El verde
+   oscuro es el de los botones y los estados activos; usarlo aquí le daba a un
+   metadato el peso visual de una acción. */
 .crm-linea::before {
   content: '';
   width: 6px;
   height: 6px;
   flex-shrink: 0;
   border-radius: 9999px;
-  background: var(--color-primary);
+  background: var(--color-secondary);
 }
 
 .crm-linea > span {

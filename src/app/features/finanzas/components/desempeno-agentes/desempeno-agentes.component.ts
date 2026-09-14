@@ -1,4 +1,5 @@
 import { httpResource } from '@angular/common/http';
+import { nombreMes } from '../../../../shared/models/meses';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -23,7 +24,6 @@ import {
   ESTADO_PERIODO_LABEL,
   EstadoPeriodo,
   FilaConsolidado,
-  MESES,
   PeriodoComision,
   ReporteConsolidado,
   Vendedora,
@@ -340,9 +340,8 @@ export class DesempenoAgentesComponent {
     this.vendedoraSeleccionada.set(id);
   }
 
-  protected nombreMes(mes: number): string {
-    return MESES[mes - 1] ?? `Mes ${mes}`;
-  }
+  /** Una sola definición: `shared/models/meses.ts`. */
+  protected readonly nombreMes = nombreMes;
 
   protected etiquetaEstado(estado: string): string {
     return ESTADO_PERIODO_LABEL[estado as EstadoPeriodo] ?? estado;

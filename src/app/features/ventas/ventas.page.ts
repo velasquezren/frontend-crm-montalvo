@@ -1,4 +1,5 @@
 import { ActivatedRoute, Router } from '@angular/router';
+import { enlaceWhatsApp } from '../../shared/models/telefono';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -684,12 +685,9 @@ export class VentasPage implements OnDestroy {
     this.visorImagenTitulo.set(null);
   }
 
-  protected getWhatsappLink(telefono?: string): string {
-    if (!telefono) return '';
-    const limpio = telefono.replace(/\D/g, '');
-    const numFinal = limpio.startsWith('591') ? limpio : `591${limpio}`;
-    return `https://wa.me/${numFinal}`;
-  }
+  /** Ver `shared/models/telefono.ts`: el `591` que se anteponía acá rompía
+   *  los números que ya traían su propio país. */
+  protected readonly getWhatsappLink = enlaceWhatsApp;
 
   protected async guardar(event: Event): Promise<void> {
     event.preventDefault();

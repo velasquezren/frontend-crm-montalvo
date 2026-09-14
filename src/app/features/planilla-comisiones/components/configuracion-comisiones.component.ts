@@ -1,4 +1,5 @@
 import { OverlayRef } from '@angular/cdk/overlay';
+import { nombreMes } from '../../../shared/models/meses';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -35,7 +36,6 @@ import {
   ClasifComision,
   CLASIF_LABEL,
   ConfiguracionPlanilla,
-  MESES,
   Objetivo,
   PeriodoComision,
   TipoVendedora,
@@ -164,9 +164,8 @@ export class ConfiguracionComisionesComponent {
     this.metasResueltas().some(o => o.periodoId !== null),
   );
 
-  protected nombreMes(mes: number): string {
-    return MESES[mes - 1] ?? '';
-  }
+  /** Una sola definición: `shared/models/meses.ts`. */
+  protected readonly nombreMes = nombreMes;
 
   protected valorParametro(clave: string): string {
     const p = this.configuracion()?.parametros.find(x => x.clave === clave);

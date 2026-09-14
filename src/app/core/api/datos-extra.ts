@@ -47,3 +47,21 @@ export function listaExtra(datos: DatosExtra | null | undefined, ...claves: stri
   }
   return [...new Set(resultados)];
 }
+
+/**
+ * Etiquetas visibles de una paciente: sus `intereses` (relación real) más las
+ * que quedaron sueltas en `datosExtra`, sin repetidas.
+ *
+ * **Estaba escrita dos veces con dos nombres** —`obtenerEtiquetas` en Clientes y
+ * `tagsDe` en el panel del chat—, así que todavía no habían divergido pero el
+ * siguiente arreglo iba a entrar en una sola. Es la misma familia que
+ * `campanaOrigenDe` y `nombreMes`: una regla de negocio escrita varias veces
+ * porque cada vista la necesitaba y ninguna sabía de la otra.
+ */
+export function etiquetasDe(cliente: {
+  readonly intereses?: ReadonlyArray<{ readonly descripcion: string }> | null;
+  readonly datosExtra?: DatosExtra | null;
+}): string[] {
+  const directos = cliente.intereses?.map(i => i.descripcion) ?? [];
+  return [...new Set([...directos, ...listaExtra(cliente.datosExtra, 'tags', 'intereses')])];
+}

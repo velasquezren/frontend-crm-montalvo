@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal, TemplateR
 import { OverlayRef } from '@angular/cdk/overlay';
 
 import { CampanaOrigen, campanaOrigenDe } from '../../../../shared/models/campana-origen';
+import { enlaceWhatsApp, enlaceLlamada } from '../../../../shared/models/telefono';
 import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
@@ -26,7 +27,7 @@ import { generarIniciales } from '../../../../core/auth/user.model';
 import { ROL_LABEL } from '../../../../core/auth/roles';
 import { calcularEdad } from '../../../../core/api/edad';
 import { aDatetimeLocal } from '../../../../core/api/fecha';
-import { listaExtra, textoExtra } from '../../../../core/api/datos-extra';
+import { etiquetasDe, textoExtra } from '../../../../core/api/datos-extra';
 import { mensajeDeError } from '../../../../core/api/http-error';
 import { ToastService } from '../../../../core/toast/toast.service';
 import { ComprobanteSubido, MetodoPagoVenta } from '../../../ventas/venta.model';
@@ -48,9 +49,6 @@ import { CategoriaCliente } from '../../../../shared/models/cliente-categoria.mo
 
 type ClienteChat = ConversacionResumen['cliente'];
 
-function soloDigitos(telefono: string): string {
-  return telefono.replace(/\D/g, '');
-}
 
 /**
  * Ficha lateral del paciente y asignación de agente.
@@ -93,11 +91,11 @@ export class ConversacionSidebarComponent {
   }
 
   protected enlaceWhatsApp(telefono: string): string {
-    return `https://wa.me/${soloDigitos(telefono)}`;
+    return enlaceWhatsApp(telefono);
   }
 
   protected enlaceLlamada(telefono: string): string {
-    return `tel:+${soloDigitos(telefono)}`;
+    return enlaceLlamada(telefono);
   }
 
   protected empresaDe(cliente: ClienteChat): string {
@@ -116,11 +114,8 @@ export class ConversacionSidebarComponent {
     return textoExtra(cliente.datosExtra, 'notas');
   }
 
-  protected tagsDe(cliente: ClienteChat): string[] {
-    const directIntereses = cliente.intereses?.map(i => i.descripcion) ?? [];
-    const tagsExtra = listaExtra(cliente.datosExtra, 'tags', 'intereses');
-    return [...new Set([...directIntereses, ...tagsExtra])];
-  }
+  /** Era una copia de `obtenerEtiquetas` de Clientes, con otro nombre. */
+  protected readonly tagsDe = etiquetasDe;
 
   protected edadDe(cliente: ClienteChat): string | null {
     return calcularEdad(cliente.fechaNacimiento);

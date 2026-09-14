@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 
 import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
+import { SelectComponent } from '../../../../shared/components/select/select.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
@@ -30,6 +31,7 @@ import { ConversacionPreviewComponent } from './conversacion-preview.component';
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,
+    SelectComponent,
     EmptyStateComponent,
     IconComponent,
     InputComponent,
@@ -41,6 +43,22 @@ import { ConversacionPreviewComponent } from './conversacion-preview.component';
   styleUrl: './conversacion-lista.component.css',
 })
 export class ConversacionListaComponent {
+
+  /**
+   * ¿Hay algo que decir en la banda del filtro de líneas?
+   *
+   * Con EXACTAMENTE una línea no: no hay nada que filtrar. Cargando, con
+   * fallo, o con ninguna (hay que avisar) o con varias (hay que elegir), sí.
+   * Vive acá y no repartido por las ramas de la plantilla para que el
+   * contenedor con su borde y su padding se escriba una sola vez.
+   */
+  protected readonly mostrarFiltroLinea = computed(
+    () =>
+      this.state.lineas.isLoading() ||
+      !!this.state.lineas.error() ||
+      this.state.lineas.value().datos.length !== 1,
+  );
+
   protected readonly state = inject(ConversacionesStateService);
   protected readonly iniciales = generarIniciales;
 

@@ -41,6 +41,20 @@ describe('esDeReferencia', () => {
     it('los agregados de servicios', () => {
       expect(esDeReferencia(api('/servicios/demografia'))).toBe(true);
     });
+
+    /* Entró el 14-09-2026: lo piden el inbox en cada apertura, Usuarios y su
+       propia pantalla, y solo cambia cuando un SUPER_ADMIN configura una línea. */
+    it('el catálogo de líneas de WhatsApp', () => {
+      expect(esDeReferencia(api('/lineas-whatsapp'))).toBe(true);
+      expect(esDeReferencia(api('/lineas-whatsapp?pagina=1&limite=100'))).toBe(true);
+    });
+
+    it('pero NO la configuración de una línea concreta', () => {
+      /* Misma trampa que ya mordió con `/periodos/:id/…`: el PATCH va a
+         `/lineas-whatsapp/:id`, y servir esa ruta desde caché mostraría la
+         línea como estaba antes de configurarla. */
+      expect(esDeReferencia(api('/lineas-whatsapp/00000000-0000-4000-8000-000000000002'))).toBe(false);
+    });
   });
 
   describe('NO se cachea lo que cuelga de un periodo concreto', () => {

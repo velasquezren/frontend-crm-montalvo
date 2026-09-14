@@ -320,7 +320,7 @@ número, era que la misma forma decía tres cosas incompatibles. Elegí cuál es
 | Una **acción de contacto** (`<a>` a WhatsApp o `tel:`) | `.crm-accion-enlace` (+ `-whatsapp`). Son enlaces, no botones: abren otra app y se copian |
 | Una fila o tarjeta **vencida** | `.crm-vencida` — filo izquierdo, no fondo teñido |
 | Un **control segmentado** (Lista/Calendario, Bs/USD) | `.crm-segmento` + `.crm-segmento-opcion` (+ `-activo`) |
-| La **línea de WhatsApp** de un chat | `.crm-linea` — punto del verde de marca + nombre en voz baja. **No es cápsula:** la píldora es del estado y una línea es un canal |
+| La **línea de WhatsApp** de un chat | `.crm-linea` — punto en `secondary` (el token declarado para *indicadores*, no `primary`, que es de botones y estados activos) + nombre en voz baja. **No es cápsula:** la píldora es del estado y una línea es un canal |
 
 `check:skills` rechaza cualquier `class` que junte `rounded-full` con un tamaño
 de texto de 11px o menos, fuera de `shared/components/`. Los átomos arman sus

@@ -2,7 +2,7 @@ import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 
-import { listaExtra, textoExtra, textoExtraOpcional } from '../../core/api/datos-extra';
+import { etiquetasDe, textoExtra, textoExtraOpcional } from '../../core/api/datos-extra';
 import { mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
@@ -224,12 +224,8 @@ export class ClientesPage {
       .filter(Boolean),
   );
 
-  /** Etiquetas e intereses combinados para la columna de la tabla y ficha */
-  protected obtenerEtiquetas(cliente: Cliente): string[] {
-    const directIntereses = cliente.intereses?.map(i => i.descripcion) ?? [];
-    const tagsExtra = listaExtra(cliente.datosExtra, 'tags', 'intereses');
-    return [...new Set([...directIntereses, ...tagsExtra])];
-  }
+  /** Etiquetas e intereses combinados. Una sola definición: `core/api/datos-extra.ts`. */
+  protected readonly obtenerEtiquetas = etiquetasDe;
 
   /* ── Acciones rápidas de la ficha ────────────────────────────────
      Son comandos, no enlaces: además de navegar cierran el cajón y llevan al

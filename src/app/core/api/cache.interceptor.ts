@@ -23,6 +23,13 @@ const REFERENCIA = [
   '/planilla-comisiones/periodos',
   '/planilla-comisiones/configuracion',
   '/planilla-comisiones/vendedoras',
+  /* Catálogo de las cuatro líneas. Lo piden TRES sitios —el inbox en cada
+     apertura, la gestión de usuarios y su propia pantalla— y solo cambia cuando
+     un SUPER_ADMIN configura una línea. Lo peor que puede pasar con un minuto de
+     retraso es ver el nombre anterior de una línea que otro acaba de renombrar;
+     al que la renombra no le afecta, porque su propio PATCH vacía la caché
+     entera antes de que recargue. */
+  '/lineas-whatsapp',
   /* Agregado de las 15.000+ fichas: solo se mueve al importar pacientes. */
   '/servicios/demografia',
   '/servicios/dashboard',
