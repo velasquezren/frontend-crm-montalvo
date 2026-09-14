@@ -1,3 +1,4 @@
+import { validarPaginaInbox, validarResumenInbox } from './validar-canal';
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
@@ -41,15 +42,15 @@ export class ConversacionesService {
   }
 
   /** Una página del inbox como promesa — para el botón "cargar más". */
-  listarPagina(filtros: FiltrosInbox, pagina: number): Promise<PaginaInbox> {
-    return this.api.get<PaginaInbox>('/conversaciones', {
+  async listarPagina(filtros: FiltrosInbox, pagina: number): Promise<PaginaInbox> {
+    return validarPaginaInbox(await this.api.get<unknown>('/conversaciones', {
       lineaId: filtros.lineaId ?? undefined,
       tab: filtros.tab === 'TODAS' ? undefined : filtros.tab,
       busqueda: filtros.busqueda.trim() || undefined,
       agenteId: filtros.agenteId ?? undefined,
       soloMios: filtros.soloMios ? 'true' : undefined,
       pagina: String(pagina),
-    });
+    }));
   }
 
   /**
@@ -59,14 +60,14 @@ export class ConversacionesService {
    * dejó de encajar en la pestaña activa, vuelve `conversacion: null` y la
    * vista la quita en vez de dejar una fila que ya no corresponde.
    */
-  resumenParaInbox(id: string, filtros: FiltrosInbox): Promise<ResumenInbox> {
-    return this.api.get<ResumenInbox>(`/conversaciones/${id}/resumen`, {
+  async resumenParaInbox(id: string, filtros: FiltrosInbox): Promise<ResumenInbox> {
+    return validarResumenInbox(await this.api.get<unknown>(`/conversaciones/${id}/resumen`, {
       lineaId: filtros.lineaId ?? undefined,
       tab: filtros.tab === 'TODAS' ? undefined : filtros.tab,
       busqueda: filtros.busqueda.trim() || undefined,
       agenteId: filtros.agenteId ?? undefined,
       soloMios: filtros.soloMios ? 'true' : undefined,
-    });
+    }));
   }
 
   detalleRequest(id: string): ResourceRequest {

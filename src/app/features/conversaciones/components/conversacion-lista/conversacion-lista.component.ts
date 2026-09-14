@@ -55,7 +55,7 @@ export class ConversacionListaComponent {
    */
   protected readonly agentesConChats = computed(() => {
     const lista = this.state.conversacionesFiltradas();
-    const todosAgentes = this.state.agentes.value();
+    const todosAgentes = this.state.agentesActuales();
     const conteos = new Map<string, number>();
 
     for (const c of lista) {

@@ -4,22 +4,26 @@
      ═══════════════════════════════════════════════════════════════ -->
 <div class="inbox-wrapper"
      [class.has-details]="!!state.seleccionadaId()"
-     [class.panel-open]="!!state.detalle.value() && state.panelAbierto()"
-     [class.panel-collapsed]="!state.detalle.value() || !state.panelAbierto()">
+     [class.panel-open]="!!state.detalleActual() && state.panelAbierto()"
+     [class.panel-collapsed]="!state.detalleActual() || !state.panelAbierto()">
 
   <!-- ── Panel izquierdo: lista de chats ──────────────────────────── -->
   <app-conversacion-lista />
 
   <!-- ── Panel central: conversación activa ───────────────────────── -->
   <section class="chat-panel">
-    <app-conversacion-thread />
-    @if (state.detalle.value()) {
+    @if (state.detalle.error()) {
+      <app-error-carga que="los mensajes" [descripcion]="state.errorDetalle()" (reintentar)="state.detalle.reload()" />
+    } @else {
+      <app-conversacion-thread />
+    }
+    @if (state.detalleActual()) {
       <app-conversacion-composer />
     }
   </section>
 
   <!-- ── Panel derecho: ficha del cliente + asignación ─────────────── -->
-  @if (state.detalle.value() && state.panelAbierto()) {
+  @if (state.detalleActual() && state.panelAbierto()) {
     <app-conversacion-sidebar />
   }
 

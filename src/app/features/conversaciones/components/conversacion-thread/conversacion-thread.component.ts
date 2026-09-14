@@ -94,7 +94,7 @@ export class ConversacionThreadComponent {
       const container = this.messagesContainer()?.nativeElement;
       const anchor = this.bottomAnchor()?.nativeElement;
       const items = this.state.mensajesConFecha();
-      const chat = this.state.detalle.value();
+      const chat = this.state.detalleActual();
       const versionEnvio = this.state.versionEnvioPropio();
 
       if (!chat) {

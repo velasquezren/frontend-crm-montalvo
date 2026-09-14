@@ -155,7 +155,7 @@
       <app-empty-state
         icon="alert-circle"
         title="No se pudo cargar el inbox"
-        description="No hay respuesta del servidor. Revisa tu conexión e inténtalo de nuevo.">
+        [description]="state.errorInbox()">
         <app-button icon="loader" (clicked)="recargarInbox()">Reintentar</app-button>
       </app-empty-state>
     } @else {

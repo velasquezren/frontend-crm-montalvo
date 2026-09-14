@@ -1,3 +1,4 @@
+import { ErrorCanalWhatsapp, validarDetalle, validarPaginaInbox } from '../validar-canal';
 import { LineasWhatsappService } from '../../lineas-whatsapp/lineas-whatsapp.service';
 import { LineaWhatsapp } from '../../lineas-whatsapp/linea-whatsapp.model';
 import { paginaVacia, RespuestaPaginada } from '../../../core/api/pagination.model';
@@ -124,7 +125,7 @@ export class ConversacionesStateService {
   // la conversación no versiona sus mensajes, ficha ni contadores.
   readonly inbox = httpResource<PaginaInbox>(
     () => this.conversacionesService.listarRequest(this.filtros()),
-    { defaultValue: PAGINA_VACIA },
+    { defaultValue: PAGINA_VACIA, parse: validarPaginaInbox },
   );
 
   /**
@@ -161,8 +162,21 @@ export class ConversacionesStateService {
       if (!id) return undefined;
       return this.conversacionesService.detalleRequest(id);
     },
-    { defaultValue: null },
+    { defaultValue: null, parse: validarDetalle },
   );
+
+  /** Un error remoto se representa en la vista, no se lee como un valor válido. */
+  readonly paginaInbox = computed(() => this.inbox.hasValue() ? this.inbox.value() : PAGINA_VACIA);
+  readonly detalleActual = computed(() => this.detalle.hasValue() ? this.detalle.value() : null);
+  readonly agentesActuales = computed(() => this.agentes.hasValue() ? this.agentes.value() : []);
+  readonly errorInbox = computed(() => {
+    const error = this.inbox.error();
+    return error instanceof ErrorCanalWhatsapp ? error.message : 'No hay respuesta del servidor. Revisa tu conexión e inténtalo de nuevo.';
+  });
+  readonly errorDetalle = computed(() => {
+    const error = this.detalle.error();
+    return error instanceof ErrorCanalWhatsapp ? error.message : 'No se pudo abrir la conversación. Reintenta o selecciona otra.';
+  });
 
   /* ── Paginación de Historial ────────────────────────────────────── */
   readonly hayMasHistorial = linkedSignal({
@@ -215,8 +229,8 @@ export class ConversacionesStateService {
     { defaultValue: [] },
   );
 
-  private readonly lineaSeleccionadaId = computed(() => this.detalle.value()?.linea.id);
-  readonly agentesParaChat = computed(() => this.agentes.value().filter(a => cubreRol(a.rol, 'ADMIN') || a.lineasWhatsapp.some(l => l.lineaId === this.lineaSeleccionadaId())));
+  private readonly lineaSeleccionadaId = computed(() => this.detalleActual()?.linea.id);
+  readonly agentesParaChat = computed(() => this.agentesActuales().filter(a => cubreRol(a.rol, 'ADMIN') || a.lineasWhatsapp?.some(l => l.lineaId === this.lineaSeleccionadaId())));
 
   readonly plantillasWhatsApp = httpResource<PlantillaResumen[]>(
     () => { const lineaId = this.lineaSeleccionadaId(); return lineaId ? this.conversacionesService.plantillasRequest(lineaId) : undefined; },
@@ -233,7 +247,7 @@ export class ConversacionesStateService {
    * escondía a las que llevaban más tiempo esperando — justo las que el número
    * existe para hacer visibles.
    */
-  readonly stats = computed(() => this.inbox.value().contadores);
+  readonly stats = computed(() => this.paginaInbox().contadores);
 
   /**
    * Lo que se pinta: la primera página más lo que se haya ido cargando.
@@ -242,12 +256,12 @@ export class ConversacionesStateService {
    * nombre se conserva porque es el que usa la plantilla.
    */
   readonly conversacionesFiltradas = computed<readonly ConversacionResumen[]>(() => [
-    ...this.inbox.value().datos,
+    ...this.paginaInbox().datos,
     ...this.paginasExtra(),
   ]);
 
   /** Cuántas conversaciones cumplen el filtro actual, cargadas o no. */
-  readonly totalFiltrado = computed(() => this.inbox.value().total);
+  readonly totalFiltrado = computed(() => this.paginaInbox().total);
 
   /** Si queda algo por debajo de lo que se está mostrando. */
   readonly hayMasConversaciones = computed(
@@ -268,7 +282,7 @@ export class ConversacionesStateService {
 
   /** Fecha en que el lead hizo clic en el anuncio de Meta Ads, si aplica. */
   readonly fechaCampanaMeta = computed<Date | null>(() => {
-    const chat = this.detalle.value();
+    const chat = this.detalleActual();
     if (!chat) return null;
     const datos = chat.cliente.datosExtra;
     if (!datos || typeof datos !== 'object') return null;
@@ -301,7 +315,7 @@ export class ConversacionesStateService {
   });
 
   readonly esLeadMetaAds = computed(() => {
-    const chat = this.detalle.value();
+    const chat = this.detalleActual();
     if (!chat) return false;
     const datos = chat.cliente.datosExtra;
     return Boolean(datos?.['campanaOrigen'] || datos?.['referral']);
@@ -316,7 +330,7 @@ export class ConversacionesStateService {
    * entra acá — solo aplica a plantillas, ver `ventana72hMetaActiva`.
    */
   readonly fueraDeVentana24h = computed(() => {
-    const chat = this.detalle.value();
+    const chat = this.detalleActual();
     if (!chat) return false;
     const ultimoEntrante = [...chat.mensajes].reverse().find(m => m.direccion === 'ENTRANTE');
     if (!ultimoEntrante) return true;
@@ -327,7 +341,7 @@ export class ConversacionesStateService {
 
   /** Horas que quedan de la CSW de 24h antes de que se bloquee el texto libre. */
   readonly horasRestantesVentana = computed(() => {
-    const chat = this.detalle.value();
+    const chat = this.detalleActual();
     if (!chat) return 0;
     const ultimoEntrante = [...chat.mensajes].reverse().find(m => m.direccion === 'ENTRANTE');
     if (!ultimoEntrante) return 0;
@@ -337,7 +351,7 @@ export class ConversacionesStateService {
   });
 
   readonly notaMedicaFijada = computed(() => {
-    const chat = this.detalle.value();
+    const chat = this.detalleActual();
     if (!chat) return null;
     const datos = chat.cliente.datosExtra;
     const texto = textoExtra(datos, 'notaFijada');
@@ -347,7 +361,7 @@ export class ConversacionesStateService {
   readonly coincidenciasChat = computed(() => {
     const query = this.busquedaChat().trim().toLowerCase();
     if (!query) return [];
-    const chat = this.detalle.value();
+    const chat = this.detalleActual();
     if (!chat) return [];
     const matches: string[] = [];
     for (const m of chat.mensajes) {
@@ -359,7 +373,7 @@ export class ConversacionesStateService {
   });
 
   readonly mensajesConFecha = computed<ItemHilo[]>(() => {
-    const chat = this.detalle.value();
+    const chat = this.detalleActual();
     if (!chat) return [];
 
     const result: ItemHilo[] = [];
@@ -469,7 +483,7 @@ export class ConversacionesStateService {
        tope; si no, es que ya no va. */
     this.paginasExtra.update(lista => lista.filter(c => c.id !== conversacionId));
 
-    const pagina = this.inbox.value();
+    const pagina = this.paginaInbox();
     const sinEsta = pagina.datos.filter(c => c.id !== conversacionId);
 
     this.inbox.set({
@@ -497,7 +511,7 @@ export class ConversacionesStateService {
   }
 
   async cargarHistorialAnterior(): Promise<number> {
-    const chat = this.detalle.value();
+    const chat = this.detalleActual();
     const id = this.seleccionadaId();
     if (!chat || !id || this.cargandoHistorial() || !this.hayMasHistorial()) return 0;
 
@@ -514,7 +528,7 @@ export class ConversacionesStateService {
       );
 
       if (this.contextoChat() !== contexto) return 0;
-      const actual = this.detalle.value();
+      const actual = this.detalleActual();
       if (!actual || actual.id !== id) return 0;
       if (anteriores.length < LOTE_HISTORIAL) {
         this.hayMasHistorial.set(false);
@@ -550,7 +564,7 @@ export class ConversacionesStateService {
       this.detalle.reload();
       this.inbox.reload();
       this.dropdownAgenteAbierto.set(false);
-      const agente = this.agentes.value().find(a => a.id === agenteId);
+      const agente = this.agentesActuales().find(a => a.id === agenteId);
       this.toastService.success(
         agenteId ? `Conversación asignada a ${agente?.nombre ?? 'agente'}.` : 'Conversación movida a sin asignar.',
       );
@@ -562,7 +576,7 @@ export class ConversacionesStateService {
   }
 
   async guardarNotaFijada(): Promise<void> {
-    const chat = this.detalle.value();
+    const chat = this.detalleActual();
     if (!chat || this.guardandoNotaFijada()) return;
 
     const texto = this.editNotaFijada().trim();
@@ -586,7 +600,7 @@ export class ConversacionesStateService {
   }
 
   iniciarEdicionFicha(): void {
-    const chat = this.detalle.value();
+    const chat = this.detalleActual();
     if (!chat) return;
     const c = chat.cliente;
     this.editNombre.set(c.nombre);
@@ -607,7 +621,7 @@ export class ConversacionesStateService {
   }
 
   async guardarFicha(): Promise<void> {
-    const chat = this.detalle.value();
+    const chat = this.detalleActual();
     if (!chat || this.guardandoFicha()) return;
 
     const nombre = this.editNombre().trim();
@@ -700,7 +714,7 @@ export class ConversacionesStateService {
    * dos reloads no pierde nada, solo el viaje redundante.
    */
   reconciliarEnvioLocal(conversacionId: string, idOptimista: string | null, real: MensajeApi): void {
-    const chat = this.detalle.value();
+    const chat = this.detalleActual();
     if (chat && chat.id === conversacionId) {
       /*
        * El backend llama `emitirActividad()` de forma SÍNCRONA e
@@ -744,7 +758,7 @@ export class ConversacionesStateService {
       this.versionEnvioPropio.update(v => v + 1);
     }
 
-    const pagina = this.inbox.value();
+    const pagina = this.paginaInbox();
     const actual =
       pagina.datos.find(c => c.id === conversacionId) ??
       this.paginasExtra().find(c => c.id === conversacionId);

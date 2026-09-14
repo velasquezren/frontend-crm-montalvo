@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_URL } from '../../../core/api/api.constants';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ConversacionDetalle, MensajeApi, PaginaInbox } from '../conversacion.model';
+import { ErrorCanalWhatsapp } from '../validar-canal';
 import { ConversacionesStateService } from './conversaciones-state.service';
 
 const FECHA = '2026-09-09T15:00:00.000Z';
@@ -201,6 +202,55 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     expect(state.seleccionadaId()).toBeNull();
     expect(state.detalle.value()).toBeNull();
     expect(state.conversacionesFiltradas()).toEqual([]);
+  });
+
+  it.each([undefined, null])('rechaza una bandeja sin línea (%s) y se recupera al reintentar', async linea => {
+    state.inbox.reload();
+    TestBed.tick();
+    responder('/conversaciones', { ...PAGINA, datos: [{ ...CHAT, linea }] });
+    await app.whenStable();
+    expect(state.inbox.error()).toBeInstanceOf(ErrorCanalWhatsapp);
+    expect(state.conversacionesFiltradas()).toEqual([]);
+    expect(state.stats().total).toBe(0);
+    expect(state.errorInbox()).toContain('identificar la línea');
+
+    state.inbox.reload();
+    TestBed.tick();
+    responder('/conversaciones', structuredClone(PAGINA));
+    await app.whenStable();
+    expect(state.inbox.error()).toBeUndefined();
+    expect(state.conversacionesFiltradas()).toEqual([CHAT]);
+  });
+
+  it('impide usar el detalle sin canal y mantiene los derivados seguros', async () => {
+    state.detalle.reload();
+    TestBed.tick();
+    responder('/conversaciones/chat-1', { ...CHAT, linea: undefined });
+    await app.whenStable();
+    expect(state.detalle.error()).toBeInstanceOf(ErrorCanalWhatsapp);
+    expect(state.detalleActual()).toBeNull();
+    expect(state.mensajesConFecha()).toEqual([]);
+    expect(state.plantillasWhatsApp.value()).toEqual([]);
+    expect(state.errorDetalle()).toContain('identificar la línea');
+  });
+
+  it('descarta resúmenes realtime sin canal conservando la fila válida', async () => {
+    const refresco = state.refrescarFilaPorRealtime(CHAT.id);
+    responder('/conversaciones/chat-1/resumen', {
+      conversacion: { ...CHAT, linea: undefined }, contadores: PAGINA.contadores,
+    });
+    await refresco;
+    expect(state.conversacionesFiltradas()).toEqual([CHAT]);
+  });
+
+  it('no incorpora una página siguiente sin canal', async () => {
+    state.inbox.set({ ...PAGINA, total: 2, totalPaginas: 2 });
+    const carga = state.cargarMas();
+    responder('/conversaciones', { ...PAGINA, pagina: 2, datos: [{ ...CHAT, id: 'chat-2', linea: undefined }] });
+    await carga;
+    expect(state.conversacionesFiltradas()).toEqual([CHAT]);
+    expect(state.cargandoMas()).toBe(false);
+    expect(state.hayMasConversaciones()).toBe(true);
   });
 
 });

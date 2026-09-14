@@ -1,3 +1,4 @@
+import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -55,6 +56,7 @@ export function debeRefrescar(ticks: number, conectado: boolean, oculto: boolean
 @Component({
   selector: 'app-conversaciones',
   imports: [
+    ErrorCargaComponent,
     ConversacionListaComponent,
     ConversacionThreadComponent,
     ConversacionComposerComponent,
@@ -247,6 +249,7 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
   }
 
   private refrescar(): void {
+    if (this.state.lineas.error()) this.state.lineas.reload();
     this.state.inbox.reload();
     if (this.state.seleccionadaId()) {
       this.state.detalle.reload();

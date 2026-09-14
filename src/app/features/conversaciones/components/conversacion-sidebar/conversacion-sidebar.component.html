@@ -1,4 +1,4 @@
-@if (state.panelAbierto() && !!state.detalle.value()) {
+@if (state.panelAbierto() && !!state.detalleActual()) {
   <div
     class="xl:hidden fixed inset-0 bg-black/40 z-40 animate-fade-in cursor-pointer"
     (click)="togglePanel()"
@@ -6,7 +6,7 @@
 }
 
 <!-- ── Panel derecho: ficha del cliente + asignación ─────────────── -->
-@if (state.detalle.value(); as chat) {
+@if (state.detalleActual(); as chat) {
   <aside class="client-panel" id="ficha-paciente">
     <!-- Top header del Drawer para cerrar en pantallas < 1280px -->
     <div class="xl:hidden flex items-center justify-between p-3.5 border-b border-border bg-white shrink-0">

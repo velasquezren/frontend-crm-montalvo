@@ -336,7 +336,7 @@ export class ConversacionComposerComponent implements OnDestroy {
 
     const contexto = this.state.contextoChat();
     this.state.enviando.set(true);
-    const chatPrevio = this.state.detalle.value();
+    const chatPrevio = this.state.detalleActual();
     const idOptimista = `temp-${Date.now()}`;
 
     // Actualización optimista de la UI
@@ -390,7 +390,7 @@ export class ConversacionComposerComponent implements OnDestroy {
 
   /* ── Inserción de Respuestas Rápidas ───────────────────────────── */
   protected insertarPlantillaAgente(contenido: string): void {
-    const chat = this.state.detalle.value();
+    const chat = this.state.detalleActual();
     const nombre = chat?.cliente.nombre ? chat.cliente.nombre.split(' ')[0] : 'paciente';
     const procesado = contenido.replace(/\{\{\s*nombre\s*\}\}/gi, nombre);
     this.state.mensajeNuevo.set(procesado);

@@ -1,4 +1,4 @@
-@if (state.detalle.value()?.linea; as linea) {
+@if (state.detalleActual()?.linea; as linea) {
   <p class="text-xs text-text-muted px-4 py-2 border-t border-border">Respondiendo desde {{ linea.nombre }} · {{ linea.telefono }}</p>
 }
 <div
@@ -399,14 +399,14 @@
         <div class="min-w-0 flex-1">
           <span class="text-[10px] uppercase font-bold text-text-muted block">Destinatario</span>
           <p class="text-xs font-bold text-text-dark truncate">
-            @if (state.detalle.value()?.cliente; as cli) {
+            @if (state.detalleActual()?.cliente; as cli) {
               {{ cli | nombreCliente }}
             } @else {
               Paciente
             }
           </p>
         </div>
-        @if (state.detalle.value()?.cliente?.telefono; as tel) {
+        @if (state.detalleActual()?.cliente?.telefono; as tel) {
           <span class="crm-meta-clave text-xs text-text-muted shrink-0 ml-2">{{ tel }}</span>
         }
       </div>
