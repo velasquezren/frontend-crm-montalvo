@@ -90,26 +90,22 @@
 
     <div class="flex items-center justify-between sm:justify-end gap-2 sm:gap-2.5 w-full sm:w-auto">
       <!-- Segmented Control de Vista -->
-      <div class="flex items-center p-1 bg-bg-workspace rounded-xl border border-border flex-1 sm:flex-initial" role="group" aria-label="Modo de visualización">
+      <div class="crm-segmento crm-segmento-igual flex-1 sm:flex-initial" role="group" aria-label="Modo de visualización">
         <button
           type="button"
-          (click)="vista.set('LISTA')"
-          class="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex-1 sm:flex-initial"
-          [class.bg-white]="vista() === 'LISTA'"
-          [class.text-text-dark]="vista() === 'LISTA'"
-          [class.shadow-subtle]="vista() === 'LISTA'"
-          [class.text-text-muted]="vista() !== 'LISTA'">
+          class="crm-segmento-opcion"
+          [class.crm-segmento-opcion-activo]="vista() === 'LISTA'"
+          [attr.aria-pressed]="vista() === 'LISTA'"
+          (click)="vista.set('LISTA')">
           <app-icon name="file-text" [size]="14" />
           <span>Lista</span>
         </button>
         <button
           type="button"
-          (click)="vista.set('CALENDARIO')"
-          class="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex-1 sm:flex-initial"
-          [class.bg-white]="vista() === 'CALENDARIO'"
-          [class.text-text-dark]="vista() === 'CALENDARIO'"
-          [class.shadow-subtle]="vista() === 'CALENDARIO'"
-          [class.text-text-muted]="vista() !== 'CALENDARIO'">
+          class="crm-segmento-opcion"
+          [class.crm-segmento-opcion-activo]="vista() === 'CALENDARIO'"
+          [attr.aria-pressed]="vista() === 'CALENDARIO'"
+          (click)="vista.set('CALENDARIO')">
           <app-icon name="calendar" [size]="14" />
           <span>Calendario</span>
         </button>
@@ -117,14 +113,14 @@
 
       <!-- Botón Limpiar Filtros -->
       @if (tieneFiltrosActivos()) {
-        <button
-          type="button"
-          (click)="limpiarTodosLosFiltros()"
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-xs font-medium text-text-muted hover:text-critical hover:border-critical/30 hover:bg-critical-bg transition-colors cursor-pointer shrink-0"
-          title="Restablecer todos los filtros">
-          <app-icon name="x" [size]="13" />
-          <span class="hidden xs:inline">Limpiar</span>
-        </button>
+        <app-button
+          variant="critical"
+          size="sm"
+          icon="x"
+          title="Restablecer todos los filtros"
+          (clicked)="limpiarTodosLosFiltros()">
+          Limpiar
+        </app-button>
       }
     </div>
   </div>
@@ -217,11 +213,11 @@
           @for (actividad of actividades.value().datos; track actividad.id) {
             <tr
               class="cursor-pointer hover:bg-bg-workspace/60 transition-colors"
-              [class.bg-critical-bg/20]="esVencida(actividad)"
+              [class.crm-vencida]="esVencida(actividad)"
               (click)="abrirDetalle(actividad)">
               <td class="text-left">
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-bg-light border border-border/70 text-text-dark">
-                  <app-icon [name]="tipoIcono[actividad.tipo]" [size]="13" class="text-primary" />
+                <span class="crm-tipo">
+                  <app-icon [name]="tipoIcono[actividad.tipo]" [size]="14" />
                   {{ tiposLabel[actividad.tipo] }}
                 </span>
               </td>
@@ -235,25 +231,17 @@
                 <div class="flex items-center gap-2.5">
                   <app-avatar [initials]="actividad.cliente | inicialesCliente" [nombre]="actividad.cliente | nombreCliente" size="sm" />
                   <div class="min-w-0">
-                    <div class="flex items-center gap-1.5">
-                      <span class="font-medium text-xs text-text-dark truncate">{{ actividad.cliente | nombreCliente }}</span>
+                    <span class="block font-medium text-xs text-text-dark truncate">{{ actividad.cliente | nombreCliente }}</span>
+                    <!-- PAC y teléfono son datos de apoyo, no estados: van en
+                         `.crm-meta` con separador del CSS. La acción de WhatsApp
+                         vive en la columna de acciones, que es donde viven las
+                         acciones. -->
+                    <span class="crm-meta crm-meta-sm">
                       @if (actividad.cliente.pac) {
-                        <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-primary/10 text-primary border border-primary/20 shrink-0">
-                          {{ actividad.cliente.pac }}
-                        </span>
+                        <span class="crm-meta-clave">{{ actividad.cliente.pac }}</span>
                       }
-                    </div>
-                    <div class="flex items-center gap-2 mt-0.5">
-                      <a
-                        [href]="getWhatsappLink(actividad.cliente.telefono)"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
-                        title="Abrir WhatsApp con paciente">
-                        <app-icon name="message-circle" [size]="11" />
-                        {{ actividad.cliente.telefono }}
-                      </a>
-                    </div>
+                      <span class="crm-meta-clave">{{ actividad.cliente.telefono }}</span>
+                    </span>
                   </div>
                 </div>
               </td>
@@ -297,13 +285,17 @@
                       title="Posponer 24 horas"
                       (clicked)="reprogramarRapido(actividad, 24)" />
                   }
-                  <app-button
-                    variant="ghost"
-                    size="sm"
-                    [circle]="true"
-                    icon="eye"
-                    title="Ver detalle 360°"
-                    (clicked)="abrirDetalle(actividad)" />
+                  <!-- El "ojo" se fue: la fila entera ya abre el detalle, así que
+                       era un control redundante ocupando sitio en cada fila. -->
+                  <a
+                    [href]="getWhatsappLink(actividad.cliente.telefono)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="crm-accion-enlace crm-accion-enlace-whatsapp"
+                    [attr.aria-label]="'Abrir WhatsApp con ' + (actividad.cliente | nombreCliente)"
+                    title="Abrir WhatsApp">
+                    <app-icon name="message-circle" [size]="14" />
+                  </a>
                   <app-button
                     variant="ghost"
                     size="sm"
@@ -332,15 +324,14 @@
         @let rel = formatoFechaRelativa(actividad.fechaProgramada);
         <div
           class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-3 cursor-pointer hover:border-primary/40 transition-colors"
-          [class.border-l-4]="rel.urgente"
-          [class.border-l-text-critical]="rel.urgente"
+          [class.crm-vencida]="rel.urgente"
           (click)="abrirDetalle(actividad)">
 
           <!-- Cabecera Móvil: Tipo + Momento + Estado -->
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-1.5 min-w-0">
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold bg-bg-light text-primary border border-border">
-                <app-icon [name]="tipoIcono[actividad.tipo]" [size]="12" />
+              <span class="crm-tipo">
+                <app-icon [name]="tipoIcono[actividad.tipo]" [size]="14" />
                 {{ tiposLabel[actividad.tipo] }}
               </span>
               <span
@@ -368,15 +359,13 @@
             <div class="flex items-center gap-2.5 min-w-0">
               <app-avatar [initials]="actividad.cliente | inicialesCliente" [nombre]="actividad.cliente | nombreCliente" size="sm" />
               <div class="min-w-0">
-                <div class="flex items-center gap-1.5">
-                  <span class="text-xs font-semibold text-text-dark truncate">{{ actividad.cliente | nombreCliente }}</span>
+                <span class="block text-xs font-semibold text-text-dark truncate">{{ actividad.cliente | nombreCliente }}</span>
+                <span class="crm-meta crm-meta-sm">
                   @if (actividad.cliente.pac) {
-                    <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-primary/10 text-primary border border-primary/20 shrink-0">
-                      {{ actividad.cliente.pac }}
-                    </span>
+                    <span class="crm-meta-clave">{{ actividad.cliente.pac }}</span>
                   }
-                </div>
-                <span class="text-[11px] text-text-muted font-mono">{{ actividad.cliente.telefono }}</span>
+                  <span class="crm-meta-clave">{{ actividad.cliente.telefono }}</span>
+                </span>
               </div>
             </div>
 
@@ -386,13 +375,15 @@
                 [href]="getWhatsappLink(actividad.cliente.telefono)"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors"
+                class="crm-accion-enlace crm-accion-enlace-whatsapp"
+                [attr.aria-label]="'Abrir WhatsApp con ' + (actividad.cliente | nombreCliente)"
                 title="Abrir WhatsApp">
                 <app-icon name="message-circle" [size]="15" />
               </a>
               <a
                 [href]="'tel:' + actividad.cliente.telefono"
-                class="w-8 h-8 rounded-full bg-bg-light text-text-dark flex items-center justify-center hover:bg-border/60 transition-colors"
+                class="crm-accion-enlace"
+                [attr.aria-label]="'Llamar a ' + (actividad.cliente | nombreCliente)"
                 title="Llamar">
                 <app-icon name="phone" [size]="15" />
               </a>
@@ -406,36 +397,38 @@
             </span>
 
             <div class="flex items-center gap-1">
+              <!-- `<app-button>`, no `<button>` a mano: eran cinco controles con cinco
+                   mezclas propias de utilidades, ninguna igual a la de escritorio.
+                   Es la regla de oro de `crm-design-system`. -->
               @if (actividad.estado === 'PENDIENTE') {
-                <button
-                  type="button"
-                  (click)="cambiarEstado(actividad, 'COMPLETADA')"
-                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary text-white hover:bg-primary-hover transition-colors shadow-subtle cursor-pointer">
-                  <app-icon name="check" [size]="12" />
-                  <span>Completar</span>
-                </button>
-                <button
-                  type="button"
-                  (click)="reprogramarRapido(actividad, 24)"
-                  class="p-1.5 rounded-full border border-border text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
-                  title="Posponer 24 h">
-                  <app-icon name="clock" [size]="14" />
-                </button>
+                <app-button size="sm" icon="check" (clicked)="cambiarEstado(actividad, 'COMPLETADA')">
+                  Completar
+                </app-button>
+                <app-button
+                  variant="ghost"
+                  size="sm"
+                  [circle]="true"
+                  icon="clock"
+                  ariaLabel="Posponer 24 horas"
+                  title="Posponer 24 h"
+                  (clicked)="reprogramarRapido(actividad, 24)" />
               }
-              <button
-                type="button"
-                (click)="abrirEdicion(actividad)"
-                class="p-1.5 rounded-full border border-border text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
-                title="Editar">
-                <app-icon name="edit" [size]="14" />
-              </button>
-              <button
-                type="button"
-                (click)="eliminar(actividad)"
-                class="p-1.5 rounded-full border border-border text-text-muted hover:text-critical hover:bg-critical-bg transition-colors cursor-pointer"
-                title="Eliminar">
-                <app-icon name="trash" [size]="14" />
-              </button>
+              <app-button
+                variant="ghost"
+                size="sm"
+                [circle]="true"
+                icon="edit"
+                ariaLabel="Editar actividad"
+                title="Editar"
+                (clicked)="abrirEdicion(actividad)" />
+              <app-button
+                variant="ghost"
+                size="sm"
+                [circle]="true"
+                icon="trash"
+                ariaLabel="Eliminar actividad"
+                title="Eliminar"
+                (clicked)="eliminar(actividad)" />
             </div>
           </div>
         </div>
@@ -902,60 +895,40 @@
         <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-2.5">
           <h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">Acciones Rápidas</h4>
 
+          <!-- `<app-button>` en todo el bloque. Eran NUEVE `<button>` a mano, todos
+               `rounded-xl` cuando la geometría del sistema dice píldora siempre
+               (§3.2), y cada uno con su propia mezcla de utilidades. La variante
+               `critical` del átomo nació justo de los dos destructivos de aquí. -->
           @if (act.estado === 'PENDIENTE') {
-            <!-- Super acción: Completar y agendar siguiente paso -->
-            <button
-              type="button"
-              (click)="completarYAgendarSiguiente(act)"
-              class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-hover shadow-subtle cursor-pointer transition-colors">
-              <app-icon name="check-circle" [size]="16" />
-              <span>Completar y agendar siguiente paso</span>
-            </button>
+            <app-button
+              icon="check-circle"
+              [fullWidth]="true"
+              (clicked)="completarYAgendarSiguiente(act)">
+              Completar y agendar siguiente paso
+            </app-button>
 
             <div class="grid grid-cols-2 gap-2 pt-1">
-              <button
-                type="button"
-                (click)="cambiarEstado(act, 'COMPLETADA')"
-                class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-semibold text-text-dark hover:bg-bg-light transition-colors cursor-pointer">
-                <app-icon name="check" [size]="14" class="text-primary" />
-                <span>Solo completar</span>
-              </button>
-
-              <button
-                type="button"
-                (click)="reprogramarRapido(act, 24)"
-                class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-semibold text-text-dark hover:bg-bg-light transition-colors cursor-pointer">
-                <app-icon name="clock" [size]="14" class="text-secondary" />
-                <span>Posponer 24 h</span>
-              </button>
+              <app-button variant="secondary" size="sm" icon="check" (clicked)="cambiarEstado(act, 'COMPLETADA')">
+                Solo completar
+              </app-button>
+              <app-button variant="secondary" size="sm" icon="clock" (clicked)="reprogramarRapido(act, 24)">
+                Posponer 24 h
+              </app-button>
             </div>
 
             <div class="grid grid-cols-2 gap-2 pt-1">
-              <button
-                type="button"
-                (click)="cerrarDetalle(); abrirEdicion(act)"
-                class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-semibold text-text-dark hover:bg-bg-light transition-colors cursor-pointer">
-                <app-icon name="edit" [size]="14" />
-                <span>Editar detalles</span>
-              </button>
-
-              <button
-                type="button"
-                (click)="cambiarEstado(act, 'CANCELADA')"
-                class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-critical/30 text-xs font-semibold text-critical hover:bg-critical-bg transition-colors cursor-pointer">
-                <app-icon name="x" [size]="14" />
-                <span>Cancelar actividad</span>
-              </button>
+              <app-button variant="secondary" size="sm" icon="edit" (clicked)="cerrarDetalle(); abrirEdicion(act)">
+                Editar detalles
+              </app-button>
+              <app-button variant="critical" size="sm" icon="x" (clicked)="cambiarEstado(act, 'CANCELADA')">
+                Cancelar actividad
+              </app-button>
             </div>
 
             <div class="pt-1">
-              <button
-                type="button"
-                (click)="eliminar(act)"
-                class="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-medium text-text-muted hover:text-critical hover:bg-critical-bg transition-colors cursor-pointer">
-                <app-icon name="trash" [size]="14" />
-                <span>Eliminar actividad</span>
-              </button>
+              <app-button variant="critical" size="sm" icon="trash" [fullWidth]="true" (clicked)="eliminar(act)">
+                Eliminar actividad
+              </app-button>
             </div>
           } @else if (act.estado === 'COMPLETADA') {
             <div class="p-3 rounded-xl bg-primary/10 border border-primary/20 text-xs text-primary font-medium flex items-center gap-2">
@@ -963,34 +936,25 @@
               <span>Actividad completada{{ act.completadaEn ? ' el ' + (act.completadaEn | date: 'd MMM, HH:mm') : '' }}.</span>
             </div>
 
-            <button
-              type="button"
-              (click)="cerrarDetalle(); abrirCreacion(); elegirCliente({ id: act.cliente.id, nombre: act.cliente.nombre, telefono: act.cliente.telefono })"
-              class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-hover transition-colors cursor-pointer">
-              <app-icon name="plus" [size]="16" />
-              <span>Agendar nuevo seguimiento</span>
-            </button>
+            <app-button
+              icon="plus"
+              [fullWidth]="true"
+              (clicked)="cerrarDetalle(); abrirCreacion(); elegirCliente({ id: act.cliente.id, nombre: act.cliente.nombre, telefono: act.cliente.telefono })">
+              Agendar nuevo seguimiento
+            </app-button>
 
-            <button
-              type="button"
-              (click)="eliminar(act)"
-              class="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-medium text-text-muted hover:text-critical hover:bg-critical-bg transition-colors cursor-pointer">
-              <app-icon name="trash" [size]="14" />
-              <span>Eliminar actividad</span>
-            </button>
+            <app-button variant="critical" size="sm" icon="trash" [fullWidth]="true" (clicked)="eliminar(act)">
+              Eliminar actividad
+            </app-button>
           } @else {
             <div class="p-3 rounded-xl bg-bg-light border border-border text-xs text-text-muted font-medium flex items-center gap-2">
               <app-icon name="x-circle" [size]="16" />
               <span>Actividad cancelada.</span>
             </div>
 
-            <button
-              type="button"
-              (click)="eliminar(act)"
-              class="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-medium text-text-muted hover:text-critical hover:bg-critical-bg transition-colors cursor-pointer">
-              <app-icon name="trash" [size]="14" />
-              <span>Eliminar del registro</span>
-            </button>
+            <app-button variant="critical" size="sm" icon="trash" [fullWidth]="true" (clicked)="eliminar(act)">
+              Eliminar del registro
+            </app-button>
           }
         </div>
       </div>

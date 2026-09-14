@@ -1,10 +1,17 @@
-<!-- Leyenda de colores del calendario -->
-<div class="flex flex-wrap items-center gap-4 mb-3 px-1" aria-hidden="true">
-  <span class="crm-leyenda-item"><span class="crm-leyenda-punto crm-leyenda-punto--primaria"></span>A tiempo</span>
-  <span class="crm-leyenda-item"><span class="crm-leyenda-punto crm-leyenda-punto--critica"></span>Vencida</span>
-  <span class="crm-leyenda-item"><span class="crm-leyenda-punto crm-leyenda-punto--secundaria"></span>Completada</span>
-  <span class="crm-leyenda-item"><span class="crm-leyenda-punto crm-leyenda-punto--neutral"></span>Cancelada</span>
-</div>
-<div class="crm-calendario-wrapper">
-  <sx-calendar [calendarApp]="calendarApp" />
-</div>
+<!-- Una sola superficie: el calendario y su leyenda son la misma tarjeta, con la
+     geometría del sistema (rounded-2xl + border-border + shadow-subtle). Antes la
+     leyenda era una fila suelta encima, que flotaba sin pertenecer a nada. -->
+<section class="crm-calendario">
+  <div class="crm-calendario-lienzo">
+    <sx-calendar [calendarApp]="calendarApp" />
+  </div>
+
+  <footer class="crm-calendario-leyenda" aria-hidden="true">
+    @for (tono of tonos; track tono.id) {
+      <span class="crm-leyenda-item">
+        <span class="crm-leyenda-punto" [style.background]="tono.color"></span>
+        {{ tono.etiqueta }}
+      </span>
+    }
+  </footer>
+</section>

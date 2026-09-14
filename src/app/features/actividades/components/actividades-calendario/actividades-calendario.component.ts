@@ -51,11 +51,49 @@ const TRADUCCION_ES = {
 };
 
 /** El `calendarId` decide el color del evento — solo tonos de la paleta cerrada (ver `crm-design-system`). */
-function calendarioDe(a: Actividad): string {
+function calendarioDe(a: Actividad): TonoCalendario {
   if (a.estado === 'CANCELADA') return 'neutral';
   if (a.estado === 'COMPLETADA') return 'secundaria';
   return esActividadVencida(a) ? 'critica' : 'primaria';
 }
+
+/**
+ * Los cuatro tonos del calendario — **fuente única**.
+ *
+ * Antes esto vivía duplicado: los `calendars` de Schedule-X en este archivo con
+ * SIETE hexadecimales literales (`#006156`, `#EAF7F5`, `#39ADA3`…) y la leyenda
+ * en el HTML con cuatro clases modificadoras propias en el CSS. Los tres sitios
+ * decían lo mismo y ninguno sabía de los otros: cambiar el verde de marca en
+ * `styles.css` dejaba el calendario y su leyenda con el color viejo, sin que
+ * nada avisara —los hexes estaban EN la paleta, así que el validador los daba
+ * por buenos—.
+ *
+ * Ahora los colores son referencias a los tokens, no copias. Se puede porque
+ * Schedule-X no hace aritmética con ellos: `setColors()` hace un
+ * `setProperty('--sx-color-x', valor)` plano sobre `documentElement`, que es
+ * donde `@theme` define los `--color-*`. Verificado en su fuente
+ * (`@schedule-x/calendar/dist/core.js`), no supuesto.
+ */
+const TONOS = [
+  { id: 'primaria', etiqueta: 'A tiempo', color: 'var(--color-primary)', fondo: 'var(--color-bg-light)' },
+  { id: 'secundaria', etiqueta: 'Completada', color: 'var(--color-secondary)', fondo: 'var(--color-bg-light)' },
+  { id: 'critica', etiqueta: 'Vencida', color: 'var(--color-text-critical)', fondo: 'var(--color-critical-bg)' },
+  { id: 'neutral', etiqueta: 'Cancelada', color: 'var(--color-text-muted)', fondo: 'var(--color-bg-workspace)' },
+] as const satisfies ReadonlyArray<{ id: string; etiqueta: string; color: string; fondo: string }>;
+
+type TonoCalendario = (typeof TONOS)[number]['id'];
+
+/** Los `calendars` de Schedule-X, armados desde `TONOS` para que no puedan divergir. */
+const CALENDARIOS = Object.fromEntries(
+  TONOS.map(t => [
+    t.id,
+    {
+      colorName: t.id,
+      label: t.etiqueta,
+      lightColors: { main: t.color, container: t.fondo, onContainer: 'var(--color-text-dark)' },
+    },
+  ]),
+);
 
 function aEventoCalendario(a: Actividad): CalendarEventExternal {
   const inicio = Temporal.Instant.from(a.fechaProgramada).toZonedDateTimeISO(ZONA);
@@ -118,6 +156,9 @@ export class ActividadesCalendarioComponent {
   /** Clic en un evento — la página abre su cajón de detalle. */
   readonly seleccionada = output<Actividad>();
 
+  /** La leyenda se pinta desde los mismos cuatro tonos que colorean los eventos. */
+  protected readonly tonos = TONOS;
+
   private readonly eventosServicio = createEventsServicePlugin();
 
   protected readonly calendarApp: CalendarApp = createCalendar(
@@ -128,28 +169,7 @@ export class ActividadesCalendarioComponent {
       locale: 'es-ES',
       translations: { 'es-ES': TRADUCCION_ES },
       firstDayOfWeek: 1,
-      calendars: {
-        primaria: {
-          colorName: 'primaria',
-          label: 'A tiempo',
-          lightColors: { main: '#006156', container: '#EAF7F5', onContainer: '#006156' },
-        },
-        secundaria: {
-          colorName: 'secundaria',
-          label: 'Completada',
-          lightColors: { main: '#39ADA3', container: '#EAF7F5', onContainer: '#006156' },
-        },
-        critica: {
-          colorName: 'critica',
-          label: 'Vencida',
-          lightColors: { main: '#000000', container: '#F8F9FA', onContainer: '#1F2937' },
-        },
-        neutral: {
-          colorName: 'neutral',
-          label: 'Cancelada',
-          lightColors: { main: '#6B7280', container: '#F8F9FA', onContainer: '#1F2937' },
-        },
-      },
+      calendars: CALENDARIOS,
       callbacks: {
         onEventClick: evento => {
           const actividad = this.actividades().find(a => a.id === evento.id);

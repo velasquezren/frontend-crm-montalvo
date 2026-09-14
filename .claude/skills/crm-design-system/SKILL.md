@@ -123,7 +123,8 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 
 | Componente | Selector | API |
 |---|---|---|
-| Button | `<app-button>` | `variant` (primary/secondary/ghost), `size`, `type`, `icon`, `loading`, `disabled`, `fullWidth`, `circle`, **`ariaLabel`** (obligatorio en los solo-ícono: sin texto proyectado el lector de pantalla solo dice "botón") · `(clicked)` |
+| Button | `<app-button>` | `variant` (primary/secondary/ghost/**critical** — destructiva; negro de paleta, no rojo), `size`, `type`, `icon`, `loading`, `disabled`, `fullWidth`, `circle`, **`ariaLabel`** (obligatorio en los solo-ícono: sin texto proyectado el lector de pantalla solo dice "botón") · `(clicked)` |
+| Switch | `<app-switch>` | `disabled`, `ariaLabel` · `[(value)]` — enciende/apaga una capacidad. `role="switch"`, no un checkbox: un checkbox marca una opción de un conjunto, un switch activa algo |
 | Select | `<app-select>` | `label`, `size` (sm=filtro de barra / md=campo de formulario), `icono`, `disabled`, `fullWidth`, `ariaLabel`, `activo` (filtro con valor puesto: se tiñe de primario) · `[(value)]` · proyecta sus `<option>` — **el único desplegable**; no escribas un `<select>` a mano |
 | Input | `<app-input>` | `label`, `type` (incl. password con toggle), `placeholder`, `autocomplete`, `error`, `disabled`, `multiline` (renderiza `<textarea>` en vez de `<input>`, mismo wrapper/label/error), `rows` (solo con `multiline`) · `[(value)]` |
 | Badge | `<app-badge>` | `variant` (success/info/neutral/critical), `icon` |
@@ -315,10 +316,21 @@ número, era que la misma forma decía tres cosas incompatibles. Elegí cuál es
 | Un **dato de apoyo** (teléfono, PAC, canal, agente) | `.crm-meta` / `.crm-meta-clave`, y `.crm-meta-sm` en tarjetas |
 | Algo que la agente **teclea** (atajo de Mi Memoria) | `.crm-atajo` |
 | La **medalla** #1/#2/#3 sobre un avatar | `.crm-medalla` (el color sigue viniendo del `.ts`) |
+| La **categoría** de una fila (tipo de actividad) | `.crm-tipo` — ícono + palabra, **sin cápsula**: la cápsula es del estado |
+| Una **acción de contacto** (`<a>` a WhatsApp o `tel:`) | `.crm-accion-enlace` (+ `-whatsapp`). Son enlaces, no botones: abren otra app y se copian |
+| Una fila o tarjeta **vencida** | `.crm-vencida` — filo izquierdo, no fondo teñido |
+| Un **control segmentado** (Lista/Calendario, Bs/USD) | `.crm-segmento` + `.crm-segmento-opcion` (+ `-activo`) |
 
 `check:skills` rechaza cualquier `class` que junte `rounded-full` con un tamaño
 de texto de 11px o menos, fuera de `shared/components/`. Los átomos arman sus
 clases en el `.ts`, así que no caen en la red.
+
+> **La red tiene un hueco conocido: solo mira `rounded-full`.** La misma cápsula
+> escrita con `rounded` a secas la esquiva, y así vivía la píldora de PAC de
+> Actividades —`px-1.5 py-0.5 rounded text-[10px] font-mono … bg-primary/10`,
+> copiada byte a byte en la tabla y en la tarjeta móvil— hasta el 2026-09-14.
+> Si ves un radio cualquiera con texto diminuto, decide qué es con la tabla de
+> arriba aunque el build no se queje.
 
 **Ojo con `.crm-meta` y la cascada**: vive fuera de toda `@layer` y Tailwind pone
 sus utilidades en `@layer utilities`, así que su `font-size` **le gana** a un

@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   signal,
   OnDestroy,
@@ -22,6 +23,10 @@ import { PaginatorComponent } from '../../shared/components/paginator/paginator.
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
+import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
+import { IconComponent } from '../../shared/components/icon/icon.component';
+import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.component';
+import { SwitchComponent } from '../../shared/components/switch/switch.component';
 import { LineaWhatsapp } from './linea-whatsapp.model';
 import { LineasWhatsappService } from './lineas-whatsapp.service';
 
@@ -38,6 +43,10 @@ import { LineasWhatsappService } from './lineas-whatsapp.service';
     LoadingSkeletonComponent,
     ErrorCargaComponent,
     EmptyStateComponent,
+    DrawerComponent,
+    IconComponent,
+    KpiCardComponent,
+    SwitchComponent,
   ],
   templateUrl: './lineas-whatsapp.page.html',
 })
@@ -55,6 +64,15 @@ export class LineasWhatsappPage implements OnDestroy {
     () => this.service.listarRequest(this.pagina()),
     { defaultValue: paginaVacia<LineaWhatsapp>() },
   );
+  /** Las dos cifras del resumen salen de la página ya cargada: cero peticiones
+   *  nuevas (ver `crm-rendimiento`, «lo que mueve la aguja es no pedir»). */
+  protected readonly totalConectadas = computed(
+    () => this.lineas.value().datos.filter(l => l.conectada).length,
+  );
+  protected readonly totalPendientes = computed(
+    () => this.lineas.value().datos.length - this.totalConectadas(),
+  );
+
   protected readonly seleccionada = signal<LineaWhatsapp | null>(null);
   protected readonly nombre = signal('');
   protected readonly telefono = signal('');
@@ -75,7 +93,7 @@ export class LineasWhatsappPage implements OnDestroy {
     this.activa.set(linea.activa);
     this.error.set('');
     this.overlay?.dispose();
-    this.overlay = this.dialog.openTemplate(template, this.vcr);
+    this.overlay = this.dialog.abrirCajon(template, this.vcr, { onClose: () => this.seleccionada.set(null) });
   }
   protected cerrar(): void {
     this.overlay?.dispose();

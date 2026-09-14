@@ -1,42 +1,38 @@
-/* Leyenda de colores del calendario — los mismos cuatro tonos que
-   `calendarioDe()` en el .ts, siempre var(--color-*), nunca un hex nuevo. */
-.crm-leyenda-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  font-weight: 500;
+/* ==========================================================================
+   Tarjeta del calendario
+   ========================================================================== */
+
+/* La tarjeta manda la geometría del sistema de diseño; el calendario vive
+   dentro y no vuelve a poner borde ni radio. `overflow: hidden` es lo que hace
+   que las esquinas redondeadas recorten de verdad la rejilla de Schedule-X. */
+.crm-calendario {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - 340px);
+  min-height: 32rem;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-subtle);
+  overflow: hidden;
 }
 
-.crm-leyenda-punto {
-  width: 8px;
-  height: 8px;
-  border-radius: 9999px;
-  flex-shrink: 0;
-}
+/* ==========================================================================
+   Schedule-X: se reestylea por sus VARIABLES, no por sus clases
+   ========================================================================== */
 
-.crm-leyenda-punto--primaria {
-  background: var(--color-primary);
-}
+/* Sus clases (`.sx__month-grid-day`…) son estables y semánticas, no hasheadas
+   —el comentario anterior de este archivo afirmaba lo contrario y era falso,
+   comprobado sobre el CSS del tema: 102 nombres legibles—. Aun así se estilan
+   por variables, que es su API pública y la única que sobrevive a una subida de
+   versión: tocar sus clases internas es acoplarse a su maquetación.
+   El tema expone 59; acá se gobiernan las que deciden color, radio, tipografía
+   y densidad. */
+.crm-calendario-lienzo {
+  flex: 1;
+  min-height: 0;
 
-.crm-leyenda-punto--secundaria {
-  background: var(--color-secondary);
-}
-
-.crm-leyenda-punto--critica {
-  background: var(--color-text-critical);
-}
-
-.crm-leyenda-punto--neutral {
-  background: var(--color-text-muted);
-}
-
-/* ── Schedule-X: se reestylea por variables CSS, nunca por sus clases
-   hasheadas (misma lección que dejó FullCalendar en Agenda Médica). Los
-   valores de abajo son SIEMPRE var(--color-*) o uno de los nueve hex de la
-   paleta cerrada — nunca un tono nuevo. */
-.crm-calendario-wrapper {
+  /* — Color: todo sale de la paleta cerrada, ningún tono nuevo — */
   --sx-color-primary: var(--color-primary);
   --sx-color-on-primary: var(--color-background);
   --sx-color-primary-container: var(--color-bg-light);
@@ -45,6 +41,10 @@
   --sx-color-on-secondary: var(--color-background);
   --sx-color-secondary-container: var(--color-bg-light);
   --sx-color-on-secondary-container: var(--color-primary);
+  --sx-color-tertiary: var(--color-text-muted);
+  --sx-color-on-tertiary: var(--color-background);
+  --sx-color-tertiary-container: var(--color-bg-workspace);
+  --sx-color-on-tertiary-container: var(--color-text-dark);
   --sx-color-surface: var(--color-background);
   --sx-color-surface-dim: var(--color-bg-workspace);
   --sx-color-surface-bright: var(--color-background);
@@ -58,16 +58,81 @@
   --sx-color-outline-variant: var(--color-border);
   --sx-color-neutral: var(--color-text-muted);
   --sx-color-neutral-variant: var(--color-border);
+  --sx-internal-color-text: var(--color-text-dark);
+  --sx-internal-color-light-gray: var(--color-border);
+  --sx-internal-color-gray-ripple-background: var(--color-bg-light);
+  --sx-color-shadow: rgb(0 0 0 / 0.08);
+  --sx-box-shadow-level3: var(--shadow-lifted);
 
-  height: calc(100dvh - 340px);
-  min-height: 32rem;
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: var(--shadow-subtle);
+  /* — Geometría: la escala del sistema (pastilla 9999 · input 12 · tarjeta 16),
+       no los radios por defecto de la librería — */
+  --sx-rounding-extra-small: 6px;
+  --sx-rounding-small: 10px;
+  --sx-rounding-extra-large: 16px;
+  --sx-border: 1px solid var(--color-border);
+
+  /* — Tipografía: la escala del CRM (base 16 / small 14), no la del tema — */
+  --sx-font-extra-small: 11px;
+  --sx-font-small: 12px;
+  --sx-font-large: 14px;
+  --sx-font-extra-large: 16px;
+  --sx-calendar-header-input-font-size: 15px;
+
+  /* — Densidad: filas compactas, el criterio de «densidad fluida» del manifiesto — */
+  --sx-spacing-padding1: 2px;
+  --sx-spacing-padding2: 6px;
+  --sx-spacing-padding3: 10px;
+  --sx-spacing-padding4: 14px;
+  --sx-spacing-padding6: 20px;
+
+  /* Una hora más alta se lee mejor en semana/día: con la altura por defecto, un
+     evento de 15 min queda más bajo que su propio texto. */
+  --sx-week-grid-hour-height: 56px;
+
+  /* El popup del selector de fecha tiene que quedar sobre el cajón de detalle. */
+  --sx-calendar-header-popup-z-index: 60;
 }
 
-.crm-calendario-wrapper sx-calendar {
+.crm-calendario-lienzo sx-calendar {
   display: block;
   height: 100%;
+  /* Los números de una rejilla van en cifras de ancho fijo: sin esto los días
+     bailan de columna en columna al cambiar de mes (§ Tipografía y números). */
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Leyenda
+   ========================================================================== */
+
+/* Pie de la misma tarjeta, sobre el fondo de trabajo: se lee como parte del
+   calendario y no como una fila huérfana encima de él. */
+.crm-calendario-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-workspace);
+}
+
+.crm-leyenda-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+/* El color lo pone `[style.background]` desde los mismos cuatro tonos que
+   colorean los eventos — por eso acá no hay una clase por tono, que era el
+   tercer sitio donde la paleta estaba copiada. */
+.crm-leyenda-punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  flex-shrink: 0;
 }

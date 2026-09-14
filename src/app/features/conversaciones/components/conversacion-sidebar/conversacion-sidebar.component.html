@@ -193,7 +193,7 @@
               icon="shopping-bag"
               [fullWidth]="true"
               (clicked)="abrirModalVenta(modalVentaChatTemplate)">
-              + Registrar Venta
+              Registrar Venta
             </app-button>
             <app-button
               variant="secondary"
@@ -201,18 +201,22 @@
               icon="calendar"
               [fullWidth]="true"
               (clicked)="abrirModalActividad(modalActividadChatTemplate)">
-              + Agendar Recordatorio
+              Agendar Recordatorio
             </app-button>
           </div>
 
-          <!-- Botón flotante para editar ficha -->
-          <button
-            type="button"
-            (click)="state.iniciarEdicionFicha()"
-            class="absolute top-3 right-3 p-1.5 rounded-lg border border-border/80 bg-white text-text-muted hover:text-primary hover:border-primary/30 transition-all cursor-pointer shadow-subtle"
-            title="Editar ficha del cliente">
-            <app-icon name="edit" [size]="14" />
-          </button>
+          <!-- Botón flotante para editar ficha. Átomo, no un control escrito a
+               mano con `rounded-lg`: la geometría del sistema dice píldora
+               siempre (§3.2). -->
+          <app-button
+            class="absolute top-3 right-3"
+            variant="secondary"
+            size="sm"
+            [circle]="true"
+            icon="edit"
+            ariaLabel="Editar ficha del cliente"
+            title="Editar ficha del cliente"
+            (clicked)="state.iniciarEdicionFicha()" />
           }
         </div>
 
@@ -473,215 +477,181 @@
     }
   </aside>
 
-  <!-- ═══ Modal Template: Registro de Venta Rápida (CDK Overlay) ═══ -->
+  <!-- ═══ Cajón: Registro de Venta Rápida ═══
+
+       Eran modales centrados escritos a mano: sobraron de la conversión a
+       cajones de `b6ba5f8` y conservaban justo lo que esa conversión vino a
+       borrar — la misma cabecera copiada dos veces (caja de ícono + título +
+       subtítulo + botón de cerrar), dos anchos inventados fuera de la escala
+       (`max-w-xl` y `max-w-sm`), y **ni trampa de foco ni cierre con Escape**,
+       que es lo que `<app-drawer>` y `DialogService.abrirCajon()` dan gratis.
+       Ver `crm-design-system` § «El cajón lateral es un átomo». -->
   <ng-template #modalVentaChatTemplate>
-    <div class="bg-white rounded-2xl shadow-lifted border border-border max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto animate-modal-pop">
+    <app-drawer
+      ancho="lg"
+      icono="shopping-bag"
+      titulo="Registrar Venta"
+      [subtitulo]="chat.cliente | nombreCliente"
+      (cerrar)="cerrarModalVenta()">
 
-      <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-4.5 border-b border-border bg-white shrink-0">
-        <div class="flex items-center gap-3 min-w-0">
-          <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-            <app-icon name="shopping-bag" [size]="18" />
-          </div>
-          <div class="min-w-0">
-            <h3 class="text-sm font-bold text-text-dark tracking-tight leading-tight truncate">Registrar Venta</h3>
-            <p class="text-xs text-text-muted leading-tight truncate mt-0.5">{{ chat.cliente | nombreCliente }}</p>
-          </div>
-        </div>
-        <button
-          type="button"
-          (click)="cerrarModalVenta()"
-          class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
-          aria-label="Cerrar modal">
-          <app-icon name="x" [size]="18" />
-        </button>
-      </div>
-
-      <!-- Form Body -->
-      <form (submit)="guardarVenta($event, chat.cliente.id)" class="p-6 overflow-y-auto space-y-4.5 flex-1">
-        @if (errorVenta()) {
-          <div class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
-            <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
-            <span>{{ errorVenta() }}</span>
-          </div>
-        }
-
-        <!-- 1. Procedimiento / Tratamiento -->
-        <div class="space-y-1.5">
-          <div class="flex items-center justify-between">
-            <label class="text-sm font-medium text-text-dark">Procedimiento / Servicio *</label>
-            @if (moduloDetectado(); as mod) {
-              <span class="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
-                Módulo {{ mod }}
-              </span>
-            }
-          </div>
-          <app-input
-            placeholder="Ej. Rinoplastia, Botox 50U, Plan Parto Gold…"
-            [(value)]="productoVenta" />
-
-          @if (sugerenciasModulo().length > 0) {
-            <div class="flex flex-wrap gap-1.5 pt-1">
-              @for (sug of sugerenciasModulo().slice(0, 8); track sug.nombre) {
-                <button
-                  type="button"
-                  (click)="seleccionarSugerenciaVenta(sug.nombre)"
-                  class="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-bg-light/80 hover:bg-primary/10 hover:text-primary text-text-dark border border-border transition-colors cursor-pointer">
-                  + {{ sug.nombre }}
-                </button>
-              }
+      <form (submit)="guardarVenta($event, chat.cliente.id)" class="flex-1 min-h-0 flex flex-col">
+        <div class="p-6 overflow-y-auto space-y-4.5 flex-1">
+          @if (errorVenta()) {
+            <div class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
+              <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
+              <span>{{ errorVenta() }}</span>
             </div>
           }
-        </div>
 
-        <!-- 2. Monto y Médico -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <app-input
-            label="Monto acordado (Bs) *"
-            type="text"
-            placeholder="Ej. 4500"
-            [(value)]="montoVenta" />
-          <app-input
-            label="Médico tratante"
-            placeholder="Ej. Dr. Montalvo"
-            [(value)]="medicoVenta" />
-        </div>
+          <!-- 1. Procedimiento / Tratamiento -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between gap-2">
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Procedimiento / Servicio *</label>
+              @if (moduloDetectado(); as mod) {
+                <app-badge variant="info">Módulo {{ mod }}</app-badge>
+              }
+            </div>
+            <app-input
+              placeholder="Ej. Rinoplastia, Botox 50U, Plan Parto Gold…"
+              [(value)]="productoVenta" />
 
-        <!-- 3. Método de Pago -->
-        <div class="space-y-1.5">
-          <span class="text-sm font-medium text-text-dark">Método de pago</span>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" role="group" aria-label="Método de pago">
-            @for (mp of metodosPago; track mp.id) {
-              <button
-                type="button"
-                (click)="metodoPagoVenta.set(mp.id)"
-                [attr.aria-pressed]="metodoPagoVenta() === mp.id"
-                class="flex items-center justify-center gap-1.5 p-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer"
-                [class.bg-primary]="metodoPagoVenta() === mp.id"
-                [class.text-white]="metodoPagoVenta() === mp.id"
-                [class.border-primary]="metodoPagoVenta() === mp.id"
-                [class.bg-bg-workspace]="metodoPagoVenta() !== mp.id"
-                [class.text-text-dark]="metodoPagoVenta() !== mp.id"
-                [class.border-border]="metodoPagoVenta() !== mp.id">
-                <app-icon [name]="mp.icon" [size]="13" />
-                <span class="truncate">{{ mp.label }}</span>
-              </button>
-            }
-          </div>
-        </div>
-
-        <!-- 4. Comprobante / Recibo de Pago -->
-        <div class="space-y-1.5">
-          <app-input
-            label="Comprobante de pago (opcional)"
-            placeholder="Nº Recibo, código QR o ref. transferencia"
-            [(value)]="comprobanteVenta" />
-
-          <div class="mt-1.5">
-            @if (comprobanteSubido(); as adj) {
-              <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-success-bg border border-border text-xs text-text-dark">
-                <div class="flex items-center gap-2 min-w-0">
-                  <app-icon name="check-circle" [size]="14" class="text-success shrink-0" />
-                  <span class="truncate font-medium">{{ adj.comprobanteNombre }}</span>
-                </div>
-                <button
-                  type="button"
-                  (click)="quitarComprobante()"
-                  class="text-text-muted hover:text-critical p-1 transition-colors cursor-pointer shrink-0"
-                  title="Eliminar archivo">
-                  <app-icon name="trash" [size]="14" />
-                </button>
+            @if (sugerenciasModulo().length > 0) {
+              <div class="flex flex-wrap gap-1.5 pt-1">
+                @for (sug of sugerenciasModulo().slice(0, 8); track sug.nombre) {
+                  <app-filter-chip size="sm" (clicked)="seleccionarSugerenciaVenta(sug.nombre)">
+                    {{ sug.nombre }}
+                  </app-filter-chip>
+                }
               </div>
-            } @else {
-              <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-dashed border-border bg-bg-workspace hover:bg-bg-light text-xs text-text-muted cursor-pointer transition-colors">
-                <app-icon name="image" [size]="14" class="text-primary" />
-                <span>{{ subiendoComprobante() ? 'Subiendo comprobante…' : 'Adjuntar foto o PDF del comprobante' }}</span>
-                <input
-                  type="file"
-                  accept="image/*,application/pdf"
-                  class="hidden"
-                  [disabled]="subiendoComprobante()"
-                  (change)="onArchivoComprobante($event)" />
-              </label>
             }
           </div>
+
+          <!-- 2. Monto y Médico -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <app-input
+              label="Monto acordado (Bs) *"
+              type="text"
+              placeholder="Ej. 4500"
+              [(value)]="montoVenta" />
+            <app-input
+              label="Médico tratante"
+              placeholder="Ej. Dr. Montalvo"
+              [(value)]="medicoVenta" />
+          </div>
+
+          <!-- 3. Método de Pago — el mismo átomo que el selector de Tipo de
+               abajo. Eran cuatro `<button>` a mano con SEIS `[class.…]` cada
+               uno para decir "activo", que es lo que `<app-filter-chip>` ya
+               resuelve con un `[active]`. -->
+          <div class="space-y-1.5">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Método de pago</label>
+            <div class="flex flex-wrap gap-1.5" role="group" aria-label="Método de pago">
+              @for (mp of metodosPago; track mp.id) {
+                <app-filter-chip
+                  size="sm"
+                  [active]="metodoPagoVenta() === mp.id"
+                  (clicked)="metodoPagoVenta.set(mp.id)">
+                  <app-icon [name]="mp.icon" [size]="12" /> {{ mp.label }}
+                </app-filter-chip>
+              }
+            </div>
+          </div>
+
+          <!-- 4. Comprobante / Recibo de Pago -->
+          <div class="space-y-1.5">
+            <app-input
+              label="Comprobante de pago (opcional)"
+              placeholder="Nº Recibo, código QR o ref. transferencia"
+              [(value)]="comprobanteVenta" />
+
+            <div class="mt-1.5">
+              @if (comprobanteSubido(); as adj) {
+                <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-success-bg border border-border text-xs text-text-dark">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <app-icon name="check-circle" [size]="14" class="text-success shrink-0" />
+                    <span class="truncate font-medium">{{ adj.comprobanteNombre }}</span>
+                  </div>
+                  <app-button
+                    variant="ghost"
+                    size="sm"
+                    [circle]="true"
+                    icon="trash"
+                    ariaLabel="Eliminar el comprobante adjunto"
+                    title="Eliminar archivo"
+                    (clicked)="quitarComprobante()" />
+                </div>
+              } @else {
+                <label class="flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-border bg-bg-workspace hover:bg-bg-light hover:border-primary/40 text-xs text-text-muted cursor-pointer transition-colors">
+                  <app-icon name="image" [size]="14" class="text-primary" />
+                  <span>{{ subiendoComprobante() ? 'Subiendo comprobante…' : 'Adjuntar foto o PDF del comprobante' }}</span>
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    class="hidden"
+                    [disabled]="subiendoComprobante()"
+                    (change)="onArchivoComprobante($event)" />
+                </label>
+              }
+            </div>
+          </div>
+
+          <!-- 5. Notas adicionales -->
+          <app-input
+            label="Observaciones / notas (opcional)"
+            [multiline]="true"
+            [rows]="2"
+            placeholder="Condiciones del paquete, fecha tentativa, etc."
+            [(value)]="notasVenta" />
         </div>
 
-        <!-- 5. Notas adicionales -->
-        <app-input
-          label="Observaciones / notas (opcional)"
-          [multiline]="true"
-          [rows]="2"
-          placeholder="Condiciones del paquete, fecha tentativa, etc."
-          [(value)]="notasVenta" />
-
-        <!-- Footer botones -->
-        <div class="flex items-center justify-end pt-3 border-t border-border">
-          <app-button type="submit" size="sm" [loading]="guardandoVenta()">
-            {{ guardandoVenta() ? 'Guardando…' : 'Confirmar Venta' }}
-          </app-button>
+        <!-- Pie fijo, igual que el resto de los cajones del CRM -->
+        <div class="flex items-center justify-end px-6 py-3.5 bg-bg-workspace border-t border-border shrink-0">
+          <app-button type="submit" size="sm" [loading]="guardandoVenta()">Confirmar Venta</app-button>
         </div>
       </form>
-    </div>
+    </app-drawer>
   </ng-template>
 
-  <!-- ═══ Modal Template: Actividad Rápida (recordatorio/tarea) desde el Chat ═══ -->
+  <!-- ═══ Cajón: Actividad Rápida (recordatorio/tarea) desde el Chat ═══ -->
   <ng-template #modalActividadChatTemplate>
-    <div class="bg-white rounded-2xl shadow-lifted border border-border max-w-sm w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto animate-modal-pop">
+    <app-drawer
+      ancho="md"
+      icono="calendar"
+      titulo="Agendar Recordatorio"
+      [subtitulo]="chat.cliente | nombreCliente"
+      (cerrar)="cerrarModalActividad()">
 
-      <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-4.5 border-b border-border bg-white shrink-0">
-        <div class="flex items-center gap-3 min-w-0">
-          <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-            <app-icon name="calendar" [size]="18" />
-          </div>
-          <div class="min-w-0">
-            <h3 class="text-sm font-bold text-text-dark tracking-tight leading-tight truncate">Agendar Recordatorio</h3>
-            <p class="text-xs text-text-muted leading-tight truncate mt-0.5">{{ chat.cliente | nombreCliente }}</p>
-          </div>
-        </div>
-        <button
-          type="button"
-          (click)="cerrarModalActividad()"
-          class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
-          aria-label="Cerrar modal">
-          <app-icon name="x" [size]="18" />
-        </button>
-      </div>
+      <form (submit)="guardarActividadRapida($event, chat.cliente.id)" class="flex-1 min-h-0 flex flex-col">
+        <div class="p-6 overflow-y-auto space-y-4 flex-1">
+          @if (errorActividad()) {
+            <div class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
+              <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
+              <span>{{ errorActividad() }}</span>
+            </div>
+          }
 
-      <!-- Form Body -->
-      <form (submit)="guardarActividadRapida($event, chat.cliente.id)" class="p-6 overflow-y-auto space-y-4 flex-1">
-        @if (errorActividad()) {
-          <div class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
-            <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
-            <span>{{ errorActividad() }}</span>
+          <div class="space-y-1.5">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Tipo</label>
+            <div class="flex flex-wrap gap-1.5" role="group" aria-label="Tipo de actividad">
+              @for (t of tiposActividad; track t) {
+                <app-filter-chip size="sm" [active]="tipoActividad() === t" (clicked)="tipoActividad.set(t)">
+                  <app-icon [name]="tipoActividadIcono[t]" [size]="12" /> {{ tipoActividadLabel[t] }}
+                </app-filter-chip>
+              }
+            </div>
           </div>
-        }
 
-        <div class="space-y-1.5">
-          <span class="text-sm font-medium text-text-dark">Tipo</span>
-          <div class="flex flex-wrap gap-1.5" role="group" aria-label="Tipo de actividad">
-            @for (t of tiposActividad; track t) {
-              <app-filter-chip size="sm" [active]="tipoActividad() === t" (clicked)="tipoActividad.set(t)">
-                <app-icon [name]="tipoActividadIcono[t]" [size]="12" /> {{ tipoActividadLabel[t] }}
-              </app-filter-chip>
-            }
-          </div>
+          <app-input label="Título *" placeholder="Ej. Llamar para confirmar cita" [(value)]="tituloActividad" />
+
+          <app-input label="Fecha y hora *" type="datetime-local" [(value)]="fechaActividad" />
+
+          <app-input label="Notas (opcional)" [multiline]="true" [rows]="3" placeholder="Detalles para recordar…" [(value)]="notasActividad" />
         </div>
 
-        <app-input label="Título *" placeholder="Ej. Llamar para confirmar cita" [(value)]="tituloActividad" />
-
-        <app-input label="Fecha y hora *" type="datetime-local" [(value)]="fechaActividad" />
-
-        <app-input label="Notas (opcional)" [multiline]="true" [rows]="2" placeholder="Detalles para recordar…" [(value)]="notasActividad" />
-
-        <!-- Footer botones -->
-        <div class="flex items-center justify-end pt-3 border-t border-border">
-          <app-button type="submit" size="sm" [loading]="guardandoActividad()">
-            {{ guardandoActividad() ? 'Agendando…' : 'Agendar' }}
-          </app-button>
+        <div class="flex items-center justify-end px-6 py-3.5 bg-bg-workspace border-t border-border shrink-0">
+          <app-button type="submit" size="sm" [loading]="guardandoActividad()">Agendar</app-button>
         </div>
       </form>
-    </div>
+    </app-drawer>
   </ng-template>
 }

@@ -437,3 +437,150 @@ tr:hover .celda-sticky {
   line-height: 1.5;
   box-shadow: var(--shadow-subtle);
 }
+
+/* ==========================================================================
+   Tipo de actividad — categoría, no estado
+   ========================================================================== */
+
+/* Estaba escrito como cápsula con borde DOS veces (tabla de escritorio y
+   tarjeta móvil) y las dos copias ya habían divergido: distinto padding,
+   distinto radio y distinto color de texto —`text-text-dark` en una,
+   `text-primary` en la otra—, así que el mismo dato se veía de dos formas
+   según el ancho de la pantalla.
+
+   No vuelve como cápsula unificada: el tipo es una CATEGORÍA, y en este sistema
+   `la píldora es solo para el estado` (misma regla que sacó PAC, canal y agente
+   de las tarjetas de lead). Ícono + palabra pesa menos, densifica la fila y deja
+   que la única cápsula de la fila —el `<app-badge>` de estado— se lea sola. */
+.crm-tipo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-text-dark);
+  white-space: nowrap;
+}
+
+.crm-tipo > app-icon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Acción de contacto directo (enlace circular)
+   ========================================================================== */
+
+/* WhatsApp y teléfono son `<a href>`, no botones: abren otra app y tienen que
+   poder copiarse y abrirse en pestaña nueva. Por eso NO son `<app-button>` —
+   pero sí comparten su forma, que estaba escrita a mano con dos mezclas
+   distintas de `w-8 h-8 rounded-full …` en la misma plantilla.
+
+   La variante `-whatsapp` es el mismo verde de marca: la paleta no tiene el
+   verde de WhatsApp y no se inventa uno (CRM_MANIFESTO.md §3.1). */
+.crm-accion-enlace {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  background: var(--color-background);
+  transition: color 200ms, background-color 200ms, border-color 200ms;
+}
+
+.crm-accion-enlace:hover {
+  color: var(--color-primary);
+  background: var(--color-bg-light);
+  border-color: color-mix(in srgb, var(--color-primary) 30%, white);
+}
+
+.crm-accion-enlace-whatsapp {
+  color: var(--color-primary);
+  background: var(--color-bg-light);
+  border-color: color-mix(in srgb, var(--color-primary) 20%, white);
+}
+
+.crm-accion-enlace-whatsapp:hover {
+  background: color-mix(in srgb, var(--color-primary) 16%, white);
+}
+
+/* ==========================================================================
+   Fila y tarjeta vencidas
+   ========================================================================== */
+
+/* El realce de "vencida" era `bg-critical-bg/20`. `--color-critical-bg` ya es
+   un 6% de negro sobre blanco, así que al 20% quedaba en ~1,2%: existía en el
+   CSS, se aplicaba de verdad, y **no se veía**. Lo que señala una fila vencida
+   no es el fondo sino el filo izquierdo — se lee al escanear la columna y no
+   ensucia el texto, que es lo que pasaba al teñir toda la fila. */
+.crm-vencida {
+  box-shadow: inset 3px 0 0 0 var(--color-text-critical);
+  background: var(--color-critical-bg);
+}
+
+.crm-vencida:hover {
+  background: color-mix(in srgb, var(--color-text-critical) 9%, white);
+}
+
+/* ==========================================================================
+   Control segmentado (Lista / Calendario, Bs / USD, Mes / Año…)
+   ========================================================================== */
+
+/* El mismo grupo `p-1 bg-bg-workspace rounded-xl` con opciones que se pintan de
+   blanco al estar activas aparece en SIETE plantillas, cada una repitiendo
+   cuatro `[class.…]` por opción para decir "activo". Acá vive una sola vez.
+
+   Aplicado por ahora en Actividades; las otras seis (Ventas, Tipo de cambio,
+   Ventas por agente, Configuración de comisiones, Planilla y el sidebar de
+   Conversaciones) siguen con su copia y son la siguiente migración obvia — no
+   se tocaron en el mismo cambio para no mezclar un rediseño de Actividades con
+   seis vistas que nadie pidió revisar. */
+.crm-segmento {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  background: var(--color-bg-workspace);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.crm-segmento-opcion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  white-space: nowrap;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: color 200ms, background-color 200ms, box-shadow 200ms;
+}
+
+.crm-segmento-opcion:hover {
+  color: var(--color-text-dark);
+}
+
+/* Reparto a partes iguales — para grupos de dos o tres que ocupan un ancho fijo
+   (Lista/Calendario). Las barras de pestañas con muchas opciones NO lo llevan:
+   ahí cada una mide lo que dice su etiqueta y el grupo scrollea. */
+.crm-segmento-igual .crm-segmento-opcion {
+  flex: 1;
+}
+
+/* La opción activa se levanta sobre el surco, que es lo que hace legible un
+   segmentado sin recurrir a un borde de acento. */
+.crm-segmento-opcion-activo {
+  color: var(--color-text-dark);
+  background: var(--color-background);
+  box-shadow: var(--shadow-subtle);
+}

@@ -1,88 +1,168 @@
-<div class="space-y-6">
-  <app-page-header
-    title="Líneas WhatsApp"
-    subtitle="Identifica cada número y configura su conexión. Los permisos del equipo se asignan en Usuarios y Accesos."
-  />
-  @if (lineas.isLoading()) {
-    <app-loading-skeleton height="8rem" />
-  } @else if (lineas.error()) {
-    <app-error-carga que="las líneas WhatsApp" (reintentar)="lineas.reload()" />
-  } @else if (lineas.value().datos.length) {
-    <app-table>
-      <thead>
-        <tr>
-          <th>Línea</th>
-          <th>Número</th>
-          <th>Conexión</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (linea of lineas.value().datos; track linea.id) {
-          <tr>
-            <td>
+<app-page-header
+  title="Líneas de WhatsApp"
+  subtitle="Identifica cada número y configura su conexión. Los permisos del equipo se asignan en Usuarios." />
+
+<!-- Resumen: cuántas líneas hay y cuántas responden de verdad. Es la pregunta
+     que trae a alguien a esta pantalla, y antes había que contarla a ojo en la
+     tabla. -->
+<div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-5">
+  <app-kpi-card
+    label="Líneas registradas"
+    [valor]="lineas.value().total"
+    icon="message-circle"
+    tono="neutral"
+    pie="Catálogo completo" />
+  <app-kpi-card
+    label="Conectadas"
+    [valor]="totalConectadas()"
+    icon="check-circle"
+    tono="primary"
+    [destacado]="true"
+    pie="Con credencial y envío habilitado" />
+  <app-kpi-card
+    class="col-span-2 lg:col-span-1"
+    label="Pendientes de conexión"
+    [valor]="totalPendientes()"
+    icon="clock"
+    tono="critical"
+    pie="Falta darlas de alta en Meta" />
+</div>
+
+@if (lineas.isLoading() && lineas.value().datos.length === 0) {
+  <app-loading-skeleton shape="text" height="16rem" />
+} @else if (lineas.error()) {
+  <app-error-carga que="las líneas de WhatsApp" (reintentar)="lineas.reload()" />
+} @else if (lineas.value().datos.length) {
+  <app-table>
+    <thead>
+      <tr>
+        <th class="text-left">Línea</th>
+        <th class="text-left">Número</th>
+        <th class="text-left">Identificadores de Meta</th>
+        <th class="text-left">Estado</th>
+        <th class="text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (linea of lineas.value().datos; track linea.id) {
+        <tr
+          class="cursor-pointer hover:bg-bg-workspace/60 transition-colors"
+          (click)="editar(linea, formulario)">
+          <td class="text-left">
+            <span class="crm-tipo">
+              <app-icon [name]="linea.comercial ? 'shopping-bag' : 'message-circle'" [size]="14" />
               {{ linea.nombre }}
-              <p class="text-xs text-text-muted">
-                {{ linea.comercial ? 'Ventas y publicidad' : 'Atención' }}
-              </p>
-            </td>
-            <td>{{ linea.telefono || 'Configurar número visible' }}</td>
-            <td>
-              <app-badge [variant]="linea.conectada ? 'success' : 'neutral'">{{
-                linea.conectada ? 'Configurada' : 'Pendiente de conexión'
-              }}</app-badge>
-            </td>
-            <td>
-              <app-button variant="ghost" (clicked)="editar(linea, formulario)"
-                >Configurar</app-button
-              >
-            </td>
-          </tr>
-        }
-      </tbody>
-    </app-table>
+            </span>
+            <span class="crm-meta crm-meta-sm">
+              <span>{{ linea.comercial ? 'Ventas y publicidad' : 'Atención' }}</span>
+            </span>
+          </td>
+          <td class="text-left">
+            @if (linea.telefono) {
+              <span class="crm-meta-clave text-xs">{{ linea.telefono }}</span>
+            } @else {
+              <span class="text-xs text-text-muted italic">Sin número visible</span>
+            }
+          </td>
+          <td class="text-left">
+            <!-- Los dos identificadores que Meta exige y que no se pueden
+                 adivinar desde el teléfono. Se muestran porque la pregunta
+                 "¿por qué sigue pendiente?" casi siempre se responde acá. -->
+            <span class="crm-meta crm-meta-sm">
+              @if (linea.phoneNumberId) {
+                <span class="crm-meta-clave">ID {{ linea.phoneNumberId }}</span>
+              }
+              @if (linea.wabaId) {
+                <span class="crm-meta-clave">WABA {{ linea.wabaId }}</span>
+              }
+              @if (!linea.phoneNumberId && !linea.wabaId) {
+                <span>Sin configurar</span>
+              }
+            </span>
+          </td>
+          <td class="text-left">
+            <app-badge [variant]="linea.conectada ? 'success' : 'neutral'">
+              {{ linea.conectada ? 'Conectada' : 'Pendiente' }}
+            </app-badge>
+          </td>
+          <td class="text-right" (click)="$event.stopPropagation()">
+            <app-button variant="secondary" size="sm" icon="edit" (clicked)="editar(linea, formulario)">
+              Configurar
+            </app-button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </app-table>
+
+  <div class="mt-4">
     <app-paginator
       [pagina]="lineas.value().pagina"
       [totalPaginas]="lineas.value().totalPaginas"
       [total]="lineas.value().total"
       [limite]="lineas.value().limite"
-      (cambiar)="pagina.set($event)"
-    />
-  } @else {
-    <app-empty-state title="No hay líneas registradas" />
-  }
-</div>
+      (cambiar)="pagina.set($event)" />
+  </div>
+} @else {
+  <app-empty-state
+    icon="message-circle"
+    title="No hay líneas registradas"
+    description="Las líneas se dan de alta en la migración del servidor. Si esperabas ver alguna, revisa el despliegue del backend." />
+}
+
+<!-- Cajón de configuración — `<app-drawer>` como el resto del CRM. Era un
+     formulario flotante escrito a mano (`bg-white rounded-2xl p-6 max-w-lg`) con
+     un `<h2>` por cabecera, sin trampa de foco ni cierre con Escape. -->
 <ng-template #formulario>
-  <form
-    (submit)="guardar($event)"
-    class="pointer-events-auto bg-white rounded-2xl p-6 space-y-4 w-full max-w-lg max-h-[90dvh] overflow-y-auto"
-    aria-label="Configurar línea WhatsApp"
-  >
-    <h2 class="text-lg font-semibold text-text-dark">Configurar línea</h2>
-    <app-input label="Nombre" [(value)]="nombre" />
-    <app-input label="Número con código de país" placeholder="+59162140323" [(value)]="telefono" />
-    <app-input label="Phone Number ID de Meta" [(value)]="phoneNumberId" />
-    <app-input label="WABA ID de Meta" [(value)]="wabaId" />
-    <app-input label="Variable de credencial en el servidor" [(value)]="tokenEnv" />
-    <p class="text-xs text-text-muted">
-      La credencial se instala en el servidor. Aquí se indica el nombre de su variable, sin pegar el
-      token.
-    </p>
-    <label class="flex items-center gap-2 text-sm"
-      ><input
-        type="checkbox"
-        #habilitada
-        [checked]="activa()"
-        (change)="activa.set(habilitada.checked)"
-      />
-      Habilitar envíos desde esta línea</label
-    >
-    @if (error()) {
-      <p role="alert" class="text-sm text-critical">{{ error() }}</p>
-    }
-    <div class="flex justify-end gap-2">
-      <app-button variant="ghost" (clicked)="cerrar()">Cancelar</app-button
-      ><app-button type="submit" [loading]="guardando()">Guardar</app-button>
-    </div>
-  </form>
+  <app-drawer
+    ancho="md"
+    icono="message-circle"
+    titulo="Configurar línea"
+    [subtitulo]="seleccionada()?.nombre ?? ''"
+    (cerrar)="cerrar()">
+
+    <form (submit)="guardar($event)" class="flex-1 min-h-0 flex flex-col" aria-label="Configurar línea de WhatsApp">
+      <div class="p-6 overflow-y-auto space-y-4 flex-1">
+        @if (error()) {
+          <div role="alert" class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
+            <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
+            <span>{{ error() }}</span>
+          </div>
+        }
+
+        <app-input label="Nombre" [(value)]="nombre" />
+        <app-input label="Número con código de país" placeholder="+59162140323" [(value)]="telefono" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <app-input label="Phone Number ID" [(value)]="phoneNumberId" />
+          <app-input label="WABA ID" [(value)]="wabaId" />
+        </div>
+
+        <div class="space-y-1.5">
+          <app-input label="Variable de credencial en el servidor" placeholder="WHATSAPP_CLIMON_TOKEN" [(value)]="tokenEnv" />
+          <p class="text-[11px] text-text-muted leading-relaxed">
+            El token vive en el servidor. Acá va solo el <strong>nombre</strong> de su variable — nunca se pega el token.
+          </p>
+        </div>
+
+        <!-- Esto enciende el envío real a pacientes: va separado del resto, con
+             su consecuencia escrita al lado. Antes era un checkbox del sistema
+             operativo suelto entre los campos. -->
+        <div class="flex items-start justify-between gap-4 p-3.5 rounded-xl border border-border bg-bg-workspace">
+          <div class="min-w-0">
+            <p class="text-xs font-semibold text-text-dark">Habilitar envíos desde esta línea</p>
+            <p class="text-[11px] text-text-muted leading-relaxed mt-0.5">
+              Con esto apagado la línea recibe, pero el CRM no manda nada por ella.
+            </p>
+          </div>
+          <app-switch class="mt-0.5" [(value)]="activa" ariaLabel="Habilitar envíos desde esta línea" />
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 px-6 py-3.5 bg-bg-workspace border-t border-border shrink-0">
+        <app-button variant="ghost" size="sm" (clicked)="cerrar()">Cancelar</app-button>
+        <app-button type="submit" size="sm" [loading]="guardando()">Guardar</app-button>
+      </div>
+    </form>
+  </app-drawer>
 </ng-template>

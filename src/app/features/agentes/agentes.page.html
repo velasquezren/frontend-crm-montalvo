@@ -68,30 +68,24 @@
   <!-- Barra de Filtros: Switcher por Rol + Búsqueda -->
   <div class="bg-white p-4 rounded-2xl border border-border flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-subtle">
     <!-- Pestañas de rol — se generan desde filtrosRol(), no una por una -->
+    <!-- La misma utilidad que el conmutador de Actividades, y el contador es
+         `.crm-contador`, que existe justo para esto. Eran NUEVE `[class.…]`
+         por pestaña para decir "activo". -->
     <div
-      class="inline-flex p-1 bg-bg-workspace rounded-xl border border-border/80 gap-1 self-start md:self-auto overflow-x-auto"
+      class="crm-segmento self-start md:self-auto overflow-x-auto"
       role="tablist"
       aria-label="Filtrar usuarios por rol">
       @for (filtro of filtrosRol(); track filtro.valor) {
         <button
           type="button"
           role="tab"
+          class="crm-segmento-opcion"
+          [class.crm-segmento-opcion-activo]="filtroRol() === filtro.valor"
           [attr.aria-selected]="filtroRol() === filtro.valor"
-          (click)="filtroRol.set(filtro.valor)"
-          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center gap-2 whitespace-nowrap"
-          [class.bg-white]="filtroRol() === filtro.valor"
-          [class.text-primary]="filtroRol() === filtro.valor"
-          [class.shadow-subtle]="filtroRol() === filtro.valor"
-          [class.text-text-muted]="filtroRol() !== filtro.valor"
-          [class.hover:text-text-dark]="filtroRol() !== filtro.valor">
+          (click)="filtroRol.set(filtro.valor)">
           <app-icon [name]="filtro.icono" [size]="14" />
           <span>{{ filtro.etiqueta }}</span>
-          <span
-            class="px-1.5 py-0.5 rounded-md text-[10px] font-bold"
-            [class.bg-primary/10]="filtroRol() === filtro.valor"
-            [class.text-primary]="filtroRol() === filtro.valor"
-            [class.bg-border/50]="filtroRol() !== filtro.valor"
-            [class.text-text-muted]="filtroRol() !== filtro.valor">
+          <span class="crm-contador" [class.crm-contador-activo]="filtroRol() === filtro.valor">
             {{ filtro.total }}
           </span>
         </button>
@@ -146,41 +140,34 @@
               </td>
               <td class="py-4 px-6 text-right">
                 <div class="flex items-center justify-end gap-2">
-                  <!-- Editar -->
-                  <button
-                    type="button"
-                    (click)="abrirEdicion(agente, modalEditar)"
-                    class="w-9 h-9 rounded-lg flex items-center justify-center text-text-muted shrink-0
-                           hover:text-primary hover:bg-bg-light transition-colors cursor-pointer"
+                  <!-- Átomos, no `rounded-lg` a mano: la geometría del sistema es
+                       píldora (§3.2). El ancho fijo de 96px tampoco hace falta —
+                       las dos etiquetas caben igual y el grupo ya va alineado a
+                       la derecha. -->
+                  <app-button
+                    variant="ghost"
+                    size="sm"
+                    [circle]="true"
+                    icon="edit"
                     [title]="'Editar ' + agente.nombre"
-                    [attr.aria-label]="'Editar ' + agente.nombre">
-                    <app-icon name="edit" [size]="16" />
-                  </button>
+                    [ariaLabel]="'Editar ' + agente.nombre"
+                    (clicked)="abrirEdicion(agente, modalEditar)" />
 
-                  <!-- Activar / Desactivar con ancho fijo de 96px (w-24) -->
                   @if (agente.activo) {
-                    <button
-                      type="button"
-                      (click)="confirmarBaja(agente, modalBaja)"
+                    <app-button
+                      variant="critical"
+                      size="sm"
                       [disabled]="agente.id === usuarioActual()?.id"
-                      class="w-24 h-9 shrink-0 inline-flex items-center justify-center text-xs font-medium rounded-lg border border-border text-text-muted
-                             transition-colors cursor-pointer
-                             hover:text-critical hover:bg-critical-bg hover:border-critical/20
-                             disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent
-                             disabled:hover:text-text-muted disabled:hover:border-border"
                       [title]="agente.id === usuarioActual()?.id
                         ? 'No puedes desactivar tu propia cuenta'
-                        : 'Desactivar cuenta'">
+                        : 'Desactivar cuenta'"
+                      (clicked)="confirmarBaja(agente, modalBaja)">
                       Desactivar
-                    </button>
+                    </app-button>
                   } @else {
-                    <button
-                      type="button"
-                      (click)="toggleEstado(agente)"
-                      class="w-24 h-9 shrink-0 inline-flex items-center justify-center text-xs font-medium rounded-lg border border-primary/30
-                             text-primary bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer">
+                    <app-button variant="secondary" size="sm" (clicked)="toggleEstado(agente)">
                       Activar
-                    </button>
+                    </app-button>
                   }
                 </div>
               </td>
@@ -215,120 +202,83 @@
 
 <!-- Modal: Registrar usuario -->
 <ng-template #modalCrear>
-  <div
-    class="bg-white w-full max-w-md rounded-2xl shadow-lifted border border-border p-6 space-y-5 animate-modal-pop pointer-events-auto"
-    (click)="$event.stopPropagation()">
-    <div class="flex items-center justify-between border-b border-border pb-4">
-      <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-          <app-icon name="user-plus" [size]="18" />
+  <app-drawer
+    ancho="md"
+    icono="user-plus"
+    titulo="Registrar usuario"
+    subtitulo="Alta de una cuenta del CRM"
+    (cerrar)="cerrarModal()">
+
+    <form (submit)="crearAgente($event)" class="flex-1 min-h-0 flex flex-col">
+      <div class="p-6 overflow-y-auto space-y-4 flex-1">
+        @if (errorMensaje(); as err) {
+          <div role="alert" class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
+            <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
+            <span>{{ err }}</span>
+          </div>
+        }
+
+        <app-input label="Nombre completo *" placeholder="Ej. Dr. Roberto Montalvo" [(value)]="formNombre" />
+        <app-input label="Email de acceso *" type="email" placeholder="agente@clinicamontalvo.com" [(value)]="formEmail" />
+        <app-input label="Contraseña (mín. 8 caracteres) *" type="password" placeholder="••••••••" autocomplete="new-password" [(value)]="formPassword" />
+
+        <div class="space-y-1.5">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Rol de sistema</label>
+          <!-- Los tres con el MISMO átomo. Antes "Recepción" era un
+               `<app-button variant="secondary">` y los otros dos `<button>` a
+               mano con estado activo: elegir Recepción no daba ninguna señal
+               visual, porque ese botón no sabía pintarse activo. -->
+          <div class="flex flex-wrap gap-1.5" role="group" aria-label="Rol de sistema">
+            @for (r of rolesCreacion; track r) {
+              <app-filter-chip size="sm" [active]="formRol() === r" (clicked)="formRol.set(r)">
+                {{ rolLabel[r] }}
+              </app-filter-chip>
+            }
+          </div>
         </div>
-        <h2 class="text-lg font-bold text-text-dark">Registrar usuario</h2>
-      </div>
-      <button type="button" (click)="cerrarModal()" class="text-text-muted hover:text-text-dark cursor-pointer"
-            aria-label="Cerrar">
-        <app-icon name="x" [size]="18" />
-      </button>
-    </div>
 
-    @if (errorMensaje(); as err) {
-      <div class="p-3 rounded-xl bg-critical-bg border border-critical/20 text-xs text-text-dark font-medium">
-        {{ err }}
-      </div>
-    }
-
-    <form (submit)="crearAgente($event)" class="space-y-4">
-      <div>
-        <label class="block text-xs font-semibold text-text-dark mb-1.5">Nombre Completo *</label>
-        <app-input placeholder="Ej. Dr. Roberto Montalvo" [(value)]="formNombre" />
+        @if (lineas.isLoading()) {
+          <p class="text-xs text-text-muted">Cargando líneas…</p>
+        } @else if (lineas.error()) {
+          <app-error-carga que="las líneas" (reintentar)="lineas.reload()" />
+        } @else if (cubreRol(formRol(), 'ADMIN')) {
+          <p class="crm-meta"><span>Los administradores tienen acceso a todas las líneas.</span></p>
+        } @else {
+          <app-selector-lineas [lineas]="lineasCreacion()" [(ids)]="formLineas" />
+        }
       </div>
 
-      <div>
-        <label class="block text-xs font-semibold text-text-dark mb-1.5">Email de Acceso *</label>
-        <app-input type="email" placeholder="agente@clinicamontalvo.com" [(value)]="formEmail" />
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-text-dark mb-1.5">Contraseña (Mín. 8 caracteres) *</label>
-        <app-input type="password" placeholder="••••••••" autocomplete="new-password" [(value)]="formPassword" />
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-text-dark mb-1.5">Rol de Sistema</label>
-        <div class="grid grid-cols-2 gap-2">
-          <app-button variant="secondary" (clicked)="formRol.set('RECEPCION')">Recepción</app-button>
-          <button
-            type="button"
-            (click)="formRol.set('AGENTE')"
-            class="py-2.5 px-3 rounded-xl text-xs font-semibold border text-center transition-all cursor-pointer"
-            [class]="formRol() === 'AGENTE' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-text-muted hover:bg-bg-light'">
-            Agente Comercial
-          </button>
-          <button
-            type="button"
-            (click)="formRol.set('ADMIN')"
-            class="py-2.5 px-3 rounded-xl text-xs font-semibold border text-center transition-all cursor-pointer"
-            [class]="formRol() === 'ADMIN' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-text-muted hover:bg-bg-light'">
-            Administrador
-          </button>
-        </div>
-      </div>
-
-      @if (lineas.isLoading()) { <p class="text-sm text-text-muted">Cargando líneas…</p> }
-      @else if (lineas.error()) { <app-error-carga que="las líneas" (reintentar)="lineas.reload()" /> }
-      @else if (cubreRol(formRol(), 'ADMIN')) { <p class="text-sm text-text-muted">Los administradores tienen acceso a todas las líneas.</p> }
-      @else { <app-selector-lineas [lineas]="lineasCreacion()" [(ids)]="formLineas" /> }
-      <div class="flex items-center justify-end pt-3 border-t border-border">
-        <app-button type="submit" [loading]="guardando()">
-          Guardar Agente
-        </app-button>
+      <div class="flex items-center justify-end px-6 py-3.5 bg-bg-workspace border-t border-border shrink-0">
+        <app-button type="submit" size="sm" [loading]="guardando()">Guardar usuario</app-button>
       </div>
     </form>
-  </div>
+  </app-drawer>
 </ng-template>
 
 <!-- Modal: Editar Agente -->
 <ng-template #modalEditar>
-  <div
-    class="bg-white w-full max-w-xl rounded-2xl shadow-lifted animate-modal-pop pointer-events-auto"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="titulo-editar-agente"
-    (click)="$event.stopPropagation()">
+  @if (agenteEditando(); as ag) {
+    <app-drawer ancho="lg" [etiqueta]="'Editar ' + ag.nombre" (cerrar)="cerrarEdicion()">
 
-    @if (agenteEditando(); as ag) {
-      <!-- Cabecera con identidad del agente -->
-      <header class="flex items-start justify-between gap-4 px-6 sm:px-8 pt-6 pb-5 border-b border-border">
-        <div class="flex items-center gap-3.5 min-w-0">
-          <app-avatar [initials]="iniciales(ag.nombre)" size="lg" />
-          <div class="min-w-0">
-            <h2 id="titulo-editar-agente" class="text-lg font-bold text-text-dark truncate">
-              {{ ag.nombre }}
-            </h2>
-            <div class="flex flex-wrap items-center gap-2 mt-1.5">
-              <app-badge [variant]="cubreRol(ag.rol, 'ADMIN') ? 'success' : 'info'">
-                {{ rolLabel[ag.rol] }}
-              </app-badge>
-              @if (!ag.activo) {
-                <app-badge variant="neutral">Inactivo</app-badge>
-              }
-            </div>
+      <!-- Cabecera propia: identidad del usuario. Es el slot que `<app-drawer>`
+           expone justo para esto, en vez de maquetar otro `<header>` con su
+           botón de cerrar a mano. -->
+      <div cabecera class="flex items-center gap-3.5 min-w-0">
+        <app-avatar [initials]="iniciales(ag.nombre)" size="lg" />
+        <div class="min-w-0">
+          <h2 class="text-base font-bold text-text-dark truncate">{{ ag.nombre }}</h2>
+          <div class="flex flex-wrap items-center gap-2 mt-1">
+            <app-badge [variant]="cubreRol(ag.rol, 'ADMIN') ? 'success' : 'info'">{{ rolLabel[ag.rol] }}</app-badge>
+            @if (!ag.activo) {
+              <app-badge variant="neutral">Inactivo</app-badge>
+            }
           </div>
         </div>
+      </div>
 
-        <button
-          type="button"
-          (click)="cerrarEdicion()"
-          class="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-text-muted
-                 hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
-          aria-label="Cerrar">
-          <app-icon name="x" [size]="18" />
-        </button>
-      </header>
-
-      <form (submit)="guardarEdicion($event)" class="px-6 sm:px-8 py-6 flex flex-col gap-6">
-
-        @if (errorMensaje()) {
+      <form (submit)="guardarEdicion($event)" class="flex-1 min-h-0 flex flex-col">
+        <div class="p-6 overflow-y-auto flex flex-col gap-6 flex-1">
+@if (errorMensaje()) {
           <div class="px-4 py-3 rounded-xl bg-critical-bg text-sm text-text-dark font-medium
                       flex items-start gap-2">
             <app-icon name="alert-circle" [size]="16" class="text-critical shrink-0 mt-px" />
@@ -366,42 +316,20 @@
 
           <!-- Rol -->
           <div class="flex flex-col gap-1.5">
-            <label class="text-sm font-medium text-text-dark">Rol</label>
-            <div class="flex flex-wrap gap-2">
-              <app-button variant="secondary" [disabled]="editandoseASiMismo()" (clicked)="editRol.set('RECEPCION')">Recepción</app-button>
-              <button
-                type="button"
-                (click)="editRol.set('AGENTE')"
-                [disabled]="editandoseASiMismo()"
-                class="px-4 py-2 rounded-full border text-xs font-medium transition-all cursor-pointer
-                       disabled:opacity-40 disabled:cursor-not-allowed"
-                [class]="editRol() === 'AGENTE'
-                  ? 'bg-primary text-white border-primary shadow-subtle'
-                  : 'bg-white text-text-muted border-border hover:border-primary/30 hover:bg-bg-light'">
-                Agente
-              </button>
-              <button
-                type="button"
-                (click)="editRol.set('ADMIN')"
-                [disabled]="editandoseASiMismo()"
-                class="px-4 py-2 rounded-full border text-xs font-medium transition-all cursor-pointer
-                       disabled:opacity-40 disabled:cursor-not-allowed"
-                [class]="editRol() === 'ADMIN'
-                  ? 'bg-primary text-white border-primary shadow-subtle'
-                  : 'bg-white text-text-muted border-border hover:border-primary/30 hover:bg-bg-light'">
-                Administrador
-              </button>
-              <button
-                type="button"
-                (click)="editRol.set('SUPER_ADMIN')"
-                [disabled]="editandoseASiMismo()"
-                class="px-4 py-2 rounded-full border text-xs font-medium transition-all cursor-pointer
-                       disabled:opacity-40 disabled:cursor-not-allowed"
-                [class]="editRol() === 'SUPER_ADMIN'
-                  ? 'bg-primary text-white border-primary shadow-subtle'
-                  : 'bg-white text-text-muted border-border hover:border-primary/30 hover:bg-bg-light'">
-                Super administrador
-              </button>
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Rol</label>
+            <!-- Los cuatro con el mismo átomo. "Recepción" era un
+                 `<app-button variant="secondary">` que NUNCA se pintaba activo
+                 —igual que en el formulario de alta—, así que elegirlo no daba
+                 ninguna señal. -->
+            <div class="flex flex-wrap gap-1.5" role="group" aria-label="Rol del usuario">
+              @for (r of rolesEdicion; track r) {
+                <app-filter-chip
+                  size="sm"
+                  [active]="editRol() === r"
+                  (clicked)="editandoseASiMismo() || editRol.set(r)">
+                  {{ rolLabel[r] }}
+                </app-filter-chip>
+              }
             </div>
             <p class="text-xs text-text-muted">
               Solo un <strong>super administrador</strong> gestiona agentes (y sus códigos) e
@@ -438,14 +366,14 @@
           </p>
         </section>
 
-        <div class="flex justify-end pt-5 border-t border-border">
-          <app-button type="submit" [loading]="guardando()">
-            {{ guardando() ? 'Guardando…' : 'Guardar cambios' }}
-          </app-button>
+        </div>
+
+        <div class="flex items-center justify-end px-6 py-3.5 bg-bg-workspace border-t border-border shrink-0">
+          <app-button type="submit" size="sm" [loading]="guardando()">Guardar cambios</app-button>
         </div>
       </form>
-    }
-  </div>
+    </app-drawer>
+  }
 </ng-template>
 
 <!-- Modal: Confirmar Desactivación -->

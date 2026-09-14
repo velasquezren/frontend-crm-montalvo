@@ -11,6 +11,8 @@ import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales } from '../../core/auth/user.model';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
+import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
+import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { CardComponent } from '../../shared/components/card/card.component';
 import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
@@ -45,6 +47,8 @@ export type FiltroRolAgentes = 'TODOS' | RolUsuario;
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,
+    FilterChipComponent,
+    DrawerComponent,
     CardComponent,
     EmptyStateComponent,
     ErrorCargaComponent,
@@ -90,6 +94,13 @@ export class AgentesPage {
   protected readonly formRol = signal<RolUsuario>('AGENTE');
 
   /** Etiquetas de rol — vienen de core/auth/roles.ts, no se redefinen aquí. */
+
+  /** Los roles que ofrece cada formulario. Estaban escritos como un `<button>`
+   *  por rol —tres en crear, tres en editar— y por eso "Recepción" se quedó
+   *  sin estado activo al copiar: era el único que no siguió el patrón. */
+  protected readonly rolesCreacion = ['RECEPCION', 'AGENTE', 'ADMIN'] as const satisfies readonly RolUsuario[];
+  protected readonly rolesEdicion = ['RECEPCION', 'AGENTE', 'ADMIN', 'SUPER_ADMIN'] as const satisfies readonly RolUsuario[];
+
   protected readonly rolLabel = ROL_LABEL;
   /** Para la plantilla: nunca comparar `rol === 'ADMIN'` a mano (deja fuera a SUPER_ADMIN). */
   protected readonly cubreRol = cubreRol;
@@ -166,7 +177,7 @@ export class AgentesPage {
     this.modalCrearAbierto.set(true);
     if (template) {
       this.activeOverlayRef?.dispose();
-      this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+      this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr);
     }
   }
 
@@ -264,7 +275,7 @@ export class AgentesPage {
     this.modalEditarAbierto.set(true);
     if (template) {
       this.activeOverlayRef?.dispose();
-      this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+      this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr);
     }
   }
 
@@ -329,6 +340,9 @@ export class AgentesPage {
   protected readonly agenteABaja = signal<Agente | null>(null);
   protected readonly dandoDeBaja = signal(false);
 
+  /* La confirmación de baja NO es un cajón a propósito: es un `alertdialog`
+     destructivo y tiene que interrumpir en el centro, no deslizarse por el
+     lateral como un formulario más. */
   confirmarBaja(agente: Agente, template?: TemplateRef<unknown>): void {
     this.agenteABaja.set(agente);
     if (template) {

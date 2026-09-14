@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 
 import { IconComponent, IconName } from '../icon/icon.component';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'critical';
 export type ButtonSize = 'sm' | 'md';
 
 /**
@@ -65,6 +65,13 @@ export class ButtonComponent {
       secondary:
         'bg-white text-primary border border-border hover:bg-bg-light hover:border-primary/30',
       ghost: 'bg-transparent text-text-muted hover:text-primary hover:bg-bg-light',
+      /* Acción destructiva (cancelar, eliminar). No inventa un tono: `critical`
+         es NEGRO en esta paleta, no rojo de alarma — la línea "premium médico"
+         del manifiesto §3.4. Nace de promover al átomo lo que el cajón de
+         Actividades ya escribía a mano (`border-critical/30 text-critical
+         hover:bg-critical-bg`) en dos botones distintos. */
+      critical:
+        'bg-white text-critical border border-critical/30 hover:bg-critical-bg hover:border-critical/50',
     };
 
     const width = this.fullWidth() ? 'w-full' : '';

@@ -4,6 +4,7 @@ import { OverlayRef } from '@angular/cdk/overlay';
 import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { DrawerComponent } from '../../../../shared/components/drawer/drawer.component';
 import { DialogService } from '../../../../shared/components/dialog/dialog.service';
 import { FilterChipComponent } from '../../../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
@@ -64,6 +65,7 @@ function soloDigitos(telefono: string): string {
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,
+    DrawerComponent,
     FilterChipComponent,
     IconComponent,
     InputComponent,
@@ -231,7 +233,7 @@ export class ConversacionSidebarComponent {
     this.archivoNombre.set(null);
     this.comprobanteSubido.set(null);
     this.modalVentaAbierto.set(true);
-    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
+    this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
       onClose: () => {
         this.modalVentaAbierto.set(false);
         this.activeOverlayRef = undefined;
@@ -356,7 +358,7 @@ export class ConversacionSidebarComponent {
     this.errorActividad.set('');
     this.modalActividadAbierto.set(true);
     this.activeOverlayRef?.dispose();
-    this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
+    this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
       onClose: () => {
         this.modalActividadAbierto.set(false);
         this.activeOverlayRef = undefined;
