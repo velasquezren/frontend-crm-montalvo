@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 
+import { CampanaOrigen, campanaOrigenDe } from '../../../../shared/models/campana-origen';
 import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
@@ -58,11 +59,23 @@ export class ConversacionThreadComponent {
   private readonly toast = inject(ToastService);
 
   protected readonly iniciales = generarIniciales;
+
+  /**
+   * Las URLs de imagen que manda Meta en el `referral` caducan. Una miniatura
+   * rota dejaría el icono de imagen partida dentro del panel, así que se oculta
+   * el elemento y el resto del contexto —que es el que importa— se queda.
+   */
+  protected ocultarMiniatura(evento: Event): void {
+    (evento.target as HTMLImageElement).style.display = 'none';
+  }
   private readonly messagesContainer = viewChild<ElementRef<HTMLElement>>('messagesScroll');
   private readonly bottomAnchor = viewChild<ElementRef<HTMLElement>>('bottomAnchor');
 
   /* ── Estado Local de Scroll & Lightbox ─────────────────────────── */
   protected readonly lightboxUrl = signal<string | null>(null);
+
+  /** Empieza plegado: en un móvil el hilo de mensajes vale más que el anuncio. */
+  protected readonly campanaAbierta = signal(false);
   protected readonly velocidades = signal<Record<string, number>>({});
   private scrollInicialListo = false;
   private chatActualId = '';
@@ -187,17 +200,9 @@ export class ConversacionThreadComponent {
     return textoExtra(cliente?.datosExtra, 'notaFijada');
   }
 
-  protected campanaDe(cliente: ConversacionResumen['cliente']): { titular?: string; anuncioId?: string } | null {
-    const raw = cliente.datosExtra?.['campanaOrigen'];
-    if (raw && typeof raw === 'object') {
-      const c = raw as Record<string, unknown>;
-      const titular = typeof c['titular'] === 'string' ? c['titular'] : undefined;
-      const anuncioId = typeof c['anuncioId'] === 'string' ? c['anuncioId'] : undefined;
-      if (titular || anuncioId) {
-        return { titular, anuncioId };
-      }
-    }
-    return null;
+  /** Ver `campanaOrigenDe`: una sola definición, compartida con el panel lateral. */
+  protected campanaDe(cliente: ConversacionResumen['cliente']): CampanaOrigen | null {
+    return campanaOrigenDe(cliente.datosExtra);
   }
 
   protected iniciarEdicionNotaFijada(notaActual?: string): void {

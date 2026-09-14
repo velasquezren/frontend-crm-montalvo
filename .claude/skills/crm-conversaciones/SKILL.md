@@ -9,6 +9,44 @@ Este módulo gestiona la mensajería omnicanal de WhatsApp Cloud API integrada c
 
 ## 1. Reglas Inmutables de WhatsApp Cloud API
 
+### Campaña de origen: qué guarda el CRM y qué ve la agente
+
+`Cliente.datosExtra.campanaOrigen` se llena desde el `referral` del webhook de
+Meta. Se lee **siempre** con `campanaOrigenDe()` (`shared/models/campana-origen.ts`),
+nunca leyendo el JSON a mano: esa función estaba duplicada en el hilo y en el
+panel lateral y las dos copias ya habían divergido —siete campos contra cuatro—,
+así que el mismo chat mostraba distinto contexto según dónde se mirara.
+
+**Todo campo es opcional, y no por comodidad.** Meta manda unos u otros según el
+anuncio (`image_url` solo en los de imagen, `thumbnail_url` solo en los de
+video, nunca `ctwa_clid` en los de Estados de WhatsApp), y los chats anteriores
+al 14-09-2026 guardaron solo cuatro campos.
+
+Lo que se captura hoy, contrastado con la referencia oficial del webhook
+(*Text messages webhook reference*, actualizada el 17-jun-2026):
+
+| Campo de Meta | Se guarda como | Para qué |
+|---|---|---|
+| `headline` | `titular` | Lo que prometía el anuncio |
+| `body` | `cuerpo` | **Lo que la paciente leyó** antes de escribir |
+| `welcome_message.text` | `saludo` | Suele ser su primer mensaje, literal |
+| `image_url` ó `thumbnail_url` | `imagenUrl` | Un anuncio de VIDEO no trae `image_url`: mapear solo ése lo dejaba sin imagen |
+| `media_type` | `mediaTipo` | `image` \| `video` |
+| `source_id` | `anuncioId` | Analítica; se oculta en móvil |
+| `source_url` | `origenUrl` | Enlace al anuncio |
+| `ctwa_clid` | `clickId` | **No se muestra.** Lo pide la Conversions API para atribuir una venta a su campaña; solo llega en este webhook y no se puede reconstruir después |
+
+⚠️ `welcome_message` no estaba en el DTO hasta el 14-09-2026, así que
+`whitelist: true` lo borraba entero — el modo de fallo que documenta
+`crm-backend-module`: no llega a medias, llega vacío y sin una línea de log.
+
+**En el hilo el banner se pliega.** Antes era una franja fija y en móvil solo
+cabía el titular: el cuerpo del anuncio vivía únicamente en el panel lateral,
+que en el teléfono hay que abrir aparte, así que quien contestaba desde el móvil
+no lo veía nunca. Cerrado ocupa lo mismo; un toque despliega imagen, cuerpo,
+saludo y enlace. Las URLs de imagen de Meta **caducan**: la miniatura se oculta
+sola si falla (`ocultarMiniatura`) en vez de dejar el icono roto.
+
 ### Ventana de Atención (24 Horas Orgánica / 72 Horas Meta Ads)
 - **Ventana Orgánica Estándar (24 horas)**:
   - Aplica cuando el paciente escribe directamente al número de la clínica.

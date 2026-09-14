@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal, TemplateRef, ViewContainerRef } from '@angular/core';
 import { OverlayRef } from '@angular/cdk/overlay';
 
+import { CampanaOrigen, campanaOrigenDe } from '../../../../shared/models/campana-origen';
 import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
@@ -125,19 +126,11 @@ export class ConversacionSidebarComponent {
     return calcularEdad(cliente.fechaNacimiento);
   }
 
-  protected campanaDe(cliente: ClienteChat): { titular?: string; anuncioId?: string; cuerpo?: string; origenUrl?: string } | null {
-    const raw = cliente.datosExtra?.['campanaOrigen'];
-    if (raw && typeof raw === 'object') {
-      const c = raw as Record<string, unknown>;
-      const titular = typeof c['titular'] === 'string' ? c['titular'] : undefined;
-      const anuncioId = typeof c['anuncioId'] === 'string' ? c['anuncioId'] : undefined;
-      const cuerpo = typeof c['cuerpo'] === 'string' ? c['cuerpo'] : undefined;
-      const origenUrl = typeof c['origenUrl'] === 'string' ? c['origenUrl'] : undefined;
-      if (titular || anuncioId || cuerpo) {
-        return { titular, anuncioId, cuerpo, origenUrl };
-      }
-    }
-    return null;
+  /** Ver `campanaOrigenDe`. Era una copia de la del hilo y ya había divergido:
+   *  leía cuatro campos donde la otra leía siete, así que el mismo chat
+   *  mostraba distinto contexto según dónde lo miraras. */
+  protected campanaDe(cliente: ClienteChat): CampanaOrigen | null {
+    return campanaOrigenDe(cliente.datosExtra);
   }
 
   protected copiarTexto(texto: string, label: string): void {

@@ -113,21 +113,77 @@
     </div>
   </header>
 
-  <!-- Banner de Campaña de Origen (Meta Ads / Click-to-WhatsApp) -->
+  <!-- Campaña de origen (Meta Ads / Click-to-WhatsApp).
+
+       Se pliega a propósito. Antes era una franja fija que en móvil solo
+       alcanzaba para el titular: el CUERPO del anuncio —lo que la paciente
+       realmente leyó antes de escribir— vivía únicamente en el panel lateral,
+       que en el móvil hay que abrir aparte. Quien contesta desde el teléfono no
+       lo veía nunca.
+
+       Ahora la barra cerrada ocupa lo mismo que antes y un toque despliega el
+       contexto completo: imagen del anuncio, texto, saludo que la paciente
+       envió y enlace al anuncio. El id queda en escritorio, que es donde se
+       usa para analítica. -->
   @if (campanaDe(chat.cliente); as campana) {
-    <div class="meta-campaign-banner flex items-center justify-between gap-2 px-4 py-2 bg-primary/6 border-b border-primary/15 text-xs text-text-dark shrink-0">
-      <div class="flex items-center gap-2 min-w-0 flex-1">
-        <span class="text-primary font-bold shrink-0 flex items-center gap-1">
-          <app-icon name="volume-2" [size]="13" />
-          Campaña:
-        </span>
-        <span class="font-semibold text-text-dark truncate">{{ campana.titular || 'Anuncio de Meta Ads' }}</span>
-        @if (campana.anuncioId) {
-          <span class="text-[10px] text-text-muted font-mono shrink-0 hidden sm:inline">(ID: {{ campana.anuncioId }})</span>
-        }
-      </div>
-      <app-badge variant="info" class="shrink-0 font-bold">Meta Ads</app-badge>
-    </div>
+    <section class="crm-campana shrink-0">
+      <button
+        type="button"
+        class="crm-campana-barra"
+        [attr.aria-expanded]="campanaAbierta()"
+        (click)="campanaAbierta.update(v => !v)">
+        <app-icon name="volume-2" [size]="13" class="text-primary shrink-0" />
+        <span class="crm-campana-titulo">{{ campana.titular || 'Anuncio de Meta Ads' }}</span>
+        <app-badge variant="info" class="shrink-0 hidden sm:inline-flex">Meta Ads</app-badge>
+        <app-icon
+          [name]="campanaAbierta() ? 'chevron-up' : 'chevron-down'"
+          [size]="14"
+          class="text-text-muted shrink-0" />
+      </button>
+
+      @if (campanaAbierta()) {
+        <div class="crm-campana-detalle animate-fade-scale">
+          @if (campana.imagenUrl) {
+            <img
+              [src]="campana.imagenUrl"
+              alt=""
+              loading="lazy"
+              class="crm-campana-miniatura"
+              (error)="ocultarMiniatura($event)" />
+          }
+
+          <div class="min-w-0 flex-1 space-y-1.5">
+            @if (campana.cuerpo) {
+              <p class="text-xs text-text-dark leading-relaxed">{{ campana.cuerpo }}</p>
+            }
+            @if (campana.saludo) {
+              <p class="text-[11px] text-text-muted leading-relaxed">
+                <span class="font-semibold text-text-dark">Escribió desde el anuncio:</span>
+                «{{ campana.saludo }}»
+              </p>
+            }
+            <span class="crm-meta crm-meta-sm">
+              @if (campana.mediaTipo) {
+                <span>{{ campana.mediaTipo === 'video' ? 'Anuncio de video' : 'Anuncio de imagen' }}</span>
+              }
+              @if (campana.anuncioId) {
+                <span class="crm-meta-clave hidden sm:inline">{{ campana.anuncioId }}</span>
+              }
+            </span>
+            @if (campana.origenUrl) {
+              <a
+                [href]="campana.origenUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline">
+                <app-icon name="external-link" [size]="11" />
+                Ver el anuncio
+              </a>
+            }
+          </div>
+        </div>
+      }
+    </section>
   }
 
   <!-- Banner de Aviso Clínico Fijado (Pinned Note) -->
