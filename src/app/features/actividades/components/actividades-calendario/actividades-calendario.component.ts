@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ViewEncapsulation, effect, input, output } from '@angular/core';
 import { CalendarComponent as SxCalendarComponent } from '@schedule-x/angular';
 import {
   CalendarApp,
@@ -12,11 +12,12 @@ import {
 import { createCurrentTimePlugin } from '@schedule-x/current-time';
 import { createEventsServicePlugin } from '@schedule-x/events-service';
 import { Temporal } from 'temporal-polyfill';
-/* El CSS del tema vive en angular.json (styles globales), no como import de
-   este archivo: un import CSS desde un componente lazy-loaded genera el
-   chunk .css en dist/ pero esbuild no lo enlaza con ningún <link> al cargar
-   la ruta — el archivo queda huérfano y la vista se ve sin estilos. Ver
-   `crm-design-system` §Schedule-X. */
+/* El tema de Schedule-X NO se importa aquí como módulo JS (`import '….css'`):
+   eso sí genera un .css suelto en dist/ que esbuild no enlaza con ningún
+   <link> al cargar la ruta, y la vista sale sin estilos. Viaja por
+   `styleUrl` (abajo), que Angular compila DENTRO del JS del componente y
+   inyecta al instanciarlo. Ver `crm-design-system`,
+   §«Al partir una página en subcomponentes». */
 
 import { Actividad, esActividadVencida } from '../../actividad.model';
 
@@ -85,18 +86,31 @@ function aEventoCalendario(a: Actividad): CalendarEventExternal {
  * primero, no a ciegas. El coste de tenerlo estático son ~63 kB transferidos en
  * `actividades-page`; el de tenerlo diferido fue una vista que no se veía.
  *
- * El CSS del tema sigue siendo global (angular.json): mover el HTML sin su CSS
- * es la trampa que documenta el §8 de `check:skills`, y con una librería de
- * terceros no avisa ni el compilador. Lo que sí viaja con este componente es su
- * `.css` propio —la leyenda y las variables `--sx-*`—, que es lo que reestiliza
- * Schedule-X sin tocar sus clases hasheadas.
+ * **El tema de Schedule-X viaja con este componente, ya no con angular.json.**
+ * Estaba en los `styles` globales, así que sus 33,7 kB (5,4 kB gzip) entraban
+ * en el paquete inicial de TODO el mundo —también en la pantalla de login, y
+ * también de una agente que nunca abre la pestaña Calendario—. Ahora es un
+ * `styleUrl` de este componente, que vive en el chunk de Actividades: mismos
+ * bytes, pero los paga quien usa el calendario.
+ *
+ * Eso obliga a `ViewEncapsulation.None`, y no es un descuido: Schedule-X pinta
+ * su DOM por su cuenta dentro de `<sx-calendar>`, así que esos nodos NUNCA
+ * llevan el atributo `_ngcontent-…` que `Emulated` exige. Con encapsulación
+ * emulada el tema compila a `.sx__…[_ngcontent-xyz]` y no casa con nada: el
+ * calendario saldría sin estilos y ni el compilador ni las pruebas avisarían.
+ * A cambio, el `.css` propio de este componente también se vuelve global —por
+ * eso sus clases están prefijadas `crm-` y son únicas en el proyecto—.
  */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-actividades-calendario',
   imports: [SxCalendarComponent],
   templateUrl: './actividades-calendario.component.html',
-  styleUrl: './actividades-calendario.component.css',
+  styleUrls: [
+    './actividades-calendario.component.css',
+    '../../../../../../node_modules/@schedule-x/theme-default/dist/index.css',
+  ],
+  encapsulation: ViewEncapsulation.None,
 })
 export class ActividadesCalendarioComponent {
   readonly actividades = input.required<readonly Actividad[]>();

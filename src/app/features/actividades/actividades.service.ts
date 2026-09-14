@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
 import { Actividad, EstadoActividad, FrecuenciaRepeticion, TipoActividad } from './actividad.model';
@@ -61,6 +61,31 @@ export interface ActualizarActividadDto {
 export class ActividadesService {
   private readonly api = inject(ApiService);
 
+  private readonly mutaciones = signal(0);
+
+  /**
+   * Sube en CADA mutación de actividades, venga de donde venga. Quien muestre
+   * actividades se suscribe y recarga; así no hace falta que cada sitio sepa
+   * quién más las está pintando.
+   *
+   * **La cicatriz:** la campana del layout y la página de Actividades tenían
+   * cada una su propio `httpResource` del mismo `/actividades/resumen`. La
+   * página recargaba los suyos tras mutar, pero nada avisaba a la campana, así
+   * que completar una actividad dejaba el badge con el número viejo hasta el
+   * respaldo de 60 s — y la agente, que es más rápida que eso, recargaba la
+   * página. Lo mismo con «Actividad Rápida» desde el chat, que creaba una
+   * actividad sin que la campana se enterara nunca.
+   *
+   * Solo sube si la petición salió bien: un fallo no invalida nada.
+   */
+  readonly cambios = this.mutaciones.asReadonly();
+
+  private async tras<T>(operacion: Promise<T>): Promise<T> {
+    const resultado = await operacion;
+    this.mutaciones.update(n => n + 1);
+    return resultado;
+  }
+
   listarRequest(filtro: FiltroActividades = {}): ResourceRequest {
     return this.api.request('/actividades', { ...filtro });
   }
@@ -80,18 +105,20 @@ export class ActividadesService {
   }
 
   crear(dto: CrearActividadDto): Promise<Actividad> {
-    return this.api.post<Actividad>('/actividades', dto);
+    return this.tras(this.api.post<Actividad>('/actividades', dto));
   }
 
   actualizar(id: string, cambios: ActualizarActividadDto): Promise<Actividad> {
-    return this.api.patch<Actividad>(`/actividades/${id}`, cambios);
+    return this.tras(this.api.patch<Actividad>(`/actividades/${id}`, cambios));
   }
 
   actualizarEstado(id: string, estado: EstadoActividad, notas?: string): Promise<Actividad> {
-    return this.api.patch<Actividad>(`/actividades/${id}/estado`, { estado, notas: notas?.trim() || undefined });
+    return this.tras(
+      this.api.patch<Actividad>(`/actividades/${id}/estado`, { estado, notas: notas?.trim() || undefined }),
+    );
   }
 
   eliminar(id: string): Promise<{ ok: boolean }> {
-    return this.api.delete<{ ok: boolean }>(`/actividades/${id}`);
+    return this.tras(this.api.delete<{ ok: boolean }>(`/actividades/${id}`));
   }
 }

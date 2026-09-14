@@ -1,10 +1,11 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { ApplicationConfig, inject, provideAppInitializer, provideZonelessChangeDetection, provideBrowserGlobalErrorListeners, isDevMode } from '@angular/core';
-import { provideRouter, withComponentInputBinding, withViewTransitions, withPreloading, PreloadAllModules } from '@angular/router';
+import { provideRouter, withComponentInputBinding, withViewTransitions, withPreloading } from '@angular/router';
 
 import { routes } from './app.routes';
 import { cacheInterceptor } from './core/api/cache.interceptor';
 import { AuthService } from './core/auth/auth.service';
+import { PreloadPorRol } from './core/auth/preload-por-rol.strategy';
 import { tokenInterceptor } from './core/auth/token.interceptor';
 import { provideServiceWorker } from '@angular/service-worker';
 
@@ -16,7 +17,11 @@ export const appConfig: ApplicationConfig = {
       routes,
       withViewTransitions(),
       withComponentInputBinding(),
-      withPreloading(PreloadAllModules),
+      /* Precarga solo lo que el rol puede abrir. `PreloadAllModules` bajaba
+         388,4 kB gzip de rutas en segundo plano, de los cuales 109,6 kB son
+         pantallas de ADMIN que una agente nunca puede abrir. El porqué y la
+         medición, en `preload-por-rol.strategy.ts`. */
+      withPreloading(PreloadPorRol),
     ),
     /* Orden a propósito: la caché va PRIMERO para que una respuesta servida de
        memoria ni siquiera pase por el interceptor del token. */

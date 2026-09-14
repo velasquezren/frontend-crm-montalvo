@@ -218,6 +218,31 @@ sintaxis, es de a qué elemento le llega la regla.
 **Al terminar un refactor así, comprueba que ningún selector quede definido en un
 archivo y usado solo en otro.** Es lo único que atrapa el fallo.
 
+### El tema de una librería de terceros: `ViewEncapsulation.None`, y va en el componente
+
+La misma regla al revés. Schedule-X pinta su propio DOM dentro de
+`<sx-calendar>`, así que esos nodos **nunca** llevan el atributo
+`_ngcontent-…`: con encapsulación `Emulated` su tema compila a
+`.sx__…[_ngcontent-xyz]`, no casa con nada y el calendario sale desnudo. Por
+eso `ActividadesCalendarioComponent` declara `ViewEncapsulation.None`.
+
+Y el tema **viaja como `styleUrl` de ese componente**, no en los `styles` de
+`angular.json`. Estuvo global hasta el 2026-09-14 y eso metía sus 33,7 kB
+(5,4 kB gzip) en el paquete inicial de todo el mundo —también en el login, y
+también de quien nunca abre la pestaña Calendario—. Sacarlo bajó el CSS inicial
+de 100,98 kB a 72,56 kB brutos (14,25 → 9,99 kB transferidos).
+
+Las dos formas de meter CSS de terceros **no son la misma**, y confundirlas
+costó un despliegue:
+
+| Cómo | Qué hace esbuild | Resultado |
+| --- | --- | --- |
+| `import '…/index.css'` en el `.ts` | emite un `.css` suelto en `dist/` | **huérfano**: nadie lo enlaza al cargar la ruta, vista sin estilos |
+| `styleUrls: ['…/index.css']` | lo compila **dentro** del JS del componente | se inyecta al instanciarlo; cero peticiones extra |
+
+Con `None`, el `.css` propio del componente también se vuelve global: sus
+clases van prefijadas `crm-` y tienen que ser únicas en el proyecto.
+
 ### Si la misma clase la necesitan dos o tres plantillas, es un átomo
 
 Copiar el bloque de CSS a cada subcomponente *funciona* — es el precio de la

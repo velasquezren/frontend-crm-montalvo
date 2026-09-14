@@ -10,6 +10,7 @@ import {
   effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
 import { Router } from '@angular/router';
 
@@ -108,6 +109,26 @@ export class NotificacionesBellComponent {
     const intervalo = setInterval(() => this.resumen.reload(), 60_000);
     inject(DestroyRef).onDestroy(() => clearInterval(intervalo));
 
+    /* Cualquier mutación de actividades —de esta campana, de la página o de
+       «Actividad Rápida» en el chat— recarga el badge. Antes cada sitio
+       recargaba solo lo suyo y el badge se quedaba con el número viejo hasta
+       el respaldo de 60 s; ver `ActividadesService.cambios`.
+
+       `untracked` no es decorativo: `reload()` escribe los signals internos del
+       recurso y `abierto()` es otro signal. Sin él este effect se suscribiría a
+       lo que escribe y a cada apertura del panel — la familia de fallo que
+       documenta `crm-rendimiento`. Aquí solo se depende de `cambios`. */
+    let vistas = this.actividadesService.cambios();
+    effect(() => {
+      const n = this.actividadesService.cambios();
+      if (n === vistas) return; // primera ejecución: el recurso ya se pidió solo
+      vistas = n;
+      untracked(() => {
+        this.resumen.reload();
+        if (this.abierto()) this.items.reload();
+      });
+    });
+
     effect(() => {
       const aviso = this.realtimeService.recordatorioActividad();
       if (!aviso) return;
@@ -163,8 +184,8 @@ export class NotificacionesBellComponent {
     try {
       await this.actividadesService.actualizarEstado(actividad.id, 'COMPLETADA');
       this.toast.show('Marcada como completada.', 'success');
-      this.items.reload();
-      this.resumen.reload();
+      /* No se recarga a mano: `ActividadesService.cambios` ya lo disparó, y
+         aquí además hace falta que se entere la página de Actividades. */
     } catch {
       this.toast.show('No se pudo completar la actividad.', 'error');
     }

@@ -53,6 +53,13 @@ Medidos contra producción desde Bolivia el 2026-08-05:
 que sigue: si un cambio no reduce el número de peticiones, su tamaño o el momento en
 que se hacen, no va a notarse aunque el perfilador diga que algo mejoró.
 
+> **Revisada el 2026-09-14 y sigue en pie.** Los modelos nuevos desde entonces
+> nacieron indexados: `Conversacion` tiene `[lineaId, updatedAt]`, `Actividad`
+> los cinco suyos, `VentaImportada` nueve. Tampoco hay `await` dentro de bucles
+> nuevos ni ningún `effect` realimentado (se revisaron los 9 que escriben
+> signals sin `untracked`: los tres que leen lo que escriben convergen en una
+> iteración). No hay nada que arreglar en la base; el cuello sigue siendo la red.
+
 ### Auditoría de base de datos del 2026-08-11
 
 Se midió con `EXPLAIN ANALYZE` contra producción para descartar N+1 y consultas sin
@@ -130,6 +137,24 @@ días más de trabajo con el bundle inicial plano. La deriva no es monótona: lo
 que se agrega dentro de una ruta *lazy* no toca esta cifra.
 
 Referencia del 2026-09-05: **424.37 kB brutos / 108.56 kB transferidos**.
+Referencia del 2026-09-14: **401.11 kB brutos / 105.69 kB transferidos**, tras
+sacar el tema de Schedule-X de los `styles` globales (ver más abajo). El CSS
+inicial pasó de 100.98 kB / 14.25 kB a **72.56 kB / 9.99 kB**.
+
+**Esa cifra ya no se vigila a mano.** `angular.json` lleva presupuestos en la
+configuración `production`, así que el `ng build` —y por tanto `npm run build`—
+avisa y luego falla solo si el paquete inicial se infla:
+
+| Presupuesto | Aviso | Error |
+| --- | --- | --- |
+| `initial` | 415 kB | 440 kB |
+| `anyComponentStyle` | 30 kB | 40 kB |
+
+Estaban en 500 kB / 1 MB, que con un inicial de 401 kB dejaba **99 kB de
+deriva silenciosa**: exactamente lo que un número anotado a mano en un markdown
+no atrapa. El de `anyComponentStyle` está en 30 kB porque el único que lo roza
+es el tema vendorizado de Schedule-X (28,43 kB); el CSS propio más grande del
+proyecto es de 10 kB.
 
 Para un cambio que afecta a una vista concreta, compara además el tamaño de su
 *lazy chunk* en la misma tabla. **Esa cifra puede importar más que el total
@@ -201,6 +226,31 @@ reportes desde producción. **Las lecciones que sí quedan en pie:**
 **Antes de volver a diferir esa vista, hay que reproducir el fallo.** Repetir el
 intento a ciegas es cómo se llegó al segundo despliegue sin arreglo.
 
+**Lo que sí se pudo recuperar sin tocar el `@defer` (2026-09-14):** el *CSS* del
+calendario. El tema de Schedule-X estaba en los `styles` de `angular.json`, o
+sea en el paquete **inicial** de todo el mundo, login incluido. Ahora es un
+`styleUrl` de `ActividadesCalendarioComponent` —que obliga a
+`ViewEncapsulation.None`, porque Schedule-X pinta su propio DOM y esos nodos no
+llevan el atributo de la encapsulación emulada— y viaja en el chunk de
+Actividades. Mismos bytes, los paga quien usa el calendario:
+
+| | Bruto | Transferido |
+| --- | --- | --- |
+| `styles` inicial antes | 100.98 kB | 14.25 kB |
+| `styles` inicial después | **72.56 kB** | **9.99 kB** |
+| `actividades-page` antes | 323.96 kB | 74.95 kB |
+| `actividades-page` después | 352.23 kB | 79.33 kB |
+
+Comprobado en `dist/`: cero `.css` huérfanos y cero `sx__` en el CSS global.
+El mecanismo está en `crm-design-system`; **un `import '….css'` desde el `.ts`
+NO es lo mismo que un `styleUrl`** y es lo que sí deja el archivo huérfano.
+
+**Y lo que se descartó, para no repetir el trabajo:** quitar
+`temporal-polyfill`. Se usa en una sola línea, pero no se puede sacar — es
+`peerDependency` de `@schedule-x/calendar` **0.3.0** y `CalendarEventExternal.start`
+está tipado `Temporal.ZonedDateTime`. Mientras Schedule-X v4 sea el calendario,
+Temporal viaja con él.
+
 ### Backend: `curl -w`, no impresiones
 
 ```bash
@@ -261,6 +311,41 @@ Los siete que entran hoy, y la lista es exhaustiva:
 > y la de este archivo coincidan, justamente para que nadie amplíe la caché sin
 > pasar por esa pregunta. Los endpoints de `/servicios/*` se alimentan del Excel
 > importado y no cambian en vivo; cualquier mutación invalida la caché completa.
+
+**4. La precarga de rutas mira el rol** (`core/auth/preload-por-rol.strategy.ts`).
+Antes era `PreloadAllModules`, que descarga la aplicación entera en cuanto
+termina la primera navegación. Medido sobre el `ng build` del 2026-09-14
+(cierre transitivo estático de los chunks de cada ruta, comprimidos):
+
+| | Bruto | gzip |
+| --- | --- | --- |
+| Todo lo lazy que bajaba `PreloadAllModules` | 1.378,2 kB | **388,4 kB** |
+| De eso, exclusivo de rutas ADMIN/SUPER_ADMIN | 391,8 kB | **109,6 kB** |
+
+Una agente o recepción se bajaba esos 109,6 kB —Finanzas, Planilla, Analítica,
+Resumen Anual, Desempeño, Servicios, Usuarios y Líneas— para nada: `exigeRol` le
+cierra la ruta y el backend le devolvería 403. Es **casi el peso del paquete
+inicial entero** (105,69 kB transferidos), bajado por segunda vez y compitiendo
+por el ancho de banda con las peticiones que sí está haciendo, en móvil y con
+conexión mediocre.
+
+**El dato que hacía falta y no es obvio: el precargador de Angular NO consulta
+`canActivate`.** Verificado en la fuente instalada (21.2.22,
+`_router_module-chunk.mjs:730`): solo mira `canLoad`, y solo para
+`loadChildren`. Todas las rutas de este CRM usan `loadComponent`, así que ningún
+guard llegaba a estorbarle. No es un bug: precargar no es navegar.
+
+El rol vive en UN solo sitio —`exigeRol('ADMIN')` en la ruta— y la estrategia lo
+lee del propio guard (`rolExigidoPor`). La alternativa era repetirlo en un
+`data: { rol }`, y un `canActivate` y un `data` que dicen cosas distintas es la
+deriva que aquí se corrige con validadores, no con disciplina.
+`preload-por-rol.strategy.spec.ts` recorre `app.routes.ts` **real**: una ruta
+nueva con `exigeRol` queda cubierta el día que alguien la escriba.
+
+No se pierde nada: `RouterPreloader` reintenta en cada `NavigationEnd` y salta
+lo ya cargado, así que devolver `of(null)` no es definitivo — en el login aún no
+hay usuario, no se precarga nada, y al entrar vuelve a pasar por aquí con el rol
+resuelto. Un ADMIN sigue precargándolo todo.
 
 **3. El polling de respaldo es de 60 s, no de 15.** El mecanismo principal es
 `RealtimeService` por WebSocket; el intervalo es una red de seguridad por si el

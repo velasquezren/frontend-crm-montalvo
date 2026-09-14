@@ -11,6 +11,7 @@ import {
   effect,
   inject,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
@@ -195,6 +196,27 @@ export class ActividadesPage implements OnDestroy {
         telefono: qp['clienteTelefono'] ?? '',
       });
       if (qp['leadId']) this.formLeadId.set(qp['leadId']);
+    });
+
+    /* Las tres vistas de esta página se refrescan con CUALQUIER mutación de
+       actividades, incluidas las que no nacen aquí: completar desde la campana
+       del layout, o crear con «Actividad Rápida» desde el chat. Antes cada
+       método repetía estas tres líneas —cinco veces el mismo bloque— y aun así
+       solo cubría sus propias mutaciones. Ver `ActividadesService.cambios`.
+
+       `untracked` porque `reload()` escribe los signals internos de cada
+       recurso: sin él, el effect se suscribiría a lo que él mismo provoca. Es
+       el fallo que documenta `crm-rendimiento`. */
+    let vistas = this.actividadesService.cambios();
+    effect(() => {
+      const n = this.actividadesService.cambios();
+      if (n === vistas) return; // primera ejecución: los recursos ya se piden solos
+      vistas = n;
+      untracked(() => {
+        this.actividades.reload();
+        this.actividadesCalendario.reload();
+        this.resumen.reload();
+      });
     });
   }
 
@@ -535,9 +557,6 @@ export class ActividadesPage implements OnDestroy {
       if (this.actividadDetalle()?.id === actividad.id) {
         this.actividadDetalle.set(act);
       }
-      this.actividades.reload();
-      this.actividadesCalendario.reload();
-      this.resumen.reload();
     } catch (err) {
       this.toast.show(mensajeDeError(err, 'No se pudo reprogramar la actividad.'), 'error');
     }
@@ -548,9 +567,6 @@ export class ActividadesPage implements OnDestroy {
       await this.actividadesService.actualizarEstado(actividad.id, 'COMPLETADA');
       this.toast.show('Actividad completada. Agenda el siguiente paso comercial.', 'success');
       this.cerrarDetalle();
-      this.actividades.reload();
-      this.actividadesCalendario.reload();
-      this.resumen.reload();
 
       // Abrir inmediatamente la siguiente actividad para este paciente
       this.abrirCreacion();
@@ -638,9 +654,6 @@ export class ActividadesPage implements OnDestroy {
       }
 
       this.cerrarModal();
-      this.actividades.reload();
-      this.actividadesCalendario.reload();
-      this.resumen.reload();
     } catch (err) {
       this.errorForm.set(mensajeDeError(err, 'No se pudo guardar la actividad.'));
     } finally {
@@ -655,9 +668,6 @@ export class ActividadesPage implements OnDestroy {
       if (this.actividadDetalle()?.id === actividad.id) {
         this.actividadDetalle.set(act);
       }
-      this.actividades.reload();
-      this.actividadesCalendario.reload();
-      this.resumen.reload();
     } catch (err) {
       this.toast.show(mensajeDeError(err, 'No se pudo actualizar el estado.'), 'error');
     }
@@ -675,9 +685,6 @@ export class ActividadesPage implements OnDestroy {
       if (this.actividadDetalle()?.id === actividad.id) {
         this.cerrarDetalle();
       }
-      this.actividades.reload();
-      this.actividadesCalendario.reload();
-      this.resumen.reload();
     } catch (err) {
       this.toast.show(mensajeDeError(err, 'No se pudo eliminar.'), 'error');
     }
