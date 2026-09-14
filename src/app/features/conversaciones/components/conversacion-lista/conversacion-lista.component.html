@@ -192,7 +192,9 @@
               </span>
             </div>
 
-            <p class="text-xs text-text-muted mt-1 truncate">{{ chat.linea.nombre }}</p>
+            <span class="crm-linea mt-1" [title]="chat.linea.nombre">
+              <span>{{ chat.linea.nombre }}</span>
+            </span>
             <!-- Último mensaje + badge de agente -->
             <div class="flex items-center justify-between gap-2 mt-1">
               <div class="flex-1 min-w-0">

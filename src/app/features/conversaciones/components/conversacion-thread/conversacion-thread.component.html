@@ -11,10 +11,21 @@
       </button>
       <app-avatar [initials]="chat.cliente | inicialesCliente" [nombre]="chat.cliente | nombreCliente" class="shrink-0" />
       <div class="min-w-0 flex-1">
-        <p class="font-semibold text-text-dark text-xs sm:text-sm leading-tight truncate">
-          {{ chat.cliente | nombreCliente }}
-        </p>
-        <p class="text-xs text-secondary truncate">{{ chat.linea.nombre }} · {{ chat.linea.telefono }}</p>
+        <div class="flex items-baseline gap-2 min-w-0">
+          <p class="font-semibold text-text-dark text-xs sm:text-sm leading-tight truncate">
+            {{ chat.cliente | nombreCliente }}
+          </p>
+          <!-- La línea va al lado del nombre, no debajo: debajo quedaba en teal
+               y con su propio teléfono, así que competía con la identidad de la
+               paciente y dejaba DOS números apilados. El teléfono de la línea
+               no se repite —se ve en el `title`— porque quien contesta no lo
+               necesita mientras lee. -->
+          <span
+            class="crm-linea shrink-0 max-w-[7rem] sm:max-w-[12rem]"
+            [title]="chat.linea.nombre + ' · ' + chat.linea.telefono">
+            <span>{{ chat.linea.nombre }}</span>
+          </span>
+        </div>
         <div class="flex items-center gap-1.5 mt-0.5 min-w-0">
           <span class="text-[11px] sm:text-xs text-text-muted leading-tight truncate max-w-[120px] sm:max-w-none">{{ chat.cliente.telefono }}</span>
           <button

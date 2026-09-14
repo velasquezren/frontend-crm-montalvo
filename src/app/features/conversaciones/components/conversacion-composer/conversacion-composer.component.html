@@ -1,6 +1,11 @@
-@if (state.detalleActual()?.linea; as linea) {
-  <p class="text-xs text-text-muted px-4 py-2 border-t border-border">Respondiendo desde {{ linea.nombre }} · {{ linea.telefono }}</p>
-}
+<!-- La línea por la que se responde NO se repite acá. Estaba como una franja a
+     todo el ancho con borde superior, entre el último mensaje y la caja de
+     texto, así que se leía como una línea más del hilo — parecía algo que había
+     escrito la paciente. Y era redundante: `.chat-header` es `flex-shrink: 0`
+     dentro de una columna flex, o sea que la cabecera NUNCA se va de pantalla,
+     tampoco en móvil con el teclado abierto, y ahí vive el indicador de línea.
+     Una conversación pertenece a una sola línea (`@@unique([clienteId, lineaId])`
+     en el schema), así que no hay ambigüedad posible al enviar. -->
 <div
   class="composer-container"
   (dragover)="onDragOver($event)"

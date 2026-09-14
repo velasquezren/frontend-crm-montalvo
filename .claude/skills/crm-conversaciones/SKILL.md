@@ -9,6 +9,28 @@ Este módulo gestiona la mensajería omnicanal de WhatsApp Cloud API integrada c
 
 ## 1. Reglas Inmutables de WhatsApp Cloud API
 
+### La línea del chat se dice UNA vez, y en la cabecera
+
+`.chat-header` es `flex-shrink: 0` dentro de una columna flex: **nunca se va de
+pantalla**, tampoco en móvil con el teclado abierto. Ahí vive el indicador de
+línea (`.crm-linea`), al lado del nombre de la paciente.
+
+No se repite encima del compositor, y esa franja se quitó por una razón de UX
+concreta: a todo el ancho, con borde superior y entre el último mensaje y la
+caja de texto, **se leía como una línea más del hilo** — parecía algo escrito
+por la paciente. Tampoco hacía falta: una conversación pertenece a una sola
+línea (`@@unique([clienteId, lineaId])`), así que al enviar no hay ambigüedad
+que resolver.
+
+Debajo del nombre tampoco: ahí estaba en teal y con el teléfono de la línea
+pegado, así que competía con la identidad de la paciente y dejaba **dos números
+apilados**. El teléfono de la línea vive en el `title`; quien contesta no lo
+necesita mientras lee.
+
+Es el patrón de cualquier bandeja multicanal seria: el canal es metadato de la
+conversación, va en su cabecera como marca discreta, y no se mete en el flujo de
+mensajes ni se repite en cada superficie.
+
 ### Campaña de origen: qué guarda el CRM y qué ve la agente
 
 `Cliente.datosExtra.campanaOrigen` se llena desde el `referral` del webhook de

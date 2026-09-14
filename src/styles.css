@@ -584,3 +584,48 @@ tr:hover .celda-sticky {
   background: var(--color-background);
   box-shadow: var(--shadow-subtle);
 }
+
+/* ==========================================================================
+   Línea de WhatsApp por la que va un chat
+   ========================================================================== */
+
+/* El mismo dato estaba escrito de TRES formas: en la cabecera del chat como
+   `text-secondary` con el teléfono de la línea pegado —lo que dejaba dos
+   teléfonos apilados bajo el nombre de la paciente, compitiendo con su
+   identidad—; en cada fila del inbox como un párrafo propio; y encima del
+   compositor como una franja a todo el ancho con borde superior, que al estar
+   entre el último mensaje y la caja de texto se leía como parte del hilo.
+
+   No es una cápsula: en este sistema la píldora es SOLO del estado, y una línea
+   es un canal. Un punto del verde de marca y el nombre en voz baja alcanzan
+   para decir de dónde viene sin disputarle el sitio a la paciente.
+
+   El nombre se recorta por CSS y el completo va en el `title`: los cuatro
+   nombres reales son largos ("Recepción Clínica Montalvo Corporativo") y en una
+   fila de inbox no caben enteros de ninguna manera. */
+.crm-linea {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.crm-linea::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: var(--color-primary);
+}
+
+.crm-linea > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
