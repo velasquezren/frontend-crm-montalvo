@@ -1021,7 +1021,18 @@
       (periodoSeleccionado)="seleccionarPeriodo($event)"
       (importarClic)="setPestana('IMPORTAR')"
       (archivoSeleccionado)="procesarArchivo($event)" />
+  } @else if (errorConsolidado()) {
+    <!-- Va ANTES que todo lo demás: si el servidor no contestó, ninguna otra
+         rama puede afirmar nada sobre el dinero de este mes. Antes este caso
+         caía en «Todavía no hay liquidación calculada», que no es un hueco
+         sino una mentira — ver el docblock de `<app-error-carga>`. -->
+    <app-error-carga
+      que="la liquidación del periodo"
+      (reintentar)="reintentarConsolidado()" />
   } @else if (!consolidado()) {
+    <!-- Todavía no llegó. No se sabe si habrá filas o no, así que no se dice. -->
+    <app-loading-skeleton height="200px" />
+  } @else if (sinLiquidacion()) {
     <div class="panel text-center py-12 px-6 flex flex-col items-center">
       <div class="w-14 h-14 rounded-2xl bg-neutral-bg flex items-center justify-center mb-4 text-text-muted">
         <app-icon name="bar-chart" [size]="24" />

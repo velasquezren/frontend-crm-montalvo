@@ -209,6 +209,70 @@ export class PlanillaComisionesPage implements OnDestroy {
   protected readonly consolidado = signal<ReporteConsolidado | null>(null);
 
   /**
+   * Los tres estados que el consolidado NO tenía, y por los que mentía.
+   *
+   * Antes solo existía `consolidado`, y un `catch → null` metía en ese mismo
+   * `null` dos cosas que no se parecen: «el servidor no contestó» y «este mes
+   * no está calculado». La plantilla leía el `null` y pintaba «Todavía no hay
+   * liquidación calculada», o sea afirmaba que no hay dinero calculado cuando
+   * lo que pasaba era que no había respuesta.
+   *
+   * Y el cartel tampoco acertaba en su propio caso: el backend **no falla** por
+   * un periodo sin calcular —`reporteConsolidado` solo lanza 409 si el periodo
+   * no existe— y devuelve el informe con `filas: []`. Así que el único momento
+   * en que ese texto era correcto era justo aquel en el que no se mostraba.
+   */
+  private readonly cargandoConsolidado = signal(false);
+  /** El servidor no contestó. Se mira ANTES que los datos: manda sobre todo. */
+  protected readonly errorConsolidado = signal(false);
+
+  /**
+   * Se enciende la primera vez que se pide el consolidado y ya no se apaga.
+   *
+   * A partir de ahí, cualquier mutación lo refresca aunque se esté en otra
+   * pestaña. Antes esto se deducía de `consolidado() !== null`, que dejaba de
+   * ser cierto en cuanto una petición fallaba: tras un error el panel se
+   * quedaba sin refrescar en silencio hasta volver a Reportes.
+   */
+  private readonly consolidadoActivo = signal(false);
+
+  /**
+   * El informe llegó bien y no trae ni una fila: nadie liquidó este mes.
+   *
+   * Es la ÚNICA condición que autoriza a decir «todavía no hay liquidación
+   * calculada». Que `consolidado()` sea `null` no lo es: puede no haber
+   * llegado todavía o haber fallado.
+   */
+  protected readonly sinLiquidacion = computed(
+    () =>
+      !this.cargandoConsolidado() &&
+      !this.errorConsolidado() &&
+      this.consolidado()?.filas.length === 0,
+  );
+
+  /* ── Carreras de respuesta (F08) ───────────────────────────────────────
+   *
+   * `alertas` y `consolidado` son las dos únicas lecturas de esta pantalla
+   * hechas a mano con promesas. El resto —`ventas`, `desglose`, `planes`,
+   * `revision`— son `httpResource` ligados a `periodoId()`: se rehacen solos al
+   * cambiar de mes y descartan lo que llega tarde. Estas dos no lo hacían, así
+   * que pedir enero, cambiar a febrero y recibir enero al final dejaba cifras
+   * de enero bajo la cabecera de febrero, sin ningún aviso.
+   *
+   * Cada petición se numera al salir y solo escribe si sigue siendo la última
+   * emitida de SU panel. Dos contadores y no uno compartido: `cargarConsolidado`
+   * pide solo el consolidado, y con un contador único anularía unas alertas que
+   * viajaran a la vez.
+   *
+   * Comparar `periodoId()` al volver no bastaría: dos refrescos seguidos del
+   * MISMO periodo —dos ajustes de fila, por ejemplo— también se cruzan, y ahí
+   * la clave es igual en los dos. Gana quien contesta último, que no tiene por
+   * qué ser quien se pidió después.
+   */
+  private generacionAlertas = 0;
+  private generacionConsolidado = 0;
+
+  /**
    * Si los informes de esta pantalla incluyen a las vendedoras dadas de baja.
    *
    * Arranca en `false`: para eso se las dio de baja. Es un interruptor y no una
@@ -388,11 +452,12 @@ export class PlanillaComisionesPage implements OnDestroy {
      * Al elegir otro periodo se recargan sus alertas y su reporte.
      *
      * **El `untracked` no es opcional: sin él esto es un bucle infinito.**
-     * `refrescarPanelesDelPeriodo()` lee `pestana()` y `consolidado()` de forma
-     * SÍNCRONA para decidir si pide el consolidado —antes de cualquier `await`,
-     * así que el effect se suscribe a los dos— y después escribe
-     * `consolidado.set()`. Escribir lo que se lee vuelve a disparar el effect,
-     * que vuelve a pedir, que vuelve a escribir.
+     * `refrescarPanelesDelPeriodo()` lee `pestana()` y `consolidadoActivo()` de
+     * forma SÍNCRONA para decidir si pide el consolidado —antes de cualquier
+     * `await`, así que el effect se suscribe a los dos— y después escribe ese
+     * mismo `consolidadoActivo`. Escribir lo que se lee vuelve a disparar el
+     * effect, que vuelve a pedir, que vuelve a escribir. (Antes la señal leída
+     * era `consolidado()`; cambió el nombre, no el riesgo.)
      *
      * No se notaba porque no cuelga el navegador: se estabiliza a la velocidad
      * de la red. Medido en producción sobre tres días de uso real, eran **240
@@ -656,7 +721,11 @@ export class PlanillaComisionesPage implements OnDestroy {
     if ((p === 'CLASIFICACION' || p === 'PLANES') && !this.configuracion()) {
       void this.cargarConfiguracion();
     }
-    if (p === 'REPORTES' && !this.consolidado()) {
+    /* El `errorConsolidado()` conserva lo que hacía el `!consolidado()` de
+       antes: volver a Reportes después de un fallo reintenta. Con solo
+       `consolidadoActivo` el panel se quedaría con el cartel de error hasta
+       pulsar Reintentar. */
+    if (p === 'REPORTES' && (!this.consolidadoActivo() || this.errorConsolidado())) {
       const id = this.periodoId();
       if (id) void this.cargarConsolidado(id);
     }
@@ -1131,31 +1200,75 @@ export class PlanillaComisionesPage implements OnDestroy {
     this.pagina.set(1);
   }
 
-  /** Recarga alertas (y consolidado si ya estaba activo o en la pestaña REPORTES). */
+  /**
+   * Recarga alertas (y consolidado si ya estaba activo o en la pestaña REPORTES).
+   *
+   * Cada panel se pide y se aplica por su cuenta. Antes los dos viajaban en un
+   * mismo `allSettled` y se escribían juntos: unas alertas lentas dejaban el
+   * consolidado esperando con su dato ya en la mano, y un fallo de uno se
+   * mezclaba con el desenlace del otro. Siguen saliendo a la vez —eso no
+   * cambia— pero ya no se esperan.
+   */
   private async refrescarPanelesDelPeriodo(id: string): Promise<void> {
-    const tareas: [Promise<Alertas>, Promise<ReporteConsolidado | null>] = [
-      this.service.obtenerAlertas(id),
-      this.pestana() === 'REPORTES' || this.consolidado() !== null
-        ? this.service.obtenerConsolidado(id, this.incluirOcultas()).catch(() => null)
-        : Promise.resolve(null),
-    ];
+    const pideConsolidado = this.pestana() === 'REPORTES' || this.consolidadoActivo();
+    await Promise.all([
+      this.cargarAlertas(id),
+      pideConsolidado ? this.cargarConsolidado(id) : Promise.resolve(),
+    ]);
+  }
 
-    const [alertas, consolidado] = await Promise.allSettled(tareas);
-
-    this.alertas.set(alertas.status === 'fulfilled' ? alertas.value : null);
-    if (consolidado.status === 'fulfilled') {
-      this.consolidado.set(consolidado.value);
-    } else {
-      this.consolidado.set(null);
-    }
+  private async cargarAlertas(id: string): Promise<void> {
+    const mio = ++this.generacionAlertas;
+    const [resultado] = await Promise.allSettled([this.service.obtenerAlertas(id)]);
+    if (mio !== this.generacionAlertas) return;
+    /* Un fallo aquí apaga los contadores en vez de dejar los del mes anterior.
+       No lleva cartel propio: son insignias de apoyo, y su ausencia no afirma
+       nada sobre el dinero — al contrario que el consolidado. */
+    this.alertas.set(resultado.status === 'fulfilled' ? resultado.value : null);
   }
 
   private async cargarConsolidado(id: string): Promise<void> {
-    try {
-      this.consolidado.set(await this.service.obtenerConsolidado(id, this.incluirOcultas()));
-    } catch {
+    const mio = this.pedirConsolidado();
+    /* `allSettled` y no `try/catch` con `.catch(() => null)`: ese catch
+       convertía un fallo en un resultado válido, y era la mitad de la mentira
+       que arregla `aplicarConsolidado`. */
+    const [resultado] = await Promise.allSettled([
+      this.service.obtenerConsolidado(id, this.incluirOcultas()),
+    ]);
+    if (mio === this.generacionConsolidado) this.aplicarConsolidado(resultado);
+  }
+
+  /** Enciende el panel, lo pone en carga y numera la petición que sale. */
+  private pedirConsolidado(): number {
+    this.consolidadoActivo.set(true);
+    this.cargandoConsolidado.set(true);
+    this.errorConsolidado.set(false);
+    return ++this.generacionConsolidado;
+  }
+
+  /**
+   * Un solo sitio decide qué significa cada desenlace del consolidado.
+   *
+   * En el fallo se vacía `consolidado` a propósito: son las cifras del periodo
+   * ANTERIOR, y dejarlas puestas mientras la cabecera dice otro mes es el mismo
+   * error que F08 arregla. La vista mira `errorConsolidado()` antes que los
+   * datos, así que lo que se ve es el error con su reintento.
+   */
+  private aplicarConsolidado(resultado: PromiseSettledResult<ReporteConsolidado | null>): void {
+    this.cargandoConsolidado.set(false);
+    if (resultado.status === 'fulfilled') {
+      this.consolidado.set(resultado.value);
+      this.errorConsolidado.set(false);
+    } else {
       this.consolidado.set(null);
+      this.errorConsolidado.set(true);
     }
+  }
+
+  /** Reintento del cartel de error del consolidado. */
+  protected reintentarConsolidado(): void {
+    const id = this.periodoId();
+    if (id) void this.cargarConsolidado(id);
   }
 
   /**
