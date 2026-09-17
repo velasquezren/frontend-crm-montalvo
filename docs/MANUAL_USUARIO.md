@@ -80,8 +80,9 @@ El CRM de Clínica Montalvo es una plataforma web centralizada diseñada para:
 1. El agente ingresa al módulo **Actividades** desde el menú lateral (`📅`).
 2. Puede visualizar la agenda en formato **Día**, **Semana**, **Mes** o **Lista**.
 3. Al pulsar **"Nueva Actividad"**:
-   - Selecciona el tipo (`LLAMADA`, `WHATSAPP`, `CITA`, `SEGUIMIENTO`, `TAREA`).
-   - Define el título, fecha y hora programada, duración real estimada y anticipación del recordatorio.
+   - Selecciona el tipo (`LLAMADA`, `REUNION`, `TAREA`, `RECORDATORIO`).
+   - Define el título, fecha y hora programada, y la duración estimada (es el alto del bloque en el calendario).
+   - **El aviso no se configura.** No hay campo de anticipación: el sistema avisa solo, cuando faltan **15 minutos** para la hora programada. Es una ventana fija que vive en el backend, igual para todas las actividades y para todos los agentes. Cada actividad avisa una sola vez; si se cambia su fecha u hora, vuelve a avisar en la nueva.
    - Puede vincularla directamente a un **Prospecto (Lead)** o a un **Paciente (Cliente)** existente.
    - Si se trata de un seguimiento periódico (ej. control post-tratamiento o recordatorio de pago), activa la **Repetición** (`SEMANAL`, `QUINCENAL`, `MENSUAL`) y elige cuántas veces (2, 4, 6, 8 o 12).
 4. Al concluir la actividad, el agente la marca como `COMPLETADA`. **Completar no agenda nada nuevo**: si quiere dejar cerrado el siguiente paso, usa el botón «Completar y agendar siguiente paso», que abre el formulario y solo cierra la actividad actual cuando el seguimiento ya está guardado.
