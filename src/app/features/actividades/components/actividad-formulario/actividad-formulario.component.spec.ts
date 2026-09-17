@@ -143,7 +143,7 @@ describe('A3 · ActividadFormularioComponent', () => {
     expect(componente['formTipo']()).toBe('LLAMADA');
     expect(componente['formNotas']()).toBe('Confirmar hora');
     expect(componente['formDuracion']()).toBe(45);
-    expect(componente['clienteElegido']()?.id).toBe(CLIENTE.id);
+    expect(componente['seleccion']()?.cliente.id).toBe(CLIENTE.id);
 
     componente['formTitulo'].set('Llamar a la paciente (reagendada)');
     const guardado = componente['guardar'](new Event('submit'));
@@ -185,7 +185,7 @@ describe('A3 · ActividadFormularioComponent', () => {
     expect(guardadas, 'un fallo no puede anunciarse como guardado').toHaveLength(0);
     expect(componente['errorForm']()).not.toBe('');
     expect(componente['formTitulo']()).toBe('Llamar la semana que viene');
-    expect(componente['clienteElegido']()?.id).toBe(CLIENTE.id);
+    expect(componente['seleccion']()?.cliente.id).toBe(CLIENTE.id);
     expect(componente['guardando']()).toBe(false);
   });
 
