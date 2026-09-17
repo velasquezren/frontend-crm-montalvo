@@ -90,6 +90,20 @@ export class ConversacionComposerComponent implements OnDestroy {
 
   /* ── Adjuntos & Drag and Drop ──────────────────────────────────── */
   protected readonly adjuntoPendiente = signal<AdjuntoLocal | null>(null);
+  /**
+   * Nombre del archivo que está viajando a R2 ahora mismo, o `null`.
+   *
+   * El estado de subida vive AQUÍ y no en `envioLocal` del mensaje, aunque
+   * `envioLocal` sea donde están ENVIANDO/ERROR/AMBIGUO. La razón es que el
+   * upload ocurre antes de que exista mensaje: la agente adjunta, revisa el
+   * archivo en el modal de confirmación y solo entonces decide enviar. Pintar
+   * una burbuja en el hilo durante la subida diría "esto ya salió" de algo que
+   * todavía puede descartar — y habría que borrarla si quita el adjunto.
+   *
+   * Sin porcentaje a propósito: `HttpClient` aquí no reporta progreso, y una
+   * barra inventada miente sobre cuánto falta.
+   */
+  protected readonly subiendoArchivo = signal<string | null>(null);
   protected readonly arrastrandoSobre = signal(false);
 
   /* ── Mi Memoria Personal (Biblioteca Privada del Agente) ───────── */
@@ -141,6 +155,7 @@ export class ConversacionComposerComponent implements OnDestroy {
     effect(() => {
       this.state.contextoChat();
       this.adjuntoPendiente.set(null);
+      this.subiendoArchivo.set(null);
       this.state.mensajeNuevo.set('');
       this.mostrarPopoverMemoria.set(false);
       this.plantillaSeleccionada.set(null);
@@ -258,9 +273,12 @@ export class ConversacionComposerComponent implements OnDestroy {
 
   protected async subirAdjunto(file: File): Promise<void> {
     const contexto = this.state.contextoChat();
+    this.subiendoArchivo.set(file.name);
     try {
-      this.toast.info(`Subiendo "${file.name}"...`);
       const recurso = await this.memoriaService.subirBinario(file, { titulo: file.name });
+      /* La agente ya está en otra conversación: el archivo queda en Mi Memoria
+         —visible y borrable— pero NO se adjunta aquí. Mandarle a la paciente
+         equivocada la foto de otra es mucho peor que perder el adjunto. */
       if (contexto !== this.state.contextoChat()) return;
       if (recurso.mediaKey) {
         this.adjuntoPendiente.set({
@@ -272,7 +290,14 @@ export class ConversacionComposerComponent implements OnDestroy {
         this.toast.success('Archivo adjuntado.');
       }
     } catch (err) {
-      this.toast.error(mensajeDeError(err, 'No se pudo adjuntar el archivo.'));
+      if (contexto === this.state.contextoChat()) {
+        this.toast.error(mensajeDeError(err, 'No se pudo adjuntar el archivo.'));
+      }
+    } finally {
+      /* Solo si seguimos donde empezamos: si cambió el chat, el effect del
+         constructor ya lo limpió y podríamos estar borrando el indicador de
+         una subida que arrancó en la conversación nueva. */
+      if (contexto === this.state.contextoChat()) this.subiendoArchivo.set(null);
     }
   }
 
@@ -288,6 +313,9 @@ export class ConversacionComposerComponent implements OnDestroy {
     const adj = this.adjuntoPendiente();
 
     if ((!texto && !adj) || !id || this.state.enviando()) return;
+    /* Con una subida en vuelo el adjunto todavía no tiene clave: enviar ahora
+       mandaría el texto solo y el archivo llegaría a ninguna parte. */
+    if (this.subiendoArchivo()) return;
 
     if (this.state.fueraDeVentana24h()) {
       const horas = this.state.horasVentanaMeta();
