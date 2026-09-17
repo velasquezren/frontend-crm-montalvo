@@ -402,7 +402,7 @@
         </div>
       }
     } @empty {
-      @if (state.detalle.isLoading()) {
+      @if (state.detalleEsProvisional() || state.detalle.isLoading()) {
         <div class="hilo-esqueleto">
           <app-loading-skeleton shape="text" height="2.5rem" width="55%" />
           <app-loading-skeleton shape="text" height="2rem" width="40%" />
