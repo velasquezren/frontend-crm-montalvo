@@ -21,6 +21,7 @@ import { OverlayRef } from '@angular/cdk/overlay';
 
 import { ActividadesCalendarioComponent } from './components/actividades-calendario/actividades-calendario.component';
 import { mismoRango, RangoCalendario } from './rango-calendario';
+import { inicioDelDiaClinica, sumarDiasClinica } from './zona-clinica';
 import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales } from '../../core/auth/user.model';
 import { aDatetimeLocal } from '../../core/api/fecha';
@@ -235,10 +236,14 @@ export class ActividadesPage implements OnDestroy {
 
   /** Ventana de filtros derivada del chip rápido — mismo criterio que `ActividadesService.resumen`. */
   private readonly filtroFechas = computed<Pick<FiltroActividades, 'estado' | 'desde' | 'hasta'>>(() => {
+    /* Los mismos tres cortes que calcula `resumen` en el backend, en la zona de
+       la clínica. Antes se partía el día en la medianoche del NAVEGADOR y allá
+       en la del proceso del VPS: la tarjeta «Hoy» y la lista que sale al
+       pulsarla podían estar hablando de días distintos. */
     const ahora = new Date();
-    const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
-    const finHoy = new Date(inicioHoy.getTime() + 24 * 60 * 60 * 1000);
-    const en7Dias = new Date(inicioHoy.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const inicioHoy = inicioDelDiaClinica(ahora);
+    const finHoy = sumarDiasClinica(inicioHoy, 1);
+    const en7Dias = sumarDiasClinica(inicioHoy, 7);
 
     switch (this.filtroRapido()) {
       case 'VENCIDAS':

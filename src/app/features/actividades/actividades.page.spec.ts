@@ -156,6 +156,30 @@ describe('F10 · rango visible del calendario de Actividades', () => {
     vi.unstubAllGlobals();
   });
 
+  it('A1 · el filtro «Hoy» pide el día de la clínica, no el del navegador', async () => {
+    /* 16/09/2026 21:30 en La Paz, que en UTC ya es el 17. Antes, con el reloj
+       del navegador en UTC, el filtro pedía desde el 17 a las 00:00 y dejaba
+       fuera toda la tarde de la clínica — justo la que el KPI estaba contando
+       como «Hoy». */
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date('2026-09-17T01:30:00.000Z'));
+    try {
+      pagina['vista'].set('LISTA');
+      pagina['filtroRapido'].set('HOY');
+      await asentar();
+
+      const lista = http.match(r => r.url.endsWith('/actividades') && r.params.has('estado'));
+      expect(lista.length).toBeGreaterThan(0);
+      const ultima = lista[lista.length - 1].request.params;
+      /* Los mismos instantes exactos que fija la prueba del backend: es lo que
+         mantiene a las dos mitades diciendo el mismo día. */
+      expect(ultima.get('desde')).toBe('2026-09-16T04:00:00.000Z');
+      expect(ultima.get('hasta')).toBe('2026-09-17T04:00:00.000Z');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('no pide nada hasta saber qué mes se está mirando', async () => {
     expect(peticionesSinEstado().length).toBe(0);
   });
