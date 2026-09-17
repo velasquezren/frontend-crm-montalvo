@@ -15,6 +15,7 @@ import {
   Actividad,
   ESTADO_ACTIVIDAD_LABEL,
   ESTADO_BADGE,
+  etiquetaRepeticion,
   formatearDuracion,
   formatoFechaRelativa,
   TIPO_ACTIVIDAD_ICONO,
@@ -83,6 +84,7 @@ export class ActividadDetalleDrawerComponent {
   protected readonly estadoBadge = ESTADO_BADGE;
   protected readonly iniciales = generarIniciales;
   protected readonly formatearDuracion = formatearDuracion;
+  protected readonly etiquetaRepeticion = etiquetaRepeticion;
   protected readonly formatoFechaRelativa = formatoFechaRelativa;
   protected readonly getWhatsappLink = enlaceWhatsApp;
   protected readonly origenLabel = ORIGEN_LABEL;

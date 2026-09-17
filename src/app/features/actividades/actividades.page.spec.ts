@@ -7,7 +7,9 @@ import { provideRouter } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { ToastService } from '../../core/toast/toast.service';
 import { Actividad } from './actividad.model';
+import { ActividadesService } from './actividades.service';
 import { ActividadesCalendarioComponent } from './components/actividades-calendario/actividades-calendario.component';
 import { ActividadesPage } from './actividades.page';
 import { RangoCalendario } from './rango-calendario';
@@ -50,13 +52,19 @@ const OCTUBRE: RangoCalendario = {
   hasta: '2026-11-01T03:59:59.999Z',
 };
 
-function actividad(id: string, fechaProgramada: string): Actividad {
+function actividad(
+  id: string,
+  fechaProgramada: string,
+  parcial: Partial<Actividad> = {},
+): Actividad {
   return {
     id, tipo: 'TAREA', titulo: `Actividad ${id}`, notas: null,
     fechaProgramada, duracionMinutos: 30, estado: 'PENDIENTE',
     completadaEn: null, notificadaEn: null, createdAt: fechaProgramada,
     cliente: { id: 'c1', nombre: 'Paciente', telefono: '+59170000000' },
     agente: { id: 'u1', nombre: 'Agente' },
+    serieId: null, frecuenciaSerie: null,
+    ...parcial,
   } as unknown as Actividad;
 }
 
@@ -116,6 +124,18 @@ describe('F10 · rango visible del calendario de Actividades', () => {
   /** El alta del seguimiento: POST /actividades */
   function creados(): TestRequest[] {
     return http.match(r => r.method === 'POST' && r.url.endsWith('/actividades'));
+  }
+
+  /** La cancelación colectiva: PATCH /actividades/:id/esta-y-siguientes/cancelar */
+  function cancelacionesDeSerie(): TestRequest[] {
+    return http.match(
+      r => r.method === 'PATCH' && r.url.endsWith('/esta-y-siguientes/cancelar'),
+    );
+  }
+
+  /** Cualquier PATCH individual sobre la actividad: /actividades/:id */
+  function edicionesIndividuales(): TestRequest[] {
+    return http.match(r => r.method === 'PATCH' && /\/actividades\/[^/]+$/.test(r.url));
   }
 
   function mostrarMes(rango: RangoCalendario): void {
@@ -422,6 +442,296 @@ describe('F10 · rango visible del calendario de Actividades', () => {
       await asentar();
 
       expect(completados()).toHaveLength(0);
+    });
+  });
+  /**
+   * A5.3 · cancelar: esta, o esta y las siguientes.
+   *
+   * La elección de alcance vive en la página porque es ella la que muta; el
+   * cajón de detalle sigue limitándose a emitir «cancelar» (A4.2). Lo que se
+   * prueba aquí es QUÉ endpoint sale por la red para cada elección, y que nunca
+   * salgan los dos: la ocurrencia elegida ya va dentro de «esta y las
+   * siguientes».
+   */
+  describe('A5.3 · cancelar una o esta y las siguientes', () => {
+    const SUELTA = actividad('la-suelta', '2026-09-20T14:00:00.000Z');
+    const DE_SERIE = actividad('la-de-la-serie', '2026-09-20T14:00:00.000Z', {
+      serieId: 'serie-1', frecuenciaSerie: 'SEMANAL',
+    });
+
+    let avisos: Array<[string, string]>;
+
+    beforeEach(() => {
+      avisos = [];
+      const toast = TestBed.inject(ToastService);
+      vi.spyOn(toast, 'show').mockImplementation((mensaje: string, tipo?: string) => {
+        avisos.push([mensaje, tipo ?? 'success']);
+      });
+    });
+
+    it('una actividad suelta no pregunta nada y usa el endpoint de siempre', async () => {
+      pagina['solicitarCancelacion'](SUELTA);
+      await asentar();
+
+      expect(pagina['actividadACancelar'](), 'no hay alcance que elegir').toBeNull();
+      expect(cancelacionesDeSerie()).toHaveLength(0);
+      const patch = completados();
+      expect(patch).toHaveLength(1);
+      expect(patch[0].request.url).toContain('la-suelta');
+      expect(patch[0].request.body.estado).toBe('CANCELADA');
+      patch[0].flush({ ...SUELTA, estado: 'CANCELADA' });
+    });
+
+    it('serie histórica (`serieId` nulo) se cancela como una suelta', async () => {
+      /* Se creó con «repetir» antes de A5.1, cuando no se guardaba el enlace.
+         No hay hermanas que cancelar y no se finge que las haya. */
+      const vieja = actividad('la-vieja', '2026-09-20T14:00:00.000Z', {
+        serieId: null, frecuenciaSerie: 'SEMANAL',
+      });
+      pagina['solicitarCancelacion'](vieja);
+      await asentar();
+
+      expect(pagina['actividadACancelar']()).toBeNull();
+      expect(cancelacionesDeSerie()).toHaveLength(0);
+      expect(completados()).toHaveLength(1);
+    });
+
+    it('serie · pulsar cancelar no manda nada todavía', async () => {
+      pagina['solicitarCancelacion'](DE_SERIE);
+      await asentar();
+
+      expect(pagina['actividadACancelar']()?.id).toBe('la-de-la-serie');
+      /* Y arranca en «solo esta»: propagar es la excepción. */
+      expect(pagina['alcanceCancelacion']()).toBe('SOLO_ESTA');
+      expect(completados()).toHaveLength(0);
+      expect(cancelacionesDeSerie()).toHaveLength(0);
+    });
+
+    it('serie · «Solo esta» usa el endpoint individual, y solo ese', async () => {
+      pagina['solicitarCancelacion'](DE_SERIE);
+      await asentar();
+      pagina['alcanceCancelacion'].set('SOLO_ESTA');
+
+      const confirmado = pagina['confirmarCancelacion']();
+      await asentar();
+
+      expect(cancelacionesDeSerie(), 'nadie pidió tocar las siguientes').toHaveLength(0);
+      const patch = completados();
+      expect(patch).toHaveLength(1);
+      expect(patch[0].request.body.estado).toBe('CANCELADA');
+      patch[0].flush({ ...DE_SERIE, estado: 'CANCELADA' });
+      await confirmado;
+
+      expect(avisos.map(([m]) => m)).toContain('Actividad cancelada.');
+    });
+
+    it('serie · «Esta y las siguientes» usa el colectivo, y solo ese', async () => {
+      pagina['solicitarCancelacion'](DE_SERIE);
+      await asentar();
+      pagina['alcanceCancelacion'].set('FUTURAS');
+
+      const confirmado = pagina['confirmarCancelacion']();
+      await asentar();
+
+      const colectiva = cancelacionesDeSerie();
+      expect(colectiva).toHaveLength(1);
+      expect(colectiva[0].request.url).toContain('la-de-la-serie');
+      /* Una intención, una escritura: la elegida ya va dentro. */
+      expect(completados(), 'no se cancela dos veces la misma').toHaveLength(0);
+
+      colectiva[0].flush({ afectadas: 3 });
+      await asentar();
+      /* Ni antes ni después: una individual encadenada detrás de la colectiva
+         no se ve antes del flush, y colgaría la prueba en vez de acusarla. */
+      expect(completados(), 'tampoco una individual encadenada detrás').toHaveLength(0);
+      await confirmado;
+
+      expect(avisos[0]).toEqual(['3 actividades canceladas.', 'success']);
+      expect(pagina['actividadACancelar'](), 'el diálogo se cierra al terminar').toBeNull();
+    });
+
+    it('serie · una sola afectada se cuenta en singular', async () => {
+      pagina['solicitarCancelacion'](DE_SERIE);
+      await asentar();
+      pagina['alcanceCancelacion'].set('FUTURAS');
+      const confirmado = pagina['confirmarCancelacion']();
+      await asentar();
+      cancelacionesDeSerie()[0].flush({ afectadas: 1 });
+      await confirmado;
+
+      expect(avisos[0]).toEqual(['1 actividad cancelada.', 'success']);
+    });
+
+    it('`afectadas: 0` no se anuncia como éxito, pero sí refresca', async () => {
+      const servicio = TestBed.inject(ActividadesService);
+      const antes = servicio.cambios();
+
+      pagina['solicitarCancelacion'](DE_SERIE);
+      await asentar();
+      pagina['alcanceCancelacion'].set('FUTURAS');
+      const confirmado = pagina['confirmarCancelacion']();
+      await asentar();
+
+      /* El backend respondió BIEN: no canceló nada porque nada seguía
+         pendiente —otra agente las completó, o el alcance cambió—. Eso no es
+         un fallo de transporte, así que no se inventa un error; pero tampoco
+         es un «0 actividades canceladas correctamente». */
+      cancelacionesDeSerie()[0].flush({ afectadas: 0 });
+      await confirmado;
+
+      expect(avisos).toHaveLength(1);
+      expect(avisos[0][1], 'ni éxito ni error: neutral').toBe('info');
+      expect(avisos[0][0]).toBe('No había actividades pendientes disponibles para cancelar.');
+      expect(avisos[0][0]).not.toContain('0 actividades');
+      expect(servicio.cambios(), 'la lista y los KPIs se recargan igual').toBe(antes + 1);
+    });
+
+    it('la invalidación es UNA por operación, no una por afectada', async () => {
+      const servicio = TestBed.inject(ActividadesService);
+      const antes = servicio.cambios();
+
+      pagina['solicitarCancelacion'](DE_SERIE);
+      await asentar();
+      pagina['alcanceCancelacion'].set('FUTURAS');
+      const confirmado = pagina['confirmarCancelacion']();
+      await asentar();
+      cancelacionesDeSerie()[0].flush({ afectadas: 7 });
+      await confirmado;
+
+      expect(servicio.cambios()).toBe(antes + 1);
+    });
+
+    it('si la colectiva falla, no se afirma éxito y el diálogo sigue abierto', async () => {
+      pagina['solicitarCancelacion'](DE_SERIE);
+      await asentar();
+      pagina['alcanceCancelacion'].set('FUTURAS');
+      const confirmado = pagina['confirmarCancelacion']();
+      await asentar();
+
+      cancelacionesDeSerie()[0].flush('boom', { status: 500, statusText: 'Server Error' });
+      await confirmado;
+      await asentar();
+
+      expect(avisos).toHaveLength(1);
+      expect(avisos[0][1]).toBe('error');
+      /* Reintentar es volver a pulsar: el contexto y la elección se conservan. */
+      expect(pagina['actividadACancelar']()?.id).toBe('la-de-la-serie');
+      expect(pagina['alcanceCancelacion']()).toBe('FUTURAS');
+      expect(pagina['cancelando']()).toBe(false);
+    });
+
+    it('«Volver» cierra sin escribir nada', async () => {
+      pagina['solicitarCancelacion'](DE_SERIE);
+      await asentar();
+      pagina['cerrarCancelacion']();
+      await asentar();
+
+      expect(pagina['actividadACancelar']()).toBeNull();
+      expect(completados()).toHaveLength(0);
+      expect(cancelacionesDeSerie()).toHaveLength(0);
+    });
+  });
+
+  /**
+   * A5.3 · lo que NO cambió, probado a propósito.
+   *
+   * Un contrato de guardado nuevo y un endpoint colectivo nuevo son dos formas
+   * fáciles de romper cosas que ya funcionaban sin que nadie se entere.
+   */
+  describe('A5.3 · lo que sigue igual', () => {
+    it('la lista dice a qué repetición pertenece cada fila', async () => {
+      baseDatos = [
+        actividad('con-serie', '2026-09-10T14:00:00.000Z', {
+          serieId: 's-1', frecuenciaSerie: 'QUINCENAL',
+        }),
+      ];
+      pagina['vista'].set('LISTA');
+      pagina['filtroRapido'].set('TODAS');
+      fixture.detectChanges();
+      await asentar();
+      /* Cambiar de filtro CANCELA la petición anterior —`httpResource` cuelga
+         de su clave—, así que solo se contesta la viva: la última. */
+      const peticiones = http.match(r => r.url.endsWith('/actividades') && r.method === 'GET');
+      contestar(peticiones[peticiones.length - 1]);
+      await asentar();
+      fixture.detectChanges();
+
+      expect((fixture.nativeElement as HTMLElement).innerHTML).toContain('Repetición quincenal');
+    });
+
+    it('reprogramar rápido sigue siendo individual, nunca de serie', async () => {
+      const deSerie = actividad('la-de-la-serie', '2026-09-20T14:00:00.000Z', {
+        serieId: 'serie-1', frecuenciaSerie: 'SEMANAL',
+      });
+
+      /* «+24 h» no significa «poner todas las futuras a las 14:00»: es otra
+         semántica y sigue tocando una sola fila, aunque pertenezca a una
+         repetición. */
+      const reprogramado = pagina['reprogramarRapido'](deSerie, 24);
+      await asentar();
+
+      expect(http.match(r => r.url.includes('esta-y-siguientes'))).toHaveLength(0);
+      const patch = edicionesIndividuales();
+      expect(patch).toHaveLength(1);
+      expect(patch[0].request.body.fechaProgramada)
+        .toBe(new Date('2026-09-21T14:00:00.000Z').toISOString());
+      patch[0].flush(deSerie);
+      await reprogramado;
+    });
+
+    it('A2 · el contrato nuevo no toca «completar y agendar siguiente»', async () => {
+      const original = actividad('la-original', '2026-09-20T14:00:00.000Z', {
+        serieId: 'serie-1', frecuenciaSerie: 'SEMANAL',
+      });
+      const seguimiento = actividad('el-seguimiento', '2026-09-27T14:00:00.000Z');
+
+      pagina['completarYAgendarSiguiente'](original);
+      await asentar();
+
+      /* Aunque la original sea de una serie: agendar el siguiente paso no es
+         editar la repetición. Crear primero, cerrar después, y ni una llamada
+         colectiva por el camino. */
+      const orquestacion = pagina['alGuardarFormulario']({
+        modo: 'CREAR', actividad: seguimiento, vecesAgendadas: 1,
+      });
+      await asentar();
+
+      expect(http.match(r => r.url.includes('esta-y-siguientes'))).toHaveLength(0);
+      const cierre = completados();
+      expect(cierre).toHaveLength(1);
+      expect(cierre[0].request.url).toContain('la-original');
+      expect(cierre[0].request.body.estado).toBe('COMPLETADA');
+      cierre[0].flush({ ...original, estado: 'COMPLETADA' });
+      await orquestacion;
+    });
+
+    it('un guardado colectivo no finge devolver una actividad', async () => {
+      const toast = TestBed.inject(ToastService);
+      const avisos: Array<[string, string]> = [];
+      vi.spyOn(toast, 'show').mockImplementation((mensaje: string, tipo?: string) => {
+        avisos.push([mensaje, tipo ?? 'success']);
+      });
+
+      await pagina['alGuardarFormulario']({ modo: 'EDITAR_HORA_FUTURAS', afectadas: 4 });
+      await asentar();
+
+      expect(avisos[0]).toEqual(['4 actividades actualizadas.', 'success']);
+      /* Y no se completa nada: un cambio de hora no cierra ninguna actividad. */
+      expect(completados()).toHaveLength(0);
+    });
+
+    it('un guardado colectivo sin efecto tampoco se anuncia como éxito', async () => {
+      const toast = TestBed.inject(ToastService);
+      const avisos: Array<[string, string]> = [];
+      vi.spyOn(toast, 'show').mockImplementation((mensaje: string, tipo?: string) => {
+        avisos.push([mensaje, tipo ?? 'success']);
+      });
+
+      await pagina['alGuardarFormulario']({ modo: 'EDITAR_HORA_FUTURAS', afectadas: 0 });
+      await asentar();
+
+      expect(avisos[0][1]).toBe('info');
+      expect(avisos[0][0]).toBe('No había actividades pendientes disponibles para modificar.');
     });
   });
 });

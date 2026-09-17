@@ -4,8 +4,12 @@ import { ApiService, ResourceRequest } from '../../core/api/api.service';
 import { Actividad, EstadoActividad, FrecuenciaRepeticion, TipoActividad } from './actividad.model';
 
 /**
- * Repetir al crear: `veces` filas independientes (2-12), sin serie enlazada
- * — ver el DTO homónimo del backend (`RepetirActividadDto`) para el porqué.
+ * Repetir al crear: `veces` ocurrencias (2-12) que comparten `serieId` desde
+ * A5.1 — ver el DTO homónimo del backend (`RepetirActividadDto`).
+ *
+ * Compartir la serie NO las vuelve una sola cosa: cada una se completa, se
+ * mueve y se cancela por su cuenta. Lo único que el backend sabe hacer en
+ * bloque son las dos operaciones de abajo.
  */
 export interface RepetirActividadDto {
   frecuencia: FrecuenciaRepeticion;
@@ -120,5 +124,31 @@ export class ActividadesService {
 
   eliminar(id: string): Promise<{ ok: boolean }> {
     return this.tras(this.api.delete<{ ok: boolean }>(`/actividades/${id}`));
+  }
+
+  /* ── «Esta y las siguientes» (A5.2) ────────────────────────────────
+   *
+   * Las DOS únicas operaciones colectivas que existen. No hay «editar la
+   * serie», ni «eliminarla», ni mover su día: lo que no está aquí es porque el
+   * backend no lo garantiza, y la interfaz no promete lo que no puede cumplir.
+   *
+   * Las dos incluyen SIEMPRE a la ocurrencia elegida, así que quien las llama
+   * no manda además el PATCH individual — sería escribirle dos veces.
+   *
+   * Responden `afectadas`: cuántas filas cambiaron de verdad, no cuántas se
+   * pidieron. Puede ser 0 sin que nada haya fallado.
+   */
+
+  /** Deja esta ocurrencia y las siguientes a `hora` («HH:MM»), cada una en su día. */
+  cambiarHoraDeFuturas(id: string, hora: string): Promise<{ afectadas: number }> {
+    return this.tras(
+      this.api.patch<{ afectadas: number }>(`/actividades/${id}/esta-y-siguientes/hora`, { hora }),
+    );
+  }
+
+  cancelarFuturas(id: string): Promise<{ afectadas: number }> {
+    return this.tras(
+      this.api.patch<{ afectadas: number }>(`/actividades/${id}/esta-y-siguientes/cancelar`),
+    );
   }
 }

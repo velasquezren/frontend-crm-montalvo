@@ -48,6 +48,33 @@ export const FRECUENCIA_LABEL: Record<FrecuenciaRepeticion, string> = {
   MENSUAL: 'Cada mes',
 };
 
+/**
+ * Cómo se NOMBRA una repetición ya existente, que no es cómo se ELIGE al crear.
+ *
+ * `FRECUENCIA_LABEL` responde «cada cuánto la agendo» y vive en los chips del
+ * formulario; esto responde «qué es esta actividad» y vive en la lista y en el
+ * detalle. Mismo enum, dos preguntas: fundirlas daba «Cada semana» colgando de
+ * una fila, que no dice que la fila PERTENEZCA a nada.
+ */
+export const REPETICION_LABEL: Record<FrecuenciaRepeticion, string> = {
+  SEMANAL: 'Repetición semanal',
+  QUINCENAL: 'Repetición quincenal',
+  MENSUAL: 'Repetición mensual',
+};
+
+/**
+ * La etiqueta de repetición, o `null` si no hay nada que etiquetar.
+ *
+ * Exige los DOS campos. El backend los escribe juntos y nunca por separado
+ * (`create` de `actividades.service.ts`), pero la interfaz no promete una
+ * cadencia que no puede nombrar: sin `frecuenciaSerie` no hay etiqueta.
+ */
+export function etiquetaRepeticion(
+  a: Pick<Actividad, 'serieId' | 'frecuenciaSerie'>,
+): string | null {
+  return a.serieId && a.frecuenciaSerie ? REPETICION_LABEL[a.frecuenciaSerie] : null;
+}
+
 export const ESTADO_ACTIVIDAD_LABEL: Record<EstadoActividad, string> = {
   PENDIENTE: 'Pendiente',
   COMPLETADA: 'Completada',
@@ -67,6 +94,15 @@ export interface Actividad {
   readonly lead: { readonly id: string; readonly estado: string; readonly origen: string } | null;
   readonly agente: { readonly id: string; readonly nombre: string };
   readonly completadaEn: string | null;
+  /**
+   * A qué repetición pertenece, o `null` si es una actividad suelta.
+   *
+   * Las creadas ANTES de A5.1 lo tienen a `null` aunque se agendaran con
+   * «repetir»: entonces no se guardaba nada que las enlazara. Son individuales
+   * y la interfaz las trata como tales; no hay hermanas que buscar.
+   */
+  readonly serieId: string | null;
+  readonly frecuenciaSerie: FrecuenciaRepeticion | null;
   readonly createdAt: string;
   readonly updatedAt: string;
 }

@@ -58,6 +58,7 @@ import {
   ESTADO_ACTIVIDAD_LABEL,
   ESTADO_BADGE,
   EstadoActividad,
+  etiquetaRepeticion,
   formatoFechaRelativa,
   ResumenActividades,
   TIPO_ACTIVIDAD_ICONO,
@@ -130,6 +131,7 @@ export class ActividadesPage implements OnDestroy {
   protected readonly formatearDuracion = formatearDuracion;
   protected readonly origenLabel = ORIGEN_LABEL;
   protected readonly formatoFechaRelativa = formatoFechaRelativa;
+  protected readonly etiquetaRepeticion = etiquetaRepeticion;
 
 
   /* ── Vista y filtros ───────────────────────────────────────────── */
@@ -206,6 +208,7 @@ export class ActividadesPage implements OnDestroy {
   ngOnDestroy(): void {
     this.activeOverlayRef?.dispose();
     this.activeDrawerRef?.dispose();
+    this.overlayCancelar?.dispose();
   }
 
   /** Agentes comerciales activos para selector de filtrado (solo ADMIN). */
@@ -374,6 +377,21 @@ export class ActividadesPage implements OnDestroy {
       return;
     }
 
+    if (resultado.modo === 'EDITAR_HORA_FUTURAS') {
+      /* No llega una `Actividad`, así que no se finge tener una: el cajón de
+         detalle guardaba una copia con la hora vieja y aquí no hay con qué
+         refrescarla. Se cierra. La lista, el calendario y los KPIs ya se
+         recargan solos por `ActividadesService.cambios`. */
+      this.cerrarDetalle();
+      this.avisarColectiva(
+        resultado.afectadas,
+        '1 actividad actualizada.',
+        'actividades actualizadas.',
+        'No había actividades pendientes disponibles para modificar.',
+      );
+      return;
+    }
+
     if (!origen) {
       this.toast.show(
         resultado.vecesAgendadas > 1
@@ -477,6 +495,102 @@ export class ActividadesPage implements OnDestroy {
     } catch (err) {
       this.toast.show(mensajeDeError(err, 'No se pudo actualizar el estado.'), 'error');
     }
+  }
+
+  /* ── Cancelar: una, o esta y las siguientes (A5.3) ──────────────────
+   *
+   * La elección de alcance vive aquí y no en el cajón de detalle porque el
+   * cajón propone intenciones y no ejecuta mutaciones (A4.2). Lo que cambia con
+   * A5.3 es QUÉ se ejecuta al recibir «cancelar», no quién la pide.
+   */
+
+  protected readonly actividadACancelar = signal<Actividad | null>(null);
+  protected readonly alcanceCancelacion = signal<'SOLO_ESTA' | 'FUTURAS'>('SOLO_ESTA');
+  protected readonly cancelando = signal(false);
+  protected readonly modalCancelarTpl = viewChild<TemplateRef<unknown>>('modalCancelar');
+  private overlayCancelar?: OverlayRef;
+
+  /**
+   * Cancelar. Una actividad suelta no pregunta nada: es lo de siempre.
+   *
+   * Solo hay algo que elegir si pertenece a una repetición VIVA. Las de antes
+   * de A5.1 tienen `serieId` a `null` aunque se crearan con «repetir», así que
+   * caen por el camino individual — que es la verdad: no hay nada enlazado a
+   * ellas que se pueda cancelar en bloque.
+   */
+  protected solicitarCancelacion(actividad: Actividad): void {
+    if (!actividad.serieId) {
+      void this.cambiarEstado(actividad, 'CANCELADA');
+      return;
+    }
+    const tpl = this.modalCancelarTpl();
+    if (!tpl) {
+      void this.cambiarEstado(actividad, 'CANCELADA');
+      return;
+    }
+    this.actividadACancelar.set(actividad);
+    this.alcanceCancelacion.set('SOLO_ESTA');
+    this.overlayCancelar?.dispose();
+    this.overlayCancelar = this.dialogService.openTemplate(tpl, this.vcr, {
+      onClose: () => this.cerrarCancelacion(),
+    });
+  }
+
+  protected cerrarCancelacion(): void {
+    this.overlayCancelar?.dispose();
+    this.overlayCancelar = undefined;
+    this.actividadACancelar.set(null);
+  }
+
+  protected async confirmarCancelacion(): Promise<void> {
+    const actividad = this.actividadACancelar();
+    if (!actividad || this.cancelando()) return;
+
+    /* «Solo esta» es el endpoint individual de siempre, sin desvíos: una
+       actividad de serie no deja de ser una actividad. */
+    if (this.alcanceCancelacion() !== 'FUTURAS') {
+      this.cerrarCancelacion();
+      await this.cambiarEstado(actividad, 'CANCELADA');
+      return;
+    }
+
+    this.cancelando.set(true);
+    try {
+      /* Una sola escritura. `esta-y-siguientes` ya incluye a la elegida: mandar
+         además el PATCH individual sería cancelarla dos veces. */
+      const { afectadas } = await this.actividadesService.cancelarFuturas(actividad.id);
+      this.cerrarCancelacion();
+      if (this.actividadDetalle()?.id === actividad.id) this.cerrarDetalle();
+      this.avisarColectiva(
+        afectadas,
+        '1 actividad cancelada.',
+        'actividades canceladas.',
+        'No había actividades pendientes disponibles para cancelar.',
+      );
+    } catch (err) {
+      /* El diálogo se queda abierto con la misma elección: reintentar es volver
+         a pulsar, y no se afirma nada que no haya pasado. */
+      this.toast.show(mensajeDeError(err, 'No se pudo cancelar la repetición.'), 'error');
+    } finally {
+      this.cancelando.set(false);
+    }
+  }
+
+  /**
+   * Lo que se le dice a la agente tras una operación colectiva.
+   *
+   * `afectadas` es cuántas filas cambiaron de VERDAD, no cuántas se pidieron:
+   * puede ser 0 porque otra persona ya las completó, o porque ninguna seguía
+   * pendiente. Eso no es un fallo de red —el backend respondió bien— pero
+   * tampoco es un éxito, y «0 actividades actualizadas correctamente» sería
+   * decirle que hizo algo que no hizo.
+   */
+  private avisarColectiva(afectadas: number, una: string, varias: string, ninguna: string): void {
+    if (afectadas === 0) {
+      this.toast.show(ninguna, 'info');
+      return;
+    }
+    this.toast.show(afectadas === 1 ? una : `${afectadas} ${varias}`, 'success');
   }
 
   protected async eliminar(actividad: Actividad): Promise<void> {

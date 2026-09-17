@@ -22,6 +22,7 @@ function actividad(parcial: Partial<Actividad> = {}): Actividad {
     fechaProgramada: '2026-09-20T18:00:00.000Z', duracionMinutos: 45, estado: 'PENDIENTE',
     completadaEn: null, notificadaEn: null, createdAt: '2026-09-01T12:00:00.000Z',
     cliente: CLIENTE, agente: { id: 'u-1', nombre: 'Viviana Morales' }, lead: null,
+    serieId: null, frecuenciaSerie: null,
     ...parcial,
   } as unknown as Actividad;
 }
@@ -115,6 +116,44 @@ describe('A4.2 · ActividadDetalleDrawerComponent', () => {
     expect(texto).toContain('Eliminar del registro');
     expect(texto).not.toContain('Completar y agendar siguiente paso');
     expect(texto).not.toContain('Agendar nuevo seguimiento');
+  });
+
+  /**
+   * A5.3 · la etiqueta de repetición.
+   *
+   * Que una actividad pertenezca a una serie es un dato, no una acción: se dice
+   * y ya. Aquí solo se comprueba que se dice —y que no se dice cuando no hay
+   * serie—, porque este componente no opera sobre ella.
+   */
+  describe('A5.3 · etiqueta de repetición', () => {
+    it('SEMANAL', () => {
+      montar(actividad({ serieId: 's-1', frecuenciaSerie: 'SEMANAL' }));
+      expect(html()).toContain('Repetición semanal');
+    });
+
+    it('QUINCENAL', () => {
+      montar(actividad({ serieId: 's-1', frecuenciaSerie: 'QUINCENAL' }));
+      expect(html()).toContain('Repetición quincenal');
+    });
+
+    it('MENSUAL', () => {
+      montar(actividad({ serieId: 's-1', frecuenciaSerie: 'MENSUAL' }));
+      expect(html()).toContain('Repetición mensual');
+    });
+
+    it('sin serie no aparece nada: una actividad suelta no se repite', () => {
+      montar(actividad());
+      expect(html()).not.toContain('Repetición');
+      expect(html()).not.toContain('Se repite');
+    });
+
+    it('serie histórica anterior a A5.1 · `serieId` nulo, se trata como suelta', () => {
+      /* Se agendó «cada semana» en su día, pero entonces no se guardaba nada
+         que enlazara las ocurrencias. No hay hermanas que buscar, y prometer
+         una repetición que el backend no puede operar sería mentir. */
+      montar(actividad({ serieId: null, frecuenciaSerie: 'SEMANAL' }));
+      expect(html()).not.toContain('Repetición semanal');
+    });
   });
 
   it('Editar · emite la intención con la actividad', () => {

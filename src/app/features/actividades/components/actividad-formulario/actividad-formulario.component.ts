@@ -5,6 +5,7 @@ import {
   effect,
   inject,
   input,
+  linkedSignal,
   output,
   signal,
   untracked,
@@ -29,6 +30,7 @@ import {
   TipoActividad,
 } from '../../actividad.model';
 import { ActividadesService } from '../../actividades.service';
+import { horaClinica, mismoDiaClinica } from '../../zona-clinica';
 import {
   ClienteMinimo,
   SeleccionPaciente,
@@ -49,13 +51,26 @@ export type ContextoFormulario =
   | { modo: 'CREAR'; cliente?: ClienteMinimo; leadId?: string | null }
   | { modo: 'EDITAR'; actividad: Actividad };
 
-/** Lo que el formulario devuelve al guardar. */
-export interface ResultadoFormulario {
-  modo: 'CREAR' | 'EDITAR';
-  actividad: Actividad;
-  /** 1, o las veces agendadas si se usó la repetición. Lo usa el aviso. */
-  vecesAgendadas: number;
-}
+/**
+ * Lo que el formulario devuelve al guardar.
+ *
+ * Discriminado por `modo` porque los tres desenlaces devuelven cosas distintas
+ * y no hay una forma honesta de fingir que devuelven la misma. Cambiar la hora
+ * de esta y las siguientes responde `{ afectadas }`: no hay UNA actividad que
+ * enseñar, hay unas cuantas que ya no están donde estaban. Antes esto se
+ * habría resuelto inventando una `Actividad` para rellenar el hueco, y quien
+ * la leyera creería que tiene la fila fresca de algo que no pidió.
+ *
+ * `vecesAgendadas` vive solo en `CREAR`, que es donde significa algo: en
+ * `EDITAR` valía siempre 1 y era ruido con forma de dato.
+ */
+export type ResultadoFormulario =
+  | { modo: 'CREAR'; actividad: Actividad; vecesAgendadas: number }
+  | { modo: 'EDITAR'; actividad: Actividad }
+  | { modo: 'EDITAR_HORA_FUTURAS'; afectadas: number };
+
+/** A cuántas ocurrencias se aplica un cambio de hora. */
+export type AlcanceEdicion = 'SOLO_ESTA' | 'FUTURAS';
 
 const TIPOS: readonly TipoActividad[] = ['LLAMADA', 'REUNION', 'TAREA', 'RECORDATORIO'];
 
@@ -131,6 +146,72 @@ export class ActividadFormularioComponent {
   protected readonly formFecha = signal(aDatetimeLocal(new Date(Date.now() + 60 * 60 * 1000)));
   protected readonly formDuracion = signal(TIPO_ACTIVIDAD_DURACION_SUGERIDA['TAREA']);
   private formDuracionTocada = false;
+
+  /* ── Editar una ocurrencia de una serie (A5.3) ──────────────────────
+   *
+   * El backend solo sabe propagar UNA cosa a las futuras: la hora. No el
+   * título, ni las notas, ni el tipo, ni la duración, ni el paciente, ni el
+   * día. Así que «esta y las siguientes» solo se ofrece cuando el cambio es
+   * exactamente eso y nada más.
+   *
+   * Esta decisión vive AQUÍ y no en la página porque aquí están las dos mitades
+   * que hacen falta —la actividad original y lo que la agente acaba de
+   * escribir—, y no hay ninguna otra. Subirla a la página obligaría a la página
+   * a guardar una segunda copia de cada campo del formulario, que es justo lo
+   * que A3 vino a quitar.
+   */
+
+  /**
+   * El «HH:MM» que se propagaría, o `null` si este Guardar no es propagable.
+   *
+   * Pide TODO a la vez: serie viva, mismo día de clínica, hora distinta y
+   * ningún otro campo tocado. Un solo `null` y el guardado es individual, que
+   * es lo que esta pantalla ha hecho siempre.
+   *
+   * **El día se compara en `America/La_Paz`, no en el navegador.** Un martes a
+   * las 21:00 de Bolivia ya es miércoles en UTC: con la zona del navegador, la
+   * misma edición ofrecía propagar o no según dónde estuviera la agente.
+   */
+  protected readonly cambioDeHoraPura = computed<string | null>(() => {
+    const original = this.actividadEditando();
+    /* PENDIENTE lo exige el backend (`origenDeSerie` responde 400 si no), y se
+       repite aquí para no ofrecer un botón que sabemos que va a fallar. */
+    if (!original?.serieId || original.estado !== 'PENDIENTE') return null;
+
+    const antes = new Date(original.fechaProgramada);
+    const despues = new Date(this.formFecha());
+    if (Number.isNaN(despues.getTime())) return null;
+    if (!mismoDiaClinica(antes, despues)) return null;
+
+    const hora = horaClinica(despues);
+    if (hora === horaClinica(antes)) return null;
+
+    /* Cualquier otro campo tocado lo convierte en una edición individual. Un
+       solo Guardar no puede ser dos intenciones: propagar la hora Y escribir
+       unas notas que solo son de esta. El agente no se compara porque este
+       formulario no lo edita. */
+    if (this.formTipo() !== original.tipo) return null;
+    if (this.formTitulo().trim() !== original.titulo) return null;
+    if (this.formNotas().trim() !== (original.notas ?? '').trim()) return null;
+    if (this.formDuracion() !== original.duracionMinutos) return null;
+
+    const seleccion = this.seleccion();
+    if (!seleccion) return null;
+    if (seleccion.cliente.id !== original.cliente.id) return null;
+    if ((seleccion.leadId ?? null) !== (original.lead?.id ?? null)) return null;
+
+    return hora;
+  });
+
+  /**
+   * A cuántas se aplica. Vuelve sola a `SOLO_ESTA` en cuanto deja de poder
+   * propagarse: si la agente elige «las siguientes» y luego escribe una nota,
+   * la elección ya no existe y no puede quedarse esperando escondida.
+   */
+  protected readonly alcanceEdicion = linkedSignal<string | null, AlcanceEdicion>({
+    source: this.cambioDeHoraPura,
+    computation: (hora, previo) => (hora ? (previo?.value ?? 'SOLO_ESTA') : 'SOLO_ESTA'),
+  });
 
   protected readonly frecuencias: readonly FrecuenciaRepeticion[] = ['SEMANAL', 'QUINCENAL', 'MENSUAL'];
   protected readonly frecuenciaLabel = FRECUENCIA_LABEL;
@@ -256,6 +337,24 @@ export class ActividadFormularioComponent {
       const editando = this.actividadEditando();
 
       if (editando) {
+        /* Una intención, una escritura. `esta-y-siguientes` YA incluye a la
+           elegida, así que mandar además el PATCH individual la escribiría dos
+           veces y abriría el hueco entre las dos: si la segunda falla, queda
+           medio aplicado algo que la agente pidió entero. Por eso esto es un
+           `if/else` y no dos pasos.
+           La regla se vuelve a consultar aquí, no solo en la plantilla: es la
+           garantía, y una garantía que solo vive en un `@if` se pierde en
+           cuanto alguien añada otra forma de pulsar Guardar. */
+        const horaFuturas = this.cambioDeHoraPura();
+        if (horaFuturas && this.alcanceEdicion() === 'FUTURAS') {
+          const { afectadas } = await this.actividadesService.cambiarHoraDeFuturas(
+            editando.id,
+            horaFuturas,
+          );
+          this.guardada.emit({ modo: 'EDITAR_HORA_FUTURAS', afectadas });
+          return;
+        }
+
         const actualizada = await this.actividadesService.actualizar(editando.id, {
           tipo: this.formTipo(),
           titulo: this.formTitulo().trim(),
@@ -264,7 +363,7 @@ export class ActividadFormularioComponent {
           duracionMinutos: this.formDuracion(),
           leadId,
         });
-        this.guardada.emit({ modo: 'EDITAR', actividad: actualizada, vecesAgendadas: 1 });
+        this.guardada.emit({ modo: 'EDITAR', actividad: actualizada });
       } else {
         const frecuencia = this.formRepetir();
         const creada = await this.actividadesService.crear({

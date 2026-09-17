@@ -95,6 +95,15 @@
           </div>
         }
 
+        <!-- Que pertenezca a una repetición es un dato del horario, no un
+             adorno: va con el mismo peso que el responsable y el lead. -->
+        @if (etiquetaRepeticion(actividad()); as repeticion) {
+          <div class="flex items-center justify-between p-2.5 rounded-xl bg-bg-workspace border border-border/60 text-xs">
+            <span class="text-text-muted">Se repite</span>
+            <span class="font-semibold text-text-dark">{{ repeticion }}</span>
+          </div>
+        }
+
         @if (actividad().lead; as lead) {
           <div class="flex items-center justify-between p-2.5 rounded-xl bg-bg-workspace border border-border/60 text-xs">
             <span class="text-text-muted">Lead asociado</span>

@@ -43,3 +43,36 @@ export function sumarDiasClinica(inicioDeDia: Date, dias: number): Date {
     .add({ days: dias });
   return new Date(siguiente.epochMilliseconds);
 }
+
+/** `instante` visto desde el calendario de la clínica. */
+function enClinica(instante: Date): Temporal.ZonedDateTime {
+  return Temporal.Instant.fromEpochMilliseconds(instante.getTime()).toZonedDateTimeISO(ZONA_CLINICA);
+}
+
+/**
+ * ¿Los dos instantes caen en el MISMO día del calendario de la clínica?
+ *
+ * La pregunta parece trivial y no lo es: dos instantes pueden caer en días
+ * distintos en UTC —o en el navegador de quien mira— y seguir siendo el mismo
+ * día en la clínica. Un martes a las 21:00 de Bolivia ya es miércoles en UTC.
+ *
+ * Lo usa A5.3 para decidir si una edición es «solo cambió la hora», que es lo
+ * único que el backend sabe propagar a las futuras. Con la zona del navegador,
+ * la misma edición habría ofrecido propagar o no según dónde estuviera sentada
+ * la agente.
+ */
+export function mismoDiaClinica(a: Date, b: Date): boolean {
+  return enClinica(a).toPlainDate().equals(enClinica(b).toPlainDate());
+}
+
+/**
+ * La hora de reloj de la clínica, «HH:MM».
+ *
+ * Es exactamente lo que espera `PATCH :id/esta-y-siguientes/hora`, que la
+ * reinterpreta con `conHoraClinica` sobre el día de cada ocurrencia. Mandar la
+ * hora del navegador dejaría cada fila a una hora que allí nadie eligió.
+ */
+export function horaClinica(instante: Date): string {
+  const z = enClinica(instante);
+  return `${String(z.hour).padStart(2, '0')}:${String(z.minute).padStart(2, '0')}`;
+}

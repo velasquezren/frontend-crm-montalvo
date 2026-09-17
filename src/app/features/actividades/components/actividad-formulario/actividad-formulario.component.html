@@ -83,6 +83,37 @@
         </div>
       </div>
 
+      <!-- Alcance del cambio de hora.
+           Solo asoma cuando el backend puede cumplirlo: misma serie, mismo día
+           de clínica y NADA más tocado. Ofrecerlo en cualquier otro caso sería
+           prometer una propagación que no existe (`cambioDeHoraPura`). -->
+      @if (cambioDeHoraPura(); as horaNueva) {
+        <div class="space-y-1.5 p-3 rounded-xl bg-bg-workspace border border-border">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">
+            Aplicar el cambio de hora a
+          </label>
+          <div class="flex flex-wrap gap-1.5" role="group" aria-label="Alcance del cambio de hora">
+            <app-filter-chip
+              size="sm"
+              [active]="alcanceEdicion() === 'SOLO_ESTA'"
+              (clicked)="alcanceEdicion.set('SOLO_ESTA')">
+              Solo esta actividad
+            </app-filter-chip>
+            <app-filter-chip
+              size="sm"
+              [active]="alcanceEdicion() === 'FUTURAS'"
+              (clicked)="alcanceEdicion.set('FUTURAS')">
+              Esta y las siguientes
+            </app-filter-chip>
+          </div>
+          @if (alcanceEdicion() === 'FUTURAS') {
+            <p class="text-[11px] text-text-muted leading-relaxed">
+              Las pendientes de esta repetición, de esta en adelante, pasarán a las {{ horaNueva }} en su propio día. Las completadas y las canceladas no se tocan.
+            </p>
+          }
+        </div>
+      }
+
       <!-- Repetir: solo al crear -->
       @if (!actividadEditando()) {
         <div class="space-y-1.5">
