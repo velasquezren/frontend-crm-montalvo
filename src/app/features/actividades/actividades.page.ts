@@ -344,6 +344,23 @@ export class ActividadesPage implements OnDestroy {
   protected readonly errorForm = signal('');
   protected readonly actividadEditando = signal<Actividad | null>(null);
 
+  /**
+   * La actividad que se cerrará **si** se agenda el seguimiento, y no antes.
+   *
+   * «Completar y agendar siguiente paso» es UNA intención. Antes se ejecutaba
+   * al revés: completaba primero y abría el formulario después, así que cerrar
+   * el cajón dejaba la actividad cerrada y el seguimiento sin crear — la
+   * interfaz prometía una operación y hacía la mitad, justo la mitad que no
+   * vale.
+   *
+   * El orden importa y es lo único que hace falta. De los dos desenlaces
+   * posibles a medias, solo uno es inaceptable: perder el seguimiento. Quedarse
+   * con las dos pendientes se ve en pantalla y se arregla con un clic. Por eso
+   * esto se orquesta aquí y no con una transacción en el backend: no hay una
+   * garantía de negocio que la pida, y sí un endpoint nuevo que mantener.
+   */
+  private readonly actividadOrigen = signal<Actividad | null>(null);
+
   protected readonly formTipo = signal<TipoActividad>('TAREA');
   protected readonly formTitulo = signal('');
   protected readonly formNotas = signal('');
@@ -513,6 +530,8 @@ export class ActividadesPage implements OnDestroy {
 
   protected abrirCreacion(): void {
     this.actividadEditando.set(null);
+    /* Un alta normal nunca arrastra un origen de una intención anterior. */
+    this.actividadOrigen.set(null);
     this.formTipo.set('TAREA');
     this.formTitulo.set('');
     this.formNotas.set('');
@@ -559,6 +578,9 @@ export class ActividadesPage implements OnDestroy {
   protected cerrarModal(): void {
     this.activeOverlayRef?.dispose();
     this.activeOverlayRef = undefined;
+    /* Cerrar es arrepentirse: se olvida la intención y la original se queda
+       como estaba. Guardar ya la consumió antes de llegar aquí. */
+    this.actividadOrigen.set(null);
   }
 
   /* ── Detalle / Cajón Lateral (Drawer 360°) ─────────────────────── */
@@ -599,29 +621,33 @@ export class ActividadesPage implements OnDestroy {
     }
   }
 
-  protected async completarYAgendarSiguiente(actividad: Actividad): Promise<void> {
-    try {
-      await this.actividadesService.actualizarEstado(actividad.id, 'COMPLETADA');
-      this.toast.show('Actividad completada. Agenda el siguiente paso comercial.', 'success');
-      this.cerrarDetalle();
-
-      // Abrir inmediatamente la siguiente actividad para este paciente
-      this.abrirCreacion();
-      this.elegirCliente({
-        id: actividad.cliente.id,
-        nombre: actividad.cliente.nombre,
-        telefono: actividad.cliente.telefono,
-      });
-      if (actividad.lead) {
-        this.formLeadId.set(actividad.lead.id);
-      }
-    } catch (err) {
-      this.toast.show(mensajeDeError(err, 'No se pudo completar la actividad.'), 'error');
+  /**
+   * Abre el seguimiento y RECUERDA cuál cerrar al guardarlo.
+   *
+   * No toca la red: hasta que la agente confirme, la original sigue pendiente.
+   * El prellenado es el mismo de siempre —paciente y lead— y no se amplía:
+   * copiar título, tipo o notas sería inventar una regla comercial.
+   */
+  protected completarYAgendarSiguiente(actividad: Actividad): void {
+    this.cerrarDetalle();
+    this.abrirCreacion();
+    this.actividadOrigen.set(actividad);
+    this.elegirCliente({
+      id: actividad.cliente.id,
+      nombre: actividad.cliente.nombre,
+      telefono: actividad.cliente.telefono,
+    });
+    if (actividad.lead) {
+      this.formLeadId.set(actividad.lead.id);
     }
   }
 
   protected async guardar(evento: Event): Promise<void> {
     evento.preventDefault();
+    /* El botón se deshabilita con `guardando()`, pero un Enter repetido o un
+       doble clic muy rápido pueden entrar dos veces antes del repintado. Sin
+       esto, «completar y agendar» crearía DOS seguimientos. */
+    if (this.guardando()) return;
     this.errorForm.set('');
 
     let cliente = this.clienteElegido();
@@ -684,10 +710,29 @@ export class ActividadesPage implements OnDestroy {
           leadId: this.formLeadId() ?? undefined,
           repetir: frecuencia ? { frecuencia, veces: this.formRepetirVeces() } : undefined,
         });
-        this.toast.show(
-          frecuencia ? `Actividad agendada — ${this.formRepetirVeces()} veces.` : 'Actividad agendada.',
-          'success',
-        );
+
+        /* El seguimiento ya existe: ahora, y solo ahora, se cierra la original.
+           Si esto falla, lo importante está guardado y se dice lo que pasó de
+           verdad en vez de cantar un éxito completo — la agente ve la original
+           todavía pendiente y la cierra con un clic. */
+        const origen = this.actividadOrigen();
+        if (origen) {
+          this.actividadOrigen.set(null);
+          try {
+            await this.actividadesService.actualizarEstado(origen.id, 'COMPLETADA');
+            this.toast.show('Seguimiento agendado y actividad anterior completada.', 'success');
+          } catch (err) {
+            this.toast.show(
+              mensajeDeError(err, 'Se agendó el seguimiento, pero la actividad anterior sigue pendiente.'),
+              'error',
+            );
+          }
+        } else {
+          this.toast.show(
+            frecuencia ? `Actividad agendada — ${this.formRepetirVeces()} veces.` : 'Actividad agendada.',
+            'success',
+          );
+        }
       }
 
       this.cerrarModal();
