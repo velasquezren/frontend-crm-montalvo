@@ -620,14 +620,14 @@
   <!-- ═══ Cajón: Actividad Rápida (recordatorio/tarea) desde el Chat ═══ -->
   <ng-template #modalActividadChatTemplate>
     <app-drawer
-      ancho="md"
+      ancho="lg"
       icono="calendar"
       titulo="Agendar Recordatorio"
       [subtitulo]="chat.cliente | nombreCliente"
       (cerrar)="cerrarModalActividad()">
 
       <form (submit)="guardarActividadRapida($event, chat.cliente.id)" class="flex-1 min-h-0 flex flex-col">
-        <div class="p-6 overflow-y-auto space-y-4 flex-1">
+        <div class="p-6 overflow-y-auto space-y-4.5 flex-1">
           @if (errorActividad()) {
             <div class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
               <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
@@ -646,11 +646,20 @@
             </div>
           </div>
 
-          <app-input label="Título *" placeholder="Ej. Llamar para confirmar cita" [(value)]="tituloActividad" />
+          <div class="space-y-1.5">
+            <label [for]="tituloInput.id" class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Título *</label>
+            <app-input #tituloInput placeholder="Ej. Llamar para confirmar cita" [(value)]="tituloActividad" />
+          </div>
 
-          <app-input label="Fecha y hora *" type="datetime-local" [(value)]="fechaActividad" />
+          <div class="space-y-1.5">
+            <label [for]="fechaInput.id" class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Fecha y hora *</label>
+            <app-input #fechaInput type="datetime-local" [(value)]="fechaActividad" />
+          </div>
 
-          <app-input label="Notas (opcional)" [multiline]="true" [rows]="3" placeholder="Detalles para recordar…" [(value)]="notasActividad" />
+          <div class="space-y-1.5">
+            <label [for]="notasInput.id" class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Notas (opcional)</label>
+            <app-input #notasInput [multiline]="true" [rows]="3" placeholder="Detalles para recordar…" [(value)]="notasActividad" />
+          </div>
         </div>
 
         <div class="flex items-center justify-end px-6 py-3.5 bg-bg-workspace border-t border-border shrink-0">
