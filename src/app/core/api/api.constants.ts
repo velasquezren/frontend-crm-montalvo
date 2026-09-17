@@ -13,11 +13,11 @@ const HOSTS_LOCALES = ['localhost', '127.0.0.1', '[::1]'];
 function resolverApiUrl(): string {
   /* Fuera del navegador (SSR/prerender) no hay window: se asume producción. */
   if (typeof window === 'undefined') {
-    return 'https://crm.107.172.193.34.nip.io';
+    return 'https://crm.107.175.132.15.nip.io';
   }
   return HOSTS_LOCALES.includes(window.location.hostname)
     ? 'http://localhost:3001'
-    : 'https://crm.107.172.193.34.nip.io';
+    : 'https://crm.107.175.132.15.nip.io';
 }
 
 export const API_URL = resolverApiUrl();
