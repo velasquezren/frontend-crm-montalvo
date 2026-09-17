@@ -364,7 +364,14 @@ export class ConversacionComposerComponent implements OnDestroy {
     if (chatPrevio) {
       const mensajeOptimista: MensajeApi = {
         id: idOptimista,
-        contenido: texto || (adj?.mediaNombre ?? ''),
+        /* EXACTAMENTE lo que va en el POST, ni más ni menos.
+           Antes caía a `adj.mediaNombre` cuando no había texto, y eso tenía dos
+           problemas: la burbuja mostraba como pie de foto un nombre de archivo
+           que la paciente nunca recibió, y —desde que el reintento reenvía el
+           adjunto— ese nombre se habría convertido en el pie real al reintentar.
+           Un reintento tiene que repetir la intención, no inventarle un texto.
+           La plantilla ya enseña el nombre del documento por su cuenta. */
+        contenido: texto,
         direccion: 'SALIENTE',
         tipo: adj ? (adj.mediaMime?.startsWith('image/') ? 'IMAGEN' : 'DOCUMENTO') : 'TEXTO',
         mediaKey: adj?.mediaKey ?? null,

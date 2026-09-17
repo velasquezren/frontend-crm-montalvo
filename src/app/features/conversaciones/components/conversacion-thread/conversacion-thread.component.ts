@@ -309,26 +309,35 @@ export class ConversacionThreadComponent {
    */
   protected async reintentarEnvio(mensaje: MensajeApi): Promise<void> {
     const id = this.state.seleccionadaId();
-    /* `AMBIGUO` ya se puede reintentar: el `clientMessageId` viaja igual y el
-       índice único del backend garantiza que un segundo POST con la misma
-       clave devuelva la fila existente en vez de crear otra. Sin esa clave
-       —un globo viejo, de antes de este cambio— sigue sin ofrecerse. */
-    const reintentable = mensaje.envioLocal === 'ERROR'
-      || (mensaje.envioLocal === 'AMBIGUO' && !!mensaje.clientMessageId);
-    if (!id || !reintentable) return;
+    /* Lo que hace seguro el reintento —con adjunto o sin él— es el mismo
+       `clientMessageId`: el índice único de PostgreSQL devuelve la fila que ya
+       existía en vez de crear otra, y ese camino sale ANTES del despacho a
+       Meta, así que la paciente no recibe nada dos veces. Sin esa clave —un
+       globo viejo, de antes de R2.1— no se ofrece, porque ahí el reintento sí
+       podría duplicar. Vale igual para ERROR que para AMBIGUO: la garantía no
+       depende de cuánto sabemos del primer intento. */
+    const fallido = mensaje.envioLocal === 'ERROR' || mensaje.envioLocal === 'AMBIGUO';
+    if (!id || !fallido || !mensaje.clientMessageId) return;
 
-    /* Solo texto. El adjunto ya se subió a R2 antes del POST y reintentar
-       aquí mandaría `contenido` a secas: el mensaje saldría sin su imagen.
-       Un adjunto fallido se descarta y se vuelve a adjuntar, que es honesto;
-       reenviarlo bien es R2.2 y necesita su propio flujo. */
-    if (mensaje.mediaKey) return;
+    /* El archivo ya está en R2 desde antes del primer POST, y el globo se
+       quedó con su clave. Reenviamos ESA, no una nueva: reintentar no vuelve
+       a subir nada. Antes esto mandaba `contenido` a secas y el mensaje habría
+       salido sin su imagen, así que el botón estaba desactivado — ese era todo
+       el motivo, no una limitación de los datos. */
+    const adjunto = mensaje.mediaKey
+      ? {
+          mediaKey: mensaje.mediaKey,
+          mediaMime: mensaje.mediaMime ?? null,
+          mediaNombre: mensaje.mediaNombre ?? null,
+        }
+      : undefined;
 
     const contexto = this.state.contextoChat();
     this.state.marcarEnvioEnCurso(id, mensaje.id);
     try {
-      /* La MISMA clave del primer intento: eso es lo que lo hace seguro. */
+      /* La MISMA clave y el MISMO adjunto del primer intento. */
       const real = await this.conversacionesService.enviarMensaje(
-        id, mensaje.contenido, undefined, mensaje.clientMessageId,
+        id, mensaje.contenido, adjunto, mensaje.clientMessageId,
       );
       if (contexto === this.state.contextoChat()) {
         this.state.reconciliarEnvioLocal(id, mensaje.id, real);
