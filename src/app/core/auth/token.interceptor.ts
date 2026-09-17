@@ -51,6 +51,27 @@ export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
 
+      /*
+       * Sin token no hay nada que refrescar NI sesión que cerrar.
+       *
+       * `refrescarToken()` devuelve `null` en dos situaciones que no son la
+       * misma: «el refresco dijo que no» y «no había token». Abajo, las dos
+       * acababan en `logout()`, y ahí estaba el bucle que tumbó el inbox 46
+       * segundos el 2026-09-17: cada `logout()` incrementa `generacionSesion`,
+       * eso despierta al effect de Conversaciones, que vuelve a pedir datos
+       * protegidos, que sin token dan 401, que llaman a `logout()` otra vez.
+       * 120 vueltas a 2,6 por segundo hasta que el rate-limit empezó a
+       * responder 429 —también al propio logout—.
+       *
+       * Salir por aquí corta el primer eslabón: quien ya está deslogueado no
+       * se vuelve a desloguear. No se navega tampoco, porque el `logout()` que
+       * de verdad cerró la sesión ya llevó al login; repetirlo sería la misma
+       * cascada con otro nombre.
+       */
+      if (!authService.token) {
+        return throwError(() => error);
+      }
+
       return from(authService.refrescarToken()).pipe(
         switchMap(nuevoToken => {
           if (generacion !== authService.generacionSesion()) return throwError(() => error);

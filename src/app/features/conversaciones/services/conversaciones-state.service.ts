@@ -124,7 +124,15 @@ export class ConversacionesStateService {
   // F07: conservar la igualdad por referencia de httpResource. La fecha de
   // la conversación no versiona sus mensajes, ficha ni contadores.
   readonly inbox = httpResource<PaginaInbox>(
-    () => this.conversacionesService.listarRequest(this.filtros()),
+    () => {
+      /* Un recurso protegido no se pide sin sesión. No es defensa en
+         profundidad: el effect de arriba resetea los filtros al cambiar de
+         generación, y como este `httpResource` depende de ellos, se
+         redisparaba solo —sin pasar por ningún `reload()`— alimentando el
+         bucle de 401. Devolver `undefined` lo deja quieto. */
+      if (!this.authService.user()) return undefined;
+      return this.conversacionesService.listarRequest(this.filtros());
+    },
     { defaultValue: PAGINA_VACIA, parse: validarPaginaInbox },
   );
 
@@ -476,7 +484,18 @@ export class ConversacionesStateService {
       this.detalle.set(null);
       this.mensajeNuevo.set('');
       this.paginasExtra.set([]);
-      this.lineas.reload();
+
+      /*
+       * Recargar SOLO si al otro lado del cambio hay una sesión de verdad.
+       *
+       * Limpiar entre agentes sigue siendo necesario —en la clínica comparten
+       * equipo— y eso no cambia: las líneas de arriba corren siempre. Lo que
+       * no puede correr es la recarga cuando la generación subió porque
+       * alguien SALIÓ: pedir datos protegidos sin token da 401, el 401
+       * llamaba a `logout()`, y `logout()` volvía a subir la generación hasta
+       * aquí. Era el otro extremo del bucle del 2026-09-17.
+       */
+      if (this.authService.user()) this.lineas.reload();
     });
     /* Retardo del buscador. `onCleanup` cancela el temporizador anterior en
        cada tecla, que es lo que impide una petición por pulsación y también
