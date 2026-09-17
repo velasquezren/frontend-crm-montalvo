@@ -103,6 +103,14 @@ export interface HistorialPaciente {
     ultimaVisita: string | null;
     medicos: number;
   };
+  /**
+   * Cuántas filas admite la línea de tiempo.
+   *
+   * El resumen de arriba se cuenta sobre TODO el historial; esta lista viene
+   * recortada. Si `resumen.servicios` supera lo que llega, lo que se ve es un
+   * corte — y hay que decirlo, no dejar que se lea como el historial entero.
+   */
+  limiteLista: number;
   servicios: ServicioDelHistorial[];
 }
 

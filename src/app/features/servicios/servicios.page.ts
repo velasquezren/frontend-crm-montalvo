@@ -544,6 +544,10 @@ export class ServiciosPage {
         ultimaVisita: fila?.ultimaVisita ?? null,
         medicos: 0,
       },
+      /* Marcador de posición mientras llega el historial de verdad: no es una
+         respuesta del servidor, así que no puede afirmar ningún tope. El cajón
+         lo tapa con `cargando()`. */
+      limiteLista: 0,
       servicios: [],
     };
   }

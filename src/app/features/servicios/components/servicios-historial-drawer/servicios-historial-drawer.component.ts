@@ -42,6 +42,18 @@ export class ServiciosHistorialDrawerComponent {
    */
   readonly cargando = input<boolean>(false);
 
+  /**
+   * La línea de tiempo trae menos servicios de los que el paciente tiene.
+   *
+   * El resumen se cuenta sobre todo el historial y la lista viene con tope, así
+   * que basta compararlos. Sin este aviso, un historial recortado se lee como
+   * el historial completo: las cifras de arriba cuadran y la lista, no — que es
+   * justo el caso en que alguien busca un error de datos que no existe.
+   */
+  protected readonly recortada = computed(
+    () => !this.cargando() && this.historial().resumen.servicios > this.historial().servicios.length,
+  );
+
   readonly cerrar = output<void>();
   readonly verMedico = output<string>();
 

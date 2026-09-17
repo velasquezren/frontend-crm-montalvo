@@ -100,6 +100,13 @@
         }
       </h3>
 
+      @if (recortada()) {
+        <p class="mb-3 px-3.5 py-2.5 rounded-xl bg-neutral-bg text-xs text-text-muted">
+          Se muestran los {{ historial().limiteLista }} servicios más recientes de
+          {{ historial().resumen.servicios }}. Las cifras de arriba sí cuentan el historial completo.
+        </p>
+      }
+
       @if (cargando()) {
         <div class="space-y-2">
           @for (fila of [1, 2, 3, 4, 5]; track fila) {
