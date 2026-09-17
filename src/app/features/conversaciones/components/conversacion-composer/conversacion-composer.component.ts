@@ -328,6 +328,7 @@ export class ConversacionComposerComponent implements OnDestroy {
   }
 
   private async ejecutarEnvio(): Promise<void> {
+    marcarEnvio('message-send-click');
     const texto = this.state.mensajeNuevo().trim();
     const id = this.state.seleccionadaId();
     const adj = this.adjuntoPendiente();
@@ -337,7 +338,7 @@ export class ConversacionComposerComponent implements OnDestroy {
     const contexto = this.state.contextoChat();
     this.state.enviando.set(true);
     const chatPrevio = this.state.detalleActual();
-    const idOptimista = `temp-${Date.now()}`;
+    const idOptimista = idTemporal();
 
     // Actualización optimista de la UI
     if (chatPrevio) {
@@ -350,7 +351,10 @@ export class ConversacionComposerComponent implements OnDestroy {
         mediaUrl: adj?.vistaPrevia ?? null,
         mediaMime: adj?.mediaMime ?? null,
         mediaNombre: adj?.mediaNombre ?? null,
-        estadoEnvio: 'ENVIADO',
+        /* Sin `estadoEnvio`: ese campo es el del servidor y todavía no hay
+           servidor que lo haya puesto. El estado de espera va aparte. */
+        estadoEnvio: null,
+        envioLocal: 'ENVIANDO',
         automatico: false,
         createdAt: new Date().toISOString(),
       };
@@ -359,6 +363,7 @@ export class ConversacionComposerComponent implements OnDestroy {
         ...chatPrevio,
         mensajes: [...chatPrevio.mensajes, mensajeOptimista],
       });
+      marcarEnvio('message-optimistic-painted');
     }
 
     this.state.mensajeNuevo.set('');
@@ -373,15 +378,27 @@ export class ConversacionComposerComponent implements OnDestroy {
 
       // Sin reload: reemplaza el mensaje optimista con el real, en memoria.
       // Ver el porqué en `reconciliarEnvioLocal`.
-      if (contexto === this.state.contextoChat()) this.state.reconciliarEnvioLocal(id, idOptimista, real);
-    } catch (err) {
-      // Una respuesta tardía no restaura el borrador de otro canal.
-      if (contexto !== this.state.contextoChat()) return;
-      if (chatPrevio) {
-        this.state.detalle.set(chatPrevio);
+      if (contexto === this.state.contextoChat()) {
+        this.state.reconciliarEnvioLocal(id, idOptimista, real);
+        medirEnvio('message-server-confirmed', 'message-send-click');
       }
-      this.state.mensajeNuevo.set(texto);
-      this.adjuntoPendiente.set(adj);
+    } catch (err) {
+      // Una respuesta tardía no toca la conversación que ya no se está mirando.
+      if (contexto !== this.state.contextoChat()) return;
+
+      /* Antes esto restauraba `chatPrevio`: el globo desaparecía y el texto
+         volvía al input con un toast. Un mensaje que se ve salir y luego se
+         esfuma se lee como enviado-y-perdido, que es peor que un error
+         visible. Ahora el globo se queda donde está, marcado, y ofrece
+         reintentar sin volver a escribirlo. */
+      if (chatPrevio) {
+        this.state.marcarEnvioFallido(id, idOptimista);
+      } else {
+        /* Sin detalle cargado no hay globo donde poner el error: ahí sí toca
+           devolver el texto al input. */
+        this.state.mensajeNuevo.set(texto);
+        this.adjuntoPendiente.set(adj);
+      }
       this.toast.error(mensajeDeError(err, 'No se pudo enviar el mensaje.'));
     } finally {
       this.state.enviando.set(false);
@@ -526,5 +543,37 @@ export class ConversacionComposerComponent implements OnDestroy {
     } catch (err) {
       this.toast.error(mensajeDeError(err, 'No se pudo eliminar la respuesta rápida.'));
     }
+  }
+}
+
+/**
+ * Id del globo optimista mientras no existe el real.
+ *
+ * `Date.now()` a secas colisiona: dos mensajes enviados en el mismo
+ * milisegundo compartían id y la reconciliación del primero se llevaba por
+ * delante al segundo. El contador lo hace único dentro de la pestaña, que es
+ * todo el alcance que necesita — nunca sale de aquí.
+ */
+let secuenciaTemporal = 0;
+function idTemporal(): string {
+  secuenciaTemporal += 1;
+  return `temp-${Date.now()}-${secuenciaTemporal}`;
+}
+
+/** Marcas estándar del navegador; sin telemetría ni envío. */
+function marcarEnvio(nombre: string): void {
+  try {
+    performance.mark(nombre);
+  } catch {
+    /* Medir nunca puede romper un envío. */
+  }
+}
+
+function medirEnvio(nombre: string, desde: string): void {
+  try {
+    if (!performance.getEntriesByName(desde, 'mark').length) return;
+    performance.measure(nombre, desde);
+  } catch {
+    /* Ídem. */
   }
 }

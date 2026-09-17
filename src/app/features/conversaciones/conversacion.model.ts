@@ -26,6 +26,18 @@ export interface MensajeApi {
   readonly contenido: string;
   readonly createdAt: string;
   readonly estadoEnvio?: EstadoEnvioMensaje | null;
+  /**
+   * Estado LOCAL de un mensaje que todavía no existe en el servidor. No viaja
+   * nunca en una respuesta: lo pone el compositor al pintar el globo optimista
+   * y lo borra la reconciliación al llegar el real.
+   *
+   * Es un campo aparte y no un valor más de `estadoEnvio` porque ese enum es
+   * el de la base (`EstadoMensaje` en `schema.prisma`, verificado por
+   * `check:tipos`) y significa otra cosa: `ENVIADO` ahí es «nuestro backend lo
+   * despachó a Meta». `ENVIANDO` aquí es «todavía no sabemos si lo aceptó».
+   * Mezclarlos convertiría una espera en una confirmación falsa.
+   */
+  readonly envioLocal?: 'ENVIANDO' | 'ERROR';
   /** true = lo mandó el sistema (acuse fuera de horario), no una persona. */
   readonly automatico?: boolean;
   readonly tipo?: TipoMensaje;

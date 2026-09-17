@@ -22,8 +22,9 @@ import { ImageViewerComponent } from '../../../../shared/components/image-viewer
 import { WhatsAppMarkdownPipe } from '../../../../shared/pipes/whatsapp-markdown.pipe';
 import { ToastService } from '../../../../core/toast/toast.service';
 import { generarIniciales } from '../../../../core/auth/user.model';
+import { ConversacionesService } from '../../conversaciones.service';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
-import { ConversacionResumen } from '../../conversacion.model';
+import { ConversacionResumen, MensajeApi } from '../../conversacion.model';
 import { textoExtra } from '../../../../core/api/datos-extra';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 
@@ -54,6 +55,7 @@ import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipe
 })
 export class ConversacionThreadComponent {
   protected readonly state = inject(ConversacionesStateService);
+  private readonly conversacionesService = inject(ConversacionesService);
   private readonly toast = inject(ToastService);
 
   protected readonly iniciales = generarIniciales;
@@ -295,5 +297,42 @@ export class ConversacionThreadComponent {
     if (el) {
       el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
     }
+  }
+
+  /**
+   * Reintenta un envío fallido sobre el MISMO globo.
+   *
+   * No crea uno nuevo: se reutiliza el id temporal, así que si el segundo
+   * intento sale bien la reconciliación lo sustituye por el real igual que
+   * habría hecho el primero, y la agente ve un solo mensaje en su sitio.
+   */
+  protected async reintentarEnvio(mensaje: MensajeApi): Promise<void> {
+    const id = this.state.seleccionadaId();
+    if (!id || mensaje.envioLocal !== 'ERROR') return;
+
+    /* Solo texto. El adjunto ya se subió a R2 antes del POST y reintentar
+       aquí mandaría `contenido` a secas: el mensaje saldría sin su imagen.
+       Un adjunto fallido se descarta y se vuelve a adjuntar, que es honesto;
+       reenviarlo bien es R2.2 y necesita su propio flujo. */
+    if (mensaje.mediaKey) return;
+
+    const contexto = this.state.contextoChat();
+    this.state.marcarEnvioEnCurso(id, mensaje.id);
+    try {
+      const real = await this.conversacionesService.enviarMensaje(id, mensaje.contenido);
+      if (contexto === this.state.contextoChat()) {
+        this.state.reconciliarEnvioLocal(id, mensaje.id, real);
+      }
+    } catch {
+      /* Vuelve a fallar: se queda marcado otra vez, sin globo de más. */
+      if (contexto === this.state.contextoChat()) this.state.marcarEnvioFallido(id, mensaje.id);
+    }
+  }
+
+  /** Descarta un globo fallido que la agente no quiere reintentar. */
+  protected descartarEnvio(mensaje: MensajeApi): void {
+    const id = this.state.seleccionadaId();
+    if (!id || mensaje.envioLocal !== 'ERROR') return;
+    this.state.descartarEnvioFallido(id, mensaje.id);
   }
 }
