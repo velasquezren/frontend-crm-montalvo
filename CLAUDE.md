@@ -91,6 +91,15 @@ Regla corta: **un cambio de rendimiento sin medición antes y después no se com
 - **`db-enums.ts` es generado**, no se edita a mano. Sale del `schema.prisma` del
   repo hermano. Si el backend añade un valor a un enum, aquí hay que correr
   `npm run sync:tipos` o el build falla.
+- **`core/build/app-build.ts` también es generado, y además está en `.gitignore`.**
+  Lleva el SHA del commit que se compila —de `VERCEL_GIT_COMMIT_SHA`, `GITHUB_SHA`
+  o `git`— para poder abrir DevTools en la PC de una agente, mirar
+  `window.crmBuild` y responder qué build corre sin deducirlo del bug que tiene.
+  No se commitea porque cambiaría en cada compilación y el árbol nunca estaría
+  limpio; lo regeneran `npm run build`, `npm test` y `npm run watch`.
+  **Por eso los comandos oficiales son los de npm.** `ng build` o `ng test` a
+  secas, sin pasar por su script, fallan con un import inexistente en un
+  checkout limpio — y eso es correcto, no un bug que haya que tapar.
 - **Moneda del sistema: Bs (es-BO)**, siempre vía el pipe `moneda`. Nunca a mano.
   (Las comisiones se calculan en dólares dentro del backend; aquí llegan ya en Bs.)
 - **Un `%` puede ser puntos porcentuales o fracción, y confundirlos ya rompió tres
