@@ -20,6 +20,7 @@ import { Temporal } from 'temporal-polyfill';
    §«Al partir una página en subcomponentes». */
 
 import { Actividad, esActividadVencida } from '../../actividad.model';
+import { RangoCalendario, rangoCalendarioDe } from '../../rango-calendario';
 
 /** Huso horario del navegador — usado solo para pintar los eventos del calendario. */
 const ZONA = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -156,6 +157,15 @@ export class ActividadesCalendarioComponent {
   /** Clic en un evento — la página abre su cajón de detalle. */
   readonly seleccionada = output<Actividad>();
 
+  /**
+   * Qué ventana de tiempo está a la vista. La página pide EXACTAMENTE eso.
+   *
+   * Schedule-X lo publica al renderizar y en cada navegación de mes, así que
+   * este componente es el único que sabe qué se está mirando: la página no
+   * puede deducirlo, porque la navegación vive aquí dentro.
+   */
+  readonly rangoVisible = output<RangoCalendario>();
+
   /** La leyenda se pinta desde los mismos cuatro tonos que colorean los eventos. */
   protected readonly tonos = TONOS;
 
@@ -174,6 +184,14 @@ export class ActividadesCalendarioComponent {
         onEventClick: evento => {
           const actividad = this.actividades().find(a => a.id === evento.id);
           if (actividad) this.seleccionada.emit(actividad);
+        },
+        /* Corre una vez al renderizar y en cada cambio de mes. Antes nadie lo
+           escuchaba y la página pedía las primeras 100 actividades de TODO el
+           historial, ordenadas hacia arriba: con dos años de uso, el mes que se
+           estaba mirando podía no entrar en esa página y el calendario salía
+           vacío teniendo actividades. */
+        onRangeUpdate: rango => {
+          this.rangoVisible.emit(rangoCalendarioDe(rango.start, rango.end));
         },
       },
     },

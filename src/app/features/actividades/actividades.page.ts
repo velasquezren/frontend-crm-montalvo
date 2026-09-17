@@ -20,6 +20,7 @@ import { ActivatedRoute } from '@angular/router';
 import { OverlayRef } from '@angular/cdk/overlay';
 
 import { ActividadesCalendarioComponent } from './components/actividades-calendario/actividades-calendario.component';
+import { mismoRango, RangoCalendario } from './rango-calendario';
 import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales } from '../../core/auth/user.model';
 import { aDatetimeLocal } from '../../core/api/fecha';
@@ -280,18 +281,51 @@ export class ActividadesPage implements OnDestroy {
   );
 
   /**
-   * Vista Calendario: ventana amplia (sin paginar en la UI) para poder pintar
-   * un mes entero. Tope real del servidor: 100 filas.
+   * La ventana que el calendario tiene a la vista, tal como él la publica.
+   *
+   * `equal` por valor y no por identidad: Schedule-X vuelve a emitir su rango
+   * en repintados que no cambian de mes, y sin esto cada uno de ellos sería un
+   * `httpResource` nuevo, o sea una petición idéntica más. Volver al mismo mes
+   * no vuelve a preguntar.
+   */
+  private readonly rangoCalendario = signal<RangoCalendario | null>(null, { equal: mismoRango });
+
+  protected registrarRangoCalendario(rango: RangoCalendario): void {
+    this.rangoCalendario.set(rango);
+  }
+
+  /**
+   * Vista Calendario: EXACTAMENTE el rango visible, ni más ni menos.
+   *
+   * Antes esto pedía `limite: 100` y ningún rango. El backend ordena
+   * `fechaProgramada: 'asc'`, así que esas 100 eran las cien actividades más
+   * ANTIGUAS del historial entero: con dos años de uso, el mes que la agente
+   * estaba mirando podía no entrar en la página y el calendario salía vacío
+   * teniendo actividades. Reproducido en `actividades.page.spec.ts` —151 en la
+   * base, 100 recibidas, todas de 2024, mirando septiembre de 2026—.
+   *
+   * No se pide nada hasta saber qué se está mirando: el rango llega del propio
+   * calendario en cuanto se monta. Y como el recurso cuelga de ese rango, una
+   * respuesta de enero que llegue después de haber pasado a febrero se descarta
+   * sola — es la garantía de F08, aquí sin contadores porque `httpResource` ya
+   * la da al ligar la petición a su clave.
+   *
+   * Sigue con `limite: 100` (el tope del backend), pero ahora el tope es del
+   * MES, no del historial, y el aviso de la plantilla dice cuándo se alcanza.
    */
   protected readonly actividadesCalendario = httpResource<RespuestaPaginada<Actividad>>(
     () => {
       if (this.vista() !== 'CALENDARIO') return undefined;
+      const rango = this.rangoCalendario();
+      if (!rango) return undefined;
       const tipo = this.filtroTipo();
       const agenteId = this.filtroAgenteId();
       return this.actividadesService.listarRequest({
         tipo: tipo === 'TODOS' ? undefined : tipo,
         agenteId: agenteId === 'TODOS' ? undefined : agenteId,
         q: this.busquedaDebounced() || undefined,
+        desde: rango.desde,
+        hasta: rango.hasta,
         limite: 100,
       });
     },

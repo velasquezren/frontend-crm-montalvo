@@ -494,6 +494,7 @@
     }
     <app-actividades-calendario
       [actividades]="actividadesCalendario.value().datos"
+      (rangoVisible)="registrarRangoCalendario($event)"
       (seleccionada)="abrirDetalle($event)" />
   }
 }
