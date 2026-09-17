@@ -83,8 +83,83 @@ El CRM de Clínica Montalvo es una plataforma web centralizada diseñada para:
    - Selecciona el tipo (`LLAMADA`, `WHATSAPP`, `CITA`, `SEGUIMIENTO`, `TAREA`).
    - Define el título, fecha y hora programada, duración real estimada y anticipación del recordatorio.
    - Puede vincularla directamente a un **Prospecto (Lead)** o a un **Paciente (Cliente)** existente.
-   - Si se trata de un seguimiento periódico (ej. control post-tratamiento o recordatorio de pago), activa la **Repetición** (`DIARIA`, `SEMANAL`, `MENSUAL`).
-4. Al concluir la actividad, el agente la marca como `COMPLETADA`. Si tenía repetición programada, el sistema agenda en automático la siguiente cita/tarea en el calendario.
+   - Si se trata de un seguimiento periódico (ej. control post-tratamiento o recordatorio de pago), activa la **Repetición** (`SEMANAL`, `QUINCENAL`, `MENSUAL`) y elige cuántas veces (2, 4, 6, 8 o 12).
+4. Al concluir la actividad, el agente la marca como `COMPLETADA`. **Completar no agenda nada nuevo**: si quiere dejar cerrado el siguiente paso, usa el botón «Completar y agendar siguiente paso», que abre el formulario y solo cierra la actividad actual cuando el seguimiento ya está guardado.
+
+### 🔁 Caso 5b: Repeticiones — qué son y qué se puede hacer con ellas
+
+**Al crear una actividad con repetición, el sistema crea por adelantado todas
+las ocurrencias elegidas**, hasta el máximo de 12. No se genera nada «más
+adelante» ni «al completar»: quedan todas en el calendario desde el primer
+momento.
+
+Cada ocurrencia es una actividad de verdad: tiene su propio estado, su propio
+recordatorio, y se puede completar, mover o cancelar por separado. Lo que
+comparten es una **identidad de serie**, que habilita dos —y solo dos—
+operaciones sobre las siguientes.
+
+#### Cancelar: solo esta, o esta y las siguientes
+
+Al cancelar una actividad que pertenece a una repetición, el sistema pregunta el
+alcance. Una actividad suelta no pregunta nada.
+
+**«Esta y las siguientes»** significa exactamente:
+
+- de la misma serie;
+- desde la fecha programada **actual** de la actividad elegida en adelante;
+- solo las que sigan `PENDIENTE`;
+- solo las que estén dentro del alcance autorizado de quien cancela.
+
+**No** significa toda la serie histórica, ni toca las ya completadas, ni las ya
+canceladas. Al terminar, el sistema dice cuántas actividades cambió de verdad.
+
+#### Editar: solo se puede propagar la HORA
+
+**No existe un editor de la serie completa.** La única edición colectiva que
+soporta el sistema es *cambiar la hora de esta actividad y las siguientes*, y
+**cada ocurrencia conserva su propio día**. Por ejemplo, una serie así:
+
+| Antes | Después de cambiar las futuras a 10:30 |
+| --- | --- |
+| lunes 09:00 | lunes **10:30** |
+| lunes 09:00 | lunes **10:30** |
+| martes 14:00 | martes **10:30** |
+| lunes 09:00 | lunes **10:30** |
+
+El día no se toca nunca: el martes sigue siendo martes.
+
+#### Cuándo aparece la opción «Esta y las siguientes» al editar
+
+Solo cuando el cambio es **únicamente de hora**. Si en el mismo guardado cambia
+además la fecha o el día, el título, las notas, el tipo, la duración, el
+paciente o el lead, la edición se aplica **solo a esa actividad**.
+
+Es una regla deliberada, no una carencia: un mismo «Guardar» no puede ser dos
+intenciones a la vez. Propagar una hora nueva y, de paso, escribir en las
+siguientes unas notas que solo valen para esta sería cambiar cosas que nadie
+pidió cambiar.
+
+Para mover una actividad de día se edita esa actividad, y solo esa.
+
+#### Eliminar afecta siempre a una sola actividad
+
+No existe «eliminar esta y las siguientes» ni «eliminar toda la serie». Para
+detener los seguimientos futuros se usa **cancelar**, no eliminar.
+
+La diferencia importa:
+
+| | Qué es |
+| --- | --- |
+| **Cancelar** | Un hecho de negocio: la actividad se queda en el registro con estado `CANCELADA` y se puede consultar después. |
+| **Eliminar** | Un borrado físico de **una** actividad. No deja rastro y no se puede deshacer. |
+
+#### Repeticiones creadas antes de esta versión
+
+Las repeticiones que se agendaron **antes** de que existiera la identidad de
+serie no la tienen, y **no se les asignó de forma retroactiva**: no hubo ninguna
+conversión de datos antiguos. Se comportan como actividades individuales —no
+muestran etiqueta de repetición ni ofrecen el selector de alcance—, y se
+cancelan o se mueven una por una.
 
 ### ⚡ Caso 6: Actividad Rápida desde el chat de WhatsApp
 1. Mientras chatea con una paciente en **Conversaciones**, el agente acuerda llamarla o agendar una cita.

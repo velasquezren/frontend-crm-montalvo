@@ -42,7 +42,7 @@ export interface CrearActividadDto {
   leadId?: string;
   /** Solo tiene efecto si quien llama es ADMIN+. */
   agenteId?: string;
-  /** Solo al crear — genera filas adicionales independientes. */
+  /** Solo al crear — genera las ocurrencias restantes, todas con la misma serie. */
   repetir?: RepetirActividadDto;
 }
 
