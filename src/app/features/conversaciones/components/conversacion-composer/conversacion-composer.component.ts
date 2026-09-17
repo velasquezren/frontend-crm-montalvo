@@ -22,6 +22,7 @@ import { ToastService } from '../../../../core/toast/toast.service';
 import { mensajeDeError } from '../../../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../../../core/api/pagination.model';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
+import { envioSeReintentaSinRiesgo } from '../../clasificar-error-envio';
 import { ConversacionesService } from '../../conversaciones.service';
 import { MemoriaAgenteService } from '../../../memoria-agente/memoria-agente.service';
 import { RecursoMemoria } from '../../../memoria-agente/memoria-agente.model';
@@ -74,6 +75,8 @@ function tipoBase(mime: string): string {
 export class ConversacionComposerComponent implements OnDestroy {
   protected readonly state = inject(ConversacionesStateService);
   private readonly conversacionesService = inject(ConversacionesService);
+  /** Textos con un POST en vuelo: frena el doble submit sin frenar el uso rápido. */
+  private readonly enviosEnVuelo = new Set<string>();
   private readonly memoriaService = inject(MemoriaAgenteService);
   private readonly toast = inject(ToastService);
   private readonly dialogService = inject(DialogService);
@@ -333,9 +336,22 @@ export class ConversacionComposerComponent implements OnDestroy {
     const id = this.state.seleccionadaId();
     const adj = this.adjuntoPendiente();
 
-    if ((!texto && !adj) || !id || this.state.enviando()) return;
+    if ((!texto && !adj) || !id) return;
+
+    /* Antes aquí había `|| this.state.enviando()`, y con el input limpiándose
+       al instante eso descartaba EN SILENCIO un segundo mensaje legítimo
+       escrito dentro de los ~226 ms del primero. Dos textos distintos son dos
+       envíos distintos, cada uno con su globo y su id temporal: no hay razón
+       para serializarlos.
+       Lo que sí hay que impedir es que el MISMO submit se procese dos veces
+       —doble Enter, doble clic sobre el botón—, y para eso basta con el texto
+       en vuelo: el input ya se vació, así que un segundo evento del mismo
+       envío trae exactamente el mismo contenido. Un adjunto no se compara:
+       exige confirmación explícita en su modal. */
+    if (!adj && this.enviosEnVuelo.has(texto)) return;
 
     const contexto = this.state.contextoChat();
+    if (!adj) this.enviosEnVuelo.add(texto);
     this.state.enviando.set(true);
     const chatPrevio = this.state.detalleActual();
     const idOptimista = idTemporal();
@@ -392,7 +408,12 @@ export class ConversacionComposerComponent implements OnDestroy {
          visible. Ahora el globo se queda donde está, marcado, y ofrece
          reintentar sin volver a escribirlo. */
       if (chatPrevio) {
-        this.state.marcarEnvioFallido(id, idOptimista);
+        /* Un error NO es permiso para reintentar. El backend persiste y
+           dispara el envío a Meta antes de responder, así que solo los
+           códigos que corta antes de la transacción son seguros. */
+        this.state.marcarEnvioFallido(
+          id, idOptimista, envioSeReintentaSinRiesgo(err) ? 'ERROR' : 'AMBIGUO',
+        );
       } else {
         /* Sin detalle cargado no hay globo donde poner el error: ahí sí toca
            devolver el texto al input. */
@@ -401,6 +422,7 @@ export class ConversacionComposerComponent implements OnDestroy {
       }
       this.toast.error(mensajeDeError(err, 'No se pudo enviar el mensaje.'));
     } finally {
+      if (!adj) this.enviosEnVuelo.delete(texto);
       this.state.enviando.set(false);
     }
   }

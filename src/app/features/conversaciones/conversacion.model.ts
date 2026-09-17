@@ -36,8 +36,15 @@ export interface MensajeApi {
    * `check:tipos`) y significa otra cosa: `ENVIADO` ahí es «nuestro backend lo
    * despachó a Meta». `ENVIANDO` aquí es «todavía no sabemos si lo aceptó».
    * Mezclarlos convertiría una espera en una confirmación falsa.
+   *
+   * `ERROR` y `AMBIGUO` no son matices de redacción: deciden si se puede
+   * reintentar. El backend persiste el mensaje y dispara el envío a Meta
+   * ANTES de responder el POST, así que un error de red o un 5xx puede
+   * significar que el mensaje ya salió hacia la paciente. Reintentar ahí
+   * manda un segundo WhatsApp de verdad. `AMBIGUO` es ese caso y no ofrece
+   * botón de reintento.
    */
-  readonly envioLocal?: 'ENVIANDO' | 'ERROR';
+  readonly envioLocal?: 'ENVIANDO' | 'ERROR' | 'AMBIGUO';
   /** true = lo mandó el sistema (acuse fuera de horario), no una persona. */
   readonly automatico?: boolean;
   readonly tipo?: TipoMensaje;

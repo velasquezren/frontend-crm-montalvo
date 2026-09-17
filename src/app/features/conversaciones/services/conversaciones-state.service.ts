@@ -568,13 +568,17 @@ export class ConversacionesStateService {
    * «se envió y se perdió»; uno marcado se lee como lo que es, y además
    * conserva el texto para reintentar sin volver a escribirlo.
    */
-  marcarEnvioFallido(conversacionId: string, idOptimista: string): void {
+  marcarEnvioFallido(
+    conversacionId: string,
+    idOptimista: string,
+    estado: 'ERROR' | 'AMBIGUO' = 'ERROR',
+  ): void {
     const chat = this.detalleActual();
     if (!chat || chat.id !== conversacionId) return;
     this.detalle.set({
       ...chat,
       mensajes: chat.mensajes.map(m =>
-        m.id === idOptimista ? { ...m, envioLocal: 'ERROR' as const } : m,
+        m.id === idOptimista ? { ...m, envioLocal: estado } : m,
       ),
     });
   }

@@ -375,6 +375,14 @@
                     <app-icon name="clock" [size]="12" />
                     <span class="text-[10px] font-semibold">Enviando</span>
                   </span>
+                } @else if (item.mensaje.envioLocal === 'AMBIGUO') {
+                  <span class="inline-flex items-center gap-1 ml-1 text-text-muted"
+                        title="Se perdió la respuesta del servidor, pero el mensaje PUEDE haber salido igualmente hacia la paciente. Revisa el hilo antes de volver a escribirlo: si aparece más arriba, ya se envió. Por eso no hay botón de reintentar aquí.">
+                    <app-icon name="alert-circle" [size]="12" />
+                    <span class="text-[10px] font-semibold">No se pudo confirmar</span>
+                    <button type="button" class="text-[10px] font-semibold underline cursor-pointer opacity-70"
+                            (click)="descartarEnvio(item.mensaje)">Descartar</button>
+                  </span>
                 } @else if (item.mensaje.envioLocal === 'ERROR') {
                   <span class="inline-flex items-center gap-1 ml-1 text-critical">
                     <app-icon name="alert-circle" [size]="12" />

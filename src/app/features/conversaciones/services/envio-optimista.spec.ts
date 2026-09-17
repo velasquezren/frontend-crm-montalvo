@@ -251,4 +251,45 @@ describe('envío optimista: esperar no es haber enviado', () => {
     expect(hilo()).toHaveLength(1);
     expect(buscar('a-1')).toBeDefined();
   });
+
+  it('14 · un fallo AMBIGUO no ofrece reintento y conserva el globo', () => {
+    pintarOptimista('temp-1', 'Buenos días');
+    /* Un 502: el backend pudo haber persistido y despachado a Meta. */
+    state.marcarEnvioFallido('chat-a', 'temp-1', 'AMBIGUO');
+    const globo = buscar('temp-1');
+    expect(globo?.envioLocal).toBe('AMBIGUO');
+    expect(globo?.contenido).toBe('Buenos días');
+    /* No se borra: la agente tiene que poder verlo para decidir. */
+    expect(hilo()).toHaveLength(2);
+  });
+
+  it('15 · el caso crítico: backend procesó, la respuesta se perdió', () => {
+    pintarOptimista('temp-1', 'Buenos días');
+
+    /* El socket sí llegó —el backend lo emite ANTES de responder el POST— y
+       el reload trajo el mensaje real. */
+    const real = respuestaServidor('Buenos días');
+    const chat = state.detalleActual()!;
+    state.detalle.set({
+      ...chat,
+      mensajes: [...chat.mensajes.filter(m => m.id !== 'temp-1'), real, {
+        ...chat.mensajes.find(m => m.id === 'temp-1')!,
+      }],
+    });
+    /* Y el POST falló con 502. */
+    state.marcarEnvioFallido('chat-a', 'temp-1', 'AMBIGUO');
+
+    /* El mensaje REAL está en el hilo: reintentar mandaría un segundo
+       WhatsApp de verdad. Por eso el estado es AMBIGUO y no ERROR. */
+    expect(buscar('real-1')).toBeDefined();
+    expect(buscar('temp-1')?.envioLocal).toBe('AMBIGUO');
+  });
+
+  it('16 · descartar también funciona sobre un globo ambiguo', () => {
+    pintarOptimista('temp-1', 'Buenos días');
+    state.marcarEnvioFallido('chat-a', 'temp-1', 'AMBIGUO');
+    state.descartarEnvioFallido('chat-a', 'temp-1');
+    expect(buscar('temp-1')).toBeUndefined();
+    expect(hilo()).toHaveLength(1);
+  });
 });

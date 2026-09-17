@@ -22,6 +22,7 @@ import { ImageViewerComponent } from '../../../../shared/components/image-viewer
 import { WhatsAppMarkdownPipe } from '../../../../shared/pipes/whatsapp-markdown.pipe';
 import { ToastService } from '../../../../core/toast/toast.service';
 import { generarIniciales } from '../../../../core/auth/user.model';
+import { envioSeReintentaSinRiesgo } from '../../clasificar-error-envio';
 import { ConversacionesService } from '../../conversaciones.service';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
 import { ConversacionResumen, MensajeApi } from '../../conversacion.model';
@@ -323,16 +324,22 @@ export class ConversacionThreadComponent {
       if (contexto === this.state.contextoChat()) {
         this.state.reconciliarEnvioLocal(id, mensaje.id, real);
       }
-    } catch {
-      /* Vuelve a fallar: se queda marcado otra vez, sin globo de más. */
-      if (contexto === this.state.contextoChat()) this.state.marcarEnvioFallido(id, mensaje.id);
+    } catch (err) {
+      /* Vuelve a fallar: se queda marcado otra vez, sin globo de más — y con
+         el estado que corresponda, porque un reintento también puede quedar
+         ambiguo y entonces tampoco debe ofrecer otro reintento. */
+      if (contexto === this.state.contextoChat()) {
+        this.state.marcarEnvioFallido(
+          id, mensaje.id, envioSeReintentaSinRiesgo(err) ? 'ERROR' : 'AMBIGUO',
+        );
+      }
     }
   }
 
   /** Descarta un globo fallido que la agente no quiere reintentar. */
   protected descartarEnvio(mensaje: MensajeApi): void {
     const id = this.state.seleccionadaId();
-    if (!id || mensaje.envioLocal !== 'ERROR') return;
+    if (!id || (mensaje.envioLocal !== 'ERROR' && mensaje.envioLocal !== 'AMBIGUO')) return;
     this.state.descartarEnvioFallido(id, mensaje.id);
   }
 }
