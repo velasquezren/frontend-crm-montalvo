@@ -369,6 +369,36 @@
               }
               {{ item.mensaje.createdAt | date: 'HH:mm' }}
               @if (item.mensaje.direccion === 'SALIENTE') {
+                @if (item.mensaje.envioLocal === 'ENVIANDO') {
+                  <span class="inline-flex items-center gap-0.5 ml-1 text-text-muted"
+                        title="Esperando confirmación de nuestro servidor. Todavía no ha salido hacia WhatsApp.">
+                    <app-icon name="clock" [size]="12" />
+                    <span class="text-[10px] font-semibold">Enviando</span>
+                  </span>
+                } @else if (item.mensaje.envioLocal === 'AMBIGUO') {
+                  <span class="inline-flex items-center gap-1 ml-1 text-text-muted"
+                        title="Se perdió la respuesta del servidor y el mensaje puede haber salido igualmente. Reintentar es seguro: lleva la misma clave de envío, así que el servidor devolverá el mensaje que ya existe en vez de mandar otro.">
+                    <app-icon name="alert-circle" [size]="12" />
+                    <span class="text-[10px] font-semibold">No se pudo confirmar</span>
+                    @if (item.mensaje.clientMessageId) {
+                      <button type="button" class="text-[10px] font-bold underline cursor-pointer"
+                              (click)="reintentarEnvio(item.mensaje)">Reintentar</button>
+                    }
+                    <button type="button" class="text-[10px] font-semibold underline cursor-pointer opacity-70"
+                            (click)="descartarEnvio(item.mensaje)">Descartar</button>
+                  </span>
+                } @else if (item.mensaje.envioLocal === 'ERROR') {
+                  <span class="inline-flex items-center gap-1 ml-1 text-critical">
+                    <app-icon name="alert-circle" [size]="12" />
+                    <span class="text-[10px] font-semibold">No se envió</span>
+                    @if (!item.mensaje.mediaKey) {
+                      <button type="button" class="text-[10px] font-bold underline cursor-pointer"
+                              (click)="reintentarEnvio(item.mensaje)">Reintentar</button>
+                    }
+                    <button type="button" class="text-[10px] font-semibold underline cursor-pointer opacity-70"
+                            (click)="descartarEnvio(item.mensaje)">Descartar</button>
+                  </span>
+                } @else {
                 @switch (item.mensaje.estadoEnvio) {
                   @case ('LEIDO') {
                     <app-icon name="check-check" [size]="12" class="inline-block ml-0.5 -mt-px text-secondary" title="Leído" />
@@ -395,6 +425,7 @@
                   @default {
                     <app-icon name="check" [size]="12" class="inline-block ml-0.5 -mt-px" title="Enviado" />
                   }
+                }
                 }
               }
             </span>

@@ -22,6 +22,7 @@ import { ToastService } from '../../../../core/toast/toast.service';
 import { mensajeDeError } from '../../../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../../../core/api/pagination.model';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
+import { envioSeReintentaSinRiesgo } from '../../clasificar-error-envio';
 import { ConversacionesService } from '../../conversaciones.service';
 import { MemoriaAgenteService } from '../../../memoria-agente/memoria-agente.service';
 import { RecursoMemoria } from '../../../memoria-agente/memoria-agente.model';
@@ -74,6 +75,8 @@ function tipoBase(mime: string): string {
 export class ConversacionComposerComponent implements OnDestroy {
   protected readonly state = inject(ConversacionesStateService);
   private readonly conversacionesService = inject(ConversacionesService);
+  /** Textos con un POST en vuelo: frena el doble submit sin frenar el uso rápido. */
+  private readonly enviosEnVuelo = new Set<string>();
   private readonly memoriaService = inject(MemoriaAgenteService);
   private readonly toast = inject(ToastService);
   private readonly dialogService = inject(DialogService);
@@ -328,16 +331,34 @@ export class ConversacionComposerComponent implements OnDestroy {
   }
 
   private async ejecutarEnvio(): Promise<void> {
+    marcarEnvio('message-send-click');
     const texto = this.state.mensajeNuevo().trim();
     const id = this.state.seleccionadaId();
     const adj = this.adjuntoPendiente();
 
-    if ((!texto && !adj) || !id || this.state.enviando()) return;
+    if ((!texto && !adj) || !id) return;
+
+    /* Antes aquí había `|| this.state.enviando()`, y con el input limpiándose
+       al instante eso descartaba EN SILENCIO un segundo mensaje legítimo
+       escrito dentro de los ~226 ms del primero. Dos textos distintos son dos
+       envíos distintos, cada uno con su globo y su id temporal: no hay razón
+       para serializarlos.
+       Lo que sí hay que impedir es que el MISMO submit se procese dos veces
+       —doble Enter, doble clic sobre el botón—, y para eso basta con el texto
+       en vuelo: el input ya se vació, así que un segundo evento del mismo
+       envío trae exactamente el mismo contenido. Un adjunto no se compara:
+       exige confirmación explícita en su modal. */
+    if (!adj && this.enviosEnVuelo.has(texto)) return;
 
     const contexto = this.state.contextoChat();
+    if (!adj) this.enviosEnVuelo.add(texto);
     this.state.enviando.set(true);
     const chatPrevio = this.state.detalleActual();
-    const idOptimista = `temp-${Date.now()}`;
+    const idOptimista = idTemporal();
+    /* Una intención de envío, un `clientMessageId`. Se genera aquí —no al
+       reintentar— porque identifica lo que la agente quiso mandar, no el
+       intento técnico. El reintento reutiliza el del globo. */
+    const clientMessageId = idDeEnvio();
 
     // Actualización optimista de la UI
     if (chatPrevio) {
@@ -350,7 +371,11 @@ export class ConversacionComposerComponent implements OnDestroy {
         mediaUrl: adj?.vistaPrevia ?? null,
         mediaMime: adj?.mediaMime ?? null,
         mediaNombre: adj?.mediaNombre ?? null,
-        estadoEnvio: 'ENVIADO',
+        /* Sin `estadoEnvio`: ese campo es el del servidor y todavía no hay
+           servidor que lo haya puesto. El estado de espera va aparte. */
+        estadoEnvio: null,
+        envioLocal: 'ENVIANDO',
+        clientMessageId,
         automatico: false,
         createdAt: new Date().toISOString(),
       };
@@ -359,6 +384,7 @@ export class ConversacionComposerComponent implements OnDestroy {
         ...chatPrevio,
         mensajes: [...chatPrevio.mensajes, mensajeOptimista],
       });
+      marcarEnvio('message-optimistic-painted');
     }
 
     this.state.mensajeNuevo.set('');
@@ -369,21 +395,39 @@ export class ConversacionComposerComponent implements OnDestroy {
         mediaKey: adj.mediaKey,
         mediaMime: adj.mediaMime ?? null,
         mediaNombre: adj.mediaNombre ?? null,
-      } : undefined);
+      } : undefined, clientMessageId);
 
       // Sin reload: reemplaza el mensaje optimista con el real, en memoria.
       // Ver el porqué en `reconciliarEnvioLocal`.
-      if (contexto === this.state.contextoChat()) this.state.reconciliarEnvioLocal(id, idOptimista, real);
-    } catch (err) {
-      // Una respuesta tardía no restaura el borrador de otro canal.
-      if (contexto !== this.state.contextoChat()) return;
-      if (chatPrevio) {
-        this.state.detalle.set(chatPrevio);
+      if (contexto === this.state.contextoChat()) {
+        this.state.reconciliarEnvioLocal(id, idOptimista, real);
+        medirEnvio('message-server-confirmed', 'message-send-click');
       }
-      this.state.mensajeNuevo.set(texto);
-      this.adjuntoPendiente.set(adj);
+    } catch (err) {
+      // Una respuesta tardía no toca la conversación que ya no se está mirando.
+      if (contexto !== this.state.contextoChat()) return;
+
+      /* Antes esto restauraba `chatPrevio`: el globo desaparecía y el texto
+         volvía al input con un toast. Un mensaje que se ve salir y luego se
+         esfuma se lee como enviado-y-perdido, que es peor que un error
+         visible. Ahora el globo se queda donde está, marcado, y ofrece
+         reintentar sin volver a escribirlo. */
+      if (chatPrevio) {
+        /* Un error NO es permiso para reintentar. El backend persiste y
+           dispara el envío a Meta antes de responder, así que solo los
+           códigos que corta antes de la transacción son seguros. */
+        this.state.marcarEnvioFallido(
+          id, idOptimista, envioSeReintentaSinRiesgo(err) ? 'ERROR' : 'AMBIGUO',
+        );
+      } else {
+        /* Sin detalle cargado no hay globo donde poner el error: ahí sí toca
+           devolver el texto al input. */
+        this.state.mensajeNuevo.set(texto);
+        this.adjuntoPendiente.set(adj);
+      }
       this.toast.error(mensajeDeError(err, 'No se pudo enviar el mensaje.'));
     } finally {
+      if (!adj) this.enviosEnVuelo.delete(texto);
       this.state.enviando.set(false);
     }
   }
@@ -527,4 +571,54 @@ export class ConversacionComposerComponent implements OnDestroy {
       this.toast.error(mensajeDeError(err, 'No se pudo eliminar la respuesta rápida.'));
     }
   }
+}
+
+/**
+ * Id del globo optimista mientras no existe el real.
+ *
+ * `Date.now()` a secas colisiona: dos mensajes enviados en el mismo
+ * milisegundo compartían id y la reconciliación del primero se llevaba por
+ * delante al segundo. El contador lo hace único dentro de la pestaña, que es
+ * todo el alcance que necesita — nunca sale de aquí.
+ */
+let secuenciaTemporal = 0;
+function idTemporal(): string {
+  secuenciaTemporal += 1;
+  return `temp-${Date.now()}-${secuenciaTemporal}`;
+}
+
+/** Marcas estándar del navegador; sin telemetría ni envío. */
+function marcarEnvio(nombre: string): void {
+  try {
+    performance.mark(nombre);
+  } catch {
+    /* Medir nunca puede romper un envío. */
+  }
+}
+
+function medirEnvio(nombre: string, desde: string): void {
+  try {
+    if (!performance.getEntriesByName(desde, 'mark').length) return;
+    performance.measure(nombre, desde);
+  } catch {
+    /* Ídem. */
+  }
+}
+
+/**
+ * Identidad de la intención de envío que viaja al backend.
+ *
+ * `crypto.randomUUID()` porque el backend la valida como UUID y porque un
+ * `Date.now()` no sirve para esto: dos pestañas de la misma agente pueden
+ * coincidir en el milisegundo, y aquí una colisión significaría que un mensaje
+ * se traga a otro. El respaldo cubre navegadores sin `randomUUID` en contextos
+ * no seguros; no entra en producción, que es HTTPS.
+ */
+function idDeEnvio(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, c =>
+    (Number(c) ^ (Math.random() * 16) >> (Number(c) / 4)).toString(16),
+  );
 }

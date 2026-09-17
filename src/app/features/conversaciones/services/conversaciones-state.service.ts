@@ -561,6 +561,50 @@ export class ConversacionesStateService {
     });
   }
 
+  /**
+   * Deja el globo optimista marcado como fallido, en su sitio y con su texto.
+   *
+   * No se borra a propósito. Un mensaje que aparece y desaparece se lee como
+   * «se envió y se perdió»; uno marcado se lee como lo que es, y además
+   * conserva el texto para reintentar sin volver a escribirlo.
+   */
+  marcarEnvioFallido(
+    conversacionId: string,
+    idOptimista: string,
+    estado: 'ERROR' | 'AMBIGUO' = 'ERROR',
+  ): void {
+    const chat = this.detalleActual();
+    if (!chat || chat.id !== conversacionId) return;
+    this.detalle.set({
+      ...chat,
+      mensajes: chat.mensajes.map(m =>
+        m.id === idOptimista ? { ...m, envioLocal: estado } : m,
+      ),
+    });
+  }
+
+  /** Devuelve el globo a «enviando» para un reintento sobre el MISMO mensaje. */
+  marcarEnvioEnCurso(conversacionId: string, idOptimista: string): void {
+    const chat = this.detalleActual();
+    if (!chat || chat.id !== conversacionId) return;
+    this.detalle.set({
+      ...chat,
+      mensajes: chat.mensajes.map(m =>
+        m.id === idOptimista ? { ...m, envioLocal: 'ENVIANDO' as const } : m,
+      ),
+    });
+  }
+
+  /** Quita un globo fallido que la agente decide descartar. */
+  descartarEnvioFallido(conversacionId: string, idOptimista: string): void {
+    const chat = this.detalleActual();
+    if (!chat || chat.id !== conversacionId) return;
+    this.detalle.set({
+      ...chat,
+      mensajes: chat.mensajes.filter(m => m.id !== idOptimista),
+    });
+  }
+
   cambiarLinea(id: string): void {
     this.filtroLineaId.set(id || null);
     this.seleccionadaId.set(null);
@@ -819,7 +863,11 @@ export class ConversacionesStateService {
         : yaHabiaOptimista
           ? chat.mensajes.map(m =>
               m.id === idOptimista
-                ? { ...m, id: real.id, createdAt: real.createdAt, estadoEnvio: real.estadoEnvio }
+                /* `envioLocal: undefined` es la mitad que importa: el globo
+                   deja de estar «enviando» porque ya hay un mensaje real
+                   detrás, y a partir de aquí manda el `estadoEnvio` del
+                   servidor. Sin esto quedaría el reloj puesto para siempre. */
+                ? { ...m, id: real.id, createdAt: real.createdAt, estadoEnvio: real.estadoEnvio, envioLocal: undefined }
                 : m,
             )
           : [...chat.mensajes, real];

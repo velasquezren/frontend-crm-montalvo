@@ -26,6 +26,31 @@ export interface MensajeApi {
   readonly contenido: string;
   readonly createdAt: string;
   readonly estadoEnvio?: EstadoEnvioMensaje | null;
+  /**
+   * Estado LOCAL de un mensaje que todavía no existe en el servidor. No viaja
+   * nunca en una respuesta: lo pone el compositor al pintar el globo optimista
+   * y lo borra la reconciliación al llegar el real.
+   *
+   * Es un campo aparte y no un valor más de `estadoEnvio` porque ese enum es
+   * el de la base (`EstadoMensaje` en `schema.prisma`, verificado por
+   * `check:tipos`) y significa otra cosa: `ENVIADO` ahí es «nuestro backend lo
+   * despachó a Meta». `ENVIANDO` aquí es «todavía no sabemos si lo aceptó».
+   * Mezclarlos convertiría una espera en una confirmación falsa.
+   *
+   * `ERROR` y `AMBIGUO` no son matices de redacción: deciden si se puede
+   * reintentar. El backend persiste el mensaje y dispara el envío a Meta
+   * ANTES de responder el POST, así que un error de red o un 5xx puede
+   * significar que el mensaje ya salió hacia la paciente. Reintentar ahí
+   * manda un segundo WhatsApp de verdad. `AMBIGUO` es ese caso y no ofrece
+   * botón de reintento.
+   */
+  readonly envioLocal?: 'ENVIANDO' | 'ERROR' | 'AMBIGUO';
+  /**
+   * Identidad de la intención de envío, la misma que viaja al backend. Se
+   * conserva entre reintentos: es lo que permite que reintentar un envío
+   * ambiguo no pueda duplicar el mensaje. Solo existe en globos optimistas.
+   */
+  readonly clientMessageId?: string;
   /** true = lo mandó el sistema (acuse fuera de horario), no una persona. */
   readonly automatico?: boolean;
   readonly tipo?: TipoMensaje;
