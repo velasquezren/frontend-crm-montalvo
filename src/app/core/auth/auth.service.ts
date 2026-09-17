@@ -1,9 +1,10 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, Injector, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import { API_URL } from '../api/api.constants';
 import { limpiarCacheApi } from '../api/cache.interceptor';
+import { NotificacionNativaService } from '../notification/notificacion-nativa.service';
 import { cubreRol } from './roles';
 import { generarIniciales, RolUsuario, User } from './user.model';
 
@@ -29,6 +30,7 @@ const USER_KEY = 'crm_usuario';
  */
 const EMAIL_KEY = 'crm_ultimo_email';
 
+
 /**
  * AuthService — sesión real contra el backend NestJS (POST /auth/login).
  * Estado en signals; token + usuario persisten en localStorage para
@@ -37,6 +39,7 @@ const EMAIL_KEY = 'crm_ultimo_email';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
+  private readonly injector = inject(Injector);
 
   private readonly currentUser = signal<User | null>(this.restaurarSesion());
   private readonly revision = signal(0);
@@ -177,25 +180,61 @@ export class AuthService {
     return new HttpErrorResponse({ status: 409, statusText: 'La sesión cambió durante la petición' });
   }
 
+  /**
+   * Cierra la sesión y da de baja el push de ESTE dispositivo.
+   *
+   * La baja del push es lo único que necesita ir antes de soltar el token: es
+   * una petición autenticada, y sin credencial el servidor responde 401 y la
+   * suscripción sobrevive. Eso es F09: en la clínica varias agentes comparten
+   * la misma tablet, y una suscripción que sobrevive al logout sigue mostrando
+   * en la pantalla de bloqueo el nombre de la paciente y lo que escribió, a
+   * nombre de quien ya salió.
+   *
+   * Lo que NO cambia: `usuario.activo` sigue en `true`. Salir no es darse de
+   * baja de la cuenta, ni perder líneas, ni cambiar permisos.
+   */
   logout(): void {
     this.revision.update(n => n + 1);
     this.refrescoEnCurso = null;
-    /* Pide revocar esta sesión y borrar su cookie HttpOnly. El estado local se
-       limpia sin esperar a la red; si la petición falla, esa limpieza local no
-       demuestra que el servidor haya revocado la credencial. */
+
+    /* Nada de aquí abajo se espera: las tres peticiones salen y se olvidan.
+       Salir no depende de la red, y el token se borra en este mismo tick. */
+    this.currentUser.set(null);
+    /* En la clínica varias agentes comparten equipo: sin esto, los datos que
+       cargó una seguirían en memoria para la siguiente. */
+    limpiarCacheApi();
+
+    /* ORDEN: las dos peticiones autenticadas salen ANTES de borrar el token.
+       Las dos leen el bearer en este mismo tick —`/auth/logout` para saber QUÉ
+       sesión revocar, la baja del push porque el endpoint solo puede borrarlo
+       su dueña—, y la línea siguiente lo borra. */
     this.http
       .post(`${API_URL}/auth/logout`, {}, { withCredentials: true })
       .subscribe({ error: () => undefined });
+
+    /* Se resuelve AQUÍ y no en el constructor. Inyectarlo arriba mete `SwPush`
+       —y con él toda la infraestructura del Service Worker— en el grafo de
+       cualquier cosa que construya `AuthService`: el servicio de notificaciones
+       es colaborador de ESTA acción, no de la identidad de este servicio. El
+       `null` por defecto cierra el círculo: salir no puede depender de que esté
+       montado, ni de que la baja funcione. */
+    try {
+      this.injector.get(NotificacionNativaService, null)?.darDeBaja();
+    } catch {
+      /* El `try` no sobra: el `null` por defecto solo cubre que el servicio no
+         esté registrado, y este SÍ lo está (`providedIn: 'root'`). Lo que puede
+         fallar es CONSTRUIRLO, porque inyecta `SwPush` y ese no existe sin
+         Service Worker montado. Sin este catch, la excepción se llevaba por
+         delante el borrado del token de las líneas de abajo: salir dejaba la
+         credencial puesta, que es peor que no dar de baja el push. */
+    }
 
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(USER_KEY);
-    this.currentUser.set(null);
-    /* En la clínica varias agentes comparten equipo: sin esto, los datos que
-       cargó una seguirían en memoria para la siguiente. */
-    limpiarCacheApi();
   }
+
 
   /**
    * Comprueba contra el servidor si el rol guardado sigue siendo el real.

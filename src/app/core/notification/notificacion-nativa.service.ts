@@ -1,5 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SwPush } from '@angular/service-worker';
+import { firstValueFrom, take } from 'rxjs';
 
 import { ApiService } from '../api/api.service';
 
@@ -33,9 +35,24 @@ export class NotificacionNativaService {
 
   private readonly audioChime = typeof Audio !== 'undefined' ? new Audio('/notification.wav') : null;
 
+  /**
+   * El endpoint de la suscripción vigente, para poder darla de baja SIN esperar.
+   *
+   * `swPush.subscription` es un observable: preguntarle en el momento del
+   * logout devolvería la respuesta un tick tarde, cuando el token ya no está.
+   * Esto no es un segundo estado —la fuente sigue siendo `swPush`—, es su
+   * último valor guardado para poder leerlo de forma síncrona.
+   */
+  private endpointSuscrito: string | null = null;
+
   constructor() {
     if (this.audioChime) {
       this.audioChime.volume = 0.6;
+    }
+    if (this.swPush.isEnabled) {
+      this.swPush.subscription
+        .pipe(takeUntilDestroyed())
+        .subscribe(sub => (this.endpointSuscrito = sub?.endpoint ?? null));
     }
   }
 
@@ -71,7 +88,11 @@ export class NotificacionNativaService {
    *
    * Ahora hay un solo Service Worker, el de Angular, y `SwPush` se monta encima
    * de él. **No vuelvas a llamar a `serviceWorker.register` desde el código de
-   * la app**: hay una prueba que lo comprueba (`sin-segundo-service-worker.spec.ts`).
+   * la app**: lo impide `check:skills` (`verificarServiceWorkerUnico` en
+   * `tools/verificar-skills.mjs`), que además rechaza que `public/sw.js` vuelva
+   * a aparecer y que `app.config.ts` deje de montar `ngsw-worker.js`. Va ahí y
+   * no en un spec a propósito: el fallo necesita un navegador real con dos SW
+   * compitiendo, y jsdom no lo reproduce.
    *
    * `requestSubscription` devuelve la suscripción existente si ya la había con
    * la misma llave, así que llamarlo en cada visita al inbox es barato y
@@ -99,6 +120,53 @@ export class NotificacionNativaService {
       }
     } catch {
       // Permiso denegado, modo privado, o el SW todavía no está listo.
+    }
+  }
+
+  /**
+   * Baja de ESTE dispositivo: deja de recibir push para esta suscripción.
+   *
+   * Tres pasos y ninguno decide nada de sesión —pedir la suscripción actual,
+   * decirle al servidor que la borre, cancelarla en el navegador—. Quién es la
+   * usuaria y cuándo toca salir es asunto de `AuthService`, que llama a esto.
+   *
+   * **Best-effort de arriba abajo.** Ningún fallo puede impedir cerrar sesión,
+   * así que cada paso se intenta por separado y ninguno propaga. Los fallos no
+   * se registran en consola a propósito: el código de la app no tiene una sola
+   * llamada a `console` —el build la rechaza— y además el endpoint identifica
+   * el dispositivo, así que dejarlo escrito en las devtools de una tablet
+   * compartida sería filtrar justo lo que esto viene a cerrar.
+   *
+   * Si la baja en el servidor falla, la fila queda huérfana: la reasigna sola
+   * el upsert por `endpoint` en cuanto otra agente se suscriba desde aquí.
+   */
+  darDeBaja(): void {
+    if (!this.swPush.isEnabled) return;
+
+    /* La petición se dispara AQUÍ, en el prólogo síncrono y sin un solo `await`
+       por delante. No es estilo: `firstValueFrom` suscribe de inmediato, así que
+       el interceptor lee el token en este mismo tick — y quien llama lo borra en
+       la línea siguiente. Preguntarle antes al navegador por la suscripción
+       (`swPush.subscription` es asíncrono) mandaría la baja un tick más tarde,
+       ya sin credencial, y el servidor respondería 401. Por eso el endpoint se
+       recuerda en cuanto se conoce. */
+    const endpoint = this.endpointSuscrito;
+    if (endpoint) {
+      void this.api.delete('push/desuscribir', { endpoint }).catch(() => undefined);
+    }
+    this.endpointSuscrito = null;
+
+    /* Cancelar en el navegador no necesita credencial, así que puede tomarse su
+       tiempo. Si falla, el servidor ya no tiene la fila: no llegará nada. */
+    void this.cancelarEnNavegador();
+  }
+
+  private async cancelarEnNavegador(): Promise<void> {
+    try {
+      const suscripcion = await firstValueFrom(this.swPush.subscription.pipe(take(1)));
+      await suscripcion?.unsubscribe();
+    } catch {
+      // El navegador pudo haberla descartado ya, o no haberla tenido nunca.
     }
   }
 

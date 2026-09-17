@@ -58,8 +58,9 @@ export class ApiService {
     return firstValueFrom(this.http.put<T>(this.url(path), body));
   }
 
-  delete<T>(path: string): Promise<T> {
-    return firstValueFrom(this.http.delete<T>(this.url(path)));
+  /** `params` porque hay bajas que identifican el recurso por query, no por ruta. */
+  delete<T>(path: string, params?: QueryParams): Promise<T> {
+    return firstValueFrom(this.http.delete<T>(this.url(path), { params: limpiarParams(params) }));
   }
 
   /**
