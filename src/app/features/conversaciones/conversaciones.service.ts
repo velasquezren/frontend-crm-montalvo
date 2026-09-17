@@ -75,8 +75,23 @@ export class ConversacionesService {
   }
 
   /** Paginación por cursor para mensajes antiguos (scroll hacia arriba). */
-  obtenerMensajesAnteriores(id: string, antesDe: string, limit = 50): Promise<MensajeApi[]> {
-    return this.api.get<MensajeApi[]>(`/conversaciones/${id}/mensajes-anteriores`, { antesDe, limit });
+  /**
+   * `antesDeId` desempata: `createdAt` no es único.
+   *
+   * Los mensajes que el backend persiste en una misma transacción comparten el
+   * instante exacto, y con la fecha sola una página que cortara dentro de ese
+   * grupo se saltaba al resto para siempre. Ver el docblock de
+   * `obtenerMensajesAnteriores` en el backend.
+   */
+  obtenerMensajesAnteriores(
+    id: string,
+    antesDe: string,
+    limit = 50,
+    antesDeId?: string,
+  ): Promise<MensajeApi[]> {
+    return this.api.get<MensajeApi[]>(`/conversaciones/${id}/mensajes-anteriores`, {
+      antesDe, limit, ...(antesDeId ? { antesDeId } : {}),
+    });
   }
 
   /** Búsqueda histórica de mensajes en el servidor. */

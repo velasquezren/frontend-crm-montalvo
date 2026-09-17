@@ -525,6 +525,7 @@ export class ConversacionesStateService {
         id,
         primerMensaje.createdAt,
         LOTE_HISTORIAL,
+        primerMensaje.id,
       );
 
       if (this.contextoChat() !== contexto) return 0;
