@@ -1,4 +1,4 @@
-import { EstadoActividad, TipoActividad } from '../../core/api/db-enums';
+import { EstadoActividad, FrecuenciaRepeticion, TipoActividad } from '../../core/api/db-enums';
 import { BadgeVariant } from '../../shared/components/badge/badge.component';
 import { IconName } from '../../shared/components/icon/icon.component';
 
@@ -32,7 +32,15 @@ export const TIPO_ACTIVIDAD_DURACION_SUGERIDA: Record<TipoActividad, number> = {
   RECORDATORIO: 5,
 };
 
-export type FrecuenciaRepeticion = 'SEMANAL' | 'QUINCENAL' | 'MENSUAL';
+/**
+ * Reexportada desde los enums generados, no escrita a mano.
+ *
+ * Desde A5.1 la cadencia es un enum de `schema.prisma`, así que el backend y
+ * esta pantalla comparten UNA definición y `check:tipos` la vigila. Antes
+ * estaba escrita dos veces, una en cada runtime, sin nada que avisara si
+ * divergían.
+ */
+export type { FrecuenciaRepeticion };
 
 export const FRECUENCIA_LABEL: Record<FrecuenciaRepeticion, string> = {
   SEMANAL: 'Cada semana',

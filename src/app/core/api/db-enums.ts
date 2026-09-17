@@ -72,3 +72,5 @@ export type FuenteTipoCambio = 'AUTOMATICO' | 'MANUAL';
 export type TipoActividad = 'LLAMADA' | 'REUNION' | 'TAREA' | 'RECORDATORIO';
 
 export type EstadoActividad = 'PENDIENTE' | 'COMPLETADA' | 'CANCELADA';
+
+export type FrecuenciaRepeticion = 'SEMANAL' | 'QUINCENAL' | 'MENSUAL';
