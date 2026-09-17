@@ -26,6 +26,9 @@
 
     <!-- Acciones — moneda + perfil + logout -->
     <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+      <!-- Fuera del @if de rol a propósito: una versión nueva le toca a todo el
+           mundo, no solo a quien gestiona comercial. -->
+      <app-actualizacion-disponible />
       @if (puedeGestionComercial()) {
         <app-notificaciones-bell />
         <app-moneda-toggle size="sm" />

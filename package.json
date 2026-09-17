@@ -7,9 +7,10 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "npm run check:tipos && npm run check:skills && ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test",
+    "build": "npm run sello:build && npm run check:tipos && npm run check:skills && ng build",
+    "watch": "npm run sello:build && ng build --watch --configuration development",
+    "test": "npm run sello:build && ng test",
+    "sello:build": "node tools/generar-sello-build.mjs",
     "sync:tipos": "node tools/generar-db-enums.mjs",
     "check:tipos": "node tools/generar-db-enums.mjs --check",
     "check:skills": "node tools/verificar-skills.mjs"

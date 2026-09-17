@@ -4,6 +4,7 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { MonedaService } from '../../../core/moneda/moneda.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { cubreRol, ROL_LABEL } from '../../../core/auth/roles';
+import { ActualizacionDisponibleComponent } from '../../../core/pwa/actualizacion-disponible.component';
 import { ToastContainerComponent } from '../../../core/toast/toast-container.component';
 import { ModoInmersivoService } from '../../../core/ui/modo-inmersivo.service';
 import { AvatarComponent } from '../avatar/avatar.component';
@@ -25,6 +26,7 @@ import { NAV_GROUPS, NAV_ITEMS } from './nav-items';
     RouterLinkActive,
     IconComponent,
     AvatarComponent,
+    ActualizacionDisponibleComponent,
     MonedaToggleComponent,
     NotificacionesBellComponent,
     ToastContainerComponent,
