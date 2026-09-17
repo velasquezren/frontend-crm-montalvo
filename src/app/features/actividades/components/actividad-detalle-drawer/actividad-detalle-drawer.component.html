@@ -1,0 +1,187 @@
+  <app-drawer
+    ancho="sm"
+    etiqueta="Detalle de la actividad"
+    (cerrar)="cerrado.emit()">
+
+    <div cabecera class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+        <app-icon [name]="tipoIcono[actividad().tipo]" [size]="20" />
+      </div>
+      <div class="min-w-0">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-primary">{{ tiposLabel[actividad().tipo] }}</span>
+          <app-badge [variant]="estadoBadge[actividad().estado]">{{ estadoLabel[actividad().estado] }}</app-badge>
+        </div>
+        <h2 class="text-sm font-bold text-text-dark tracking-tight leading-tight truncate mt-0.5">
+          {{ actividad().titulo }}
+        </h2>
+      </div>
+    </div>
+
+
+    <!-- Cuerpo del Drawer con scroll -->
+    <div class="p-6 overflow-y-auto space-y-5 flex-1 bg-bg-workspace/30">
+
+      <!-- 1. Tarjeta 360° de la Paciente -->
+      <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle flex flex-col gap-3">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <app-avatar
+              [initials]="actividad().cliente | inicialesCliente"
+              [nombre]="actividad().cliente | nombreCliente"
+              size="md" />
+            <div class="min-w-0">
+              <h3 class="text-sm font-bold text-text-dark truncate">{{ actividad().cliente | nombreCliente }}</h3>
+              <div class="crm-meta mt-0.5">
+                @if (sinNombre(actividad().cliente)) {
+                  <span class="italic">Sin nombre registrado</span>
+                } @else {
+                  <span class="crm-meta-clave">{{ actividad().cliente.telefono }}</span>
+                }
+                @if (actividad().cliente.pac; as codigo) {
+                  <span class="crm-meta-clave">{{ codigo }}</span>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones de contacto directo (WhatsApp & Llamada) -->
+        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-border/70">
+          <a
+            [href]="getWhatsappLink(actividad().cliente.telefono)"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+            <app-icon name="message-circle" [size]="15" />
+            <span>WhatsApp</span>
+          </a>
+          <a
+            [href]="'tel:' + actividad().cliente.telefono"
+            class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-bg-light text-text-dark hover:bg-border/60 transition-colors">
+            <app-icon name="phone" [size]="15" />
+            <span>Llamar</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- 2. Información del Compromiso / Agenda -->
+      <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-3">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">Horario y Asignación</h4>
+
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div class="p-2.5 rounded-xl bg-bg-workspace border border-border/60">
+            <span class="text-[11px] text-text-muted block">Programada para</span>
+            @let r = formatoFechaRelativa(actividad().fechaProgramada);
+            <span class="font-bold text-xs" [class.text-critical]="r.urgente" [class.text-text-dark]="!r.urgente">
+              {{ r.texto }}
+            </span>
+            <span class="text-[10px] text-text-muted block mt-0.5">
+              {{ actividad().fechaProgramada | date: 'd MMM yyyy, HH:mm' }}
+            </span>
+          </div>
+
+          <div class="p-2.5 rounded-xl bg-bg-workspace border border-border/60">
+            <span class="text-[11px] text-text-muted block">Duración estimada</span>
+            <span class="font-bold text-xs text-text-dark">{{ formatearDuracion(actividad().duracionMinutos) }}</span>
+            <span class="text-[10px] text-text-muted block mt-0.5">Bloque de calendario</span>
+          </div>
+        </div>
+
+        @if (esAdmin()) {
+          <div class="flex items-center justify-between p-2.5 rounded-xl bg-bg-workspace border border-border/60 text-xs">
+            <span class="text-text-muted">Responsable comercial</span>
+            <span class="font-semibold text-text-dark">{{ actividad().agente.nombre }}</span>
+          </div>
+        }
+
+        @if (actividad().lead; as lead) {
+          <div class="flex items-center justify-between p-2.5 rounded-xl bg-bg-workspace border border-border/60 text-xs">
+            <span class="text-text-muted">Lead asociado</span>
+            <span class="px-2 py-0.5 rounded-md bg-secondary/10 text-secondary font-semibold text-[11px]">
+              {{ labelOrigen(lead.origen) }} · {{ lead.estado }}
+            </span>
+          </div>
+        }
+      </div>
+
+      <!-- 3. Notas y Contexto -->
+      <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-2">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">Notas y Detalles</h4>
+        @if (actividad().notas) {
+          <p class="text-xs text-text-dark leading-relaxed whitespace-pre-wrap bg-bg-workspace p-3 rounded-xl border border-border/60">
+            {{ actividad().notas }}
+          </p>
+        } @else {
+          <p class="text-xs text-text-muted italic">Sin notas registradas para esta actividad.</p>
+        }
+      </div>
+
+      <!-- 4. Acciones Comerciales de Alto Impacto -->
+      <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-2.5">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">Acciones Rápidas</h4>
+
+        <!-- `<app-button>` en todo el bloque. Eran NUEVE `<button>` a mano, todos
+             `rounded-xl` cuando la geometría del sistema dice píldora siempre
+             (§3.2), y cada uno con su propia mezcla de utilidades. La variante
+             `critical` del átomo nació justo de los dos destructivos de aquí. -->
+        @if (actividad().estado === 'PENDIENTE') {
+          <app-button
+            icon="check-circle"
+            [fullWidth]="true"
+            (clicked)="completarYAgendarSiguiente.emit(actividad())">
+            Completar y agendar siguiente paso
+          </app-button>
+
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <app-button variant="secondary" size="sm" icon="check" (clicked)="completar.emit(actividad())">
+              Solo completar
+            </app-button>
+            <app-button variant="secondary" size="sm" icon="clock" (clicked)="reprogramar.emit(24)">
+              Posponer 24 h
+            </app-button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <app-button variant="secondary" size="sm" icon="edit" (clicked)="editar.emit(actividad())">
+              Editar detalles
+            </app-button>
+            <app-button variant="critical" size="sm" icon="x" (clicked)="cancelar.emit(actividad())">
+              Cancelar actividad
+            </app-button>
+          </div>
+
+          <div class="pt-1">
+            <app-button variant="critical" size="sm" icon="trash" [fullWidth]="true" (clicked)="eliminar.emit(actividad())">
+              Eliminar actividad
+            </app-button>
+          </div>
+        } @else if (actividad().estado === 'COMPLETADA') {
+          <div class="p-3 rounded-xl bg-primary/10 border border-primary/20 text-xs text-primary font-medium flex items-center gap-2">
+            <app-icon name="check-circle" [size]="16" />
+            <span>Actividad completada{{ actividad().completadaEn ? ' el ' + (actividad().completadaEn | date: 'd MMM, HH:mm') : '' }}.</span>
+          </div>
+
+          <app-button
+            icon="plus"
+            [fullWidth]="true"
+            (clicked)="agendarSeguimiento.emit(actividad().cliente)">
+            Agendar nuevo seguimiento
+          </app-button>
+
+          <app-button variant="critical" size="sm" icon="trash" [fullWidth]="true" (clicked)="eliminar.emit(actividad())">
+            Eliminar actividad
+          </app-button>
+        } @else {
+          <div class="p-3 rounded-xl bg-bg-light border border-border text-xs text-text-muted font-medium flex items-center gap-2">
+            <app-icon name="x-circle" [size]="16" />
+            <span>Actividad cancelada.</span>
+          </div>
+
+          <app-button variant="critical" size="sm" icon="trash" [fullWidth]="true" (clicked)="eliminar.emit(actividad())">
+            Eliminar del registro
+          </app-button>
+        }
+      </div>
+    </div>
+  </app-drawer>

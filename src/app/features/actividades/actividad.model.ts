@@ -1,4 +1,5 @@
 import { EstadoActividad, TipoActividad } from '../../core/api/db-enums';
+import { BadgeVariant } from '../../shared/components/badge/badge.component';
 import { IconName } from '../../shared/components/icon/icon.component';
 
 export type { EstadoActividad, TipoActividad };
@@ -133,3 +134,10 @@ export function formatearDuracion(minutos: number): string {
   const resto = minutos % 60;
   return resto === 0 ? `${horas} h` : `${horas} h ${resto}`;
 }
+
+/** Con qué color se pinta cada estado. Lo miran la lista y el detalle. */
+export const ESTADO_BADGE: Record<EstadoActividad, BadgeVariant> = {
+  PENDIENTE: 'info',
+  COMPLETADA: 'success',
+  CANCELADA: 'neutral',
+};

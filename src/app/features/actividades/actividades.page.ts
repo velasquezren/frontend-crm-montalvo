@@ -19,6 +19,7 @@ import { ActivatedRoute } from '@angular/router';
 
 import { OverlayRef } from '@angular/cdk/overlay';
 
+import { ActividadDetalleDrawerComponent } from './components/actividad-detalle-drawer/actividad-detalle-drawer.component';
 import { ActividadesCalendarioComponent } from './components/actividades-calendario/actividades-calendario.component';
 import {
   ActividadFormularioComponent,
@@ -35,7 +36,7 @@ import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model'
 import { ToastService } from '../../core/toast/toast.service';
 import { ORIGEN_LABEL } from '../leads/lead.model';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
-import { BadgeComponent, BadgeVariant } from '../../shared/components/badge/badge.component';
+import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
@@ -55,6 +56,7 @@ import {
   esActividadVencida,
   formatearDuracion,
   ESTADO_ACTIVIDAD_LABEL,
+  ESTADO_BADGE,
   EstadoActividad,
   formatoFechaRelativa,
   ResumenActividades,
@@ -63,7 +65,6 @@ import {
   TipoActividad,
 } from './actividad.model';
 import { ActividadesService, FiltroActividades } from './actividades.service';
-import { esNombreProvisional } from '../../shared/models/nombre-cliente';
 import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 
 type FiltroRapido = 'PENDIENTES' | 'VENCIDAS' | 'HOY' | 'PROXIMA_SEMANA' | 'COMPLETADAS' | 'TODAS';
@@ -71,11 +72,6 @@ type Vista = 'LISTA' | 'CALENDARIO';
 
 const TIPOS: readonly TipoActividad[] = ['LLAMADA', 'REUNION', 'TAREA', 'RECORDATORIO'];
 
-const ESTADO_BADGE: Record<EstadoActividad, BadgeVariant> = {
-  PENDIENTE: 'info',
-  COMPLETADA: 'success',
-  CANCELADA: 'neutral',
-};
 
 
 /**
@@ -93,6 +89,7 @@ const ESTADO_BADGE: Record<EstadoActividad, BadgeVariant> = {
     BadgeComponent,
     ButtonComponent,
     ActividadesCalendarioComponent,
+    ActividadDetalleDrawerComponent,
     ActividadFormularioComponent,
     DrawerComponent,
     DatePipe,
@@ -124,9 +121,6 @@ export class ActividadesPage implements OnDestroy {
   /* Un contacto que llegó por WhatsApp sin dar su nombre se guarda como
      "WhatsApp +591…", y entonces el título YA es el teléfono: repetirlo debajo
      era decir dos veces el mismo número. Ver `shared/models/nombre-cliente`. */
-  protected sinNombre(cliente: { nombre: string; telefono: string }): boolean {
-    return esNombreProvisional(cliente.nombre);
-  }
   protected readonly tiposLabel = TIPO_ACTIVIDAD_LABEL;
   protected readonly tipoIcono = TIPO_ACTIVIDAD_ICONO;
   protected readonly estadoLabel = ESTADO_ACTIVIDAD_LABEL;
@@ -137,10 +131,6 @@ export class ActividadesPage implements OnDestroy {
   protected readonly origenLabel = ORIGEN_LABEL;
   protected readonly formatoFechaRelativa = formatoFechaRelativa;
 
-  protected labelOrigen(origen: string): string {
-    const mapa: Record<string, string> = this.origenLabel;
-    return mapa[origen] ?? origen;
-  }
 
   /* ── Vista y filtros ───────────────────────────────────────────── */
   protected readonly vista = signal<Vista>('LISTA');
