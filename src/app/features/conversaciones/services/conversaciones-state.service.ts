@@ -167,7 +167,52 @@ export class ConversacionesStateService {
 
   /** Un error remoto se representa en la vista, no se lee como un valor válido. */
   readonly paginaInbox = computed(() => this.inbox.hasValue() ? this.inbox.value() : PAGINA_VACIA);
-  readonly detalleActual = computed(() => this.detalle.hasValue() ? this.detalle.value() : null);
+  /**
+   * El detalle que pinta la vista: el real cuando ya llegó, y mientras tanto
+   * uno provisional armado con la fila del listado.
+   *
+   * Antes esto era `detalle.hasValue() ? detalle.value() : null`, y de ahí
+   * colgaba TODO el panel —cabecera, hilo, compositor y ficha—. Al pulsar una
+   * conversación el `httpResource` entra en carga, el valor vuelve al inicial
+   * y la vista se quedaba vacía los ~236 ms que tarda el viaje a Buffalo: 192
+   * de red y 44 de servidor. La agente veía un panel en blanco teniendo el
+   * nombre de la paciente ya descargado en memoria, en la fila que acababa de
+   * pulsar.
+   *
+   * No hace falta pedir nada para llenarlo: `ConversacionDetalle` es
+   * `Omit<ConversacionResumen, 'mensajes'>` más el hilo completo, así que la
+   * fila del listado ya ES un detalle al que solo le faltan los mensajes.
+   *
+   * El hilo va vacío a propósito. La fila trae el último mensaje (`take: 1`),
+   * pero pintar uno solo donde hay cincuenta se lee como una conversación que
+   * empieza, no como una que está cargando. Con `mensajes: []` entra el
+   * `@empty` del hilo, que ya tenía su esqueleto para `detalle.isLoading()`.
+   */
+  readonly detalleActual = computed<ConversacionDetalle | null>(() => {
+    const id = this.seleccionadaId();
+    if (!id) return null;
+
+    /* La comprobación de id es la protección contra carreras: si se pulsa A y
+       luego B, la respuesta tardía de A no puede pintarse bajo la selección B.
+       Sin ella bastaría con que el recurso conservara el valor anterior. */
+    const real = this.detalle.hasValue() ? this.detalle.value() : null;
+    if (real && real.id === id) return real;
+
+    /* Un error tiene su propia vista en la página. Devolver el provisional
+       aquí dejaría el compositor abierto sobre un hilo que no se pudo cargar. */
+    if (this.detalle.error()) return null;
+
+    const fila = this.conversacionesFiltradas().find(c => c.id === id);
+    return fila ? { ...fila, mensajes: [] } : null;
+  });
+
+  /** Verdadero mientras lo que se ve es la fila del listado y no el hilo real. */
+  readonly detalleEsProvisional = computed(() => {
+    const actual = this.detalleActual();
+    if (!actual) return false;
+    const real = this.detalle.hasValue() ? this.detalle.value() : null;
+    return !real || real.id !== actual.id;
+  });
   readonly agentesActuales = computed(() => this.agentes.hasValue() ? this.agentes.value() : []);
   readonly errorInbox = computed(() => {
     const error = this.inbox.error();
@@ -398,6 +443,29 @@ export class ConversacionesStateService {
   });
 
   constructor() {
+    /* Medición de la apertura. Dos tiempos distintos que conviene no mezclar:
+       `first-content` es lo que la agente percibe —la cabecera pintada— y
+       `detail-loaded` es el viaje de red, que no se puede bajar desde aquí. */
+    let idMedido: string | null = null;
+    let contenidoMarcado = false;
+    effect(() => {
+      const id = this.seleccionadaId();
+      const actual = this.detalleActual();
+      const provisional = this.detalleEsProvisional();
+
+      if (id !== idMedido) {
+        idMedido = id;
+        contenidoMarcado = false;
+      }
+      if (!id || !actual) return;
+
+      if (!contenidoMarcado) {
+        contenidoMarcado = true;
+        medir('conversation-first-content', 'conversation-select-click');
+      }
+      if (!provisional) medir('conversation-detail-loaded', 'conversation-select-click');
+    });
+
     let generacionAnterior = this.authService.generacionSesion();
     effect(() => {
       const generacion = this.authService.generacionSesion();
@@ -503,6 +571,7 @@ export class ConversacionesStateService {
 
   seleccionar(id: string): void {
     if (this.seleccionadaId() === id) return;
+    marcar('conversation-select-click');
     this.router.navigate([], { queryParams: { id }, queryParamsHandling: 'merge' });
   }
 
@@ -794,5 +863,30 @@ export class ConversacionesStateService {
         ? { ...pagina.contadores, sinResponder: Math.max(0, pagina.contadores.sinResponder - 1) }
         : pagina.contadores,
     });
+  }
+}
+
+/**
+ * Marcas de rendimiento de la apertura de una conversación.
+ *
+ * Son dos llamadas a la API estándar del navegador y nada más: no hay
+ * telemetría, ni envío, ni almacenamiento. Se leen desde las DevTools o con
+ * `performance.getEntriesByType('measure')`. En un entorno sin `performance`
+ * —o en las pruebas— no hacen nada.
+ */
+function marcar(nombre: string): void {
+  try {
+    performance.mark(nombre);
+  } catch {
+    /* Medir nunca puede romper la vista. */
+  }
+}
+
+function medir(nombre: string, desde: string): void {
+  try {
+    if (!performance.getEntriesByName(desde, 'mark').length) return;
+    performance.measure(nombre, desde);
+  } catch {
+    /* Ídem. */
   }
 }
