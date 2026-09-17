@@ -109,13 +109,21 @@ export class ConversacionesService {
    * está firmada y caduca a los 15 minutos: guardarla en el texto hacía que la
    * burbuja se rompiera en el CRM un cuarto de hora después de enviarla.
    */
+  /**
+   * @param clientMessageId Identidad de la INTENCIÓN de envío, estable entre
+   *   reintentos. El backend la guarda con un índice único, así que dos POST
+   *   con el mismo valor producen un solo mensaje y un solo envío a Meta. Sin
+   *   ella, un reintento tras una respuesta perdida manda un segundo WhatsApp.
+   */
   enviarMensaje(
     conversacionId: string,
     contenido: string,
     adjunto?: { mediaKey: string; mediaMime: string | null; mediaNombre: string | null },
+    clientMessageId?: string,
   ): Promise<MensajeApi> {
     return this.api.post<MensajeApi>(`/conversaciones/${conversacionId}/mensajes`, {
       contenido,
+      clientMessageId,
       mediaKey: adjunto?.mediaKey,
       mediaMime: adjunto?.mediaMime ?? undefined,
       mediaNombre: adjunto?.mediaNombre ?? undefined,

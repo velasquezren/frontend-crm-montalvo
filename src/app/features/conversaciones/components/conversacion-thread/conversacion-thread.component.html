@@ -377,9 +377,13 @@
                   </span>
                 } @else if (item.mensaje.envioLocal === 'AMBIGUO') {
                   <span class="inline-flex items-center gap-1 ml-1 text-text-muted"
-                        title="Se perdió la respuesta del servidor, pero el mensaje PUEDE haber salido igualmente hacia la paciente. Revisa el hilo antes de volver a escribirlo: si aparece más arriba, ya se envió. Por eso no hay botón de reintentar aquí.">
+                        title="Se perdió la respuesta del servidor y el mensaje puede haber salido igualmente. Reintentar es seguro: lleva la misma clave de envío, así que el servidor devolverá el mensaje que ya existe en vez de mandar otro.">
                     <app-icon name="alert-circle" [size]="12" />
                     <span class="text-[10px] font-semibold">No se pudo confirmar</span>
+                    @if (item.mensaje.clientMessageId) {
+                      <button type="button" class="text-[10px] font-bold underline cursor-pointer"
+                              (click)="reintentarEnvio(item.mensaje)">Reintentar</button>
+                    }
                     <button type="button" class="text-[10px] font-semibold underline cursor-pointer opacity-70"
                             (click)="descartarEnvio(item.mensaje)">Descartar</button>
                   </span>

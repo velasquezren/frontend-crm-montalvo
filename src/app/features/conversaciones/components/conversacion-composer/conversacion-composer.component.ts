@@ -355,6 +355,10 @@ export class ConversacionComposerComponent implements OnDestroy {
     this.state.enviando.set(true);
     const chatPrevio = this.state.detalleActual();
     const idOptimista = idTemporal();
+    /* Una intención de envío, un `clientMessageId`. Se genera aquí —no al
+       reintentar— porque identifica lo que la agente quiso mandar, no el
+       intento técnico. El reintento reutiliza el del globo. */
+    const clientMessageId = idDeEnvio();
 
     // Actualización optimista de la UI
     if (chatPrevio) {
@@ -371,6 +375,7 @@ export class ConversacionComposerComponent implements OnDestroy {
            servidor que lo haya puesto. El estado de espera va aparte. */
         estadoEnvio: null,
         envioLocal: 'ENVIANDO',
+        clientMessageId,
         automatico: false,
         createdAt: new Date().toISOString(),
       };
@@ -390,7 +395,7 @@ export class ConversacionComposerComponent implements OnDestroy {
         mediaKey: adj.mediaKey,
         mediaMime: adj.mediaMime ?? null,
         mediaNombre: adj.mediaNombre ?? null,
-      } : undefined);
+      } : undefined, clientMessageId);
 
       // Sin reload: reemplaza el mensaje optimista con el real, en memoria.
       // Ver el porqué en `reconciliarEnvioLocal`.
@@ -598,4 +603,22 @@ function medirEnvio(nombre: string, desde: string): void {
   } catch {
     /* Ídem. */
   }
+}
+
+/**
+ * Identidad de la intención de envío que viaja al backend.
+ *
+ * `crypto.randomUUID()` porque el backend la valida como UUID y porque un
+ * `Date.now()` no sirve para esto: dos pestañas de la misma agente pueden
+ * coincidir en el milisegundo, y aquí una colisión significaría que un mensaje
+ * se traga a otro. El respaldo cubre navegadores sin `randomUUID` en contextos
+ * no seguros; no entra en producción, que es HTTPS.
+ */
+function idDeEnvio(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, c =>
+    (Number(c) ^ (Math.random() * 16) >> (Number(c) / 4)).toString(16),
+  );
 }

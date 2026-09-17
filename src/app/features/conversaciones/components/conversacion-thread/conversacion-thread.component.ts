@@ -309,7 +309,13 @@ export class ConversacionThreadComponent {
    */
   protected async reintentarEnvio(mensaje: MensajeApi): Promise<void> {
     const id = this.state.seleccionadaId();
-    if (!id || mensaje.envioLocal !== 'ERROR') return;
+    /* `AMBIGUO` ya se puede reintentar: el `clientMessageId` viaja igual y el
+       índice único del backend garantiza que un segundo POST con la misma
+       clave devuelva la fila existente en vez de crear otra. Sin esa clave
+       —un globo viejo, de antes de este cambio— sigue sin ofrecerse. */
+    const reintentable = mensaje.envioLocal === 'ERROR'
+      || (mensaje.envioLocal === 'AMBIGUO' && !!mensaje.clientMessageId);
+    if (!id || !reintentable) return;
 
     /* Solo texto. El adjunto ya se subió a R2 antes del POST y reintentar
        aquí mandaría `contenido` a secas: el mensaje saldría sin su imagen.
@@ -320,7 +326,10 @@ export class ConversacionThreadComponent {
     const contexto = this.state.contextoChat();
     this.state.marcarEnvioEnCurso(id, mensaje.id);
     try {
-      const real = await this.conversacionesService.enviarMensaje(id, mensaje.contenido);
+      /* La MISMA clave del primer intento: eso es lo que lo hace seguro. */
+      const real = await this.conversacionesService.enviarMensaje(
+        id, mensaje.contenido, undefined, mensaje.clientMessageId,
+      );
       if (contexto === this.state.contextoChat()) {
         this.state.reconciliarEnvioLocal(id, mensaje.id, real);
       }

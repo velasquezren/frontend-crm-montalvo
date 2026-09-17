@@ -72,6 +72,7 @@ describe('envío optimista: esperar no es haber enviado', () => {
       mensajes: [...chat.mensajes, {
         id: idTemp, contenido: texto, direccion: 'SALIENTE', tipo: 'TEXTO',
         estadoEnvio: null, envioLocal: 'ENVIANDO', automatico: false, createdAt: FECHA,
+        clientMessageId: `uuid-${idTemp}`,
       }],
     });
   }
@@ -291,5 +292,35 @@ describe('envío optimista: esperar no es haber enviado', () => {
     state.descartarEnvioFallido('chat-a', 'temp-1');
     expect(buscar('temp-1')).toBeUndefined();
     expect(hilo()).toHaveLength(1);
+  });
+
+  it('17 · el globo lleva su clientMessageId y sobrevive al fallo', () => {
+    pintarOptimista('temp-1', 'Buenos días');
+    const clave = buscar('temp-1')?.clientMessageId;
+    expect(clave).toBe('uuid-temp-1');
+
+    state.marcarEnvioFallido('chat-a', 'temp-1', 'AMBIGUO');
+    /* La clave es lo que hace seguro el reintento: si se perdiera, volveríamos
+       al caso que podía duplicar. */
+    expect(buscar('temp-1')?.clientMessageId).toBe(clave);
+  });
+
+  it('18 · el reintento conserva la clave y termina en UNA fila', () => {
+    pintarOptimista('temp-1', 'Buenos días');
+    state.marcarEnvioFallido('chat-a', 'temp-1', 'AMBIGUO');
+    state.marcarEnvioEnCurso('chat-a', 'temp-1');
+    expect(buscar('temp-1')?.clientMessageId).toBe('uuid-temp-1');
+
+    /* El backend devuelve la fila que YA existía (mismo clientMessageId). */
+    state.reconciliarEnvioLocal('chat-a', 'temp-1', respuestaServidor('Buenos días'));
+    expect(hilo()).toHaveLength(2);
+    expect(buscar('real-1')?.envioLocal).toBeUndefined();
+  });
+
+  it('19 · dos envíos rápidos llevan claves distintas', () => {
+    pintarOptimista('temp-1', 'Hola');
+    pintarOptimista('temp-2', '¿Tiene horario?');
+    expect(buscar('temp-1')?.clientMessageId).not.toBe(buscar('temp-2')?.clientMessageId);
+    expect(hilo()).toHaveLength(3);
   });
 });

@@ -45,6 +45,12 @@ export interface MensajeApi {
    * botón de reintento.
    */
   readonly envioLocal?: 'ENVIANDO' | 'ERROR' | 'AMBIGUO';
+  /**
+   * Identidad de la intención de envío, la misma que viaja al backend. Se
+   * conserva entre reintentos: es lo que permite que reintentar un envío
+   * ambiguo no pueda duplicar el mensaje. Solo existe en globos optimistas.
+   */
+  readonly clientMessageId?: string;
   /** true = lo mandó el sistema (acuse fuera de horario), no una persona. */
   readonly automatico?: boolean;
   readonly tipo?: TipoMensaje;
