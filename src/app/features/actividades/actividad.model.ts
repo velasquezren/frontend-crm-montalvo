@@ -119,3 +119,17 @@ export function formatoFechaRelativa(fechaIso: string): { texto: string; urgente
   const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
   return { texto: `${dia} ${meses[fecha.getMonth()]} · ${horaStr}`, urgente: false };
 }
+
+/**
+ * «45 min», «1 h», «1 h 30». Lo usan la lista, el detalle y el formulario.
+ *
+ * Vive aquí y no en un componente porque lo consultan los tres: tenerlo en uno
+ * y copiarlo en otro es cómo se llega a dos formatos distintos para el mismo
+ * número.
+ */
+export function formatearDuracion(minutos: number): string {
+  if (minutos < 60) return `${minutos} min`;
+  const horas = Math.floor(minutos / 60);
+  const resto = minutos % 60;
+  return resto === 0 ? `${horas} h` : `${horas} h ${resto}`;
+}

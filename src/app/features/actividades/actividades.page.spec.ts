@@ -338,27 +338,22 @@ describe('F10 · rango visible del calendario de Actividades', () => {
   });
 
   /**
-   * A2 · «Completar y agendar siguiente paso».
+   * A2 · «Completar y agendar siguiente paso», ahora desde la página.
    *
-   * El botón promete UNA operación y hoy ejecuta la mitad: completa la original
-   * antes de abrir el formulario, así que si la agente cierra o cancela, la
-   * actividad queda cerrada y el seguimiento no existe. Justo lo contrario de
-   * lo que hace falta: perder el seguimiento es el desenlace inaceptable.
+   * Tras A3 el formulario es un componente aparte y no sabe que esta intención
+   * existe: agenda y emite `guardada`. La regla —cerrar la original solo cuando
+   * el seguimiento ya está guardado— vive aquí, y aquí se prueba. Lo que el
+   * formulario hace por dentro (validar, componer el payload, conservar los
+   * datos ante un error) se prueba en su propio spec.
    */
   describe('A2 · completar y agendar el siguiente paso', () => {
     const PENDIENTE = actividad('la-original', '2026-09-20T14:00:00.000Z');
-
-    /** Rellena lo mínimo que el formulario exige y envía. */
-    async function confirmarSeguimiento(titulo = 'Llamar la semana que viene'): Promise<void> {
-      pagina['formTitulo'].set(titulo);
-      await pagina['guardar'](new Event('submit'));
-    }
+    const SEGUIMIENTO = actividad('el-seguimiento', '2026-09-27T14:00:00.000Z');
 
     it('Caso A · si la agente cancela, la original sigue PENDIENTE', async () => {
       pagina['completarYAgendarSiguiente'](PENDIENTE);
       await asentar();
 
-      // Se arrepiente y cierra el formulario sin guardar.
       pagina['cerrarModal']();
       await asentar();
 
@@ -373,28 +368,24 @@ describe('F10 · rango visible del calendario de Actividades', () => {
       pagina['completarYAgendarSiguiente'](PENDIENTE);
       await asentar();
 
-      /* La intención queda anotada, no ejecutada: hasta que se confirme, la
-         original no se toca. */
       expect(completados()).toHaveLength(0);
       expect(creados()).toHaveLength(0);
-      // Y el formulario llega con el paciente de la original ya puesto.
-      expect(pagina['clienteElegido']()?.id).toBe(PENDIENTE.cliente.id);
+      /* Y el formulario recibe el contexto con el paciente y el lead de la
+         original: es todo lo que la página le cuenta. */
+      const contexto = pagina['contextoFormulario']();
+      expect(contexto?.modo).toBe('CREAR');
+      expect(contexto?.modo === 'CREAR' && contexto.cliente?.id).toBe(PENDIENTE.cliente.id);
     });
 
-    it('Caso B · al confirmar se crea el seguimiento y se completa la original', async () => {
+    it('Caso B · cuando el formulario avisa de que guardó, se completa la original', async () => {
       pagina['completarYAgendarSiguiente'](PENDIENTE);
       await asentar();
 
-      const guardado = confirmarSeguimiento();
-      await asentar();
-
-      const alta = creados();
-      expect(alta).toHaveLength(1);
-      expect(alta[0].request.body.clienteId).toBe(PENDIENTE.cliente.id);
-      /* Primero el alta: mientras no haya seguimiento, nada se cierra. */
-      expect(completados(), 'aún no se completa: el seguimiento no ha vuelto').toHaveLength(0);
-
-      alta[0].flush(actividad('el-seguimiento', '2026-09-27T14:00:00.000Z'));
+      /* Sin `await` todavía: la promesa no resuelve hasta que se conteste la
+         petición de cierre, y contestarla es precisamente lo que viene. */
+      const orquestacion = pagina['alGuardarFormulario']({
+        modo: 'CREAR', actividad: SEGUIMIENTO, vecesAgendadas: 1,
+      });
       await asentar();
 
       const cierre = completados();
@@ -402,62 +393,32 @@ describe('F10 · rango visible del calendario de Actividades', () => {
       expect(cierre[0].request.url).toContain(PENDIENTE.id);
       expect(cierre[0].request.body.estado).toBe('COMPLETADA');
       cierre[0].flush({ ...PENDIENTE, estado: 'COMPLETADA' });
-      await guardado;
+      await orquestacion;
     });
 
-    it('Caso C · si falla crear el seguimiento, la original NO se completa', async () => {
-      pagina['completarYAgendarSiguiente'](PENDIENTE);
+    it('un alta normal, sin intención de A2, no completa nada', async () => {
+      pagina['abrirCreacion']();
       await asentar();
 
-      const guardado = confirmarSeguimiento();
-      await asentar();
-      creados()[0].flush('boom', { status: 500, statusText: 'Server Error' });
-      await guardado;
+      await pagina['alGuardarFormulario']({
+        modo: 'CREAR', actividad: SEGUIMIENTO, vecesAgendadas: 1,
+      });
       await asentar();
 
       expect(completados()).toHaveLength(0);
-      expect(pagina['errorForm'](), 'y el formulario dice qué pasó').not.toBe('');
-      /* Los datos siguen puestos para reintentar sin volver a escribirlos. */
-      expect(pagina['formTitulo']()).toBe('Llamar la semana que viene');
-      expect(pagina['clienteElegido']()?.id).toBe(PENDIENTE.cliente.id);
     });
 
-    it('Caso E · doble envío no crea dos seguimientos ni completa dos veces', async () => {
+    it('cerrar el cajón después de pulsar el botón olvida la intención', async () => {
       pagina['completarYAgendarSiguiente'](PENDIENTE);
       await asentar();
-
-      pagina['formTitulo'].set('Llamar la semana que viene');
-      // Dos envíos seguidos, sin esperar al primero.
-      const primero = pagina['guardar'](new Event('submit'));
-      const segundo = pagina['guardar'](new Event('submit'));
+      pagina['cerrarModal']();
       await asentar();
 
-      const alta = creados();
-      expect(alta).toHaveLength(1);
-      alta[0].flush(actividad('el-seguimiento', '2026-09-27T14:00:00.000Z'));
-      await asentar();
-
-      const cierre = completados();
-      expect(cierre).toHaveLength(1);
-      cierre[0].flush({ ...PENDIENTE, estado: 'COMPLETADA' });
-      await Promise.all([primero, segundo]);
-    });
-
-    it('Caso F · un rechazo por alcance deja la original intacta', async () => {
-      pagina['completarYAgendarSiguiente'](PENDIENTE);
-      await asentar();
-
-      const guardado = confirmarSeguimiento();
-      await asentar();
-      /* Lo que devuelve el backend cuando el paciente está fuera del alcance de
-         quien crea (F04): `ClientesService.findOne` lanza NotFound. El permiso
-         lo sigue imponiendo el servidor; esto fija que su rechazo no deja la
-         original cerrada. */
-      creados()[0].flush(
-        { message: 'Cliente no encontrado' },
-        { status: 404, statusText: 'Not Found' },
-      );
-      await guardado;
+      /* Aunque después llegue un guardado —un alta corriente—, la original no
+         se cierra: la intención se consumió al cancelar. */
+      await pagina['alGuardarFormulario']({
+        modo: 'CREAR', actividad: SEGUIMIENTO, vecesAgendadas: 1,
+      });
       await asentar();
 
       expect(completados()).toHaveLength(0);

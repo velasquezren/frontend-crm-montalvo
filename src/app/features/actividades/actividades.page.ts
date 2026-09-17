@@ -20,18 +20,20 @@ import { ActivatedRoute } from '@angular/router';
 import { OverlayRef } from '@angular/cdk/overlay';
 
 import { ActividadesCalendarioComponent } from './components/actividades-calendario/actividades-calendario.component';
+import {
+  ActividadFormularioComponent,
+  ClienteMinimo,
+  ContextoFormulario,
+  ResultadoFormulario,
+} from './components/actividad-formulario/actividad-formulario.component';
 import { mismoRango, RangoCalendario } from './rango-calendario';
 import { inicioDelDiaClinica, sumarDiasClinica } from './zona-clinica';
 import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales } from '../../core/auth/user.model';
-import { aDatetimeLocal } from '../../core/api/fecha';
 import { mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { ToastService } from '../../core/toast/toast.service';
-import { Cliente } from '../clientes/cliente.model';
-import { ClientesService } from '../clientes/clientes.service';
-import { Lead, ORIGEN_LABEL } from '../leads/lead.model';
-import { LeadsService } from '../leads/leads.service';
+import { ORIGEN_LABEL } from '../leads/lead.model';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent, BadgeVariant } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -51,13 +53,11 @@ import { TableComponent } from '../../shared/components/table/table.component';
 import {
   Actividad,
   esActividadVencida,
+  formatearDuracion,
   ESTADO_ACTIVIDAD_LABEL,
   EstadoActividad,
   formatoFechaRelativa,
-  FRECUENCIA_LABEL,
-  FrecuenciaRepeticion,
   ResumenActividades,
-  TIPO_ACTIVIDAD_DURACION_SUGERIDA,
   TIPO_ACTIVIDAD_ICONO,
   TIPO_ACTIVIDAD_LABEL,
   TipoActividad,
@@ -77,17 +77,6 @@ const ESTADO_BADGE: Record<EstadoActividad, BadgeVariant> = {
   CANCELADA: 'neutral',
 };
 
-/**
- * Lo mínimo que necesita el formulario del cliente elegido. Un `Cliente`
- * completo (de la búsqueda) satisface esto de sobra por tipado estructural;
- * al editar solo tenemos estos tres campos desde `Actividad.cliente`, y así
- * no hace falta un `as Cliente` inseguro para rellenar los que faltan.
- */
-interface ClienteMinimo {
-  readonly id: string;
-  readonly nombre: string;
-  readonly telefono: string;
-}
 
 /**
  * Seguimiento comercial: recordatorios y tareas de un agente sobre un
@@ -104,6 +93,7 @@ interface ClienteMinimo {
     BadgeComponent,
     ButtonComponent,
     ActividadesCalendarioComponent,
+    ActividadFormularioComponent,
     DrawerComponent,
     DatePipe,
     EmptyStateComponent,
@@ -122,8 +112,6 @@ interface ClienteMinimo {
 })
 export class ActividadesPage implements OnDestroy {
   private readonly actividadesService = inject(ActividadesService);
-  private readonly clientesService = inject(ClientesService);
-  private readonly leadsService = inject(LeadsService);
   private readonly authService = inject(AuthService);
   private readonly toast = inject(ToastService);
   private readonly dialogService = inject(DialogService);
@@ -145,6 +133,7 @@ export class ActividadesPage implements OnDestroy {
   protected readonly estadoBadge = ESTADO_BADGE;
   protected readonly tipos = TIPOS;
   protected readonly esVencida = esActividadVencida;
+  protected readonly formatearDuracion = formatearDuracion;
   protected readonly origenLabel = ORIGEN_LABEL;
   protected readonly formatoFechaRelativa = formatoFechaRelativa;
 
@@ -192,13 +181,14 @@ export class ActividadesPage implements OnDestroy {
       if (qp['nuevo'] !== '1' || !qp['clienteId'] || !qp['clienteNombre']) return;
 
       this.queryParamsProcesados = true;
-      this.abrirCreacion();
-      this.elegirCliente({
-        id: qp['clienteId'],
-        nombre: qp['clienteNombre'],
-        telefono: qp['clienteTelefono'] ?? '',
-      });
-      if (qp['leadId']) this.formLeadId.set(qp['leadId']);
+      this.abrirCreacion(
+        {
+          id: qp['clienteId'],
+          nombre: qp['clienteNombre'],
+          telefono: qp['clienteTelefono'] ?? '',
+        },
+        qp['leadId'] ?? null,
+      );
     });
 
     /* Las tres vistas de esta página se refrescan con CUALQUIER mutación de
@@ -340,10 +330,6 @@ export class ActividadesPage implements OnDestroy {
   protected readonly modalFormTpl = viewChild<TemplateRef<unknown>>('modalForm');
 
   /* ── Formulario crear/editar ───────────────────────────────────── */
-  protected readonly guardando = signal(false);
-  protected readonly errorForm = signal('');
-  protected readonly actividadEditando = signal<Actividad | null>(null);
-
   /**
    * La actividad que se cerrará **si** se agenda el seguimiento, y no antes.
    *
@@ -361,210 +347,66 @@ export class ActividadesPage implements OnDestroy {
    */
   private readonly actividadOrigen = signal<Actividad | null>(null);
 
-  protected readonly formTipo = signal<TipoActividad>('TAREA');
-  protected readonly formTitulo = signal('');
-  protected readonly formNotas = signal('');
-  protected readonly formFecha = signal(aDatetimeLocal(new Date(Date.now() + 60 * 60 * 1000)));
-  protected readonly formDuracion = signal(TIPO_ACTIVIDAD_DURACION_SUGERIDA['TAREA']);
-  private formDuracionTocada = false;
-  protected readonly formLeadId = signal<string | null>(null);
+  /** Con qué se abre el formulario. La página compone el contexto y nada más. */
+  protected readonly contextoFormulario = signal<ContextoFormulario | null>(null);
 
-  protected readonly frecuencias: readonly FrecuenciaRepeticion[] = ['SEMANAL', 'QUINCENAL', 'MENSUAL'];
-  protected readonly frecuenciaLabel = FRECUENCIA_LABEL;
-  protected readonly formRepetir = signal<FrecuenciaRepeticion | null>(null);
-  protected readonly formRepetirVeces = signal(4);
-
-  /* Búsqueda de cliente */
-  protected readonly busquedaCliente = signal('');
-  protected readonly clienteElegido = signal<ClienteMinimo | null>(null);
-
-  /* ── Creación Express de Contacto / Paciente nuevo ────────────── */
-  protected readonly modoNuevoCliente = signal(false);
-  protected readonly nuevoClienteNombre = signal('');
-  protected readonly nuevoClienteTelefono = signal('');
-  protected readonly creandoCliente = signal(false);
-  protected readonly errorNuevoCliente = signal('');
-
-  protected activarModoNuevoCliente(valorInicial?: string): void {
-    this.modoNuevoCliente.set(true);
-    this.errorNuevoCliente.set('');
-    const texto = (valorInicial ?? this.busquedaCliente()).trim();
-    const soloDigitos = texto.replace(/\D/g, '');
-    if (soloDigitos.length >= 7) {
-      this.nuevoClienteTelefono.set(texto);
-      this.nuevoClienteNombre.set('');
-    } else {
-      this.nuevoClienteNombre.set(texto);
-      this.nuevoClienteTelefono.set('');
-    }
-  }
-
-  protected cancelarModoNuevoCliente(): void {
-    this.modoNuevoCliente.set(false);
-    this.errorNuevoCliente.set('');
-  }
-
-  protected normalizarTelefono(valor: string): string | null {
-    const limpio = valor.replace(/[^\d+]/g, '');
-    if (/^\+\d{9,13}$/.test(limpio)) {
-      return limpio;
-    }
-    if (/^\d{8}$/.test(limpio)) {
-      return `+591${limpio}`;
-    }
-    return null;
-  }
-
-  protected async registrarNuevoClienteExpress(): Promise<void> {
-    this.errorNuevoCliente.set('');
-    const nombre = this.nuevoClienteNombre().trim();
-    if (nombre.length < 2) {
-      this.errorNuevoCliente.set('El nombre requiere al menos 2 caracteres.');
-      return;
-    }
-
-    const telNormalizado = this.normalizarTelefono(this.nuevoClienteTelefono());
-    if (!telNormalizado) {
-      this.errorNuevoCliente.set('Ingresa un celular válido (8 dígitos locales o formato +591…).');
-      return;
-    }
-
-    this.creandoCliente.set(true);
-    try {
-      const nuevo = await this.clientesService.crear({
-        nombre,
-        telefono: telNormalizado,
-      });
-      this.toast.show(`Paciente "${nuevo.nombre}" registrado.`, 'success');
-      this.elegirCliente({
-        id: nuevo.id,
-        nombre: nuevo.nombre,
-        telefono: nuevo.telefono,
-      });
-      this.modoNuevoCliente.set(false);
-    } catch (err) {
-      this.errorNuevoCliente.set(mensajeDeError(err, 'No se pudo registrar el contacto.'));
-    } finally {
-      this.creandoCliente.set(false);
-    }
-  }
-
-  protected readonly resultadosCliente = httpResource<readonly Cliente[]>(
-    () => {
-      const termino = this.busquedaCliente().trim();
-      return termino.length >= 2 && !this.clienteElegido() ? this.clientesService.buscarRequest(termino) : undefined;
-    },
-    { defaultValue: [] },
-  );
-
-  protected readonly leadsDelCliente = httpResource<RespuestaPaginada<Lead>>(
-    () => {
-      const cliente = this.clienteElegido();
-      return cliente ? this.leadsService.listarRequest({ clienteId: cliente.id, pagina: 1, limite: 10 }) : undefined;
-    },
-    { defaultValue: paginaVacia<Lead>() },
-  );
-
-  protected readonly leadsAbiertosDelCliente = computed(() =>
-    this.leadsDelCliente.value().datos.filter(l => l.estado === 'NUEVO' || l.estado === 'CONTACTADO'),
-  );
-
-  protected readonly duracionesPreset: readonly number[] = [5, 15, 30, 45, 60, 90, 120];
-
-  protected formatearDuracion(minutos: number): string {
-    if (minutos < 60) return `${minutos} min`;
-    const horas = Math.floor(minutos / 60);
-    const resto = minutos % 60;
-    return resto === 0 ? `${horas} h` : `${horas} h ${resto}`;
-  }
-
-  protected elegirTipo(tipo: TipoActividad): void {
-    this.formTipo.set(tipo);
-    if (!this.formDuracionTocada) this.formDuracion.set(TIPO_ACTIVIDAD_DURACION_SUGERIDA[tipo]);
-  }
-
-  protected elegirDuracion(minutos: number): void {
-    this.formDuracionTocada = true;
-    this.formDuracion.set(minutos);
-  }
-
-  protected elegirCliente(cliente: ClienteMinimo): void {
-    this.clienteElegido.set(cliente);
-    this.busquedaCliente.set(cliente.nombre);
-    this.formLeadId.set(null);
-    this.modoNuevoCliente.set(false);
-  }
-
-  protected limpiarCliente(): void {
-    this.clienteElegido.set(null);
-    this.busquedaCliente.set('');
-    this.formLeadId.set(null);
-    this.modoNuevoCliente.set(false);
-    this.errorNuevoCliente.set('');
-  }
-
-  protected aplicarPresetFecha(tipo: '1H' | 'HOY_TARDE' | 'MANANA_MANANA' | 'EN_2_DIAS'): void {
-    const ahora = new Date();
-    let target = new Date(ahora);
-    switch (tipo) {
-      case '1H':
-        target = new Date(ahora.getTime() + 60 * 60 * 1000);
-        break;
-      case 'HOY_TARDE':
-        target.setHours(16, 0, 0, 0);
-        if (target.getTime() <= ahora.getTime()) {
-          target = new Date(ahora.getTime() + 60 * 60 * 1000);
-        }
-        break;
-      case 'MANANA_MANANA':
-        target.setDate(target.getDate() + 1);
-        target.setHours(9, 30, 0, 0);
-        break;
-      case 'EN_2_DIAS':
-        target.setDate(target.getDate() + 2);
-        target.setHours(10, 0, 0, 0);
-        break;
-    }
-    this.formFecha.set(aDatetimeLocal(target));
-  }
-
-  protected abrirCreacion(): void {
-    this.actividadEditando.set(null);
-    /* Un alta normal nunca arrastra un origen de una intención anterior. */
+  protected abrirCreacion(cliente?: ClienteMinimo, leadId?: string | null): void {
     this.actividadOrigen.set(null);
-    this.formTipo.set('TAREA');
-    this.formTitulo.set('');
-    this.formNotas.set('');
-    this.formFecha.set(aDatetimeLocal(new Date(Date.now() + 60 * 60 * 1000)));
-    this.formDuracion.set(TIPO_ACTIVIDAD_DURACION_SUGERIDA['TAREA']);
-    this.formDuracionTocada = false;
-    this.formLeadId.set(null);
-    this.formRepetir.set(null);
-    this.formRepetirVeces.set(4);
-    this.limpiarCliente();
-    this.modoNuevoCliente.set(false);
-    this.nuevoClienteNombre.set('');
-    this.nuevoClienteTelefono.set('');
-    this.creandoCliente.set(false);
-    this.errorNuevoCliente.set('');
-    this.errorForm.set('');
+    this.contextoFormulario.set({ modo: 'CREAR', cliente, leadId });
     this.abrirModal(this.modalFormTpl());
   }
 
   protected abrirEdicion(actividad: Actividad): void {
-    this.actividadEditando.set(actividad);
-    this.formTipo.set(actividad.tipo);
-    this.formTitulo.set(actividad.titulo);
-    this.formNotas.set(actividad.notas ?? '');
-    this.formFecha.set(aDatetimeLocal(new Date(actividad.fechaProgramada)));
-    this.formDuracion.set(actividad.duracionMinutos);
-    this.formDuracionTocada = true;
-    this.formLeadId.set(actividad.lead?.id ?? null);
-    this.formRepetir.set(null);
-    this.clienteElegido.set(actividad.cliente);
-    this.busquedaCliente.set(actividad.cliente.nombre);
-    this.errorForm.set('');
+    this.actividadOrigen.set(null);
+    this.contextoFormulario.set({ modo: 'EDITAR', actividad });
     this.abrirModal(this.modalFormTpl());
+  }
+
+  /**
+   * El formulario guardó. Aquí —y solo aquí— vive la intención de A2.
+   *
+   * El componente no sabe que existe «completar y agendar siguiente»: agenda y
+   * avisa. La regla de cerrar la anterior es de este caso de uso, no del
+   * formulario, así que se queda fuera de él.
+   */
+  protected async alGuardarFormulario(resultado: ResultadoFormulario): Promise<void> {
+    /* La intención se lee ANTES de cerrar: `cerrarModal()` la olvida, porque
+       cerrar es arrepentirse. Leerla después devolvía siempre `null` y la
+       original nunca se completaba — lo cazó el Caso B al extraer. */
+    const origen = this.actividadOrigen();
+    this.cerrarModal();
+
+    if (resultado.modo === 'EDITAR') {
+      if (this.actividadDetalle()?.id === resultado.actividad.id) {
+        this.actividadDetalle.set(resultado.actividad);
+      }
+      this.toast.show('Actividad actualizada.', 'success');
+      return;
+    }
+
+    if (!origen) {
+      this.toast.show(
+        resultado.vecesAgendadas > 1
+          ? `Actividad agendada — ${resultado.vecesAgendadas} veces.`
+          : 'Actividad agendada.',
+        'success',
+      );
+      return;
+    }
+
+    /* El seguimiento ya existe: ahora, y solo ahora, se cierra la original. Si
+       esto falla, lo importante está guardado y se dice lo que pasó de verdad
+       en vez de cantar un éxito completo. */
+    this.actividadOrigen.set(null);
+    try {
+      await this.actividadesService.actualizarEstado(origen.id, 'COMPLETADA');
+      this.toast.show('Seguimiento agendado y actividad anterior completada.', 'success');
+    } catch (err) {
+      this.toast.show(
+        mensajeDeError(err, 'Se agendó el seguimiento, pero la actividad anterior sigue pendiente.'),
+        'error',
+      );
+    }
   }
 
   private abrirModal(template: TemplateRef<unknown> | undefined): void {
@@ -581,6 +423,7 @@ export class ActividadesPage implements OnDestroy {
     /* Cerrar es arrepentirse: se olvida la intención y la original se queda
        como estaba. Guardar ya la consumió antes de llegar aquí. */
     this.actividadOrigen.set(null);
+    this.contextoFormulario.set(null);
   }
 
   /* ── Detalle / Cajón Lateral (Drawer 360°) ─────────────────────── */
@@ -630,117 +473,8 @@ export class ActividadesPage implements OnDestroy {
    */
   protected completarYAgendarSiguiente(actividad: Actividad): void {
     this.cerrarDetalle();
-    this.abrirCreacion();
+    this.abrirCreacion(actividad.cliente, actividad.lead?.id ?? null);
     this.actividadOrigen.set(actividad);
-    this.elegirCliente({
-      id: actividad.cliente.id,
-      nombre: actividad.cliente.nombre,
-      telefono: actividad.cliente.telefono,
-    });
-    if (actividad.lead) {
-      this.formLeadId.set(actividad.lead.id);
-    }
-  }
-
-  protected async guardar(evento: Event): Promise<void> {
-    evento.preventDefault();
-    /* El botón se deshabilita con `guardando()`, pero un Enter repetido o un
-       doble clic muy rápido pueden entrar dos veces antes del repintado. Sin
-       esto, «completar y agendar» crearía DOS seguimientos. */
-    if (this.guardando()) return;
-    this.errorForm.set('');
-
-    let cliente = this.clienteElegido();
-    if (!cliente && this.modoNuevoCliente()) {
-      const nombre = this.nuevoClienteNombre().trim();
-      const tel = this.normalizarTelefono(this.nuevoClienteTelefono());
-      if (nombre.length >= 2 && tel) {
-        this.guardando.set(true);
-        try {
-          const creado = await this.clientesService.crear({ nombre, telefono: tel });
-          cliente = { id: creado.id, nombre: creado.nombre, telefono: creado.telefono };
-          this.elegirCliente(cliente);
-        } catch (err) {
-          this.errorForm.set(mensajeDeError(err, 'No se pudo registrar el nuevo paciente.'));
-          this.guardando.set(false);
-          return;
-        }
-      } else {
-        this.errorForm.set('Completa el nombre (mínimo 2 letras) y teléfono del nuevo paciente.');
-        return;
-      }
-    }
-
-    if (!cliente) {
-      this.errorForm.set('Elige o registra un cliente.');
-      return;
-    }
-    if (this.formTitulo().trim().length < 3) {
-      this.errorForm.set('El título necesita al menos 3 caracteres.');
-      return;
-    }
-
-    this.guardando.set(true);
-    try {
-      const fechaProgramada = new Date(this.formFecha()).toISOString();
-      const editando = this.actividadEditando();
-
-      if (editando) {
-        const actualizada = await this.actividadesService.actualizar(editando.id, {
-          tipo: this.formTipo(),
-          titulo: this.formTitulo().trim(),
-          notas: this.formNotas().trim() || undefined,
-          fechaProgramada,
-          duracionMinutos: this.formDuracion(),
-          leadId: this.formLeadId(),
-        });
-        if (this.actividadDetalle()?.id === editando.id) {
-          this.actividadDetalle.set(actualizada);
-        }
-        this.toast.show('Actividad actualizada.', 'success');
-      } else {
-        const frecuencia = this.formRepetir();
-        await this.actividadesService.crear({
-          tipo: this.formTipo(),
-          titulo: this.formTitulo().trim(),
-          notas: this.formNotas().trim() || undefined,
-          fechaProgramada,
-          duracionMinutos: this.formDuracion(),
-          clienteId: cliente.id,
-          leadId: this.formLeadId() ?? undefined,
-          repetir: frecuencia ? { frecuencia, veces: this.formRepetirVeces() } : undefined,
-        });
-
-        /* El seguimiento ya existe: ahora, y solo ahora, se cierra la original.
-           Si esto falla, lo importante está guardado y se dice lo que pasó de
-           verdad en vez de cantar un éxito completo — la agente ve la original
-           todavía pendiente y la cierra con un clic. */
-        const origen = this.actividadOrigen();
-        if (origen) {
-          this.actividadOrigen.set(null);
-          try {
-            await this.actividadesService.actualizarEstado(origen.id, 'COMPLETADA');
-            this.toast.show('Seguimiento agendado y actividad anterior completada.', 'success');
-          } catch (err) {
-            this.toast.show(
-              mensajeDeError(err, 'Se agendó el seguimiento, pero la actividad anterior sigue pendiente.'),
-              'error',
-            );
-          }
-        } else {
-          this.toast.show(
-            frecuencia ? `Actividad agendada — ${this.formRepetirVeces()} veces.` : 'Actividad agendada.',
-            'success',
-          );
-        }
-      }
-
-      this.cerrarModal();
-    } catch (err) {
-      this.errorForm.set(mensajeDeError(err, 'No se pudo guardar la actividad.'));
-    } finally {
-      this.guardando.set(false);
-    }
   }
 
   protected async cambiarEstado(actividad: Actividad, estado: EstadoActividad, notas?: string): Promise<void> {
