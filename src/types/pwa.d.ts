@@ -17,3 +17,13 @@ interface WindowEventMap {
   beforeinstallprompt: BeforeInstallPromptEvent;
   appinstalled: Event;
 }
+
+interface Window {
+  /**
+   * Sello del build que está sirviendo esta pestaña, puesto por
+   * `PwaUpdateService`. Existe para poder abrir DevTools en la PC de una agente
+   * y responder "este navegador ejecuta <sha>" sin deducirlo del comportamiento.
+   * Se declara estructuralmente para que este archivo siga siendo global.
+   */
+  crmBuild?: { readonly sha: string; readonly compiladoEn: string };
+}

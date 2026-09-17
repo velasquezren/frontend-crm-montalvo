@@ -60,3 +60,6 @@ Thumbs.db
 *.swo
 *~
 *.log
+
+# Sello de build generado (tools/generar-sello-build.mjs) — cambia en cada build
+/src/app/core/build/app-build.ts
