@@ -147,7 +147,7 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 | SelectorPeriodoEmpty | `<app-selector-periodo-empty>` | `periodos`, `cargando`, `titulo`, `descripcion`, `icono`, `puedeImportar` · `(periodoSeleccionado)`, `(importarClic)`, `(archivoSeleccionado)` |
 | Timeline | `<app-timeline>` | `gap` — eje vertical con punto; proyecta un `<article class="crm-timeline-evento">` por hito (clases `crm-timeline-fecha` / `crm-timeline-valor`) |
 | ImageViewer | `<app-image-viewer>` | `imageUrl`, `title` · `(closed)` — visor a pantalla completa de un adjunto |
-| MonedaToggle | `<app-moneda-toggle>` | `size` (sm/md), `mostrarDetalle` — cambia Bs/USD en toda la app |
+| MonedaToggle | `<app-moneda-toggle>` | *(sin API)* — cambia Bs/USD en toda la app. Es un `.crm-segmento` de dos opciones; el tamaño lo fija la clase |
 | NotificacionesBell | `<app-notificaciones-bell>` | *(sin API — vive en el topbar del layout)* — campana de recordatorios: contador de Actividades vencidas/de hoy, panel desplegable con tiempo real y acción rápida de completar |
 | Layout | `<app-layout>` | *(sin API)* — el armazón de la app: header, sidebar y `<router-outlet>` |
 | DialogService | *(servicio)* | `openTemplate(tpl, vcr)` — modales por CDK Overlay, ver `crm-feature-page` |

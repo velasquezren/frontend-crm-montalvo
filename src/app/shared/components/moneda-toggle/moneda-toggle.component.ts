@@ -1,61 +1,48 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { formatearNumero, MonedaService, MonedaVisualizacion } from '../../../core/moneda/moneda.service';
 
 /**
- * Componente atómico de selector de moneda (Bs / $us).
- * Proporciona un switch segmentado ultra estético, sin emojis,
- * con respuesta inmediata (0ms) e integración con el CRM UI Kit.
+ * Selector de moneda de visualización (Bs / $us).
+ *
+ * Usa `.crm-segmento` del sistema de diseño, que es la forma declarada para un
+ * control segmentado —el skill `crm-design-system` cita este control por su
+ * nombre—. Antes se armaba a mano con utilidades: carril con `shadow-subtle`
+ * MÁS opción activa con relleno sólido y otra `shadow-subtle`, dos sombras
+ * apiladas que le daban un relieve que ningún otro control de la app tiene.
+ * El segmentado del sistema levanta la opción activa sobre el surco con fondo
+ * blanco y una sola sombra, y es el mismo que ya usan Actividades y Agentes.
+ *
+ * Sin `size` ni `mostrarDetalle`: el tamaño lo fija `.crm-segmento-opcion` y
+ * nadie pasaba nunca el detalle. Eran entradas sin un solo consumidor.
  */
 @Component({
   selector: 'app-moneda-toggle',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div
-      class="inline-flex items-center p-0.5 rounded-xl bg-bg-light/90 border border-border/80 shadow-subtle select-none"
-      [class.text-xs]="size() === 'sm'"
-      [class.text-sm]="size() === 'md'"
-      role="group"
-      aria-label="Selector de moneda">
+    <div class="crm-segmento" role="group" aria-label="Selector de moneda">
       <button
         type="button"
         (click)="cambiarMoneda('BOB')"
-        class="px-2.5 py-1 rounded-lg font-bold transition-all duration-150 cursor-pointer flex items-center gap-1 leading-tight"
-        [class.bg-primary]="monedaService.esBob()"
-        [class.text-white]="monedaService.esBob()"
-        [class.shadow-subtle]="monedaService.esBob()"
-        [class.text-text-muted]="!monedaService.esBob()"
-        [class.hover:text-text-dark]="!monedaService.esBob()"
-        [class.hover:bg-white/60]="!monedaService.esBob()"
+        class="crm-segmento-opcion"
+        [class.crm-segmento-opcion-activo]="monedaService.esBob()"
+        [attr.aria-pressed]="monedaService.esBob()"
         title="Visualizar montos en Bolivianos (Bs)">
-        <span>Bs</span>
-        @if (mostrarDetalle()) {
-          <span class="text-[10px] font-normal opacity-80">(BOB)</span>
-        }
+        Bs
       </button>
       <button
         type="button"
         (click)="cambiarMoneda('USD')"
-        class="px-2.5 py-1 rounded-lg font-bold transition-all duration-150 cursor-pointer flex items-center gap-1 leading-tight"
-        [class.bg-primary]="monedaService.esUsd()"
-        [class.text-white]="monedaService.esUsd()"
-        [class.shadow-subtle]="monedaService.esUsd()"
-        [class.text-text-muted]="!monedaService.esUsd()"
-        [class.hover:text-text-dark]="!monedaService.esUsd()"
-        [class.hover:bg-white/60]="!monedaService.esUsd()"
+        class="crm-segmento-opcion"
+        [class.crm-segmento-opcion-activo]="monedaService.esUsd()"
+        [attr.aria-pressed]="monedaService.esUsd()"
         [title]="tituloUsd()">
-        <span>$us</span>
-        @if (mostrarDetalle()) {
-          <span class="text-[10px] font-normal opacity-80">(USD)</span>
-        }
+        $us
       </button>
     </div>
   `,
 })
 export class MonedaToggleComponent {
   protected readonly monedaService = inject(MonedaService);
-
-  readonly size = input<'sm' | 'md'>('sm');
-  readonly mostrarDetalle = input<boolean>(false);
 
   /**
    * Con qué se convierte, en el tooltip del botón de dólares.

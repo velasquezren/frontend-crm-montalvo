@@ -35,7 +35,7 @@
       <app-actualizacion-disponible />
       @if (puedeGestionComercial()) {
         <app-notificaciones-bell />
-        <app-moneda-toggle size="sm" />
+        <app-moneda-toggle />
       }
       @if (user(); as currentUser) {
         <div class="flex items-center gap-3">
@@ -147,11 +147,11 @@
   </a>
 
   @if (puedeGestionComercial()) {
-  <a routerLink="/leads" routerLinkActive="mobile-nav-active" class="mobile-nav-item">
-    <app-icon name="user-plus" [size]="20" />
-    <span>Leads</span>
-  </a>
-
+  <!-- Leads NO está aquí: su vista por defecto es el Kanban, que en el teléfono
+       apila cuatro columnas de 520px casi vacías y cuyas tarjetas son
+       arrastrables, así que el gesto de scroll levanta una tarjeta. Sigue en el
+       menú lateral; lo que se quita es el acceso de un toque a una vista que en
+       móvil no se puede usar. -->
   <a routerLink="/dashboard" routerLinkActive="mobile-nav-active" class="mobile-nav-item">
     <app-icon name="dashboard" [size]="20" />
     <span>Panel</span>
