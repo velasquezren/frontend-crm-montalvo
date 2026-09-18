@@ -47,7 +47,13 @@ describe('bucle 401 · el interceptor no desloguea a quien ya salió', () => {
       providers: [
         provideHttpClient(withInterceptors([tokenInterceptor])),
         provideHttpClientTesting(),
-        provideRouter([]),
+        /* La ruta de login existe aquí porque el interceptor navega a ella al
+           desloguear. Con `provideRouter([])` esa navegación rechazaba con
+           NG04002 fuera del ciclo de la prueba: los casos pasaban igual, pero
+           Vitest contaba dos rechazos no manejados y `npm test` salía con 1,
+           así que la suite nunca estaba limpia del todo. Sin componente: lo que
+           se comprueba es que se navega, no qué se pinta. */
+        provideRouter([{ path: 'auth/login', children: [] }]),
         { provide: PwaUpdateService, useValue: { aplicarActualizacion: () => Promise.resolve() } },
       ],
     });
