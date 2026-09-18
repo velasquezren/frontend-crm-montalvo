@@ -32,6 +32,15 @@ export interface Lead {
     readonly datosExtra?: DatosExtra | null;
   };
   readonly agente: { readonly id: string; readonly nombre: string } | null;
+  /**
+   * Anuncio de Meta que trajo este lead (`referral.source_id`), si vino de uno.
+   *
+   * El backend lo devuelve desde siempre —`findAll` usa `include`, que trae
+   * todos los escalares de Lead—, pero no estaba declarado aquí. Es lo único
+   * que distingue dos leads del mismo canal y el mismo día al corregir la
+   * atribución de una venta.
+   */
+  readonly anuncioId?: string | null;
   /** Solo tiene valor si `estado = 'PERDIDO'`; se limpia al volver a moverse. */
   readonly motivoPerdida?: string | null;
   readonly createdAt: string;

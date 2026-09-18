@@ -93,6 +93,21 @@ export class VentasService {
     return this.api.patch<Venta>(`/ventas/${id}/estado`, { estado, motivoPerdida });
   }
 
+  /**
+   * Corregir de qué lead vino una venta ya registrada — CAMP-1.
+   *
+   * `leadId: null` quita la atribución, y es un valor con significado: «esta
+   * venta no vino de ninguna campaña». Por eso el parámetro no es opcional —
+   * omitirlo devuelve 400, para que un error de tipeo no borre la atribución
+   * en silencio.
+   *
+   * Endpoint específico, no un PATCH general de Venta: el importe, el estado y
+   * el agente no se editan (RF-12).
+   */
+  corregirOrigen(id: string, leadId: string | null): Promise<Venta> {
+    return this.api.patch<Venta>(`/ventas/${id}/origen`, { leadId });
+  }
+
   subirComprobante(file: File): Promise<ComprobanteSubido> {
     const formData = new FormData();
     formData.append('file', file);

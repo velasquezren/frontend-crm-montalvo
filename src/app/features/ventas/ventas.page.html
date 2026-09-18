@@ -950,14 +950,92 @@
                   </div>
                 </div>
               }
-              @if (venta.lead) {
-                <div class="flex items-center justify-between py-1 border-b border-border/50">
-                  <span class="text-text-muted">Lead / Canal de Origen</span>
-                  <span class="font-semibold text-text-dark">
-                    {{ origenLabel[venta.lead.origen] || venta.lead.origen }}
-                  </span>
+              <!-- Lead de origen — editable: de aquí sale la atribución de campaña
+                   (Venta → Lead → anuncioId), así que un origen mal elegido no
+                   puede tener como único arreglo un UPDATE a mano en la base. -->
+              <div class="py-1 border-b border-border/50">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-text-muted shrink-0">Lead / Canal de Origen</span>
+                  <div class="flex items-center gap-2 min-w-0">
+                    @if (venta.lead) {
+                      <span class="font-semibold text-text-dark truncate">
+                        {{ origenLabel[venta.lead.origen] || venta.lead.origen }}
+                      </span>
+                    } @else {
+                      <span class="font-semibold text-text-muted">Sin origen</span>
+                    }
+                    <button
+                      type="button"
+                      data-test="corregir-origen"
+                      (click)="alternarCorreccionOrigen()"
+                      class="text-[11px] font-semibold text-primary hover:underline cursor-pointer shrink-0">
+                      {{ corrigiendoOrigen() ? 'Cancelar' : 'Corregir' }}
+                    </button>
+                  </div>
                 </div>
-              }
+
+                @if (corrigiendoOrigen()) {
+                  <div class="mt-2 p-2.5 rounded-xl bg-bg-workspace border border-border space-y-2">
+                    @if (leadsDeLaVentaAbierta.isLoading()) {
+                      <p class="text-[11px] text-text-muted">Cargando los leads de la paciente…</p>
+                    } @else if (leadsDeLaVentaAbierta.error()) {
+                      <!-- Sin esta rama, un backend caído diría "no tiene leads", que
+                           es una mentira y llevaría a quitar una atribución correcta. -->
+                      <p class="text-[11px] text-text-critical">
+                        No se pudieron cargar los leads de la paciente. Reintenta al reabrir el detalle.
+                      </p>
+                    } @else if (leadsDeLaVentaAbierta.value().datos.length === 0) {
+                      <p class="text-[11px] text-text-muted">
+                        Esta paciente no tiene ningún lead registrado, así que no hay origen que asignar.
+                      </p>
+                    } @else {
+                      <p class="text-[10px] text-text-muted leading-relaxed">
+                        Elige de qué lead vino esta venta. Corregirlo cambia solo la atribución: no
+                        reabre ni cierra ningún lead.
+                      </p>
+                      <div class="flex flex-wrap gap-1.5">
+                        <button
+                          type="button"
+                          data-test="origen-ninguno"
+                          [disabled]="guardandoOrigen()"
+                          (click)="corregirOrigenDeLaVenta(null)"
+                          class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          [class.bg-primary]="!venta.leadId"
+                          [class.text-white]="!venta.leadId"
+                          [class.border-primary]="!venta.leadId"
+                          [class.bg-white]="venta.leadId"
+                          [class.text-text-dark]="venta.leadId"
+                          [class.border-border]="venta.leadId">
+                          Ninguno
+                        </button>
+                        @for (lead of leadsDeLaVentaAbierta.value().datos; track lead.id) {
+                          <button
+                            type="button"
+                            data-test="origen-lead"
+                            [disabled]="guardandoOrigen()"
+                            (click)="corregirOrigenDeLaVenta(lead.id)"
+                            class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            [class.bg-primary]="venta.leadId === lead.id"
+                            [class.text-white]="venta.leadId === lead.id"
+                            [class.border-primary]="venta.leadId === lead.id"
+                            [class.bg-white]="venta.leadId !== lead.id"
+                            [class.text-text-dark]="venta.leadId !== lead.id"
+                            [class.border-border]="venta.leadId !== lead.id">
+                            {{ origenLabel[lead.origen] || lead.origen }}
+                            <span class="opacity-70"> · {{ lead.createdAt | date: 'dd/MM/yy' }}</span>
+                            @if (lead.anuncioId) {
+                              <!-- El anuncio es lo que de verdad distingue dos leads del
+                                   mismo canal y el mismo día. El id del lead no se muestra:
+                                   un UUID no le dice nada a nadie. -->
+                              <span class="opacity-70"> · anuncio {{ lead.anuncioId }}</span>
+                            }
+                          </button>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
               @if (venta.notas) {
                 <div class="pt-2">
                   <span class="text-text-muted block text-[11px] mb-1">Observaciones / Notas:</span>

@@ -317,6 +317,10 @@ export class VentasPage implements OnDestroy {
   /* ── Detalle / Cajón Lateral (Drawer 360°) ─────────────────────── */
   protected readonly ventaSeleccionada = signal<Venta | null>(null);
 
+  /* Corrección del origen de una venta ya registrada — CAMP-1. */
+  protected readonly corrigiendoOrigen = signal(false);
+  protected readonly guardandoOrigen = signal(false);
+
   /* Visor atómico de Comprobante (<app-image-viewer>) */
   protected readonly visorImagenUrl = signal<string | null>(null);
   protected readonly visorImagenTitulo = signal<string | null>(null);
@@ -497,6 +501,24 @@ export class VentasPage implements OnDestroy {
       const cliente = this.clienteElegido();
       return this.formularioAbierto() && cliente
         ? this.leadsService.listarRequest({ clienteId: cliente.id, pagina: 1, limite: 10 })
+        : undefined;
+    },
+    { defaultValue: paginaVacia<Lead>() },
+  );
+
+  /**
+   * TODOS los leads del cliente de la venta abierta, para poder corregir su
+   * origen — CAMP-1.
+   *
+   * Sin filtrar por estado, a diferencia de `leadsAbiertosDelCliente`: el lead
+   * que originó la venta quedó en CONVERTIDO al registrarla, así que filtrar
+   * por abiertos escondería justamente el que hay que mostrar como actual.
+   */
+  protected readonly leadsDeLaVentaAbierta = httpResource<RespuestaPaginada<Lead>>(
+    () => {
+      const venta = this.ventaSeleccionada();
+      return venta
+        ? this.leadsService.listarRequest({ clienteId: venta.cliente.id, pagina: 1, limite: 20 })
         : undefined;
     },
     { defaultValue: paginaVacia<Lead>() },
@@ -694,6 +716,7 @@ export class VentasPage implements OnDestroy {
     const tpl = template ?? this.drawerDetalleTemplate();
     if (!tpl) return;
     this.ventaSeleccionada.set(venta);
+    this.corrigiendoOrigen.set(false);
     this.activeDrawerRef?.dispose();
     this.activeDrawerRef = this.dialogService.abrirCajon(tpl, this.vcr, {
       onClose: () => this.cerrarDetalleVenta(),
@@ -702,6 +725,7 @@ export class VentasPage implements OnDestroy {
 
   protected cerrarDetalleVenta(): void {
     this.ventaSeleccionada.set(null);
+    this.corrigiendoOrigen.set(false);
     this.activeDrawerRef?.dispose();
     this.activeDrawerRef = undefined;
   }
@@ -838,6 +862,46 @@ export class VentasPage implements OnDestroy {
       );
     } finally {
       this.cambiandoEstado.set(false);
+    }
+  }
+
+  /* ── Corregir el origen de una venta registrada (CAMP-1) ────────── */
+
+  protected alternarCorreccionOrigen(): void {
+    this.corrigiendoOrigen.update(abierto => !abierto);
+  }
+
+  /**
+   * Guarda el nuevo origen y refleja lo que el backend confirmó, no lo que se
+   * pulsó.
+   *
+   * Si la llamada falla, la interfaz se queda como estaba —el origen anterior
+   * sigue a la vista y el panel abierto— porque `ventaSeleccionada` solo se
+   * reemplaza con la fila que devuelve el servidor. Fingir que guardó sería
+   * peor aquí que en otros sitios: la agente cerraría el cajón convencida de
+   * haber corregido la atribución.
+   */
+  protected async corregirOrigenDeLaVenta(leadId: string | null): Promise<void> {
+    const venta = this.ventaSeleccionada();
+    if (!venta || this.guardandoOrigen()) return;
+
+    this.guardandoOrigen.set(true);
+    try {
+      const actualizada = await this.ventasService.corregirOrigen(venta.id, leadId);
+      this.ventaSeleccionada.set(actualizada);
+      this.corrigiendoOrigen.set(false);
+      this.toastService.success(
+        leadId ? 'Origen de la venta corregido' : 'Se quitó el origen de la venta',
+        'Atribución actualizada',
+      );
+      this.ventas.reload();
+    } catch (err: unknown) {
+      this.toastService.error(
+        mensajeDeError(err, 'No se pudo corregir el origen de la venta.'),
+        'Error',
+      );
+    } finally {
+      this.guardandoOrigen.set(false);
     }
   }
 }
