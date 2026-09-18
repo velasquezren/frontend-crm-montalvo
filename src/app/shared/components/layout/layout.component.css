@@ -49,6 +49,60 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   Padding del área de contenido — FUENTE ÚNICA
+
+   Estaba escrito como utilidades en la plantilla (`p-4 sm:p-6 pb-28
+   md:pb-6`). El problema no era el sitio, era que Conversaciones va a
+   sangre y **repetía los mismos números en negativo** para cancelarlo.
+   Repetidos, se desincronizaron: la plantilla usaba 1rem en el teléfono y
+   la página tiraba de -1.5rem, así que el inbox salía 16px más ancho que
+   la pantalla y aparecía un scroll horizontal. En web no se veía porque a
+   partir de 640px los dos valores sí coincidían.
+
+   Ahora el número vive UNA vez, aquí, y quien va a sangre lo niega con
+   `calc(var(--workspace-pad-x) * -1)`. No hay dos sitios que puedan
+   discrepar. Si algún día cambia el padding, el margen negativo lo sigue
+   solo.
+
+   Sin `var()` de respaldo a propósito: fuera del shell la variable no
+   existe, la declaración entera se vuelve inválida y el margen queda en 0
+   —contenido sin desplazar—, que es el fallo seguro. Un respaldo fijo
+   desplazaría el contenido justo cuando nadie está mirando.
+   ═══════════════════════════════════════════════════════════════ */
+.workspace-inner {
+  --workspace-pad-x: 1rem;
+  --workspace-pad-top: 1rem;
+  /* Hueco para la barra inferior del móvil, que va fija sobre el contenido. */
+  --workspace-pad-bottom: 7rem;
+
+  padding: var(--workspace-pad-top) var(--workspace-pad-x) var(--workspace-pad-bottom);
+  max-width: 100%;
+}
+
+@media (min-width: 640px) {
+  .workspace-inner {
+    --workspace-pad-x: 1.5rem;
+    --workspace-pad-top: 1.5rem;
+  }
+}
+
+/*
+ * 769px, no 768. El hueco de abajo existe para la barra inferior, así que tiene
+ * que desaparecer EXACTAMENTE cuando ella desaparece — y la barra se muestra
+ * con `max-width: 768px`, que incluye el 768 justo.
+ *
+ * Antes esto era `md:pb-6` de Tailwind, o sea `min-width: 768px`: a 768px
+ * exactos la barra se veía Y el hueco ya se había quitado, así que tapaba los
+ * últimos ~60px del contenido. No es un ancho hipotético, es un iPad en
+ * vertical.
+ */
+@media (min-width: 769px) {
+  .workspace-inner {
+    --workspace-pad-bottom: 1.5rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
    TOPBAR — Compacta (64px)
    ═══════════════════════════════════════════════════════════════ */
 .topbar {

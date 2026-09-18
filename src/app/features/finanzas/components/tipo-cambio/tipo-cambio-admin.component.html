@@ -144,8 +144,12 @@
       <app-error-carga que="el historial de tipo de cambio" (reintentar)="dias.reload()" />
     </div>
   } @else if (dias.value().length > 0) {
-    <div class="bg-white rounded-2xl shadow-subtle overflow-hidden">
-      <table class="w-full text-sm">
+    <!-- `overflow-x-auto` y no `overflow-hidden`: en el teléfono la fila en
+         edición mete un input y dos botones, y recortarlos dejaba «Guardar»
+         fuera de la pantalla sin forma de llegar a él. El radio sigue
+         recortando igual. -->
+    <div class="bg-white rounded-2xl shadow-subtle overflow-x-auto">
+      <table class="w-full text-sm min-w-[22rem]">
         <thead>
           <tr class="border-b border-border">
             <th class="text-left px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-text-muted">Fecha</th>

@@ -3,18 +3,24 @@
    Ref: CRM_MANIFESTO.md §3 — Minimalismo Médico Orgánico
    ═══════════════════════════════════════════════════════════════ */
 
+/*
+ * El inbox va a sangre: cancela el padding del área de contenido en vez de
+ * vivir dentro de él.
+ *
+ * Los números NO se escriben aquí. Salen de `--workspace-pad-*`, que declara
+ * `.workspace-inner` en el shell — ver el comentario largo de
+ * `layout.component.css`. Antes estaban copiados (`-1.5rem`) y se
+ * desincronizaron del padding real del teléfono (`1rem`): el inbox salía 16px
+ * más ancho que la pantalla y aparecía un scroll horizontal que en escritorio
+ * no existía.
+ */
 :host {
   display: block;
-  margin: -1.5rem -1.5rem -7rem -1.5rem;
+  margin: calc(var(--workspace-pad-top) * -1)
+          calc(var(--workspace-pad-x) * -1)
+          calc(var(--workspace-pad-bottom) * -1);
   height: calc(100dvh - 64px);
   overflow: hidden;
-}
-
-@media (min-width: 768px) {
-  :host {
-    margin: -1.5rem;
-    height: calc(100dvh - 64px);
-  }
 }
 
 /* ── Layout de columnas dinámico ─────────────────────────────── */
@@ -89,8 +95,9 @@ app-conversacion-composer {
 
 /* ── Responsive en Móviles y Tablets (<768px) ───────────────── */
 @media (max-width: 768px) {
+  /* Los márgenes ya los pone `:host` a partir de las variables del shell;
+     aquí solo cambia el alto, porque en inmersivo no hay topbar que restar. */
   :host.chat-inmersivo {
-    margin: -1.5rem -1.5rem -7rem -1.5rem;
     height: 100dvh;
   }
 
