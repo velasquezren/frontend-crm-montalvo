@@ -12,14 +12,18 @@ import { formatearNumero, MonedaService, MonedaVisualizacion } from '../../../co
  * El segmentado del sistema levanta la opción activa sobre el surco con fondo
  * blanco y una sola sombra, y es el mismo que ya usan Actividades y Agentes.
  *
- * Sin `size` ni `mostrarDetalle`: el tamaño lo fija `.crm-segmento-opcion` y
- * nadie pasaba nunca el detalle. Eran entradas sin un solo consumidor.
+ * Lleva además `.crm-segmento-compacto`: vive en la topbar, junto a la campana
+ * y el avatar en 64px de alto, y con el cuerpo del segmentado normal era el
+ * elemento más pesado de la barra sin ser el más importante.
+ *
+ * Sin `size` ni `mostrarDetalle`: el tamaño lo fijan las clases y nadie pasaba
+ * nunca el detalle. Eran entradas sin un solo consumidor.
  */
 @Component({
   selector: 'app-moneda-toggle',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="crm-segmento" role="group" aria-label="Selector de moneda">
+    <div class="crm-segmento crm-segmento-compacto" role="group" aria-label="Selector de moneda">
       <button
         type="button"
         (click)="cambiarMoneda('BOB')"

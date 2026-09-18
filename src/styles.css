@@ -585,6 +585,44 @@ tr:hover .celda-sticky {
   box-shadow: var(--shadow-subtle);
 }
 
+/*
+ * Variante compacta del segmentado — para barras densas.
+ *
+ * El segmentado normal está dimensionado para cabeceras de página, donde tiene
+ * sitio. En la topbar convive con la campana, el avatar y el botón de salir en
+ * 64px de alto, y ahí su cuerpo lo convierte en el elemento más pesado de la
+ * barra sin ser el más importante.
+ *
+ * Es una VARIANTE del sistema y no un estilo propio del selector de moneda: si
+ * mañana otro control segmentado cae en una barra densa, usa esta clase en vez
+ * de inventarse la suya. Hereda todo de `.crm-segmento` y solo reduce.
+ *
+ * Colores, sin excepción, de la paleta: surco `--color-bg-workspace`, opción
+ * apagada `--color-text-muted`, activa sobre `--color-background` con
+ * `--color-primary`. Ese par blanco+primary es el mismo que ya usa el selector
+ * de vista de Leads, así que no se estrena nada.
+ */
+.crm-segmento-compacto {
+  gap: 1px;
+  padding: 2px;
+  border-radius: 10px;
+}
+
+.crm-segmento-compacto .crm-segmento-opcion {
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* A 11px el contraste gris-sobre-gris no alcanza para decir cuál está activa;
+   el color de marca sí, y evita tener que engordarla para que se lea. */
+.crm-segmento-compacto .crm-segmento-opcion-activo {
+  color: var(--color-primary);
+}
+
 /* ==========================================================================
    Línea de WhatsApp por la que va un chat
    ========================================================================== */

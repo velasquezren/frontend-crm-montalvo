@@ -319,7 +319,7 @@ número, era que la misma forma decía tres cosas incompatibles. Elegí cuál es
 | La **categoría** de una fila (tipo de actividad) | `.crm-tipo` — ícono + palabra, **sin cápsula**: la cápsula es del estado |
 | Una **acción de contacto** (`<a>` a WhatsApp o `tel:`) | `.crm-accion-enlace` (+ `-whatsapp`). Son enlaces, no botones: abren otra app y se copian |
 | Una fila o tarjeta **vencida** | `.crm-vencida` — filo izquierdo, no fondo teñido |
-| Un **control segmentado** (Lista/Calendario, Bs/USD) | `.crm-segmento` + `.crm-segmento-opcion` (+ `-activo`) |
+| Un **control segmentado** (Lista/Calendario, Bs/USD) | `.crm-segmento` + `.crm-segmento-opcion` (+ `-activo`). En una barra densa —la topbar— se le suma `.crm-segmento-compacto`, que solo reduce cuerpo y sube la opción activa a `--color-primary` para que se lea a 11px |
 | La **línea de WhatsApp** de un chat | `.crm-linea` — punto en `secondary` (el token declarado para *indicadores*, no `primary`, que es de botones y estados activos) + nombre en voz baja. **No es cápsula:** la píldora es del estado y una línea es un canal |
 
 `check:skills` rechaza cualquier `class` que junte `rounded-full` con un tamaño
