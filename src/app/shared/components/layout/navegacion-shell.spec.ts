@@ -247,14 +247,97 @@ describe('navegación: el shell sobrevive al cambio de ruta', () => {
     const cajonAbierto = () =>
       !!fixture.nativeElement.querySelector('.sidebar-expanded');
 
-    it('8 · en el teléfono, tocar el logo NO abre el menú', async () => {
+    it('8 · en el teléfono, el logo TAMBIÉN abre el menú', async () => {
       await montarComoTelefono();
       expect(cajonAbierto(), 'en el teléfono arranca cerrado').toBe(false);
 
       logo().click();
       fixture.detectChanges();
 
-      expect(cajonAbierto()).toBe(false);
+      /* Hay dos puertas a propósito: el logo, que es donde la gente ya iba, y
+         «Más» en la barra inferior, que cae más cerca del pulgar. */
+      expect(cajonAbierto()).toBe(true);
+    });
+
+    /**
+     * Arrastrar el cajón hacia su borde para cerrarlo.
+     *
+     * Se prueba la lógica del gesto y no eventos táctiles reales: lo que se
+     * rompió al escribirlo fue la máquina de estados —un desliz en diagonal
+     * acababa arrastrando el cajón a mitad de un scroll de la lista—, y eso vive
+     * aquí, no en el navegador.
+     */
+    describe('arrastrar para cerrar', () => {
+      const toque = (x: number, y: number) =>
+        ({ touches: [{ clientX: x, clientY: y }] }) as unknown as TouchEvent;
+
+      /** Simula un dedo que parte de (200,300) y acaba en el punto dado. */
+      function arrastrar(componente: LayoutComponent, hastaX: number, hastaY: number): void {
+        componente['alTocarCajon'](toque(200, 300));
+        componente['alArrastrarCajon'](toque(hastaX, hastaY));
+        componente['alSoltarCajon']();
+      }
+
+      it('12 · un arrastre largo hacia la izquierda lo cierra', async () => {
+        await montarComoTelefono();
+        const c = fixture.componentInstance;
+        logo().click();
+        fixture.detectChanges();
+        expect(cajonAbierto()).toBe(true);
+
+        arrastrar(c, 60, 300); // 140px a la izquierda, por encima del umbral
+        fixture.detectChanges();
+
+        expect(cajonAbierto()).toBe(false);
+      });
+
+      it('13 · un arrastre corto NO lo cierra: vuelve a su sitio', async () => {
+        await montarComoTelefono();
+        const c = fixture.componentInstance;
+        logo().click();
+        fixture.detectChanges();
+
+        arrastrar(c, 180, 300); // 20px: por debajo del umbral
+        fixture.detectChanges();
+
+        expect(cajonAbierto()).toBe(true);
+        expect(c['desplazamientoCajon']()).toBeNull();
+      });
+
+      it('14 · un desliz VERTICAL no mueve el cajón — la lista scrollea', async () => {
+        await montarComoTelefono();
+        const c = fixture.componentInstance;
+        logo().click();
+        fixture.detectChanges();
+
+        c['alTocarCajon'](toque(200, 300));
+        c['alArrastrarCajon'](toque(190, 200)); // 10px en x, 100px en y
+
+        /* Lo que hay que impedir: que el cajón siga a un dedo que en realidad
+           está scrolleando la navegación. */
+        expect(c['desplazamientoCajon']()).toBeNull();
+        c['alSoltarCajon']();
+        fixture.detectChanges();
+        expect(cajonAbierto()).toBe(true);
+      });
+
+      it('15 · un diagonal que empieza vertical no se convierte en cierre a mitad', async () => {
+        await montarComoTelefono();
+        const c = fixture.componentInstance;
+        logo().click();
+        fixture.detectChanges();
+
+        c['alTocarCajon'](toque(200, 300));
+        c['alArrastrarCajon'](toque(190, 200));  // decide: vertical → ignorado
+        c['alArrastrarCajon'](toque(20, 190));   // ahora sí va muy a la izquierda
+
+        /* Una vez descartado, el gesto NO se reabre: era el fallo de la primera
+           versión, que usaba un booleano en vez de tres estados. */
+        expect(c['desplazamientoCajon']()).toBeNull();
+        c['alSoltarCajon']();
+        fixture.detectChanges();
+        expect(cajonAbierto()).toBe(true);
+      });
     });
 
     it('9 · «Más» de la barra inferior SÍ lo abre — es la única puerta que queda', async () => {

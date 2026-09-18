@@ -190,29 +190,96 @@ export class LayoutComponent {
     this.sidebarExpanded.update(v => !v);
   }
 
-  /**
-   * En el teléfono el logo no abre nada; es solo el logo.
-   *
-   * Se tocaba sin querer —está en la esquina donde el pulgar vuelve atrás— y
-   * salía un cajón a pantalla completa que ahí no hace falta, porque la barra
-   * inferior ya lleva a lo del día a día. En escritorio sigue siendo el único
-   * botón que contrae y expande el menú, que es donde sí sirve.
-   *
-   * El menú completo del teléfono no se pierde: vive en «Más», en la barra
-   * inferior. Es la ÚNICA puerta a Clientes, Actividades, Finanzas, Servicios,
-   * Líneas y Usuarios, que la barra no lista.
-   */
-  protected alternarMenuDesdeLogo(event: MouseEvent): void {
-    if (this.esMovil()) {
-      event.stopPropagation();
-      return;
-    }
+  /** «Más» de la barra inferior. Misma puerta que el logo, más cerca del pulgar. */
+  protected alternarMenu(event: MouseEvent): void {
     this.toggleSidebar(event);
   }
 
-  /** «Más» de la barra inferior — ver `alternarMenuDesdeLogo`. */
-  protected alternarMenu(event: MouseEvent): void {
-    this.toggleSidebar(event);
+  /* ── Cajón del teléfono: arrastrar hacia la izquierda para cerrarlo ──
+   *
+   * Es el gesto que la guía de Material da por sentado en un cajón modal
+   * («swiping the drawer toward its anchoring edge»), junto con tocar el velo.
+   * Sin él, la única salida era tocar fuera: se sentía atrapado.
+   *
+   * Dos decisiones que no son obvias:
+   *
+   * - **El arrastre solo empieza si el dedo va más en horizontal que en
+   *   vertical.** La lista de navegación scrollea, y secuestrar un desliz
+   *   vertical para cerrar el cajón es peor que no tener gesto.
+   * - **Se cierra por distancia, no por velocidad.** Un umbral de un tercio del
+   *   ancho es predecible; medir velocidad obliga a elegir un límite que acierta
+   *   con unos pulgares y falla con otros.
+   */
+  /* El CSS usa `min(280px, 85vw)`. En una pantalla de menos de ~330px el cajón
+     será algo más estrecho que esta constante, así que el velo no llega a
+     transparencia total al arrastrarlo del todo. Son unos pocos píxeles y no
+     compensa leer el ancho real del DOM en cada `touchmove`. */
+  private static readonly ANCHO_CAJON = 280;
+  /** A partir de aquí, soltar cierra. Un tercio: se nota que ya no vuelve. */
+  private static readonly UMBRAL_CIERRE = LayoutComponent.ANCHO_CAJON / 3;
+
+  private toqueX = 0;
+  private toqueY = 0;
+  /**
+   * Tres estados, no un booleano.
+   *
+   * Con un booleano «ya decidí» no se distingue «decidí que SÍ es un cierre» de
+   * «decidí que NO lo es», y un desliz en diagonal acababa arrastrando el cajón
+   * a mitad de un scroll de la lista.
+   */
+  private gesto: 'indeciso' | 'cerrando' | 'ignorado' = 'indeciso';
+
+  /** Px arrastrados hacia la izquierda; `null` mientras no hay gesto activo. */
+  protected readonly desplazamientoCajon = signal<number | null>(null);
+  protected readonly arrastrandoCajon = computed(() => this.desplazamientoCajon() !== null);
+
+  /** El cajón sigue al dedo. Sin gesto, manda el CSS (por eso `null`). */
+  protected readonly transformCajon = computed(() => {
+    const dx = this.desplazamientoCajon();
+    return dx === null ? null : `translateX(${-dx}px)`;
+  });
+
+  /** El velo se aclara a la vez que el cajón se va, como pide Material. */
+  protected readonly opacidadVelo = computed(() => {
+    const dx = this.desplazamientoCajon();
+    return dx === null ? null : String(1 - dx / LayoutComponent.ANCHO_CAJON);
+  });
+
+  protected alTocarCajon(evento: TouchEvent): void {
+    if (!this.esMovil() || !this.sidebarExpanded()) return;
+    const toque = evento.touches[0];
+    this.toqueX = toque.clientX;
+    this.toqueY = toque.clientY;
+    this.gesto = 'indeciso';
+  }
+
+  protected alArrastrarCajon(evento: TouchEvent): void {
+    if (this.gesto === 'ignorado') return;
+    if (!this.esMovil() || !this.sidebarExpanded()) return;
+
+    const toque = evento.touches[0];
+    const dx = this.toqueX - toque.clientX;
+    const dy = Math.abs(this.toqueY - toque.clientY);
+
+    if (this.gesto === 'indeciso') {
+      /* Nada se mueve hasta saber hacia dónde va el dedo: ni se roba el scroll
+         vertical de la lista ni se desplaza el cajón por un temblor. */
+      if (Math.abs(dx) < 8 && dy < 8) return;
+      /* Solo es cierre si va a la izquierda Y domina la horizontal. */
+      this.gesto = dx > 0 && dx > dy ? 'cerrando' : 'ignorado';
+      if (this.gesto === 'ignorado') return;
+    }
+
+    this.desplazamientoCajon.set(Math.min(Math.max(dx, 0), LayoutComponent.ANCHO_CAJON));
+  }
+
+  protected alSoltarCajon(): void {
+    const dx = this.desplazamientoCajon();
+    this.desplazamientoCajon.set(null);
+    this.gesto = 'indeciso';
+    if (dx !== null && dx >= LayoutComponent.UMBRAL_CIERRE) {
+      this.sidebarExpanded.set(false);
+    }
   }
 
   protected onNavClick(): void {

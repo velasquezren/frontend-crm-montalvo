@@ -267,25 +267,88 @@
     height: calc(4rem + env(safe-area-inset-top, 0px));
   }
 
+  /*
+   * Cajón modal a pantalla COMPLETA, por encima de todo.
+   *
+   * Antes arrancaba en `top: 4rem` —debajo de la topbar— mientras el velo sí la
+   * cubría: quedaba una cabecera oscurecida flotando sobre un cajón que no
+   * llegaba a ella. Y la barra inferior (z-index 100) pasaba por ENCIMA del
+   * cajón (60), así que la navegación del teléfono se veía sobre un menú que se
+   * supone modal.
+   *
+   * Las capas ahora, de abajo arriba: barra inferior 100 · velo 110 · cajón 120.
+   * Un cajón modal está «elevado sobre la mayor parte de la UI», que es
+   * justamente lo que no se cumplía.
+   */
   .sidebar {
     position: fixed;
-    top: calc(4rem + env(safe-area-inset-top, 0px));
+    top: 0;
     left: 0;
     bottom: 0;
-    z-index: 60;
+    z-index: 120;
     width: 0;
     overflow: visible;
   }
 
   .sidebar-inner {
-    width: 250px;
+    /* 280px es el máximo que fija la guía de Material para teléfono; el
+       `min()` evita que en una pantalla estrecha tape la pista de que hay algo
+       detrás que se puede tocar para cerrar. */
+    width: min(280px, 85vw);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     transform: translateX(-100%);
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+    /* El gesto de cerrar es horizontal; esto le deja a la lista el vertical y
+       evita que el navegador interprete el arrastre como «atrás». */
+    touch-action: pan-y;
   }
 
   .sidebar-expanded .sidebar-inner {
     transform: translateX(0);
     box-shadow: 12px 0 36px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Mientras el dedo arrastra manda el `transform` en línea, no la transición:
+     con ella puesta el cajón iría siempre un paso por detrás del dedo. */
+  .sidebar-inner--arrastrando {
+    transition: none;
+  }
+
+  /*
+   * Velo. Entra y sale con el cajón en vez de aparecer de golpe: antes era un
+   * `@if` con `transition-opacity` y nada desde donde transicionar, así que el
+   * oscurecido se plantaba encima de un tirón. Eso era buena parte del «se ve
+   * mal».
+   */
+  .sidebar-velo {
+    position: fixed;
+    inset: 0;
+    z-index: 110;
+    background: rgba(0, 0, 0, 0.32);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    /* El velo también recibe el gesto: arrastrar desde él cierra igual. */
+    touch-action: pan-y;
+  }
+
+  .sidebar-velo--visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Durante el arrastre la opacidad va en línea, siguiendo al dedo. */
+  .sidebar-velo--arrastrando {
+    transition: none;
+    pointer-events: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sidebar-inner,
+    .sidebar-velo {
+      transition-duration: 0.01ms;
+    }
   }
 
   .sidebar-expanded .nav-label {

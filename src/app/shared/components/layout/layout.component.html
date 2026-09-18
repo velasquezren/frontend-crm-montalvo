@@ -10,12 +10,12 @@
     <div class="flex items-center gap-2 sm:gap-3 min-w-0">
       <button
         type="button"
-        (click)="alternarMenuDesdeLogo($event)"
+        (click)="toggleSidebar($event)"
         class="logo-toggle-btn p-1.5 -ml-1 rounded-xl hover:bg-bg-light
                transition-all duration-200 cursor-pointer border border-transparent hover:border-border shrink-0"
-        [title]="esMovil() ? 'Clínica Montalvo' : 'Hacer clic en el logo para abrir / cerrar el menú'"
-        [attr.aria-label]="esMovil() ? 'Clínica Montalvo' : 'Abrir o cerrar el menú de navegación'"
-        [attr.aria-expanded]="esMovil() ? null : sidebarExpanded()">
+        title="Abrir o cerrar el menú de navegación"
+        aria-label="Abrir o cerrar el menú de navegación"
+        [attr.aria-expanded]="sidebarExpanded()">
         <img src="/favicon.svg" alt="Montalvo Logo" class="w-8 h-8 sm:w-10 sm:h-10 object-contain transition-transform duration-200 hover:scale-105" />
       </button>
 
@@ -68,13 +68,33 @@
        SIDEBAR — Icon Rail (72px) → Expandible al hover (240px)
        Ref: CRM_MANIFESTO.md §3.2
        ══════════════════════════════════════════════════════════════════════ -->
-  <!-- Mobile Backdrop Overlay -->
-  @if (sidebarExpanded()) {
-    <div (click)="toggleSidebar($event)" class="fixed inset-0 bg-text-dark/40 z-30 md:hidden transition-opacity" aria-hidden="true"></div>
+  <!-- Velo del cajón (solo teléfono). Ver `.sidebar-velo` en el CSS: la opacidad
+       la lleva el propio velo para poder seguir al dedo mientras se arrastra. -->
+  @if (esMovil()) {
+    <!-- Presente siempre en el teléfono y con la visibilidad en una clase, NO
+         con un `@if` sobre `sidebarExpanded()`: así el velo también se atenúa
+         al cerrar. Con el `@if` el nodo desaparecía de golpe mientras el cajón
+         todavía se deslizaba. -->
+    <div class="sidebar-velo"
+         [class.sidebar-velo--visible]="sidebarExpanded()"
+         [class.sidebar-velo--arrastrando]="arrastrandoCajon()"
+         [style.opacity]="opacidadVelo()"
+         (click)="toggleSidebar($event)"
+         (touchstart)="alTocarCajon($event)"
+         (touchmove)="alArrastrarCajon($event)"
+         (touchend)="alSoltarCajon()"
+         aria-hidden="true"></div>
   }
 
   <aside class="sidebar" [class.sidebar-expanded]="sidebarExpanded()">
-    <div class="sidebar-inner py-4" [class.sidebar-inner-expanded]="sidebarExpanded()">
+    <div class="sidebar-inner py-4"
+         [class.sidebar-inner-expanded]="sidebarExpanded()"
+         [class.sidebar-inner--arrastrando]="arrastrandoCajon()"
+         [style.transform]="transformCajon()"
+         (touchstart)="alTocarCajon($event)"
+         (touchmove)="alArrastrarCajon($event)"
+         (touchend)="alSoltarCajon()"
+         (touchcancel)="alSoltarCajon()">
       <!-- Navigation -->
       <nav class="flex flex-col gap-2 px-3 flex-1 overflow-y-auto" aria-label="Navegación principal">
         @for (group of navGroups(); track group.titulo; let idx = $index) {
