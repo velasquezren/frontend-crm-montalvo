@@ -66,7 +66,10 @@ Los Webhooks permiten que Meta le notifique al Backend del CRM inmediatamente cu
 1. En el panel lateral izquierdo de Meta Developers, despliega **WhatsApp** y selecciona **Configuración** (Configuration).
 2. En la sección **Webhook**, haz clic en **Editar** (Edit).
 3. Configura los siguientes campos:
-   - **URL de devolución de llamada (Callback URL)**: La URL pública de tu backend NestJS donde escucharás los eventos de WhatsApp (ej: `https://api.montalvocrm.com/conversaciones/meta/webhook`).
+   - **URL de devolución de llamada (Callback URL)**: La URL pública de tu backend NestJS donde escucharás los eventos de WhatsApp — la ruta real del código es **`/webhooks/whatsapp`**, p. ej.
+     `https://crm.107.175.132.15.nip.io/webhooks/whatsapp`. La de Lead Ads es
+     **`/webhooks/meta`**. Ambas responden `GET` para la verificación y `POST`
+     para los eventos.
    - **Token de verificación (Verify Token)**: Una clave secreta que definirás tú mismo y configurarás en el `.env` del backend (ej: `TokenSeguroMontalvoCRM2026`).
 4. Haz clic en **Verificar y guardar** (Verify and Save). Meta enviará una petición de prueba para validar que tu backend responde correctamente.
 5. Una vez guardado, en la misma sección busca **Campos del webhook** y haz clic en **Administrar** (Manage).
@@ -123,20 +126,28 @@ Los tokens generados en el panel de desarrollador expiran en 24 horas. Para que 
 
 Configura las siguientes variables en el archivo `.env` del backend NestJS para completar la conexión:
 
+> Estos son los nombres que **lee el código**, verificados el 2026-09-18. La
+> versión anterior de esta guía listaba `META_APP_ID`, `META_WABA_ID`,
+> `META_PHONE_NUMBER_ID`, `META_SYSTEM_USER_TOKEN` y `META_LEADS_VERIFY_TOKEN`:
+> ninguna de las cinco existe en el backend. Ponerlas no configura nada.
+
 ```env
-# Configuración del Webhook de Meta (Tú defines estos tokens)
-META_VERIFY_TOKEN="TuTokenDeVerificacionCreadoEnMetaDev"
-META_LEADS_VERIFY_TOKEN="TuTokenDeVerificacionParaLeads"
+# Webhooks — el MISMO token verifica WhatsApp y Leads, no hay uno por cada uno
+META_VERIFY_TOKEN="TuTokenDeVerificacion"
+META_APP_SECRET="..."          # firma HMAC-SHA256 del cuerpo crudo; sin esto no se valida
 
-# Credenciales de WhatsApp Cloud API
-META_WABA_ID="123456789012345"             # Identificador de cuenta de WhatsApp Business
-META_PHONE_NUMBER_ID="123456789012345"     # Identificador del número de teléfono
-META_SYSTEM_USER_TOKEN="EAAG..."           # Token permanente del System User (Paso 6)
-
-# Configuración de Aplicación Meta
-META_APP_ID="123456789012345"
-META_APP_SECRET="tu_meta_app_secret_aqui"
+# WhatsApp Cloud API
+WHATSAPP_TOKEN="EAAG..."       # token permanente del System User (Paso 6)
+WHATSAPP_PHONE_ID="123..."     # identificador del número
+WHATSAPP_WABA_ID="123..."      # cuenta de WhatsApp Business
 ```
+
+**El token NO es uno solo si hay varias líneas.** Cada fila de `LineaWhatsapp`
+guarda en `tokenEnv` el **nombre** de la variable que contiene su token, y
+`LineasWhatsappService` lo resuelve con `config.get(linea.tokenEnv)`. Por eso en
+producción existen `WHATSAPP_TOKEN` y `WHATSAPP_CLIMON_TOKEN`: son dos líneas.
+Al dar de alta una línea nueva se añade su variable y se pone el nombre en
+`tokenEnv` — no se toca el código.
 
 ---
 

@@ -187,10 +187,52 @@ ignorar cambios del contenido para mantener esa identidad. La regresión está
 en `conversaciones-state.service.spec.ts`, con HTTP simulado y el servicio real,
 incluido el resumen realtime de una fila que ya estaba primera.
 
-### Envío Optimista (0 ms de Latencia Percibida)
-- Al pulsar `Enter` o enviar, el mensaje se inserta inmediatamente en el hilo con un `idOptimista` temporal y estado `ENVIANDO`.
-- Al confirmar el servidor, se reemplaza el ID provisional por el definitivo y el estado cambia a `ENVIADO` con su check.
-- Si la petición falla, se restaura el estado previo (`chatPrevio`) y se notifica el error permitiendo reintentar.
+### Envío Optimista, y por qué NO se hace rollback (R2, 2026-09-17)
+
+- Al enviar, el mensaje entra en el hilo con un `idOptimista` y **`envioLocal:
+  'ENVIANDO'`**. Ese campo es del navegador; `estadoEnvio` —el del servidor—
+  queda en `null` a propósito. **Nunca pintar `ENVIADO` antes de que el servidor
+  confirme**: un mensaje que se ve confirmado y no salió es la peor mentira
+  posible acá.
+- Al confirmar, `reconciliarEnvioLocal` sustituye el globo por el real y
+  `envioLocal` desaparece; manda el `estadoEnvio` del servidor.
+- **Si falla, el globo NO se borra.** Antes se restauraba `chatPrevio` y el
+  mensaje se esfumaba con un toast: un mensaje que se ve salir y luego
+  desaparece se lee como enviado-y-perdido. Ahora se queda marcado y ofrece
+  reintentar sin reescribirlo.
+- El fallo se clasifica en dos, y la diferencia importa:
+  **`ERROR`** (consta que no salió: 400, 401, 403, 404, 429 — códigos que el
+  backend corta antes de la transacción) y **`AMBIGUO`** (no se sabe: red caída,
+  timeout, 5xx). Ver `clasificar-error-envio.ts`.
+
+### `clientMessageId`: qué hace seguro el reintento (R2.1)
+
+El backend persiste el mensaje y despacha a Meta **antes** de responder el POST,
+así que una respuesta perdida es indistinguible de un envío que nunca ocurrió.
+Reintentar sin una clave estable mandaba un segundo WhatsApp real.
+
+- El navegador genera un **UUID por INTENCIÓN de envío** (`crypto.randomUUID()`)
+  y lo reutiliza en cada reintento del mismo globo. No se regenera nunca.
+- La garantía no es el código: es un **índice único de PostgreSQL** sobre
+  `Mensaje.clientMessageId`. El backend traduce su rebote y devuelve la fila que
+  ya existía, **antes** de emitir socket y antes de despachar a Meta.
+- Por eso `AMBIGUO` **sí** se puede reintentar. Un globo sin `clientMessageId`
+  —anterior a R2.1— no ofrece el botón: ahí sí duplicaría.
+- La clave está **aislada por conversación**: un `clientMessageId` de otro chat
+  responde 409 y no devuelve nada del original.
+
+### Reintento con adjunto (R2.2)
+
+- El globo conserva `mediaKey`, `mediaMime`, `mediaNombre` y `clientMessageId`,
+  así que el reintento **reconstruye el adjunto y NO vuelve a subir el archivo**:
+  ya está en R2 desde antes del primer POST.
+- El `contenido` del globo es **exactamente** el que viajó en el POST. No caer a
+  `mediaNombre` cuando no hay pie de foto: al reintentar convertiría un nombre de
+  archivo en el pie real.
+- Mientras el archivo sube, el compositor muestra «Subiendo archivo…» y bloquea
+  el envío. Ese estado vive en el compositor y **no** en `envioLocal`, porque
+  durante la subida todavía no existe mensaje: pintar una burbuja afirmaría que
+  algo salió cuando aún se puede descartar.
 - **Cuidado con la carrera WebSocket-vs-POST**: el backend llama `emitirActividad()`
   de forma síncrona en cuanto guarda el mensaje —antes de responder el POST—,
   así que el aviso de socket puede llegarle al mismo navegador que envió ANTES
