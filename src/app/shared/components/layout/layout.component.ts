@@ -11,7 +11,7 @@ import { AvatarComponent } from '../avatar/avatar.component';
 import { IconComponent } from '../icon/icon.component';
 import { MonedaToggleComponent } from '../moneda-toggle/moneda-toggle.component';
 import { NotificacionesBellComponent } from '../notificaciones-bell/notificaciones-bell.component';
-import { NAV_GROUPS, NAV_ITEMS } from './nav-items';
+import { NAV_GROUPS } from './nav-items';
 
 /**
  * Layout Shell — Estructura maestra del CRM
@@ -92,7 +92,6 @@ export class LayoutComponent {
 
   protected readonly user = this.authService.user;
   protected readonly puedeGestionComercial = this.authService.puedeGestionComercial;
-  protected readonly isAdmin = this.authService.isAdmin;
   /** Para la plantilla: nunca comparar `rol === 'ADMIN'` a mano (deja fuera a SUPER_ADMIN). */
   protected readonly rolLabel = ROL_LABEL;
   /** En escritorio el sidebar arranca abierto (240px) y el workspace se adapta fluidamente.
@@ -152,11 +151,6 @@ export class LayoutComponent {
       .filter(group => group.items.length > 0);
   });
 
-  protected readonly navItems = computed(() => {
-    const rol = this.authService.user()?.rol;
-    return NAV_ITEMS.filter(item => !item.rolMinimo || cubreRol(rol, item.rolMinimo));
-  });
-
   /**
    * ¿Estamos en el teléfono? Mismo corte que el CSS del shell (`max-width: 768px`).
    *
@@ -188,11 +182,6 @@ export class LayoutComponent {
       event.stopPropagation();
     }
     this.sidebarExpanded.update(v => !v);
-  }
-
-  /** «Más» de la barra inferior. Misma puerta que el logo, más cerca del pulgar. */
-  protected alternarMenu(event: MouseEvent): void {
-    this.toggleSidebar(event);
   }
 
   /* ── Cajón del teléfono: arrastrar hacia la izquierda para cerrarlo ──

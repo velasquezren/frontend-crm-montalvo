@@ -48,6 +48,3 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     ],
   },
 ];
-
-/* Compatibilidad plana para componentes o utilitarios que consulten la lista completa */
-export const NAV_ITEMS: readonly NavItem[] = NAV_GROUPS.flatMap(g => g.items);

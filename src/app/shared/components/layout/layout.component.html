@@ -96,7 +96,7 @@
          (touchend)="alSoltarCajon()"
          (touchcancel)="alSoltarCajon()">
       <!-- Navigation -->
-      <nav class="flex flex-col gap-2 px-3 flex-1 overflow-y-auto" aria-label="Navegación principal">
+      <nav class="nav-lista flex flex-col gap-2 px-3 flex-1 overflow-y-auto" aria-label="Navegación principal">
         @for (group of navGroups(); track group.titulo; let idx = $index) {
           @if (idx > 0) {
             <div class="sidebar-divider"></div>
@@ -167,19 +167,6 @@
     <app-icon name="user" [size]="20" />
     <span>Perfil</span>
   </a>
-
-  <!-- Única puerta al menú completo en el teléfono.
-       La barra inferior lista 5 rutas y el menú 10: Clientes, Actividades,
-       Finanzas, Servicios, Líneas y Usuarios solo se alcanzan por aquí. Antes
-       el disparador era el logo, que se tocaba sin querer; moverlo aquí lo
-       vuelve deliberado sin dejar ningún módulo sin puerta. -->
-  <button type="button" (click)="alternarMenu($event)" class="mobile-nav-item"
-          [class.mobile-nav-active]="sidebarExpanded()"
-          [attr.aria-expanded]="sidebarExpanded()"
-          aria-label="Abrir el menú completo">
-    <app-icon name="menu" [size]="20" />
-    <span>Más</span>
-  </button>
 </nav>
 
 <!-- ══════════════════════════════════════════════════════════════════════

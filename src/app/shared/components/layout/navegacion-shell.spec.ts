@@ -242,8 +242,6 @@ describe('navegación: el shell sobrevive al cambio de ruta', () => {
     }
 
     const logo = () => fixture.nativeElement.querySelector('.logo-toggle-btn') as HTMLElement;
-    const masBtn = () =>
-      fixture.nativeElement.querySelector('button.mobile-nav-item') as HTMLElement | null;
     const cajonAbierto = () =>
       !!fixture.nativeElement.querySelector('.sidebar-expanded');
 
@@ -340,29 +338,25 @@ describe('navegación: el shell sobrevive al cambio de ruta', () => {
       });
     });
 
-    it('9 · «Más» de la barra inferior SÍ lo abre — es la única puerta que queda', async () => {
-      await montarComoTelefono();
-      expect(masBtn(), 'debe existir un botón en la barra inferior').not.toBeNull();
-
-      masBtn()!.click();
-      fixture.detectChanges();
-
-      expect(cajonAbierto()).toBe(true);
-    });
-
     it('10 · el menú sigue listando las rutas que la barra inferior NO lleva', async () => {
       await montarComoTelefono();
-      masBtn()!.click();
+      logo().click();
       fixture.detectChanges();
 
       const destinos = Array.from(
         fixture.nativeElement.querySelectorAll('.sidebar a[href]'),
       ).map(a => (a as HTMLAnchorElement).getAttribute('href'));
 
-      /* Con rol AGENTE. Si alguien recorta el menú, que falle aquí y no en el
+      /* Con rol AGENTE. El logo es la ÚNICA puerta a estas rutas en el
+         teléfono: la barra inferior no las lista. Si alguien recorta el menú o
+         vuelve a quitarle el disparador al logo, que falle aquí y no en el
          teléfono de una agente que no encuentra a su paciente. */
       expect(destinos).toContain('/clientes');
       expect(destinos).toContain('/actividades');
+
+      /* La barra inferior es solo enlaces: si reaparece un botón ahí, esta
+         prueba obliga a revisar si hace falta. */
+      expect(fixture.nativeElement.querySelector('button.mobile-nav-item')).toBeNull();
     });
 
     it('11 · en escritorio el logo SIGUE abriendo y cerrando el menú', () => {
