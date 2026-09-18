@@ -18,8 +18,20 @@ export interface DialogOptions {
  * y una constante que se copia deja de ser una constante: basta que un sitio se
  * olvide de `pointer-events-none` para que un panel invisible se coma los clics
  * de toda la página.
+ *
+ * **`h-full` no es decorativo y no se quita.** El CDK deja el panel con
+ * `max-height: 100%` pero SIN `height`, y además le pone `position: static` en
+ * línea, que anula el `inset-0`. Con la altura del panel en `auto`, el `h-full`
+ * del `<app-drawer>` se resuelve a `auto` —un porcentaje contra un padre sin
+ * altura definida no es nada—, el cajón crece con su contenido y el
+ * `overflow-y-auto` del cuerpo no llega a activarse nunca: no hay un techo
+ * contra el que desbordar.
+ *
+ * En escritorio no se veía porque los formularios caben en la pantalla. En el
+ * teléfono, el modal de Registrar Venta se salía por abajo y no se podía
+ * deslizar hasta el botón de guardar.
  */
-const PANEL_CAJON = ['fixed', 'inset-0', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'];
+const PANEL_CAJON = ['fixed', 'inset-0', 'h-full', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'];
 
 /**
  * DialogService — abre plantillas proyectadas en `document.body` con CDK

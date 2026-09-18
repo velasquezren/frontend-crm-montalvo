@@ -91,10 +91,16 @@ describe('A4.1 · SelectorClienteExpressComponent', () => {
     await asentar();
     const consulta = busquedas();
     expect(consulta).toHaveLength(1);
-    consulta[0].flush([ANA]);
+    /* La forma EXACTA de `GET /clientes`: un sobre paginado, no un array.
+       Esta prueba respondía con `[ANA]` y por eso estuvo verde mientras el
+       buscador no mostraba a nadie en producción — el componente leía
+       `.value().length` de un objeto, que es `undefined`. Una prueba que
+       inventa la respuesta del servidor no prueba la integración, prueba el
+       mock. */
+    consulta[0].flush({ datos: [ANA], total: 1, pagina: 1, limite: 20, totalPaginas: 1 });
     await asentar();
 
-    expect(componente['resultadosCliente'].value().map(c => c.id)).toEqual([ANA.id]);
+    expect(componente['clientesEncontrados']().map(c => c.id)).toEqual([ANA.id]);
   });
 
   it('Selección · elegir un paciente lo publica hacia fuera', async () => {

@@ -538,9 +538,9 @@
                 type="search"
                 placeholder="Buscar por nombre, teléfono, CI o PAC…"
                 [(value)]="busquedaCliente" />
-              @if (resultadosCliente.value().length > 0) {
+              @if (clientesEncontrados().length > 0) {
                 <div class="border border-border rounded-xl divide-y divide-border max-h-48 overflow-y-auto shadow-subtle bg-white mt-1">
-                  @for (cliente of resultadosCliente.value(); track cliente.id) {
+                  @for (cliente of clientesEncontrados(); track cliente.id) {
                     <button
                       type="button"
                       (click)="elegirCliente(cliente)"

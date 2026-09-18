@@ -115,13 +115,33 @@ export class SelectorClienteExpressComponent {
   protected readonly creandoCliente = signal(false);
   protected readonly errorNuevoCliente = signal('');
 
-  protected readonly resultadosCliente = httpResource<readonly Cliente[]>(
+  /**
+   * Búsqueda de cliente: solo consulta con 2+ caracteres.
+   *
+   * `GET /clientes` responde **paginado** (`{ datos, total, … }`), no un array.
+   * Estuvo declarado como `Cliente[]`, así que `.value().length` era
+   * `undefined`, `undefined > 0` daba `false` y la lista de sugerencias no se
+   * pintaba NUNCA: parecía que el buscador no encontraba a nadie cuando el
+   * backend sí devolvía resultados —busca por nombre, teléfono, email, CI y
+   * PAC—.
+   *
+   * Funcionó hasta `f45894e`, que quitó un `httpResource<any>` (bien) y de paso
+   * se llevó el `computed` que desenvolvía `.datos` (mal). TypeScript no lo ve:
+   * el parámetro de tipo de `httpResource` es una afirmación sobre el JSON, no
+   * una comprobación. Por eso el tipo ahora dice la verdad y el desenvuelto es
+   * explícito.
+   */
+  protected readonly resultadosCliente = httpResource<RespuestaPaginada<Cliente>>(
     () => {
       const termino = this.busquedaCliente().trim();
       return termino.length >= 2 && !this.clienteElegido() ? this.clientesService.buscarRequest(termino) : undefined;
     },
-    { defaultValue: [] },
+    { defaultValue: paginaVacia<Cliente>() },
   );
+
+  /** Los clientes encontrados, ya desenvueltos de la página. */
+  protected readonly clientesEncontrados = computed(() => this.resultadosCliente.value().datos);
+
 
   protected readonly leadsDelCliente = httpResource<RespuestaPaginada<Lead>>(
     () => {
