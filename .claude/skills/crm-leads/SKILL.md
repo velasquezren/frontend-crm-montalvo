@@ -21,6 +21,12 @@ El pipeline comercial opera sobre 4 estados canónicos (`EstadoLead`):
 3. **`CONVERTIDO`**:
    - El lead se convierte en paciente con venta cerrada (consulta, ecografía, paquete de maternidad, cirugía o plan).
    - Se marca de forma manual o **automática** al registrar una venta en `VentasService` (`marcarConvertidos`).
+   - **No lo uses como fuente de atribución comercial.** Desde CAMP-1 (18/09/2026)
+     la pregunta «de qué anuncio vino este dinero» se responde con `Venta.leadId`
+     (`Venta → Lead → anuncioId`), nunca con `Lead.estado`. Los dos pueden
+     divergir a propósito: corregir el origen de una venta **no** reabre el lead
+     anterior, que queda `CONVERTIDO` sin venta asociada. El estado cuenta lo que
+     pasó cuando pasó; la atribución, de dónde vino el dinero.
 4. **`PERDIDO`**:
    - El prospecto desiste o no califica.
    - **Regla Inmutable de Auditoría:** El backend exige obligatoriamente un `motivoPerdida` (mínimo 3 caracteres). La interfaz abre un modal modalizado con `DialogService` para solicitar el motivo antes de persistir el cambio.
