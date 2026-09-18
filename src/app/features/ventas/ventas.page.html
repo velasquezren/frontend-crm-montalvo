@@ -573,7 +573,7 @@
               <div class="flex flex-wrap gap-1.5">
                 <button
                   type="button"
-                  (click)="leadIdSeleccionado.set(null)"
+                  (click)="elegirOrigen(null)"
                   class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer"
                   [class.bg-primary]="leadIdSeleccionado() === null"
                   [class.text-white]="leadIdSeleccionado() === null"
@@ -586,7 +586,7 @@
                 @for (lead of leadsAbiertosDelCliente(); track lead.id) {
                   <button
                     type="button"
-                    (click)="leadIdSeleccionado.set(lead.id)"
+                    (click)="elegirOrigen(lead.id)"
                     class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer"
                     [class.bg-primary]="leadIdSeleccionado() === lead.id"
                     [class.text-white]="leadIdSeleccionado() === lead.id"
@@ -595,6 +595,9 @@
                     [class.text-text-dark]="leadIdSeleccionado() !== lead.id"
                     [class.border-border]="leadIdSeleccionado() !== lead.id">
                     {{ origenLabel[lead.origen] }}
+                    @if (leadsAbiertosDelCliente().length > 1) {
+                      <span class="opacity-70"> · {{ lead.createdAt | date: 'dd/MM' }}</span>
+                    }
                   </button>
                 }
               </div>

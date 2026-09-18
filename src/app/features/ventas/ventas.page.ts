@@ -62,6 +62,7 @@ import {
   Venta,
 } from './venta.model';
 import { VentasService } from './ventas.service';
+import { origenInequivoco } from './origen-inequivoco';
 import { esNombreProvisional } from '../../shared/models/nombre-cliente';
 import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 
@@ -335,6 +336,8 @@ export class VentasPage implements OnDestroy {
 
   /** Lead de origen elegido para esta venta (opcional). Ver `leadsAbiertosDelCliente`. */
   protected readonly leadIdSeleccionado = signal<string | null>(null);
+  /** La agente ya eligió origen a mano (o vino uno por contexto): no autoelegir encima. */
+  private readonly origenElegidoAMano = signal(false);
 
   /* ── Cambio de estado de una venta ya registrada (ADMIN) ────────── */
   protected readonly ventaParaMotivo = signal<Venta | null>(null);
@@ -347,6 +350,27 @@ export class VentasPage implements OnDestroy {
   protected readonly archivoNombre = signal<string | null>(null);
 
   constructor() {
+    /**
+     * Con UN solo lead abierto, ese es el origen y viene ya marcado.
+     *
+     * El selector existe desde el 2026-08-21 pero arrancaba siempre en
+     * «Ninguno»: había que acordarse de pulsar el chip, y nadie se acordaba.
+     * Medido contra producción el 18/09: las 14 ventas de la base tienen
+     * `leadId` en NULL, así que hoy no se puede ir de una venta cobrada al
+     * anuncio que la originó sin reconstruirlo a ojo.
+     *
+     * Qué NO hace, que es lo delicado: con dos leads abiertos `origenInequivoco`
+     * devuelve `null` y acá no se toca nada. Y nunca pisa una decisión ya
+     * tomada — un chip pulsado, o una venta abierta desde la ficha de un lead
+     * (`?leadId=`) — porque el efecto vuelve a correr cada vez que llegan los
+     * leads del cliente.
+     */
+    effect(() => {
+      const propuesto = origenInequivoco(this.leadsAbiertosDelCliente());
+      if (this.origenElegidoAMano() || this.leadIdSeleccionado() !== null) return;
+      if (propuesto) this.leadIdSeleccionado.set(propuesto);
+    });
+
     effect((onCleanup: EffectCleanupRegisterFn) => {
       const texto = this.busqueda().trim();
       const timer = setTimeout(() => {
@@ -385,6 +409,7 @@ export class VentasPage implements OnDestroy {
           const leadId = qp['leadId'];
           if (leadId) {
             this.leadIdSeleccionado.set(leadId);
+            this.origenElegidoAMano.set(true);
           }
         }
         this.abrirFormulario(tpl);
@@ -482,6 +507,12 @@ export class VentasPage implements OnDestroy {
     this.leadsDelCliente.value().datos.filter(l => l.estado === 'NUEVO' || l.estado === 'CONTACTADO'),
   );
 
+  /** Un clic en los chips de origen es una decisión: bloquea la preselección. */
+  protected elegirOrigen(leadId: string | null): void {
+    this.origenElegidoAMano.set(true);
+    this.leadIdSeleccionado.set(leadId);
+  }
+
   /* ── KPIs Médicos y Comerciales del Filtro Actual ────────────────── */
   protected readonly resumenKpis = computed(() => {
     const lista = this.ventasFiltradas();
@@ -565,12 +596,14 @@ export class VentasPage implements OnDestroy {
     /* Un cliente nuevo invalida el lead que se hubiera elegido antes — lo
        vuelve a fijar quien llame esto con contexto (ver el efecto de arriba). */
     this.leadIdSeleccionado.set(null);
+    this.origenElegidoAMano.set(false);
   }
 
   protected limpiarCliente(): void {
     this.clienteElegido.set(null);
     this.busquedaCliente.set('');
     this.leadIdSeleccionado.set(null);
+    this.origenElegidoAMano.set(false);
   }
 
   protected seleccionarSugerencia(nombreServicio: string): void {
