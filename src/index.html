@@ -21,11 +21,22 @@
       que elimina un viaje completo a un host nuevo — medido contra producción
       desde Bolivia, abrir una conexión TLS a un dominio de terceros cuesta ~385 ms.
 
-      Las dos preconexiones abren el canal a gstatic (de donde sale el .woff2)
-      mientras el navegador sigue leyendo el HTML, en vez de esperar a necesitarlo.
+      La preconexión abre el canal a gstatic (de donde sale el .woff2) mientras el
+      navegador sigue leyendo el HTML. A googleapis NO se preconecta: el build
+      inlinea aquí su respuesta, así que a ese host no se le pide nada nunca y el
+      preconnect que había abría un TLS (~104 ms) para tirarlo.
+
+      El del API se abre mientras baja el bundle. Medido: handshake en frío
+      404 ms contra una ventana de descarga de 250 ms, así que declararlo lo
+      solapa en vez de pagarlo en serie detrás. `crossorigin` es obligatorio, no
+      decorativo: las conexiones se indexan por modo de credenciales y la primera
+      petición (`GET /auth/perfil`) viaja en anónimo —`withCredentials` solo lo
+      usan login, refresh y logout—; sin el atributo el preconnect quedaría de
+      adorno. El host va escrito porque esto es HTML estático: en desarrollo
+      local apunta a producción y no se usa.
     -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://crm.107.175.132.15.nip.io" crossorigin />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" />
