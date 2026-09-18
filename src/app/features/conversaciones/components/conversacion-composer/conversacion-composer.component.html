@@ -113,6 +113,15 @@
 
   <!-- ── Caja de Entrada de Mensajes ───────────────────────────────── -->
   @if (!state.fueraDeVentana24h()) {
+    <!-- Subida en vuelo — estado indeterminado, sin porcentaje inventado -->
+    @if (subiendoArchivo(); as nombreArchivo) {
+      <div class="adjunto-pendiente">
+        <!-- `loader` ya gira solo: el átomo le pone `animate-spin` siempre. -->
+        <app-icon name="loader" [size]="18" class="text-primary shrink-0" />
+        <span class="adjunto-nombre">Subiendo archivo… {{ nombreArchivo }}</span>
+      </div>
+    }
+
     <!-- Adjunto pendiente -->
     @if (adjuntoPendiente(); as adj) {
       <div class="adjunto-pendiente">
@@ -169,7 +178,7 @@
       <!-- Botón Enviar -->
       <button
         type="submit"
-        [disabled]="(!state.mensajeNuevo().trim() && !adjuntoPendiente()) || state.enviando()"
+        [disabled]="(!state.mensajeNuevo().trim() && !adjuntoPendiente()) || state.enviando() || !!subiendoArchivo()"
         class="chat-send-btn"
         title="Enviar mensaje (Enter)">
         <app-icon [name]="state.enviando() ? 'clock' : 'send'" [size]="16" />
