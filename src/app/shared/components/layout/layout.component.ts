@@ -58,6 +58,7 @@ export class LayoutComponent {
   constructor() {
     if (this.authService.puedeGestionComercial()) void this.moneda.cargarTipoCambio();
     this.volverArribaAlCambiarDePagina();
+    this.escucharCambioDeAnchura();
   }
 
   /**
@@ -156,11 +157,62 @@ export class LayoutComponent {
     return NAV_ITEMS.filter(item => !item.rolMinimo || cubreRol(rol, item.rolMinimo));
   });
 
+  /**
+   * ¿Estamos en el teléfono? Mismo corte que el CSS del shell (`max-width: 768px`).
+   *
+   * Es una señal y no un `window.innerWidth` leído al vuelo porque la plantilla
+   * la consulta: sin reactividad, girar el teléfono dejaría el `title` y el
+   * `aria-label` del logo describiendo la disposición anterior.
+   */
+  protected readonly esMovil = signal(
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches,
+  );
+
+  /** Mantiene `esMovil` al día: girar el teléfono cambia de disposición. */
+  private escucharCambioDeAnchura(): void {
+    if (typeof window === 'undefined') return;
+    const destroyRef = inject(DestroyRef);
+    const consulta = window.matchMedia('(max-width: 768px)');
+    const alCambiar = (e: MediaQueryListEvent) => {
+      this.esMovil.set(e.matches);
+      /* Al pasar a teléfono, un cajón abierto se queda flotando sobre el
+         contenido sin nada que lo haya pedido. */
+      if (e.matches) this.sidebarExpanded.set(false);
+    };
+    consulta.addEventListener('change', alCambiar);
+    destroyRef.onDestroy(() => consulta.removeEventListener('change', alCambiar));
+  }
+
   toggleSidebar(event?: MouseEvent): void {
     if (event) {
       event.stopPropagation();
     }
     this.sidebarExpanded.update(v => !v);
+  }
+
+  /**
+   * En el teléfono el logo no abre nada; es solo el logo.
+   *
+   * Se tocaba sin querer —está en la esquina donde el pulgar vuelve atrás— y
+   * salía un cajón a pantalla completa que ahí no hace falta, porque la barra
+   * inferior ya lleva a lo del día a día. En escritorio sigue siendo el único
+   * botón que contrae y expande el menú, que es donde sí sirve.
+   *
+   * El menú completo del teléfono no se pierde: vive en «Más», en la barra
+   * inferior. Es la ÚNICA puerta a Clientes, Actividades, Finanzas, Servicios,
+   * Líneas y Usuarios, que la barra no lista.
+   */
+  protected alternarMenuDesdeLogo(event: MouseEvent): void {
+    if (this.esMovil()) {
+      event.stopPropagation();
+      return;
+    }
+    this.toggleSidebar(event);
+  }
+
+  /** «Más» de la barra inferior — ver `alternarMenuDesdeLogo`. */
+  protected alternarMenu(event: MouseEvent): void {
+    this.toggleSidebar(event);
   }
 
   protected onNavClick(): void {

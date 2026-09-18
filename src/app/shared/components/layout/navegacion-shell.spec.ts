@@ -44,6 +44,7 @@ class PaginaRota {
 describe('navegación: el shell sobrevive al cambio de ruta', () => {
   let fixture: ComponentFixture<LayoutComponent>;
   let router: Router;
+  let esTelefono = false;
 
   const shell = () => ({
     topbar: fixture.nativeElement.querySelector('.topbar') as HTMLElement | null,
@@ -53,7 +54,14 @@ describe('navegación: el shell sobrevive al cambio de ruta', () => {
 
   beforeEach(async () => {
     TestBed.resetTestingModule();
-    vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
+    esTelefono = false;
+    /* `esMovil` del layout consulta `(max-width: 768px)`. Por defecto escritorio;
+       `fingirTelefono()` lo cambia antes de montar. */
+    vi.stubGlobal('matchMedia', (consulta: string) => ({
+      matches: esTelefono && consulta.includes('max-width: 768px'),
+      addEventListener() {},
+      removeEventListener() {},
+    }));
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
@@ -184,5 +192,109 @@ describe('navegación: el shell sobrevive al cambio de ruta', () => {
 
     expect(recargar).not.toHaveBeenCalled();
     expect(asignar).not.toHaveBeenCalled();
+  });
+
+  /**
+   * El menú del teléfono: el logo deja de abrirlo, «Más» pasa a hacerlo.
+   *
+   * Lo que hay que impedir aquí es una regresión concreta y cara: la barra
+   * inferior lista 5 rutas y el menú 10, así que Clientes, Actividades,
+   * Finanzas, Servicios, Líneas y Usuarios **solo** se alcanzan por el cajón.
+   * Quitarle el disparador sin poner otro deja a una agente sin Clientes desde
+   * el teléfono, y eso no lo cantaría ningún tipo ni ningún build.
+   */
+  describe('menú en el teléfono', () => {
+    /** Vuelve a montar el shell haciéndole creer que la pantalla es un teléfono. */
+    async function montarComoTelefono(): Promise<void> {
+      esTelefono = true;
+      TestBed.resetTestingModule();
+      /* `innerWidth` además de `matchMedia`: el estado inicial del cajón y el
+         cierre al tocar fuera lo consultan directamente. Sin esto el shell
+         arranca como escritorio —con el cajón ya abierto— y la prueba mediría
+         otra cosa. */
+      vi.stubGlobal('innerWidth', 390);
+      vi.stubGlobal('matchMedia', (consulta: string) => ({
+        matches: consulta.includes('max-width: 768px'),
+        addEventListener() {},
+        removeEventListener() {},
+      }));
+      TestBed.configureTestingModule({
+        providers: [
+          provideHttpClient(),
+          provideHttpClientTesting(),
+          provideRouter([{ path: 'a', component: PaginaA }]),
+          { provide: PwaUpdateService, useValue: { actualizacionPendiente: signal(false), aplicarActualizacion: vi.fn() } },
+          {
+            provide: AuthService,
+            useValue: {
+              puedeGestionComercial: signal(false),
+              isAdmin: signal(false),
+              generacionSesion: signal(1),
+              user: signal({ id: 'u1', nombre: 'Agente', rol: 'AGENTE', iniciales: 'A', foto: null }),
+              logout: vi.fn(),
+            },
+          },
+        ],
+      });
+      fixture = TestBed.createComponent(LayoutComponent);
+      fixture.detectChanges();
+      await fixture.whenStable();
+    }
+
+    const logo = () => fixture.nativeElement.querySelector('.logo-toggle-btn') as HTMLElement;
+    const masBtn = () =>
+      fixture.nativeElement.querySelector('button.mobile-nav-item') as HTMLElement | null;
+    const cajonAbierto = () =>
+      !!fixture.nativeElement.querySelector('.sidebar-expanded');
+
+    it('8 · en el teléfono, tocar el logo NO abre el menú', async () => {
+      await montarComoTelefono();
+      expect(cajonAbierto(), 'en el teléfono arranca cerrado').toBe(false);
+
+      logo().click();
+      fixture.detectChanges();
+
+      expect(cajonAbierto()).toBe(false);
+    });
+
+    it('9 · «Más» de la barra inferior SÍ lo abre — es la única puerta que queda', async () => {
+      await montarComoTelefono();
+      expect(masBtn(), 'debe existir un botón en la barra inferior').not.toBeNull();
+
+      masBtn()!.click();
+      fixture.detectChanges();
+
+      expect(cajonAbierto()).toBe(true);
+    });
+
+    it('10 · el menú sigue listando las rutas que la barra inferior NO lleva', async () => {
+      await montarComoTelefono();
+      masBtn()!.click();
+      fixture.detectChanges();
+
+      const destinos = Array.from(
+        fixture.nativeElement.querySelectorAll('.sidebar a[href]'),
+      ).map(a => (a as HTMLAnchorElement).getAttribute('href'));
+
+      /* Con rol AGENTE. Si alguien recorta el menú, que falle aquí y no en el
+         teléfono de una agente que no encuentra a su paciente. */
+      expect(destinos).toContain('/clientes');
+      expect(destinos).toContain('/actividades');
+    });
+
+    it('11 · en escritorio el logo SIGUE abriendo y cerrando el menú', () => {
+      /* El montaje por defecto de esta suite es escritorio, donde el cajón
+         arranca ABIERTO (240px, acoplado). Lo que se fija es que el logo
+         alterne, no un valor absoluto. */
+      const inicial = cajonAbierto();
+
+      logo().click();
+      fixture.detectChanges();
+      expect(cajonAbierto()).toBe(!inicial);
+
+      logo().click();
+      fixture.detectChanges();
+      expect(cajonAbierto()).toBe(inicial);
+    });
   });
 });

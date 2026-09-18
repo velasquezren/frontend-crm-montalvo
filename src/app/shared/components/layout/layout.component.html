@@ -10,16 +10,20 @@
     <div class="flex items-center gap-2 sm:gap-3 min-w-0">
       <button
         type="button"
-        (click)="toggleSidebar($event)"
+        (click)="alternarMenuDesdeLogo($event)"
         class="logo-toggle-btn p-1.5 -ml-1 rounded-xl hover:bg-bg-light
                transition-all duration-200 cursor-pointer border border-transparent hover:border-border shrink-0"
-        title="Hacer clic en el logo para abrir / cerrar el menú"
-        aria-label="Toggle menú de navegación">
+        [title]="esMovil() ? 'Clínica Montalvo' : 'Hacer clic en el logo para abrir / cerrar el menú'"
+        [attr.aria-label]="esMovil() ? 'Clínica Montalvo' : 'Abrir o cerrar el menú de navegación'"
+        [attr.aria-expanded]="esMovil() ? null : sidebarExpanded()">
         <img src="/favicon.svg" alt="Montalvo Logo" class="w-8 h-8 sm:w-10 sm:h-10 object-contain transition-transform duration-200 hover:scale-105" />
       </button>
 
-      <span class="text-sm sm:text-base font-bold text-text-dark tracking-tight flex items-center gap-1.5 sm:gap-2 truncate">
-        <span class="hidden sm:inline">Clínica </span>Montalvo
+      <!-- Oculta en el teléfono: al lado del logo y con «Clínica» ya recortado,
+           quedaba un «Montalvo CRM» apretado que no dice nada que el logo no
+           diga. El nombre de la app lo pone el sistema operativo en la PWA. -->
+      <span class="hidden sm:flex text-sm sm:text-base font-bold text-text-dark tracking-tight items-center gap-1.5 sm:gap-2 truncate">
+        Clínica Montalvo
         <span class="text-[10px] sm:text-xs font-semibold text-primary bg-primary/10 px-1.5 sm:px-2 py-0.5 rounded-md">CRM</span>
       </span>
     </div>
@@ -143,6 +147,19 @@
     <app-icon name="user" [size]="20" />
     <span>Perfil</span>
   </a>
+
+  <!-- Única puerta al menú completo en el teléfono.
+       La barra inferior lista 5 rutas y el menú 10: Clientes, Actividades,
+       Finanzas, Servicios, Líneas y Usuarios solo se alcanzan por aquí. Antes
+       el disparador era el logo, que se tocaba sin querer; moverlo aquí lo
+       vuelve deliberado sin dejar ningún módulo sin puerta. -->
+  <button type="button" (click)="alternarMenu($event)" class="mobile-nav-item"
+          [class.mobile-nav-active]="sidebarExpanded()"
+          [attr.aria-expanded]="sidebarExpanded()"
+          aria-label="Abrir el menú completo">
+    <app-icon name="menu" [size]="20" />
+    <span>Más</span>
+  </button>
 </nav>
 
 <!-- ══════════════════════════════════════════════════════════════════════
