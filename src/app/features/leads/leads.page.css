@@ -11,7 +11,6 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-height: 520px;
 }
 
 .pipeline-column-header {
@@ -26,8 +25,27 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-height: 460px;
   border-radius: 12px;
+  /* Basta para que una columna vacía siga siendo un blanco donde soltar. */
+  min-height: 72px;
+}
+
+/*
+ * Las columnas altas son de escritorio, donde van CUATRO en fila y el alto
+ * común es lo que las hace leerse como un tablero.
+ *
+ * En el teléfono el grid colapsa a una sola columna, así que ese mismo alto
+ * apilaba cuatro bloques de 520px casi vacíos: recorrer ~2.000px para ver
+ * cuatro leads. Aquí cada columna mide lo que tiene dentro.
+ */
+@media (min-width: 768px) {
+  .pipeline-column {
+    min-height: 520px;
+  }
+
+  .lead-drag-list {
+    min-height: 460px;
+  }
 }
 
 /* ── Tarjeta de Lead ─────────────────────────────────────────── */
@@ -39,6 +57,10 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
   cursor: grab;
   transition: box-shadow 0.2s ease, transform 0.2s var(--ease-spring-smooth);
+  /* El arrastre táctil va con retardo (ver `CDK_DRAG_CONFIG` en el .ts); esto
+     deja que el scroll vertical siga siendo del navegador mientras tanto. */
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .lead-card:hover {

@@ -16,6 +16,7 @@ import {
 } from '@angular/core';
 import { OverlayRef } from '@angular/cdk/overlay';
 import {
+  CDK_DRAG_CONFIG,
   CdkDragDrop,
   DragDropModule,
   moveItemInArray,
@@ -78,6 +79,18 @@ type FiltroOrigen = OrigenLeadApi | 'TODOS';
     RouterLink,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  /**
+   * Arrastrar una tarjeta exige mantener el dedo 250 ms; con ratón sigue siendo
+   * inmediato.
+   *
+   * Sin esto, en el teléfono cualquier `touchstart` sobre una tarjeta empezaba
+   * un arrastre, así que el gesto de desplazar la página levantaba un lead en
+   * vez de scrollear: el tablero se quedaba pegado y parecía roto. Es el remedio
+   * que el propio CDK ofrece para tableros táctiles, y `CDK_DRAG_CONFIG` lo
+   * aplica a las cuatro columnas de una vez en lugar de repetir el input en
+   * cada `cdkDrag`.
+   */
+  providers: [{ provide: CDK_DRAG_CONFIG, useValue: { dragStartDelay: { touch: 250, mouse: 0 } } }],
   templateUrl: './leads.page.html',
   styleUrl: './leads.page.css',
 })
@@ -135,8 +148,26 @@ export class LeadsPage implements OnDestroy {
     return esNombreProvisional(cliente.nombre);
   }
 
-  /* Modos de vista: 'PIPELINE' (Kanban) o 'LISTA' (Tabla) */
-  protected readonly modoVista = signal<'PIPELINE' | 'LISTA'>('PIPELINE');
+  /**
+   * Modos de vista: 'PIPELINE' (Kanban) o 'LISTA' (Tabla).
+   *
+   * En el teléfono arranca en LISTA. El Kanban colapsa a una columna, y como
+   * cada una conserva `min-height: 520px`, quedan cuatro bloques apilados casi
+   * vacíos que hay que recorrer para ver cuatro leads. Peor: las tarjetas son
+   * arrastrables (CDK drag & drop), así que el gesto de scroll levanta una
+   * tarjeta en vez de desplazar la página — el Kanban es un tablero de ratón y
+   * en táctil compite con lo único que la agente quiere hacer ahí.
+   *
+   * La tabla ya resuelve su propio scroll (`<app-table>`), así que en móvil es
+   * la vista que sí se puede usar. No es una preferencia guardada: el botón
+   * «Pipeline Kanban» sigue ahí y manda en cuanto se toca.
+   *
+   * Solo decide el arranque. Girar el teléfono no reescribe lo que la agente
+   * haya elegido a mano.
+   */
+  protected readonly modoVista = signal<'PIPELINE' | 'LISTA'>(
+    typeof window !== 'undefined' && window.innerWidth <= 768 ? 'LISTA' : 'PIPELINE',
+  );
   protected readonly filtro = signal<FiltroOrigen>('TODOS');
   protected readonly pagina = signal(1);
   protected readonly busqueda = signal('');
