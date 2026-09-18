@@ -27,7 +27,11 @@ import { ConversacionesStateService } from './services/conversaciones-state.serv
  * devuelve la fila que ya existía y no despacha nada a Meta por segunda vez.
  */
 
-const FECHA = '2026-09-17T15:00:00.000Z';
+/* La fecha es RELATIVA a ahora, no fija. Con una constante del día en que se
+   escribió el test, la ventana de 24 h de WhatsApp se cierra al día siguiente y
+   el compositor deja de pintar el formulario: la suite empieza a fallar sola,
+   sin que nadie toque el código. Pasó el 2026-09-18. */
+const FECHA = new Date(Date.now() - 60_000).toISOString();
 const CLAVE_IMAGEN = 'memoria/agente-1/1789000000000-ab12.jpg';
 
 function mensaje(id: string, contenido = 'Hola'): MensajeApi {

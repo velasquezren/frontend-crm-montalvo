@@ -27,7 +27,11 @@ import { ConversacionesStateService } from './services/conversaciones-state.serv
  *    se pierde: queda en Mi Memoria.
  */
 
-const FECHA = '2026-09-17T15:00:00.000Z';
+/* La fecha es RELATIVA a ahora, no fija. Con una constante del día en que se
+   escribió el test, la ventana de 24 h de WhatsApp se cierra al día siguiente y
+   el compositor deja de pintar el formulario: la suite empieza a fallar sola,
+   sin que nadie toque el código. Pasó el 2026-09-18. */
+const FECHA = new Date(Date.now() - 60_000).toISOString();
 
 function mensaje(id: string): MensajeApi {
   return { id, direccion: 'ENTRANTE', contenido: 'Hola', createdAt: FECHA, estadoEnvio: 'ENVIADO' };
