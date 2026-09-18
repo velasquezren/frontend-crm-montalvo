@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { MonedaService } from '../../../core/moneda/moneda.service';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -57,6 +57,36 @@ export class LayoutComponent {
 
   constructor() {
     if (this.authService.puedeGestionComercial()) void this.moneda.cargarTipoCambio();
+    this.volverArribaAlCambiarDePagina();
+  }
+
+  /**
+   * Al cambiar de página, el contenido arranca arriba.
+   *
+   * Quien scrollea NO es el documento —`.layout-grid` es `overflow: hidden`—
+   * sino `.workspace`, así que ni la restauración del navegador ni
+   * `withInMemoryScrolling` tocan nada: el `scrollTop` del contenedor
+   * sobrevivía a la navegación. Bajabas la lista de Clientes, abrías Agenda y
+   * aparecía a media altura, sin cabecera a la vista. Eso, sumado al fundido,
+   * era buena parte de la sensación de "refresh raro".
+   *
+   * Se compara la ruta SIN query params a propósito: Conversaciones navega a
+   * `?id=…` en cada chat que se abre, y eso no es cambiar de página.
+   */
+  private volverArribaAlCambiarDePagina(): void {
+    const destroyRef = inject(DestroyRef);
+    let rutaPrevia = this.router.url.split('?')[0];
+
+    const suscripcion = this.router.events.subscribe(evento => {
+      if (!(evento instanceof NavigationEnd)) return;
+      const ruta = evento.urlAfterRedirects.split('?')[0];
+      if (ruta === rutaPrevia) return;
+      rutaPrevia = ruta;
+      const workspace = (this.elementRef.nativeElement as HTMLElement).querySelector('.workspace');
+      if (workspace) workspace.scrollTop = 0;
+    });
+
+    destroyRef.onDestroy(() => suscripcion.unsubscribe());
   }
 
   protected readonly user = this.authService.user;

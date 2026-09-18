@@ -634,3 +634,52 @@ tr:hover .celda-sticky {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   TRANSICIÓN ENTRE RUTAS
+   ═══════════════════════════════════════════════════════════════
+
+   `withViewTransitions()` estaba activo sin una sola línea de CSS que lo
+   acotara, así que el navegador aplicaba su transición por defecto: un
+   cross-fade de 250 ms sobre el documento ENTERO. La barra lateral y la
+   cabecera se desvanecían y reaparecían en cada navegación aunque no
+   cambiaran, y durante ese fundido la página es un snapshot congelado. Eso
+   —no un remontaje, ni una recarga— es lo que se sentía como un mini-refresh.
+
+   El shell queda fuera del snapshot `root` con su propio `view-transition-name`
+   (ver `layout.component.css`), así que acá solo se anima el contenido.
+
+   Estos pseudo-elementos viven en la raíz del documento: NO se pueden estilar
+   desde el CSS de un componente con encapsulación emulada. Por eso están acá. */
+
+::view-transition-old(root) {
+  animation: crm-ruta-sale 90ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+::view-transition-new(root) {
+  animation: crm-ruta-entra 120ms cubic-bezier(0, 0, 0.2, 1) both;
+}
+
+@keyframes crm-ruta-sale {
+  to { opacity: 0; }
+}
+
+@keyframes crm-ruta-entra {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* El shell no se anima: está en ambas vistas y en la misma posición. */
+::view-transition-group(crm-topbar),
+::view-transition-group(crm-sidebar) {
+  animation: none;
+}
+
+/* El `*` del bloque general de más arriba no alcanza a estos pseudo-elementos:
+   viven en un árbol aparte y hay que apagarlos a mano. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}

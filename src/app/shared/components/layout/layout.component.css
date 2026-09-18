@@ -26,8 +26,22 @@
   grid-template-columns: 240px 1fr;
 }
 
-.topbar    { grid-area: topbar; }
-.sidebar   { grid-area: sidebar; }
+/*
+ * El shell se queda quieto al cambiar de ruta.
+ *
+ * `withViewTransitions()` está activo en `app.config.ts`, y sin estos nombres
+ * el navegador mete TODO el documento en un único snapshot `root` y lo
+ * cross-fadea: la barra lateral y la cabecera se desvanecían y volvían a
+ * aparecer en cada navegación aunque no cambiaran ni un píxel. Eso es lo que se
+ * sentía como un refresh —no había nada que se destruyera, era el fundido.
+ *
+ * Al darles nombre propio salen del snapshot `root` y el navegador los trata
+ * como elementos continuos entre las dos vistas: como no se mueven, no se
+ * anima nada. `root` queda reducido al área de contenido, que es lo único que
+ * debe cambiar. Ver la animación en `styles.css`.
+ */
+.topbar    { grid-area: topbar; view-transition-name: crm-topbar; }
+.sidebar   { grid-area: sidebar; view-transition-name: crm-sidebar; }
 .workspace {
   grid-area: workspace;
   min-width: 0;
