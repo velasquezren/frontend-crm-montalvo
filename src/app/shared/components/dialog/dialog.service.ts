@@ -31,7 +31,7 @@ export interface DialogOptions {
  * teléfono, el modal de Registrar Venta se salía por abajo y no se podía
  * deslizar hasta el botón de guardar.
  */
-const PANEL_CAJON = ['fixed', 'inset-0', 'h-full', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'];
+const PANEL_CAJON = ['crm-panel-cajon', 'fixed', 'inset-0', 'h-full', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'];
 
 /**
  * DialogService — abre plantillas proyectadas en `document.body` con CDK

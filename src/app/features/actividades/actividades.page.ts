@@ -1,5 +1,4 @@
 import { DatePipe } from '@angular/common';
-import { enlaceWhatsApp } from '../../shared/models/telefono';
 import { httpResource } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -15,7 +14,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { OverlayRef } from '@angular/cdk/overlay';
 
@@ -39,7 +38,6 @@ import { AvatarComponent } from '../../shared/components/avatar/avatar.component
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
-import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
@@ -91,8 +89,8 @@ const TIPOS: readonly TipoActividad[] = ['LLAMADA', 'REUNION', 'TAREA', 'RECORDA
     ButtonComponent,
     ActividadesCalendarioComponent,
     ActividadDetalleDrawerComponent,
+    RouterLink,
     ActividadFormularioComponent,
-    DrawerComponent,
     DatePipe,
     EmptyStateComponent,
     ErrorCargaComponent,
@@ -451,10 +449,6 @@ export class ActividadesPage implements OnDestroy {
     this.activeDrawerRef?.dispose();
     this.activeDrawerRef = undefined;
   }
-
-  /** Una sola definición: `shared/models/telefono.ts`. Antes anteponía `591`
-   *  «si faltaba», lo que corrompía a cualquier paciente extranjera. */
-  protected readonly getWhatsappLink = enlaceWhatsApp;
 
   protected async reprogramarRapido(actividad: Actividad, horas: number): Promise<void> {
     try {

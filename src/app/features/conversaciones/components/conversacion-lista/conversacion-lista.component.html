@@ -48,7 +48,7 @@
           (valueChange)="state.cambiarLinea($event)">
           <option value="">Todas mis líneas</option>
           @for (l of state.lineas.value().datos; track l.id) {
-            <option [value]="l.id">{{ l.nombre }}</option>
+            <option [value]="l.id">{{ l.nombre }}{{ l.conectada ? '' : ' · Pendiente de conexión' }}</option>
           }
         </app-select>
       } @else {
@@ -58,6 +58,11 @@
   }
 
   <!-- Filtro tabs: Taller vertical stack (Texto arriba, contador abajo) -->
+  @if (!state.isAdmin()) {
+    <p class="px-4 py-2 text-[11px] leading-relaxed text-text-muted border-b border-border">
+      Ves tus chats y los que están sin asignar en tus líneas autorizadas.
+    </p>
+  }
   <div class="sidebar-filters">
     <div class="tabs-inbox flex items-center justify-around py-1.5">
       <button

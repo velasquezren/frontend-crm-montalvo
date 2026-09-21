@@ -1,3 +1,4 @@
+import { DrawerComponent } from '../../../../shared/components/drawer/drawer.component';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -61,6 +62,7 @@ function tipoBase(mime: string): string {
 @Component({
   selector: 'app-conversacion-composer',
   imports: [
+    DrawerComponent,
     BadgeComponent,
     RouterLink,
     ButtonComponent,
@@ -480,7 +482,7 @@ export class ConversacionComposerComponent implements OnDestroy {
     const tmpl = this.modalPlantillas();
     if (!tmpl) return;
     this.overlayRef?.dispose();
-    this.overlayRef = this.dialogService.openTemplate(tmpl, this.vcr, {
+    this.overlayRef = this.dialogService.abrirCajon(tmpl, this.vcr, {
       onClose: () => {
         this.plantillaSeleccionada.set(null);
         this.variablesPlantilla.set([]);
@@ -540,7 +542,7 @@ export class ConversacionComposerComponent implements OnDestroy {
     if (!tmpl) return;
     this.resetFormPlantilla();
     this.overlayRef?.dispose();
-    this.overlayRef = this.dialogService.openTemplate(tmpl, this.vcr, {
+    this.overlayRef = this.dialogService.abrirCajon(tmpl, this.vcr, {
       onClose: () => {
         this.resetFormPlantilla();
         this.overlayRef = undefined;

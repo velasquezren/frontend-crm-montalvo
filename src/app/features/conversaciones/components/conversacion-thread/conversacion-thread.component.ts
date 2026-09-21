@@ -23,6 +23,7 @@ import { WhatsAppMarkdownPipe } from '../../../../shared/pipes/whatsapp-markdown
 import { ToastService } from '../../../../core/toast/toast.service';
 import { generarIniciales } from '../../../../core/auth/user.model';
 import { envioSeReintentaSinRiesgo } from '../../clasificar-error-envio';
+import { explicacionErrorWhatsapp } from '../../error-whatsapp';
 import { ConversacionesService } from '../../conversaciones.service';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
 import { ConversacionResumen, MensajeApi } from '../../conversacion.model';
@@ -55,6 +56,7 @@ import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipe
   styleUrl: './conversacion-thread.component.css',
 })
 export class ConversacionThreadComponent {
+  protected readonly errorWhatsapp = explicacionErrorWhatsapp;
   protected readonly state = inject(ConversacionesStateService);
   private readonly conversacionesService = inject(ConversacionesService);
   private readonly toast = inject(ToastService);

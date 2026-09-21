@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { MensajeApi } from '../../conversacion.model';
+import { explicacionErrorWhatsapp } from '../../error-whatsapp';
 
 /**
  * Vista previa del último mensaje en la tarjeta de conversación de la bandeja.
@@ -23,7 +24,7 @@ import { MensajeApi } from '../../conversacion.model';
               <app-icon name="check-check" [size]="14" class="text-text-muted/70 shrink-0" title="Entregado" />
             }
             @case ('FALLIDO') {
-              <span class="text-text-critical font-semibold text-[11px] shrink-0 leading-none" title="Falló el envío">No enviado</span>
+              <span class="text-critical font-semibold text-[11px] shrink-0 leading-none" [title]="errorWhatsapp(ultimo.codigoErrorEnvio)">No enviado</span>
             }
             @case ('INCIERTO') {
               <span
@@ -83,5 +84,6 @@ import { MensajeApi } from '../../conversacion.model';
   `,
 })
 export class ConversacionPreviewComponent {
+  protected readonly errorWhatsapp = explicacionErrorWhatsapp;
   readonly mensaje = input<MensajeApi | undefined>(undefined);
 }

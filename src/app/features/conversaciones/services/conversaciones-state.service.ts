@@ -285,10 +285,21 @@ export class ConversacionesStateService {
   private readonly lineaSeleccionadaId = computed(() => this.detalleActual()?.linea.id);
   readonly agentesParaChat = computed(() => this.agentesActuales().filter(a => cubreRol(a.rol, 'ADMIN') || a.lineasWhatsapp?.some(l => l.lineaId === this.lineaSeleccionadaId())));
 
+  private readonly versionPlantillas = signal(0);
   readonly plantillasWhatsApp = httpResource<PlantillaResumen[]>(
-    () => { const lineaId = this.lineaSeleccionadaId(); return lineaId ? this.conversacionesService.plantillasRequest(lineaId) : undefined; },
+    () => {
+      const lineaId = this.lineaSeleccionadaId();
+      const refresh = this.versionPlantillas() > 0;
+      return lineaId ? this.conversacionesService.plantillasRequest(lineaId, refresh) : undefined;
+    },
     { defaultValue: [] },
   );
+
+  actualizarPlantillasWhatsApp(): void {
+    if (this.plantillasWhatsApp.isLoading()) return;
+    if (this.versionPlantillas() === 0) this.versionPlantillas.set(1);
+    else this.plantillasWhatsApp.reload();
+  }
 
   /* ── Señales Derivadas (Computed) ───────────────────────────────── */
 

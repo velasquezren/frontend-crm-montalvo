@@ -207,33 +207,21 @@
 
 <!-- ── Modal: selector de plantillas de WhatsApp ────────────────────── -->
 <ng-template #modalPlantillas>
-  <div class="pointer-events-auto w-full max-w-lg max-h-[85dvh] flex flex-col bg-white rounded-2xl shadow-lifted overflow-hidden animate-modal-pop">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-border">
-      <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-          <app-icon name="file-text" [size]="16" class="text-primary" />
-        </div>
-        <div>
-          <h3 class="text-sm font-bold text-text-dark leading-tight">Plantillas de WhatsApp</h3>
-          <p class="text-[10px] text-text-muted leading-tight">Aprobadas por Meta para iniciar conversaciones</p>
-        </div>
-      </div>
-      <button
-        type="button"
-        (click)="cerrarModalPlantillas()"
-        class="p-1 rounded-lg hover:bg-black/5 text-text-muted hover:text-text-dark cursor-pointer transition-colors"
-        aria-label="Cerrar">
-        <app-icon name="x" [size]="16" />
-      </button>
-    </div>
-
+  <app-drawer alto="contenido" ancho="md" titulo="Plantillas de WhatsApp" subtitulo="Revisa la plantilla y confirma el envío" icono="file-text" (cerrar)="cerrarModalPlantillas()">
     <div class="flex-1 overflow-y-auto p-5 space-y-3">
+      <div class="flex items-center justify-between gap-3">
+        <p class="text-xs text-text-muted">{{ state.detalleActual()?.linea?.nombre }}</p>
+        <app-button variant="ghost" size="sm" [loading]="state.plantillasWhatsApp.isLoading()"
+          (clicked)="state.actualizarPlantillasWhatsApp()">Actualizar desde Meta</app-button>
+      </div>
       @if (state.plantillasWhatsApp.isLoading()) {
         <p class="text-xs text-text-muted text-center py-6">Cargando plantillas…</p>
+      } @else if (state.plantillasWhatsApp.error()) {
+        <p role="alert" class="text-xs text-critical py-4">No se pudieron consultar las plantillas. Pulsa Actualizar desde Meta para volver a intentar.</p>
       } @else if (state.plantillasWhatsApp.value().length === 0) {
         <div class="text-center py-8">
           <p class="text-sm font-semibold text-text-dark">No hay plantillas disponibles</p>
-          <p class="text-xs text-text-muted mt-1">Crea y aprueba plantillas en el Business Manager de WhatsApp.</p>
+          <p class="text-xs text-text-muted mt-1">Esta línea no tiene plantillas aprobadas disponibles. Si Meta acaba de aprobar una, pulsa Actualizar desde Meta.</p>
         </div>
       } @else {
         <div class="space-y-2">
@@ -253,6 +241,10 @@
         </div>
 
         @if (plantillaSeleccionada(); as pSel) {
+          <div class="p-3 rounded-xl bg-bg-workspace border border-border space-y-1 text-xs">
+            <p class="font-semibold text-text-dark">Envío a {{ state.detalleActual()?.cliente?.telefono }}</p>
+            <p class="text-text-muted leading-relaxed">Meta puede cobrar este mensaje según su categoría, el país del destinatario y la ventana de atención. El importe exacto no está disponible en el CRM. Revisa el contenido y las variables antes de confirmar.</p>
+          </div>
           @if (pSel.variables > 0) {
             <div class="mt-4 p-4 rounded-xl bg-bg-light border border-border space-y-3">
               <h4 class="text-xs font-bold text-text-dark uppercase tracking-wider">Completar variables</h4>
@@ -269,7 +261,7 @@
       }
     </div>
 
-    <div class="flex items-center justify-end px-5 py-3 border-t border-border bg-bg-light">
+    <div class="flex items-center justify-end px-5 py-3 shrink-0 border-t border-border bg-bg-light">
       <app-button
         variant="primary"
         size="sm"
@@ -277,34 +269,15 @@
         [disabled]="!plantillaSeleccionada() || enviandoPlantilla()"
         [loading]="enviandoPlantilla()"
         (clicked)="enviarPlantillaWhatsApp()">
-        Enviar Plantilla
+        Confirmar y enviar
       </app-button>
     </div>
-  </div>
+  </app-drawer>
 </ng-template>
 
 <!-- ── Modal: gestión de respuestas rápidas del agente ─────────────── -->
 <ng-template #modalGestionPlantillas>
-  <div class="pointer-events-auto w-full max-w-lg max-h-[85dvh] flex flex-col bg-white rounded-2xl shadow-lifted overflow-hidden animate-modal-pop">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-border">
-      <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-          <app-icon name="message-circle" [size]="16" class="text-primary" />
-        </div>
-        <div>
-          <h3 class="text-sm font-bold text-text-dark leading-tight">Mis Respuestas Rápidas</h3>
-          <p class="text-[10px] text-text-muted leading-tight">Usa comandos con '/' en el chat para insertarlas al instante</p>
-        </div>
-      </div>
-      <button
-        type="button"
-        (click)="cerrarGestionPlantillas()"
-        class="p-1 rounded-lg hover:bg-black/5 text-text-muted hover:text-text-dark cursor-pointer transition-colors"
-        aria-label="Cerrar">
-        <app-icon name="x" [size]="16" />
-      </button>
-    </div>
-
+  <app-drawer alto="contenido" ancho="md" titulo="Mis respuestas rápidas" subtitulo="Textos reutilizables para preparar tus mensajes" icono="message-circle" (cerrar)="cerrarGestionPlantillas()">
     <div class="flex-1 overflow-y-auto p-5 space-y-4">
       <!-- Formulario -->
       <div class="p-4 rounded-xl bg-bg-light border border-border space-y-3">
@@ -380,7 +353,7 @@
         }
       </div>
     </div>
-  </div>
+  </app-drawer>
 </ng-template>
 
 <!-- ── Modal: confirmación de envío de imagen o archivo ────────────── -->

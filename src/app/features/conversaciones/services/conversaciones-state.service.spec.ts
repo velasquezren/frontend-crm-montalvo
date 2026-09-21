@@ -97,6 +97,22 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     },
   );
 
+  it('actualiza las plantillas de la línea actual desde Meta y permite repetir tras un error', async () => {
+    state.actualizarPlantillasWhatsApp();
+    TestBed.tick();
+    const peticion = http.expectOne(req => req.url.endsWith('/meta/plantillas') && req.params.get('refresh') === 'true');
+    expect(peticion.request.params.get('lineaId')).toBe(CHAT.linea.id);
+    peticion.flush({ message: 'Meta no disponible' }, { status: 503, statusText: 'Unavailable' });
+    await app.whenStable();
+    expect(state.plantillasWhatsApp.error()).toBeTruthy();
+    state.actualizarPlantillasWhatsApp();
+    TestBed.tick();
+    http.expectOne(req => req.url.endsWith('/meta/plantillas') && req.params.get('refresh') === 'true').flush([]);
+    await app.whenStable();
+    expect(state.plantillasWhatsApp.error()).toBeUndefined();
+    expect(state.plantillasWhatsApp.value()).toEqual([]);
+  });
+
   it('muestra el archivo cuando termina su descarga y renueva su URL firmada', async () => {
     const pendiente: MensajeApi = {
       ...MENSAJE, direccion: 'ENTRANTE', tipo: 'IMAGEN', mediaUrl: null,

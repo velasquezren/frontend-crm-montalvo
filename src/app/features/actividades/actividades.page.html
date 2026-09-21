@@ -291,12 +291,11 @@
                   <!-- El "ojo" se fue: la fila entera ya abre el detalle, así que
                        era un control redundante ocupando sitio en cada fila. -->
                   <a
-                    [href]="getWhatsappLink(actividad.cliente.telefono)"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    routerLink="/conversaciones"
+                    [queryParams]="{ telefono: actividad.cliente.telefono }"
                     class="crm-accion-enlace crm-accion-enlace-whatsapp"
-                    [attr.aria-label]="'Abrir WhatsApp con ' + (actividad.cliente | nombreCliente)"
-                    title="Abrir WhatsApp">
+                    [attr.aria-label]="'Ver conversaciones de ' + (actividad.cliente | nombreCliente)"
+                    title="Ver conversación en el CRM">
                     <app-icon name="message-circle" [size]="14" />
                   </a>
                   <app-button
@@ -375,12 +374,11 @@
             <!-- Botones de Contacto Directo Móvil -->
             <div class="flex items-center gap-1.5 shrink-0">
               <a
-                [href]="getWhatsappLink(actividad.cliente.telefono)"
-                target="_blank"
-                rel="noopener noreferrer"
+                routerLink="/conversaciones"
+                    [queryParams]="{ telefono: actividad.cliente.telefono }"
                 class="crm-accion-enlace crm-accion-enlace-whatsapp"
-                [attr.aria-label]="'Abrir WhatsApp con ' + (actividad.cliente | nombreCliente)"
-                title="Abrir WhatsApp">
+                [attr.aria-label]="'Ver conversaciones de ' + (actividad.cliente | nombreCliente)"
+                title="Ver conversación en el CRM">
                 <app-icon name="message-circle" [size]="15" />
               </a>
               <a

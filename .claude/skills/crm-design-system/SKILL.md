@@ -111,6 +111,13 @@ Los cuatro anchos (`sm` 500/540 · `md` 520/580 · `lg` 560/640 · `xl` 600/720)
 escala completa. Si uno nuevo no cabe en ella, la pregunta es por qué esa vista es
 distinta, no qué número poner.
 
+`ancho="ancho"` reserva dos columnas para las fichas extensas de Servicios.
+`alto="contenido"` ajusta los formularios breves en escritorio (con techo de
+viewport y scroll); en móvil conserva pantalla completa. El valor por defecto
+`pantalla` mantiene las fichas de consulta a toda altura. La geometría, zonas
+seguras y scroll del contenido proyectado viven en `styles.css`, bajo
+`.crm-drawer`; no se duplican estilos por vista.
+
 Curvas: `--ease-spring-smooth`, `--ease-spring-bounce`, `--ease-press`. Para hover y transiciones
 simples, `transition-all duration-200`.
 
@@ -129,7 +136,7 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 | Input | `<app-input>` | `label`, `type` (incl. password con toggle), `placeholder`, `autocomplete`, `error`, `disabled`, `multiline` (renderiza `<textarea>` en vez de `<input>`, mismo wrapper/label/error), `rows` (solo con `multiline`) · `[(value)]` |
 | Badge | `<app-badge>` | `variant` (success/info/neutral/critical), `icon` |
 | Card | `<app-card>` | `padding` (sm/md/lg), `hoverable` |
-| Drawer | `<app-drawer>` | `ancho` (sm/md/lg/xl), `titulo`, `subtitulo`, `icono`, `etiqueta` · `(cerrar)` · slots `[cabecera]` (fila del título) y `[subcabecera]` (bloque a todo el ancho) — **el único cajón lateral**; se abre con `DialogService.abrirCajon()` |
+| Drawer | `<app-drawer>` | `ancho` (sm/md/lg/xl/ancho), `alto` (pantalla/contenido), `titulo`, `subtitulo`, `icono`, `etiqueta` · `(cerrar)` · slots `[cabecera]` (fila del título) y `[subcabecera]` (bloque a todo el ancho) — **el único cajón lateral**; se abre con `DialogService.abrirCajon()` |
 | KpiCard | `<app-kpi-card>` | `label`, `valor` (requeridos; número → lo formatea el átomo), `icon`, `tono` (primary/secondary/neutral/critical), `tonoValor`, `destacado`, `compacto`, `pie`, `pieIcono` + contenido proyectado |
 | Avatar | `<app-avatar>` | `initials` (requerido), `size`, `variant` (light/solid), `imageUrl`, `nombre` |
 | Icon | `<app-icon>` | `name` (catálogo cerrado), `size`, `strokeWidth` |

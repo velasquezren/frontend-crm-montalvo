@@ -101,6 +101,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+@media (max-width: 639px) {
+  .crm-calendario { height: 70dvh; min-height: 30rem; }
+  .crm-calendario-lienzo { overflow: auto; overscroll-behavior: contain; }
+  .crm-calendario-lienzo sx-calendar { min-width: 20rem; }
+}
+
 /* ==========================================================================
    Leyenda
    ========================================================================== */

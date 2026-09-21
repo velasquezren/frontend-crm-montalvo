@@ -26,6 +26,7 @@ export interface MensajeApi {
   readonly contenido: string;
   readonly createdAt: string;
   readonly estadoEnvio?: EstadoEnvioMensaje | null;
+  readonly codigoErrorEnvio?: number | null;
   /**
    * Estado LOCAL de un mensaje que todavía no existe en el servidor. No viaja
    * nunca en una respuesta: lo pone el compositor al pintar el globo optimista

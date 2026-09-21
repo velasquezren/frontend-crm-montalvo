@@ -202,3 +202,25 @@ cancelan o se mueven una por una.
  │ 💰 Finanzas│ 🔘 FAB Flotante: Acciones Rápidas (Registrar Venta, Lead)       │
  └───────────┴─────────────────────────────────────────────────────────────────┘
 ```
+# Modales, agenda y conversaciones — septiembre de 2026
+
+Los formularios cortos se ajustan al contenido en escritorio. En móvil ocupan
+la pantalla y permiten desplazar el contenido manteniendo accesible el cierre
+y, en formularios, las acciones del pie. Las fichas extensas de Servicios
+conservan su distribución amplia.
+
+El calendario de Actividades muestra tareas y seguimientos comerciales en hora
+de Bolivia. No sustituye una agenda médica. Desde una actividad, **Ver
+conversación** abre la búsqueda del paciente entre los chats que tienes permiso
+para consultar. Si tiene varias conversaciones, elige la línea correspondiente.
+
+Agendar una actividad es un recordatorio interno: no programa envíos de WhatsApp
+ni genera cargos de mensajería. Para enviar una plantilla, revisa el destinatario,
+el contenido y sus variables; el botón **Confirmar y enviar** realiza el envío.
+El CRM avisa de posibles cargos y no muestra un precio que no puede verificar.
+Consulta las [tarifas oficiales de WhatsApp](https://business.whatsapp.com/products/platform-pricing).
+
+**Actualizar desde Meta** vuelve a consultar las plantillas aprobadas de la
+línea. Un fallo de conexión se muestra como error, distinto de no tener plantillas
+aprobadas. Los mensajes rechazados muestran el código y una explicación de la
+causa; los rechazos permanentes no se reintentan automáticamente.

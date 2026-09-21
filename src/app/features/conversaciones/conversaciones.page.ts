@@ -160,12 +160,21 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
       }
     });
 
-    /* Búsqueda o teléfono pasado por queryParams (desde Clientes o Leads) */
+    /* Llegar desde la agenda busca en todas las líneas autorizadas. Los
+       filtros de una visita anterior no deben ocultar el paciente solicitado. */
     effect(() => {
       const q = this.busquedaEnRuta();
       if (!q) return;
-
       this.state.busqueda.set(q);
+      this.state.filtroLineaId.set(null);
+      this.state.filtroTab.set('TODAS');
+      this.state.filtroAgenteId.set(null);
+      this.state.soloMisChatsAdmin.set(false);
+    });
+
+    effect(() => {
+      const q = this.busquedaEnRuta();
+      if (!q) return;
 
       /* Llegar desde Clientes o Leads con un teléfono ahora SÍ encuentra a la
          paciente aunque su chat sea antiguo: la búsqueda la resuelve el
@@ -176,9 +185,11 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
       const chats = this.state.conversacionesFiltradas();
       if (chats.length > 0) {
         const queryNorm = q.trim().toLowerCase();
-        const coincidencia = chats.find(
+        const coincidencias = chats.filter(
           c => c.cliente.telefono.includes(queryNorm) || c.cliente.nombre.toLowerCase().includes(queryNorm),
         );
+        // Si tiene varias líneas, la agente elige el chat antes de escribir.
+        const coincidencia = coincidencias.length === 1 ? coincidencias[0] : undefined;
         if (coincidencia && this.state.seleccionadaId() !== coincidencia.id) {
           this.state.seleccionar(coincidencia.id);
         }

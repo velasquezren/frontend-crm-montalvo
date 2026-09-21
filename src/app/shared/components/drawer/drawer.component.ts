@@ -55,13 +55,14 @@ export type DrawerAncho = 'sm' | 'md' | 'lg' | 'xl' | 'ancho';
   template: `
     <aside
       [class]="clases()"
+      [class.crm-drawer-contenido]="alto() === 'contenido'"
       cdkTrapFocus
       [cdkTrapFocusAutoCapture]="true"
       role="dialog"
       aria-modal="true"
       [attr.aria-labelledby]="titulo() ? tituloId : null"
       [attr.aria-label]="titulo() ? null : etiqueta()">
-      <header class="px-6 py-4.5 border-b border-border bg-white shrink-0">
+      <header class="crm-drawer-cabecera px-5 sm:px-6 py-4 border-b border-border bg-white shrink-0">
         <div class="flex items-start justify-between gap-3">
           @if (titulo(); as t) {
             <div class="flex items-center gap-3 min-w-0">
@@ -74,11 +75,11 @@ export type DrawerAncho = 'sm' | 'md' | 'lg' | 'xl' | 'ancho';
               <div class="min-w-0">
                 <h2
                   [id]="tituloId"
-                  class="text-sm font-bold text-text-dark tracking-tight leading-tight truncate">
+                  class="text-base font-semibold text-text-dark tracking-tight leading-snug break-words">
                   {{ t }}
                 </h2>
                 @if (subtitulo(); as s) {
-                  <p class="text-xs text-text-muted leading-tight mt-0.5 truncate">{{ s }}</p>
+                  <p class="text-xs text-text-muted leading-relaxed mt-1">{{ s }}</p>
                 }
               </div>
             </div>
@@ -129,6 +130,8 @@ export class DrawerComponent {
   readonly subtitulo = input<string | undefined>(undefined);
   readonly icono = input<IconName | undefined>(undefined);
   readonly ancho = input<DrawerAncho>('md');
+  /** Formularios breves se ajustan en escritorio; en móvil siempre ocupan la pantalla. */
+  readonly alto = input<'pantalla' | 'contenido'>('pantalla');
 
   /**
    * Nombre accesible cuando la vista trae cabecera propia. Es obligatorio en
@@ -150,7 +153,7 @@ export class DrawerComponent {
 
   protected readonly clases = computed(
     () =>
-      'h-full w-full bg-white shadow-lifted border-l border-border flex flex-col ' +
+      'crm-drawer h-full min-h-0 max-w-full w-full bg-white shadow-lifted border-l border-border flex flex-col overflow-hidden ' +
       `pointer-events-auto animate-drawer-in ${DrawerComponent.ANCHOS[this.ancho()]}`,
   );
 }

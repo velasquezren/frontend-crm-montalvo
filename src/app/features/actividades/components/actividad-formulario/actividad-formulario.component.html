@@ -1,11 +1,13 @@
 <app-drawer
+    alto="contenido"
   [icono]="actividadEditando() ? 'edit' : 'calendar'"
   [titulo]="actividadEditando() ? 'Editar actividad' : 'Nueva actividad'"
   [subtitulo]="actividadEditando() ? 'Ajusta el recordatorio o sus detalles' : 'Un recordatorio o tarea de seguimiento comercial'"
   (cerrar)="cerrado.emit()">
 
   <form (submit)="guardar($event)" class="flex-1 min-h-0 flex flex-col">
-    <div class="p-6 overflow-y-auto space-y-4 flex-1">
+    <div class="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1">
+      <p class="text-xs text-text-muted leading-relaxed p-3 rounded-xl bg-bg-workspace border border-border">Este recordatorio es interno. Agendarlo no envía mensajes ni genera cargos de WhatsApp.</p>
       @if (errorForm()) {
         <div class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
           <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
@@ -50,9 +52,9 @@
         </div>
 
         <div class="space-y-1.5">
-          <div class="flex items-center justify-between">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Fecha y hora *</label>
-            <div class="flex items-center gap-1">
+            <div class="flex flex-wrap items-center gap-1">
               <button
                 type="button"
                 (click)="aplicarPresetFecha('1H')"

@@ -1,4 +1,7 @@
-import { ChangeDetectionStrategy, Component, ViewEncapsulation, effect, input, output } from '@angular/core';
+// Schedule-X usa el global y valida con instanceof. Debe ser la misma
+// implementación que convierte nuestras fechas, incluso con Temporal nativo.
+import 'temporal-polyfill/global';
+import { ChangeDetectionStrategy, Component, OnDestroy, ViewEncapsulation, effect, input, output } from '@angular/core';
 import { CalendarComponent as SxCalendarComponent } from '@schedule-x/angular';
 import {
   CalendarApp,
@@ -21,9 +24,10 @@ import { Temporal } from 'temporal-polyfill';
 
 import { Actividad, esActividadVencida } from '../../actividad.model';
 import { RangoCalendario, rangoCalendarioDe } from '../../rango-calendario';
+import { ZONA_CLINICA } from '../../zona-clinica';
 
-/** Huso horario del navegador — usado solo para pintar los eventos del calendario. */
-const ZONA = Intl.DateTimeFormat().resolvedOptions().timeZone;
+/** La cuadrícula, los filtros y los indicadores comparten el día de la clínica. */
+const ZONA = ZONA_CLINICA;
 
 /**
  * Schedule-X no trae español de fábrica — sin esto "Today"/"Month"/"Week"
@@ -151,7 +155,7 @@ function aEventoCalendario(a: Actividad): CalendarEventExternal {
   ],
   encapsulation: ViewEncapsulation.None,
 })
-export class ActividadesCalendarioComponent {
+export class ActividadesCalendarioComponent implements OnDestroy {
   readonly actividades = input.required<readonly Actividad[]>();
 
   /** Clic en un evento — la página abre su cajón de detalle. */
@@ -181,6 +185,13 @@ export class ActividadesCalendarioComponent {
       firstDayOfWeek: 1,
       calendars: CALENDARIOS,
       callbacks: {
+        onRender: app => {
+          // La primera onRangeUpdate ocurre dentro de createCalendar, antes
+          // de que Angular conecte el output de la página. Publicarlo montado
+          // garantiza la primera consulta sin tener que cambiar de mes.
+          const rango = app.calendarState.range.value;
+          if (rango) this.rangoVisible.emit(rangoCalendarioDe(rango.start, rango.end));
+        },
         onEventClick: evento => {
           const actividad = this.actividades().find(a => a.id === evento.id);
           if (actividad) this.seleccionada.emit(actividad);
@@ -205,5 +216,11 @@ export class ActividadesCalendarioComponent {
     effect(() => {
       this.eventosServicio.set(this.actividades().map(aEventoCalendario));
     });
+  }
+
+  ngOnDestroy(): void {
+    // El adaptador Angular no destruye CalendarApp: libera plugins y timers
+    // al volver a Lista o navegar a otra pantalla.
+    this.calendarApp.destroy();
   }
 }

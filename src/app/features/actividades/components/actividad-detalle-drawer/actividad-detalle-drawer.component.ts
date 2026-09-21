@@ -1,10 +1,10 @@
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 import { generarIniciales } from '../../../../core/auth/user.model';
 import { ORIGEN_LABEL } from '../../../leads/lead.model';
 import { esNombreProvisional } from '../../../../shared/models/nombre-cliente';
-import { enlaceWhatsApp } from '../../../../shared/models/telefono';
 import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
@@ -59,6 +59,7 @@ interface ClienteDeLaActividad {
     IconComponent,
     InicialesClientePipe,
     NombreClientePipe,
+    RouterLink,
   ],
   templateUrl: './actividad-detalle-drawer.component.html',
 })
@@ -86,7 +87,6 @@ export class ActividadDetalleDrawerComponent {
   protected readonly formatearDuracion = formatearDuracion;
   protected readonly etiquetaRepeticion = etiquetaRepeticion;
   protected readonly formatoFechaRelativa = formatoFechaRelativa;
-  protected readonly getWhatsappLink = enlaceWhatsApp;
   protected readonly origenLabel = ORIGEN_LABEL;
 
   protected sinNombre(cliente: { nombre: string; telefono: string }): boolean {

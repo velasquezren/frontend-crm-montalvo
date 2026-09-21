@@ -413,7 +413,7 @@
                   @case ('FALLIDO') {
                     <span
                       class="inline-flex items-center gap-0.5 ml-1 text-critical"
-                      title="No se pudo enviar. Meta rechazó el mensaje (si la ventana venció, usa una Plantilla de WhatsApp).">
+                      [title]="errorWhatsapp(item.mensaje.codigoErrorEnvio)">
                       <app-icon name="alert-circle" [size]="12" />
                       <span class="text-[10px] font-semibold">No enviado</span>
                     </span>
@@ -433,6 +433,14 @@
                 }
               }
             </span>
+            @if (item.mensaje.direccion === 'SALIENTE' && item.mensaje.estadoEnvio === 'FALLIDO') {
+              <div class="clear-both mt-2 pt-2 border-t border-critical/20 text-xs text-text-dark leading-relaxed" role="note">
+                {{ errorWhatsapp(item.mensaje.codigoErrorEnvio) }}
+                @if (item.mensaje.codigoErrorEnvio) {
+                  <span class="block mt-1 text-[10px] text-text-muted">Código de Meta: {{ item.mensaje.codigoErrorEnvio }}</span>
+                }
+              </div>
+            }
           </div>
         </div>
       }
