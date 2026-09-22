@@ -484,14 +484,12 @@ sombras y los tres radios. El mecanismo de `DEUDA` en `tools/verificar-skills.mj
 que aún no se puede arreglar: se anota el número por archivo y a partir de ahí **solo puede
 bajar** —arreglar obliga a actualizar la cifra, empeorar rompe el build—.
 
-**Hay una entrada abierta**, desde que la regla de hexadecimales se extendió a los `.ts`
-(2026-08-11): `ORIGEN_COLOR` en `dashboard.page.ts` pinta cada canal con su color de marca
-—teal de WhatsApp, azul de Facebook, violeta de Instagram— para distinguir nueve orígenes en
-un gráfico. No es descuido: la paleta cerrada ofrece tres tonos usables y con tres ese gráfico
-deja de leerse. Resolverlo es una decisión de identidad visual (aceptar los colores de canal
-como excepción, o distinguir por etiqueta directa en vez de por color), no una limpieza, y
-está pendiente de decidir. Mientras tanto la cifra está congelada en 11 (`tools/verificar-skills.mjs`,
-objeto `DEUDA` — solo puede bajar).
+**No queda ninguna entrada abierta** (2026-09-22). La última fue `ORIGEN_COLOR` en el
+dashboard: once hexadecimales de marca ajena (azul Facebook, violeta Instagram, ámbar) para
+distinguir nueve canales en una dona. Se resolvió como proponía esta sección — **distinguir por
+etiqueta, no por color**: los canales son filas de una tabla con su nombre y una barra de
+proporción en `primary`. Si alguna vez nueve categorías "necesitan" nueve colores, la respuesta
+es la misma.
 
 Lo que se arregló, por si sirve de guía: los estados de lead estaban pintados a mano con
 escalas inventadas (sky/amber/emerald) mientras la tabla de la misma pantalla usaba

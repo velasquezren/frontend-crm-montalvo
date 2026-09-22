@@ -286,19 +286,10 @@ const RADIO_AJENO = /border-radius:\s*(?!12px|16px|9999px|50%|0)[0-9]+(?:px|rem)
  * olvidarla: una que ya no corresponda a ningún archivo también falla.
  */
 const DEUDA = {
-  /* Aparecida el 2026-08-11 al extender la regla `hex` a los .ts: no es deuda
-     nueva, es deuda que llevaba tiempo siendo invisible. Y no es descuido —
-     ORIGEN_COLOR asigna un color de MARCA a cada canal (teal de WhatsApp, azul
-     de Facebook, violeta de Instagram) para distinguir nueve orígenes en el
-     gráfico de leads. La paleta cerrada ofrece tres tonos usables; con tres, ese
-     gráfico deja de leerse.
-
-     Se congela en vez de arreglarse porque resolverlo es una decisión de
-     identidad visual, no una limpieza: o se aceptan los colores de canal como
-     excepción documentada, o se derivan nueve tonos de la marca y el gráfico
-     pasa a distinguirse por otra cosa (patrón, etiqueta directa). Esa decisión
-     es del dueño del producto. Mientras tanto la cifra solo puede bajar. */
-  'features/dashboard/dashboard.page.ts': { hex: 11 },
+  /* Vacía desde el 2026-09-22. La última entrada eran los 11 hexadecimales de
+     `ORIGEN_COLOR` en el dashboard (un color de marca por canal). Se resolvió
+     distinguiendo los canales por su nombre en una tabla, no por color: con
+     nueve orígenes y tres tonos de paleta, el color nunca iba a leerse. */
 };
 
 const REGLAS = [

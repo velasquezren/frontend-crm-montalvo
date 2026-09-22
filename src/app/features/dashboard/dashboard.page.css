@@ -1,3 +1,214 @@
 :host {
   display: block;
 }
+
+/* Números en columna: sin ancho fijo por dígito, las cifras bailan. */
+.dash-cifra,
+.dash-ahora-numero,
+.dash-serie-max,
+.dash-serie-ejes {
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-cifra {
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
+/* ── Pendiente ahora ─────────────────────────────────────────────────
+   Una franja, no tarjetas: es una lista de cosas por hacer, y como lista
+   se lee. El número es lo único con peso. */
+.dash-ahora {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.dash-ahora-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  transition: background-color 0.15s ease;
+}
+
+.dash-ahora-item + .dash-ahora-item {
+  border-left: 1px solid var(--color-border);
+}
+
+.dash-ahora-item:hover,
+.dash-ahora-item:focus-visible {
+  background: var(--color-bg-light);
+  outline: none;
+}
+
+.dash-ahora-numero {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.dash-ahora-flecha {
+  margin-left: auto;
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 539px) {
+  .dash-ahora-item + .dash-ahora-item {
+    border-left: 0;
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+/* ── Títulos de sección ─────────────────────────────────────────────── */
+.dash-titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.dash-titulo h2 {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.dash-titulo p {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.dash-leyenda {
+  display: flex;
+  gap: 14px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.dash-leyenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dash-muestra {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+}
+
+.dash-muestra-respondido {
+  background: var(--color-primary);
+}
+
+.dash-muestra-pendiente {
+  background: color-mix(in srgb, var(--color-secondary) 30%, white);
+}
+
+/* ── Serie de leads ──────────────────────────────────────────────────
+   Columnas de CSS, no un SVG: cada barra es un div con su altura y dentro el
+   tramo respondido, apoyado en la base. */
+.dash-serie {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 180px;
+  padding-top: 18px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dash-serie-max {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+}
+
+.dash-serie-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  min-width: 0;
+}
+
+.dash-serie-barra {
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  background: color-mix(in srgb, var(--color-secondary) 30%, white);
+  overflow: hidden;
+  transition: height 0.4s var(--ease-spring-smooth);
+}
+
+.dash-serie-col:hover .dash-serie-barra {
+  filter: brightness(0.92);
+}
+
+.dash-serie-respondido {
+  width: 100%;
+  background: var(--color-primary);
+}
+
+.dash-serie-ejes {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+}
+
+/* ── Embudo y barras de proporción ──────────────────────────────────── */
+.dash-embudo {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.dash-embudo li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dash-pista {
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--color-bg-light);
+  overflow: hidden;
+}
+
+.dash-pista-fina {
+  height: 4px;
+}
+
+.dash-relleno {
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  transition: width 0.4s var(--ease-spring-smooth);
+}
+
+/* ── Listas ──────────────────────────────────────────────────────────── */
+.dash-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dash-puesto {
+  width: 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}

@@ -1,367 +1,274 @@
-<div class="flex flex-col gap-8">
+<div class="flex flex-col gap-6">
 
-  <!-- ── Saludo + fecha + controles de tiempo real ──────────────────── -->
-  <div class="flex flex-wrap items-center justify-between gap-4">
+  <!-- ── Cabecera: saludo, periodo y recarga ─────────────────────────── -->
+  <header class="flex flex-wrap items-end justify-between gap-4">
     <div>
       <h1 class="text-2xl font-bold text-text-dark tracking-tight">
-        @if (firstName()) {
-          Hola, {{ firstName() }}
-        } @else {
-          Dashboard Comercial
-        }
+        @if (firstName()) { Hola, {{ firstName() }} } @else { Panel comercial }
       </h1>
-      <p class="text-text-muted mt-1 text-sm capitalize">{{ fechaHoy }} · Panel Operativo en Vivo</p>
+      <p class="text-sm text-text-muted mt-1">
+        <span class="capitalize">{{ fechaHoy }}</span>
+        @if (actualizadoA()) { · datos de las {{ actualizadoA() }} }
+      </p>
     </div>
 
     <div class="flex items-center gap-2">
-      <span class="inline-flex items-center gap-1.5 text-xs text-primary bg-primary/10 px-3 py-1.5 rounded-xl font-semibold border border-primary/20">
-        <app-icon name="activity" [size]="14" />
-        <span>Tiempo Real</span>
-      </span>
+      <div class="crm-segmento" role="group" aria-label="Periodo">
+        @for (p of periodos; track p.clave) {
+          <button
+            type="button"
+            class="crm-segmento-opcion"
+            [class.crm-segmento-opcion-activo]="periodo() === p.clave"
+            [attr.aria-pressed]="periodo() === p.clave"
+            (click)="periodo.set(p.clave)">
+            {{ p.label }}
+          </button>
+        }
+      </div>
       <app-button
         variant="ghost"
         size="sm"
         icon="rotate-cw"
-        (clicked)="kpiData.reload()"
-        title="Actualizar datos">
-        Recargar
-      </app-button>
+        [circle]="true"
+        ariaLabel="Actualizar datos"
+        [loading]="kpiData.isLoading()"
+        (clicked)="kpiData.reload()" />
     </div>
-  </div>
+  </header>
 
-  @if (kpiData.isLoading() && kpis().length === 0) {
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-      <app-loading-skeleton shape="card" height="120px" />
-      <app-loading-skeleton shape="card" height="120px" />
-      <app-loading-skeleton shape="card" height="120px" />
-      <app-loading-skeleton shape="card" height="120px" />
+  @if (kpiData.isLoading() && !kpiData.value()) {
+    <app-loading-skeleton shape="card" height="64px" />
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <app-loading-skeleton shape="card" height="124px" />
+      <app-loading-skeleton shape="card" height="124px" />
+      <app-loading-skeleton shape="card" height="124px" />
+      <app-loading-skeleton shape="card" height="124px" />
     </div>
-  } @else if (kpiData.error() && kpis().length === 0) {
+    <app-loading-skeleton shape="card" height="280px" />
+  } @else if (kpiData.error() && !kpiData.value()) {
     <app-error-carga que="los indicadores" (reintentar)="kpiData.reload()" />
-  } @else {
-    <!-- ── 1. KPIs Operativos y Comerciales ──────────────────────────── -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-      @for (kpi of kpis(); track kpi.label) {
-        <app-card [hoverable]="true" class="relative overflow-hidden group">
-          <div class="flex items-start justify-between relative z-10">
-            <div class="w-11 h-11 rounded-xl bg-bg-light flex items-center justify-center">
-              <app-icon [name]="kpi.icon" [size]="20" class="text-primary" />
-            </div>
-            <app-badge [variant]="kpi.tendenciaVariant" [icon]="kpi.tendenciaIcon">
-              {{ kpi.tendencia }}
-            </app-badge>
-          </div>
-          <div class="relative z-10">
-            <p class="text-sm text-text-muted font-medium mt-5">{{ kpi.label }}</p>
-            <p class="text-3xl font-bold text-text-dark mt-1 tracking-tight">{{ kpi.valor }}</p>
-          </div>
-          <!-- Sparkline SVG sutil -->
-          <div class="absolute bottom-0 left-0 right-0 h-10 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity">
-            <svg class="w-full h-full text-primary" viewBox="0 0 120 30" fill="none" preserveAspectRatio="none">
-              <path [attr.d]="kpi.sparklinePath" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
-            </svg>
-          </div>
-        </app-card>
-      }
-    </div>
+  } @else if (kpiData.value(); as r) {
 
-    <!-- ── 2. Embudo de Conversión Visual (Pipeline Pipelined UX) ─────── -->
-    <app-card>
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-base font-bold text-text-dark">Embudo de Conversión Comercial</h2>
-          <p class="text-xs text-text-muted mt-0.5">Paso a paso desde la captación del lead hasta la venta ganada</p>
-        </div>
-        <span class="text-xs font-semibold text-text-muted">
-          Haz clic en cualquier etapa para ver los registros
+    <!-- ── 1. Pendiente ahora: lo único que pide acción ─────────────────── -->
+    <section class="dash-ahora" aria-label="Pendiente ahora">
+      <a class="dash-ahora-item" routerLink="/conversaciones" [queryParams]="{ pestana: 'SIN_RESPONDER' }">
+        <app-icon name="message-circle" [size]="16" class="text-primary shrink-0" />
+        <span class="dash-ahora-numero">{{ r.ahora.chatsSinResponder }}</span>
+        <span class="text-sm text-text-muted">
+          {{ r.ahora.chatsSinResponder === 1 ? 'chat espera' : 'chats esperan' }} respuesta
         </span>
-      </div>
+        <app-icon name="chevron-right" [size]="14" class="dash-ahora-flecha" />
+      </a>
+      <a class="dash-ahora-item" routerLink="/leads">
+        <app-icon name="user-plus" [size]="16" class="text-primary shrink-0" />
+        <span class="dash-ahora-numero">{{ r.ahora.leadsHoy }}</span>
+        <span class="text-sm text-text-muted">{{ r.ahora.leadsHoy === 1 ? 'lead nuevo' : 'leads nuevos' }} hoy</span>
+        <app-icon name="chevron-right" [size]="14" class="dash-ahora-flecha" />
+      </a>
+    </section>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
-        @for (etapa of funnelData(); track etapa.id; let idx = $index) {
-          <div
-            (click)="navegarAEtapa(etapa.id)"
-            class="relative bg-bg-workspace border border-border/70 rounded-xl p-4 flex flex-col justify-between hover:border-primary/50 hover:shadow-subtle transition-all cursor-pointer group">
+    <!-- ── 2. El periodo en cuatro números ──────────────────────────────── -->
+    @if (tarjetas(); as t) {
+      <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" aria-label="Resumen del periodo">
+        <app-kpi-card label="Leads captados" icon="users" tono="primary" [valor]="t.leads.valor" [pie]="t.leads.pie" [pieIcono]="t.leads.icono" />
+        <app-kpi-card label="Respondidos por el equipo" icon="message-circle" tono="primary" [valor]="t.respondidos.valor" [pie]="t.respondidos.pie" />
+        <app-kpi-card label="Primera respuesta (mediana)" icon="clock" tono="secondary" [valor]="t.respuesta.valor" [pie]="t.respuesta.pie" />
+        <app-kpi-card label="Ventas" icon="wallet" tono="secondary" [valor]="t.ventas.valor" [pie]="t.ventas.pie" />
+      </section>
+    }
 
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-bold text-text-dark truncate group-hover:text-primary transition-colors">
-                {{ etapa.label }}
-              </span>
-              <div class="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-all">
-                <app-icon [name]="etapa.icon" [size]="14" />
-              </div>
-            </div>
-
-            <div class="space-y-1.5">
-              <div class="flex items-baseline justify-between">
-                <span class="text-2xl font-extrabold text-text-dark tracking-tight">{{ etapa.cantidad }}</span>
-                <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                  {{ etapa.porcentajeTexto }}
-                </span>
-              </div>
-
-              <div class="h-2 rounded-full bg-bg-light overflow-hidden">
-                <div
-                  class="h-full rounded-full transition-all duration-500"
-                  [style.background-color]="etapa.color"
-                  [style.width.%]="etapa.porcentaje"></div>
-              </div>
-            </div>
-
-            @if (idx > 0) {
-              <div class="mt-3 pt-2.5 border-t border-border/50 flex items-center justify-between text-[11px] text-text-muted">
-                <span>Conversión de etapa:</span>
-                <span class="font-bold text-text-dark">{{ etapa.tasaPaso }}%</span>
-              </div>
-            } @else {
-              <div class="mt-3 pt-2.5 border-t border-border/50 flex items-center justify-between text-[11px] text-text-muted">
-                <span>Volumen de entrada</span>
-                <span class="font-semibold text-primary">100% captación</span>
-              </div>
-            }
-          </div>
-        }
-      </div>
-    </app-card>
-
-    <!-- ── 3. Canales de Adquisición + Ranking de Agentes ─────────────── -->
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-
-      <!-- Canales de Origen -->
-      <app-card class="xl:col-span-2">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <!-- ── 3. Leads en el tiempo + embudo ───────────────────────────────── -->
+    <section class="grid grid-cols-1 xl:grid-cols-5 gap-4">
+      <app-card class="xl:col-span-3">
+        <div class="dash-titulo">
           <div>
-            <h2 class="text-base font-bold text-text-dark">Rendimiento por Canal de Captación</h2>
-            <p class="text-xs text-text-muted mt-0.5">Leads captados y efectividad por canal (Haz clic para ver leads)</p>
+            <h2>Leads {{ serie()?.unidad }}</h2>
+            <p>Cada barra se divide entre los respondidos y los que siguen sin respuesta.</p>
           </div>
-
-          <div class="flex items-center gap-2">
-            <button
-              type="button"
-              (click)="toggleIncluirImportacion()"
-              class="px-2.5 py-1 text-[11px] font-semibold rounded-lg border transition-all cursor-pointer flex items-center gap-1.5"
-              [class]="incluirImportacion() ? 'bg-primary/10 text-primary border-primary/30' : 'bg-bg-workspace text-text-muted border-border hover:border-primary/30'">
-              <app-icon name="database" [size]="12" />
-              <span>{{ incluirImportacion() ? 'Mostrando Histórico' : 'Solo Canales Activos' }}</span>
-            </button>
-
-            <div class="inline-flex rounded-lg bg-bg-light p-0.5 border border-border">
-              <button
-                type="button"
-                (click)="setVistaGrafico('DONUT')"
-                class="px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer flex items-center gap-1"
-                [class]="vistaGrafico() === 'DONUT' ? 'bg-white text-primary shadow-subtle' : 'text-text-muted hover:text-text-dark'">
-                <app-icon name="pie-chart" [size]="14" />
-                <span>Torta</span>
-              </button>
-              <button
-                type="button"
-                (click)="setVistaGrafico('BARRAS')"
-                class="px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer flex items-center gap-1"
-                [class]="vistaGrafico() === 'BARRAS' ? 'bg-white text-primary shadow-subtle' : 'text-text-muted hover:text-text-dark'">
-                <app-icon name="bar-chart" [size]="14" />
-                <span>Barras</span>
-              </button>
-            </div>
+          <div class="dash-leyenda">
+            <span><i class="dash-muestra dash-muestra-respondido"></i>Respondidos</span>
+            <span><i class="dash-muestra dash-muestra-pendiente"></i>Sin respuesta</span>
           </div>
         </div>
 
-        @if (canales().length > 0) {
-          @if (vistaGrafico() === 'DONUT') {
-            <!-- Mismo átomo que usan Servicios y Analítica: antes esta vista
-                 reimplementaba su propio SVG de dona a mano, con un gris fuera
-                 de la paleta cerrada (#F1F5F9) que ningún validador veía. -->
-            <app-donut-chart
-              etiquetaTotal="leads"
-              formatType="number"
-              [items]="canalesChartItems()"
-              (segmentClick)="navegarACanal($event)" />
-          } @else {
-            <div class="flex flex-col gap-3">
-              @for (canal of canales(); track canal.origen) {
-                <div
-                  (click)="navegarACanal(canal.origen)"
-                  class="p-3 rounded-xl border border-border/60 bg-bg-workspace/40 hover:bg-bg-workspace hover:border-primary/40 transition-all cursor-pointer group">
-                  <div class="flex items-center justify-between text-sm mb-1.5">
-                    <div class="flex items-center gap-2">
-                      <span class="w-3 h-3 rounded-full" [style.background-color]="canal.color"></span>
-                      <span class="font-bold text-text-dark text-xs group-hover:text-primary transition-colors">{{ canal.nombre }}</span>
-                    </div>
-                    <span class="text-xs text-text-muted">
-                      <strong class="text-text-dark">{{ canal.leads }}</strong> leads ·
-                      <span class="font-bold text-primary">{{ canal.conversion }}% conversión</span>
-                    </span>
-                  </div>
-                  <div class="h-2.5 rounded-full bg-bg-light overflow-hidden">
-                    <div
-                      class="h-full rounded-full transition-all duration-500"
-                      [style.background-color]="canal.color"
-                      [style.width.%]="canal.conversion > 0 ? canal.conversion : (canal.leads > 0 ? 5 : 0)"></div>
+        @if (serie(); as s) {
+          @if (s.hayDatos) {
+            <div class="dash-serie" role="img" [attr.aria-label]="'Leads ' + s.unidad + ' del periodo'">
+              <span class="dash-serie-max">{{ s.max }}</span>
+              @for (b of s.barras; track b.fecha) {
+                <div class="dash-serie-col" [title]="b.titulo">
+                  <div class="dash-serie-barra" [style.height.%]="b.alto">
+                    <div class="dash-serie-respondido" [style.height.%]="b.respondidos"></div>
                   </div>
                 </div>
               }
             </div>
+            <div class="dash-serie-ejes">
+              @for (e of s.ejes; track $index) { <span>{{ e }}</span> }
+            </div>
+          } @else {
+            <app-empty-state icon="users" title="Sin leads en este periodo" description="Cuando entren leads por WhatsApp, Meta o recepción, aparecerán aquí." />
           }
-        } @else {
-          <app-empty-state
-            icon="trending-up"
-            title="Sin registros de canales"
-            description="Los datos se actualizarán automáticamente al ingresar leads y realizar ventas." />
         }
       </app-card>
 
-      <!-- Ranking Comercial de Agentes -->
-      <app-card>
-        <div class="flex items-center justify-between mb-6">
+      <app-card class="xl:col-span-2">
+        <div class="dash-titulo">
           <div>
-            <h2 class="text-base font-bold text-text-dark">Desempeño del Equipo</h2>
-            <p class="text-xs text-text-muted mt-0.5">Ranking de ventas comerciales</p>
+            <h2 class="flex items-center gap-1.5">
+              Embudo del periodo
+              <app-info-hint titulo="Cómo se cuenta">
+                <p><strong>Respondido</strong>: una persona del equipo le escribió al paciente después de que entró el lead. El mensaje automático fuera de horario no cuenta.</p>
+                <p>No depende de mover la tarjeta en el Kanban: se lee de los mensajes enviados.</p>
+                <p><strong>Con venta</strong>: el lead quedó convertido al registrarse una venta del paciente.</p>
+              </app-info-hint>
+            </h2>
+            <p>Sin el histórico importado de FileMaker.</p>
           </div>
-          <span class="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full flex items-center gap-1">
-            <app-icon name="star" [size]="12" />
-            <span>Líderes</span>
-          </span>
         </div>
 
-        @if (topAgentes().length > 0) {
-          <div class="flex flex-col gap-4">
-            @for (agente of topAgentes(); track agente.nombre; let posicion = $index) {
-              <div class="flex items-center gap-3 p-2.5 rounded-xl border border-border/50 bg-bg-workspace/50 hover:border-primary/30 transition-all">
-                <div class="relative rounded-full" [class.ring-2]="posicion === 0" [class.ring-primary]="posicion === 0" [class.ring-offset-2]="posicion === 0">
-                  <app-avatar
-                    [initials]="agente.iniciales"
-                    [imageUrl]="agente.foto"
-                    [nombre]="agente.nombre"
-                    size="sm"
-                    [variant]="posicion === 0 ? 'solid' : 'light'" />
-                  @if (agente.rankBadge; as badge) {
-                    <span class="crm-medalla" [class]="badge.colorClass">
-                      {{ badge.label }}
-                    </span>
-                  }
-                </div>
+        <ol class="dash-embudo">
+          @for (paso of embudo(); track paso.etapa) {
+            <li>
+              <div class="flex items-baseline justify-between gap-3">
+                <span class="text-sm font-semibold text-text-dark">{{ paso.etapa }}</span>
+                <span class="dash-cifra text-lg">{{ paso.cantidad }}</span>
+              </div>
+              <div class="dash-pista"><div class="dash-relleno" [style.width.%]="paso.ancho"></div></div>
+              <span class="text-xs text-text-muted">{{ paso.nota }}</span>
+            </li>
+          }
+        </ol>
+      </app-card>
+    </section>
+
+    <!-- ── 4. Canales + equipo ──────────────────────────────────────────── -->
+    <section class="grid grid-cols-1 xl:grid-cols-5 gap-4">
+      <app-card class="xl:col-span-3" padding="sm">
+        <div class="dash-titulo px-2 pt-2">
+          <div>
+            <h2>Por canal</h2>
+            <p>Pulsa un canal para ver sus leads.</p>
+          </div>
+        </div>
+        @if (canales().length) {
+          <app-table [dense]="true">
+            <thead>
+              <tr>
+                <th class="text-left">Canal</th>
+                <th class="text-right">Leads</th>
+                <th class="text-right">Respondidos</th>
+                <th class="text-right">1.ª respuesta</th>
+                <th class="text-right">Con venta</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of canales(); track c.origen) {
+                <tr class="fila-clicable" tabindex="0" (click)="irACanal(c.origen)" (keydown.enter)="irACanal(c.origen)">
+                  <td class="text-left">
+                    <span class="font-medium text-text-dark">{{ origenLabel[c.origen] }}</span>
+                    <div class="dash-pista dash-pista-fina mt-1.5"><div class="dash-relleno" [style.width.%]="c.ancho"></div></div>
+                  </td>
+                  <td class="text-right font-semibold">{{ c.captados }}</td>
+                  <td class="text-right">{{ pct(c.respondidos, c.captados) ?? '—' }} %</td>
+                  <td class="text-right">{{ espera(c.medianaRespuestaMinutos) }}</td>
+                  <td class="text-right">{{ c.convertidos }}</td>
+                </tr>
+              }
+            </tbody>
+          </app-table>
+        } @else {
+          <app-empty-state icon="bar-chart" title="Sin leads por canal" description="Aún no entró ningún lead en este periodo." />
+        }
+      </app-card>
+
+      <app-card class="xl:col-span-2">
+        <div class="dash-titulo">
+          <div>
+            <h2>Equipo</h2>
+            <p>Ventas registradas en el periodo.</p>
+          </div>
+        </div>
+        @if (equipo().length) {
+          <ul class="dash-lista">
+            @for (a of equipo(); track a.agenteId) {
+              <li class="flex items-center gap-3">
+                <app-avatar [initials]="a.iniciales" [imageUrl]="a.foto" [nombre]="a.agente" size="sm" [variant]="a.puesto === 1 ? 'solid' : 'light'" />
                 <div class="flex-1 min-w-0">
-                  <div class="flex items-center justify-between gap-2">
-                    <p class="text-xs font-bold text-text-dark truncate">{{ agente.nombre }}</p>
-                    <span class="text-[11px] font-semibold text-primary shrink-0">{{ agente.ventas }} ventas</span>
+                  <div class="flex items-baseline justify-between gap-2">
+                    <span class="text-sm font-medium text-text-dark truncate">{{ a.agente }}</span>
+                    <span class="dash-cifra text-sm">{{ a.monto }}</span>
                   </div>
-                  <div class="h-1.5 rounded-full bg-bg-light overflow-hidden mt-1.5">
-                    <div
-                      class="h-full rounded-full bg-primary transition-all duration-500"
-                      [style.width.%]="agente.porcentaje"></div>
-                  </div>
-                  <p class="text-xs font-extrabold text-text-dark mt-1">{{ formatearMonto(agente.monto) }}</p>
+                  <div class="dash-pista dash-pista-fina mt-1.5"><div class="dash-relleno" [style.width.%]="a.ancho"></div></div>
+                  <span class="text-xs text-text-muted">{{ a.cantidad }} {{ a.cantidad === 1 ? 'venta' : 'ventas' }}</span>
                 </div>
-              </div>
+              </li>
             }
-          </div>
+          </ul>
         } @else {
-          <app-empty-state
-            icon="users"
-            title="Sin ventas registradas"
-            description="Aquí aparecerán los agentes con ventas en el sistema." />
+          <app-empty-state icon="award" title="Sin ventas en el periodo" description="Las ventas que registre el equipo aparecerán aquí." />
         }
       </app-card>
-    </div>
+    </section>
 
-    <!-- ── 4. Tratamientos Demandados + Feed de Actividad Reciente ──────── -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-      <!-- Tratamientos / Servicios Más Demandados -->
+    <!-- ── 5. Más vendido + últimos movimientos ────────────────────────── -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <app-card>
-        <div class="flex items-center justify-between mb-4">
+        <div class="dash-titulo">
           <div>
-            <!-- Fuente explícita: Analítica de Facturación tiene otro ranking de
-                 servicios, sacado del Excel de FileMaker. Este sale de las ventas
-                 que registran las agentes en el CRM, así que las dos listas
-                 pueden diferir — y sin decirlo, parece un error. -->
-            <h2 class="text-base font-bold text-text-dark">Servicios y Tratamientos Más Vendidos</h2>
-            <p class="text-xs text-text-muted mt-0.5">
-              Según las ventas registradas por el equipo en el CRM
-            </p>
+            <h2>Lo más vendido</h2>
+            <!-- Analítica tiene otro ranking, sacado del Excel de FileMaker.
+                 Este sale de las ventas del CRM; sin decirlo, parece un error. -->
+            <p>Según las ventas registradas en el CRM.</p>
           </div>
-          <span class="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-            Top Procedimientos
-          </span>
         </div>
-
-        @if (topServicios().length > 0) {
-          <div class="space-y-3">
-            @for (srv of topServicios(); track srv.producto; let i = $index) {
-              <div class="flex items-center justify-between p-3 rounded-xl bg-bg-workspace border border-border/60 hover:border-primary/40 transition-colors">
-                <div class="flex items-center gap-3 min-w-0">
-                  <div class="w-7 h-7 rounded-lg bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0">
-                    {{ i + 1 }}
-                  </div>
-                  <div class="min-w-0">
-                    <p class="text-xs font-bold text-text-dark truncate">{{ srv.producto }}</p>
-                    <p class="text-[11px] text-text-muted">{{ srv.cantidad }} atenciones cerradas</p>
-                  </div>
-                </div>
-                <div class="text-right shrink-0">
-                  <p class="text-xs font-extrabold text-primary">{{ formatearMonto(srv.monto) }}</p>
-                </div>
-              </div>
+        @if (servicios().length) {
+          <ol class="dash-lista">
+            @for (s of servicios(); track s.producto; let i = $index) {
+              <li class="flex items-baseline gap-3">
+                <span class="dash-puesto">{{ i + 1 }}</span>
+                <span class="flex-1 min-w-0 text-sm text-text-dark truncate">{{ s.producto }}</span>
+                <span class="text-xs text-text-muted shrink-0">{{ s.cantidad }} ×</span>
+                <span class="dash-cifra text-sm shrink-0 w-24 text-right">{{ s.monto }}</span>
+              </li>
             }
-          </div>
+          </ol>
         } @else {
-          <app-empty-state
-            icon="shopping-bag"
-            title="Sin tratamientos registrados"
-            description="Los procedimientos con ventas se agruparán aquí." />
+          <app-empty-state icon="shopping-bag" title="Sin ventas en el periodo" description="Los servicios vendidos se agruparán aquí." />
         }
       </app-card>
 
-      <!-- Feed de Actividad Reciente (Tiempo Real) -->
       <app-card>
-        <div class="flex items-center justify-between mb-4">
+        <div class="dash-titulo">
           <div>
-            <h2 class="text-base font-bold text-text-dark">Actividad Reciente en el CRM</h2>
-            <p class="text-xs text-text-muted mt-0.5">Últimos movimientos de ventas y prospectos</p>
+            <h2>Últimos movimientos</h2>
+            <p>Ventas y leads más recientes.</p>
           </div>
-          <span class="inline-flex items-center gap-1 text-xs text-text-muted">
-            <app-icon name="clock" [size]="13" />
-            <span>Últimos registros</span>
-          </span>
         </div>
-
-        @if (actividadReciente().length > 0) {
-          <div class="space-y-2.5">
-            @for (item of actividadReciente(); track item.id) {
-              <div
-                role="button"
+        @if (actividad().length) {
+          <ul class="dash-lista">
+            @for (a of actividad(); track a.id) {
+              <li
+                class="fila-clicable flex items-center gap-3 -mx-2 px-2 py-1.5 rounded-xl"
                 tabindex="0"
-                (click)="navegarActividad(item)"
-                (keydown.enter)="navegarActividad(item)"
-                class="flex items-start justify-between gap-3 p-2.5 rounded-xl border border-border/50 bg-bg-workspace/40 hover:bg-bg-workspace hover:border-primary/40 transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-primary/20"
-                [title]="item.tipo === 'VENTA' ? 'Ver en Ventas' : 'Ver en Leads'">
-                <div class="flex items-start gap-2.5 min-w-0">
-                  <div
-                    class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
-                    [class]="item.tipo === 'VENTA' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'">
-                    <app-icon [name]="item.tipo === 'VENTA' ? 'shopping-bag' : 'user-plus'" [size]="14" />
-                  </div>
-                  <div class="min-w-0">
-                    <p class="text-xs font-bold text-text-dark truncate group-hover:text-primary transition-colors">{{ item.titulo }}</p>
-                    <p class="text-[11px] text-text-muted truncate">{{ item.subtitulo }}</p>
-                  </div>
+                (click)="irAActividad(a)"
+                (keydown.enter)="irAActividad(a)">
+                <app-icon [name]="a.tipo === 'VENTA' ? 'shopping-bag' : 'user-plus'" [size]="14" class="text-text-muted shrink-0" />
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-text-dark truncate">{{ a.cliente | nombreCliente }}</p>
+                  <p class="text-xs text-text-muted truncate">{{ a.que }}@if (a.agente) { · {{ a.agente }} }</p>
                 </div>
                 <div class="text-right shrink-0">
-                  @if (item.monto > 0) {
-                    <p class="text-xs font-bold text-primary">{{ formatearMonto(item.monto) }}</p>
-                  }
-                  <p class="text-[10px] text-text-muted">{{ formatearHoraRelativa(item.fecha) }}</p>
+                  @if (a.monto) { <p class="dash-cifra text-sm">{{ a.monto }}</p> }
+                  <p class="text-xs text-text-muted">{{ a.cuando }}</p>
                 </div>
-              </div>
+              </li>
             }
-          </div>
+          </ul>
         } @else {
-          <app-empty-state
-            icon="activity"
-            title="Sin actividad reciente"
-            description="Las nuevas ventas y prospectos se mostrarán en vivo aquí." />
+          <app-empty-state icon="activity" title="Sin movimientos" description="Las ventas y leads nuevos aparecerán aquí." />
         }
       </app-card>
-    </div>
+    </section>
   }
 </div>

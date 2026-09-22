@@ -15,6 +15,7 @@ import { RealtimeService } from '../../core/realtime/realtime.service';
 import { ModoInmersivoService } from '../../core/ui/modo-inmersivo.service';
 import { NotificacionNativaService } from '../../core/notification/notificacion-nativa.service';
 import { ConversacionesService } from './conversaciones.service';
+import { esFiltroInbox } from './conversacion.model';
 import { ConversacionesStateService } from './services/conversaciones-state.service';
 import { ConversacionListaComponent } from './components/conversacion-lista/conversacion-lista.component';
 import { ConversacionThreadComponent } from './components/conversacion-thread/conversacion-thread.component';
@@ -91,8 +92,26 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
     { initialValue: null },
   );
 
+  /** Pestaña pedida por URL: el dashboard enlaza a «Sin responder». */
+  private readonly pestanaEnRuta = toSignal(
+    this.route.queryParamMap.pipe(map(p => p.get('pestana'))),
+    { initialValue: null },
+  );
+
   constructor() {
     void this.notificacionNativa.solicitarPermiso();
+
+    /* Sin filtros heredados de otra visita: el número que la agente pulsó en
+       el dashboard se cuenta sin línea, agente ni «solo míos», y la pestaña
+       tiene que mostrar esos mismos chats. */
+    effect(() => {
+      const pestana = this.pestanaEnRuta();
+      if (!esFiltroInbox(pestana)) return;
+      this.state.filtroTab.set(pestana);
+      this.state.filtroLineaId.set(null);
+      this.state.filtroAgenteId.set(null);
+      this.state.soloMisChatsAdmin.set(false);
+    });
 
     /* Actualizar badge de la PWA según chats sin responder */
     effect(() => {

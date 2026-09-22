@@ -133,7 +133,13 @@ export interface PlantillaAgente {
 }
 
 /** Filtros de la vista del inbox. */
-export type FiltroInbox = 'TODAS' | 'SIN_RESPONDER' | 'SIN_ASIGNAR' | 'MIS_CHATS';
+export const FILTROS_INBOX = ['TODAS', 'SIN_RESPONDER', 'SIN_ASIGNAR', 'MIS_CHATS'] as const;
+export type FiltroInbox = (typeof FILTROS_INBOX)[number];
+
+/** Un valor que llega por URL solo cuenta si es una pestaña que existe. */
+export function esFiltroInbox(valor: string | null): valor is FiltroInbox {
+  return (FILTROS_INBOX as readonly string[]).includes(valor ?? '');
+}
 
 /** Los números de las cuatro pestañas, calculados por el servidor. */
 export interface ContadoresInbox {
