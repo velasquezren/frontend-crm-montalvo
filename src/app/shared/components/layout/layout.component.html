@@ -33,8 +33,8 @@
       <!-- Fuera del @if de rol a propósito: una versión nueva le toca a todo el
            mundo, no solo a quien gestiona comercial. -->
       <app-actualizacion-disponible />
+      <app-notificaciones-bell />
       @if (puedeGestionComercial()) {
-        <app-notificaciones-bell />
         <app-moneda-toggle />
       }
       @if (user(); as currentUser) {

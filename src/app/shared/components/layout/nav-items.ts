@@ -10,6 +10,15 @@ export interface NavItem {
   readonly label: string;
   readonly icon: IconName;
   readonly rolMinimo?: RolUsuario;
+  /**
+   * Roles concretos que también ven el ítem, además de los que cubren
+   * `rolMinimo`. Existe porque la jerarquía es lineal y hay permisos que no lo
+   * son: un asistente comparte rango con recepción y está por debajo de un
+   * agente de ventas, pero es el único —junto con administración— que entrega
+   * resultados. Usar solo cuando el rango no alcance; para todo lo demás,
+   * `rolMinimo`.
+   */
+  readonly roles?: readonly RolUsuario[];
 }
 
 export interface NavGroup {
@@ -25,7 +34,14 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       { path: '/conversaciones', label: 'WhatsApp', icon: 'message-circle' },
       { path: '/clientes', label: 'Clientes y Pacientes', icon: 'users', rolMinimo: 'AGENTE' },
       { path: '/leads', label: 'Leads y Prospectos', icon: 'user-plus', rolMinimo: 'AGENTE' },
-      { path: '/actividades', label: 'Actividades', icon: 'calendar', rolMinimo: 'AGENTE' },
+      { path: '/actividades', label: 'Actividades', icon: 'calendar', rolMinimo: 'RECEPCION' },
+      {
+        path: '/resultados',
+        label: 'Entrega de Resultados',
+        icon: 'file-text',
+        rolMinimo: 'ADMIN',
+        roles: ['ASISTENTE'],
+      },
     ],
   },
   {

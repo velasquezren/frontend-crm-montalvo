@@ -5,7 +5,7 @@
  * Regenerar:  npm run sync:tipos
  * Verificar:  npm run check:tipos   (falla si el schema cambió y esto no)
  */
-export type Rol = 'RECEPCION' | 'SUPER_ADMIN' | 'ADMIN' | 'AGENTE';
+export type Rol = 'RECEPCION' | 'ASISTENTE' | 'SUPER_ADMIN' | 'ADMIN' | 'AGENTE';
 
 export type CategoriaCliente = 'PROSPECTO' | 'BRONZE' | 'SILVER' | 'GOLD';
 

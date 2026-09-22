@@ -73,6 +73,13 @@ describe('PreloadPorRol · solo se precarga lo que el rol puede abrir', () => {
     },
   );
 
+  it('recepción dispone de WhatsApp y Actividades, sin módulos comerciales', () => {
+    const permitidas = precargadas('RECEPCION');
+    expect(permitidas).toContain('conversaciones');
+    expect(permitidas).toContain('actividades');
+    for (const ruta of ['clientes', 'leads', 'ventas', 'finanzas', 'usuarios']) expect(permitidas).not.toContain(ruta);
+  });
+
   it('una AGENTE no descarga NINGUNA pantalla de ADMIN', () => {
     const deAdmin = CON_ROL.filter(r => !cubreRol('AGENTE', rolExigidoPor(r)!)).map(r => r.path ?? '');
     expect(deAdmin.length).toBeGreaterThan(0);

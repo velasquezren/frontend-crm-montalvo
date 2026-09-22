@@ -1,10 +1,12 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { User } from '../../../core/auth/user.model';
+import { NotificacionesBellComponent } from '../notificaciones-bell/notificaciones-bell.component';
 import { AuthService } from '../../../core/auth/auth.service';
 import { PwaUpdateService } from '../../../core/pwa/pwa-update.service';
 import { LayoutComponent } from './layout.component';
@@ -24,6 +26,9 @@ import { LayoutComponent } from './layout.component';
  * navegación con `window.location`, el fundido acotado deja de tener sentido y
  * estas pruebas caen primero.
  */
+
+@Component({ selector: 'app-notificaciones-bell', template: '', changeDetection: ChangeDetectionStrategy.OnPush })
+class CampanaDePrueba {}
 
 @Component({ template: '<h1>Página A</h1>', changeDetection: ChangeDetectionStrategy.OnPush })
 class PaginaA {}
@@ -80,8 +85,8 @@ describe('navegación: el shell sobrevive al cambio de ruta', () => {
         {
           provide: AuthService,
           useValue: {
-            /* `false` mantiene fuera la campana de notificaciones, que abriría
-               un socket real: acá se prueba el shell, no el tiempo real. */
+            /* La campana se sustituye abajo: esta prueba verifica navegación,
+               sin abrir conexiones reales ni esperar peticiones de recordatorios. */
             puedeGestionComercial: signal(false),
             isAdmin: signal(false),
             generacionSesion: signal(1),
@@ -91,11 +96,26 @@ describe('navegación: el shell sobrevive al cambio de ruta', () => {
         },
       ],
     });
+    TestBed.overrideComponent(LayoutComponent, {
+      remove: { imports: [NotificacionesBellComponent] },
+      add: { imports: [CampanaDePrueba] },
+    });
     router = TestBed.inject(Router);
     fixture = TestBed.createComponent(LayoutComponent);
     await router.navigate(['/a']);
     fixture.detectChanges();
     await fixture.whenStable();
+  });
+
+  it('recepción encuentra WhatsApp, Actividades y su campana de recordatorios', async () => {
+    const auth = TestBed.inject(AuthService);
+    (auth.user as WritableSignal<User | null>).set({ ...auth.user()!, rol: 'RECEPCION' });
+    await fixture.whenStable();
+    const destinos = [...fixture.nativeElement.querySelectorAll('a')].map((a: HTMLAnchorElement) => a.getAttribute('href'));
+    expect(destinos).toContain('/conversaciones');
+    expect(destinos).toContain('/actividades');
+    for (const ruta of ['/clientes', '/leads', '/ventas', '/finanzas', '/usuarios']) expect(destinos).not.toContain(ruta);
+    expect(fixture.nativeElement.querySelector('app-notificaciones-bell')).not.toBeNull();
   });
 
   it('1 · la ruta cambia de verdad y el contenido se reemplaza', async () => {
@@ -235,6 +255,10 @@ describe('navegación: el shell sobrevive al cambio de ruta', () => {
             },
           },
         ],
+      });
+      TestBed.overrideComponent(LayoutComponent, {
+        remove: { imports: [NotificacionesBellComponent] },
+        add: { imports: [CampanaDePrueba] },
       });
       fixture = TestBed.createComponent(LayoutComponent);
       fixture.detectChanges();

@@ -94,6 +94,10 @@ export class ActividadesService {
     return this.api.request('/actividades', { ...filtro });
   }
 
+  pacientesRequest(q: string): ResourceRequest {
+    return this.api.request('/actividades/pacientes', { q, pagina: 1, limite: 10 });
+  }
+
   resumenRequest(filtro: FiltroActividades = {}): ResourceRequest {
     return this.api.request('/actividades/resumen', { ...filtro });
   }

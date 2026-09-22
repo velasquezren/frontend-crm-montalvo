@@ -11,10 +11,11 @@ import {
   untracked,
 } from '@angular/core';
 
+import { AuthService } from '../../../../core/auth/auth.service';
+import { ActividadesService } from '../../actividades.service';
 import { mensajeDeError } from '../../../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../../../core/api/pagination.model';
 import { ToastService } from '../../../../core/toast/toast.service';
-import { Cliente } from '../../../clientes/cliente.model';
 import { ClientesService } from '../../../clientes/clientes.service';
 import { Lead, ORIGEN_LABEL } from '../../../leads/lead.model';
 import { LeadsService } from '../../../leads/leads.service';
@@ -30,6 +31,7 @@ export interface ClienteMinimo {
   id: string;
   nombre: string;
   telefono: string;
+  pac?: string | null;
 }
 
 /** Lo que este componente decide: a quién, y con qué lead del pipeline. */
@@ -84,6 +86,9 @@ export type ResolucionSeleccion =
   templateUrl: './selector-cliente-express.component.html',
 })
 export class SelectorClienteExpressComponent {
+  private readonly auth = inject(AuthService);
+  protected readonly esRecepcion = computed(() => this.auth.user()?.rol === 'RECEPCION');
+  private readonly actividadesService = inject(ActividadesService);
   private readonly clientesService = inject(ClientesService);
   private readonly leadsService = inject(LeadsService);
   private readonly toast = inject(ToastService);
@@ -131,12 +136,15 @@ export class SelectorClienteExpressComponent {
    * una comprobación. Por eso el tipo ahora dice la verdad y el desenvuelto es
    * explícito.
    */
-  protected readonly resultadosCliente = httpResource<RespuestaPaginada<Cliente>>(
+  protected readonly resultadosCliente = httpResource<RespuestaPaginada<ClienteMinimo>>(
     () => {
       const termino = this.busquedaCliente().trim();
-      return termino.length >= 2 && !this.clienteElegido() ? this.clientesService.buscarRequest(termino) : undefined;
+      if (termino.length < 2 || this.clienteElegido()) return undefined;
+      return this.esRecepcion()
+        ? this.actividadesService.pacientesRequest(termino)
+        : this.clientesService.buscarRequest(termino);
     },
-    { defaultValue: paginaVacia<Cliente>() },
+    { defaultValue: paginaVacia<ClienteMinimo>() },
   );
 
   /** Los clientes encontrados, ya desenvueltos de la página. */
@@ -146,7 +154,7 @@ export class SelectorClienteExpressComponent {
   protected readonly leadsDelCliente = httpResource<RespuestaPaginada<Lead>>(
     () => {
       const cliente = this.clienteElegido();
-      return cliente ? this.leadsService.listarRequest({ clienteId: cliente.id, pagina: 1, limite: 10 }) : undefined;
+      return cliente && !this.esRecepcion() ? this.leadsService.listarRequest({ clienteId: cliente.id, pagina: 1, limite: 10 }) : undefined;
     },
     { defaultValue: paginaVacia<Lead>() },
   );

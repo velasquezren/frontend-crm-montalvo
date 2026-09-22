@@ -146,7 +146,12 @@ export class LayoutComponent {
     return NAV_GROUPS
       .map(group => ({
         ...group,
-        items: group.items.filter(item => !item.rolMinimo || cubreRol(rol, item.rolMinimo)),
+        items: group.items.filter(
+          item =>
+            (!item.rolMinimo && !item.roles) ||
+            (item.rolMinimo !== undefined && cubreRol(rol, item.rolMinimo)) ||
+            (rol !== undefined && item.roles?.includes(rol) === true),
+        ),
       }))
       .filter(group => group.items.length > 0);
   });

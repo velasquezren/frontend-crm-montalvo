@@ -453,9 +453,26 @@ Los fallos transitorios reintentan con espera acotada; logout desconecta el sock
 
 ## Roles y permisos
 
-Hay cuatro roles jerárquicos: `RECEPCION` < `AGENTE` < `ADMIN` < `SUPER_ADMIN`. Recepción entra en conversaciones y solo atiende sus líneas autorizadas; el backend aplica los permisos. La jerarquía vive en
+La jerarquía es `RECEPCION` y `ASISTENTE` (0) < `AGENTE` (1) < `ADMIN` (2) < `SUPER_ADMIN` (3). Recepción entra en conversaciones y solo atiende sus líneas autorizadas; el backend aplica los permisos. La jerarquía vive en
 `core/auth/roles.ts` y es espejo de `common/auth/roles.ts` del backend — **si añades un rol,
-tócalo en los dos lados**.
+tócalo en los dos lados**, y regenera `core/api/db-enums.ts` con `npm run sync:tipos` (el build
+lo verifica).
+
+#### Cuando el rango NO alcanza: `NavItem.roles`
+
+`ASISTENTE` comparte rango con recepción y está **por debajo** de un agente de ventas, pero es
+—junto con administración— quien entrega resultados. Ningún `rolMinimo` expresa eso: pedir
+`RECEPCION` admite a todos y pedir `AGENTE` deja fuera al asistente. Para ese caso el ítem de
+menú acepta además una lista explícita:
+
+```ts
+{ path: '/resultados', label: 'Entrega de Resultados', icon: 'file-text',
+  rolMinimo: 'ADMIN', roles: ['ASISTENTE'] }
+```
+
+Se ve si cubre `rolMinimo` **o** si su rol está en `roles`. Es la excepción, no la norma: para
+todo lo demás, `rolMinimo`. Y ocultar el menú no es el permiso — quien autoriza de verdad es el
+backend, que en `/resultados` comprueba la membresía en la línea, no el rango.
 
 El **backend** es la autoridad: acota por rol según el JWT y bloquea con `@Roles`.
 El frontend solo *oculta* lo que no aplica:

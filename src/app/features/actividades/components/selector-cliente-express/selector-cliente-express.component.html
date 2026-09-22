@@ -2,7 +2,7 @@
 <div class="space-y-1.5">
   <div class="flex items-center justify-between">
     <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Cliente / Paciente *</label>
-    @if (!clienteElegido() && permiteCambiarPaciente() && !modoNuevoCliente()) {
+    @if (!esRecepcion() && !clienteElegido() && permiteCambiarPaciente() && !modoNuevoCliente()) {
       <button
         type="button"
         (click)="activarModoNuevoCliente()"
@@ -77,6 +77,9 @@
       </div>
     </div>
   } @else {
+    @if (esRecepcion()) {
+      <p class="text-xs text-text-muted">Busca pacientes que hayan escrito a tus líneas de WhatsApp.</p>
+    }
     <!-- Buscador de cliente existente -->
     <app-input type="search" placeholder="Buscar por nombre, teléfono o PAC…" [(value)]="busquedaCliente" />
     @if (busquedaCliente().trim().length >= 2) {
@@ -98,6 +101,7 @@
               }
             </button>
           }
+          @if (!esRecepcion()) {
           <!-- Opción al pie de lista para crear nuevo -->
           <button
             type="button"
@@ -106,12 +110,14 @@
             <app-icon name="user-plus" [size]="14" />
             <span>Registrar nuevo contacto: "{{ busquedaCliente() }}"</span>
           </button>
+          }
         </div>
       } @else if (!resultadosCliente.isLoading()) {
         <div class="p-3 border border-border rounded-xl bg-bg-light/60 mt-1 flex flex-col gap-2">
           <p class="text-xs text-text-muted">
             No se encontró ningún paciente registrado con "{{ busquedaCliente() }}".
           </p>
+          @if (!esRecepcion()) {
           <button
             type="button"
             (click)="activarModoNuevoCliente()"
@@ -119,6 +125,7 @@
             <app-icon name="user-plus" [size]="13" />
             <span>Registrar como nuevo paciente express</span>
           </button>
+          }
         </div>
       }
     }

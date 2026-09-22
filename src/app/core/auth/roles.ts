@@ -13,6 +13,10 @@ import { RolUsuario } from './user.model';
  */
 export const RANGO_ROL: Readonly<Record<RolUsuario, number>> = {
   RECEPCION: 0,
+  /* Mismo rango que recepción: opera sus líneas, sin alcance comercial. Lo que
+     puede hacer un asistente NO se deduce del rango —está por debajo de un
+     agente— sino de su acceso a la línea, que resuelve el backend. */
+  ASISTENTE: 0,
   AGENTE: 1,
   ADMIN: 2,
   SUPER_ADMIN: 3,
@@ -28,6 +32,7 @@ export const ROL_LABEL: Readonly<Record<RolUsuario, string>> = {
   SUPER_ADMIN: 'Super administrador',
   ADMIN: 'Administrador',
   RECEPCION: 'Recepción',
+  ASISTENTE: 'Asistente',
   AGENTE: 'Agente',
 };
 

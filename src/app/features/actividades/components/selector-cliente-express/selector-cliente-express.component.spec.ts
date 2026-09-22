@@ -1,4 +1,5 @@
 import '@angular/compiler';
+import { AuthService } from '../../../../core/auth/auth.service';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting, TestRequest } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -78,6 +79,25 @@ describe('A4.1 · SelectorClienteExpressComponent', () => {
     fixture?.destroy();
     TestBed.resetTestingModule();
     vi.unstubAllGlobals();
+  });
+
+  it('recepción busca pacientes de sus chats y los elige sin consultar leads ni ofrecer altas comerciales', async () => {
+    vi.spyOn(TestBed.inject(AuthService), 'user').mockReturnValue({
+      id: 'recepcion', nombre: 'Recepción', email: 'recepcion@test.local', rol: 'RECEPCION', iniciales: 'R', foto: null,
+    });
+    await montar();
+    componente['busquedaCliente'].set('ana');
+    await asentar();
+    const consulta = http.expectOne(r => r.url.endsWith('/actividades/pacientes') && r.params.get('q') === 'ana');
+    consulta.flush({ datos: [ANA], total: 1, pagina: 1, limite: 10, totalPaginas: 1 });
+    await asentar();
+    expect(fixture.nativeElement.textContent).toContain('Ana Rojas');
+    expect(fixture.nativeElement.textContent).not.toContain('Nuevo paciente express');
+    expect(fixture.nativeElement.textContent).not.toContain('Registrar nuevo contacto');
+    componente['elegirCliente'](ANA);
+    await asentar();
+    expect(emitidas.at(-1)).toEqual({ cliente: ANA, leadId: null });
+    http.expectNone(r => r.url.includes('/leads') || r.url.endsWith('/clientes'));
   });
 
   it('Búsqueda · desde dos caracteres pregunta al servidor y muestra lo que vuelve', async () => {

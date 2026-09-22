@@ -1,0 +1,106 @@
+<app-page-header
+  title="Entrega de Resultados"
+  subtitle="Informes publicados por los médicos. Envía al paciente el enlace para consultarlo." />
+
+@if (entregas.isLoading()) {
+  <app-loading-skeleton shape="text" height="3rem" />
+  <app-loading-skeleton shape="text" height="3rem" />
+  <app-loading-skeleton shape="text" height="3rem" />
+} @else if (entregas.error()) {
+  <!-- Va ANTES de comprobar si hay datos: al fallar, el recurso devuelve su
+       defaultValue —una página vacía— y caería en el estado vacío diciendo
+       "no hay informes", que es mentira. -->
+  <app-error-carga
+    que="los informes publicados"
+    descripcion="Puede que esta cuenta no tenga acceso a la línea de resultados, o que el portal no esté respondiendo."
+    (reintentar)="entregas.reload()" />
+} @else if (entregas.value().datos.length > 0) {
+  <app-table [dense]="true">
+    <thead>
+      <tr>
+        <th>Paciente</th>
+        <th>Estudio</th>
+        <th>Fecha</th>
+        <th>Estado</th>
+        <th class="text-right">Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (fila of entregas.value().datos; track fila.informeId) {
+        <tr>
+          <td>
+            @if (fila.paciente) {
+              <div class="font-medium">{{ fila.paciente.nombre }}</div>
+              <div class="text-sm text-muted">{{ fila.paciente.telefono }}</div>
+            } @else {
+              <span class="text-muted">Sin ficha en el CRM</span>
+            }
+          </td>
+          <td>{{ fila.estudio }}</td>
+          <td>{{ fila.fechaEstudio | date: 'd MMM y' }}</td>
+          <td>
+            @if (fila.aviso) {
+              <app-badge variant="success" icon="check-check">
+                Avisado {{ fila.aviso.enviadoEn | date: 'd MMM, HH:mm' }}
+              </app-badge>
+            } @else if (!fila.accesoVigente) {
+              <app-badge variant="critical" icon="alert-circle">Acceso vencido</app-badge>
+            } @else if (!fila.paciente) {
+              <app-badge variant="neutral" icon="user-plus">Sin vincular</app-badge>
+            } @else {
+              <app-badge variant="info" icon="clock">Pendiente de avisar</app-badge>
+            }
+          </td>
+          <td class="text-right">
+            @if (sePuedeEnviar(fila)) {
+              <app-button
+                size="sm"
+                icon="message-circle"
+                [loading]="enviando() === fila.informeId"
+                [disabled]="enviando() !== null"
+                (click)="pedirConfirmacion(fila)">
+                Enviar por WhatsApp
+              </app-button>
+            } @else {
+              <span class="text-sm text-muted">{{ motivoBloqueo(fila) }}</span>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </app-table>
+
+  <app-paginator
+    [pagina]="entregas.value().pagina"
+    [totalPaginas]="entregas.value().totalPaginas"
+    [total]="entregas.value().total"
+    [limite]="entregas.value().limite"
+    (cambiar)="pagina.set($event)" />
+} @else {
+  <app-empty-state
+    icon="file-text"
+    title="No hay informes publicados"
+    description="Cuando un médico publique un informe en el portal de resultados, aparecerá aquí para avisar al paciente." />
+}
+
+<!-- Enviar cuesta dinero y no se puede deshacer: se confirma a quién va. -->
+<ng-template #confirmar>
+  <div class="pointer-events-auto w-full max-w-md rounded-lg bg-surface p-6 shadow-lifted">
+    <h2 class="text-lg font-semibold">Enviar el resultado por WhatsApp</h2>
+    @if (candidato(); as fila) {
+      <p class="mt-3 text-sm">
+        Se enviará a <strong>{{ fila.paciente?.nombre }}</strong> al número
+        <strong>{{ fila.paciente?.telefono }}</strong>.
+      </p>
+      <p class="mt-2 text-sm text-muted">
+        El mensaje lleva el enlace de su informe, no el código de acceso: ese se lo
+        entregaron en la clínica. WhatsApp puede generar un cargo y el envío no se
+        puede deshacer.
+      </p>
+    }
+    <div class="mt-6 flex justify-end gap-3">
+      <app-button variant="ghost" (click)="cerrarConfirmacion()">Cancelar</app-button>
+      <app-button icon="message-circle" (click)="confirmarEnvio()">Enviar aviso</app-button>
+    </div>
+  </div>
+</ng-template>

@@ -128,9 +128,18 @@ export const routes: Routes = [
       },
       {
         path: 'actividades',
-        canActivate: [exigeRol('AGENTE')],
+        canActivate: [exigeRol('RECEPCION')],
         loadComponent: () =>
           import('./features/actividades/actividades.page').then(m => m.ActividadesPage),
+      },
+      {
+        /* El permiso real es la membresía en la línea de resultados, que solo
+           el backend conoce. El guard aquí exige sesión y nada más: sin él la
+           ruta quedaría abierta, y con uno por rango dejaría fuera al asistente
+           —rango 0— o dentro a un agente de ventas. */
+        path: 'resultados',
+        loadComponent: () =>
+          import('./features/resultados/resultados.page').then(m => m.ResultadosPage),
       },
       {
         path: 'leads/registro-presencial',
