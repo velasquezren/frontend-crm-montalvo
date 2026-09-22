@@ -32,9 +32,9 @@ describe('porcentaje y variación', () => {
   });
 
   it('dice la dirección en palabras', () => {
-    expect(variacion(120, 100)).toEqual({ texto: '20 % más que', sube: true });
-    expect(variacion(80, 100)).toEqual({ texto: '20 % menos que', sube: false });
-    expect(variacion(100, 100)?.texto).toBe('igual que');
+    expect(variacion(120, 100)).toEqual({ texto: '20 % más que', corto: '+20 %', sube: true });
+    expect(variacion(80, 100)).toEqual({ texto: '20 % menos que', corto: '−20 %', sube: false });
+    expect(variacion(100, 100)).toEqual({ texto: 'igual que', corto: '=', sube: true });
   });
 });
 

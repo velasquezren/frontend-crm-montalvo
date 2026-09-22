@@ -198,6 +198,47 @@
   transition: width 0.4s var(--ease-spring-smooth);
 }
 
+/* ── Canales ─────────────────────────────────────────────────────────
+   Filas en rejilla sobre la tarjeta: cabecera en voz baja, separadores de
+   una línea, cifras alineadas a la derecha. En el teléfono se quedan las tres
+   columnas que responden «cuántos y cuántos atendidos». */
+.dash-canal {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 3.5rem 6rem 6.5rem 4.5rem;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 8px;
+  margin: 0 -8px;
+  border-radius: 12px;
+}
+
+.dash-canal > :not(:first-child) {
+  text-align: right;
+}
+
+.dash-canal + .dash-canal {
+  border-top: 1px solid var(--color-border);
+}
+
+.dash-canal-cabecera {
+  padding-top: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 639px) {
+  .dash-canal {
+    grid-template-columns: minmax(0, 1fr) 3rem 5.5rem;
+  }
+
+  .dash-canal-extra {
+    display: none;
+  }
+}
+
 /* ── Listas ──────────────────────────────────────────────────────────── */
 .dash-lista {
   display: flex;

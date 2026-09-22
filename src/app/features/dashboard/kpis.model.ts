@@ -38,6 +38,9 @@ export interface PuntoSerie {
   readonly fecha: string;
   readonly captados: number;
   readonly respondidos: number;
+  /** `null` si ese día nadie respondió: no es «0 minutos». */
+  readonly medianaMinutos: number | null;
+  readonly ventas: number;
 }
 
 /**
@@ -117,9 +120,16 @@ export function porcentaje(parte: number, total: number): number | null {
  * Cambio contra el periodo anterior, dicho en palabras. `null` cuando no hay
  * con qué comparar: un «+100 %» contra cero no informa nada.
  */
-export function variacion(actual: number, anterior: number): { texto: string; sube: boolean } | null {
+export function variacion(
+  actual: number,
+  anterior: number,
+): { texto: string; corto: string; sube: boolean } | null {
   if (anterior <= 0) return null;
   const cambio = Math.round(((actual - anterior) / anterior) * 100);
-  if (cambio === 0) return { texto: 'igual que', sube: true };
-  return { texto: `${Math.abs(cambio)} % ${cambio > 0 ? 'más' : 'menos'} que`, sube: cambio > 0 };
+  if (cambio === 0) return { texto: 'igual que', corto: '=', sube: true };
+  return {
+    texto: `${Math.abs(cambio)} % ${cambio > 0 ? 'más' : 'menos'} que`,
+    corto: `${cambio > 0 ? '+' : '−'}${Math.abs(cambio)} %`,
+    sube: cambio > 0,
+  };
 }

@@ -38,11 +38,11 @@
 
   @if (kpiData.isLoading() && !kpiData.value()) {
     <app-loading-skeleton shape="card" height="64px" />
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-      <app-loading-skeleton shape="card" height="124px" />
-      <app-loading-skeleton shape="card" height="124px" />
-      <app-loading-skeleton shape="card" height="124px" />
-      <app-loading-skeleton shape="card" height="124px" />
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      <app-loading-skeleton shape="card" height="164px" />
+      <app-loading-skeleton shape="card" height="164px" />
+      <app-loading-skeleton shape="card" height="164px" />
+      <app-loading-skeleton shape="card" height="164px" />
     </div>
     <app-loading-skeleton shape="card" height="280px" />
   } @else if (kpiData.error() && !kpiData.value()) {
@@ -67,18 +67,32 @@
       </a>
     </section>
 
-    <!-- ── 2. El periodo en cuatro números ──────────────────────────────── -->
-    @if (tarjetas(); as t) {
-      <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" aria-label="Resumen del periodo">
-        <app-kpi-card label="Leads captados" icon="users" tono="primary" [valor]="t.leads.valor" [pie]="t.leads.pie" [pieIcono]="t.leads.icono" />
-        <app-kpi-card label="Respondidos por el equipo" icon="message-circle" tono="primary" [valor]="t.respondidos.valor" [pie]="t.respondidos.pie" />
-        <app-kpi-card label="Primera respuesta (mediana)" icon="clock" tono="secondary" [valor]="t.respuesta.valor" [pie]="t.respuesta.pie" />
-        <app-kpi-card label="Ventas" icon="wallet" tono="secondary" [valor]="t.ventas.valor" [pie]="t.ventas.pie" />
-      </section>
-    }
+    <!-- ── 2. El periodo en cuatro números ──────────────────────────────
+         El estilo de tarjeta de siempre. La línea del pie ya no es un trazo
+         fijo: es la serie diaria de ese mismo indicador. -->
+    <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" aria-label="Resumen del periodo">
+      @for (k of tarjetas(); track k.label) {
+        <app-card [hoverable]="true" class="relative overflow-hidden group">
+          <div class="flex items-start justify-between gap-2 relative z-10">
+            <div class="w-11 h-11 rounded-xl bg-bg-light flex items-center justify-center shrink-0">
+              <app-icon [name]="k.icon" [size]="20" class="text-primary" />
+            </div>
+            <app-badge [variant]="k.badge.variant" [icon]="k.badge.icon">{{ k.badge.texto }}</app-badge>
+          </div>
+          <div class="relative z-10 pb-6">
+            <p class="text-sm text-text-muted font-medium mt-5">{{ k.label }}</p>
+            <p class="text-3xl font-bold text-text-dark mt-1 tracking-tight dash-cifra">{{ k.valor }}</p>
+            <p class="text-xs text-text-muted mt-1">{{ k.detalle }}</p>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 h-10 pointer-events-none text-primary opacity-20 group-hover:opacity-40 transition-opacity">
+            <app-sparkline [valores]="k.serie" />
+          </div>
+        </app-card>
+      }
+    </section>
 
     <!-- ── 3. Leads en el tiempo + embudo ───────────────────────────────── -->
-    <section class="grid grid-cols-1 xl:grid-cols-5 gap-4">
+    <section class="grid grid-cols-1 xl:grid-cols-5 gap-6">
       <app-card class="xl:col-span-3">
         <div class="dash-titulo">
           <div>
@@ -143,40 +157,45 @@
     </section>
 
     <!-- ── 4. Canales + equipo ──────────────────────────────────────────── -->
-    <section class="grid grid-cols-1 xl:grid-cols-5 gap-4">
-      <app-card class="xl:col-span-3" padding="sm">
-        <div class="dash-titulo px-2 pt-2">
+    <section class="grid grid-cols-1 xl:grid-cols-5 gap-6">
+      <app-card class="xl:col-span-3">
+        <div class="dash-titulo">
           <div>
             <h2>Por canal</h2>
             <p>Pulsa un canal para ver sus leads.</p>
           </div>
         </div>
         @if (canales().length) {
-          <app-table [dense]="true">
-            <thead>
-              <tr>
-                <th class="text-left">Canal</th>
-                <th class="text-right">Leads</th>
-                <th class="text-right">Respondidos</th>
-                <th class="text-right">1.ª respuesta</th>
-                <th class="text-right">Con venta</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (c of canales(); track c.origen) {
-                <tr class="fila-clicable" tabindex="0" (click)="irACanal(c.origen)" (keydown.enter)="irACanal(c.origen)">
-                  <td class="text-left">
-                    <span class="font-medium text-text-dark">{{ origenLabel[c.origen] }}</span>
-                    <div class="dash-pista dash-pista-fina mt-1.5"><div class="dash-relleno" [style.width.%]="c.ancho"></div></div>
-                  </td>
-                  <td class="text-right font-semibold">{{ c.captados }}</td>
-                  <td class="text-right">{{ pct(c.respondidos, c.captados) ?? '—' }} %</td>
-                  <td class="text-right">{{ espera(c.medianaRespuestaMinutos) }}</td>
-                  <td class="text-right">{{ c.convertidos }}</td>
-                </tr>
-              }
-            </tbody>
-          </app-table>
+          <!-- Filas sobre la propia tarjeta, sin un <app-table> dentro: su marco
+               con borde y sombra, metido en otra tarjeta, era una caja dentro
+               de otra caja. -->
+          <div class="dash-canales">
+            <div class="dash-canal dash-canal-cabecera" aria-hidden="true">
+              <span>Canal</span>
+              <span>Leads</span>
+              <span>Respondidos</span>
+              <span class="dash-canal-extra">1.ª respuesta</span>
+              <span class="dash-canal-extra">Con venta</span>
+            </div>
+            @for (c of canales(); track c.origen) {
+              <div
+                class="dash-canal fila-clicable"
+                role="link"
+                tabindex="0"
+                [attr.aria-label]="'Ver leads de ' + origenLabel[c.origen]"
+                (click)="irACanal(c.origen)"
+                (keydown.enter)="irACanal(c.origen)">
+                <div class="min-w-0">
+                  <span class="text-sm font-medium text-text-dark">{{ origenLabel[c.origen] }}</span>
+                  <div class="dash-pista dash-pista-fina mt-1.5"><div class="dash-relleno" [style.width.%]="c.ancho"></div></div>
+                </div>
+                <span class="dash-cifra text-sm">{{ c.captados }}</span>
+                <span class="text-sm text-text-dark">{{ pct(c.respondidos, c.captados) ?? '—' }} %</span>
+                <span class="dash-canal-extra text-sm text-text-muted">{{ espera(c.medianaRespuestaMinutos) }}</span>
+                <span class="dash-canal-extra text-sm text-text-muted">{{ c.convertidos }}</span>
+              </div>
+            }
+          </div>
         } @else {
           <app-empty-state icon="bar-chart" title="Sin leads por canal" description="Aún no entró ningún lead en este periodo." />
         }
@@ -212,7 +231,7 @@
     </section>
 
     <!-- ── 5. Más vendido + últimos movimientos ────────────────────────── -->
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <app-card>
         <div class="dash-titulo">
           <div>

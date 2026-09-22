@@ -150,6 +150,7 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 | Paginator | `<app-paginator>` | `pagina`, `totalPaginas`, `total` (requeridos), `limite` · `(cambiar)` |
 | BarChart | `<app-bar-chart>` | `items`, `mode` (BAR/COLUMN), `title`, `subtitle`, `height`, `formatType`, `origenMoneda` · `(segmentClick)` |
 | DonutChart | `<app-donut-chart>` | `items`, `title`, `subtitle`, `etiquetaTotal`, `formatType`, `origenMoneda` · `(segmentClick)` |
+| Sparkline | `<app-sparkline>` | `valores` (requerido; un valor nulo es un tramo sin dato y se salta en vez de pintarse en cero) — línea de tendencia sin ejes para el pie de una tarjeta; el color lo pone la clase del contenedor, p. ej. text-primary. **Siempre con datos reales**: el dashboard tuvo trazos fijos escritos a mano que dibujaban la misma curva hubiera o no ventas |
 | InfoHint | `<app-info-hint>` | `titulo` (requerido), `size` + contenido proyectado — el "!" que explica una regla |
 | SelectorPeriodoEmpty | `<app-selector-periodo-empty>` | `periodos`, `cargando`, `titulo`, `descripcion`, `icono`, `puedeImportar` · `(periodoSeleccionado)`, `(importarClic)`, `(archivoSeleccionado)` |
 | Timeline | `<app-timeline>` | `gap` — eje vertical con punto; proyecta un `<article class="crm-timeline-evento">` por hito (clases `crm-timeline-fecha` / `crm-timeline-valor`) |
