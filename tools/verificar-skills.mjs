@@ -292,6 +292,9 @@ const DEUDA = {
      nueve orígenes y tres tonos de paleta, el color nunca iba a leerse. */
 };
 
+const NOMBRES_ROL = 'RECEPCION|ASISTENTE|AGENTE|ADMIN|SUPER_ADMIN';
+const ROL_A_MANO = new RegExp(`(?<!\`[^\`\\n]{0,60})(?:[!=]==\\s*'(?:${NOMBRES_ROL})'|'(?:${NOMBRES_ROL})'\\s*[!=]==)`, 'g');
+
 const REGLAS = [
   { clave: 'color', patron: COLOR_AJENO, ext: /\.html$/, que: 'color(es) fuera de la paleta cerrada' },
   { clave: 'sombra', patron: SOMBRA_AJENA, ext: /\.html$/, que: 'sombra(s) fuera de shadow-subtle/lifted' },
@@ -313,6 +316,14 @@ const REGLAS = [
      componente que más se ve en toda la app. */
   { clave: 'color', patron: COLOR_AJENO, ext: /\.ts$/, que: 'color(es) fuera de la paleta cerrada' },
   { clave: 'sombra', patron: SOMBRA_AJENA, ext: /\.ts$/, que: 'sombra(s) fuera de shadow-subtle/lifted' },
+  /* Un rol comparado con un literal es una tabla de permisos paralela. Al añadir
+     ASISTENTE (2026-09-22) había tres en este frontend —Usuarios y el selector
+     de Actividades— y las tres lo dejaron fuera: no se podía crear la cuenta y
+     su formulario llamaba endpoints de ventas. Lo que decide un permiso vive en
+     core/auth/roles.ts (cubreRol, esRolOperativo, puedeEntregarResultados), que
+     no compara literales. No cuenta lo escrito entre comillas invertidas: son
+     los comentarios que advierten justamente de este patrón. */
+  { clave: 'rol', patron: ROL_A_MANO, ext: /\.(ts|html)$/, que: 'comparación(es) de rol con un literal — usa cubreRol / esRolOperativo / puedeEntregarResultados de core/auth/roles.ts' },
 ];
 
 function verificarCodigo() {

@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 
 import { AuthService } from '../../../../core/auth/auth.service';
+import { esRolOperativo } from '../../../../core/auth/roles';
 import { ActividadesService } from '../../actividades.service';
 import { mensajeDeError } from '../../../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../../../core/api/pagination.model';
@@ -87,7 +88,8 @@ export type ResolucionSeleccion =
 })
 export class SelectorClienteExpressComponent {
   private readonly auth = inject(AuthService);
-  protected readonly esRecepcion = computed(() => this.auth.user()?.rol === 'RECEPCION');
+  /** Recepción y asistente: buscan solo entre sus chats y no vinculan leads. */
+  protected readonly esOperativo = computed(() => esRolOperativo(this.auth.user()?.rol));
   private readonly actividadesService = inject(ActividadesService);
   private readonly clientesService = inject(ClientesService);
   private readonly leadsService = inject(LeadsService);
@@ -140,7 +142,7 @@ export class SelectorClienteExpressComponent {
     () => {
       const termino = this.busquedaCliente().trim();
       if (termino.length < 2 || this.clienteElegido()) return undefined;
-      return this.esRecepcion()
+      return this.esOperativo()
         ? this.actividadesService.pacientesRequest(termino)
         : this.clientesService.buscarRequest(termino);
     },
@@ -154,7 +156,7 @@ export class SelectorClienteExpressComponent {
   protected readonly leadsDelCliente = httpResource<RespuestaPaginada<Lead>>(
     () => {
       const cliente = this.clienteElegido();
-      return cliente && !this.esRecepcion() ? this.leadsService.listarRequest({ clienteId: cliente.id, pagina: 1, limite: 10 }) : undefined;
+      return cliente && !this.esOperativo() ? this.leadsService.listarRequest({ clienteId: cliente.id, pagina: 1, limite: 10 }) : undefined;
     },
     { defaultValue: paginaVacia<Lead>() },
   );

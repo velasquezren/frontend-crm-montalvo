@@ -21,7 +21,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InputComponent } from '../../shared/components/input/input.component';
 import { ToastService } from '../../core/toast/toast.service';
 import { IconName } from '../../shared/components/icon/icon.component';
-import { cubreRol, ROL_LABEL } from '../../core/auth/roles';
+import { cubreRol, esRolOperativo, RANGO_ROL, ROL_LABEL } from '../../core/auth/roles';
 import { RolUsuario } from '../../core/auth/user.model';
 import { Agente, CreateAgentePayload } from './agente.model';
 import { AgentesService } from './agentes.service';
@@ -65,8 +65,10 @@ export class AgentesPage {
   protected readonly lineas = httpResource<RespuestaPaginada<LineaWhatsapp>>(() => this.lineasService.listarRequest(), { defaultValue: paginaVacia<LineaWhatsapp>() });
   protected readonly formLineas = signal<string[]>([]);
   protected readonly editLineas = signal<string[]>([]);
-  protected readonly lineasCreacion = computed(() => this.lineas.value().datos.filter(l => this.formRol() !== 'RECEPCION' || !l.comercial));
-  protected readonly lineasEdicion = computed(() => this.lineas.value().datos.filter(l => this.editRol() !== 'RECEPCION' || !l.comercial));
+  /* Un rol operativo no puede tener la línea comercial: el backend lo rechaza,
+     así que no se ofrece. */
+  protected readonly lineasCreacion = computed(() => this.lineas.value().datos.filter(l => !esRolOperativo(this.formRol()) || !l.comercial));
+  protected readonly lineasEdicion = computed(() => this.lineas.value().datos.filter(l => !esRolOperativo(this.editRol()) || !l.comercial));
   private readonly agentesService = inject(AgentesService);
   private readonly toastService = inject(ToastService);
   private readonly authService = inject(AuthService);
@@ -98,10 +100,23 @@ export class AgentesPage {
   /** Los roles que ofrece cada formulario. Estaban escritos como un `<button>`
    *  por rol —tres en crear, tres en editar— y por eso "Recepción" se quedó
    *  sin estado activo al copiar: era el único que no siguió el patrón. */
-  protected readonly rolesCreacion = ['RECEPCION', 'AGENTE', 'ADMIN'] as const satisfies readonly RolUsuario[];
-  protected readonly rolesEdicion = ['RECEPCION', 'AGENTE', 'ADMIN', 'SUPER_ADMIN'] as const satisfies readonly RolUsuario[];
+  protected readonly rolesCreacion = ['RECEPCION', 'ASISTENTE', 'AGENTE', 'ADMIN'] as const satisfies readonly RolUsuario[];
+  protected readonly rolesEdicion = ['RECEPCION', 'ASISTENTE', 'AGENTE', 'ADMIN', 'SUPER_ADMIN'] as const satisfies readonly RolUsuario[];
 
   protected readonly rolLabel = ROL_LABEL;
+
+  /**
+   * Qué hace cada rol, dicho para quien crea la cuenta. `Record` y no una lista
+   * suelta: un rol nuevo no compila hasta tener su descripción, que es como
+   * ASISTENTE se había quedado fuera de esta pantalla.
+   */
+  protected readonly rolDescripcion: Readonly<Record<RolUsuario, string>> = {
+    RECEPCION: 'Atiende los chats de sus líneas y agenda sus recordatorios. Sin acceso comercial.',
+    ASISTENTE: 'Como recepción, y además entrega resultados médicos: necesita la línea de Recepción.',
+    AGENTE: 'Ventas: sus leads, clientes y chats de la línea comercial.',
+    ADMIN: 'Ve a todo el equipo, las finanzas y el historial clínico.',
+    SUPER_ADMIN: 'Además gestiona usuarios, líneas y la planilla de comisiones.',
+  };
   /** Para la plantilla: nunca comparar `rol === 'ADMIN'` a mano (deja fuera a SUPER_ADMIN). */
   protected readonly cubreRol = cubreRol;
 
@@ -114,7 +129,9 @@ export class AgentesPage {
   /* ── Datos Derivados ───────────────────────────────────────────── */
   protected readonly stats = computed(() => {
     const lista: Agente[] = this.agentes.value() ?? [];
-    const porRol = { SUPER_ADMIN: 0, ADMIN: 0, AGENTE: 0, RECEPCION: 0 } as Record<RolUsuario, number>;
+    /* Desde la jerarquía, no escrito a mano: con la lista literal, ASISTENTE
+       no tenía clave y su contador acababa en NaN. */
+    const porRol = Object.fromEntries(Object.keys(RANGO_ROL).map(rol => [rol, 0])) as Record<RolUsuario, number>;
     for (const usuario of lista) porRol[usuario.rol] += 1;
 
     return {
@@ -140,6 +157,7 @@ export class AgentesPage {
       { valor: 'SUPER_ADMIN' as const, etiqueta: 'Super administradores', icono: 'shield' as IconName, total: porRol.SUPER_ADMIN },
       { valor: 'ADMIN' as const, etiqueta: 'Administradores', icono: 'shield' as IconName, total: porRol.ADMIN },
       { valor: 'RECEPCION' as const, etiqueta: 'Recepción', icono: 'message-circle' as IconName, total: porRol.RECEPCION },
+      { valor: 'ASISTENTE' as const, etiqueta: 'Asistentes', icono: 'file-text' as IconName, total: porRol.ASISTENTE },
       { valor: 'AGENTE' as const, etiqueta: 'Agentes comerciales', icono: 'message-circle' as IconName, total: porRol.AGENTE },
     ];
   });

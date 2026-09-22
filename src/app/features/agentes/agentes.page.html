@@ -225,7 +225,7 @@
 
         <div class="space-y-1.5">
           <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Rol de sistema</label>
-          <!-- Los tres con el MISMO átomo. Antes "Recepción" era un
+          <!-- Todos con el MISMO átomo. Antes "Recepción" era un
                `<app-button variant="secondary">` y los otros dos `<button>` a
                mano con estado activo: elegir Recepción no daba ninguna señal
                visual, porque ese botón no sabía pintarse activo. -->
@@ -236,6 +236,7 @@
               </app-filter-chip>
             }
           </div>
+          <p class="text-xs text-text-muted">{{ rolDescripcion[formRol()] }}</p>
         </div>
 
         @if (lineas.isLoading()) {
@@ -318,7 +319,7 @@
           <!-- Rol -->
           <div class="flex flex-col gap-1.5">
             <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Rol</label>
-            <!-- Los cuatro con el mismo átomo. "Recepción" era un
+            <!-- Todos con el mismo átomo. "Recepción" era un
                  `<app-button variant="secondary">` que NUNCA se pintaba activo
                  —igual que en el formulario de alta—, así que elegirlo no daba
                  ninguna señal. -->
@@ -332,10 +333,7 @@
                 </app-filter-chip>
               }
             </div>
-            <p class="text-xs text-text-muted">
-              Solo un <strong>super administrador</strong> gestiona agentes (y sus códigos) e
-              importa la planilla de comisiones.
-            </p>
+            <p class="text-xs text-text-muted">{{ rolDescripcion[editRol()] }}</p>
 
             @if (editandoseASiMismo()) {
               <p class="flex items-start gap-2 text-xs text-text-muted mt-1">

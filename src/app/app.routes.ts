@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { authGuard } from './core/auth/auth.guard';
-import { exigeRol } from './core/auth/roles';
+import { exigeEntregaResultados, exigeRol } from './core/auth/roles';
 
 /**
  * Rutas del CRM
@@ -133,11 +133,11 @@ export const routes: Routes = [
           import('./features/actividades/actividades.page').then(m => m.ActividadesPage),
       },
       {
-        /* El permiso real es la membresía en la línea de resultados, que solo
-           el backend conoce. El guard aquí exige sesión y nada más: sin él la
-           ruta quedaría abierta, y con uno por rango dejaría fuera al asistente
-           —rango 0— o dentro a un agente de ventas. */
+        /* Capacidad, no rango: con uno por rango quedaría fuera el asistente
+           —rango 0— o dentro un agente de ventas. El backend exige además el
+           acceso a la línea de resultados. */
         path: 'resultados',
+        canActivate: [exigeEntregaResultados],
         loadComponent: () =>
           import('./features/resultados/resultados.page').then(m => m.ResultadosPage),
       },

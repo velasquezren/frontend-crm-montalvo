@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { cubreRol } from '../../core/auth/roles';
+import { cubreRol, puedeEntregarResultados } from '../../core/auth/roles';
 import { RolUsuario } from '../../core/auth/user.model';
 import { NAV_GROUPS } from '../../shared/components/layout/nav-items';
 import { EntregaResultado, estadoEntrega, nombresDistintos, sePuedeEntregar } from './resultado.model';
@@ -96,5 +96,14 @@ describe('quién ve la entrega de resultados en el menú', () => {
   it('NO lo ven un agente de ventas ni recepción, aunque el agente tenga más rango', () => {
     expect(ve('AGENTE')).toBe(false);
     expect(ve('RECEPCION')).toBe(false);
+  });
+
+  /* El menú, el guard de la ruta y el backend tienen que decir lo mismo. El
+     menú se declara con rolMinimo/roles y el guard con la función: si uno
+     cambia sin el otro, alguien ve un ítem que le devuelve a la bandeja, o
+     entra por URL a una pantalla que el menú le oculta. */
+  it('el menú coincide con puedeEntregarResultados para todos los roles', () => {
+    const roles: RolUsuario[] = ['RECEPCION', 'ASISTENTE', 'AGENTE', 'ADMIN', 'SUPER_ADMIN'];
+    for (const rol of roles) expect(ve(rol)).toBe(puedeEntregarResultados(rol));
   });
 });

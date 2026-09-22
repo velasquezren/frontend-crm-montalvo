@@ -472,7 +472,28 @@ menú acepta además una lista explícita:
 
 Se ve si cubre `rolMinimo` **o** si su rol está en `roles`. Es la excepción, no la norma: para
 todo lo demás, `rolMinimo`. Y ocultar el menú no es el permiso — quien autoriza de verdad es el
-backend, que en `/resultados` comprueba la membresía en la línea, no el rango.
+backend, que en `/resultados` exige las dos cosas: `puedeEntregarResultados(rol)` **y** acceso a
+la línea de resultados.
+
+**Solo la membresía no bastaba (2026-09-22).** La línea de resultados es la de Recepción, que
+también atienden recepcionistas y algún agente de ventas; en producción un AGENTE con esa línea
+podía entregar informes médicos. Por eso hay tres piezas que dicen lo mismo y una prueba
+(`resultados.page.spec.ts`) que las ata para los cinco roles: el ítem de menú, el guard
+`exigeEntregaResultados` de la ruta y `puedeEntregarResultados` de `core/auth/roles.ts`.
+
+#### Capacidades por rol: funciones de `core/auth/roles.ts`, nunca literales
+
+| Pregunta | Función |
+|---|---|
+| ¿Alcanza este nivel? | `cubreRol(rol, 'AGENTE')` |
+| ¿Atiende líneas sin alcance comercial (recepción, asistente)? | `esRolOperativo(rol)` |
+| ¿Entrega resultados médicos? | `puedeEntregarResultados(rol)` |
+
+`rol === 'RECEPCION'` escrito en una vista es una tabla de permisos paralela: al añadir ASISTENTE
+había tres en este frontend y las tres lo dejaron fuera (no se podía crear la cuenta, el formulario
+le ofrecía la línea comercial y el selector de Actividades llamaba endpoints de ventas).
+**`check:skills` rechaza comparar un rol con un literal** en `.ts`/`.html`; lo escrito entre
+comillas invertidas no cuenta, para que los comentarios puedan citar el patrón.
 
 El **backend** es la autoridad: acota por rol según el JWT y bloquea con `@Roles`.
 El frontend solo *oculta* lo que no aplica:

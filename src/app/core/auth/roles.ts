@@ -45,6 +45,44 @@ export const ROL_LABEL: Readonly<Record<RolUsuario, string>> = {
  * `canActivate` y un `data` que dicen cosas distintas es exactamente el tipo de
  * deriva que aquí se corrige con validadores, no con disciplina.
  */
+/** Espejo de `ROLES_ENTREGA_RESULTADOS` del backend. */
+const ROLES_ENTREGA_RESULTADOS: readonly RolUsuario[] = ['ASISTENTE'];
+
+/**
+ * ¿Este rol entrega resultados médicos? Espejo de `puedeEntregarResultados`
+ * del backend (`common/auth/roles.ts`), que es quien decide de verdad —y además
+ * exige acceso a la línea de resultados—.
+ *
+ * Es una capacidad, no un rango: el asistente está por debajo de un agente de
+ * ventas y aun así es quien entrega. Ni recepción ni ventas, aunque atiendan la
+ * línea de Recepción por la que sale el aviso.
+ */
+export function puedeEntregarResultados(rol: RolUsuario | undefined): boolean {
+  return cubreRol(rol, 'ADMIN') || (rol !== undefined && ROLES_ENTREGA_RESULTADOS.includes(rol));
+}
+
+
+/**
+ * Roles OPERATIVOS: atienden los chats de sus líneas, sin alcance comercial
+ * (sin leads, sin fichas completas, sin la línea de ventas). Espejo de
+ * `ROLES_OPERATIVOS` del backend.
+ *
+ * Lista única a propósito, como allí: al añadir ASISTENTE, las tres
+ * comparaciones sueltas con `'RECEPCION'` que había en este frontend lo
+ * dejaron fuera —no se podía crear la cuenta, el formulario le ofrecía la
+ * línea comercial y el selector de Actividades le llamaba endpoints de ventas—.
+ * `check:skills` rechaza ahora comparar un rol con un literal fuera de aquí.
+ */
+export const ROLES_OPERATIVOS: readonly RolUsuario[] = ['RECEPCION', 'ASISTENTE'];
+
+export function esRolOperativo(rol: RolUsuario | undefined): boolean {
+  return rol !== undefined && ROLES_OPERATIVOS.includes(rol);
+}
+
+/** Guard de `/resultados`: quien no entrega vuelve a su bandeja, no a una pantalla de error. */
+export const exigeEntregaResultados: CanActivateFn = () =>
+  puedeEntregarResultados(inject(AuthService).user()?.rol) || inject(Router).createUrlTree(['/conversaciones']);
+
 export type GuardDeRol = CanActivateFn & { readonly rolMinimo: RolUsuario };
 
 /**
