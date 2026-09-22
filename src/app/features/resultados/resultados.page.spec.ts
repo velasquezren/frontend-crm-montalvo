@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { cubreRol } from '../../core/auth/roles';
 import { RolUsuario } from '../../core/auth/user.model';
 import { NAV_GROUPS } from '../../shared/components/layout/nav-items';
-import { EntregaResultado, estadoEntrega, sePuedeEntregar } from './resultado.model';
+import { EntregaResultado, estadoEntrega, nombresDistintos, sePuedeEntregar } from './resultado.model';
 
 /**
  * La parte de esta pantalla que decide algo, aislada de Angular: cuándo se
@@ -22,6 +22,9 @@ const base: EntregaResultado = {
   publicadoEn: '2026-09-21T10:00:00.000Z',
   accesoVigente: true,
   paciente: { id: 'c-1', nombre: 'Paciente', telefono: '+59170000001' },
+  vinculo: 'PAC',
+  sinFicha: null,
+  pacientePortal: { nombre: 'Paciente', pac: 'PAC33009', ci: null },
   aviso: null,
 };
 
@@ -53,6 +56,22 @@ describe('cuándo se puede entregar un resultado', () => {
     const incierto = { ...base, aviso: { enviadoEn: '2026-09-22T12:00:00.000Z', estadoMensaje: 'INCIERTO' as const } };
     expect(sePuedeEntregar(incierto)).toBe(false);
     expect(estadoEntrega(incierto).texto).toBe('Sin confirmar');
+  });
+});
+
+describe('vínculo con la ficha del CRM', () => {
+  it('un CI repetido se señala como tal, no como «sin vincular»', () => {
+    const repetido = { ...base, paciente: null, vinculo: null, sinFicha: 'CI_REPETIDO' as const };
+    expect(sePuedeEntregar(repetido)).toBe(false);
+    expect(estadoEntrega(repetido).texto).toBe('CI repetido');
+  });
+
+  it('el mismo nombre escrito por dos manos no es una alerta', () => {
+    expect(nombresDistintos('Andrea Avendaño', 'AVENDANO  andrea')).toBe(false);
+  });
+
+  it('dos personas distintas sí lo son', () => {
+    expect(nombresDistintos('Andrea Avendaño', 'Andrea Rosales')).toBe(true);
   });
 });
 

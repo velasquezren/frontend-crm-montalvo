@@ -14,8 +14,10 @@ import { LoadingSkeletonComponent } from '../../shared/components/loading-skelet
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { TableComponent } from '../../shared/components/table/table.component';
+import { nombreParaMostrar } from '../../shared/models/nombre-cliente';
+import { NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { ToastService } from '../../core/toast/toast.service';
-import { EntregaResultado, estadoEntrega, motivoBloqueo, sePuedeEntregar } from './resultado.model';
+import { EntregaResultado, estadoEntrega, motivoBloqueo, nombresDistintos, sePuedeEntregar } from './resultado.model';
 import { ResultadosService } from './resultados.service';
 
 /**
@@ -36,6 +38,7 @@ import { ResultadosService } from './resultados.service';
     EmptyStateComponent,
     ErrorCargaComponent,
     LoadingSkeletonComponent,
+    NombreClientePipe,
     PageHeaderComponent,
     PaginatorComponent,
     TableComponent,
@@ -66,6 +69,7 @@ export class ResultadosPage {
   protected readonly sePuedeEnviar = sePuedeEntregar;
   protected readonly motivoBloqueo = motivoBloqueo;
   protected readonly estadoEntrega = estadoEntrega;
+  protected readonly distintos = nombresDistintos;
 
   protected pedirConfirmacion(fila: EntregaResultado): void {
     this.candidato.set(fila);
@@ -87,7 +91,7 @@ export class ResultadosPage {
       await this.resultadosService.enviar(fila.informeId);
       this.toast.success(
         /* Meta confirma después: el estado real aparece en la fila. */
-        `El enlace del informe va en camino a ${fila.paciente?.nombre ?? 'el paciente'}.`,
+        `El enlace del informe va en camino a ${fila.paciente ? nombreParaMostrar(fila.paciente) : 'el paciente'}.`,
         'Aviso enviado',
       );
       this.entregas.reload();

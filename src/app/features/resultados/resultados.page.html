@@ -18,27 +18,39 @@
   <app-table [dense]="true">
     <thead>
       <tr>
-        <th>Paciente</th>
-        <th>Estudio</th>
-        <th>Fecha</th>
-        <th>Estado</th>
+        <th class="text-left">Paciente</th>
+        <th class="text-left">Estudio</th>
+        <th class="text-left">Fecha</th>
+        <th class="text-left">Estado</th>
         <th class="text-right">Acción</th>
       </tr>
     </thead>
     <tbody>
       @for (fila of entregas.value().datos; track fila.informeId) {
         <tr>
-          <td>
-            @if (fila.paciente) {
-              <div class="font-medium">{{ fila.paciente.nombre }}</div>
-              <div class="text-sm text-muted">{{ fila.paciente.telefono }}</div>
+          <td class="text-left">
+            @if (fila.paciente; as ficha) {
+              <p class="font-medium text-text-dark">{{ ficha | nombreCliente }}</p>
+              <div class="crm-meta crm-meta-sm mt-0.5">
+                <span class="crm-meta-clave">{{ ficha.telefono }}</span>
+                @if (fila.vinculo === 'CI') { <span>Vinculado por CI</span> }
+              </div>
+              <!-- Con CI el cruce es por un número tecleado en dos sistemas:
+                   si los nombres no se parecen, la asistente lo tiene que ver. -->
+              @if (fila.vinculo === 'CI' && distintos(fila.pacientePortal.nombre, ficha.nombre)) {
+                <p class="text-xs text-text-muted mt-0.5">En el portal: {{ fila.pacientePortal.nombre }}</p>
+              }
             } @else {
-              <span class="text-muted">Sin ficha en el CRM</span>
+              <p class="font-medium text-text-dark">{{ fila.pacientePortal.nombre }}</p>
+              <div class="crm-meta crm-meta-sm mt-0.5">
+                @if (fila.pacientePortal.pac; as pac) { <span class="crm-meta-clave">{{ pac }}</span> }
+                @if (fila.pacientePortal.ci; as ci) { <span class="crm-meta-clave">CI {{ ci }}</span> }
+              </div>
             }
           </td>
-          <td>{{ fila.estudio }}</td>
-          <td>{{ fila.fechaEstudio | date: 'd MMM y' }}</td>
-          <td>
+          <td class="text-left">{{ fila.estudio }}</td>
+          <td class="text-left">{{ fila.fechaEstudio | date: 'd MMM y' : 'UTC' }}</td>
+          <td class="text-left">
             @let estado = estadoEntrega(fila);
             <app-badge [variant]="estado.variant" [icon]="estado.icon">
               {{ estado.texto }}@if (fila.aviso) { · {{ fila.aviso.enviadoEn | date: 'd MMM, HH:mm' }}}
@@ -51,11 +63,11 @@
                 icon="message-circle"
                 [loading]="enviando() === fila.informeId"
                 [disabled]="enviando() !== null"
-                (click)="pedirConfirmacion(fila)">
+                (clicked)="pedirConfirmacion(fila)">
                 {{ fila.aviso ? 'Reenviar' : 'Enviar por WhatsApp' }}
               </app-button>
             } @else {
-              <span class="text-sm text-muted">{{ motivoBloqueo(fila) }}</span>
+              <span class="text-sm text-text-muted">{{ motivoBloqueo(fila) }}</span>
             }
           </td>
         </tr>
@@ -78,22 +90,32 @@
 
 <!-- Enviar cuesta dinero y no se puede deshacer: se confirma a quién va. -->
 <ng-template #confirmar>
-  <div class="pointer-events-auto w-full max-w-md rounded-lg bg-surface p-6 shadow-lifted">
-    <h2 class="text-lg font-semibold">Enviar el resultado por WhatsApp</h2>
+  <div class="pointer-events-auto w-full max-w-md bg-background rounded-2xl shadow-lifted p-6 animate-modal-pop">
+    <h2 class="text-base font-bold text-text-dark">Enviar el resultado por WhatsApp</h2>
     @if (candidato(); as fila) {
-      <p class="mt-3 text-sm">
-        Se enviará a <strong>{{ fila.paciente?.nombre }}</strong> al número
-        <strong>{{ fila.paciente?.telefono }}</strong>.
-      </p>
-      <p class="mt-2 text-sm text-muted">
+      @if (fila.paciente; as ficha) {
+        <p class="mt-3 text-sm text-text-dark">
+          Se enviará a <strong>{{ ficha | nombreCliente }}</strong> al número
+          <strong class="tabular-nums">{{ ficha.telefono }}</strong>.
+        </p>
+        @if (fila.vinculo === 'CI') {
+          <!-- El PAC es único en los dos sistemas; el CI se teclea a mano en
+               cada uno. Por eso con CI se pide mirar el nombre antes. -->
+          <p class="mt-3 text-sm text-text-dark rounded-xl bg-bg-light px-3 py-2.5">
+            Se reconoció por el CI {{ fila.pacientePortal.ci }}. En el portal figura como
+            <strong>{{ fila.pacientePortal.nombre }}</strong>: confirma que es la misma persona.
+          </p>
+        }
+      }
+      <p class="mt-3 text-sm text-text-muted">
         El mensaje lleva el enlace de su informe, no el código de acceso: ese se lo
         entregaron en la clínica. WhatsApp puede generar un cargo y el envío no se
         puede deshacer.
       </p>
     }
     <div class="mt-6 flex justify-end gap-3">
-      <app-button variant="ghost" (click)="cerrarConfirmacion()">Cancelar</app-button>
-      <app-button icon="message-circle" (click)="confirmarEnvio()">Enviar aviso</app-button>
+      <app-button variant="ghost" (clicked)="cerrarConfirmacion()">Cancelar</app-button>
+      <app-button icon="message-circle" (clicked)="confirmarEnvio()">Enviar aviso</app-button>
     </div>
   </div>
 </ng-template>

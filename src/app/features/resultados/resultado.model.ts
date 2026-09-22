@@ -17,8 +17,14 @@ export interface EntregaResultado {
   readonly publicadoEn: string | null;
   /** Si el acceso del paciente venció o fue revocado, no se puede avisar. */
   readonly accesoVigente: boolean;
-  /** `null` = el PAC no cruza con ninguna ficha del CRM. */
+  /** La ficha del CRM a la que se enviaría. `null` = no se reconoció. */
   readonly paciente: { readonly id: string; readonly nombre: string; readonly telefono: string } | null;
+  /** Por qué clave se reconoció. Con CI, la asistente compara el nombre. */
+  readonly vinculo: 'PAC' | 'CI' | null;
+  /** Por qué no se reconoció. */
+  readonly sinFicha: 'SIN_COINCIDENCIA' | 'CI_REPETIDO' | null;
+  /** Cómo figura el paciente en el portal de resultados. */
+  readonly pacientePortal: { readonly nombre: string; readonly pac: string | null; readonly ci: string | null };
   /** `null` = todavía no se le avisó. */
   readonly aviso: { readonly enviadoEn: string; readonly estadoMensaje: EstadoMensaje | null } | null;
 }
@@ -57,6 +63,7 @@ export function estadoEntrega(fila: EntregaResultado): { texto: string; variant:
     return { texto: 'Enviado', variant: 'info', icon: 'check' };
   }
   if (!fila.accesoVigente) return { texto: 'Acceso vencido', variant: 'critical', icon: 'alert-circle' };
+  if (fila.sinFicha === 'CI_REPETIDO') return { texto: 'CI repetido', variant: 'critical', icon: 'alert-circle' };
   if (!fila.paciente) return { texto: 'Sin vincular', variant: 'neutral', icon: 'user-plus' };
   return { texto: 'Pendiente de avisar', variant: 'info', icon: 'clock' };
 }
@@ -65,7 +72,28 @@ export function estadoEntrega(fila: EntregaResultado): { texto: string; variant:
 export function motivoBloqueo(fila: EntregaResultado): string {
   if (fila.aviso?.estadoMensaje === 'INCIERTO') return 'Esperando confirmación de WhatsApp';
   if (fila.aviso) return 'Ya se le avisó';
-  if (!fila.paciente) return 'Sin ficha en el CRM';
+  if (fila.sinFicha === 'CI_REPETIDO') return 'Su CI está en dos fichas: corrígelas';
+  if (!fila.paciente) return 'Sin ficha con ese PAC o CI';
   if (!fila.accesoVigente) return 'Acceso vencido';
   return '';
+}
+
+/**
+ * ¿El nombre del portal y el de la ficha parecen de personas distintas?
+ *
+ * Ignora mayúsculas, tildes y el orden de las palabras: «Andrea Avendaño» y
+ * «AVENDANO ANDREA» son la misma persona escrita por dos manos. Solo avisa;
+ * quien decide si enviar es la asistente.
+ */
+export function nombresDistintos(uno: string, otro: string): boolean {
+  const palabras = (nombre: string) =>
+    nombre
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean)
+      .sort()
+      .join(' ');
+  return palabras(uno) !== palabras(otro);
 }
