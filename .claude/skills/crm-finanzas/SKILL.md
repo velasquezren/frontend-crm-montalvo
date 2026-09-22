@@ -607,8 +607,9 @@ antes de eso; el módulo puro no cambió al migrar, porque no depende del format
 
 **Nada de navegador.** `docx` es JS puro y arma un documento de ~10 KB en
 milisegundos. Puppeteer está descartado en este servidor: `crm_backend.service`
-corre con `MemoryMax=400M` sobre un VPS de 1,7 GB compartido, y un Chrome
-headless pide más que eso él solo. A diferencia del Excel no va en streaming
+corre con `MemoryMax` de 1,5 GB en una máquina que comparte con Resultados y
+ClamAV (medido 2026-09-22), y un Chrome headless por documento es memoria y
+CPU que no se le quita al vecino por diez filas. A diferencia del Excel no va en streaming
 —un .docx es un ZIP y se arma entero— pero son diez filas, no las 500 del
 detalle.
 

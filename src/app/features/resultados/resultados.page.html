@@ -39,17 +39,10 @@
           <td>{{ fila.estudio }}</td>
           <td>{{ fila.fechaEstudio | date: 'd MMM y' }}</td>
           <td>
-            @if (fila.aviso) {
-              <app-badge variant="success" icon="check-check">
-                Avisado {{ fila.aviso.enviadoEn | date: 'd MMM, HH:mm' }}
-              </app-badge>
-            } @else if (!fila.accesoVigente) {
-              <app-badge variant="critical" icon="alert-circle">Acceso vencido</app-badge>
-            } @else if (!fila.paciente) {
-              <app-badge variant="neutral" icon="user-plus">Sin vincular</app-badge>
-            } @else {
-              <app-badge variant="info" icon="clock">Pendiente de avisar</app-badge>
-            }
+            @let estado = estadoEntrega(fila);
+            <app-badge [variant]="estado.variant" [icon]="estado.icon">
+              {{ estado.texto }}@if (fila.aviso) { · {{ fila.aviso.enviadoEn | date: 'd MMM, HH:mm' }}}
+            </app-badge>
           </td>
           <td class="text-right">
             @if (sePuedeEnviar(fila)) {
@@ -59,7 +52,7 @@
                 [loading]="enviando() === fila.informeId"
                 [disabled]="enviando() !== null"
                 (click)="pedirConfirmacion(fila)">
-                Enviar por WhatsApp
+                {{ fila.aviso ? 'Reenviar' : 'Enviar por WhatsApp' }}
               </app-button>
             } @else {
               <span class="text-sm text-muted">{{ motivoBloqueo(fila) }}</span>

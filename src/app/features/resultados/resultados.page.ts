@@ -15,7 +15,7 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 import { ToastService } from '../../core/toast/toast.service';
-import { EntregaResultado, motivoBloqueo, sePuedeEntregar } from './resultado.model';
+import { EntregaResultado, estadoEntrega, motivoBloqueo, sePuedeEntregar } from './resultado.model';
 import { ResultadosService } from './resultados.service';
 
 /**
@@ -65,6 +65,7 @@ export class ResultadosPage {
      las fija, y escritas dos veces divergen. */
   protected readonly sePuedeEnviar = sePuedeEntregar;
   protected readonly motivoBloqueo = motivoBloqueo;
+  protected readonly estadoEntrega = estadoEntrega;
 
   protected pedirConfirmacion(fila: EntregaResultado): void {
     this.candidato.set(fila);
@@ -85,7 +86,8 @@ export class ResultadosPage {
     try {
       await this.resultadosService.enviar(fila.informeId);
       this.toast.success(
-        `${fila.paciente?.nombre ?? 'El paciente'} recibirá el enlace de su informe.`,
+        /* Meta confirma después: el estado real aparece en la fila. */
+        `El enlace del informe va en camino a ${fila.paciente?.nombre ?? 'el paciente'}.`,
         'Aviso enviado',
       );
       this.entregas.reload();

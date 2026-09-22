@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { cubreRol } from '../../core/auth/roles';
 import { RolUsuario } from '../../core/auth/user.model';
 import { NAV_GROUPS } from '../../shared/components/layout/nav-items';
-import { EntregaResultado, sePuedeEntregar } from './resultado.model';
+import { EntregaResultado, estadoEntrega, sePuedeEntregar } from './resultado.model';
 
 /**
  * La parte de esta pantalla que decide algo, aislada de Angular: cuándo se
@@ -40,6 +40,19 @@ describe('cuándo se puede entregar un resultado', () => {
 
   it('no se puede dos veces: WhatsApp cuesta y el paciente ya lo recibió', () => {
     expect(sePuedeEntregar({ ...base, aviso: { enviadoEn: '2026-09-22T12:00:00.000Z', estadoMensaje: 'ENVIADO' } })).toBe(false);
+  });
+
+  /* Meta rechaza en diferido: el aviso quedó guardado pero el paciente no recibió nada. */
+  it('se puede reenviar si Meta lo rechazó, y la fila no lo pinta como entregado', () => {
+    const fallido = { ...base, aviso: { enviadoEn: '2026-09-22T12:00:00.000Z', estadoMensaje: 'FALLIDO' as const } };
+    expect(sePuedeEntregar(fallido)).toBe(true);
+    expect(estadoEntrega(fallido).variant).toBe('critical');
+  });
+
+  it('NO se reenvía si no se sabe si llegó: sería el doble WhatsApp', () => {
+    const incierto = { ...base, aviso: { enviadoEn: '2026-09-22T12:00:00.000Z', estadoMensaje: 'INCIERTO' as const } };
+    expect(sePuedeEntregar(incierto)).toBe(false);
+    expect(estadoEntrega(incierto).texto).toBe('Sin confirmar');
   });
 });
 
