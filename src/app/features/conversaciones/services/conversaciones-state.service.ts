@@ -702,6 +702,18 @@ export class ConversacionesStateService {
     this.deseleccionar();
   }
 
+  /**
+   * Tras «Nuevo chat». El chat puede ser de una línea que la bandeja no está
+   * mostrando: se quita el filtro de línea en la misma navegación, para no
+   * abrir un hilo cuya fila no aparece a la izquierda.
+   */
+  abrirChatIniciado(id: string): void {
+    /* Cambiar el filtro ya vuelve a pedir la bandeja; sin filtro hay que pedirla a mano. */
+    if (this.filtroLineaId()) this.filtroLineaId.set(null);
+    else this.inbox.reload();
+    this.router.navigate([], { queryParams: { id }, queryParamsHandling: 'merge' });
+  }
+
   seleccionar(id: string): void {
     if (this.seleccionadaId() === id) return;
     marcar('conversation-select-click');

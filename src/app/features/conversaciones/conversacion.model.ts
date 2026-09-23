@@ -115,9 +115,23 @@ export interface PlantillaResumen {
   readonly nombre: string;
   readonly idioma: string;
   readonly categoria: string;
-  /** Cuerpo con placeholders `{{1}}`, `{{2}}`… para previsualizar y contar variables. */
+  /** Cuerpo con placeholders `{{1}}` o `{{nombre}}`, tal como lo aprobó Meta. */
   readonly cuerpo: string;
   readonly variables: number;
+  /** Las variables en el orden en que se mandan (`1`, `2`… o `nombre`, `fecha`…). */
+  readonly nombresVariables: readonly string[];
+  readonly formato: 'POSITIONAL' | 'NAMED';
+  readonly pie: string | null;
+  readonly botones: readonly string[];
+  /** false si lleva algo que el chat no sabe rellenar (imagen de encabezado, enlace variable). */
+  readonly enviable: boolean;
+  readonly motivoNoEnviable: string | null;
+}
+
+/** Lo que devuelve `POST /conversaciones/iniciar`. */
+export interface ConversacionIniciada {
+  readonly conversacionId: string;
+  readonly mensaje: MensajeApi;
 }
 
 /** Respuesta Rápida / Plantilla Personalizada del Agente (GET/POST /plantillas-agente). */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { enlaceLlamada, enlaceWhatsApp, soloDigitos } from './telefono';
+import { enlaceLlamada, enlaceWhatsApp, soloDigitos, telefonoParaEscribir } from './telefono';
 
 /*
  * El caso que obliga a que esto exista es el de la paciente extranjera. Dos de
@@ -52,5 +52,19 @@ describe('enlaceLlamada', () => {
 describe('soloDigitos', () => {
   it('quita todo lo que no sea cifra', () => {
     expect(soloDigitos('+591 (718) 365-60')).toBe('59171836560');
+  });
+});
+
+describe('telefonoParaEscribir', () => {
+  it('reconoce un celular boliviano escrito de cualquier forma', () => {
+    expect(telefonoParaEscribir('700 12-345')).toBe('+59170012345');
+    expect(telefonoParaEscribir('59170012345')).toBe('+59170012345');
+    expect(telefonoParaEscribir('+591 70012345')).toBe('+59170012345');
+  });
+
+  it('respeta otros países y descarta lo que no es un teléfono', () => {
+    expect(telefonoParaEscribir('+34 612 345 678')).toBe('+34612345678');
+    expect(telefonoParaEscribir('María')).toBeNull();
+    expect(telefonoParaEscribir('1234')).toBeNull();
   });
 });

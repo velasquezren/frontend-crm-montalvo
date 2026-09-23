@@ -1,0 +1,72 @@
+<div class="flex items-center justify-between gap-3">
+  <p class="text-xs text-text-muted">
+    @if (linea(); as nombreLinea) { Plantillas aprobadas de <span class="font-semibold text-text-dark">{{ nombreLinea }}</span> }
+    @else { Plantillas aprobadas por Meta }
+  </p>
+  <app-button variant="ghost" size="sm" [loading]="cargando()" (clicked)="actualizar.emit()">Actualizar desde Meta</app-button>
+</div>
+
+@if (cargando()) {
+  <p class="text-xs text-text-muted text-center py-6">Cargando plantillas…</p>
+} @else if (error()) {
+  <p role="alert" class="text-xs text-critical py-4">No se pudieron consultar las plantillas. Pulsa «Actualizar desde Meta» para volver a intentar.</p>
+} @else if (plantillas().length === 0) {
+  <div class="text-center py-8">
+    <p class="text-sm font-semibold text-text-dark">No hay plantillas aprobadas</p>
+    <p class="text-xs text-text-muted mt-1">Esta línea no tiene plantillas aprobadas. Si Meta acaba de aprobar una, pulsa «Actualizar desde Meta».</p>
+  </div>
+} @else {
+  <div class="space-y-2" role="listbox" aria-label="Plantillas de WhatsApp">
+    @for (p of plantillas(); track p.nombre + p.idioma) {
+      <button
+        type="button"
+        role="option"
+        [attr.aria-selected]="seleccionada()?.nombre === p.nombre"
+        [disabled]="!p.enviable"
+        (click)="elegir(p)"
+        class="plantilla-opcion"
+        [class.plantilla-opcion--elegida]="seleccionada()?.nombre === p.nombre && seleccionada()?.idioma === p.idioma">
+        <span class="flex items-center justify-between gap-2">
+          <span class="text-xs font-bold text-text-dark">{{ p.nombre }}</span>
+          <app-badge variant="info">{{ p.categoria }}</app-badge>
+        </span>
+        <span class="block text-xs text-text-muted mt-1 whitespace-pre-wrap line-clamp-3">{{ p.cuerpo }}</span>
+        @if (!p.enviable) {
+          <span class="block text-[11px] text-text-muted mt-1.5 italic">{{ p.motivoNoEnviable }}</span>
+        }
+      </button>
+    }
+  </div>
+
+  @if (seleccionada(); as p) {
+    @if (p.nombresVariables.length > 0) {
+      <div class="p-4 rounded-xl bg-bg-light border border-border space-y-3">
+        <h4 class="text-xs font-bold text-text-dark uppercase tracking-wider">Completa los datos</h4>
+        @for (nombre of p.nombresVariables; track nombre; let i = $index) {
+          <app-input
+            [label]="etiqueta(p, i)"
+            placeholder="Lo que verá el paciente en ese lugar"
+            [value]="valores()[i]"
+            (valueChange)="cambiarValor(i, $event)" />
+        }
+      </div>
+    }
+
+    <div>
+      <h4 class="text-xs font-bold text-text-dark uppercase tracking-wider mb-2">Así lo verá el paciente</h4>
+      <div class="vista-previa">
+        <p class="vista-previa__burbuja">{{ vistaPrevia() }}</p>
+        @for (boton of p.botones; track boton) {
+          <span class="vista-previa__boton">{{ boton }}</span>
+        }
+      </div>
+      @if (falta(); as motivo) {
+        <p class="text-xs text-text-muted mt-2">{{ motivo }}</p>
+      }
+    </div>
+
+    <p class="text-[11px] text-text-muted leading-relaxed">
+      Meta puede cobrar este mensaje según su categoría y el país del destinatario. El importe no está disponible en el CRM.
+    </p>
+  }
+}

@@ -13,9 +13,12 @@
           <p class="text-[11px] text-text-muted leading-tight">WhatsApp Business</p>
         </div>
       </div>
-      <div class="stat-pill">
-        <span class="stat-dot"></span>
-        {{ state.stats().total }} chat{{ state.stats().total === 1 ? '' : 's' }}
+      <div class="flex items-center gap-2">
+        <div class="stat-pill">
+          <span class="stat-dot"></span>
+          {{ state.stats().total }} chat{{ state.stats().total === 1 ? '' : 's' }}
+        </div>
+        <app-button variant="primary" size="sm" icon="plus" ariaLabel="Nuevo chat" (clicked)="abrirNuevoChat()">Nuevo</app-button>
       </div>
     </div>
   </div>
@@ -279,3 +282,7 @@
     }
   </div>
 </aside>
+
+<ng-template #nuevoChatTpl>
+  <app-nuevo-chat (cerrar)="cerrarNuevoChat()" (iniciado)="alIniciarChat($event)" />
+</ng-template>

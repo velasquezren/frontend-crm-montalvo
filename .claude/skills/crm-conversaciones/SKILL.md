@@ -126,6 +126,31 @@ añades un estado, se tocan **los dos** o el inbox y el hilo se contradicen.
 - Al consultar una conversación, el backend resuelve la clave a una URL firmada HMAC efímera (expiración corta) mediante `aws4fetch`.
 - Para descargar archivos, se utiliza el proxy del backend (`GET /conversaciones/media/descargar?key=...`), el cual valida los permisos del usuario con `puedeDescargarMedia` antes de emitir el binario con `Content-Disposition: attachment`.
 
+### Escribir primero: «Nuevo chat» y plantillas (2026-09-23)
+
+`components/nuevo-chat/` pide línea, destino y plantilla en un mismo cajón y
+los manda juntos a `POST /conversaciones/iniciar`. No existe un paso de «crear
+el chat vacío y luego escribir»: un intento que fallaba a mitad dejaba fichas y
+conversaciones vacías en la bandeja. El servidor comprueba todo antes de dar
+de alta nada.
+
+- **Destino**: una ficha (agente y administración buscan pacientes) o un número
+  tecleado. Recepción y asistencia solo escriben el número: no tienen fichas
+  comerciales. `telefonoParaEscribir()` solo sirve para el aviso «Escribir a
+  +591…»; la normalización que vale es la del backend, y es la MISMA clave que
+  usa el webhook, para que la respuesta del paciente caiga en ese chat.
+- **Línea comercial**: escribirle a la paciente de otra agente responde 403.
+- **Plantillas**: `<app-envio-plantilla>` lo comparten el compositor y «Nuevo
+  chat». Enseña la burbuja tal como la leerá el paciente (`renderizarPlantilla`)
+  y qué falta completar (`faltaParaEnviar`). **El texto no viaja**: lo compone el
+  servidor desde la plantilla aprobada de esa línea. Antes viajaba el cuerpo sin
+  sustituir y el historial guardaba «Hola {{1}}».
+- Soporta variables numeradas y con nombre (`NAMED` exige `parameter_name`).
+  Una plantilla con imagen de encabezado o enlace variable llega con
+  `enviable: false` y su motivo: el chat no sabe rellenarla y Meta la rechazaría.
+- **Una clave `clientMessageId` por apertura del cajón**: un doble clic no manda
+  —ni cobra— dos plantillas.
+
 ## 2. Visibilidad y Seguridad por Rol
 
 - **Administrador y Super Admin (`ADMIN` / `SUPER_ADMIN`)**:

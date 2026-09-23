@@ -1,4 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, TemplateRef, viewChild, ViewContainerRef } from '@angular/core';
+import { OverlayRef } from '@angular/cdk/overlay';
+
+import { DialogService } from '../../../../shared/components/dialog/dialog.service';
+import { NuevoChatComponent } from '../nuevo-chat/nuevo-chat.component';
 
 import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
@@ -37,12 +41,35 @@ import { ConversacionPreviewComponent } from './conversacion-preview.component';
     InputComponent,
     LoadingSkeletonComponent,
     ConversacionPreviewComponent,
+    NuevoChatComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './conversacion-lista.component.html',
   styleUrl: './conversacion-lista.component.css',
 })
 export class ConversacionListaComponent {
+  private readonly dialog = inject(DialogService);
+  private readonly vcr = inject(ViewContainerRef);
+  private readonly nuevoChatTpl = viewChild.required<TemplateRef<unknown>>('nuevoChatTpl');
+  private cajonNuevoChat?: OverlayRef;
+
+  protected abrirNuevoChat(): void {
+    this.cajonNuevoChat?.dispose();
+    this.cajonNuevoChat = this.dialog.abrirCajon(this.nuevoChatTpl(), this.vcr, {
+      onClose: () => (this.cajonNuevoChat = undefined),
+    });
+  }
+
+  protected cerrarNuevoChat(): void {
+    this.cajonNuevoChat?.dispose();
+    this.cajonNuevoChat = undefined;
+  }
+
+  /** Abre el chat recién iniciado; si la bandeja filtraba otra línea, se quita el filtro para que se vea. */
+  protected alIniciarChat(conversacionId: string): void {
+    this.cerrarNuevoChat();
+    this.state.abrirChatIniciado(conversacionId);
+  }
 
   /**
    * ¿Hay algo que decir en la banda del filtro de líneas?

@@ -1,0 +1,102 @@
+<app-drawer ancho="md" titulo="Nuevo chat" subtitulo="El primer mensaje es una plantilla aprobada por Meta" icono="message-circle" (cerrar)="cerrar.emit()">
+  <div class="flex-1 overflow-y-auto p-5 space-y-6">
+
+    <!-- 1. Desde qué línea -->
+    <section class="space-y-2">
+      <h3 class="paso"><span class="paso__numero">1</span> Desde la línea</h3>
+      @if (lineas().length === 0) {
+        <p class="text-xs text-text-muted">No tienes ninguna línea conectada a WhatsApp. Pide a administración que te asigne una.</p>
+      } @else if (lineas().length === 1) {
+        <p class="text-sm text-text-dark font-semibold">{{ lineaElegida()?.nombre }}
+          @if (lineaElegida()?.telefono; as tel) { <span class="text-xs text-text-muted font-normal">· {{ tel }}</span> }
+        </p>
+      } @else {
+        <app-select size="sm" icono="message-circle" ariaLabel="Línea desde la que se escribe" [value]="lineaId()" (valueChange)="cambiarLinea($event)">
+          <option value="" disabled>Elige una línea…</option>
+          @for (l of lineas(); track l.id) {
+            <option [value]="l.id">{{ l.nombre }}{{ l.telefono ? ' · ' + l.telefono : '' }}</option>
+          }
+        </app-select>
+      }
+    </section>
+
+    <!-- 2. A quién -->
+    <section class="space-y-2">
+      <h3 class="paso"><span class="paso__numero">2</span> Para</h3>
+      @if (destino(); as d) {
+        <div class="destino-elegido">
+          <app-icon [name]="d.tipo === 'PACIENTE' ? 'user' : 'phone'" [size]="16" class="text-primary shrink-0" />
+          <div class="min-w-0 flex-1">
+            @if (d.tipo === 'PACIENTE') {
+              <p class="text-sm font-semibold text-text-dark truncate">{{ d.cliente | nombreCliente }}</p>
+              <p class="text-xs text-text-muted">{{ d.cliente.telefono }}</p>
+            } @else {
+              <p class="text-sm font-semibold text-text-dark">{{ d.telefono }}</p>
+              <p class="text-xs text-text-muted">Si ya tiene ficha, el mensaje entra en ella.</p>
+            }
+          </div>
+          <app-button variant="ghost" size="sm" (clicked)="cambiarDestino()">Cambiar</app-button>
+        </div>
+        @if (d.tipo === 'NUMERO') {
+          <app-input label="Nombre (opcional)" placeholder="Para la ficha, si es un número nuevo" [(value)]="nombreNuevo" />
+        }
+      } @else {
+        <app-input
+          [placeholder]="buscaPacientes ? 'Nombre, teléfono, CI o PAC' : 'Número de WhatsApp, ej. 70012345'"
+          autocomplete="off"
+          [(value)]="texto" />
+
+        @if (telefonoTecleado(); as tel) {
+          <button type="button" class="opcion-destino" (click)="elegirNumero(tel)">
+            <app-icon name="phone" [size]="16" class="text-primary shrink-0" />
+            <span class="text-sm text-text-dark">Escribir a <span class="font-semibold">{{ tel }}</span></span>
+          </button>
+        }
+
+        @if (buscaPacientes && texto().trim().length >= 2) {
+          @if (resultados.isLoading()) {
+            <p class="text-xs text-text-muted py-2">Buscando…</p>
+          } @else if (resultados.error()) {
+            <p role="alert" class="text-xs text-critical py-2">No se pudo buscar en los pacientes. Puedes escribir el número directamente.</p>
+          } @else if (coincidencias().length > 0) {
+            <div class="space-y-1">
+              @for (c of coincidencias(); track c.id) {
+                <button type="button" class="opcion-destino" (click)="elegirPaciente(c)">
+                  <app-icon name="user" [size]="16" class="text-text-muted shrink-0" />
+                  <span class="min-w-0">
+                    <span class="block text-sm text-text-dark truncate">{{ c | nombreCliente }}</span>
+                    <span class="block text-xs text-text-muted">{{ c.telefono }}</span>
+                  </span>
+                </button>
+              }
+            </div>
+          } @else if (!telefonoTecleado()) {
+            <p class="text-xs text-text-muted py-2">Ningún paciente coincide. Si es alguien nuevo, escribe su número.</p>
+          }
+        }
+      }
+    </section>
+
+    <!-- 3. Qué mensaje -->
+    @if (lineaElegida(); as linea) {
+      <section class="space-y-2">
+        <h3 class="paso"><span class="paso__numero">3</span> Primer mensaje</h3>
+        <app-envio-plantilla
+          [plantillas]="plantillas.value()"
+          [cargando]="plantillas.isLoading()"
+          [error]="!!plantillas.error()"
+          [linea]="linea.nombre"
+          [(seleccionada)]="plantilla"
+          [(valores)]="valores"
+          (actualizar)="actualizarPlantillas()" />
+      </section>
+    }
+  </div>
+
+  <div class="flex items-center justify-between gap-3 px-5 py-3 shrink-0 border-t border-border bg-bg-light">
+    <p class="text-xs text-text-muted min-w-0">{{ falta() ?? 'Listo para enviar.' }}</p>
+    <app-button variant="primary" size="sm" icon="send" [disabled]="!!falta() || enviando()" [loading]="enviando()" (clicked)="enviar()">
+      Enviar y abrir chat
+    </app-button>
+  </div>
+</app-drawer>

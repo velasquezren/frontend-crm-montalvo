@@ -4,11 +4,20 @@ import { inject, Injectable } from '@angular/core';
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
 import {
   ConversacionDetalle,
+  ConversacionIniciada,
   FiltrosInbox,
   MensajeApi,
   PaginaInbox,
   ResumenInbox,
 } from './conversacion.model';
+
+/** Lo que viaja al mandar una plantilla. Sin texto: lo compone el servidor. */
+export interface EnvioPlantilla {
+  readonly plantilla: string;
+  readonly idioma: string;
+  readonly parametros: readonly string[];
+  readonly clientMessageId: string;
+}
 
 /**
  * Conversaciones — WhatsApp Inbox (RF-09/RF-10).
@@ -147,11 +156,16 @@ export class ConversacionesService {
   }
 
   /** Envía una plantilla al paciente. `contenido` es el texto ya renderizado que se guarda. */
-  enviarPlantilla(
-    conversacionId: string,
-    payload: { plantilla: string; idioma: string; parametros: string[]; contenido: string },
-  ): Promise<MensajeApi> {
+  /** El texto que recibe el paciente lo compone el servidor; `clientMessageId` evita el doble envío. */
+  enviarPlantilla(conversacionId: string, payload: EnvioPlantilla): Promise<MensajeApi> {
     return this.api.post<MensajeApi>(`/conversaciones/${conversacionId}/plantilla`, payload);
+  }
+
+  /** Escribirle primero a una paciente o a un número nuevo desde una línea. */
+  iniciarConversacion(
+    payload: EnvioPlantilla & { lineaId: string; clienteId?: string; telefono?: string; nombre?: string },
+  ): Promise<ConversacionIniciada> {
+    return this.api.post<ConversacionIniciada>('/conversaciones/iniciar', payload);
   }
 
   /** Marca como leído (tildes azules) el último entrante; `typing` muestra "escribiendo…". */

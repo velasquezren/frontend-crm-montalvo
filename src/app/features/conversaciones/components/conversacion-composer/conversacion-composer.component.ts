@@ -30,7 +30,8 @@ import { ConversacionesService } from '../../conversaciones.service';
 import { MemoriaAgenteService } from '../../../memoria-agente/memoria-agente.service';
 import { RecursoMemoria } from '../../../memoria-agente/memoria-agente.model';
 import { MensajeApi, PlantillaResumen } from '../../conversacion.model';
-import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
+import { EnvioPlantillaComponent } from '../envio-plantilla/envio-plantilla.component';
+import { faltaParaEnviar } from '../../plantillas';
 import { NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 import { buscarAtajos, insertarEnCursor, rellenarNombre } from '../../atajos';
 
@@ -66,7 +67,7 @@ function tipoBase(mime: string): string {
   selector: 'app-conversacion-composer',
   imports: [
     DrawerComponent,
-    BadgeComponent,
+    EnvioPlantillaComponent,
     RouterLink,
     ButtonComponent,
     IconComponent,
@@ -147,8 +148,14 @@ export class ConversacionComposerComponent implements OnDestroy {
 
   /* ── Plantillas de WhatsApp (Ventana 24h) ───────────────────────── */
   protected readonly plantillaSeleccionada = signal<PlantillaResumen | null>(null);
-  protected readonly variablesPlantilla = signal<string[]>([]);
+  protected readonly variablesPlantilla = signal<readonly string[]>([]);
   protected readonly enviandoPlantilla = signal(false);
+  protected readonly plantillaLista = computed(() => {
+    const p = this.plantillaSeleccionada();
+    return !!p && faltaParaEnviar(p, this.variablesPlantilla()) === null;
+  });
+  /** Una intención de envío por apertura del cajón: el doble clic reusa la clave y el servidor no manda dos. */
+  private claveEnvioPlantilla = crypto.randomUUID();
 
   /* ── Gestión de Respuestas Rápidas ──────────────────────────────── */
   protected readonly editandoPlantillaId = signal<string | null>(null);
@@ -571,6 +578,7 @@ export class ConversacionComposerComponent implements OnDestroy {
   protected abrirPlantillas(): void {
     const tmpl = this.modalPlantillas();
     if (!tmpl) return;
+    this.claveEnvioPlantilla = crypto.randomUUID();
     this.overlayRef?.dispose();
     this.overlayRef = this.dialogService.abrirCajon(tmpl, this.vcr, {
       onClose: () => {
@@ -581,23 +589,10 @@ export class ConversacionComposerComponent implements OnDestroy {
     });
   }
 
-  protected seleccionarPlantilla(p: PlantillaResumen): void {
-    this.plantillaSeleccionada.set(p);
-    this.variablesPlantilla.set(Array.from({ length: p.variables }, () => ''));
-  }
-
-  protected setVariablePlantilla(index: number, val: string): void {
-    this.variablesPlantilla.update(vars => {
-      const next = [...vars];
-      next[index] = val;
-      return next;
-    });
-  }
-
   protected async enviarPlantillaWhatsApp(): Promise<void> {
     const p = this.plantillaSeleccionada();
     const id = this.state.seleccionadaId();
-    if (!p || !id || this.enviandoPlantilla()) return;
+    if (!p || !id || !this.plantillaLista() || this.enviandoPlantilla()) return;
 
     const contexto = this.state.contextoChat();
     this.enviandoPlantilla.set(true);
@@ -606,8 +601,9 @@ export class ConversacionComposerComponent implements OnDestroy {
         plantilla: p.nombre,
         idioma: p.idioma,
         parametros: this.variablesPlantilla(),
-        contenido: p.cuerpo,
+        clientMessageId: this.claveEnvioPlantilla,
       });
+      this.claveEnvioPlantilla = crypto.randomUUID();
       if (contexto !== this.state.contextoChat()) return;
       this.state.reconciliarEnvioLocal(id, null, real);
       this.toast.success('Plantilla de WhatsApp enviada.');
