@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, TemplateRef, viewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, TemplateRef, untracked, viewChild, ViewContainerRef } from '@angular/core';
 import { OverlayRef } from '@angular/cdk/overlay';
 
 import { DialogService } from '../../../../shared/components/dialog/dialog.service';
@@ -52,8 +52,22 @@ export class ConversacionListaComponent {
   private readonly vcr = inject(ViewContainerRef);
   private readonly nuevoChatTpl = viewChild.required<TemplateRef<unknown>>('nuevoChatTpl');
   private cajonNuevoChat?: OverlayRef;
+  /** Número con el que abre el cajón cuando se llega a una paciente sin chat. */
+  protected readonly telefonoNuevoChat = signal<string | null>(null);
 
-  protected abrirNuevoChat(): void {
+  constructor() {
+    effect(() => {
+      const telefono = this.state.nuevoChatPara();
+      if (!telefono) return;
+      untracked(() => {
+        this.state.nuevoChatPara.set(null);
+        this.abrirNuevoChat(telefono);
+      });
+    });
+  }
+
+  protected abrirNuevoChat(telefono: string | null = null): void {
+    this.telefonoNuevoChat.set(telefono);
     this.cajonNuevoChat?.dispose();
     this.cajonNuevoChat = this.dialog.abrirCajon(this.nuevoChatTpl(), this.vcr, {
       onClose: () => (this.cajonNuevoChat = undefined),

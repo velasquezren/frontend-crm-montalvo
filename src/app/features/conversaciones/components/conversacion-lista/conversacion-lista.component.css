@@ -220,3 +220,23 @@
   color: var(--color-text-muted);
   letter-spacing: 0.01em;
 }
+
+/* «Nuevo chat»: solo el icono, del tamaño del contador de al lado. Un botón
+   primario con texto competía con la bandeja por la atención. */
+.nuevo-chat-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.nuevo-chat-btn:hover,
+.nuevo-chat-btn:focus-visible {
+  color: var(--color-primary);
+  background: var(--color-bg-light);
+}

@@ -5,6 +5,7 @@ import { DatePipe } from '@angular/common';
 import { etiquetasDe, textoExtra, textoExtraOpcional } from '../../core/api/datos-extra';
 import { edadDePaciente } from '../../core/api/edad';
 import { mensajeDeError } from '../../core/api/http-error';
+import { enlaceAlChat } from '../conversaciones/enlace-chat';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
@@ -238,8 +239,9 @@ export class ClientesPage {
     void this.router.navigate([ruta], { queryParams });
   }
 
+  /** Iba con `clienteId`, que la bandeja no lee: llegaba sin abrir nada. Ver `enlaceAlChat`. */
   protected irAConversacion(cliente: Cliente): void {
-    this.irACon('/conversaciones', { clienteId: cliente.id });
+    this.irACon('/conversaciones', enlaceAlChat(cliente.telefono));
   }
 
   protected irARegistrarVenta(cliente: Cliente): void {

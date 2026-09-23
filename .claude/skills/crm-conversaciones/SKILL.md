@@ -151,6 +151,22 @@ de alta nada.
 - **Una clave `clientMessageId` por apertura del cajón**: un doble clic no manda
   —ni cobra— dos plantillas.
 
+### Llegar al chat de una paciente desde otra pantalla
+
+Todo enlace va con `?telefono=` (`enlaceAlChat`). Había cuatro contratos para
+lo mismo y el botón «Conversación» de la ficha en Clientes mandaba `clienteId`,
+que la bandeja no leía: llevaba a la bandeja sin abrir nada.
+
+`abrirChatDePaciente()` lo resuelve **una vez**, preguntando al servidor, y
+retira el parámetro de la URL: un chat → lo abre; varios (una por línea) →
+deja la búsqueda para elegir; ninguno → abre «Nuevo chat» con el número puesto.
+Coincidencia **exacta** de número (`resolverChatDePaciente`), nunca «contiene».
+
+Cicatriz: el teléfono se quedaba en la URL y un efecto lo reaplicaba con cada
+cambio de la bandeja, así que un mensaje en tiempo real devolvía a la agente al
+chat del enlace aunque ella ya estuviera en otro. `?id=` (push, avisos) no
+cambia.
+
 ## 2. Visibilidad y Seguridad por Rol
 
 - **Administrador y Super Admin (`ADMIN` / `SUPER_ADMIN`)**:

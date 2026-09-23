@@ -702,6 +702,9 @@ export class ConversacionesStateService {
     this.deseleccionar();
   }
 
+  /** Pedido de abrir «Nuevo chat» con el número ya puesto: llegar a una paciente que aún no tiene chat. */
+  readonly nuevoChatPara = signal<string | null>(null);
+
   /**
    * Tras «Nuevo chat». El chat puede ser de una línea que la bandeja no está
    * mostrando: se quita el filtro de línea en la misma navegación, para no

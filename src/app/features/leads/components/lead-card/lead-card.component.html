@@ -13,7 +13,7 @@
 
   <a
     [routerLink]="['/conversaciones']"
-    [queryParams]="{ busqueda: lead().cliente.telefono }"
+    [queryParams]="{ telefono: lead().cliente.telefono }"
     (click)="$event.stopPropagation()"
     class="p-1 rounded-lg text-text-muted hover:text-primary hover:bg-bg-light transition-colors inline-flex shrink-0"
     title="Abrir chat en WhatsApp"

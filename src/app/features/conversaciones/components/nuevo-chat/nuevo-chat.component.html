@@ -1,5 +1,8 @@
 <app-drawer ancho="md" titulo="Nuevo chat" subtitulo="El primer mensaje es una plantilla aprobada por Meta" icono="message-circle" (cerrar)="cerrar.emit()">
   <div class="flex-1 overflow-y-auto p-5 space-y-6">
+    @if (telefonoInicial()) {
+      <p class="text-xs text-text-muted -mb-2">Esta paciente todavía no tiene chat en tus líneas. Escríbele con una plantilla.</p>
+    }
 
     <!-- 1. Desde qué línea -->
     <section class="space-y-2">

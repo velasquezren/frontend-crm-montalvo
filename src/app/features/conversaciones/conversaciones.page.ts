@@ -6,8 +6,9 @@ import {
   effect,
   inject,
   OnDestroy,
+  untracked,
 } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 
@@ -16,6 +17,9 @@ import { ModoInmersivoService } from '../../core/ui/modo-inmersivo.service';
 import { NotificacionNativaService } from '../../core/notification/notificacion-nativa.service';
 import { ConversacionesService } from './conversaciones.service';
 import { esFiltroInbox } from './conversacion.model';
+import { resolverChatDePaciente } from './enlace-chat';
+import { ToastService } from '../../core/toast/toast.service';
+import { mensajeDeError } from '../../core/api/http-error';
 import { textoVistaPrevia } from './vista-previa';
 import { nombreParaMostrar } from '../../shared/models/nombre-cliente';
 import { ConversacionesStateService } from './services/conversaciones-state.service';
@@ -77,6 +81,8 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
   private readonly modoInmersivo = inject(ModoInmersivoService);
   private readonly notificacionNativa = inject(NotificacionNativaService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   private pollingInterval: ReturnType<typeof setInterval> | null = null;
   private alVolverAlFrente: (() => void) | null = null;
@@ -88,9 +94,15 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
     { initialValue: null },
   );
 
-  /** Búsqueda o teléfono pasado por URL desde otros módulos. */
+  /** Texto de búsqueda pasado por URL: solo filtra la bandeja, no abre nada. */
   private readonly busquedaEnRuta = toSignal(
-    this.route.queryParamMap.pipe(map(p => p.get('busqueda') || p.get('telefono'))),
+    this.route.queryParamMap.pipe(map(p => p.get('busqueda'))),
+    { initialValue: null },
+  );
+
+  /** «Llévame al chat de esta paciente» desde Clientes, Leads o Actividades (ver `enlaceAlChat`). */
+  private readonly telefonoEnRuta = toSignal(
+    this.route.queryParamMap.pipe(map(p => p.get('telefono'))),
     { initialValue: null },
   );
 
@@ -180,27 +192,9 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
     });
 
     effect(() => {
-      const q = this.busquedaEnRuta();
-      if (!q) return;
-
-      /* Llegar desde Clientes o Leads con un teléfono ahora SÍ encuentra a la
-         paciente aunque su chat sea antiguo: la búsqueda la resuelve el
-         servidor sobre todas las conversaciones, no sobre las cargadas.
-         Este efecto se vuelve a ejecutar cuando llega el resultado —lee
-         `conversacionesFiltradas()`—, así que basta con esperar a que haya
-         algo que abrir. */
-      const chats = this.state.conversacionesFiltradas();
-      if (chats.length > 0) {
-        const queryNorm = q.trim().toLowerCase();
-        const coincidencias = chats.filter(
-          c => c.cliente.telefono.includes(queryNorm) || c.cliente.nombre.toLowerCase().includes(queryNorm),
-        );
-        // Si tiene varias líneas, la agente elige el chat antes de escribir.
-        const coincidencia = coincidencias.length === 1 ? coincidencias[0] : undefined;
-        if (coincidencia && this.state.seleccionadaId() !== coincidencia.id) {
-          this.state.seleccionar(coincidencia.id);
-        }
-      }
+      const telefono = this.telefonoEnRuta();
+      if (!telefono) return;
+      untracked(() => void this.abrirChatDePaciente(telefono));
     });
 
     /* Modo inmersivo en móvil cuando hay chat abierto */
@@ -243,6 +237,49 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
         tag: `chat-${conversacionId}`,
         alHacerClic: () => this.state.seleccionar(conversacionId),
       });
+    }
+  }
+
+  /**
+   * Resuelve UNA vez el enlace «chat de esta paciente» y lo retira de la URL.
+   *
+   * Antes el teléfono se quedaba en la URL y un efecto lo volvía a aplicar cada
+   * vez que la bandeja cambiaba: si la agente abría otro chat, el siguiente
+   * mensaje en tiempo real la devolvía al de la paciente del enlace. Y se
+   * elegía por «contiene», así que podía abrir el chat de otra persona.
+   *
+   * Se pregunta al servidor en vez de mirar la bandeja cargada: el chat puede
+   * ser antiguo o de otra línea que no está en pantalla.
+   */
+  private async abrirChatDePaciente(telefono: string): Promise<void> {
+    this.state.filtroLineaId.set(null);
+    this.state.filtroTab.set('TODAS');
+    this.state.filtroAgenteId.set(null);
+    this.state.soloMisChatsAdmin.set(false);
+    try {
+      const pagina = await this.conversacionesService.listarPagina(
+        { lineaId: null, tab: 'TODAS', busqueda: telefono, agenteId: null, soloMios: false },
+        1,
+      );
+      const chat = resolverChatDePaciente(pagina.datos, telefono);
+      if (chat.tipo === 'UNO') {
+        this.state.busqueda.set('');
+        void this.router.navigate([], { queryParams: { id: chat.id, telefono: null }, queryParamsHandling: 'merge', replaceUrl: true });
+        return;
+      }
+      void this.router.navigate([], { queryParams: { telefono: null }, queryParamsHandling: 'merge', replaceUrl: true });
+      if (chat.tipo === 'VARIOS') {
+        this.state.busqueda.set(telefono);
+        this.toast.info('Tiene chats en varias líneas: elige cuál abrir.');
+      } else {
+        /* Sin chat todavía (o de una línea a la que no tienes acceso): se
+           ofrece escribirle, con el número ya puesto. */
+        this.state.nuevoChatPara.set(telefono);
+      }
+    } catch (err) {
+      this.state.busqueda.set(telefono);
+      void this.router.navigate([], { queryParams: { telefono: null }, queryParamsHandling: 'merge', replaceUrl: true });
+      this.toast.error(mensajeDeError(err, 'No se pudo buscar el chat de la paciente.'));
     }
   }
 

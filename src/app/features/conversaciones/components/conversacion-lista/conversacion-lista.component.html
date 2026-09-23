@@ -18,7 +18,10 @@
           <span class="stat-dot"></span>
           {{ state.stats().total }} chat{{ state.stats().total === 1 ? '' : 's' }}
         </div>
-        <app-button variant="primary" size="sm" icon="plus" ariaLabel="Nuevo chat" (clicked)="abrirNuevoChat()">Nuevo</app-button>
+        <!-- Discreto a propósito: es una acción ocasional y la bandeja es para leer. -->
+        <button type="button" class="nuevo-chat-btn" title="Nuevo chat" aria-label="Nuevo chat" (click)="abrirNuevoChat()">
+          <app-icon name="edit" [size]="15" />
+        </button>
       </div>
     </div>
   </div>
@@ -284,5 +287,5 @@
 </aside>
 
 <ng-template #nuevoChatTpl>
-  <app-nuevo-chat (cerrar)="cerrarNuevoChat()" (iniciado)="alIniciarChat($event)" />
+  <app-nuevo-chat [telefonoInicial]="telefonoNuevoChat()" (cerrar)="cerrarNuevoChat()" (iniciado)="alIniciarChat($event)" />
 </ng-template>

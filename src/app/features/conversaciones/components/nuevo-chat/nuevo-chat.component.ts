@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 
 import { mensajeDeError } from '../../../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../../../core/api/pagination.model';
@@ -51,6 +51,9 @@ export class NuevoChatComponent {
   private readonly conversaciones = inject(ConversacionesService);
   private readonly clientes = inject(ClientesService);
   private readonly toast = inject(ToastService);
+
+  /** Llega puesto cuando se vino desde la ficha de una paciente que aún no tiene chat. */
+  readonly telefonoInicial = input<string | null>(null);
 
   readonly cerrar = output<void>();
   readonly iniciado = output<string>();
@@ -106,6 +109,11 @@ export class NuevoChatComponent {
   });
 
   constructor() {
+    effect(() => {
+      const telefono = this.telefonoInicial();
+      if (telefono) untracked(() => this.elegirNumero(telefono));
+    });
+
     /* Con una sola línea no hay nada que elegir. */
     effect(() => {
       const disponibles = this.lineas();
