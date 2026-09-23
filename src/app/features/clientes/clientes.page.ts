@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { DatePipe } from '@angular/common';
 
 import { etiquetasDe, textoExtra, textoExtraOpcional } from '../../core/api/datos-extra';
+import { edadDePaciente } from '../../core/api/edad';
 import { mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
@@ -443,23 +444,6 @@ export class ClientesPage {
       .map(([etiqueta, valor, icono]) => ({ etiqueta, valor: String(valor), icono }));
   });
 
-  /**
-   * Siempre se calcula desde la fecha de nacimiento. El campo `Edad.a` que trae
-   * FileMaker es la edad del día en que se capturó el registro y está desfasado
-   * hasta 18 años, así que se ignora deliberadamente.
-   */
-  protected obtenerEdad(cliente: Cliente): string | null {
-    const fn = cliente.fechaNacimiento || textoExtra(cliente.datosExtra, 'fechaNacimiento', 'fn');
-    if (fn) {
-      const nac = new Date(fn);
-      if (!isNaN(nac.getTime())) {
-        const hoy = new Date();
-        let e = hoy.getFullYear() - nac.getFullYear();
-        const m = hoy.getMonth() - nac.getMonth();
-        if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) e--;
-        if (e >= 0) return `${e} años`;
-      }
-    }
-    return null;
-  }
+  /** Ver `edadDePaciente`: nunca el `Edad.a` de FileMaker. */
+  protected readonly obtenerEdad = edadDePaciente;
 }

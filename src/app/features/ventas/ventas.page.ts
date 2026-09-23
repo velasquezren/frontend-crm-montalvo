@@ -767,6 +767,9 @@ export class VentasPage implements OnDestroy {
 
   protected async guardar(event: Event): Promise<void> {
     event.preventDefault();
+    /* Una venta duplicada es dinero contado dos veces en comisiones: el botón
+       deshabilitado no frena un Enter repetido mientras la primera viaja. */
+    if (this.guardando()) return;
     this.errorForm.set('');
 
     const cliente = this.clienteElegido();
@@ -784,6 +787,12 @@ export class VentasPage implements OnDestroy {
       return;
     }
 
+    /* Guardar a mitad de la subida registraba la venta sin comprobante y sin
+       avisar: el archivo terminaba de subir después, huérfano. */
+    if (this.subiendoComprobante()) {
+      this.errorForm.set('Espera a que termine de subir el comprobante.');
+      return;
+    }
     const subido = this.comprobanteSubido();
 
     this.guardando.set(true);

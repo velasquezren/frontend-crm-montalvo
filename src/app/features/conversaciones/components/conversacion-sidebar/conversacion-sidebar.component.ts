@@ -25,7 +25,7 @@ import {
 } from '../../../../shared/models/cliente-categoria.model';
 import { generarIniciales } from '../../../../core/auth/user.model';
 import { ROL_LABEL } from '../../../../core/auth/roles';
-import { calcularEdad } from '../../../../core/api/edad';
+import { edadDePaciente } from '../../../../core/api/edad';
 import { aDatetimeLocal } from '../../../../core/api/fecha';
 import { etiquetasDe, textoExtra } from '../../../../core/api/datos-extra';
 import { mensajeDeError } from '../../../../core/api/http-error';
@@ -117,9 +117,7 @@ export class ConversacionSidebarComponent {
   /** Era una copia de `obtenerEtiquetas` de Clientes, con otro nombre. */
   protected readonly tagsDe = etiquetasDe;
 
-  protected edadDe(cliente: ClienteChat): string | null {
-    return calcularEdad(cliente.fechaNacimiento);
-  }
+  protected readonly edadDe = edadDePaciente;
 
   /** Ver `campanaOrigenDe`. Era una copia de la del hilo y ya había divergido:
    *  leía cuatro campos donde la otra leía siete, así que el mismo chat
