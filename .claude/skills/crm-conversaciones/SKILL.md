@@ -264,6 +264,14 @@ el mismo error que el backend ya había corregido en el push.
 
 ### Hilo y compositor: lo que hace que se sienta WhatsApp
 
+- **Abrir un chat muestra el último mensaje, aunque haya fotos.** Las fotos
+  cargan en diferido (`loading="lazy"`): empiezan a bajar DESPUÉS del salto al
+  fondo y, al llegar, crecen de 0 a hasta 288 px y empujan la vista hacia
+  arriba —en Safari siempre, porque no compensa ese salto—. Mientras se esté al
+  fondo, cada `load`/`loadedmetadata` de imagen o video (escuchado en captura
+  sobre el contenedor) vuelve a bajar. Y «bajar al abrir» (`bajarAlAbrir`)
+  queda pendiente hasta que los mensajes reales están en el hilo: la vista
+  provisional sin mensajes ya no gasta la marca. No quitar ninguna de las dos.
 - **«↓» con contador** cuando se lee más arriba y llegan mensajes: el hilo no
   arrastra al fondo (`pegadoAlFondo`), pero tampoco calla. Cuenta lo que quedó
   detrás del último mensaje visto, no el total —cargar historial también hace

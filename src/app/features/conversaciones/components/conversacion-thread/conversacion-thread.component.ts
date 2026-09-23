@@ -106,8 +106,39 @@ export class ConversacionThreadComponent {
   private ultimoMensajeId: string | null = null;
   private static readonly UMBRAL_FONDO_PX = 120;
   private ultimaVersionEnvioVista = 0;
+  /**
+   * Bajar al último mensaje queda pendiente hasta que los mensajes estén de
+   * verdad en el hilo. Al abrir un chat primero se ve la fila del listado, sin
+   * mensajes; antes la marca de «chat nuevo» se gastaba en ese instante vacío y
+   * al llegar los mensajes reales bajar dependía de que ningún evento de
+   * scroll intermedio hubiera cambiado `pegadoAlFondo`.
+   */
+  private bajarAlAbrir = false;
 
   constructor() {
+    /* Las fotos del hilo cargan en diferido: empiezan a bajar DESPUÉS de que el
+       hilo salta al fondo y, al llegar, crecen de 0 a hasta 288 px y empujan
+       la vista hacia arriba. Por eso al abrir un chat el último mensaje
+       quedaba fuera de pantalla (en Safari siempre: no compensa ese salto).
+       Mientras se esté al fondo, cada foto o video que termina de cargar
+       vuelve a llevarlo al último mensaje; si se subió a leer, no se toca.
+       `load` no burbujea: se escucha en captura sobre el contenedor. */
+    effect(onCleanup => {
+      const container = this.messagesContainer()?.nativeElement;
+      if (!container) return;
+      const alCrecerMedia = (evento: Event) => {
+        const origen = evento.target;
+        if (!(origen instanceof HTMLImageElement || origen instanceof HTMLVideoElement)) return;
+        if (untracked(this.pegadoAlFondo)) container.scrollTop = container.scrollHeight;
+      };
+      container.addEventListener('load', alCrecerMedia, true);
+      container.addEventListener('loadedmetadata', alCrecerMedia, true);
+      onCleanup(() => {
+        container.removeEventListener('load', alCrecerMedia, true);
+        container.removeEventListener('loadedmetadata', alCrecerMedia, true);
+      });
+    });
+
     effect(() => {
       const container = this.messagesContainer()?.nativeElement;
       const anchor = this.bottomAnchor()?.nativeElement;
@@ -126,6 +157,7 @@ export class ConversacionThreadComponent {
 
       if (esNuevoChat) {
         this.scrollInicialListo = false;
+        this.bajarAlAbrir = true;
         this.pegadoAlFondo.set(true);
         this.nuevosSinVer.set(0);
         this.ultimoMensajeId = null;
@@ -147,12 +179,16 @@ export class ConversacionThreadComponent {
       const esEnvioPropio = versionEnvio !== this.ultimaVersionEnvioVista;
       this.ultimaVersionEnvioVista = versionEnvio;
 
-      if (!container || items.length === 0) return;
+      /* Sin mensajes todavía (la vista provisional): `bajarAlAbrir` sigue
+         pendiente para cuando lleguen. */
+      if (!container || !mensajes.length || this.state.detalleEsProvisional()) return;
 
-      // Un chat nuevo o un envío propio siempre bajan al fondo. Cualquier
-      // otro cambio —un mensaje entrante, cargar historial anterior— solo
-      // baja si el usuario ya estaba ahí.
-      if (!esNuevoChat && !esEnvioPropio && !untracked(this.pegadoAlFondo)) return;
+      // Un chat recién abierto o un envío propio siempre bajan al fondo.
+      // Cualquier otro cambio —un mensaje entrante, cargar historial
+      // anterior— solo baja si el usuario ya estaba ahí.
+      if (!this.bajarAlAbrir && !esEnvioPropio && !untracked(this.pegadoAlFondo)) return;
+      this.bajarAlAbrir = false;
+      this.pegadoAlFondo.set(true);
 
       const forzarAbajo = () => {
         container.scrollTop = container.scrollHeight;
