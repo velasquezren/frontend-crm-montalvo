@@ -21,4 +21,9 @@ export class ResultadosService {
   enviar(informeId: string): Promise<{ enviado: true; mensajeId: string }> {
     return this.api.post<{ enviado: true; mensajeId: string }>(`/resultados/${informeId}/enviar`);
   }
+
+  /** El enlace venció: se extiende 30 días y se vuelve a avisar al paciente. */
+  renovarYEnviar(informeId: string): Promise<{ enviado: true; mensajeId: string }> {
+    return this.api.post<{ enviado: true; mensajeId: string }>(`/resultados/${informeId}/renovar-y-enviar`);
+  }
 }

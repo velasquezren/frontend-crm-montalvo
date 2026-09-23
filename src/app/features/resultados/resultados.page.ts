@@ -17,7 +17,7 @@ import { TableComponent } from '../../shared/components/table/table.component';
 import { nombreParaMostrar } from '../../shared/models/nombre-cliente';
 import { NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { ToastService } from '../../core/toast/toast.service';
-import { EntregaResultado, estadoEntrega, motivoBloqueo, nombresDistintos, sePuedeEntregar } from './resultado.model';
+import { EntregaResultado, estadoEntrega, motivoBloqueo, nombresDistintos, sePuedeEntregar, sePuedeRenovar } from './resultado.model';
 import { ResultadosService } from './resultados.service';
 
 /**
@@ -57,7 +57,8 @@ export class ResultadosPage {
   protected readonly pagina = signal(1);
   /** Informe que se está enviando: bloquea solo su fila, no la tabla entera. */
   protected readonly enviando = signal<string | null>(null);
-  protected readonly candidato = signal<EntregaResultado | null>(null);
+  /** A quién se va a enviar y si antes hay que renovar su enlace vencido. */
+  protected readonly candidato = signal<{ fila: EntregaResultado; renovar: boolean } | null>(null);
 
   protected readonly entregas = httpResource<RespuestaPaginada<EntregaResultado>>(
     () => this.resultadosService.pendientesRequest(this.pagina()),
@@ -67,12 +68,13 @@ export class ResultadosPage {
   /* Las dos reglas viven en el modelo: la plantilla las consulta y la prueba
      las fija, y escritas dos veces divergen. */
   protected readonly sePuedeEnviar = sePuedeEntregar;
+  protected readonly sePuedeRenovar = sePuedeRenovar;
   protected readonly motivoBloqueo = motivoBloqueo;
   protected readonly estadoEntrega = estadoEntrega;
   protected readonly distintos = nombresDistintos;
 
-  protected pedirConfirmacion(fila: EntregaResultado): void {
-    this.candidato.set(fila);
+  protected pedirConfirmacion(fila: EntregaResultado, renovar = false): void {
+    this.candidato.set({ fila, renovar });
     this.overlay = this.dialog.openTemplate(this.plantillaConfirmar(), this.vcr);
   }
 
@@ -83,12 +85,13 @@ export class ResultadosPage {
   }
 
   protected async confirmarEnvio(): Promise<void> {
-    const fila = this.candidato();
-    if (!fila) return;
+    const candidato = this.candidato();
+    if (!candidato) return;
+    const { fila, renovar } = candidato;
     this.cerrarConfirmacion();
     this.enviando.set(fila.informeId);
     try {
-      await this.resultadosService.enviar(fila.informeId);
+      await (renovar ? this.resultadosService.renovarYEnviar(fila.informeId) : this.resultadosService.enviar(fila.informeId));
       this.toast.success(
         /* Meta confirma después: el estado real aparece en la fila. */
         `El enlace del informe va en camino a ${fila.paciente ? nombreParaMostrar(fila.paciente) : 'el paciente'}.`,

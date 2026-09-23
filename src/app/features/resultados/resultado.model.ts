@@ -27,6 +27,8 @@ export interface EntregaResultado {
   readonly pacientePortal: { readonly nombre: string; readonly pac: string | null; readonly ci: string | null };
   /** `null` = todavía no se le avisó. */
   readonly aviso: { readonly enviadoEn: string; readonly estadoMensaje: EstadoMensaje | null } | null;
+  /** Primera vez que el paciente abrió su informe. Entregado no es visto: esto sí. */
+  readonly abiertoEn: string | null;
 }
 
 /**
@@ -56,16 +58,27 @@ function avisoFallido(fila: EntregaResultado): boolean {
  */
 export function estadoEntrega(fila: EntregaResultado): { texto: string; variant: BadgeVariant; icon: IconName } {
   const estado = fila.aviso?.estadoMensaje;
+  /* Lo que de verdad importa va primero: si lo abrió, lo demás ya da igual. */
+  if (fila.abiertoEn) return { texto: 'Abierto por el paciente', variant: 'success', icon: 'eye' };
   if (fila.aviso) {
     if (estado === 'FALLIDO') return { texto: 'No se entregó', variant: 'critical', icon: 'alert-circle' };
     if (estado === 'INCIERTO') return { texto: 'Sin confirmar', variant: 'neutral', icon: 'clock' };
     if (estado === 'ENTREGADO' || estado === 'LEIDO') return { texto: 'Entregado', variant: 'success', icon: 'check-check' };
     return { texto: 'Enviado', variant: 'info', icon: 'check' };
   }
-  if (!fila.accesoVigente) return { texto: 'Acceso vencido', variant: 'critical', icon: 'alert-circle' };
+  if (!fila.accesoVigente) return { texto: 'Enlace vencido', variant: 'neutral', icon: 'clock' };
   if (fila.sinFicha === 'CI_REPETIDO') return { texto: 'CI repetido', variant: 'critical', icon: 'alert-circle' };
   if (!fila.paciente) return { texto: 'Sin vincular', variant: 'neutral', icon: 'user-plus' };
   return { texto: 'Pendiente de avisar', variant: 'info', icon: 'clock' };
+}
+
+/**
+ * El enlace venció y el paciente está reconocido: se puede extender y volver
+ * a avisar en un paso. El enlace es el mismo, así que el mensaje anterior
+ * también vuelve a abrir.
+ */
+export function sePuedeRenovar(fila: EntregaResultado): boolean {
+  return fila.paciente !== null && !fila.accesoVigente;
 }
 
 /** Por qué no se puede, en las palabras que ve el asistente. */
@@ -74,7 +87,7 @@ export function motivoBloqueo(fila: EntregaResultado): string {
   if (fila.aviso) return 'Ya se le avisó';
   if (fila.sinFicha === 'CI_REPETIDO') return 'Su CI está en dos fichas: corrígelas';
   if (!fila.paciente) return 'Sin ficha con ese PAC o CI';
-  if (!fila.accesoVigente) return 'Acceso vencido';
+  if (!fila.accesoVigente) return 'Enlace vencido';
   return '';
 }
 

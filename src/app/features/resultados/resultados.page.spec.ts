@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { cubreRol, puedeEntregarResultados } from '../../core/auth/roles';
 import { RolUsuario } from '../../core/auth/user.model';
 import { NAV_GROUPS } from '../../shared/components/layout/nav-items';
-import { EntregaResultado, estadoEntrega, nombresDistintos, sePuedeEntregar } from './resultado.model';
+import { EntregaResultado, estadoEntrega, nombresDistintos, sePuedeEntregar, sePuedeRenovar } from './resultado.model';
 
 /**
  * La parte de esta pantalla que decide algo, aislada de Angular: cuándo se
@@ -26,6 +26,7 @@ const base: EntregaResultado = {
   sinFicha: null,
   pacientePortal: { nombre: 'Paciente', pac: 'PAC33009', ci: null },
   aviso: null,
+  abiertoEn: null,
 };
 
 describe('cuándo se puede entregar un resultado', () => {
@@ -56,6 +57,21 @@ describe('cuándo se puede entregar un resultado', () => {
     const incierto = { ...base, aviso: { enviadoEn: '2026-09-22T12:00:00.000Z', estadoMensaje: 'INCIERTO' as const } };
     expect(sePuedeEntregar(incierto)).toBe(false);
     expect(estadoEntrega(incierto).texto).toBe('Sin confirmar');
+  });
+});
+
+describe('enlace abierto y enlace vencido', () => {
+  it('«abierto por el paciente» manda sobre el estado del mensaje', () => {
+    const abierto = { ...base, abiertoEn: '2026-09-23T10:00:00.000Z', aviso: { enviadoEn: '2026-09-22T12:00:00.000Z', estadoMensaje: 'ENTREGADO' as const } };
+    expect(estadoEntrega(abierto).texto).toBe('Abierto por el paciente');
+    expect(sePuedeEntregar(abierto)).toBe(false);
+  });
+
+  it('un enlace vencido no se envía tal cual, se renueva y envía', () => {
+    const vencido = { ...base, accesoVigente: false };
+    expect(sePuedeEntregar(vencido)).toBe(false);
+    expect(sePuedeRenovar(vencido)).toBe(true);
+    expect(sePuedeRenovar({ ...vencido, paciente: null })).toBe(false);
   });
 });
 

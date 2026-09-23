@@ -53,7 +53,7 @@
           <td class="text-left">
             @let estado = estadoEntrega(fila);
             <app-badge [variant]="estado.variant" [icon]="estado.icon">
-              {{ estado.texto }}@if (fila.aviso) { · {{ fila.aviso.enviadoEn | date: 'd MMM, HH:mm' }}}
+              {{ estado.texto }}@if (fila.abiertoEn) { · {{ fila.abiertoEn | date: 'd MMM, HH:mm' }}} @else if (fila.aviso) { · {{ fila.aviso.enviadoEn | date: 'd MMM, HH:mm' }}}
             </app-badge>
           </td>
           <td class="text-right">
@@ -65,6 +65,16 @@
                 [disabled]="enviando() !== null"
                 (clicked)="pedirConfirmacion(fila)">
                 {{ fila.aviso ? 'Reenviar' : 'Enviar por WhatsApp' }}
+              </app-button>
+            } @else if (sePuedeRenovar(fila)) {
+              <app-button
+                size="sm"
+                variant="secondary"
+                icon="rotate-cw"
+                [loading]="enviando() === fila.informeId"
+                [disabled]="enviando() !== null"
+                (clicked)="pedirConfirmacion(fila, true)">
+                Renovar y enviar
               </app-button>
             } @else {
               <span class="text-sm text-text-muted">{{ motivoBloqueo(fila) }}</span>
@@ -91,8 +101,11 @@
 <!-- Enviar cuesta dinero y no se puede deshacer: se confirma a quién va. -->
 <ng-template #confirmar>
   <div class="pointer-events-auto w-full max-w-md bg-background rounded-2xl shadow-lifted p-6 animate-modal-pop">
-    <h2 class="text-base font-bold text-text-dark">Enviar el resultado por WhatsApp</h2>
-    @if (candidato(); as fila) {
+    @if (candidato(); as c) {
+      @let fila = c.fila;
+      <h2 class="text-base font-bold text-text-dark">
+        {{ c.renovar ? 'Renovar el enlace y enviarlo' : 'Enviar el resultado por WhatsApp' }}
+      </h2>
       @if (fila.paciente; as ficha) {
         <p class="mt-3 text-sm text-text-dark">
           Se enviará a <strong>{{ ficha | nombreCliente }}</strong> al número
@@ -108,14 +121,19 @@
         }
       }
       <p class="mt-3 text-sm text-text-muted">
-        El mensaje lleva el enlace de su informe, no el código de acceso: ese se lo
-        entregaron en la clínica. WhatsApp puede generar un cargo y el envío no se
-        puede deshacer.
+        @if (c.renovar) {
+          El enlace venció: se extenderá 30 días y el paciente recibirá un mensaje
+          nuevo. El anterior también volverá a abrir.
+        }
+        Al tocar el botón del mensaje verá su informe directamente, sin códigos.
+        WhatsApp puede generar un cargo y el envío no se puede deshacer.
       </p>
     }
     <div class="mt-6 flex justify-end gap-3">
       <app-button variant="ghost" (clicked)="cerrarConfirmacion()">Cancelar</app-button>
-      <app-button icon="message-circle" (clicked)="confirmarEnvio()">Enviar aviso</app-button>
+      <app-button icon="message-circle" (clicked)="confirmarEnvio()">
+        {{ candidato()?.renovar ? 'Renovar y enviar' : 'Enviar aviso' }}
+      </app-button>
     </div>
   </div>
 </ng-template>
