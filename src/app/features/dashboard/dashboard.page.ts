@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
@@ -17,6 +17,7 @@ import { LoadingSkeletonComponent } from '../../shared/components/loading-skelet
 import { SparklineComponent } from '../../shared/components/sparkline/sparkline.component';
 import { NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { ORIGEN_LABEL } from '../leads/lead.model';
+import { enlaceAlChat } from '../conversaciones/enlace-chat';
 import { ActividadItem, formatearEspera, KpiResumen, PeriodoKpi, porcentaje, variacion } from './kpis.model';
 import { KpisService } from './kpis.service';
 
@@ -94,15 +95,32 @@ export class DashboardPage {
   );
 
   /** Hora de la última respuesta: sustituye al «Tiempo real», que no lo era. */
+  /**
+   * Los últimos indicadores que llegaron, aunque se esté pidiendo otro periodo.
+   *
+   * Al cambiar de periodo `httpResource` se queda sin valor mientras carga, y el
+   * panel entero se cambiaba por esqueletos de otra altura: la página saltaba
+   * dos veces por clic. Ahora lo anterior se queda, atenuado, hasta que llega
+   * lo nuevo.
+   */
+  protected readonly datos = linkedSignal<KpiResumen | undefined, KpiResumen | undefined>({
+    /* `value()` lanza con el recurso en error: se pregunta antes. */
+    source: () => (this.kpiData.hasValue() ? this.kpiData.value() : undefined),
+    computation: (nuevo, previo) => nuevo ?? previo?.value,
+  });
+
+  /** Hay datos a la vista pero se está pidiendo otro periodo. */
+  protected readonly recargando = computed(() => this.kpiData.isLoading() && !!this.datos());
+
   protected readonly actualizadoA = computed(() => {
-    if (!this.kpiData.value()) return '';
+    if (!this.kpiData.hasValue()) return '';
     return new Date().toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' });
   });
 
   private readonly periodoActual = computed(() => PERIODOS.find(p => p.clave === this.periodo()) ?? PERIODOS[0]);
 
   protected readonly tarjetas = computed<Tarjeta[]>(() => {
-    const r = this.kpiData.value();
+    const r = this.datos();
     if (!r) return [];
     const { embudo, ventas, serie } = r;
     const { comparado, corto } = this.periodoActual();
@@ -165,7 +183,7 @@ export class DashboardPage {
    * vistazo QUÉ días quedaron gente sin atender, no solo cuántos entraron.
    */
   protected readonly serie = computed(() => {
-    const r = this.kpiData.value();
+    const r = this.datos();
     if (!r) return null;
     const max = Math.max(...r.serie.map(p => p.captados), 1);
     const semanal = r.periodo.granularidad === 'SEMANA';
@@ -188,7 +206,7 @@ export class DashboardPage {
   });
 
   protected readonly embudo = computed(() => {
-    const e = this.kpiData.value()?.embudo;
+    const e = this.datos()?.embudo;
     if (!e) return [];
     return [
       { etapa: 'Captados', cantidad: e.captados, ancho: e.captados ? 100 : 0, nota: 'leads que entraron en el periodo' },
@@ -208,14 +226,14 @@ export class DashboardPage {
   });
 
   protected readonly canales = computed(() => {
-    const r = this.kpiData.value();
+    const r = this.datos();
     if (!r) return [];
     const max = Math.max(...r.canales.map(c => c.captados), 1);
     return r.canales.map(c => ({ ...c, ancho: (c.captados / max) * 100 }));
   });
 
   protected readonly equipo = computed(() => {
-    const agentes = this.kpiData.value()?.ventas.porAgente ?? [];
+    const agentes = this.datos()?.ventas.porAgente ?? [];
     const max = Math.max(...agentes.map(a => a.monto), 1);
     return agentes.map((a, i) => ({
       ...a,
@@ -227,11 +245,11 @@ export class DashboardPage {
   });
 
   protected readonly servicios = computed(() =>
-    (this.kpiData.value()?.topServicios ?? []).map(s => ({ ...s, monto: this.moneda.formatearBob(s.monto) })),
+    (this.datos()?.topServicios ?? []).map(s => ({ ...s, monto: this.moneda.formatearBob(s.monto) })),
   );
 
   protected readonly actividad = computed(() =>
-    (this.kpiData.value()?.actividadReciente ?? []).map(a => ({
+    (this.datos()?.actividadReciente ?? []).map(a => ({
       ...a,
       que: a.tipo === 'VENTA' ? a.detalle : `Lead · ${ORIGEN_LABEL[a.detalle as keyof typeof ORIGEN_LABEL] ?? a.detalle}`,
       monto: a.monto > 0 ? this.moneda.formatearBob(a.monto) : '',
@@ -243,8 +261,13 @@ export class DashboardPage {
     void this.router.navigate(['/leads'], { queryParams: { origen } });
   }
 
-  protected irAActividad(item: Pick<ActividadItem, 'tipo'>): void {
-    void this.router.navigate([item.tipo === 'VENTA' ? '/ventas' : '/leads']);
+  /** Un lead abre el chat de esa paciente (lo que hay que hacer con él); una venta, Ventas. */
+  protected irAActividad(item: Pick<ActividadItem, 'tipo' | 'cliente'>): void {
+    if (item.tipo === 'LEAD') {
+      void this.router.navigate(['/conversaciones'], { queryParams: enlaceAlChat(item.cliente.telefono) });
+    } else {
+      void this.router.navigate(['/ventas']);
+    }
   }
 }
 

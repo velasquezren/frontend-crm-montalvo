@@ -4,6 +4,7 @@
 
 /* Números en columna: sin ancho fijo por dígito, las cifras bailan. */
 .dash-cifra,
+.dash-kpi-valor,
 .dash-ahora-numero,
 .dash-serie-max,
 .dash-serie-ejes {
@@ -13,6 +14,121 @@
 .dash-cifra {
   font-weight: 600;
   color: var(--color-text-dark);
+}
+
+/* ── Contenido y recarga ───────────────────────────────────────────────
+   Al cambiar de periodo lo anterior se queda, atenuado, hasta que llega lo
+   nuevo: nada salta ni se cambia por esqueletos. */
+.dash-contenido {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: opacity 0.2s var(--ease-press);
+}
+
+.dash-recargando {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.dash-aviso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--color-bg-workspace);
+  border: 1px solid var(--color-border);
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+/* ── Tarjetas del periodo ─────────────────────────────────────────────
+   Una sola superficie que recorta su propia línea: antes la línea iba
+   posicionada sobre el host de <app-card>, que no redondea, y asomaba por
+   las esquinas. La cifra es lo único grande; el ícono va del tamaño del
+   texto, sin caja. */
+.dash-kpi {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 178px;
+  padding: 18px 20px 0;
+  background: var(--color-background);
+  border-radius: 16px;
+  box-shadow: var(--shadow-subtle);
+  overflow: hidden;
+  transition: box-shadow 0.2s var(--ease-spring-smooth), transform 0.2s var(--ease-spring-smooth);
+}
+
+.dash-kpi:hover {
+  box-shadow: var(--shadow-lifted);
+  transform: translateY(-2px);
+}
+
+.dash-kpi-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dash-kpi-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.dash-kpi-valor {
+  margin-top: 14px;
+  font-size: 1.875rem;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-dark);
+}
+
+.dash-kpi-detalle {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+/* La línea va a sangre en el pie, por debajo del texto, en el verde de marca. */
+.dash-kpi-tendencia {
+  margin: auto -20px 0;
+  padding-top: 14px;
+  height: 58px;
+  color: var(--color-primary);
+  opacity: 0.45;
+  transition: opacity 0.2s var(--ease-press);
+}
+
+.dash-kpi:hover .dash-kpi-tendencia {
+  opacity: 0.85;
+}
+
+@media (min-width: 640px) {
+  .dash-contenido {
+    gap: 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-kpi,
+  .dash-contenido,
+  .dash-kpi-tendencia {
+    transition: none;
+  }
+
+  .dash-kpi:hover {
+    transform: none;
+  }
 }
 
 /* ── Pendiente ahora ─────────────────────────────────────────────────

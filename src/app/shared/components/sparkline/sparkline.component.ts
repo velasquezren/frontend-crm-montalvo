@@ -24,15 +24,31 @@ const MARGEN = 3;
   template: `
     @if (trazo(); as d) {
       <svg class="block w-full h-full" viewBox="0 0 120 30" fill="none" preserveAspectRatio="none" aria-hidden="true">
-        <path [attr.d]="d" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+        @if (area()) {
+          <!-- El área cierra el trazo contra el suelo; el tono sigue siendo el del texto. -->
+          <path [attr.d]="d + ' L' + bordes().fin + ',30 L' + bordes().inicio + ',30 Z'" fill="currentColor" fill-opacity="0.1" stroke="none" />
+        }
+        <path [attr.d]="d" stroke="currentColor" [attr.stroke-width]="grosor()" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
       </svg>
     }
   `,
 })
 export class SparklineComponent {
   readonly valores = input.required<ReadonlyArray<number | null>>();
+  /** Rellena suavemente debajo del trazo: la tendencia se lee de un vistazo, sin ejes. */
+  readonly area = input(false);
+  readonly grosor = input(2.5);
 
-  /** Curva suave por puntos medios; `null` si no hay dos puntos que unir. */
+  /** Dónde empieza y termina el trazo: el primer y el último punto con dato, no siempre los bordes. */
+  protected readonly bordes = computed(() => {
+    const valores = this.valores();
+    const paso = ANCHO / Math.max(valores.length - 1, 1);
+    const primero = valores.findIndex(v => v !== null);
+    let ultimo = valores.length - 1;
+    while (ultimo > 0 && valores[ultimo] === null) ultimo--;
+    return { inicio: (Math.max(primero, 0) * paso).toFixed(1), fin: (ultimo * paso).toFixed(1) };
+  });
+
   protected readonly trazo = computed(() => {
     const valores = this.valores();
     const puntos = valores

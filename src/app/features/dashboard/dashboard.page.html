@@ -1,4 +1,4 @@
-<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-4 sm:gap-5">
 
   <!-- ── Cabecera: saludo, periodo y recarga ─────────────────────────── -->
   <header class="flex flex-wrap items-end justify-between gap-4">
@@ -36,18 +36,27 @@
     </div>
   </header>
 
-  @if (kpiData.isLoading() && !kpiData.value()) {
-    <app-loading-skeleton shape="card" height="64px" />
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-      <app-loading-skeleton shape="card" height="164px" />
-      <app-loading-skeleton shape="card" height="164px" />
-      <app-loading-skeleton shape="card" height="164px" />
-      <app-loading-skeleton shape="card" height="164px" />
-    </div>
-    <app-loading-skeleton shape="card" height="280px" />
-  } @else if (kpiData.error() && !kpiData.value()) {
-    <app-error-carga que="los indicadores" (reintentar)="kpiData.reload()" />
-  } @else if (kpiData.value(); as r) {
+  @if (!datos()) {
+    @if (kpiData.error()) {
+      <app-error-carga que="los indicadores" (reintentar)="kpiData.reload()" />
+    } @else {
+      <!-- Mismas alturas que el contenido real: al llegar los datos no salta nada. -->
+      <app-loading-skeleton shape="card" height="52px" />
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
+        @for (i of [1, 2, 3, 4]; track i) { <app-loading-skeleton shape="card" height="178px" /> }
+      </div>
+      <app-loading-skeleton shape="card" height="300px" />
+    }
+  } @else {
+  <div class="dash-contenido animate-fade-scale" [class.dash-recargando]="recargando()" [attr.aria-busy]="recargando()">
+    @if (kpiData.error()) {
+      <p role="status" class="dash-aviso">
+        <app-icon name="alert-circle" [size]="14" class="shrink-0" />
+        No se pudieron actualizar los datos; se muestran los anteriores.
+        <app-button variant="ghost" size="sm" (clicked)="kpiData.reload()">Reintentar</app-button>
+      </p>
+    }
+    @let r = datos()!;
 
     <!-- ── 1. Pendiente ahora: lo único que pide acción ─────────────────── -->
     <section class="dash-ahora" aria-label="Pendiente ahora">
@@ -68,31 +77,29 @@
     </section>
 
     <!-- ── 2. El periodo en cuatro números ──────────────────────────────
-         El estilo de tarjeta de siempre. La línea del pie ya no es un trazo
-         fijo: es la serie diaria de ese mismo indicador. -->
-    <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" aria-label="Resumen del periodo">
+         La cifra manda; el ícono acompaña a la etiqueta en su tamaño (sin
+         caja), y la línea verde del pie es la serie de ese mismo indicador. -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5" aria-label="Resumen del periodo">
       @for (k of tarjetas(); track k.label) {
-        <app-card [hoverable]="true" class="relative overflow-hidden group">
-          <div class="flex items-start justify-between gap-2 relative z-10">
-            <div class="w-11 h-11 rounded-xl bg-bg-light flex items-center justify-center shrink-0">
-              <app-icon [name]="k.icon" [size]="20" class="text-primary" />
-            </div>
+        <article class="dash-kpi">
+          <div class="dash-kpi-cabecera">
+            <span class="dash-kpi-label">
+              <app-icon [name]="k.icon" [size]="14" class="text-primary shrink-0" />
+              {{ k.label }}
+            </span>
             <app-badge [variant]="k.badge.variant" [icon]="k.badge.icon">{{ k.badge.texto }}</app-badge>
           </div>
-          <div class="relative z-10 pb-6">
-            <p class="text-sm text-text-muted font-medium mt-5">{{ k.label }}</p>
-            <p class="text-3xl font-bold text-text-dark mt-1 tracking-tight dash-cifra">{{ k.valor }}</p>
-            <p class="text-xs text-text-muted mt-1">{{ k.detalle }}</p>
+          <p class="dash-kpi-valor">{{ k.valor }}</p>
+          <p class="dash-kpi-detalle">{{ k.detalle }}</p>
+          <div class="dash-kpi-tendencia">
+            <app-sparkline [valores]="k.serie" [area]="true" [grosor]="2" />
           </div>
-          <div class="absolute bottom-0 left-0 right-0 h-10 pointer-events-none text-primary opacity-20 group-hover:opacity-40 transition-opacity">
-            <app-sparkline [valores]="k.serie" />
-          </div>
-        </app-card>
+        </article>
       }
     </section>
 
     <!-- ── 3. Leads en el tiempo + embudo ───────────────────────────────── -->
-    <section class="grid grid-cols-1 xl:grid-cols-5 gap-6">
+    <section class="grid grid-cols-1 xl:grid-cols-5 gap-4 sm:gap-5">
       <app-card class="xl:col-span-3">
         <div class="dash-titulo">
           <div>
@@ -157,7 +164,7 @@
     </section>
 
     <!-- ── 4. Canales + equipo ──────────────────────────────────────────── -->
-    <section class="grid grid-cols-1 xl:grid-cols-5 gap-6">
+    <section class="grid grid-cols-1 xl:grid-cols-5 gap-4 sm:gap-5">
       <app-card class="xl:col-span-3">
         <div class="dash-titulo">
           <div>
@@ -231,7 +238,7 @@
     </section>
 
     <!-- ── 5. Más vendido + últimos movimientos ────────────────────────── -->
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
       <app-card>
         <div class="dash-titulo">
           <div>
@@ -289,5 +296,6 @@
         }
       </app-card>
     </section>
+  </div>
   }
 </div>
