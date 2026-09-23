@@ -38,7 +38,6 @@ export interface Venta {
   readonly notas?: string | null;
   readonly cliente: { id: string; nombre: string; telefono: string; pac?: string | null };
   readonly agente: { id: string; nombre: string };
-  readonly comision: { id: string; monto: string; estado: string } | null;
   /** Lead que originó esta venta, si el agente lo indicó al registrarla. */
   readonly leadId?: string | null;
   readonly lead?: { id: string; origen: OrigenLeadApi; anuncioId?: string | null } | null;
@@ -73,3 +72,18 @@ export interface CatalogoClinico {
   readonly modulos: readonly string[];
   readonly ventasAnalizadas: number;
 }
+
+/** Cuántas ventas y cuánto suman, por estado, método o módulo — `GET /ventas/resumen`. */
+export interface GrupoVentas {
+  readonly clave: string | null;
+  readonly cantidad: number;
+  readonly monto: number;
+}
+
+export interface ResumenVentas {
+  readonly porEstado: readonly GrupoVentas[];
+  readonly porMetodo: readonly GrupoVentas[];
+  readonly porModulo: readonly GrupoVentas[];
+}
+
+export const RESUMEN_VACIO: ResumenVentas = { porEstado: [], porMetodo: [], porModulo: [] };

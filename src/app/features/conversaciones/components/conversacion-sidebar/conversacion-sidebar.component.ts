@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal, TemplateRef, ViewContainerRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, TemplateRef, ViewContainerRef } from '@angular/core';
 import { OverlayRef } from '@angular/cdk/overlay';
 
 import { CampanaOrigen, campanaOrigenDe } from '../../../../shared/models/campana-origen';
@@ -30,17 +30,8 @@ import { aDatetimeLocal } from '../../../../core/api/fecha';
 import { etiquetasDe, textoExtra } from '../../../../core/api/datos-extra';
 import { mensajeDeError } from '../../../../core/api/http-error';
 import { ToastService } from '../../../../core/toast/toast.service';
-import { ComprobanteSubido, MetodoPagoVenta } from '../../../ventas/venta.model';
-import { VentasService } from '../../../ventas/ventas.service';
-import { METODOS_PAGO } from '../../../ventas/ventas.page';
-import {
-  CATALOGO_VACIO,
-  filtrarMedicos,
-  filtrarServicios,
-  moduloDeServicio,
-} from '../../../ventas/catalogo.util';
-import { CatalogoClinico } from '../../../ventas/venta.model';
-import { httpResource } from '@angular/common/http';
+import { FormularioVentaComponent } from '../../../ventas/formulario-venta/formulario-venta.component';
+import { Venta } from '../../../ventas/venta.model';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
 import { ConversacionResumen } from '../../conversacion.model';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
@@ -58,6 +49,7 @@ type ClienteChat = ConversacionResumen['cliente'];
 @Component({
   selector: 'app-conversacion-sidebar',
   imports: [
+    FormularioVentaComponent,
     SelectComponent,
     InicialesClientePipe,
     NombreClientePipe,
@@ -167,141 +159,30 @@ export class ConversacionSidebarComponent {
     return new Date(fecha).toLocaleDateString('es-BO', { day: '2-digit', month: 'short' });
   }
 
-  protected readonly metodosPago = METODOS_PAGO;
-
-  /* ── Modal de Venta Rápida desde el Chat ───────────────────────── */
-  private readonly ventasService = inject(VentasService);
+  /* ── Venta desde el chat: el MISMO formulario que la página de Ventas ──
+     Era una copia y había divergido: no mandaba el lead de origen (0 de 18
+     ventas atribuidas en producción), no frenaba el doble envío y leía «4.500»
+     como Bs 4,50. Ver `FormularioVentaComponent`. */
   private readonly dialogService = inject(DialogService);
   private readonly vcr = inject(ViewContainerRef);
-
   private activeOverlayRef?: OverlayRef;
 
-  protected readonly modalVentaAbierto = signal(false);
-  protected readonly productoVenta = signal<string>('');
-  protected readonly montoVenta = signal<string>('');
-  protected readonly metodoPagoVenta = signal<MetodoPagoVenta>('QR');
-  protected readonly comprobanteVenta = signal<string>('');
-  protected readonly medicoVenta = signal<string>('');
-  protected readonly notasVenta = signal<string>('');
-  protected readonly guardandoVenta = signal(false);
-  protected readonly errorVenta = signal('');
-
-  protected readonly subiendoComprobante = signal(false);
-  protected readonly comprobanteSubido = signal<ComprobanteSubido | null>(null);
-  protected readonly archivoNombre = signal<string | null>(null);
-
-  /* El mismo catálogo real que usa la página de Ventas: se pide al abrir el
-     modal, no al abrir el chat. */
-  protected readonly catalogo = httpResource<CatalogoClinico>(
-    () => (this.modalVentaAbierto() ? this.ventasService.catalogoRequest() : undefined),
-    { defaultValue: CATALOGO_VACIO },
-  );
-
-  protected readonly sugerenciasModulo = computed(() =>
-    filtrarServicios(this.catalogo.value(), this.productoVenta()),
-  );
-
-  protected readonly medicosSugeridos = computed(() =>
-    filtrarMedicos(this.catalogo.value(), this.medicoVenta()),
-  );
-
-  protected readonly moduloDetectado = computed(() =>
-    moduloDeServicio(this.catalogo.value(), this.productoVenta()),
-  );
-
   protected abrirModalVenta(template: TemplateRef<unknown>): void {
-    this.productoVenta.set('');
-    this.montoVenta.set('');
-    this.comprobanteVenta.set('');
-    this.medicoVenta.set('');
-    this.notasVenta.set('');
-    this.errorVenta.set('');
-    this.archivoNombre.set(null);
-    this.comprobanteSubido.set(null);
-    this.modalVentaAbierto.set(true);
+    this.activeOverlayRef?.dispose();
     this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
-      onClose: () => {
-        this.modalVentaAbierto.set(false);
-        this.activeOverlayRef = undefined;
-      },
+      onClose: () => (this.activeOverlayRef = undefined),
     });
   }
 
   protected cerrarModalVenta(): void {
-    this.modalVentaAbierto.set(false);
-    this.activeOverlayRef?.dispose();
+    const abierto = this.activeOverlayRef;
     this.activeOverlayRef = undefined;
+    abierto?.dispose();
   }
 
-  protected seleccionarSugerenciaVenta(sug: string): void {
-    this.productoVenta.set(sug);
-  }
-
-  protected async onArchivoComprobante(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    if (!input.files || input.files.length === 0) return;
-
-    const file = input.files[0];
-    this.archivoNombre.set(file.name);
-    this.subiendoComprobante.set(true);
-    this.errorVenta.set('');
-
-    try {
-      const res = await this.ventasService.subirComprobante(file);
-      this.comprobanteSubido.set(res);
-    } catch (err) {
-      this.errorVenta.set(mensajeDeError(err, 'No se pudo subir el comprobante'));
-      this.archivoNombre.set(null);
-      this.comprobanteSubido.set(null);
-    } finally {
-      this.subiendoComprobante.set(false);
-    }
-  }
-
-  protected quitarComprobante(): void {
-    this.archivoNombre.set(null);
-    this.comprobanteSubido.set(null);
-  }
-
-  protected async guardarVenta(event: Event, clienteId: string): Promise<void> {
-    event.preventDefault();
-    this.errorVenta.set('');
-
-    const monto = Number(this.montoVenta());
-    if (!this.productoVenta().trim()) {
-      this.errorVenta.set('Indica el procedimiento o servicio vendido.');
-      return;
-    }
-    if (!monto || monto <= 0) {
-      this.errorVenta.set('Ingresa un monto válido en Bs.');
-      return;
-    }
-
-    const subido = this.comprobanteSubido();
-
-    this.guardandoVenta.set(true);
-    try {
-      await this.ventasService.crear({
-        clienteId,
-        producto: this.productoVenta().trim(),
-        monto,
-        metodoPago: this.metodoPagoVenta(),
-        comprobante: this.comprobanteVenta().trim() || undefined,
-        comprobanteKey: subido?.comprobanteKey,
-        comprobanteMime: subido?.comprobanteMime,
-        comprobanteNombre: subido?.comprobanteNombre,
-        medico: this.medicoVenta().trim() || undefined,
-        modulo: this.moduloDetectado() || undefined,
-        notas: this.notasVenta().trim() || undefined,
-      });
-
-      this.toast.success(`Venta de ${this.productoVenta()} (Bs ${monto}) registrada con éxito.`);
-      this.cerrarModalVenta();
-    } catch (err) {
-      this.errorVenta.set(mensajeDeError(err, 'No se pudo registrar la venta.'));
-    } finally {
-      this.guardandoVenta.set(false);
-    }
+  protected alRegistrarVenta(venta: Venta): void {
+    this.cerrarModalVenta();
+    this.toast.success(`Venta de ${venta.producto} registrada.`);
   }
 
   protected togglePanel(): void {

@@ -10,6 +10,7 @@ import {
   OnDestroy,
   signal,
   TemplateRef,
+  untracked,
   viewChild,
   ViewContainerRef,
 } from '@angular/core';
@@ -22,8 +23,6 @@ import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model'
 import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales } from '../../core/auth/user.model';
 import { ToastService } from '../../core/toast/toast.service';
-import { Cliente } from '../clientes/cliente.model';
-import { ClientesService } from '../clientes/clientes.service';
 import { Lead, ORIGEN_LABEL } from '../leads/lead.model';
 import { LeadsService } from '../leads/leads.service';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
@@ -35,7 +34,7 @@ import { DrawerComponent } from '../../shared/components/drawer/drawer.component
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
-import { IconComponent, IconName } from '../../shared/components/icon/icon.component';
+import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InputComponent } from '../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
@@ -52,28 +51,23 @@ import {
 } from '../../shared/models/estados.model';
 import { MonedaService } from '../../core/moneda/moneda.service';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
-import { CATALOGO_VACIO, filtrarMedicos, filtrarServicios, moduloDeServicio } from './catalogo.util';
 import {
   AgenteResumenVenta,
-  CatalogoClinico,
-  ComprobanteSubido,
   MetodoPagoVenta,
   PresetPeriodo,
+  RESUMEN_VACIO,
+  ResumenVentas,
   Venta,
 } from './venta.model';
-import { VentasService } from './ventas.service';
-import { origenInequivoco } from './origen-inequivoco';
+import { FiltroVentas, VentasService } from './ventas.service';
+import { FormularioVentaComponent, METODOS_PAGO, PacienteVenta } from './formulario-venta/formulario-venta.component';
 import { esNombreProvisional } from '../../shared/models/nombre-cliente';
 import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 
 type FiltroVenta = EstadoVenta | 'TODAS';
 
-export const METODOS_PAGO: readonly { id: MetodoPagoVenta; label: string; icon: IconName }[] = [
-  { id: 'QR', label: 'Pago QR', icon: 'dollar-sign' },
-  { id: 'TRANSFERENCIA', label: 'Transferencia', icon: 'wallet' },
-  { id: 'TARJETA', label: 'Tarjeta Déb./Créd.', icon: 'wallet' },
-  { id: 'EFECTIVO', label: 'Efectivo en Caja', icon: 'dollar-sign' },
-];
+/** Valor del filtro de módulo para las ventas sin módulo (el «Sin módulo» del gráfico). */
+const SIN_MODULO = '__SIN_MODULO__';
 
 export const PRESETS_PERIODO: readonly { id: PresetPeriodo; label: string }[] = [
   { id: 'TODAS', label: 'Cualquier fecha' },
@@ -144,8 +138,9 @@ function calcularRangoFechas(
 
 /**
  * Ventas — datos reales (RF-11/RF-12). El agente que registra queda fijado
- * por el JWT en el servidor; una venta GANADA genera comisión y recategoriza
- * al cliente automáticamente. Un agente ve solo sus ventas; un admin todas.
+ * por el JWT en el servidor; una venta GANADA recategoriza a la paciente (no
+ * genera comisión: esa sale de la planilla de FileMaker). Un agente ve solo
+ * sus ventas; un admin todas.
  */
 @Component({
   selector: 'app-ventas',
@@ -168,6 +163,7 @@ function calcularRangoFechas(
     PaginatorComponent,
     SelectComponent,
     ImageViewerComponent,
+    FormularioVentaComponent,
     DonutChartComponent,
     BarChartComponent,
     MonedaPipe,
@@ -186,7 +182,6 @@ export class VentasPage implements OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly ventasService = inject(VentasService);
-  private readonly clientesService = inject(ClientesService);
   private readonly leadsService = inject(LeadsService);
   private readonly authService = inject(AuthService);
   private readonly toastService = inject(ToastService);
@@ -243,30 +238,31 @@ export class VentasPage implements OnDestroy {
   protected readonly vistaActiva = signal<'tabla' | 'analitica'>('tabla');
 
   /* ── Datos Remotos: Ventas Paginadas ───────────────────────────── */
-  protected readonly ventas = httpResource<RespuestaPaginada<Venta>>(
-    () => {
-      const estado = this.filtro() === 'TODAS' ? undefined : (this.filtro() as EstadoVenta);
-      const agenteId = this.agenteSeleccionadoId() === 'TODOS' ? undefined : this.agenteSeleccionadoId();
-      const metodoPago = this.metodoPagoFiltro() === 'TODOS' ? undefined : this.metodoPagoFiltro();
-      const comprobante = this.comprobanteFiltro() === 'TODOS' ? undefined : this.comprobanteFiltro();
-      const { desde, hasta } = calcularRangoFechas(
-        this.presetPeriodo(),
-        this.fechaDesdePersonalizada(),
-        this.fechaHastaPersonalizada(),
-      );
+  /** Filtro de módulo que se aplica al pulsar un sector del gráfico. */
+  protected readonly moduloFiltro = signal<string | null>(null);
 
-      return this.ventasService.listarRequest({
-        q: this.busquedaDebounced(),
-        estado,
-        agenteId,
-        desde,
-        hasta,
-        metodoPago,
-        comprobante,
-        pagina: this.pagina(),
-        limite: 25,
-      });
-    },
+  /** Lo que filtra listado y resumen por igual: si divergen, las tarjetas mienten sobre la tabla. */
+  private readonly filtroActual = computed<FiltroVentas>(() => {
+    const { desde, hasta } = calcularRangoFechas(
+      this.presetPeriodo(),
+      this.fechaDesdePersonalizada(),
+      this.fechaHastaPersonalizada(),
+    );
+    const modulo = this.moduloFiltro();
+    return {
+      q: this.busquedaDebounced(),
+      estado: this.filtro() === 'TODAS' ? undefined : (this.filtro() as EstadoVenta),
+      agenteId: this.agenteSeleccionadoId() === 'TODOS' ? undefined : this.agenteSeleccionadoId(),
+      desde,
+      hasta,
+      metodoPago: this.metodoPagoFiltro() === 'TODOS' ? undefined : this.metodoPagoFiltro(),
+      comprobante: this.comprobanteFiltro() === 'TODOS' ? undefined : this.comprobanteFiltro(),
+      ...(modulo === SIN_MODULO ? { sinModulo: true } : modulo ? { modulo } : {}),
+    };
+  });
+
+  protected readonly ventas = httpResource<RespuestaPaginada<Venta>>(
+    () => this.ventasService.listarRequest({ ...this.filtroActual(), pagina: this.pagina(), limite: 25 }),
     { defaultValue: paginaVacia<Venta>() },
   );
 
@@ -290,6 +286,11 @@ export class VentasPage implements OnDestroy {
     return p ? p.label : this.presetPeriodo();
   });
 
+  protected readonly etiquetaModuloActivo = computed(() => {
+    const modulo = this.moduloFiltro();
+    return modulo === SIN_MODULO ? 'Sin módulo' : modulo;
+  });
+
   protected readonly etiquetaMetodoPagoActivo = computed(() => {
     const mp = METODOS_PAGO.find(item => item.id === this.metodoPagoFiltro());
     return mp ? mp.label : this.metodoPagoFiltro();
@@ -308,6 +309,7 @@ export class VentasPage implements OnDestroy {
     if (this.agenteSeleccionadoId() !== 'TODOS') count++;
     if (this.metodoPagoFiltro() !== 'TODOS') count++;
     if (this.comprobanteFiltro() !== 'TODOS') count++;
+    if (this.moduloFiltro() !== null) count++;
     if (this.busqueda().trim().length > 0) count++;
     return count;
   });
@@ -325,56 +327,16 @@ export class VentasPage implements OnDestroy {
   protected readonly visorImagenUrl = signal<string | null>(null);
   protected readonly visorImagenTitulo = signal<string | null>(null);
 
-  /* ── Formulario "Registrar venta" ─────────────────────────────── */
-  protected readonly formularioAbierto = signal(false);
-  protected readonly busquedaCliente = signal('');
-  protected readonly clienteElegido = signal<Cliente | null>(null);
-  protected readonly producto = signal('');
-  protected readonly monto = signal('');
-  protected readonly metodoPago = signal<MetodoPagoVenta>('QR');
-  protected readonly comprobante = signal('');
-  protected readonly medico = signal('');
-  protected readonly notas = signal('');
-  protected readonly guardando = signal(false);
-  protected readonly errorForm = signal('');
-
-  /** Lead de origen elegido para esta venta (opcional). Ver `leadsAbiertosDelCliente`. */
-  protected readonly leadIdSeleccionado = signal<string | null>(null);
-  /** La agente ya eligió origen a mano (o vino uno por contexto): no autoelegir encima. */
-  private readonly origenElegidoAMano = signal(false);
-
+  /* ── Formulario «Registrar venta» (ver `FormularioVentaComponent`) ── */
+  /** Paciente y lead con los que se abre, cuando se viene de otra pantalla. */
+  protected readonly pacienteFormulario = signal<PacienteVenta | null>(null);
+  protected readonly leadFormulario = signal<string | null>(null);
   /* ── Cambio de estado de una venta ya registrada (ADMIN) ────────── */
   protected readonly ventaParaMotivo = signal<Venta | null>(null);
   protected readonly motivoPerdidaTexto = signal('');
   protected readonly cambiandoEstado = signal(false);
 
-  /* Adjunto de Comprobante / Recibo */
-  protected readonly subiendoComprobante = signal(false);
-  protected readonly comprobanteSubido = signal<ComprobanteSubido | null>(null);
-  protected readonly archivoNombre = signal<string | null>(null);
-
   constructor() {
-    /**
-     * Con UN solo lead abierto, ese es el origen y viene ya marcado.
-     *
-     * El selector existe desde el 2026-08-21 pero arrancaba siempre en
-     * «Ninguno»: había que acordarse de pulsar el chip, y nadie se acordaba.
-     * Medido contra producción el 18/09: las 14 ventas de la base tienen
-     * `leadId` en NULL, así que hoy no se puede ir de una venta cobrada al
-     * anuncio que la originó sin reconstruirlo a ojo.
-     *
-     * Qué NO hace, que es lo delicado: con dos leads abiertos `origenInequivoco`
-     * devuelve `null` y acá no se toca nada. Y nunca pisa una decisión ya
-     * tomada — un chip pulsado, o una venta abierta desde la ficha de un lead
-     * (`?leadId=`) — porque el efecto vuelve a correr cada vez que llegan los
-     * leads del cliente.
-     */
-    effect(() => {
-      const propuesto = origenInequivoco(this.leadsAbiertosDelCliente());
-      if (this.origenElegidoAMano() || this.leadIdSeleccionado() !== null) return;
-      if (propuesto) this.leadIdSeleccionado.set(propuesto);
-    });
-
     effect((onCleanup: EffectCleanupRegisterFn) => {
       const texto = this.busqueda().trim();
       const timer = setTimeout(() => {
@@ -384,147 +346,56 @@ export class VentasPage implements OnDestroy {
       onCleanup(() => clearTimeout(timer));
     });
 
+    /* `?nuevo=1` desde la ficha de un paciente o de un lead: abre el
+       formulario con la paciente —y, si vino de un lead, su origen— ya puestos. */
     effect(() => {
-      const qp = this.route.snapshot.queryParams;
-      const clienteId = qp['clienteId'];
-      const clienteNombre = qp['clienteNombre'];
-      const clienteTelefono = qp['clienteTelefono'];
-      const nuevo = qp['nuevo'];
       const tpl = this.modalVentaTemplate();
-
-      if (nuevo === '1' && tpl && !this.formularioAbierto() && !this.queryParamsProcesados) {
-        this.queryParamsProcesados = true;
-        if (clienteId && clienteNombre) {
-          this.elegirCliente({
-            id: clienteId,
-            nombre: clienteNombre,
-            telefono: clienteTelefono || '',
-            email: null,
-            categoria: 'PROSPECTO',
-            agenteId: null,
-            agente: null,
-            intereses: [],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          });
-          /* Viene de la ficha de un lead ("Registrar Venta"): se preselecciona
-             como origen. `elegirCliente` ya limpió este signal justo arriba,
-             así que fijarlo acá después es lo que queda. */
-          const leadId = qp['leadId'];
-          if (leadId) {
-            this.leadIdSeleccionado.set(leadId);
-            this.origenElegidoAMano.set(true);
-          }
-        }
-        this.abrirFormulario(tpl);
-      }
+      if (!tpl || this.queryParamsProcesados) return;
+      const qp = this.route.snapshot.queryParams;
+      if (qp['nuevo'] !== '1') return;
+      this.queryParamsProcesados = true;
+      untracked(() => {
+        const clienteId: string | undefined = qp['clienteId'];
+        const nombre: string | undefined = qp['clienteNombre'];
+        this.pacienteFormulario.set(clienteId && nombre ? { id: clienteId, nombre, telefono: qp['clienteTelefono'] || '' } : null);
+        this.leadFormulario.set(qp['leadId'] || null);
+        this.abrirCajonVenta(tpl);
+      });
     });
   }
-
   ngOnDestroy(): void {
     this.activeOverlayRef?.dispose();
     this.activeDrawerRef?.dispose();
   }
 
   protected abrirFormulario(template: TemplateRef<unknown>): void {
-    this.formularioAbierto.set(true);
+    this.pacienteFormulario.set(null);
+    this.leadFormulario.set(null);
+    this.abrirCajonVenta(template);
+  }
+
+  private abrirCajonVenta(template: TemplateRef<unknown>): void {
+    this.activeOverlayRef?.dispose();
     this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
       onClose: () => this.cerrarFormulario(),
     });
   }
 
   protected cerrarFormulario(): void {
-    this.formularioAbierto.set(false);
-    this.activeOverlayRef?.dispose();
+    const abierto = this.activeOverlayRef;
     this.activeOverlayRef = undefined;
+    abierto?.dispose();
     if (this.route.snapshot.queryParams['nuevo']) {
       void this.router.navigate([], { queryParams: {}, replaceUrl: true });
     }
   }
 
-  /**
-   * Catálogo real de la clínica. Se pide al abrir el formulario y no antes: no
-   * tiene sentido cargarlo al entrar al listado, que es lo que la agente hace
-   * más veces.
-   */
-  protected readonly catalogo = httpResource<CatalogoClinico>(
-    () => (this.formularioAbierto() ? this.ventasService.catalogoRequest() : undefined),
-    { defaultValue: CATALOGO_VACIO },
-  );
-
-  /**
-   * Servicios que coinciden con lo tecleado, los más vendidos primero.
-   *
-   * Sin texto muestra los diez más frecuentes, que es lo que resuelve la mayoría
-   * de los registros sin escribir nada: consulta externa, hemograma, ecografía.
-   */
-  protected readonly serviciosSugeridos = computed(() =>
-    filtrarServicios(this.catalogo.value(), this.producto()),
-  );
-
-  /**
-   * El módulo ya no lo elige nadie: sale del servicio elegido.
-   *
-   * Antes había un selector de ocho "especialidades" escrito a mano que no
-   * existía en FileMaker. Los módulos de verdad son cuatro y son operativos
-   * —LABORATORIO, CONSULTA, PLANES, INTERNACION—, además de ser entrada del
-   * motor de comisiones. Deducirlos del servicio quita un clic y hace que lo
-   * guardado venga del dato, no de lo que alguien supuso.
-   */
-  protected readonly moduloDetectado = computed(() =>
-    moduloDeServicio(this.catalogo.value(), this.producto()),
-  );
-
-  protected readonly medicosSugeridos = computed(() =>
-    filtrarMedicos(this.catalogo.value(), this.medico()),
-  );
-
-  /**
-   * Búsqueda de cliente: solo consulta con 2+ caracteres.
-   *
-   * `GET /clientes` responde **paginado** (`{ datos, total, … }`), no un array.
-   * Estuvo declarado como `Cliente[]`, así que `.value().length` era
-   * `undefined`, `undefined > 0` daba `false` y la lista de sugerencias no se
-   * pintaba NUNCA: parecía que el buscador no encontraba a nadie cuando el
-   * backend sí devolvía resultados —busca por nombre, teléfono, email, CI y
-   * PAC—.
-   *
-   * Funcionó hasta `f45894e`, que quitó un `httpResource<any>` (bien) y de paso
-   * se llevó el `computed` que desenvolvía `.datos` (mal). TypeScript no lo ve:
-   * el parámetro de tipo de `httpResource` es una afirmación sobre el JSON, no
-   * una comprobación. Por eso el tipo ahora dice la verdad y el desenvuelto es
-   * explícito.
-   */
-  protected readonly resultadosCliente = httpResource<RespuestaPaginada<Cliente>>(
-    () => {
-      const termino = this.busquedaCliente().trim();
-      return termino.length >= 2 && !this.clienteElegido()
-        ? this.clientesService.buscarRequest(termino)
-        : undefined;
-    },
-    { defaultValue: paginaVacia<Cliente>() },
-  );
-
-  /** Los clientes encontrados, ya desenvueltos de la página. */
-  protected readonly clientesEncontrados = computed(() => this.resultadosCliente.value().datos);
-
-
-  /**
-   * Leads del cliente elegido, para vincular la venta a su origen (RF-17
-   * extendido: de qué campaña/canal vino una venta real, no solo un lead
-   * cerrado en bloque). Se pide solo con el formulario abierto y un cliente
-   * puesto — no tiene sentido antes.
-   */
-  protected readonly leadsDelCliente = httpResource<RespuestaPaginada<Lead>>(
-    () => {
-      const cliente = this.clienteElegido();
-      return this.formularioAbierto() && cliente
-        ? this.leadsService.listarRequest({ clienteId: cliente.id, pagina: 1, limite: 10 })
-        : undefined;
-    },
-    { defaultValue: paginaVacia<Lead>() },
-  );
-
+  protected alRegistrarVenta(venta: Venta): void {
+    this.cerrarFormulario();
+    this.toastService.success(`Venta de ${venta.producto} registrada.`);
+    this.ventas.reload();
+    this.resumen.reload();
+  }
   /**
    * TODOS los leads del cliente de la venta abierta, para poder corregir su
    * origen — CAMP-1.
@@ -543,140 +414,64 @@ export class VentasPage implements OnDestroy {
     { defaultValue: paginaVacia<Lead>() },
   );
 
-  /** Solo los que siguen abiertos: uno ya CONVERTIDO o PERDIDO no es un origen útil para elegir. */
-  protected readonly leadsAbiertosDelCliente = computed(() =>
-    this.leadsDelCliente.value().datos.filter(l => l.estado === 'NUEVO' || l.estado === 'CONTACTADO'),
+  /* ── Tarjetas y gráficos: sobre TODO lo filtrado, no sobre la página ── */
+  /**
+   * Se calculaban en el navegador con las 25 ventas de la página visible: con
+   * más, «Facturación cerrada» sumaba solo esas y se leía como el total. Ahora
+   * los cuenta el servidor con el mismo filtro que el listado (`/ventas/resumen`).
+   */
+  protected readonly resumen = httpResource<ResumenVentas>(
+    () => this.ventasService.resumenRequest(this.filtroActual()),
+    { defaultValue: RESUMEN_VACIO },
   );
 
-  /** Un clic en los chips de origen es una decisión: bloquea la preselección. */
-  protected elegirOrigen(leadId: string | null): void {
-    this.origenElegidoAMano.set(true);
-    this.leadIdSeleccionado.set(leadId);
-  }
-
-  /* ── KPIs Médicos y Comerciales del Filtro Actual ────────────────── */
   protected readonly resumenKpis = computed(() => {
-    const lista = this.ventasFiltradas();
-    const ganadas = lista.filter(v => v.estado === 'GANADA');
-    const enProceso = lista.filter(v => v.estado === 'EN_PROCESO');
-    const perdidas = lista.filter(v => v.estado === 'PERDIDA');
-
-    const totalCerrado = ganadas.reduce((sum, v) => sum + Number(v.monto), 0);
-    const montoEnProceso = enProceso.reduce((sum, v) => sum + Number(v.monto), 0);
-    const ticketPromedio = ganadas.length > 0 ? Math.round(totalCerrado / ganadas.length) : 0;
-    const tasaCierre = lista.length > 0 ? `${Math.round((ganadas.length / lista.length) * 100)}% efectividad` : '0% efectividad';
+    const sinDato = !!this.resumen.error();
+    const grupos = this.resumen.value().porEstado;
+    const de = (estado: EstadoVenta) => grupos.find(g => g.clave === estado) ?? { cantidad: 0, monto: 0 };
+    const ganadas = de('GANADA');
+    const enProceso = de('EN_PROCESO');
+    const total = grupos.reduce((n, g) => n + g.cantidad, 0);
+    const ticket = ganadas.cantidad > 0 ? Math.round(ganadas.monto / ganadas.cantidad) : 0;
+    const bs = (valor: number) => (sinDato ? '—' : this.moneda.formatearBob(valor));
 
     return {
-      totalCerrado: this.moneda.formatearBob(totalCerrado),
-      pieCerrado: `${ganadas.length} venta${ganadas.length === 1 ? '' : 's'} cerrada${ganadas.length === 1 ? '' : 's'}`,
-      conteoGanadas: ganadas.length,
-      tasaCierre,
-      conteoEnProceso: enProceso.length,
-      montoEnProceso: `Potencial ${this.moneda.formatearBob(montoEnProceso)}`,
-      ticketPromedio: this.moneda.formatearBob(ticketPromedio),
-      conteoPerdidas: perdidas.length,
+      totalCerrado: bs(ganadas.monto),
+      pieCerrado: sinDato ? 'No se pudo calcular' : `${ganadas.cantidad} venta${ganadas.cantidad === 1 ? '' : 's'} cerrada${ganadas.cantidad === 1 ? '' : 's'}`,
+      conteoGanadas: sinDato ? '—' : ganadas.cantidad,
+      tasaCierre: total > 0 ? `${Math.round((ganadas.cantidad / total) * 100)}% efectividad` : '0% efectividad',
+      conteoEnProceso: sinDato ? '—' : enProceso.cantidad,
+      montoEnProceso: `Potencial ${bs(enProceso.monto)}`,
+      ticketPromedio: bs(ticket),
+      conteoPerdidas: sinDato ? '—' : de('PERDIDA').cantidad,
     };
   });
 
-  /* ── Gráficos Analíticos de Distribución ────────────────────────── */
-  protected readonly chartMetodosPago = computed<ChartItem[]>(() => {
-    const mapa = new Map<string, { count: number; monto: number }>();
-    for (const mp of METODOS_PAGO) {
-      mapa.set(mp.id, { count: 0, monto: 0 });
-    }
+  protected readonly chartMetodosPago = computed<ChartItem[]>(() =>
+    this.resumen
+      .value()
+      .porMetodo.filter(g => g.clave !== null && g.cantidad > 0)
+      .map(g => ({
+        id: g.clave!,
+        label: METODOS_PAGO.find(m => m.id === g.clave)?.label ?? g.clave!,
+        value: g.cantidad,
+        sublabel: this.moneda.formatearBob(g.monto),
+      }))
+      .sort((a, b) => b.value - a.value),
+  );
 
-    for (const v of this.ventas.value().datos) {
-      if (v.metodoPago) {
-        const actual = mapa.get(v.metodoPago) || { count: 0, monto: 0 };
-        actual.count += 1;
-        actual.monto += Number(v.monto);
-        mapa.set(v.metodoPago, actual);
-      }
-    }
-
-    const items: ChartItem[] = [];
-    for (const mp of METODOS_PAGO) {
-      const data = mapa.get(mp.id);
-      if (data && data.count > 0) {
-        items.push({
-          id: mp.id,
-          label: mp.label,
-          value: data.count,
-          sublabel: this.moneda.formatearBob(data.monto),
-        });
-      }
-    }
-    return items;
-  });
-
-  protected readonly chartModulos = computed<ChartItem[]>(() => {
-    const mapa = new Map<string, { count: number; monto: number }>();
-    for (const v of this.ventas.value().datos) {
-      const mod = v.modulo || 'OTROS';
-      const actual = mapa.get(mod) || { count: 0, monto: 0 };
-      actual.count += 1;
-      actual.monto += Number(v.monto);
-      mapa.set(mod, actual);
-    }
-
-    const items: ChartItem[] = [];
-    for (const [mod, data] of mapa.entries()) {
-      items.push({
-        id: mod,
-        label: mod,
-        value: data.count,
-        sublabel: this.moneda.formatearBob(data.monto),
-      });
-    }
-    return items.sort((a, b) => b.value - a.value);
-  });
-
-  protected elegirCliente(cliente: Cliente): void {
-    this.clienteElegido.set(cliente);
-    this.busquedaCliente.set(cliente.nombre);
-    /* Un cliente nuevo invalida el lead que se hubiera elegido antes — lo
-       vuelve a fijar quien llame esto con contexto (ver el efecto de arriba). */
-    this.leadIdSeleccionado.set(null);
-    this.origenElegidoAMano.set(false);
-  }
-
-  protected limpiarCliente(): void {
-    this.clienteElegido.set(null);
-    this.busquedaCliente.set('');
-    this.leadIdSeleccionado.set(null);
-    this.origenElegidoAMano.set(false);
-  }
-
-  protected seleccionarSugerencia(nombreServicio: string): void {
-    this.producto.set(nombreServicio);
-  }
-
-  protected async onArchivoSeleccionado(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    if (!input.files || input.files.length === 0) return;
-
-    const file = input.files[0];
-    this.archivoNombre.set(file.name);
-    this.subiendoComprobante.set(true);
-    this.errorForm.set('');
-
-    try {
-      const res = await this.ventasService.subirComprobante(file);
-      this.comprobanteSubido.set(res);
-    } catch (err) {
-      this.errorForm.set(mensajeDeError(err, 'No se pudo subir el archivo de comprobante'));
-      this.archivoNombre.set(null);
-      this.comprobanteSubido.set(null);
-    } finally {
-      this.subiendoComprobante.set(false);
-    }
-  }
-
-  protected quitarComprobante(): void {
-    this.archivoNombre.set(null);
-    this.comprobanteSubido.set(null);
-  }
-
+  protected readonly chartModulos = computed<ChartItem[]>(() =>
+    this.resumen
+      .value()
+      .porModulo.filter(g => g.cantidad > 0)
+      .map(g => ({
+        id: g.clave ?? SIN_MODULO,
+        label: g.clave ?? 'Sin módulo',
+        value: g.cantidad,
+        sublabel: this.moneda.formatearBob(g.monto),
+      }))
+      .sort((a, b) => b.value - a.value),
+  );
   /* ── Métodos de Filtro ─────────────────────────────────────────── */
 
   protected cambiarFiltro(nuevo: FiltroVenta): void {
@@ -712,6 +507,7 @@ export class VentasPage implements OnDestroy {
     this.agenteSeleccionadoId.set('TODOS');
     this.metodoPagoFiltro.set('TODOS');
     this.comprobanteFiltro.set('TODOS');
+    this.moduloFiltro.set(null);
     this.busqueda.set('');
     this.pagina.set(1);
   }
@@ -724,7 +520,9 @@ export class VentasPage implements OnDestroy {
         this.vistaActiva.set('tabla');
       }
     } else if (tipo === 'modulo') {
-      this.busqueda.set(segmentId);
+      /* Antes escribía el módulo en el buscador, que no mira esa columna. */
+      this.moduloFiltro.set(segmentId);
+      this.pagina.set(1);
       this.vistaActiva.set('tabla');
     }
   }
@@ -764,69 +562,6 @@ export class VentasPage implements OnDestroy {
   /** Ver `shared/models/telefono.ts`: el `591` que se anteponía acá rompía
    *  los números que ya traían su propio país. */
   protected readonly getWhatsappLink = enlaceWhatsApp;
-
-  protected async guardar(event: Event): Promise<void> {
-    event.preventDefault();
-    /* Una venta duplicada es dinero contado dos veces en comisiones: el botón
-       deshabilitado no frena un Enter repetido mientras la primera viaja. */
-    if (this.guardando()) return;
-    this.errorForm.set('');
-
-    const cliente = this.clienteElegido();
-    const monto = Number(this.monto());
-    if (!cliente) {
-      this.errorForm.set('Busca y selecciona un cliente o paciente.');
-      return;
-    }
-    if (!this.producto().trim()) {
-      this.errorForm.set('Indica el producto, procedimiento o servicio vendido.');
-      return;
-    }
-    if (!monto || monto <= 0) {
-      this.errorForm.set('Ingresa un monto válido en Bs.');
-      return;
-    }
-
-    /* Guardar a mitad de la subida registraba la venta sin comprobante y sin
-       avisar: el archivo terminaba de subir después, huérfano. */
-    if (this.subiendoComprobante()) {
-      this.errorForm.set('Espera a que termine de subir el comprobante.');
-      return;
-    }
-    const subido = this.comprobanteSubido();
-
-    this.guardando.set(true);
-    try {
-      await this.ventasService.crear({
-        clienteId: cliente.id,
-        producto: this.producto().trim(),
-        monto,
-        metodoPago: this.metodoPago(),
-        comprobante: this.comprobante().trim() || undefined,
-        comprobanteKey: subido?.comprobanteKey,
-        comprobanteMime: subido?.comprobanteMime,
-        comprobanteNombre: subido?.comprobanteNombre,
-        medico: this.medico().trim() || undefined,
-        modulo: this.moduloDetectado() || undefined,
-        notas: this.notas().trim() || undefined,
-        leadId: this.leadIdSeleccionado() ?? undefined,
-      });
-
-      this.cerrarFormulario();
-      this.limpiarCliente();
-      this.producto.set('');
-      this.monto.set('');
-      this.comprobante.set('');
-      this.medico.set('');
-      this.notas.set('');
-      this.quitarComprobante();
-      this.ventas.reload();
-    } catch (err) {
-      this.errorForm.set(mensajeDeError(err, 'No se pudo registrar la venta. Intenta de nuevo.'));
-    } finally {
-      this.guardando.set(false);
-    }
-  }
 
   /* ── Cambiar estado de una venta ya registrada (ADMIN) ────────────── */
 

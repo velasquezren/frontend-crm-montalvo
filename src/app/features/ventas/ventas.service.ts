@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
 import { EstadoVenta } from '../../shared/models/estados.model';
-import { Venta } from './venta.model';
+import { ComprobanteSubido, Venta } from './venta.model';
 
 /** El agente que cierra lo fija el backend desde el JWT (RF-12), no se envía. */
 export interface CrearVentaDto {
@@ -22,13 +22,8 @@ export interface CrearVentaDto {
   /** Lead que originó esta venta, si el agente lo indicó. */
   leadId?: string;
   motivoPerdida?: string;
-}
-
-export interface ComprobanteSubido {
-  comprobanteKey: string;
-  comprobanteMime: string;
-  comprobanteNombre: string;
-  comprobanteUrl: string;
+  /** Una por formulario abierto: el servidor devuelve la misma venta si llega dos veces. */
+  clientRequestId?: string;
 }
 
 export interface FiltroVentas {
@@ -39,20 +34,32 @@ export interface FiltroVentas {
   readonly hasta?: string;
   readonly metodoPago?: string;
   readonly comprobante?: string;
+  readonly modulo?: string;
+  readonly sinModulo?: boolean;
   readonly pagina?: number;
   readonly limite?: number;
 }
 
 /**
  * Ventas — registro de cierres (RF-11/RF-12).
- * Una venta GANADA dispara comisión y recategorización del cliente en el backend.
+ * Una venta GANADA recategoriza a la paciente y cierra su lead en el backend.
+ * No genera comisión: las comisiones se liquidan desde la planilla de FileMaker.
  */
 @Injectable({ providedIn: 'root' })
 export class VentasService {
   private readonly api = inject(ApiService);
 
   listarRequest(filtro?: FiltroVentas): ResourceRequest {
-    return this.api.request('/ventas', {
+    return this.api.request('/ventas', this.parametros(filtro));
+  }
+
+  /** Las tarjetas y los gráficos, con el MISMO filtro que el listado. */
+  resumenRequest(filtro?: FiltroVentas): ResourceRequest {
+    return this.api.request('/ventas/resumen', this.parametros({ ...filtro, pagina: undefined, limite: undefined }));
+  }
+
+  private parametros(filtro?: FiltroVentas) {
+    return {
       q: filtro?.q?.trim() || undefined,
       estado: filtro?.estado,
       agenteId: filtro?.agenteId,
@@ -60,9 +67,11 @@ export class VentasService {
       hasta: filtro?.hasta,
       metodoPago: filtro?.metodoPago && filtro?.metodoPago !== 'TODOS' ? filtro?.metodoPago : undefined,
       comprobante: filtro?.comprobante && filtro?.comprobante !== 'TODOS' ? filtro?.comprobante : undefined,
+      modulo: filtro?.modulo,
+      sinModulo: filtro?.sinModulo ? 'true' : undefined,
       pagina: filtro?.pagina,
       limite: filtro?.limite,
-    });
+    };
   }
 
   /** Lista de agentes para filtro (ADMIN / SUPER_ADMIN). */

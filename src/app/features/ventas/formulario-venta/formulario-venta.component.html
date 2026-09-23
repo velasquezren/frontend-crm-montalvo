@@ -1,0 +1,159 @@
+<app-drawer
+  ancho="lg"
+  icono="shopping-bag"
+  titulo="Registrar venta"
+  [subtitulo]="pacienteFijo() && elegido() ? (elegido()! | nombreCliente) : 'Servicio, monto y comprobante'"
+  (cerrar)="cerrar.emit()">
+
+  <form (submit)="guardar($event)" class="flex-1 min-h-0 flex flex-col">
+    <div class="p-6 overflow-y-auto space-y-4.5 flex-1">
+      @if (error()) {
+        <div role="alert" class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
+          <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
+          <span>{{ error() }}</span>
+        </div>
+      }
+
+      <!-- 1. Paciente (en el chat viene fija y no se muestra) -->
+      @if (!pacienteFijo()) {
+        <div class="space-y-1.5">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Paciente *</label>
+          @if (elegido(); as p) {
+            <div class="flex items-center justify-between gap-3 bg-bg-light/70 rounded-xl px-3.5 py-2.5 border border-border">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <app-avatar [initials]="p | inicialesCliente" size="sm" />
+                <div class="min-w-0">
+                  <p class="text-xs font-semibold text-text-dark truncate">{{ p | nombreCliente }}</p>
+                  <p class="text-[11px] text-text-muted font-mono leading-tight mt-0.5">{{ p.telefono }}@if (p.pac) { · PAC {{ p.pac }} }</p>
+                </div>
+              </div>
+              <app-button variant="ghost" size="sm" (clicked)="cambiarPaciente()">Cambiar</app-button>
+            </div>
+          } @else {
+            <app-input type="search" placeholder="Buscar por nombre, teléfono, CI o PAC…" [(value)]="busqueda" />
+            @if (busqueda().trim().length >= 2) {
+              @if (resultados.isLoading()) {
+                <p class="text-xs text-text-muted py-1">Buscando…</p>
+              } @else if (resultados.error()) {
+                <p role="alert" class="text-xs text-critical py-1">No se pudo buscar pacientes. Intenta de nuevo.</p>
+              } @else if (resultados.value().datos.length > 0) {
+                <div class="border border-border rounded-xl divide-y divide-border max-h-48 overflow-y-auto bg-white mt-1">
+                  @for (c of resultados.value().datos; track c.id) {
+                    <button type="button" (click)="elegir(c)"
+                      class="w-full flex items-center justify-between gap-3 px-3.5 py-2 text-left cursor-pointer hover:bg-bg-light transition-colors">
+                      <span class="flex items-center gap-2.5 min-w-0">
+                        <app-avatar [initials]="c | inicialesCliente" size="sm" />
+                        <span class="min-w-0">
+                          <span class="block text-xs font-medium text-text-dark truncate">{{ c | nombreCliente }}</span>
+                          <span class="block text-[10px] text-text-muted font-mono leading-tight">{{ c.telefono }}</span>
+                        </span>
+                      </span>
+                      @if (c.pac) { <span class="text-[9px] font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">{{ c.pac }}</span> }
+                    </button>
+                  }
+                </div>
+              } @else {
+                <p class="text-xs text-text-muted py-1">Ningún paciente coincide.</p>
+              }
+            }
+          }
+        </div>
+      }
+
+      <!-- 2. Origen: de qué campaña vino. Solo si hay leads abiertos. -->
+      @if (leadsAbiertos().length > 0) {
+        <div class="space-y-1.5">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Lead de origen</label>
+          <div class="flex flex-wrap gap-1.5" role="group" aria-label="Lead de origen">
+            <app-filter-chip size="sm" [active]="leadId() === null" (clicked)="elegirOrigen(null)">Ninguno</app-filter-chip>
+            @for (lead of leadsAbiertos(); track lead.id) {
+              <app-filter-chip size="sm" [active]="leadId() === lead.id" (clicked)="elegirOrigen(lead.id)">
+                {{ origenLabel[lead.origen] }}@if (leadsAbiertos().length > 1) { · {{ lead.createdAt | date: 'dd/MM' }} }
+              </app-filter-chip>
+            }
+          </div>
+          <p class="text-[11px] text-text-muted">Así se sabe de qué campaña vino el dinero. Con un solo lead abierto ya viene marcado.</p>
+        </div>
+      }
+
+      <!-- 3. Servicio -->
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between gap-2">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Procedimiento / servicio *</label>
+          @if (modulo(); as mod) { <app-badge variant="info">Módulo {{ mod }}</app-badge> }
+        </div>
+        <app-input placeholder="Ej. Consulta externa, Hemograma, Plan Parto Gold…" [(value)]="producto" />
+        @if (servicios().length > 0) {
+          <div class="flex flex-wrap gap-1.5 pt-1">
+            @for (s of servicios(); track s.nombre) {
+              <app-filter-chip size="sm" (clicked)="producto.set(s.nombre)">{{ s.nombre }}</app-filter-chip>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- 4. Monto y médico -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div class="space-y-1">
+          <app-input label="Monto (Bs) *" placeholder="Ej. 4.500 o 4500,50" [(value)]="monto" />
+          @if (monto().trim()) {
+            <p class="text-[11px]" [class.text-text-muted]="montoLegible()" [class.text-critical]="!montoLegible()">
+              {{ montoLegible() ? 'Se registrará ' + montoLegible() : 'No es un monto válido.' }}
+            </p>
+          }
+        </div>
+        <div class="space-y-1">
+          <app-input label="Médico tratante" placeholder="Ej. Dr. Montalvo" [(value)]="medico" />
+          @if (medicos().length > 0) {
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              @for (m of medicos(); track m.nombre) {
+                <app-filter-chip size="sm" (clicked)="medico.set(m.nombre)">{{ m.nombre }}</app-filter-chip>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- 5. Método de pago -->
+      <div class="space-y-1.5">
+        <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Método de pago</label>
+        <div class="flex flex-wrap gap-1.5" role="group" aria-label="Método de pago">
+          @for (mp of metodosPago; track mp.id) {
+            <app-filter-chip size="sm" [active]="metodoPago() === mp.id" (clicked)="metodoPago.set(mp.id)">
+              <app-icon [name]="mp.icon" [size]="12" /> {{ mp.label }}
+            </app-filter-chip>
+          }
+        </div>
+      </div>
+
+      <!-- 6. Comprobante -->
+      <div class="space-y-1.5">
+        <app-input label="Comprobante de pago (opcional)" placeholder="Nº de recibo, código QR o ref. de transferencia" [(value)]="comprobante" />
+        @if (comprobanteSubido(); as adj) {
+          <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-success-bg border border-border text-xs text-text-dark">
+            <span class="flex items-center gap-2 min-w-0">
+              <app-icon name="check-circle" [size]="14" class="text-success shrink-0" />
+              <span class="truncate font-medium">{{ adj.comprobanteNombre }}</span>
+            </span>
+            <app-button variant="ghost" size="sm" [circle]="true" icon="trash" ariaLabel="Quitar el comprobante" (clicked)="comprobanteSubido.set(null)" />
+          </div>
+        } @else {
+          <label class="flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-border bg-bg-workspace hover:bg-bg-light hover:border-primary/40 text-xs text-text-muted cursor-pointer transition-colors">
+            <app-icon name="image" [size]="14" class="text-primary" />
+            <span>{{ subiendoComprobante() ? 'Subiendo comprobante…' : 'Adjuntar foto o PDF del comprobante' }}</span>
+            <input type="file" accept="image/*,application/pdf" class="hidden" [disabled]="subiendoComprobante()" (change)="adjuntar($event)" />
+          </label>
+        }
+      </div>
+
+      <!-- 7. Notas -->
+      <app-input label="Observaciones (opcional)" [multiline]="true" [rows]="2" placeholder="Condiciones del paquete, fecha tentativa, etc." [(value)]="notas" />
+    </div>
+
+    <div class="flex items-center justify-end px-6 py-3.5 bg-bg-workspace border-t border-border shrink-0">
+      <app-button type="submit" size="sm" [loading]="guardando()" [disabled]="subiendoComprobante()">
+        {{ guardando() ? 'Guardando…' : 'Confirmar venta' }}
+      </app-button>
+    </div>
+  </form>
+</app-drawer>

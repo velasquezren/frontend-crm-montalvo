@@ -33,7 +33,6 @@ function ventaCon(lead: Venta['lead']): Venta {
     estado: 'GANADA',
     cliente: { id: 'cliente-1', nombre: 'Paciente', telefono: '+59170000000' },
     agente: { id: 'agente-1', nombre: 'Vendedora' },
-    comision: null,
     leadId: lead?.id ?? null,
     lead,
     createdAt: '2026-09-10T12:00:00.000Z',
@@ -64,6 +63,7 @@ describe('CAMP-1 · corregir el origen de una venta registrada', () => {
 
   const ventasService = {
     listarRequest: () => undefined,
+    resumenRequest: () => undefined,
     agentesRequest: () => undefined,
     catalogoRequest: () => undefined,
     crear: vi.fn(),
