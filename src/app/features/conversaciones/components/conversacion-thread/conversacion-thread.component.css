@@ -499,3 +499,46 @@
   border: 1px solid var(--color-border);
   background: var(--color-bg-workspace);
 }
+
+/* ── Ir al último mensaje ────────────────────────────────────────
+   Flota sobre el final del hilo, justo encima del compositor. */
+.ir-al-fondo {
+  position: absolute;
+  right: 20px;
+  bottom: 16px;
+  z-index: 5;
+  width: 42px;
+  height: 42px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-background);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-lifted);
+  cursor: pointer;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.ir-al-fondo:hover {
+  color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.ir-al-fondo__contador {
+  position: absolute;
+  top: -6px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  color: var(--color-background);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}

@@ -14,7 +14,7 @@
 
   <!-- ── Drag & Drop Overlay Visual ────────────────────────────────── -->
   @if (arrastrandoSobre()) {
-    <div class="drag-drop-overlay animate-fade-in">
+    <div class="drag-drop-overlay animate-fade-scale">
       <div class="drag-drop-box">
         <app-icon name="image" [size]="28" class="text-primary animate-bounce mb-2" />
         <p class="text-xs font-bold text-text-dark">Suelta tu archivo aquí</p>
@@ -28,7 +28,7 @@
     <div class="flex items-center gap-1.5 min-w-0 flex-1">
       <span class="quick-reply-label shrink-0">Mis respuestas:</span>
       <div class="quick-reply-chips">
-        @for (plantilla of state.plantillasAgente.value(); track plantilla.id) {
+        @for (plantilla of misRespuestas(); track plantilla.id) {
           <button
             type="button"
             (click)="insertarPlantillaAgente(plantilla.contenido)"
@@ -138,6 +138,28 @@
       </div>
     }
 
+    <!-- Atajos con «/»: encima de la caja, como el autocompletado de WhatsApp. -->
+    @if (sugerenciasAtajo().length) {
+      <ul id="atajos-respuestas" class="atajos-lista animate-fade-scale" role="listbox" aria-label="Respuestas rápidas">
+        @for (r of sugerenciasAtajo(); track r.id; let i = $index) {
+          <li role="option" [attr.aria-selected]="i === indiceAtajo()">
+            <button
+              type="button"
+              class="atajos-opcion"
+              [class.atajos-opcion-activa]="i === indiceAtajo()"
+              (mousedown)="$event.preventDefault()"
+              (click)="insertarPlantillaAgente(r.contenido)">
+              <span class="atajos-opcion__cabecera">
+                @if (r.atajo) { <span class="crm-atajo">{{ r.atajo }}</span> }
+                <span class="font-semibold text-text-dark truncate">{{ r.titulo }}</span>
+              </span>
+              <span class="atajos-opcion__texto">{{ r.contenido }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+
     <!-- Formulario de Envío -->
     <form (submit)="enviar($event)" class="chat-input-bar">
       <!-- Botón Adjuntar Archivo o Imagen -->
@@ -168,11 +190,14 @@
       <textarea
         #txtComposer
         [value]="state.mensajeNuevo()"
-        (input)="state.mensajeNuevo.set(txtComposer.value)"
-        (keydown.enter)="$any($event).shiftKey ? null : enviar($event)"
+        (input)="alEscribir(txtComposer.value)"
+        (keydown)="alTeclear($event)"
         (paste)="pegarEnComposer($event)"
         rows="1"
-        placeholder="Escribe un mensaje, '/' para respuestas rápidas o arrastra un archivo..."
+        placeholder="Escribe un mensaje o «/» para tus respuestas rápidas"
+        aria-autocomplete="list"
+        [attr.aria-expanded]="sugerenciasAtajo().length > 0"
+        aria-controls="atajos-respuestas"
         class="chat-composer"></textarea>
 
       <!-- Botón Enviar -->
@@ -320,7 +345,7 @@
       <!-- Lista de respuestas del agente -->
       <div class="space-y-2">
         <h4 class="text-xs font-bold text-text-dark uppercase tracking-wider">Respuestas guardadas</h4>
-        @for (p of state.plantillasAgente.value(); track p.id) {
+        @for (p of misRespuestas(); track p.id) {
           <div class="p-3 rounded-xl border border-border hover:border-primary/30 bg-white transition-all flex items-start justify-between gap-3">
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-2">
@@ -367,7 +392,9 @@
         </div>
         <div>
           <h3 class="text-sm font-bold text-text-dark">Confirmar envío</h3>
-          <p class="text-[11px] text-text-muted">Verifica la imagen antes de enviarla al paciente</p>
+          <p class="text-[11px] text-text-muted">
+            Verifica {{ adjuntoPendiente()?.mediaMime?.startsWith('image/') ? 'la imagen' : 'el archivo' }} antes de enviarlo al paciente
+          </p>
         </div>
       </div>
       <button
@@ -438,7 +465,7 @@
         icon="send"
         [loading]="state.enviando()"
         (clicked)="confirmarYEnviarMedia()">
-        Enviar imagen
+        {{ adjuntoPendiente()?.mediaMime?.startsWith('image/') ? 'Enviar imagen' : 'Enviar archivo' }}
       </app-button>
     </div>
   </div>

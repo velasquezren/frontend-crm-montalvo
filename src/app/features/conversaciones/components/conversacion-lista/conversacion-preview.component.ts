@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { MensajeApi } from '../../conversacion.model';
 import { explicacionErrorWhatsapp } from '../../error-whatsapp';
+import { sinFormato } from '../../vista-previa';
 
 /**
  * Vista previa del último mensaje en la tarjeta de conversación de la bandeja.
@@ -74,7 +75,8 @@ import { explicacionErrorWhatsapp } from '../../error-whatsapp';
             </span>
           }
           @default {
-            <span class="truncate">{{ ultimo.contenido }}</span>
+            <!-- Sin los asteriscos del formato, como la lista de WhatsApp. -->
+            <span class="truncate">{{ texto(ultimo.contenido) }}</span>
           }
         }
       </p>
@@ -85,5 +87,6 @@ import { explicacionErrorWhatsapp } from '../../error-whatsapp';
 })
 export class ConversacionPreviewComponent {
   protected readonly errorWhatsapp = explicacionErrorWhatsapp;
+  protected readonly texto = sinFormato;
   readonly mensaje = input<MensajeApi | undefined>(undefined);
 }

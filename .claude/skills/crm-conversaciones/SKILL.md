@@ -73,10 +73,10 @@ sola si falla (`ocultarMiniatura`) en vez de dejar el icono roto.
 - **Ventana Orgánica Estándar (24 horas)**:
   - Aplica cuando el paciente escribe directamente al número de la clínica.
   - Vence a las 24 horas del último mensaje entrante del paciente.
-- **Ventana Extendida de Meta Ads (72 horas / 3 días completos)**:
-  - Aplica automáticamente cuando el paciente contacta desde un anuncio de Facebook/Instagram (`campanaOrigen` / `referral`).
-  - Durante 72 horas, Meta permite el envío 100% gratuito de texto libre, audios, fotos y documentos sin requerir plantillas.
-- **Fuera de la ventana (vencida >24h o >72h)**:
+- **Ventana gratuita de Meta Ads (72 horas, «Free Entry Point»)**:
+  - Se abre cuando el paciente llega desde un anuncio de Facebook/Instagram (`campanaOrigen` / `referral`) y la clínica responde a tiempo.
+  - Durante esas 72 horas los mensajes **no se cobran**, incluidas las plantillas. **No** habilita texto libre: el texto libre sigue exigiendo la ventana de 24 horas (ver la cicatriz de abajo).
+- **Fuera de la ventana de 24 horas**:
   - Meta **prohíbe** enviar mensajes de texto libre directo (error `#131047`).
   - Es **estrictamente obligatorio** utilizar una **Plantilla Aprobada de WhatsApp (HSM / Template)**.
   - El frontend bloquea de forma automática y estricta la caja de texto y despliega el selector de plantillas oficiales con sus variables obligatorias para evitar que se envíen mensajes anulados/fallidos.
@@ -242,6 +242,44 @@ Reintentar sin una clave estable mandaba un segundo WhatsApp real.
   array?", no "busca el optimista y reemplázalo". Sin eso, algunas imágenes (y
   en teoría cualquier mensaje) se duplicaban en el hilo — no por doble clic ni
   doble envío a Meta, sino por la misma confirmación llegando dos veces.
+
+### Avisar solo cuando escribió el paciente (2026-09-23)
+
+El socket manda `conversacion:actividad` por **todo** lo que cambia un chat
+—ticks de entrega, envíos propios, media que termina de subir— y, solo cuando
+escribió el paciente, con `entrante: true` (`ConversacionesGateway.notificarEntrante`).
+La página **solo suena y notifica con `entrante`**; lo demás refresca en
+silencio. Antes notificaba todo: cada tick sonaba como «Nuevo mensaje», que es
+el mismo error que el backend ya había corregido en el push.
+
+- La notificación usa la etiqueta `chat-<id>`, **la misma del push**: el
+  navegador reemplaza en vez de mostrar dos avisos del mismo mensaje. Lleva el
+  nombre del paciente y `textoVistaPrevia()` del mensaje.
+- Los avisos se juntan 100 ms **en un lote por conversación**. Un solo
+  temporizador que se reiniciaba procesaba solo el último: si dos pacientes
+  escribían casi a la vez, la fila del primero no se actualizaba.
+- **Leído solo con la pestaña a la vista.** Marcarlo con la pestaña oculta le
+  ponía al paciente el doble tick azul de un mensaje que nadie leyó; al volver a
+  la pestaña se marca (`alVolverAlFrente`).
+
+### Hilo y compositor: lo que hace que se sienta WhatsApp
+
+- **«↓» con contador** cuando se lee más arriba y llegan mensajes: el hilo no
+  arrastra al fondo (`pegadoAlFondo`), pero tampoco calla. Cuenta lo que quedó
+  detrás del último mensaje visto, no el total —cargar historial también hace
+  crecer la lista, por arriba—.
+- **El texto se pinta como texto.** Una URL `.jpg`/`.pdf` dentro de un mensaje
+  ya no se incrusta: con los mensajes del paciente eso cargaba cualquier imagen
+  de cualquier servidor en el navegador de la agente. La media viaja por `mediaKey`.
+- **Atajos con «/»** (`atajos.ts`): solo cuando el mensaje entero es `/algo`;
+  flechas y Enter o Tab para elegir, Escape para cerrar. Insertar una respuesta
+  va **al cursor** y no reemplaza el borrador. `{{nombre}}` sin nombre real se
+  quita en vez de saludar «Hola WhatsApp».
+- **La caja crece con el texto** hasta su `max-height`. En el teléfono
+  (`pointer: coarse`) Enter hace salto de línea y se envía con el botón.
+- La **nota fijada** la editan solo quienes pueden editar la ficha
+  (`puedeGestionComercial`): guardarla es un `PATCH /clientes`, que a recepción
+  y al asistente les responde 403. La siguen viendo.
 
 ## 4. Despiece Modular de Componentes
 

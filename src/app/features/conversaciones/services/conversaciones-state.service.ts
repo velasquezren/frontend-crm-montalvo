@@ -563,7 +563,12 @@ export class ConversacionesStateService {
    * la reasignaron y estás en "Mis chats"): se quita en vez de dejar una fila
    * que ya no corresponde.
    */
-  async refrescarFilaPorRealtime(conversacionId: string): Promise<void> {
+  /**
+   * Devuelve la fila tal como quedó, o `null` si no se pudo resolver o ya no
+   * encaja en la pestaña activa: quien notifica la usa para poner el nombre
+   * del paciente y su mensaje sin pedir nada más.
+   */
+  async refrescarFilaPorRealtime(conversacionId: string): Promise<ConversacionResumen | null> {
     const filtros = this.filtros();
     let respuesta: ResumenInbox;
     try {
@@ -571,10 +576,10 @@ export class ConversacionesStateService {
     } catch {
       /* Un aviso de tiempo real que no se puede resolver no puede romper la
          pantalla: el respaldo de 60 s acabará poniéndola al día. */
-      return;
+      return null;
     }
 
-    if (filtros !== this.filtros()) return;
+    if (filtros !== this.filtros()) return respuesta.conversacion;
     const { conversacion, contadores } = respuesta;
 
     /* Fuera de las páginas siguientes en los dos casos: si vuelve, sube al
@@ -589,6 +594,7 @@ export class ConversacionesStateService {
       datos: conversacion ? [conversacion, ...sinEsta] : sinEsta,
       contadores,
     });
+    return conversacion;
   }
 
   /**

@@ -9,6 +9,8 @@ import {
   signal,
   TemplateRef,
   viewChild,
+  ElementRef,
+  untracked,
   ViewContainerRef,
 } from '@angular/core';
 import { httpResource } from '@angular/common/http';
@@ -30,6 +32,7 @@ import { RecursoMemoria } from '../../../memoria-agente/memoria-agente.model';
 import { MensajeApi, PlantillaResumen } from '../../conversacion.model';
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 import { NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
+import { buscarAtajos, insertarEnCursor, rellenarNombre } from '../../atajos';
 
 interface AdjuntoLocal {
   readonly mediaKey: string;
@@ -88,6 +91,26 @@ export class ConversacionComposerComponent implements OnDestroy {
   private readonly modalPlantillas = viewChild<TemplateRef<unknown>>('modalPlantillas');
   private readonly modalGestionPlantillas = viewChild<TemplateRef<unknown>>('modalGestionPlantillas');
   private readonly modalConfirmarMedia = viewChild<TemplateRef<unknown>>('modalConfirmarMedia');
+  private readonly txtComposer = viewChild<ElementRef<HTMLTextAreaElement>>('txtComposer');
+
+  /* ── Atajos con «/» ───────────────────────────────────────────────
+     El marcador de la caja los prometía y no existían: escribir /horarios no
+     hacía nada. Ahora «/» abre las respuestas rápidas que coinciden y se elige
+     con flechas y Enter o Tab, o con un toque. */
+  protected readonly misRespuestas = computed(() =>
+    this.state.plantillasAgente.hasValue() ? this.state.plantillasAgente.value() : [],
+  );
+  protected readonly atajosCerrados = signal(false);
+  protected readonly sugerenciasAtajo = computed(() =>
+    this.atajosCerrados() ? [] : buscarAtajos(this.state.mensajeNuevo(), this.misRespuestas()),
+  );
+  protected readonly indiceAtajo = signal(0);
+
+  /**
+   * En el teléfono Enter hace un salto de línea y se envía con el botón, como
+   * en WhatsApp: si no, el primer salto de línea mandaba el mensaje a medias.
+   */
+  private readonly esTactil = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
   private overlayRef?: OverlayRef;
 
   /* ── Adjuntos & Drag and Drop ──────────────────────────────────── */
@@ -154,6 +177,12 @@ export class ConversacionComposerComponent implements OnDestroy {
   private static readonly TYPING_THROTTLE_MS = 20_000;
 
   constructor() {
+    /* Enviar, cambiar de chat o insertar vacían o cambian el texto sin pasar
+       por el teclado: la altura se recalcula igual. */
+    effect(() => {
+      this.state.mensajeNuevo();
+      untracked(() => queueMicrotask(() => this.ajustarAltura()));
+    });
     effect(() => {
       this.state.contextoChat();
       this.adjuntoPendiente.set(null);
@@ -470,11 +499,72 @@ export class ConversacionComposerComponent implements OnDestroy {
   }
 
   /* ── Inserción de Respuestas Rápidas ───────────────────────────── */
+  /**
+   * Inserta la respuesta donde está el cursor. Si lo escrito era un atajo
+   * («/hor»), lo sustituye; si era un borrador, lo conserva.
+   */
   protected insertarPlantillaAgente(contenido: string): void {
-    const chat = this.state.detalleActual();
-    const nombre = chat?.cliente.nombre ? chat.cliente.nombre.split(' ')[0] : 'paciente';
-    const procesado = contenido.replace(/\{\{\s*nombre\s*\}\}/gi, nombre);
-    this.state.mensajeNuevo.set(procesado);
+    const texto = rellenarNombre(contenido, this.state.detalleActual()?.cliente);
+    const caja = this.txtComposer()?.nativeElement;
+    const actual = this.state.mensajeNuevo();
+    const esAtajo = buscarAtajos(actual, this.misRespuestas()).length > 0 || /^\/\S*$/.test(actual);
+    const { texto: nuevo, cursor } = esAtajo || !caja
+      ? { texto, cursor: texto.length }
+      : insertarEnCursor(actual, texto, caja.selectionStart, caja.selectionEnd);
+    this.state.mensajeNuevo.set(nuevo);
+    this.indiceAtajo.set(0);
+    queueMicrotask(() => {
+      if (!caja) return;
+      caja.focus();
+      caja.setSelectionRange(cursor, cursor);
+      this.ajustarAltura();
+    });
+  }
+
+  /** Teclado de la caja: navegar los atajos, o enviar con Enter (no en el teléfono). */
+  protected alTeclear(evento: KeyboardEvent): void {
+    const sugerencias = this.sugerenciasAtajo();
+    if (sugerencias.length) {
+      if (evento.key === 'ArrowDown' || evento.key === 'ArrowUp') {
+        evento.preventDefault();
+        const paso = evento.key === 'ArrowDown' ? 1 : -1;
+        this.indiceAtajo.update(i => (i + paso + sugerencias.length) % sugerencias.length);
+        return;
+      }
+      if (evento.key === 'Enter' || evento.key === 'Tab') {
+        evento.preventDefault();
+        const elegida = sugerencias[Math.min(this.indiceAtajo(), sugerencias.length - 1)];
+        this.insertarPlantillaAgente(elegida.contenido);
+        return;
+      }
+      if (evento.key === 'Escape') {
+        evento.preventDefault();
+        this.atajosCerrados.set(true);
+        return;
+      }
+    }
+    if (evento.key === 'Enter' && !evento.shiftKey && !this.esTactil && !evento.isComposing) {
+      void this.enviar(evento);
+    }
+  }
+
+  /** Al escribir: guarda el texto, reabre los atajos y ajusta la altura. */
+  protected alEscribir(valor: string): void {
+    this.state.mensajeNuevo.set(valor);
+    this.atajosCerrados.set(false);
+    this.indiceAtajo.set(0);
+    this.ajustarAltura();
+  }
+
+  /**
+   * La caja crece con el texto hasta su tope (CSS `max-height`) y a partir de
+   * ahí hace scroll, como la de WhatsApp. Antes se quedaba en una línea.
+   */
+  private ajustarAltura(): void {
+    const caja = this.txtComposer()?.nativeElement;
+    if (!caja) return;
+    caja.style.height = 'auto';
+    caja.style.height = `${caja.scrollHeight}px`;
   }
 
   /* ── Modales de Plantillas Oficiales de WhatsApp ─────────────────── */

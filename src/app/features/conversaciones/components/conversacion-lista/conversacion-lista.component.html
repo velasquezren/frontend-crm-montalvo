@@ -59,8 +59,12 @@
 
   <!-- Filtro tabs: Taller vertical stack (Texto arriba, contador abajo) -->
   @if (!state.isAdmin()) {
+    <!-- Recepción y asistente comparten la atención de sus líneas: ven TODOS
+         los chats de ellas, no solo los suyos (ver acceso-conversacion.ts). -->
     <p class="px-4 py-2 text-[11px] leading-relaxed text-text-muted border-b border-border">
-      Ves tus chats y los que están sin asignar en tus líneas autorizadas.
+      {{ state.puedeGestionComercial()
+        ? 'Ves tus chats y los que están sin asignar en tus líneas autorizadas.'
+        : 'Ves todos los chats de tus líneas: la atención es compartida.' }}
     </p>
   }
   <div class="sidebar-filters">

@@ -210,6 +210,7 @@
               [value]="state.editNotaFijada()"
               (input)="state.editNotaFijada.set(inputNotaFijada.value)"
               (keydown.enter)="guardarNotaFijada()"
+              (keydown.escape)="cancelarEdicionNotaFijada()"
               placeholder="Ej: Interesada en Rinoplastia - Paciente VIP (Alergia a Penicilina)"
               class="edit-pinned-input" />
             <app-button
@@ -227,7 +228,7 @@
           </p>
         }
       </div>
-      @if (!state.editandoNotaFijada()) {
+      @if (!state.editandoNotaFijada() && state.puedeGestionComercial()) {
         <div class="flex items-center gap-1 shrink-0 ml-2">
           <app-button
             variant="ghost"
@@ -238,7 +239,10 @@
         </div>
       }
     </div>
-  } @else {
+  } @else if (state.puedeGestionComercial()) {
+    <!-- Solo quien puede editar la ficha: guardar la nota es un PATCH del
+         cliente, y a recepción y al asistente les respondía 403. La nota ya
+         fijada la siguen viendo. -->
     <button
       type="button"
       (click)="iniciarEdicionNotaFijada()"
@@ -345,19 +349,14 @@
             }
 
             <!-- Texto / pie de foto / URL de media -->
+            <!-- El texto se pinta como texto, con sus enlaces clicables. Antes una
+                 URL terminada en .jpg/.pdf se incrustaba como imagen: con los
+                 mensajes del paciente eso cargaba en el navegador de la agente
+                 cualquier imagen de cualquier servidor, y las URLs firmadas
+                 viejas que se pegaban en el texto ya habían caducado, así que se
+                 veían rotas. La media real viaja por `mediaKey` (arriba). -->
             @if (item.mensaje.contenido) {
-              @if (esUrlImagen(item.mensaje.contenido)) {
-                <button type="button" (click)="abrirLightbox(item.mensaje.contenido)" class="block my-1 cursor-zoom-in text-left">
-                  <img [src]="item.mensaje.contenido" alt="Imagen adjunta" loading="lazy" decoding="async" class="max-w-full sm:max-w-xs max-h-72 rounded-xl object-cover border border-border shadow-subtle hover:opacity-95 transition-opacity" />
-                </button>
-              } @else if (esUrlPdf(item.mensaje.contenido)) {
-                <a [href]="item.mensaje.contenido" target="_blank" rel="noopener" class="flex items-center gap-2 p-2.5 rounded-xl bg-black/5 hover:bg-black/10 transition-colors my-1 border border-border/50">
-                  <app-icon name="file-text" [size]="20" class="shrink-0 text-primary" />
-                  <span class="text-xs font-bold truncate flex items-center gap-1">Ver Documento PDF <app-icon name="external-link" [size]="12" /></span>
-                </a>
-              } @else {
-                <p class="bubble-text" [innerHTML]="item.mensaje.contenido | whatsappMarkdown"></p>
-              }
+              <p class="bubble-text" [innerHTML]="item.mensaje.contenido | whatsappMarkdown"></p>
             }
 
             <span class="bubble-time">
@@ -460,6 +459,22 @@
     <!-- Ancla para forzar scroll al mensaje mas reciente -->
     <div #bottomAnchor class="h-0 w-full shrink-0"></div>
   </div>
+
+  <!-- Leyendo más arriba: un mensaje nuevo no te arrastra al fondo (ver
+       `pegadoAlFondo`), pero tampoco llega en silencio. Como en WhatsApp: una
+       flecha, y el número de mensajes que llegaron mientras tanto. -->
+  @if (!pegadoAlFondo()) {
+    <button
+      type="button"
+      class="ir-al-fondo animate-fade-scale"
+      [attr.aria-label]="nuevosSinVer() ? nuevosSinVer() + ' mensajes nuevos. Ir al último' : 'Ir al último mensaje'"
+      (click)="bajarAlFondo()">
+      @if (nuevosSinVer() > 0) {
+        <span class="ir-al-fondo__contador">{{ nuevosSinVer() }}</span>
+      }
+      <app-icon name="chevron-down" [size]="20" />
+    </button>
+  }
 } @else {
   <div class="flex-1 flex items-center justify-center p-6 bg-bg-workspace/40">
     <app-empty-state

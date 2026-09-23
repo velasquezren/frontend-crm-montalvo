@@ -9,6 +9,11 @@ import { AuthService } from '../auth/auth.service';
  *  ver la nota en `conversaciones.gateway.ts` del backend. */
 export interface ActividadConversacion {
   readonly conversacionId: string;
+  /**
+   * Escribió el paciente. Los demás avisos —ticks de entrega, envíos propios,
+   * media que termina de subir— refrescan pero no suenan ni notifican.
+   */
+  readonly entrante: boolean;
   /** Distingue avisos repetidos del mismo id para que un `effect()` los note. */
   readonly ts: number;
 }
@@ -99,9 +104,9 @@ export class RealtimeService {
     this.socket = socket;
     const generacion = this.authService.generacionSesion();
     this.generacionConectada = generacion;
-    socket.on('conversacion:actividad', (payload: { conversacionId: string }) => {
+    socket.on('conversacion:actividad', (payload: { conversacionId: string; entrante?: boolean }) => {
       if (!this.sigueVigente(socket, generacion)) return;
-      this.actividad.set({ conversacionId: payload.conversacionId, ts: Date.now() });
+      this.actividad.set({ conversacionId: payload.conversacionId, entrante: payload.entrante === true, ts: Date.now() });
     });
     socket.on('actividad:recordatorio', (payload: { actividadId: string; agenteId: string }) => {
       if (!this.sigueVigente(socket, generacion)) return;

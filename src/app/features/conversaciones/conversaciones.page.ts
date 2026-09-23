@@ -16,6 +16,8 @@ import { ModoInmersivoService } from '../../core/ui/modo-inmersivo.service';
 import { NotificacionNativaService } from '../../core/notification/notificacion-nativa.service';
 import { ConversacionesService } from './conversaciones.service';
 import { esFiltroInbox } from './conversacion.model';
+import { textoVistaPrevia } from './vista-previa';
+import { nombreParaMostrar } from '../../shared/models/nombre-cliente';
 import { ConversacionesStateService } from './services/conversaciones-state.service';
 import { ConversacionListaComponent } from './components/conversacion-lista/conversacion-lista.component';
 import { ConversacionThreadComponent } from './components/conversacion-thread/conversacion-thread.component';
@@ -119,36 +121,22 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
       this.notificacionNativa.actualizarBadge(sinResponder);
     });
 
-    /* Recibir mensajes entrantes y actualizaciones realtime por WebSocket */
-    let timerReload: ReturnType<typeof setTimeout> | null = null;
+    /* Avisos del WebSocket. Se juntan 100 ms en un LOTE por conversación:
+       antes el temporizador se reiniciaba con cada aviso y solo procesaba el
+       último, así que si dos pacientes escribían casi a la vez la fila del
+       primero no se actualizaba. `entrante` se acumula con OR: si en la ráfaga
+       hubo un mensaje del paciente, se avisa aunque detrás viniera un tick. */
+    const pendientes = new Map<string, boolean>();
+    let temporizador: ReturnType<typeof setTimeout> | null = null;
     effect(() => {
       const aviso = this.realtimeService.actividad();
       if (!aviso) return;
-
-      if (timerReload) clearTimeout(timerReload);
-      timerReload = setTimeout(() => {
-        /* Solo la fila que cambió, no el inbox entero. Antes esto recargaba las
-           500 conversaciones para reflejar un mensaje en una; ahora pide esa
-           conversación y la coloca arriba, que es donde el orden por
-           `updatedAt` la pondría igual. Si dejó de encajar en la pestaña
-           activa, el servidor lo dice y la fila se quita. */
-        void this.state.refrescarFilaPorRealtime(aviso.conversacionId);
-
-        const chatSeleccionado = this.state.seleccionadaId() === aviso.conversacionId;
-
-        if (chatSeleccionado) {
-          this.state.detalle.reload();
-          void this.conversacionesService.marcarLeido(aviso.conversacionId, false).catch(() => {});
-        }
-
-        if (document.hidden || !chatSeleccionado) {
-          this.notificacionNativa.mostrar({
-            titulo: 'Nuevo mensaje en WhatsApp',
-            mensaje: 'Tienes un nuevo mensaje entrante en Montalvo CRM.',
-            tag: `conv-${aviso.conversacionId}`,
-            alHacerClic: () => this.state.seleccionar(aviso.conversacionId),
-          });
-        }
+      pendientes.set(aviso.conversacionId, (pendientes.get(aviso.conversacionId) ?? false) || aviso.entrante);
+      if (temporizador) clearTimeout(temporizador);
+      temporizador = setTimeout(() => {
+        const lote = [...pendientes];
+        pendientes.clear();
+        for (const [conversacionId, entrante] of lote) void this.procesarAviso(conversacionId, entrante);
       }, 100);
     });
 
@@ -225,6 +213,39 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
     });
   }
 
+  /**
+   * Un aviso del socket: refresca la fila (solo esa), el hilo si está abierto y,
+   * si escribió el paciente, avisa.
+   *
+   * Solo `entrante` suena y notifica. Los demás avisos son ticks de entrega,
+   * envíos propios o media que termina de subir: el backend ya separó eso en
+   * el push, y aquí se había vuelto a mezclar — cada tick sonaba como un
+   * mensaje nuevo. La etiqueta `chat-<id>` es la misma que usa el push, así que
+   * el navegador reemplaza en vez de mostrar dos avisos del mismo mensaje.
+   *
+   * Leído solo con la pestaña a la vista: marcarlo con la pestaña oculta le
+   * pone al paciente el doble tick azul de un mensaje que nadie leyó. Al
+   * volver a la pestaña se marca (`alVolverAlFrente`).
+   */
+  private async procesarAviso(conversacionId: string, entrante: boolean): Promise<void> {
+    const fila = await this.state.refrescarFilaPorRealtime(conversacionId);
+    const abierta = this.state.seleccionadaId() === conversacionId;
+
+    if (abierta) {
+      this.state.detalle.reload();
+      if (!document.hidden) void this.conversacionesService.marcarLeido(conversacionId, false).catch(() => {});
+    }
+
+    if (entrante && (document.hidden || !abierta)) {
+      this.notificacionNativa.mostrar({
+        titulo: fila ? `WhatsApp: ${nombreParaMostrar(fila.cliente)}` : 'Mensaje de WhatsApp',
+        mensaje: (fila && textoVistaPrevia(fila.mensajes[0])) || 'Tienes un mensaje nuevo',
+        tag: `chat-${conversacionId}`,
+        alHacerClic: () => this.state.seleccionar(conversacionId),
+      });
+    }
+  }
+
   ngAfterViewInit(): void {
     this.startPolling();
   }
@@ -274,6 +295,10 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
       if (document.hidden) return;
       this.ticksDesdeUltimoRefresco = 0;
       this.refrescar();
+      /* Lo que llegó al chat abierto con la pestaña oculta se marca leído
+         ahora, que es cuando de verdad se ve. */
+      const abierta = this.state.seleccionadaId();
+      if (abierta) void this.conversacionesService.marcarLeido(abierta, false).catch(() => {});
     };
     document.addEventListener('visibilitychange', this.alVolverAlFrente);
   }

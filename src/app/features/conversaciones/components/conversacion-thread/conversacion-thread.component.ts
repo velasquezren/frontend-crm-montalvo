@@ -79,7 +79,6 @@ export class ConversacionThreadComponent {
 
   /** Empieza plegado: en un móvil el hilo de mensajes vale más que el anuncio. */
   protected readonly campanaAbierta = signal(false);
-  protected readonly velocidades = signal<Record<string, number>>({});
   private scrollInicialListo = false;
   private chatActualId = '';
 
@@ -102,6 +101,9 @@ export class ConversacionThreadComponent {
    * el tipo de fricción que hace preferir el WhatsApp del teléfono.
    */
   protected readonly pegadoAlFondo = signal(true);
+  /** Mensajes que llegaron al final del hilo mientras se leía más arriba. */
+  protected readonly nuevosSinVer = signal(0);
+  private ultimoMensajeId: string | null = null;
   private static readonly UMBRAL_FONDO_PX = 120;
   private ultimaVersionEnvioVista = 0;
 
@@ -125,6 +127,19 @@ export class ConversacionThreadComponent {
       if (esNuevoChat) {
         this.scrollInicialListo = false;
         this.pegadoAlFondo.set(true);
+        this.nuevosSinVer.set(0);
+        this.ultimoMensajeId = null;
+      }
+
+      /* Cuántos mensajes nuevos quedaron DETRÁS del último que ya se había
+         visto. Se mira el final del hilo y no el total: cargar historial
+         anterior también hace crecer la lista, pero por arriba. */
+      const mensajes = items.flatMap(i => (i.tipo === 'separador-fecha' ? [] : [i.mensaje.id]));
+      const previo = this.ultimoMensajeId;
+      this.ultimoMensajeId = mensajes.at(-1) ?? null;
+      if (!esNuevoChat && previo && previo !== this.ultimoMensajeId && !untracked(this.pegadoAlFondo)) {
+        const desde = mensajes.lastIndexOf(previo);
+        if (desde >= 0) this.nuevosSinVer.update(n => n + (mensajes.length - 1 - desde));
       }
 
       // Enviar un mensaje propio es una acción deliberada: baja al fondo
@@ -187,16 +202,6 @@ export class ConversacionThreadComponent {
     } catch {
       this.toast.error(`No se pudo copiar ${label.toLowerCase()}.`);
     }
-  }
-
-  protected esUrlImagen(url?: string | null): boolean {
-    if (!url) return false;
-    return /\.(jpeg|jpg|gif|png|webp)($|\?)/i.test(url);
-  }
-
-  protected esUrlPdf(url?: string | null): boolean {
-    if (!url) return false;
-    return /\.pdf($|\?)/i.test(url);
   }
 
   protected notaFijadaDe(cliente: { readonly datosExtra?: Record<string, unknown> | null }): string {
@@ -276,7 +281,9 @@ export class ConversacionThreadComponent {
     if (!el) return;
 
     const distanciaAlFondo = el.scrollHeight - el.scrollTop - el.clientHeight;
-    this.pegadoAlFondo.set(distanciaAlFondo < ConversacionThreadComponent.UMBRAL_FONDO_PX);
+    const alFondo = distanciaAlFondo < ConversacionThreadComponent.UMBRAL_FONDO_PX;
+    this.pegadoAlFondo.set(alFondo);
+    if (alFondo) this.nuevosSinVer.set(0);
 
     if (!this.scrollInicialListo) return;
 

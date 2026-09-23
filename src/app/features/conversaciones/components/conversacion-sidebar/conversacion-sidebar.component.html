@@ -467,10 +467,12 @@
         <!-- Info de la conversación — footer premium -->
         <div class="conv-stats-footer">
           <h3 class="detail-section-title">Resumen</h3>
+          <!-- Sin «N mensajes»: era el tamaño de la página cargada (50), no
+               el total de la conversación, y se leía como un dato. -->
           <div class="flex items-center justify-between text-xs text-text-muted">
             <span class="flex items-center gap-1">
               <app-icon name="message-circle" [size]="14" class="text-primary" />
-              {{ chat.mensajes.length }} mensaje{{ chat.mensajes.length === 1 ? '' : 's' }}
+              Último mensaje
             </span>
             @if (chat.mensajes.length > 0) {
               <span class="flex items-center gap-1 tabular-nums">
