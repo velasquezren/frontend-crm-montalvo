@@ -101,7 +101,7 @@
     <!-- Fila 2: Chips de Estado (Izquierda) + Selectores Dropdown Estilizados (Derecha) -->
     <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-3 border-t border-border">
       <!-- Chips de Estado Comercial -->
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 sm:flex-wrap no-scrollbar" role="group" aria-label="Filtro por estado de venta">
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 sm:flex-wrap scrollbar-hide" role="group" aria-label="Filtro por estado de venta">
         @for (opcion of filtros; track opcion) {
           <div class="shrink-0 sm:shrink">
             <app-filter-chip

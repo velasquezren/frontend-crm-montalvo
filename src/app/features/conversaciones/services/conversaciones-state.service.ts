@@ -422,19 +422,63 @@ export class ConversacionesStateService {
     return texto || null;
   });
 
+  /**
+   * El término que de verdad se consulta: lo tecleado, 300 ms después de la
+   * última tecla. Sin esto cada letra era una petición.
+   */
+  private readonly terminoBuscado = signal('');
+  /**
+   * Coincidencias en TODO el historial, del servidor. La búsqueda anterior
+   * solo miraba los mensajes cargados (los últimos 50), así que buscar algo
+   * de hace un mes decía «0» aunque existiera: un corte leído como dato.
+   */
+  readonly busquedaServidor = httpResource<{ total: number; items: MensajeApi[] }>(() => {
+    const id = this.seleccionadaId();
+    const termino = this.terminoBuscado();
+    return id && this.buscadorAbierto() && termino.length > 1
+      ? this.conversacionesService.buscarMensajesRequest(id, termino)
+      : undefined;
+  });
+
+  /**
+   * Ids de las coincidencias, de la más reciente a la más antigua —como el
+   * buscador de WhatsApp, que empieza por abajo—. Mientras el servidor no
+   * responde se usa lo cargado, para que la búsqueda no parpadee en vacío.
+   */
   readonly coincidenciasChat = computed(() => {
     const query = this.busquedaChat().trim().toLowerCase();
-    if (!query) return [];
+    if (query.length < 2) return [];
+    if (this.terminoBuscado() === query && this.busquedaServidor.hasValue()) {
+      return this.busquedaServidor.value().items.map(m => m.id);
+    }
     const chat = this.detalleActual();
     if (!chat) return [];
-    const matches: string[] = [];
-    for (const m of chat.mensajes) {
-      if (m.contenido && m.contenido.toLowerCase().includes(query)) {
-        matches.push(m.id);
-      }
-    }
-    return matches;
+    return chat.mensajes
+      .filter(m => m.contenido?.toLowerCase().includes(query))
+      .map(m => m.id)
+      .reverse();
   });
+
+  /** Cuántas hay en total: el servidor corta la lista en 50 pero cuenta todas. */
+  readonly totalCoincidencias = computed(() => {
+    const query = this.busquedaChat().trim().toLowerCase();
+    return this.terminoBuscado() === query && this.busquedaServidor.hasValue()
+      ? this.busquedaServidor.value().total
+      : this.coincidenciasChat().length;
+  });
+
+  /**
+   * Carga historial hacia atrás hasta que el mensaje esté en el hilo, para
+   * poder saltar a una coincidencia vieja. Tope de 40 páginas (≈2.000
+   * mensajes): más allá, mejor no congelar la pestaña.
+   */
+  async asegurarMensajeCargado(mensajeId: string): Promise<boolean> {
+    for (let intento = 0; intento < 40; intento++) {
+      if (this.detalleActual()?.mensajes.some(m => m.id === mensajeId)) return true;
+      if (!this.hayMasHistorial() || (await this.cargarHistorialAnterior()) === 0) break;
+    }
+    return !!this.detalleActual()?.mensajes.some(m => m.id === mensajeId);
+  }
 
   readonly mensajesConFecha = computed<ItemHilo[]>(() => {
     const chat = this.detalleActual();
@@ -462,6 +506,15 @@ export class ConversacionesStateService {
   });
 
   constructor() {
+    /* Debounce del buscador del hilo (ver `terminoBuscado`). */
+    effect(onCleanup => {
+      const termino = this.busquedaChat().trim().toLowerCase();
+      const t = setTimeout(() => {
+        this.terminoBuscado.set(termino);
+        this.indiceCoincidencia.set(0);
+      }, 300);
+      onCleanup(() => clearTimeout(t));
+    });
     /* Medición de la apertura. Dos tiempos distintos que conviene no mezclar:
        `first-content` es lo que la agente percibe —la cabecera pintada— y
        `detail-loaded` es el viaje de red, que no se puede bajar desde aquí. */

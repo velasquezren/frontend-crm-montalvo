@@ -65,17 +65,28 @@
             autofocus
             [value]="state.busquedaChat()"
             (input)="state.busquedaChat.set(inputBuscarChat.value)"
-            (keydown.enter)="irACoincidencia(1)"
+            (keydown.enter)="$any($event).shiftKey ? irACoincidencia(-1) : irACoincidencia(1)"
             (keydown.escape)="cerrarBusquedaChat()"
             placeholder="Buscar en el chat…"
             aria-label="Buscar dentro de esta conversación"
             class="chat-search-input" />
           @if (state.busquedaChat().trim().length > 1) {
-            <span class="chat-search-count tabular-nums">{{ state.coincidenciasChat().length }}</span>
+            <!-- El total es de TODO el chat (lo cuenta el servidor), no de lo cargado. -->
+            <span class="chat-search-count tabular-nums" aria-live="polite">
+              @if (state.totalCoincidencias() > 0) {
+                {{ state.indiceCoincidencia() + 1 }}/{{ state.totalCoincidencias() }}
+              } @else {
+                0
+              }
+            </span>
           }
           <app-button
+            variant="ghost" size="sm" icon="chevron-up" [circle]="true"
+            ariaLabel="Coincidencia más reciente"
+            (clicked)="irACoincidencia(-1)" />
+          <app-button
             variant="ghost" size="sm" icon="chevron-down" [circle]="true"
-            ariaLabel="Coincidencia siguiente"
+            ariaLabel="Coincidencia más antigua"
             (clicked)="irACoincidencia(1)" />
           <app-button
             variant="ghost" size="sm" icon="x" [circle]="true"

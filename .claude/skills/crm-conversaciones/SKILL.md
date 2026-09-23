@@ -277,6 +277,15 @@ el mismo error que el backend ya había corregido en el push.
   quita en vez de saludar «Hola WhatsApp».
 - **La caja crece con el texto** hasta su `max-height`. En el teléfono
   (`pointer: coarse`) Enter hace salto de línea y se envía con el botón.
+- **Buscar dentro del chat mira TODO el historial** (`busquedaServidor`, 300 ms
+  de debounce, `GET /:id/buscar-mensajes`): antes solo miraba los mensajes
+  cargados y decía «0» para uno de hace un mes que existía. El contador es el
+  total del servidor; saltar a una coincidencia vieja carga historial hasta
+  encontrarla (`asegurarMensajeCargado`, tope de 40 páginas). El primer Enter va
+  a la primera coincidencia; Shift+Enter, a la anterior.
+- **Adjuntos salientes** (backend, `contenido-adjunto.ts`): el texto viaja como
+  descripción de la foto o el documento —antes se perdía—, el tipo sale de
+  `mediaMime` y solo JPEG/PNG salen como imagen.
 - La **nota fijada** la editan solo quienes pueden editar la ficha
   (`puedeGestionComercial`): guardarla es un `PATCH /clientes`, que a recepción
   y al asistente les responde 403. La siguen viendo.

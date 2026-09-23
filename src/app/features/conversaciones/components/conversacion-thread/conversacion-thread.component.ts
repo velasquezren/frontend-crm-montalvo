@@ -243,19 +243,36 @@ export class ConversacionThreadComponent {
   }
 
   protected cerrarBusquedaChat(): void {
+    this.terminoSaltado = '';
     this.state.buscadorAbierto.set(false);
     this.state.busquedaChat.set('');
     this.state.indiceCoincidencia.set(0);
   }
 
-  protected irACoincidencia(delta: number): void {
-    this.state.irACoincidencia(delta);
-    const matches = this.state.coincidenciasChat();
-    const idx = this.state.indiceCoincidencia();
-    if (matches.length > 0 && matches[idx]) {
-      const el = document.querySelector(`[data-mensaje-id="${matches[idx]}"]`);
-      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  /** Término al que ya se saltó: el primer Enter va a la PRIMERA coincidencia, no a la segunda. */
+  private terminoSaltado = '';
+
+  /**
+   * Salta a la coincidencia siguiente (`delta` 1, más antigua) o anterior
+   * (-1). Si es de un mensaje todavía no cargado, carga historial hasta
+   * encontrarlo: la búsqueda cubre todo el chat, no solo lo visible.
+   */
+  protected async irACoincidencia(delta: number): Promise<void> {
+    const termino = this.state.busquedaChat().trim().toLowerCase();
+    if (this.terminoSaltado === termino) this.state.irACoincidencia(delta);
+    this.terminoSaltado = termino;
+
+    const id = this.state.coincidenciasChat()[this.state.indiceCoincidencia()];
+    if (!id) return;
+    /* Que cargar historial no dispare el «bajar al fondo» del hilo. */
+    this.pegadoAlFondo.set(false);
+    if (!(await this.state.asegurarMensajeCargado(id))) {
+      this.toast.info('Ese mensaje es muy antiguo para mostrarlo aquí. Afina la búsqueda.');
+      return;
     }
+    requestAnimationFrame(() =>
+      document.querySelector(`[data-mensaje-id="${id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+    );
   }
 
   /* ── Lightbox & Audio ─────────────────────────────────────────── */

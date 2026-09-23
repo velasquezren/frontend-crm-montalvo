@@ -21,7 +21,7 @@ CRM/
 
 ## Antes de escribir código
 
-**Primero lee [`../backend-crm-montalvo/docs/ESTADO_ACTUAL.md`](../backend-crm-montalvo/docs/ESTADO_ACTUAL.md)**
+**Primero lee [`../backend-crm-montalvo/docs/PANORAMA.md`](../backend-crm-montalvo/docs/PANORAMA.md)** —el mapa de qué hay hoy— **y después [`../backend-crm-montalvo/docs/ESTADO_ACTUAL.md`](../backend-crm-montalvo/docs/ESTADO_ACTUAL.md)**
 y haz `git fetch` en los dos repos. Dice qué fase de la auditoría está cerrada,
 qué sigue y qué no hay que deshacer. Vive en el backend porque cubre los dos
 repos. Se trabaja desde dos máquinas: es normal encontrarse commits que no se

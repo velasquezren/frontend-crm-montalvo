@@ -94,9 +94,13 @@ export class ConversacionesService {
     });
   }
 
-  /** Búsqueda histórica de mensajes en el servidor. */
-  buscarMensajes(id: string, query: string, limit = 20, skip = 0): Promise<{ total: number; items: MensajeApi[] }> {
-    return this.api.get<{ total: number; items: MensajeApi[] }>(`/conversaciones/${id}/buscar-mensajes`, { query, limit, skip });
+  /**
+   * Búsqueda en TODO el historial del chat, no solo en lo cargado: el
+   * buscador del hilo la usa para que «0 resultados» signifique que no existe.
+   * Devuelve hasta 50, del más reciente al más antiguo, y el total real.
+   */
+  buscarMensajesRequest(id: string, query: string): ResourceRequest {
+    return this.api.request(`/conversaciones/${id}/buscar-mensajes`, { query, limit: 50 });
   }
 
   /** Agentes activos — alimenta el desplegable de asignación del admin. */

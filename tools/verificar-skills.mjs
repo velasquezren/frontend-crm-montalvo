@@ -352,6 +352,21 @@ function verificarCodigo() {
     }
   }
 
+  /* ── Toda clase animate-* usada en una plantilla existe ───────────────────
+     Tailwind no avisa de una clase que no genera: simplemente no pinta nada.
+     Así vivieron `animate-fade-in` en el selector de pacientes y en el fondo
+     de la ficha del chat, sin animación y sin que nadie lo notara (2026-09-23).
+     Vale una de las de Tailwind o una definida en algún CSS del proyecto. */
+  const TAILWIND_ANIMATE = new Set(['animate-spin', 'animate-ping', 'animate-pulse', 'animate-bounce', 'animate-none']);
+  const cssProyecto = indexar(resolve(RAIZ, 'src')).filter(r => r.endsWith('.css')).map(r => readFileSync(r, 'utf8')).join('\n');
+  for (const ruta of indexar(base).filter(r => /\.(html|ts)$/.test(r) && !r.endsWith('.spec.ts'))) {
+    const usadas = new Set(readFileSync(ruta, 'utf8').match(/(?<![\w-])animate-[a-z][a-z-]*(?![\w-])/g) ?? []);
+    for (const clase of usadas) {
+      if (TAILWIND_ANIMATE.has(clase) || cssProyecto.includes(`.${clase}`)) continue;
+      señalaCodigo(`${relative(base, ruta)}: \`${clase}\` no existe (ni en Tailwind ni en ningún CSS): no anima nada.`);
+    }
+  }
+
   /* ── Toda vista con datos remotos declara su estado de error ──────────────
      No es una regla de estilo: sin esa rama, un backend caído cae en el estado
      vacío y la pantalla afirma "no hay clientes" o "no hay comisiones". El

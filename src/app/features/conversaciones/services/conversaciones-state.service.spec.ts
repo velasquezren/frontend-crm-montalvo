@@ -97,6 +97,23 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     },
   );
 
+  /* Buscar solo en lo cargado decía «0» para un mensaje de hace un mes que
+     existía: un corte leído como dato. Ahora cuenta y lista el servidor. */
+  it('el buscador del hilo busca en todo el historial y cuenta el total real', async () => {
+    state.buscadorAbierto.set(true);
+    state.busquedaChat.set('Receta');
+    let peticion: ReturnType<HttpTestingController['expectOne']> | undefined;
+    await vi.waitFor(() => {
+      TestBed.tick();
+      peticion = http.expectOne(req => req.url === `${API_URL}/conversaciones/chat-1/buscar-mensajes`);
+    });
+    expect(peticion!.request.params.get('query')).toBe('receta');
+    peticion!.flush({ total: 73, items: [{ ...MENSAJE, id: 'viejo-1', contenido: 'su receta' }] });
+    await app.whenStable();
+    expect(state.coincidenciasChat()).toEqual(['viejo-1']);
+    expect(state.totalCoincidencias()).toBe(73);
+  });
+
   it('actualiza las plantillas de la línea actual desde Meta y permite repetir tras un error', async () => {
     state.actualizarPlantillasWhatsApp();
     TestBed.tick();
