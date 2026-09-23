@@ -1,3 +1,4 @@
+import { CajaImagenPipe } from '../../caja-imagen';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -39,6 +40,7 @@ import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipe
 @Component({
   selector: 'app-conversacion-thread',
   imports: [
+    CajaImagenPipe,
     InicialesClientePipe,
     NombreClientePipe,
     AvatarComponent,

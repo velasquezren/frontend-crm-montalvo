@@ -61,6 +61,9 @@ export interface MensajeApi {
   readonly mediaUrl?: string | null;
   readonly mediaMime?: string | null;
   readonly mediaNombre?: string | null;
+  /** Ancho y alto con que se ve la foto; el hilo reserva su caja antes de que llegue. */
+  readonly mediaAncho?: number | null;
+  readonly mediaAlto?: number | null;
 }
 
 export interface ConversacionResumen {

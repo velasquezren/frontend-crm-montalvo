@@ -292,13 +292,21 @@
             @switch (item.mensaje.tipo) {
               @case ('IMAGEN') {
                 @if (item.mensaje.mediaUrl) {
-                  <button type="button" (click)="abrirLightbox(item.mensaje.mediaUrl)" class="block mb-1 cursor-zoom-in text-left">
+                  <!-- La caja se reserva antes de que llegue la foto: el hilo no salta. -->
+                  @let caja = item.mensaje | cajaImagen;
+                  <button type="button" (click)="abrirLightbox(item.mensaje.mediaUrl)"
+                    class="media-foto" [style.width.px]="caja.ancho" [style.height.px]="caja.alto"
+                    aria-label="Ver la imagen completa">
                     <img [src]="item.mensaje.mediaUrl" alt="Imagen enviada en la conversación"
-                      loading="lazy" decoding="async"
-                      class="rounded-lg max-w-full max-h-72 object-contain hover:opacity-90 transition-opacity" />
+                      loading="lazy" decoding="async" [width]="caja.ancho" [height]="caja.alto"
+                      class="media-foto-img" [class.media-foto-img-recortada]="caja.recortar" />
                   </button>
                 } @else {
-                  <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando imagen…</div>
+                  <!-- Aún se descarga de WhatsApp: el mismo hueco que ocupará la foto. -->
+                  @let caja = item.mensaje | cajaImagen;
+                  <div class="media-foto media-foto-pendiente" [style.width.px]="caja.ancho" [style.height.px]="caja.alto">
+                    <app-icon name="image" [size]="16" /> Descargando imagen…
+                  </div>
                 }
               }
               @case ('STICKER') {

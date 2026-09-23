@@ -10,6 +10,7 @@ import {
   Injectable,
   linkedSignal,
   signal,
+  untracked,
 } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -64,6 +65,9 @@ const PAGINA_VACIA: PaginaInbox = {
  * Centraliza la reactividad con Angular Signals y httpResource,
  * desacoplando la lógica de negocio de los componentes de presentación.
  */
+/** Cuántos chats recientes se recuerdan para reabrirlos al instante. */
+const MAX_HILOS_RECIENTES = 12;
+
 @Injectable({ providedIn: 'root' })
 export class ConversacionesStateService {
   private readonly conversacionesService = inject(ConversacionesService);
@@ -210,17 +214,40 @@ export class ConversacionesStateService {
        aquí dejaría el compositor abierto sobre un hilo que no se pudo cargar. */
     if (this.detalle.error()) return null;
 
+    /* Un chat abierto hace poco se muestra entero al instante mientras llega
+       la versión fresca, que lo reemplaza. Ver `hilosRecientes`. */
+    const reciente = this.hilosRecientes().get(id);
+    if (reciente) return reciente;
+
     const fila = this.conversacionesFiltradas().find(c => c.id === id);
     return fila ? { ...fila, mensajes: [] } : null;
   });
 
-  /** Verdadero mientras lo que se ve es la fila del listado y no el hilo real. */
+  /** Verdadero mientras lo que se ve es la fila del listado: la cabecera sin el hilo. */
   readonly detalleEsProvisional = computed(() => {
     const actual = this.detalleActual();
     if (!actual) return false;
-    const real = this.detalle.hasValue() ? this.detalle.value() : null;
-    return !real || real.id !== actual.id;
+    return !this.detalleEsReal() && !this.hilosRecientes().has(actual.id);
   });
+
+  /** Lo que se ve es la respuesta del servidor para ESTA conversación. */
+  readonly detalleEsReal = computed(() => {
+    const id = this.seleccionadaId();
+    const real = this.detalle.hasValue() ? this.detalle.value() : null;
+    return !!id && real?.id === id;
+  });
+
+  /**
+   * Los últimos hilos que llegaron del servidor, para que volver a un chat
+   * sea instantáneo: se pinta entero con lo último que se vio y la respuesta
+   * fresca lo reemplaza al llegar (unos 200 ms), como WhatsApp Web. Antes cada
+   * vuelta a un chat pasaba por el esqueleto aunque se hubiera abierto hacía
+   * un minuto.
+   *
+   * Solo en memoria, a lo sumo `MAX_HILOS_RECIENTES`, y se vacía al cambiar de
+   * sesión: en la clínica varias agentes comparten equipo.
+   */
+  readonly hilosRecientes = signal<ReadonlyMap<string, ConversacionDetalle>>(new Map());
   readonly agentesActuales = computed(() => this.agentes.hasValue() ? this.agentes.value() : []);
   readonly errorInbox = computed(() => {
     const error = this.inbox.error();
@@ -523,8 +550,6 @@ export class ConversacionesStateService {
     effect(() => {
       const id = this.seleccionadaId();
       const actual = this.detalleActual();
-      const provisional = this.detalleEsProvisional();
-
       if (id !== idMedido) {
         idMedido = id;
         contenidoMarcado = false;
@@ -535,7 +560,19 @@ export class ConversacionesStateService {
         contenidoMarcado = true;
         medir('conversation-first-content', 'conversation-select-click');
       }
-      if (!provisional) medir('conversation-detail-loaded', 'conversation-select-click');
+      if (this.detalleEsReal()) medir('conversation-detail-loaded', 'conversation-select-click');
+    });
+
+    effect(() => {
+      const real = this.detalle.hasValue() ? this.detalle.value() : null;
+      if (!real) return;
+      untracked(() => this.hilosRecientes.update(previos => {
+        const siguientes = new Map(previos);
+        siguientes.delete(real.id);
+        siguientes.set(real.id, real);
+        while (siguientes.size > MAX_HILOS_RECIENTES) siguientes.delete(siguientes.keys().next().value!);
+        return siguientes;
+      }));
     });
 
     let generacionAnterior = this.authService.generacionSesion();
@@ -543,6 +580,7 @@ export class ConversacionesStateService {
       const generacion = this.authService.generacionSesion();
       if (generacion === generacionAnterior) return;
       generacionAnterior = generacion;
+      this.hilosRecientes.set(new Map());
       this.seleccionadaId.set(null);
       this.filtroLineaId.set(null);
       this.detalle.set(null);

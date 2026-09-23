@@ -201,6 +201,41 @@ describe('apertura inmediata de una conversación', () => {
     expect(state.detalleActual()?.cliente.nombre).toBe('Paciente B');
   });
 
+  describe('volver a un chat ya abierto', () => {
+    it('se pinta entero al instante con lo último que se vio, sin esqueleto', () => {
+      state.seleccionadaId.set('chat-b');
+      TestBed.tick();
+      state.seleccionadaId.set('chat-a');
+      TestBed.tick();
+
+      /* Nada respondió aún para esta vuelta, y A ya está con sus 3 mensajes. */
+      expect(state.detalleActual()?.id).toBe('chat-a');
+      expect(state.detalleActual()?.mensajes).toHaveLength(3);
+      expect(state.detalleEsProvisional()).toBe(false);
+      expect(state.detalleEsReal()).toBe(false);
+    });
+
+    it('la respuesta fresca reemplaza lo recordado', async () => {
+      state.seleccionadaId.set('chat-b');
+      TestBed.tick();
+      state.seleccionadaId.set('chat-a');
+      TestBed.tick();
+      responder('/conversaciones/chat-a', detalle(FILA_A, 5));
+      await vi.waitFor(() => { TestBed.tick(); expect(state.detalleEsReal()).toBe(true); });
+      expect(state.detalleActual()?.mensajes).toHaveLength(5);
+    });
+
+    it('si el servidor falla al volver, no muestra lo recordado como si fuera válido', async () => {
+      state.seleccionadaId.set('chat-b');
+      TestBed.tick();
+      state.seleccionadaId.set('chat-a');
+      TestBed.tick();
+      http.expectOne(req => req.url === `${API_URL}/conversaciones/chat-a`).flush('roto', { status: 500, statusText: 'Server Error' });
+      await vi.waitFor(() => { TestBed.tick(); expect(state.detalle.error()).toBeTruthy(); });
+      expect(state.detalleActual()).toBeNull();
+    });
+  });
+
   it('sin selección no hay detalle', () => {
     state.seleccionadaId.set(null);
     TestBed.tick();

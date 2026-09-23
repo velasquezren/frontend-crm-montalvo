@@ -167,6 +167,29 @@ cambio de la bandeja, así que un mensaje en tiempo real devolvía a la agente a
 chat del enlace aunque ella ya estuviera en otro. `?id=` (push, avisos) no
 cambia.
 
+### Abrir un chat con muchas fotos sin parpadeo (2026-09-23)
+
+Eran tres causas, y ninguna era la consulta a la base:
+
+1. **URLs firmadas distintas en cada lectura.** `R2Service.urlFirmada` fechaba
+   la firma con la hora exacta, así que cada apertura —y cada recarga por un
+   mensaje en tiempo real— daba a cada foto una URL nueva: el navegador no usaba
+   su caché y las volvía a descargar TODAS. Ahora se firma por ventanas de una
+   hora (misma clave → misma URL dentro de la hora, validez mínima intacta) y
+   los archivos se suben con `Cache-Control: immutable`. La URL firmada NO puede
+   fijar esa cabecera (R2 responde 501 a `response-cache-control`).
+2. **Fotos sin caja reservada.** La burbuja nacía con altura 0 y crecía al
+   cargar; el hilo se reacomodaba una vez por foto. `Mensaje.mediaAncho/Alto`
+   se guardan al descargar (entrantes) y al subir a Mi Memoria (salientes), ya
+   girados por EXIF, y `cajaImagen` reserva la caja exacta. Sin medidas (lo
+   anterior), una caja fija de 240×240 recortada al centro. **No vuelvas a
+   pintar una `<img>` de chat sin su caja.**
+3. **Volver a un chat pasaba por el esqueleto.** `hilosRecientes` recuerda los
+   últimos 12 hilos en memoria (se vacían al cambiar de sesión) y los pinta al
+   instante mientras llega la versión fresca. Un error del servidor nunca
+   muestra lo recordado. `detalleEsProvisional` es solo «cabecera sin hilo»;
+   «lo que se ve es del servidor» es `detalleEsReal`.
+
 ## 2. Visibilidad y Seguridad por Rol
 
 - **Administrador y Super Admin (`ADMIN` / `SUPER_ADMIN`)**:
