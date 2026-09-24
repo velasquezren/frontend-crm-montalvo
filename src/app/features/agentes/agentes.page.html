@@ -1,68 +1,20 @@
 <div class="space-y-6">
 
-  <!-- Cabecera de la vista -->
-  <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-    <div>
-      <h1 class="text-2xl font-bold text-text-dark tracking-tight">Usuarios</h1>
-      <p class="text-sm text-text-muted mt-1">
-        Administra las cuentas del equipo de Clínica Montalvo, asigna roles y gestiona accesos.
-      </p>
-    </div>
-
+  <!-- Cabecera y KPIs con los mismos átomos que Clientes: eran un <header> y
+       cuatro tarjetas maquetadas a mano, y la pantalla se leía como otra app. -->
+  <app-page-header
+    title="Usuarios"
+    subtitle="Administra las cuentas del equipo de Clínica Montalvo, asigna roles y gestiona accesos.">
     <app-button icon="user-plus" (clicked)="abrirModal(modalCrear)">
       Nuevo usuario
     </app-button>
-  </header>
+  </app-page-header>
 
-  <!-- Métricas KPI -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-    <app-card>
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-xs font-medium text-text-muted">Total Usuarios</p>
-          <p class="text-2xl font-bold text-text-dark mt-1">{{ stats().total }}</p>
-        </div>
-        <div class="w-10 h-10 rounded-xl bg-bg-light flex items-center justify-center text-text-muted">
-          <app-icon name="users" [size]="20" />
-        </div>
-      </div>
-    </app-card>
-
-    <app-card>
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-xs font-medium text-text-muted">Agentes Activos</p>
-          <p class="text-2xl font-bold text-primary mt-1">{{ stats().activos }}</p>
-        </div>
-        <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-          <app-icon name="check-circle" [size]="20" />
-        </div>
-      </div>
-    </app-card>
-
-    <app-card>
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-xs font-medium text-text-muted">Administradores</p>
-          <p class="text-2xl font-bold text-text-dark mt-1">{{ stats().porRol.ADMIN }}</p>
-        </div>
-        <div class="w-10 h-10 rounded-xl bg-bg-light flex items-center justify-center text-text-muted">
-          <app-icon name="shield" [size]="20" />
-        </div>
-      </div>
-    </app-card>
-
-    <app-card>
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-xs font-medium text-text-muted">Agentes comerciales</p>
-          <p class="text-2xl font-bold text-text-dark mt-1">{{ stats().porRol.AGENTE }}</p>
-        </div>
-        <div class="w-10 h-10 rounded-xl bg-bg-light flex items-center justify-center text-text-muted">
-          <app-icon name="message-circle" [size]="20" />
-        </div>
-      </div>
-    </app-card>
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+    <app-kpi-card label="Total usuarios" [valor]="stats().total" icon="users" tono="neutral" [compacto]="true" />
+    <app-kpi-card label="Activos" [valor]="stats().activos" icon="check-circle" tono="primary" tonoValor="primary" [compacto]="true" />
+    <app-kpi-card label="Administradores" [valor]="stats().porRol.ADMIN" icon="shield" tono="neutral" [compacto]="true" />
+    <app-kpi-card label="Agentes comerciales" [valor]="stats().porRol.AGENTE" icon="message-circle" tono="secondary" [compacto]="true" />
   </div>
 
   <!-- Barra de Filtros: Switcher por Rol + Búsqueda -->
@@ -99,6 +51,16 @@
   </div>
 
   <!-- Tabla de Agentes -->
+  <!-- Sin esta rama, mientras la lista viaja la tabla caía en @empty y decía
+       «Sin usuarios registrados»: la misma mentira que la regla de las cuatro
+       ramas existe para evitar. -->
+  @if (agentes.isLoading() && agentes.value().length === 0) {
+    <div class="bg-white rounded-2xl border border-border p-6 shadow-subtle flex flex-col gap-4">
+      @for (fila of [1, 2, 3, 4]; track fila) {
+        <app-loading-skeleton height="48px" />
+      }
+    </div>
+  } @else {
   <div class="bg-white rounded-2xl border border-border overflow-hidden shadow-subtle">
     <div class="overflow-x-auto">
       <table class="w-full text-left text-sm text-text-dark border-collapse">
@@ -192,6 +154,7 @@
       </table>
     </div>
   </div>
+  }
 
 </div>
 

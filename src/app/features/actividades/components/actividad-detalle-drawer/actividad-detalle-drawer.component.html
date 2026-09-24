@@ -107,8 +107,9 @@
         @if (actividad().lead; as lead) {
           <div class="flex items-center justify-between p-2.5 rounded-xl bg-bg-workspace border border-border/60 text-xs">
             <span class="text-text-muted">Lead asociado</span>
-            <span class="px-2 py-0.5 rounded-md bg-secondary/10 text-secondary font-semibold text-[11px]">
-              {{ labelOrigen(lead.origen) }} · {{ lead.estado }}
+            <span class="flex items-center gap-2 min-w-0">
+              <span class="font-medium text-text-dark truncate">{{ labelOrigen(lead.origen) }}</span>
+              <app-badge [variant]="badgeEtapaLead(lead.estado)">{{ etiquetaEtapaLead(lead.estado) }}</app-badge>
             </span>
           </div>
         }

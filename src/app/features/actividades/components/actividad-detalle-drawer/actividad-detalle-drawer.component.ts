@@ -4,6 +4,9 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 
 import { generarIniciales } from '../../../../core/auth/user.model';
 import { ORIGEN_LABEL } from '../../../leads/lead.model';
+import { EstadoLead } from '../../../../core/api/db-enums';
+import { BadgeVariant } from '../../../../shared/components/badge/badge.component';
+import { ESTADO_LEAD_BADGE, ESTADO_LEAD_LABEL } from '../../../../shared/models/estados.model';
 import { esNombreProvisional } from '../../../../shared/models/nombre-cliente';
 import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
@@ -91,6 +94,17 @@ export class ActividadDetalleDrawerComponent {
 
   protected sinNombre(cliente: { nombre: string; telefono: string }): boolean {
     return esNombreProvisional(cliente.nombre);
+  }
+
+  /* La etapa llegaba en crudo ("CONVERTIDO") dentro de una cápsula teñida de
+     secundario. Es un estado, así que va con su etiqueta y su variante de badge,
+     las mismas que usa el pipeline de Leads. */
+  protected etiquetaEtapaLead(estado: string): string {
+    return ESTADO_LEAD_LABEL[estado as EstadoLead] ?? estado;
+  }
+
+  protected badgeEtapaLead(estado: string): BadgeVariant {
+    return ESTADO_LEAD_BADGE[estado as EstadoLead] ?? 'neutral';
   }
 
   protected labelOrigen(origen: string): string {

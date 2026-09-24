@@ -84,22 +84,9 @@
   <!-- ── Cabecera: navegación de mes + sincronizar ────────────────────── -->
   <div class="flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-2">
-      <button
-        type="button"
-        (click)="mesAnterior()"
-        class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
-        aria-label="Mes anterior">
-        <app-icon name="chevron-left" [size]="16" />
-      </button>
+      <app-button variant="ghost" size="sm" [circle]="true" icon="chevron-left" ariaLabel="Mes anterior" (clicked)="mesAnterior()" />
       <span class="text-sm font-bold text-text-dark min-w-32 text-center">{{ etiquetaMes() }}</span>
-      <button
-        type="button"
-        [disabled]="esMesActual()"
-        (click)="mesSiguiente()"
-        class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-        aria-label="Mes siguiente">
-        <app-icon name="chevron-up" [size]="16" class="rotate-90" />
-      </button>
+      <app-button variant="ghost" size="sm" [circle]="true" icon="chevron-right" [disabled]="esMesActual()" ariaLabel="Mes siguiente" (clicked)="mesSiguiente()" />
     </div>
 
     <div class="flex items-center gap-2">
@@ -179,13 +166,7 @@
                   <app-badge [variant]="fuenteBadge[dia.fuente]">{{ fuenteLabel[dia.fuente] }}</app-badge>
                 </td>
                 <td class="px-4 py-2 text-right">
-                  <button
-                    type="button"
-                    (click)="abrirEdicion(dia)"
-                    class="w-7 h-7 rounded-lg inline-flex items-center justify-center text-text-muted hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                    title="Corregir a mano">
-                    <app-icon name="edit" [size]="13" />
-                  </button>
+                  <app-button variant="ghost" size="xs" [circle]="true" icon="edit" title="Corregir a mano" ariaLabel="Corregir a mano" (clicked)="abrirEdicion(dia)" />
                 </td>
               }
             </tr>

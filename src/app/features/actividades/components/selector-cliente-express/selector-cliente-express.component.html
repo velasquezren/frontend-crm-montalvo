@@ -6,7 +6,7 @@
       <button
         type="button"
         (click)="activarModoNuevoCliente()"
-        class="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer">
+        class="crm-enlace text-[11px]">
         <app-icon name="user-plus" [size]="12" />
         <span>+ Nuevo paciente express</span>
       </button>
@@ -23,9 +23,7 @@
         </div>
       </div>
       @if (permiteCambiarPaciente()) {
-        <button type="button" (click)="limpiarCliente()" class="text-text-muted hover:text-critical p-1 rounded-lg transition-colors cursor-pointer shrink-0" title="Cambiar cliente">
-          <app-icon name="x" [size]="16" />
-        </button>
+        <app-button variant="ghost" size="xs" [circle]="true" icon="x" title="Cambiar cliente" ariaLabel="Cambiar cliente" class="shrink-0" (clicked)="limpiarCliente()" />
       }
     </div>
   } @else if (modoNuevoCliente()) {
@@ -33,7 +31,7 @@
     <div class="p-3.5 rounded-xl border border-primary/30 bg-primary/5 space-y-3 animate-fade-scale">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <div class="w-6 h-6 rounded-lg bg-primary/15 flex items-center justify-center text-primary">
+          <div class="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center text-primary">
             <app-icon name="user-plus" [size]="13" />
           </div>
           <span class="text-xs font-bold text-text-dark">Registrar nuevo paciente</span>
@@ -47,7 +45,7 @@
       </div>
 
       @if (errorNuevoCliente()) {
-        <div class="px-2.5 py-1.5 rounded-lg bg-critical-bg text-[11px] text-text-dark font-medium flex items-center gap-1.5 border border-border">
+        <div class="px-2.5 py-1.5 rounded-xl bg-critical-bg text-[11px] text-text-dark font-medium flex items-center gap-1.5 border border-border">
           <app-icon name="alert-circle" [size]="12" class="text-critical shrink-0" />
           <span>{{ errorNuevoCliente() }}</span>
         </div>
@@ -91,14 +89,12 @@
                 <app-avatar [initials]="cliente | inicialesCliente" size="sm" />
                 <div class="min-w-0">
                   <p class="text-xs font-medium text-text-dark truncate">{{ cliente | nombreCliente }}</p>
-                  <p class="text-[10px] text-text-muted font-mono leading-tight">{{ cliente.telefono }}</p>
+                  <div class="crm-meta crm-meta-sm">
+                    <span class="crm-meta-clave">{{ cliente.telefono }}</span>
+                    @if (cliente.pac) { <span class="crm-meta-clave" title="Código PAC">{{ cliente.pac }}</span> }
+                  </div>
                 </div>
               </div>
-              @if (cliente.pac) {
-                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-primary/10 text-primary border border-primary/20 shrink-0">
-                  {{ cliente.pac }}
-                </span>
-              }
             </button>
           }
           @if (!esOperativo()) {
@@ -118,13 +114,9 @@
             No se encontró ningún paciente registrado con "{{ busquedaCliente() }}".
           </p>
           @if (!esOperativo()) {
-          <button
-            type="button"
-            (click)="activarModoNuevoCliente()"
-            class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary-hover transition-colors cursor-pointer self-start shadow-subtle">
-            <app-icon name="user-plus" [size]="13" />
-            <span>Registrar como nuevo paciente express</span>
-          </button>
+          <app-button size="sm" icon="user-plus" class="self-start" (clicked)="activarModoNuevoCliente()">
+            Registrar como nuevo paciente express
+          </app-button>
           }
         </div>
       }

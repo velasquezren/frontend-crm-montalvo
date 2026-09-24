@@ -6,6 +6,7 @@ import { generarIniciales } from '../../../../core/auth/user.model';
 import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { ErrorCargaComponent } from '../../../../shared/components/error-carga/error-carga.component';
 import { InputComponent } from '../../../../shared/components/input/input.component';
 import {
   DireccionOrden,
@@ -21,6 +22,7 @@ import { PacienteConServicios } from '../../servicios.model';
   selector: 'app-servicios-pacientes-tabla',
   imports: [
     DatePipe,
+    ErrorCargaComponent,
     DecimalPipe,
     MonedaPipe,
     AvatarComponent,
@@ -40,6 +42,8 @@ export class ServiciosPacientesTablaComponent {
   readonly pacientes = input.required<RespuestaPaginada<PacienteConServicios>>();
   readonly isLoading = input<boolean>(false);
   readonly error = input<unknown>(null);
+  /** Pide a la página que vuelva a traer la lista tras un error de carga. */
+  readonly reintentar = output<void>();
 
   /** Enlaza bidireccionalmente con la señal del padre a través de busquedaChange */
   readonly busqueda = input<string>('');

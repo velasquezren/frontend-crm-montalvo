@@ -14,13 +14,7 @@
         <app-icon name="user" [size]="16" class="text-primary" />
         <span class="text-xs font-bold text-text-dark">Ficha del Paciente</span>
       </div>
-      <button
-        type="button"
-        (click)="togglePanel()"
-        class="p-1.5 text-text-muted hover:text-text-dark rounded-lg hover:bg-bg-light cursor-pointer transition-colors"
-        title="Cerrar ficha">
-        <app-icon name="x" [size]="16" />
-      </button>
+      <app-button variant="ghost" size="sm" [circle]="true" icon="x" title="Cerrar ficha" ariaLabel="Cerrar ficha" (clicked)="togglePanel()" />
     </div>
 
     @if (state.editandoFicha()) {
@@ -37,11 +31,7 @@
               <p class="text-[10px] text-text-muted leading-tight truncate max-w-[180px]">{{ chat.cliente | nombreCliente }}</p>
             </div>
           </div>
-          <button type="button" (click)="state.cancelarEdicionFicha()"
-            class="p-1.5 rounded-lg hover:bg-black/5 text-text-muted hover:text-text-dark cursor-pointer transition-colors"
-            aria-label="Cancelar edición">
-            <app-icon name="x" [size]="16" />
-          </button>
+          <app-button variant="ghost" size="sm" [circle]="true" icon="x" ariaLabel="Cancelar edición" (clicked)="state.cancelarEdicionFicha()" />
         </div>
 
         <!-- Body scrollable sin cajas comprimidas -->
@@ -266,13 +256,7 @@
                   <span class="text-xs text-text-muted shrink-0">C.I.:</span>
                   <span class="text-xs font-medium text-text-dark truncate">{{ chat.cliente.ci }}</span>
                 </div>
-                <button
-                  type="button"
-                  (click)="copiarTexto(chat.cliente.ci!, 'C.I.')"
-                  class="p-1 text-text-muted hover:text-primary transition-colors cursor-pointer rounded-lg hover:bg-black/5"
-                  title="Copiar C.I.">
-                  <app-icon name="copy" [size]="12" />
-                </button>
+                <app-button variant="ghost" size="xs" [circle]="true" icon="copy" title="Copiar C.I." ariaLabel="Copiar C.I." (clicked)="copiarTexto(chat.cliente.ci!, 'C.I.')" />
               </div>
             }
             @if (chat.cliente.email) {
@@ -282,13 +266,7 @@
                   <span class="text-xs text-text-muted shrink-0">Email:</span>
                   <span class="text-xs font-medium text-text-dark truncate">{{ chat.cliente.email }}</span>
                 </div>
-                <button
-                  type="button"
-                  (click)="copiarTexto(chat.cliente.email!, 'Email')"
-                  class="p-1 text-text-muted hover:text-primary transition-colors cursor-pointer rounded-lg hover:bg-black/5"
-                  title="Copiar email">
-                  <app-icon name="copy" [size]="12" />
-                </button>
+                <app-button variant="ghost" size="xs" [circle]="true" icon="copy" title="Copiar email" ariaLabel="Copiar email" (clicked)="copiarTexto(chat.cliente.email!, 'Email')" />
               </div>
             }
           </div>

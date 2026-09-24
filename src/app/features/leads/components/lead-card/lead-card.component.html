@@ -15,10 +15,10 @@
     [routerLink]="['/conversaciones']"
     [queryParams]="{ telefono: lead().cliente.telefono }"
     (click)="$event.stopPropagation()"
-    class="p-1 rounded-lg text-text-muted hover:text-primary hover:bg-bg-light transition-colors inline-flex shrink-0"
+    class="crm-accion-enlace crm-accion-enlace-whatsapp"
     title="Abrir chat en WhatsApp"
     aria-label="Abrir chat en WhatsApp">
-    <app-icon name="message-circle" [size]="13" />
+    <app-icon name="message-circle" [size]="14" />
   </a>
 </div>
 

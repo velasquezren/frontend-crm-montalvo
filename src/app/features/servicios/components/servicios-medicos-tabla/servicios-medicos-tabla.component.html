@@ -14,10 +14,7 @@
       }
     </div>
   } @else if (error()) {
-    <app-empty-state
-      icon="alert-circle"
-      title="No se pudieron cargar los médicos"
-      description="Verifica que el servidor esté encendido." />
+    <app-error-carga que="los médicos" (reintentar)="reintentar.emit()" />
   } @else if (medicos().datos.length > 0) {
     <app-table [dense]="true">
       <thead>

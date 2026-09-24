@@ -537,6 +537,36 @@ tr:hover .celda-sticky {
 }
 
 /* ==========================================================================
+   Acción en línea de texto
+   ========================================================================== */
+
+/* «Limpiar todos», «Ver adjunto», «Quitar», «+ Nuevo paciente express»: una
+   acción que se lee como parte del texto y no como botón. Estaba escrita siete
+   veces con siete mezclas —subrayado siempre o solo al pasar, 10/11/12 px,
+   peso medio/seminegrita/negrita—, así que la misma clase de acción se veía
+   distinta según la pantalla. El tamaño lo sigue poniendo el contexto (una
+   utilidad `text-…`): aquí solo va lo que la hace reconocible como acción.
+   No sirve dentro de una burbuja de chat, donde el color lo hereda del globo. */
+.crm-enlace {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  text-underline-offset: 2px;
+  transition: color 200ms;
+}
+
+.crm-enlace:hover {
+  text-decoration: underline;
+}
+
+.crm-enlace-critico {
+  color: var(--color-critical);
+}
+
+/* ==========================================================================
    Fila y tarjeta vencidas
    ========================================================================== */
 
@@ -562,11 +592,11 @@ tr:hover .celda-sticky {
    blanco al estar activas aparece en SIETE plantillas, cada una repitiendo
    cuatro `[class.…]` por opción para decir "activo". Acá vive una sola vez.
 
-   Aplicado por ahora en Actividades; las otras seis (Ventas, Tipo de cambio,
-   Ventas por agente, Configuración de comisiones, Planilla y el sidebar de
-   Conversaciones) siguen con su copia y son la siguiente migración obvia — no
-   se tocaron en el mismo cambio para no mezclar un rediseño de Actividades con
-   seis vistas que nadie pidió revisar. */
+   Lo usan todos los selectores de vista (Actividades, Ventas, Leads, Perfil,
+   Usuarios, el dashboard) y, con `.crm-segmento-pestanas`, las barras de
+   pestañas de Finanzas y Servicios. Tipo de cambio, Ventas por agente y
+   Configuración de comisiones filtran con `<app-filter-chip>`, que es lo suyo:
+   son filtros, no vistas. */
 .crm-segmento {
   display: flex;
   align-items: center;
@@ -648,6 +678,41 @@ tr:hover .celda-sticky {
    el color de marca sí, y evita tener que engordarla para que se lea. */
 .crm-segmento-compacto .crm-segmento-opcion-activo {
   color: var(--color-primary);
+}
+
+/*
+ * Pestañas de sección de una página (Finanzas, Servicios).
+ *
+ * Eran dos copias idénticas —`.finanzas-tab-btn` y `.servicios-tab-btn`— del
+ * mismo segmentado, con una sombra propia ajena a `--shadow-subtle` y dos
+ * tokens que no existen (`--color-bg-card`, `--radius-lg`) que solo
+ * funcionaban por su valor de respaldo. Son un `.crm-segmento` más: esta
+ * variante solo añade lo que tiene de distinto una barra de pestañas —mide lo
+ * que sus etiquetas, scrollea en horizontal si no caben y en móvil ocupa el
+ * ancho—. Va DESPUÉS de `.crm-segmento` a propósito: misma especificidad, gana
+ * el orden, y así su `inline-flex` pisa el `flex` del segmentado.
+ */
+.crm-segmento-pestanas {
+  display: inline-flex;
+  align-self: flex-start;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.crm-segmento-pestanas::-webkit-scrollbar {
+  display: none;
+}
+
+.crm-segmento-pestanas .crm-segmento-opcion {
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .crm-segmento-pestanas {
+    width: 100%;
+  }
 }
 
 /* ==========================================================================

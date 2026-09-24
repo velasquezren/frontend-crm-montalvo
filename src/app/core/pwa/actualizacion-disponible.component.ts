@@ -26,7 +26,7 @@ import { PwaUpdateService } from './pwa-update.service';
       <button
         type="button"
         (click)="actualizar()"
-        class="flex items-center gap-1.5 h-8 px-2 sm:px-2.5 rounded-lg shrink-0
+        class="flex items-center gap-1.5 h-8 px-2 sm:px-2.5 rounded-full shrink-0
                text-info bg-info-bg border border-info/20
                hover:bg-info/15 transition-colors duration-200 cursor-pointer"
         title="Nueva versión del CRM disponible — haz clic para actualizar"

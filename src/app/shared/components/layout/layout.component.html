@@ -50,15 +50,7 @@
               </p>
             </div>
           </a>
-          <button
-            type="button"
-            (click)="logout()"
-            class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted
-                   hover:text-primary hover:bg-bg-light transition-all duration-200 cursor-pointer"
-            title="Cerrar sesión"
-            aria-label="Cerrar sesión">
-            <app-icon name="log-out" [size]="16" />
-          </button>
+          <app-button variant="ghost" size="sm" [circle]="true" icon="log-out" title="Cerrar sesión" ariaLabel="Cerrar sesión" (clicked)="logout()" />
         </div>
       }
     </div>
@@ -185,22 +177,12 @@
         </div>
         <div class="flex-1 min-w-0">
           <h4 class="text-sm font-bold text-text-dark leading-snug">Instalar App Móvil</h4>
-          <p class="text-xs text-text-muted leading-tight mt-0.5">Accedé al CRM al instante, como una app nativa.</p>
+          <p class="text-xs text-text-muted leading-tight mt-0.5">Accede al CRM al instante, como una app nativa.</p>
         </div>
       </div>
       <div class="flex gap-2 mt-3">
-        <button
-          type="button"
-          (click)="installPwa()"
-          class="flex-1 px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:opacity-90 transition-all cursor-pointer shadow-subtle">
-          Instalar
-        </button>
-        <button
-          type="button"
-          (click)="dismissInstallBanner()"
-          class="px-4 py-2 text-text-muted text-xs font-semibold rounded-xl hover:bg-bg-light transition-all cursor-pointer whitespace-nowrap">
-          Ahora no
-        </button>
+        <app-button size="sm" icon="download" class="flex-1" [fullWidth]="true" (clicked)="installPwa()">Instalar</app-button>
+        <app-button variant="ghost" size="sm" (clicked)="dismissInstallBanner()">Ahora no</app-button>
       </div>
     </div>
   </div>

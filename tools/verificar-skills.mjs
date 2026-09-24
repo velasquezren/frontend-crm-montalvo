@@ -448,6 +448,50 @@ function verificarPildoras() {
   }
 }
 
+// ── 8b. Los radios del sistema también en las plantillas ────────────────────
+// La regla de radios de arriba solo mira `.css`, y el radio casi nunca se
+// escribe ahí: se escribe como utilidad en la plantilla. Por ese hueco se
+// colaron 81 radios ajenos (62 `rounded-lg`, 11 `rounded`, 8 `rounded-md`) en
+// 22 archivos —la cápsula de PAC escrita de cinco formas, 25 botones de solo
+// ícono con cinco tamaños y dos radios— hasta el 2026-09-23.
+//
+// Se rechaza:
+//   · `rounded`, `rounded-sm`, `rounded-md` en cualquier `class`: 4-6 px no es
+//     ningún radio del sistema (12 inputs, 16 tarjetas, píldora).
+//   · `rounded-lg` en un `<button>`: un botón es píldora, siempre. Ahí va
+//     `<app-button>` (con `size="xs"` y `[circle]` en filas densas),
+//     `.crm-segmento-opcion` o `<app-filter-chip>`.
+// `rounded-lg` sigue valiendo para lo ANIDADO —una imagen dentro de una
+// burbuja, la opción dentro de un surco de 12 px—: es el radio concéntrico.
+function verificarRadiosEnPlantillas() {
+  const base = resolve(RAIZ, 'src', 'app');
+  const CLASES = /class="([^"]*)"/g;
+  const CHICO = /(?:^|\s)(?:[a-z-]+:)*rounded(?:-sm|-md)?(?=\s|$)/;
+  const BOTON_LG = /<button\b[^>]*\bclass="[^"]*\brounded-lg\b/g;
+
+  for (const ruta of indexar(base)) {
+    if (!/\.(html|ts)$/.test(ruta)) continue;
+    const rel = relative(base, ruta);
+    if (rel.startsWith('shared/components/')) continue;
+
+    const codigo = readFileSync(ruta, 'utf8');
+    const chicos = [...codigo.matchAll(CLASES)].filter(m => CHICO.test(m[1])).length;
+    const botones = (codigo.match(BOTON_LG) ?? []).length;
+    if (chicos) {
+      problemas.push({
+        skill: 'crm-design-system',
+        mensaje: `${rel}: ${chicos} radio(s) \`rounded\`/\`rounded-sm\`/\`rounded-md\` en una plantilla. El sistema tiene tres: rounded-xl (inputs), rounded-2xl (tarjetas) y píldora.`,
+      });
+    }
+    if (botones) {
+      problemas.push({
+        skill: 'crm-design-system',
+        mensaje: `${rel}: ${botones} <button> con \`rounded-lg\`. Un botón es píldora: usa <app-button> (size="xs" + [circle] para solo-ícono en filas), .crm-segmento-opcion o <app-filter-chip>.`,
+      });
+    }
+  }
+}
+
 // ── 8. El nombre de un cliente se pinta con su pipe, nunca en crudo ──────────
 // Un contacto que escribe por WhatsApp sin dar su nombre se guarda como
 // "WhatsApp +59171836560". Interpolarlo tal cual deja la ficha diciendo el mismo
@@ -790,6 +834,7 @@ verificarCodigo();
 verificarCajonUnico();
 verificarNombreCliente();
 verificarPildoras();
+verificarRadiosEnPlantillas();
 verificarCssEncapsulado();
 verificarRendimiento();
 verificarServiceWorkerUnico();

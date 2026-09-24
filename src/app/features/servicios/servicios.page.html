@@ -42,7 +42,7 @@
 </div>
 
 <!-- ── Barra de Pestañas Segmentadas ──────────────────────────────── -->
-<nav class="servicios-tabs-bar" role="tablist" aria-label="Secciones de Historial de Servicios">
+<nav class="crm-segmento crm-segmento-pestanas mb-5" role="tablist" aria-label="Secciones de Historial de Servicios">
   @for (t of tabs; track t.id) {
     <button
       type="button"
@@ -51,10 +51,10 @@
       [attr.aria-controls]="'panel-' + t.id"
       [id]="'tab-' + t.id"
       (click)="setPestana(t.id)"
-      class="servicios-tab-btn"
-      [class.servicios-tab-btn--active]="pestana() === t.id">
-      <app-icon [name]="t.icon" [size]="16" class="tab-icono" />
-      <span class="tab-label">{{ t.label }}</span>
+      class="crm-segmento-opcion"
+      [class.crm-segmento-opcion-activo]="pestana() === t.id">
+      <app-icon [name]="t.icon" [size]="14" />
+      <span>{{ t.label }}</span>
     </button>
   }
 </nav>
@@ -77,10 +77,7 @@
       }
     </div>
   } @else if (dashboard.error() && !dashboard.value()) {
-    <app-empty-state
-      icon="alert-circle"
-      title="No se pudo cargar el resumen"
-      description="Verifica que el servidor esté encendido." />
+    <app-error-carga que="el resumen" titulo="No se pudo cargar el resumen" (reintentar)="dashboard.reload()" />
   } @else if (dashboard.value(); as d) {
     @if (d.totales.servicios === 0) {
       <app-empty-state
@@ -257,7 +254,7 @@
         @if (demografia.isLoading()) {
           <app-loading-skeleton shape="card" height="200px" />
         } @else if (demografia.error()) {
-          <app-empty-state icon="alert-circle" title="No se pudo cargar el perfil" />
+          <app-error-carga que="el perfil" titulo="No se pudo cargar el perfil" (reintentar)="demografia.reload()" />
         } @else if (demografia.value(); as dg) {
           <section class="grid-kpis-modern">
             @for (item of resumenDemografia(); track item.label; let i = $index) {
@@ -314,6 +311,7 @@
         [pacientes]="pacientes.value()"
         [isLoading]="pacientes.isLoading()"
         [error]="pacientes.error()"
+        (reintentar)="pacientes.reload()"
         [busqueda]="busquedaPacientes()"
         (busquedaChange)="busquedaPacientes.set($event)"
         (paginaChange)="paginaPacientes.set($event)"
@@ -336,6 +334,7 @@
         [medicos]="medicos.value()"
         [isLoading]="medicos.isLoading()"
         [error]="medicos.error()"
+        (reintentar)="medicos.reload()"
         [busqueda]="busquedaMedicos()"
         (busquedaChange)="busquedaMedicos.set($event)"
         (paginaChange)="paginaMedicos.set($event)"

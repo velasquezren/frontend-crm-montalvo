@@ -57,30 +57,25 @@
       <!-- Selector de Modo de Visualización (Listado vs Distribución) & Acción Limpiar -->
       <div class="flex items-center justify-between sm:justify-end gap-2 sm:gap-2.5 w-full sm:w-auto">
         <!-- Segmented Control de Vista -->
-        <div class="flex items-center p-1 bg-bg-workspace rounded-xl border border-border flex-1 sm:flex-initial">
+        <div class="crm-segmento crm-segmento-igual flex-1 sm:flex-initial" role="group" aria-label="Modo de visualización">
           <button
             type="button"
-            (click)="vistaActiva.set('tabla')"
-            class="flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
-            [class.bg-white]="vistaActiva() === 'tabla'"
-            [class.text-primary]="vistaActiva() === 'tabla'"
-            [class.shadow-subtle]="vistaActiva() === 'tabla'"
-            [class.text-text-muted]="vistaActiva() !== 'tabla'">
+            class="crm-segmento-opcion"
+            [class.crm-segmento-opcion-activo]="vistaActiva() === 'tabla'"
+            [attr.aria-pressed]="vistaActiva() === 'tabla'"
+            (click)="vistaActiva.set('tabla')">
             <app-icon name="file-text" [size]="14" />
             <span>Listado</span>
             <span class="crm-contador" [class.crm-contador-activo]="vistaActiva() === 'tabla'">
               {{ ventas.value().total }}
             </span>
           </button>
-
           <button
             type="button"
-            (click)="vistaActiva.set('analitica')"
-            class="flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
-            [class.bg-white]="vistaActiva() === 'analitica'"
-            [class.text-primary]="vistaActiva() === 'analitica'"
-            [class.shadow-subtle]="vistaActiva() === 'analitica'"
-            [class.text-text-muted]="vistaActiva() !== 'analitica'">
+            class="crm-segmento-opcion"
+            [class.crm-segmento-opcion-activo]="vistaActiva() === 'analitica'"
+            [attr.aria-pressed]="vistaActiva() === 'analitica'"
+            (click)="vistaActiva.set('analitica')">
             <app-icon name="pie-chart" [size]="14" />
             <span>Distribución</span>
           </button>
@@ -213,9 +208,10 @@
             <button
               type="button"
               (click)="busqueda.set('')"
-              class="hover:text-text-critical transition-colors cursor-pointer text-[13px] leading-none shrink-0"
-              title="Quitar búsqueda">
-              ✕
+              class="inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-primary/10 transition-colors cursor-pointer shrink-0"
+              title="Quitar búsqueda"
+              aria-label="Quitar búsqueda">
+              <app-icon name="x" [size]="12" />
             </button>
           </span>
         }
@@ -226,9 +222,10 @@
             <button
               type="button"
               (click)="cambiarFiltro('TODAS')"
-              class="hover:text-text-critical transition-colors cursor-pointer text-[13px] leading-none shrink-0"
-              title="Quitar filtro de estado">
-              ✕
+              class="inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-primary/10 transition-colors cursor-pointer shrink-0"
+              title="Quitar filtro de estado"
+              aria-label="Quitar filtro de estado">
+              <app-icon name="x" [size]="12" />
             </button>
           </span>
         }
@@ -239,9 +236,10 @@
             <button
               type="button"
               (click)="cambiarPresetPeriodo('TODAS')"
-              class="hover:text-text-critical transition-colors cursor-pointer text-[13px] leading-none shrink-0"
-              title="Quitar filtro de período">
-              ✕
+              class="inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-primary/10 transition-colors cursor-pointer shrink-0"
+              title="Quitar filtro de período"
+              aria-label="Quitar filtro de período">
+              <app-icon name="x" [size]="12" />
             </button>
           </span>
         }
@@ -252,9 +250,10 @@
             <button
               type="button"
               (click)="cambiarMetodoPagoFiltro('TODOS')"
-              class="hover:text-text-critical transition-colors cursor-pointer text-[13px] leading-none shrink-0"
-              title="Quitar filtro de pago">
-              ✕
+              class="inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-primary/10 transition-colors cursor-pointer shrink-0"
+              title="Quitar filtro de pago"
+              aria-label="Quitar filtro de pago">
+              <app-icon name="x" [size]="12" />
             </button>
           </span>
         }
@@ -265,9 +264,10 @@
             <button
               type="button"
               (click)="moduloFiltro.set(null); pagina.set(1)"
-              class="hover:text-text-critical transition-colors cursor-pointer text-[13px] leading-none shrink-0"
-              title="Quitar filtro de módulo">
-              ✕
+              class="inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-primary/10 transition-colors cursor-pointer shrink-0"
+              title="Quitar filtro de módulo"
+              aria-label="Quitar filtro de módulo">
+              <app-icon name="x" [size]="12" />
             </button>
           </span>
         }
@@ -278,9 +278,10 @@
             <button
               type="button"
               (click)="cambiarComprobanteFiltro('TODOS')"
-              class="hover:text-text-critical transition-colors cursor-pointer text-[13px] leading-none shrink-0"
-              title="Quitar filtro de comprobante">
-              ✕
+              class="inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-primary/10 transition-colors cursor-pointer shrink-0"
+              title="Quitar filtro de comprobante"
+              aria-label="Quitar filtro de comprobante">
+              <app-icon name="x" [size]="12" />
             </button>
           </span>
         }
@@ -291,9 +292,10 @@
             <button
               type="button"
               (click)="agenteSeleccionadoId.set('TODOS')"
-              class="hover:text-text-critical transition-colors cursor-pointer text-[13px] leading-none shrink-0"
-              title="Quitar filtro de agente">
-              ✕
+              class="inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-primary/10 transition-colors cursor-pointer shrink-0"
+              title="Quitar filtro de agente"
+              aria-label="Quitar filtro de agente">
+              <app-icon name="x" [size]="12" />
             </button>
           </span>
         }
@@ -301,7 +303,7 @@
         <button
           type="button"
           (click)="limpiarTodosLosFiltros()"
-          class="text-xs text-primary font-semibold hover:underline ml-1 cursor-pointer transition-colors whitespace-nowrap">
+          class="crm-enlace text-xs ml-1 whitespace-nowrap">
           Limpiar todos
         </button>
       </div>
@@ -372,12 +374,10 @@
                     <app-avatar [initials]="venta.cliente | inicialesCliente" [nombre]="venta.cliente | nombreCliente" size="sm" />
                     <div class="min-w-0">
                       <p class="font-semibold text-text-dark leading-tight truncate">{{ venta.cliente | nombreCliente }}</p>
-                      <div class="flex items-center gap-1.5 mt-0.5">
-                        <span class="text-xs text-text-muted font-mono">{{ venta.cliente.telefono }}</span>
+                      <div class="crm-meta mt-0.5">
+                        <span class="crm-meta-clave">{{ venta.cliente.telefono }}</span>
                         @if (venta.cliente.pac) {
-                          <span class="text-[9px] font-mono font-semibold px-1 py-0.2 rounded bg-primary/10 text-primary">
-                            {{ venta.cliente.pac }}
-                          </span>
+                          <span class="crm-meta-clave" title="Código PAC">{{ venta.cliente.pac }}</span>
                         }
                       </div>
                     </div>
@@ -387,9 +387,7 @@
                   <div class="flex flex-col gap-0.5">
                     <p class="font-medium text-text-dark text-sm leading-tight">{{ venta.producto }}</p>
                     @if (venta.modulo) {
-                      <span class="text-[10px] font-semibold text-text-muted bg-bg-light px-1.5 py-0.5 rounded w-fit">
-                        {{ venta.modulo }}
-                      </span>
+                      <span class="text-[11px] font-medium text-text-muted">{{ venta.modulo }}</span>
                     }
                   </div>
                 </td>
@@ -408,7 +406,7 @@
                       <button
                         type="button"
                         (click)="$event.stopPropagation(); abrirVisorImagen(venta.comprobanteUrl, venta.comprobanteNombre || venta.comprobante)"
-                        class="text-[10px] font-medium text-primary hover:underline inline-flex items-center gap-1 cursor-pointer w-fit"
+                        class="crm-enlace text-[11px] w-fit"
                         title="Ver comprobante adjunto">
                         <app-icon name="image" [size]="11" />
                         <span>Ver adjunto</span>
@@ -437,34 +435,13 @@
                     @if (esAdmin()) {
                       <div class="flex items-center gap-0.5">
                         @if (venta.estado !== 'GANADA') {
-                          <button
-                            type="button"
-                            [disabled]="cambiandoEstado()"
-                            (click)="cambiarEstadoVenta(venta, 'GANADA')"
-                            title="Marcar ganada"
-                            class="w-6 h-6 rounded-lg flex items-center justify-center text-text-muted hover:text-success hover:bg-success-bg transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                            <app-icon name="check-circle" [size]="13" />
-                          </button>
+                          <app-button variant="ghost" size="xs" [circle]="true" icon="check-circle" [disabled]="cambiandoEstado()" title="Marcar ganada" ariaLabel="Marcar ganada" (clicked)="cambiarEstadoVenta(venta, 'GANADA')" />
                         }
                         @if (venta.estado !== 'EN_PROCESO') {
-                          <button
-                            type="button"
-                            [disabled]="cambiandoEstado()"
-                            (click)="cambiarEstadoVenta(venta, 'EN_PROCESO')"
-                            title="Marcar en proceso"
-                            class="w-6 h-6 rounded-lg flex items-center justify-center text-text-muted hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                            <app-icon name="clock" [size]="13" />
-                          </button>
+                          <app-button variant="ghost" size="xs" [circle]="true" icon="clock" [disabled]="cambiandoEstado()" title="Marcar en proceso" ariaLabel="Marcar en proceso" (clicked)="cambiarEstadoVenta(venta, 'EN_PROCESO')" />
                         }
                         @if (venta.estado !== 'PERDIDA') {
-                          <button
-                            type="button"
-                            [disabled]="cambiandoEstado()"
-                            (click)="cambiarEstadoVenta(venta, 'PERDIDA')"
-                            title="Marcar perdida"
-                            class="w-6 h-6 rounded-lg flex items-center justify-center text-text-muted hover:text-critical hover:bg-critical-bg transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                            <app-icon name="x-circle" [size]="13" />
-                          </button>
+                          <app-button variant="ghost" size="xs" [circle]="true" icon="x-circle" [disabled]="cambiandoEstado()" title="Marcar perdida" ariaLabel="Marcar perdida" (clicked)="cambiarEstadoVenta(venta, 'PERDIDA')" />
                         }
                       </div>
                     }
@@ -547,34 +524,13 @@
                 <span class="text-[11px] font-medium text-text-muted">Cambiar estado:</span>
                 <div class="flex items-center gap-1.5">
                   @if (venta.estado !== 'GANADA') {
-                    <button
-                      type="button"
-                      [disabled]="cambiandoEstado()"
-                      (click)="cambiarEstadoVenta(venta, 'GANADA')"
-                      class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-success-bg text-text-dark hover:bg-success/20 border border-border transition-colors cursor-pointer flex items-center gap-1 disabled:opacity-40">
-                      <app-icon name="check-circle" [size]="12" class="text-success" />
-                      <span>Ganada</span>
-                    </button>
+                    <app-button variant="secondary" size="xs" icon="check-circle" [disabled]="cambiandoEstado()" (clicked)="cambiarEstadoVenta(venta, 'GANADA')">Ganada</app-button>
                   }
                   @if (venta.estado !== 'EN_PROCESO') {
-                    <button
-                      type="button"
-                      [disabled]="cambiandoEstado()"
-                      (click)="cambiarEstadoVenta(venta, 'EN_PROCESO')"
-                      class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 border border-border transition-colors cursor-pointer flex items-center gap-1 disabled:opacity-40">
-                      <app-icon name="clock" [size]="12" />
-                      <span>En proceso</span>
-                    </button>
+                    <app-button variant="secondary" size="xs" icon="clock" [disabled]="cambiandoEstado()" (clicked)="cambiarEstadoVenta(venta, 'EN_PROCESO')">En proceso</app-button>
                   }
                   @if (venta.estado !== 'PERDIDA') {
-                    <button
-                      type="button"
-                      [disabled]="cambiandoEstado()"
-                      (click)="cambiarEstadoVenta(venta, 'PERDIDA')"
-                      class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-critical-bg text-text-dark hover:bg-critical/20 border border-border transition-colors cursor-pointer flex items-center gap-1 disabled:opacity-40">
-                      <app-icon name="x-circle" [size]="12" class="text-critical" />
-                      <span>Perdida</span>
-                    </button>
+                    <app-button variant="critical" size="xs" icon="x-circle" [disabled]="cambiandoEstado()" (clicked)="cambiarEstadoVenta(venta, 'PERDIDA')">Perdida</app-button>
                   }
                 </div>
               </div>
@@ -596,9 +552,7 @@
             <div class="flex items-center justify-between">
               <h3 class="text-xs font-bold uppercase tracking-wider text-text-muted">Paciente / Cliente</h3>
               @if (venta.cliente.pac) {
-                <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary">
-                  PAC {{ venta.cliente.pac }}
-                </span>
+                <span class="text-xs text-text-muted">PAC <span class="crm-meta-clave">{{ venta.cliente.pac }}</span></span>
               }
             </div>
 
@@ -646,9 +600,7 @@
               <div class="flex items-center justify-between py-1 border-b border-border/50">
                 <span class="text-text-muted">Módulo FileMaker</span>
                 @if (venta.modulo) {
-                  <span class="font-semibold text-text-dark bg-bg-light px-2 py-0.5 rounded-md">
-                    {{ venta.modulo }}
-                  </span>
+                  <span class="font-semibold text-text-dark">{{ venta.modulo }}</span>
                 } @else {
                   <span class="text-text-muted">—</span>
                 }
@@ -691,7 +643,7 @@
                   <button
                     type="button"
                     (click)="abrirVisorImagen(venta.comprobanteUrl, venta.comprobanteNombre || venta.comprobante)"
-                    class="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 cursor-pointer">
+                    class="crm-enlace text-xs">
                     <app-icon name="maximize" [size]="12" />
                     <span>Expandir visor</span>
                   </button>
@@ -736,7 +688,7 @@
                       type="button"
                       data-test="corregir-origen"
                       (click)="alternarCorreccionOrigen()"
-                      class="text-[11px] font-semibold text-primary hover:underline cursor-pointer shrink-0">
+                      class="crm-enlace text-[11px] shrink-0">
                       {{ corrigiendoOrigen() ? 'Cancelar' : 'Corregir' }}
                     </button>
                   </div>
@@ -761,34 +713,10 @@
                         Elige de qué lead vino esta venta. Corregirlo cambia solo la atribución: no
                         reabre ni cierra ningún lead.
                       </p>
-                      <div class="flex flex-wrap gap-1.5">
-                        <button
-                          type="button"
-                          data-test="origen-ninguno"
-                          [disabled]="guardandoOrigen()"
-                          (click)="corregirOrigenDeLaVenta(null)"
-                          class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                          [class.bg-primary]="!venta.leadId"
-                          [class.text-white]="!venta.leadId"
-                          [class.border-primary]="!venta.leadId"
-                          [class.bg-white]="venta.leadId"
-                          [class.text-text-dark]="venta.leadId"
-                          [class.border-border]="venta.leadId">
-                          Ninguno
-                        </button>
+                      <div class="flex flex-wrap gap-1.5" role="group" aria-label="Lead de origen">
+                        <app-filter-chip size="sm" data-test="origen-ninguno" [active]="!venta.leadId" (clicked)="corregirOrigenDeLaVenta(null)">Ninguno</app-filter-chip>
                         @for (lead of leadsDeLaVentaAbierta.value().datos; track lead.id) {
-                          <button
-                            type="button"
-                            data-test="origen-lead"
-                            [disabled]="guardandoOrigen()"
-                            (click)="corregirOrigenDeLaVenta(lead.id)"
-                            class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                            [class.bg-primary]="venta.leadId === lead.id"
-                            [class.text-white]="venta.leadId === lead.id"
-                            [class.border-primary]="venta.leadId === lead.id"
-                            [class.bg-white]="venta.leadId !== lead.id"
-                            [class.text-text-dark]="venta.leadId !== lead.id"
-                            [class.border-border]="venta.leadId !== lead.id">
+                          <app-filter-chip size="sm" data-test="origen-lead" [active]="venta.leadId === lead.id" (clicked)="corregirOrigenDeLaVenta(lead.id)">
                             {{ origenLabel[lead.origen] || lead.origen }}
                             <span class="opacity-70"> · {{ lead.createdAt | date: 'dd/MM/yy' }}</span>
                             @if (lead.anuncioId) {
@@ -797,7 +725,7 @@
                                    un UUID no le dice nada a nadie. -->
                               <span class="opacity-70"> · anuncio {{ lead.anuncioId }}</span>
                             }
-                          </button>
+                          </app-filter-chip>
                         }
                       </div>
                     }
@@ -842,13 +770,7 @@
               <p class="text-[11px] text-text-muted mt-0.5 truncate">{{ v.cliente | nombreCliente }} · {{ v.producto }}</p>
             </div>
           </div>
-          <button
-            type="button"
-            (click)="cerrarMotivoPerdidaVenta()"
-            class="w-7 h-7 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
-            aria-label="Cerrar">
-            <app-icon name="x" [size]="14" />
-          </button>
+          <app-button variant="ghost" size="sm" [circle]="true" icon="x" ariaLabel="Cerrar" (clicked)="cerrarMotivoPerdidaVenta()" />
         </div>
 
         <div class="p-5 space-y-1.5">

@@ -8,6 +8,7 @@ import { ActualizacionDisponibleComponent } from '../../../core/pwa/actualizacio
 import { ToastContainerComponent } from '../../../core/toast/toast-container.component';
 import { ModoInmersivoService } from '../../../core/ui/modo-inmersivo.service';
 import { AvatarComponent } from '../avatar/avatar.component';
+import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
 import { MonedaToggleComponent } from '../moneda-toggle/moneda-toggle.component';
 import { NotificacionesBellComponent } from '../notificaciones-bell/notificaciones-bell.component';
@@ -21,6 +22,7 @@ import { NAV_GROUPS } from './nav-items';
 @Component({
   selector: 'app-layout',
   imports: [
+    ButtonComponent,
     RouterOutlet,
     RouterLink,
     RouterLinkActive,

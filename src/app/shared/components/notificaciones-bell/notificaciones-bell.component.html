@@ -4,7 +4,7 @@
     (click)="toggle()"
     [attr.aria-expanded]="abierto()"
     aria-label="Recordatorios y notificaciones"
-    class="relative w-9 h-9 rounded-lg flex items-center justify-center text-text-muted hover:text-primary hover:bg-bg-light transition-all duration-200 cursor-pointer">
+    class="relative w-9 h-9 rounded-full flex items-center justify-center text-text-muted hover:text-primary hover:bg-bg-light transition-all duration-200 cursor-pointer">
     <app-icon name="bell" [size]="18" />
     @if (totalUrgentes() > 0) {
       <span
@@ -41,7 +41,7 @@
               <li class="flex items-center gap-2 px-3 py-2.5 hover:bg-bg-light transition-colors">
                 <button type="button" (click)="irAActividades()" class="flex items-center gap-2.5 min-w-0 flex-1 text-left cursor-pointer">
                   <div
-                    class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                    class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
                     [class.bg-critical-bg]="esVencida(actividad)"
                     [class.text-critical]="esVencida(actividad)"
                     [class.bg-bg-light]="!esVencida(actividad)"
@@ -58,14 +58,7 @@
                     </p>
                   </div>
                 </button>
-                <button
-                  type="button"
-                  (click)="completar(actividad)"
-                  class="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-text-muted hover:text-primary hover:bg-white transition-colors cursor-pointer"
-                  title="Marcar como completada"
-                  aria-label="Marcar como completada">
-                  <app-icon name="check" [size]="14" />
-                </button>
+                <app-button variant="ghost" size="xs" [circle]="true" icon="check" title="Marcar como completada" ariaLabel="Marcar como completada" class="shrink-0" (clicked)="completar(actividad)" />
               </li>
             }
           </ul>

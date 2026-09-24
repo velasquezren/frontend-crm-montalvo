@@ -265,45 +265,37 @@
 
           <!-- Barra de Filtros y Buscador -->
           <div class="bg-white rounded-2xl border border-border p-4 shadow-subtle flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div class="flex items-center gap-1 bg-bg-light p-1 rounded-xl border border-border text-xs overflow-x-auto scrollbar-hide max-w-full">
+            <div class="crm-segmento overflow-x-auto scrollbar-hide max-w-full" role="group" aria-label="Tipo de recurso">
               <button
                 type="button"
-                (click)="filtroTipoMemoria.set('')"
-                class="px-3.5 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer select-none shrink-0 whitespace-nowrap"
-                [class.bg-primary]="filtroTipoMemoria() === ''"
-                [class.text-white]="filtroTipoMemoria() === ''"
-                [class.shadow-subtle]="filtroTipoMemoria() === ''"
-                [class.text-text-muted]="filtroTipoMemoria() !== ''">
+                class="crm-segmento-opcion"
+                [class.crm-segmento-opcion-activo]="filtroTipoMemoria() === ''"
+                [attr.aria-pressed]="filtroTipoMemoria() === ''"
+                (click)="filtroTipoMemoria.set('')">
                 Todos
               </button>
               <button
                 type="button"
-                (click)="filtroTipoMemoria.set('TEXTO')"
-                class="px-3.5 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer select-none shrink-0 whitespace-nowrap"
-                [class.bg-primary]="filtroTipoMemoria() === 'TEXTO'"
-                [class.text-white]="filtroTipoMemoria() === 'TEXTO'"
-                [class.shadow-subtle]="filtroTipoMemoria() === 'TEXTO'"
-                [class.text-text-muted]="filtroTipoMemoria() !== 'TEXTO'">
+                class="crm-segmento-opcion"
+                [class.crm-segmento-opcion-activo]="filtroTipoMemoria() === 'TEXTO'"
+                [attr.aria-pressed]="filtroTipoMemoria() === 'TEXTO'"
+                (click)="filtroTipoMemoria.set('TEXTO')">
                 Notas
               </button>
               <button
                 type="button"
-                (click)="filtroTipoMemoria.set('IMAGEN')"
-                class="px-3.5 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer select-none shrink-0 whitespace-nowrap"
-                [class.bg-primary]="filtroTipoMemoria() === 'IMAGEN'"
-                [class.text-white]="filtroTipoMemoria() === 'IMAGEN'"
-                [class.shadow-subtle]="filtroTipoMemoria() === 'IMAGEN'"
-                [class.text-text-muted]="filtroTipoMemoria() !== 'IMAGEN'">
+                class="crm-segmento-opcion"
+                [class.crm-segmento-opcion-activo]="filtroTipoMemoria() === 'IMAGEN'"
+                [attr.aria-pressed]="filtroTipoMemoria() === 'IMAGEN'"
+                (click)="filtroTipoMemoria.set('IMAGEN')">
                 Imágenes
               </button>
               <button
                 type="button"
-                (click)="filtroTipoMemoria.set('DOCUMENTO')"
-                class="px-3.5 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer select-none shrink-0 whitespace-nowrap"
-                [class.bg-primary]="filtroTipoMemoria() === 'DOCUMENTO'"
-                [class.text-white]="filtroTipoMemoria() === 'DOCUMENTO'"
-                [class.shadow-subtle]="filtroTipoMemoria() === 'DOCUMENTO'"
-                [class.text-text-muted]="filtroTipoMemoria() !== 'DOCUMENTO'">
+                class="crm-segmento-opcion"
+                [class.crm-segmento-opcion-activo]="filtroTipoMemoria() === 'DOCUMENTO'"
+                [attr.aria-pressed]="filtroTipoMemoria() === 'DOCUMENTO'"
+                (click)="filtroTipoMemoria.set('DOCUMENTO')">
                 Documentos
               </button>
             </div>
@@ -361,13 +353,7 @@
                     <span>Copiar</span>
                   </app-button>
 
-                  <button
-                    type="button"
-                    (click)="eliminarRecursoMemoria(item.id)"
-                    class="p-2 rounded-xl text-text-muted hover:text-text-critical hover:bg-bg-light transition-colors cursor-pointer"
-                    title="Eliminar recurso">
-                    <app-icon name="trash" [size]="16" />
-                  </button>
+                  <app-button variant="ghost" size="xs" [circle]="true" icon="trash" title="Eliminar recurso" ariaLabel="Eliminar recurso" (clicked)="eliminarRecursoMemoria(item.id)" />
                 </div>
               </div>
             } @empty {

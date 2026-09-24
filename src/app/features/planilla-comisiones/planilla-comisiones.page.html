@@ -124,7 +124,7 @@
 
       <label class="boton-archivo mt-5 cursor-pointer">
         @if (subiendo()) {
-          <app-icon name="loader" [size]="16" class="animate-spin" />
+          <app-icon name="loader" [size]="16" />
           <span>Procesando archivo…</span>
         } @else {
           <app-icon name="download" [size]="16" />
@@ -1148,10 +1148,7 @@
         @if (desglose.isLoading() && desglose.value().filas.length === 0) {
           <app-loading-skeleton height="200px" />
         } @else if (desglose.error()) {
-          <app-empty-state
-            icon="alert-circle"
-            title="No se pudo cargar el desglose"
-            description="Verifica que el servidor esté encendido e inténtalo de nuevo." />
+          <app-error-carga que="el desglose" titulo="No se pudo cargar el desglose" (reintentar)="desglose.reload()" />
         } @else if (desglose.value().filas.length > 0) {
           <app-desglose-comisiones [filas]="desglose.value().filas" [tipoCambio]="+rep.periodo.tipoCambio" />
         } @else {

@@ -171,12 +171,13 @@
             [value]="busqueda()"
             (input)="busqueda.set($any($event.target).value)"
             placeholder="Buscar vendedora…"
-            class="w-full pl-8 pr-7 py-1 text-xs rounded-lg border border-border bg-white text-text-dark focus:outline-none focus:border-primary transition-colors" />
+            class="w-full pl-8 pr-7 py-1 text-xs rounded-xl border border-border bg-white text-text-dark focus:outline-none focus:border-primary transition-colors" />
           @if (busqueda()) {
             <button
               type="button"
               (click)="busqueda.set('')"
-              class="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-dark cursor-pointer">
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-dark cursor-pointer"
+              aria-label="Limpiar búsqueda">
               <app-icon name="x" [size]="12" />
             </button>
           }

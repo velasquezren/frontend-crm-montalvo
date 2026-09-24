@@ -173,7 +173,7 @@ export class PerfilPage {
       const comprimida = await this.comprimirImagen(file);
       this.previewFoto.set(comprimida);
     } catch {
-      this.toast.error('No se pudo procesar la imagen. Probá con otra.', 'Formato no soportado');
+      this.toast.error('No se pudo procesar la imagen. Prueba con otra.', 'Formato no soportado');
     }
   }
 

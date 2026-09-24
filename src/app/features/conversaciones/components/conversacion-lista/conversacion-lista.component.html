@@ -193,7 +193,7 @@
         icon="alert-circle"
         title="No se pudo cargar el inbox"
         [description]="state.errorInbox()">
-        <app-button icon="loader" (clicked)="recargarInbox()">Reintentar</app-button>
+        <app-button icon="rotate-cw" (clicked)="recargarInbox()">Reintentar</app-button>
       </app-empty-state>
     } @else {
       @for (chat of state.conversacionesFiltradas(); track chat.id) {

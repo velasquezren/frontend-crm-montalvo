@@ -42,13 +42,7 @@ import { ToastService } from './toast.service';
           </div>
 
           <!-- Botón Cerrar -->
-          <button
-            type="button"
-            (click)="dismiss(toast.id)"
-            class="text-text-muted hover:text-text-dark hover:bg-bg-light p-1 rounded-lg transition-colors cursor-pointer shrink-0"
-            aria-label="Cerrar notificación">
-            <app-icon name="x" [size]="14" />
-          </button>
+          <app-button variant="ghost" size="xs" [circle]="true" icon="x" ariaLabel="Cerrar notificación" class="shrink-0" (clicked)="dismiss(toast.id)" />
         </div>
       }
     </div>

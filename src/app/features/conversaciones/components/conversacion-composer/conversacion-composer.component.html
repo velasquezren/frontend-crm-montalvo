@@ -46,14 +46,15 @@
     </div>
 
     <!-- Botón para gestionar respuestas rápidas -->
-    <button
-      type="button"
-      (click)="abrirGestionPlantillas()"
-      class="px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
-      title="Personalizar mis respuestas rápidas">
-      <app-icon name="plus" [size]="12" />
-      <span>Personalizar</span>
-    </button>
+    <app-button
+      variant="ghost"
+      size="xs"
+      icon="plus"
+      class="shrink-0"
+      title="Personalizar mis respuestas rápidas"
+      (clicked)="abrirGestionPlantillas()">
+      Personalizar
+    </app-button>
   </div>
 
   <!-- ── Popover Flotante de Memoria Personal del Agente ────────────── -->
@@ -69,10 +70,7 @@
             <span>Gestionar (30 MB)</span>
             <app-icon name="external-link" [size]="10" />
           </a>
-          <button type="button" (click)="togglePopoverMemoria()" class="p-1 text-text-muted hover:text-text-dark cursor-pointer rounded-lg hover:bg-black/5"
-            aria-label="Cerrar">
-            <app-icon name="x" [size]="14" />
-          </button>
+          <app-button variant="ghost" size="xs" [circle]="true" icon="x" ariaLabel="Cerrar" (clicked)="togglePopoverMemoria()" />
         </div>
       </div>
 
@@ -315,20 +313,8 @@
               <p class="text-xs text-text-muted mt-1 line-clamp-2">{{ p.contenido }}</p>
             </div>
             <div class="flex items-center gap-1 shrink-0">
-              <button
-                type="button"
-                (click)="editarPlantilla(p)"
-                class="p-1 text-text-muted hover:text-primary rounded-lg hover:bg-bg-light cursor-pointer transition-colors"
-                title="Editar respuesta">
-                <app-icon name="edit" [size]="14" />
-              </button>
-              <button
-                type="button"
-                (click)="eliminarPlantillaAgente(p.id)"
-                class="p-1 text-text-muted hover:text-critical rounded-lg hover:bg-critical/10 cursor-pointer transition-colors"
-                title="Eliminar respuesta">
-                <app-icon name="trash" [size]="14" />
-              </button>
+              <app-button variant="ghost" size="xs" [circle]="true" icon="edit" title="Editar respuesta" ariaLabel="Editar respuesta" (clicked)="editarPlantilla(p)" />
+              <app-button variant="ghost" size="xs" [circle]="true" icon="trash" title="Eliminar respuesta" ariaLabel="Eliminar respuesta" (clicked)="eliminarPlantillaAgente(p.id)" />
             </div>
           </div>
         } @empty {
@@ -355,13 +341,7 @@
           </p>
         </div>
       </div>
-      <button
-        type="button"
-        (click)="cerrarConfirmarMedia()"
-        class="p-1.5 text-text-muted hover:text-text-dark hover:bg-black/5 rounded-lg cursor-pointer transition-colors"
-        aria-label="Cerrar">
-        <app-icon name="x" [size]="16" />
-      </button>
+      <app-button variant="ghost" size="xs" [circle]="true" icon="x" ariaLabel="Cerrar" (clicked)="cerrarConfirmarMedia()" />
     </div>
 
     <!-- Cuerpo con vista previa -->
@@ -399,7 +379,7 @@
             <button
               type="button"
               (click)="quitarAdjuntoDesdeModal()"
-              class="text-critical hover:underline font-semibold text-xs shrink-0 cursor-pointer ml-2">
+              class="crm-enlace crm-enlace-critico text-xs shrink-0 ml-2">
               Quitar
             </button>
           </div>

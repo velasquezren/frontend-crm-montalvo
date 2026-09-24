@@ -103,15 +103,15 @@
               <div class="flex items-center gap-3">
                 <app-avatar [initials]="cliente | inicialesCliente" [nombre]="cliente | nombreCliente" size="sm" />
                 <div>
-                  <div class="flex items-center gap-2">
-                    <p class="font-medium text-text-dark leading-tight">{{ cliente | nombreCliente }}</p>
+                  <p class="font-medium text-text-dark leading-tight">{{ cliente | nombreCliente }}</p>
+                  <!-- PAC y CI son datos de apoyo, no estados: van en la línea de
+                       datos, no como cápsula junto al nombre (crm-design-system). -->
+                  <div class="crm-meta mt-0.5">
                     @if (cliente.pac) {
-                      <span class="text-[10px] font-mono font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20" title="Código PAC">{{ cliente.pac }}</span>
+                      <span class="crm-meta-clave" title="Código PAC">{{ cliente.pac }}</span>
                     }
-                  </div>
-                  <div class="flex items-center gap-2 text-xs text-text-muted mt-0.5">
                     @if (cliente.ci) {
-                      <span class="font-mono text-[11px] text-text-muted">CI: {{ cliente.ci }}</span>
+                      <span>CI <span class="crm-meta-clave">{{ cliente.ci }}</span></span>
                     }
                     @if (cliente.email) {
                       <span>{{ cliente.email }}</span>
@@ -156,9 +156,7 @@
             <td>
               <div class="flex flex-wrap gap-1.5 max-w-56">
                 @for (tag of obtenerEtiquetas(cliente); track tag) {
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-[11px] leading-tight border border-primary/20">
-                    {{ tag }}
-                  </span>
+                  <app-badge variant="info">{{ tag }}</app-badge>
                 } @empty {
                   <span class="text-xs text-text-muted italic">Sin intereses</span>
                 }
@@ -170,24 +168,13 @@
                 <a
                   [routerLink]="['/conversaciones']"
                   [queryParams]="{ telefono: cliente.telefono }"
-                  class="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-bg-light transition-colors inline-flex items-center justify-center"
-                  title="Abrir chat en WhatsApp">
-                  <app-icon name="message-circle" [size]="16" />
+                  class="crm-accion-enlace crm-accion-enlace-whatsapp"
+                  title="Abrir chat en WhatsApp"
+                  aria-label="Abrir chat en WhatsApp">
+                  <app-icon name="message-circle" [size]="14" />
                 </a>
-                <button
-                  type="button"
-                  (click)="copiarTelefono($event, cliente.telefono)"
-                  class="p-1.5 rounded-lg text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
-                  title="Copiar teléfono">
-                  <app-icon name="copy" [size]="15" />
-                </button>
-                <button
-                  type="button"
-                  (click)="abrirEdicion(cliente, modalFicha)"
-                  class="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-bg-light transition-colors cursor-pointer"
-                  title="Ver / Editar ficha">
-                  <app-icon name="edit" [size]="15" />
-                </button>
+                <app-button variant="ghost" size="xs" [circle]="true" icon="copy" title="Copiar teléfono" ariaLabel="Copiar teléfono" (clicked)="copiarTelefono($event, cliente.telefono)" />
+                <app-button variant="ghost" size="xs" [circle]="true" icon="edit" title="Ver / Editar ficha" ariaLabel="Ver / Editar ficha" (clicked)="abrirEdicion(cliente, modalFicha)" />
               </div>
             </td>
           </tr>
@@ -321,9 +308,7 @@
           @if (tagsPreview().length > 0) {
             <div class="flex flex-wrap gap-1.5 pt-1">
               @for (tag of tagsPreview(); track tag) {
-                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-[10px] leading-tight border border-primary/20">
-                  {{ tag }}
-                </span>
+                <app-badge variant="info">{{ tag }}</app-badge>
               }
             </div>
           }
@@ -600,9 +585,7 @@
                 @if (tagsPreview().length > 0) {
                   <div class="flex flex-wrap gap-1.5 pt-1">
                     @for (tag of tagsPreview(); track tag) {
-                      <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-[10px] leading-tight border border-primary/20">
-                        {{ tag }}
-                      </span>
+                      <app-badge variant="info">{{ tag }}</app-badge>
                     }
                   </div>
                 }

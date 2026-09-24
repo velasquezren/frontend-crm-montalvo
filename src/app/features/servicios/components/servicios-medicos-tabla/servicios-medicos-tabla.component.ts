@@ -5,6 +5,7 @@ import { RespuestaPaginada } from '../../../../core/api/pagination.model';
 import { generarIniciales } from '../../../../core/auth/user.model';
 import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { ErrorCargaComponent } from '../../../../shared/components/error-carga/error-carga.component';
 import { InputComponent } from '../../../../shared/components/input/input.component';
 import {
   DireccionOrden,
@@ -20,6 +21,7 @@ import { MedicoConServicios } from '../../servicios.model';
   selector: 'app-servicios-medicos-tabla',
   imports: [
     DatePipe,
+    ErrorCargaComponent,
     DecimalPipe,
     MonedaPipe,
     AvatarComponent,
@@ -38,6 +40,8 @@ export class ServiciosMedicosTablaComponent {
   readonly medicos = input.required<RespuestaPaginada<MedicoConServicios>>();
   readonly isLoading = input<boolean>(false);
   readonly error = input<unknown>(null);
+  /** Pide a la página que vuelva a traer la lista tras un error de carga. */
+  readonly reintentar = output<void>();
 
   readonly busqueda = input<string>('');
   readonly busquedaChange = output<string>();

@@ -45,10 +45,12 @@
                         <app-avatar [initials]="c | inicialesCliente" size="sm" />
                         <span class="min-w-0">
                           <span class="block text-xs font-medium text-text-dark truncate">{{ c | nombreCliente }}</span>
-                          <span class="block text-[10px] text-text-muted font-mono leading-tight">{{ c.telefono }}</span>
+                          <span class="crm-meta crm-meta-sm">
+                            <span class="crm-meta-clave">{{ c.telefono }}</span>
+                            @if (c.pac) { <span class="crm-meta-clave" title="Código PAC">{{ c.pac }}</span> }
+                          </span>
                         </span>
                       </span>
-                      @if (c.pac) { <span class="text-[9px] font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">{{ c.pac }}</span> }
                     </button>
                   }
                 </div>

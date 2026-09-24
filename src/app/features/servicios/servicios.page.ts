@@ -25,6 +25,7 @@ import { ButtonComponent } from '../../shared/components/button/button.component
 import { BarChartComponent, ChartItem } from '../../shared/components/charts/bar-chart.component';
 import { DonutChartComponent } from '../../shared/components/charts/donut-chart.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
+import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InfoHintComponent } from '../../shared/components/info-hint/info-hint.component';
@@ -104,6 +105,7 @@ const TABS_SERVICIOS: readonly TabServicioConfig[] = [
     ButtonComponent,
     DonutChartComponent,
     EmptyStateComponent,
+    ErrorCargaComponent,
     FilterChipComponent,
     IconComponent,
     InfoHintComponent,

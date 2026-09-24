@@ -10,11 +10,13 @@ import { mensajeDeError } from '../../core/api/http-error';
 import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales } from '../../core/auth/user.model';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
+import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
+import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.component';
+import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
-import { CardComponent } from '../../shared/components/card/card.component';
 import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
@@ -43,13 +45,15 @@ export type FiltroRolAgentes = 'TODOS' | RolUsuario;
 @Component({
   selector: 'app-agentes-page',
   imports: [
+    LoadingSkeletonComponent,
+    KpiCardComponent,
+    PageHeaderComponent,
     SelectorLineasComponent,
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,
     FilterChipComponent,
     DrawerComponent,
-    CardComponent,
     EmptyStateComponent,
     ErrorCargaComponent,
     IconComponent,

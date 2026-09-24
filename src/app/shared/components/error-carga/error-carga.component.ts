@@ -32,7 +32,7 @@ import { EmptyStateComponent } from '../empty-state/empty-state.component';
         descripcion() ||
         'No hay respuesta del servidor. Revisa tu conexión e inténtalo de nuevo.'
       ">
-      <app-button icon="loader" (clicked)="reintentar.emit()">Reintentar</app-button>
+      <app-button icon="rotate-cw" (clicked)="reintentar.emit()">Reintentar</app-button>
     </app-empty-state>
   `,
 })

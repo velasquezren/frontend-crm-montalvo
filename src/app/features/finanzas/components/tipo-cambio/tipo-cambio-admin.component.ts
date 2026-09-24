@@ -8,7 +8,6 @@ import { BadgeComponent, BadgeVariant } from '../../../../shared/components/badg
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { ErrorCargaComponent } from '../../../../shared/components/error-carga/error-carga.component';
-import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { FilterChipComponent } from '../../../../shared/components/filter-chip/filter-chip.component';
 import { InputComponent } from '../../../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
@@ -54,7 +53,6 @@ const MOTIVO_LABEL: Record<MotivoSincronizacion, string> = {
 @Component({
   selector: 'app-tipo-cambio-admin',
   imports: [
-    IconComponent,
     ButtonComponent,
     FilterChipComponent,
     InputComponent,

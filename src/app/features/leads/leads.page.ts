@@ -33,6 +33,7 @@ import { DrawerComponent } from '../../shared/components/drawer/drawer.component
 import { LeadCardComponent } from './components/lead-card/lead-card.component';
 import { esNombreProvisional } from '../../shared/models/nombre-cliente';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
+import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InputComponent } from '../../shared/components/input/input.component';
@@ -70,6 +71,7 @@ type FiltroOrigen = OrigenLeadApi | 'TODOS';
     DrawerComponent,
     LeadCardComponent,
     EmptyStateComponent,
+    ErrorCargaComponent,
     InputComponent,
     LoadingSkeletonComponent,
     IconComponent,

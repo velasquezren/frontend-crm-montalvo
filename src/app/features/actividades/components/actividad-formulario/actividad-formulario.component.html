@@ -55,30 +55,10 @@
           <div class="flex flex-wrap items-center justify-between gap-2">
             <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Fecha y hora *</label>
             <div class="flex flex-wrap items-center gap-1">
-              <button
-                type="button"
-                (click)="aplicarPresetFecha('1H')"
-                class="text-[10px] font-semibold text-primary px-1.5 py-0.5 rounded hover:bg-primary/10 transition-colors cursor-pointer">
-                +1 h
-              </button>
-              <button
-                type="button"
-                (click)="aplicarPresetFecha('HOY_TARDE')"
-                class="text-[10px] font-semibold text-primary px-1.5 py-0.5 rounded hover:bg-primary/10 transition-colors cursor-pointer">
-                Hoy 16:00
-              </button>
-              <button
-                type="button"
-                (click)="aplicarPresetFecha('MANANA_MANANA')"
-                class="text-[10px] font-semibold text-primary px-1.5 py-0.5 rounded hover:bg-primary/10 transition-colors cursor-pointer">
-                Mañana 09:30
-              </button>
-              <button
-                type="button"
-                (click)="aplicarPresetFecha('EN_2_DIAS')"
-                class="text-[10px] font-semibold text-primary px-1.5 py-0.5 rounded hover:bg-primary/10 transition-colors cursor-pointer">
-                En 2 días
-              </button>
+              <app-button variant="secondary" size="xs" (clicked)="aplicarPresetFecha('1H')">+1 h</app-button>
+              <app-button variant="secondary" size="xs" (clicked)="aplicarPresetFecha('HOY_TARDE')">Hoy 16:00</app-button>
+              <app-button variant="secondary" size="xs" (clicked)="aplicarPresetFecha('MANANA_MANANA')">Mañana 09:30</app-button>
+              <app-button variant="secondary" size="xs" (clicked)="aplicarPresetFecha('EN_2_DIAS')">En 2 días</app-button>
             </div>
           </div>
           <app-input type="datetime-local" [(value)]="formFecha" />

@@ -10,22 +10,24 @@
           placeholder="Buscar paciente, teléfono o campaña…"
           [(value)]="busqueda" />
       </div>
-      <div class="inline-flex p-1 bg-bg-workspace border border-border rounded-xl shadow-subtle">
+      <div class="crm-segmento" role="group" aria-label="Modo de visualización">
         <button
           type="button"
-          (click)="setVista('PIPELINE')"
-          class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-          [class]="modoVista() === 'PIPELINE' ? 'bg-white text-primary shadow-subtle' : 'text-text-muted hover:text-text-dark'">
+          class="crm-segmento-opcion"
+          [class.crm-segmento-opcion-activo]="modoVista() === 'PIPELINE'"
+          [attr.aria-pressed]="modoVista() === 'PIPELINE'"
+          (click)="setVista('PIPELINE')">
           <app-icon name="dashboard" [size]="14" />
-          Pipeline Kanban
+          <span>Pipeline Kanban</span>
         </button>
         <button
           type="button"
-          (click)="setVista('LISTA')"
-          class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-          [class]="modoVista() === 'LISTA' ? 'bg-white text-primary shadow-subtle' : 'text-text-muted hover:text-text-dark'">
+          class="crm-segmento-opcion"
+          [class.crm-segmento-opcion-activo]="modoVista() === 'LISTA'"
+          [attr.aria-pressed]="modoVista() === 'LISTA'"
+          (click)="setVista('LISTA')">
           <app-icon name="menu" [size]="14" />
-          Vista Tabla
+          <span>Vista Tabla</span>
         </button>
       </div>
 
@@ -83,12 +85,7 @@
       }
     </div>
   } @else if (leads.error() && leads.value().datos.length === 0) {
-    <div class="bg-white rounded-2xl border border-border p-12">
-      <app-empty-state
-        icon="alert-circle"
-        title="No se pudieron cargar los prospectos"
-        description="Ocurrió un error al intentar sincronizar los leads con la base de datos." />
-    </div>
+    <app-error-carga que="los prospectos" (reintentar)="leads.reload()" />
   } @else {
 
     <!-- ── VISTA PIPELINE (Drag and Drop Kanban) ────────────────────── -->
@@ -263,13 +260,13 @@
                   <div class="flex items-center gap-3">
                     <app-avatar [initials]="lead.cliente | inicialesCliente" [nombre]="lead.cliente | nombreCliente" size="sm" />
                     <div>
-                      <div class="flex items-center gap-1.5">
-                        <p class="font-semibold text-text-dark leading-tight">{{ lead.cliente | nombreCliente }}</p>
+                      <p class="font-semibold text-text-dark leading-tight">{{ lead.cliente | nombreCliente }}</p>
+                      <div class="crm-meta mt-0.5">
+                        <span class="crm-meta-clave">{{ lead.cliente.telefono }}</span>
                         @if (lead.cliente.pac) {
-                          <span class="text-[9px] font-mono font-bold text-primary bg-primary/10 px-1 py-0.2 rounded border border-primary/20 shrink-0" title="Código PAC">{{ lead.cliente.pac }}</span>
+                          <span class="crm-meta-clave" title="Código PAC">{{ lead.cliente.pac }}</span>
                         }
                       </div>
-                      <p class="text-xs text-text-muted leading-tight mt-0.5">{{ lead.cliente.telefono }}</p>
                     </div>
                   </div>
                 </td>
@@ -289,19 +286,14 @@
                 </td>
                 <td>
                   <div class="flex items-center justify-end gap-1">
-                    <button
-                      type="button"
-                      (click)="abrirFichaLead(lead, modalFichaLead)"
-                      class="p-1.5 rounded-lg text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors inline-flex items-center justify-center cursor-pointer"
-                      title="Ver detalle del lead">
-                      <app-icon name="eye" [size]="16" />
-                    </button>
+                    <app-button variant="ghost" size="xs" [circle]="true" icon="eye" title="Ver detalle del lead" ariaLabel="Ver detalle del lead" (clicked)="abrirFichaLead(lead, modalFichaLead)" />
                     <a
                       [routerLink]="['/conversaciones']"
                       [queryParams]="{ telefono: lead.cliente.telefono }"
-                      class="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-bg-light transition-colors inline-flex items-center justify-center"
-                      title="Abrir chat en WhatsApp">
-                      <app-icon name="message-circle" [size]="16" />
+                      class="crm-accion-enlace crm-accion-enlace-whatsapp"
+                      title="Abrir chat en WhatsApp"
+                      aria-label="Abrir chat en WhatsApp">
+                      <app-icon name="message-circle" [size]="14" />
                     </a>
                   </div>
                 </td>
@@ -389,17 +381,9 @@
             [(value)]="nuevoLeadInteres" />
 
           <!-- Chips de sugerencias rápidas -->
-          <div class="flex flex-wrap gap-1.5 pt-1">
+          <div class="flex flex-wrap gap-1.5 pt-1" role="group" aria-label="Intereses sugeridos">
             @for (sug of interesesSugeridos; track sug) {
-              <button
-                type="button"
-                (click)="elegirInteresSugerido(sug)"
-                class="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-bg-light hover:bg-primary/10 hover:text-primary text-text-dark border border-border transition-colors cursor-pointer"
-                [class.border-primary]="nuevoLeadInteres() === sug"
-                [class.text-primary]="nuevoLeadInteres() === sug"
-                [class.bg-primary/10]="nuevoLeadInteres() === sug">
-                + {{ sug }}
-              </button>
+              <app-filter-chip size="sm" [active]="nuevoLeadInteres() === sug" (clicked)="elegirInteresSugerido(sug)">{{ sug }}</app-filter-chip>
             }
           </div>
         </div>
@@ -469,15 +453,16 @@
           <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">
             Etapa en el Pipeline Comercial
           </label>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 bg-bg-workspace rounded-xl border border-border">
+          <!-- Rejilla y no `.crm-segmento`: esa clase vive fuera de @layer y su
+               `display: flex` le ganaría a `grid`. Las opciones sí son las del sistema. -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-0.5 p-1 bg-bg-workspace rounded-xl border border-border" role="group" aria-label="Etapa del lead">
             @for (est of estadosDisponibles; track est) {
               <button
                 type="button"
-                (click)="cambiarEstadoLeadDirecto(est)"
-                class="py-2 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer text-center truncate"
-                [class]="l.estado === est
-                  ? 'bg-white text-primary shadow-subtle font-bold'
-                  : 'text-text-muted hover:text-text-dark'">
+                class="crm-segmento-opcion"
+                [class.crm-segmento-opcion-activo]="l.estado === est"
+                [attr.aria-pressed]="l.estado === est"
+                (click)="cambiarEstadoLeadDirecto(est)">
                 {{ estadoLabel[est] }}
               </button>
             }
@@ -591,13 +576,7 @@
             <p class="text-xs text-text-muted mt-0.5 truncate">{{ l.cliente | nombreCliente }}</p>
           </div>
         </div>
-        <button
-          type="button"
-          (click)="cerrarMotivoPerdida()"
-          class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-text-dark hover:bg-bg-light transition-colors cursor-pointer"
-          aria-label="Cerrar">
-          <app-icon name="x" [size]="18" />
-        </button>
+        <app-button variant="ghost" size="sm" [circle]="true" icon="x" ariaLabel="Cerrar" (clicked)="cerrarMotivoPerdida()" />
       </div>
 
       <div class="p-6 space-y-3">

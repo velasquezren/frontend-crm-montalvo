@@ -119,7 +119,13 @@ seguras y scroll del contenido proyectado viven en `styles.css`, bajo
 `.crm-drawer`; no se duplican estilos por vista.
 
 Curvas: `--ease-spring-smooth`, `--ease-spring-bounce`, `--ease-press`. Para hover y transiciones
-simples, `transition-all duration-200`.
+simples, `transition-all duration-200`. **Desde una plantilla, una curva se escribe
+`ease-(--ease-spring-smooth)`**, nunca `cubic-bezier(…)` suelto: como clase eso son cuatro
+clases que Tailwind no conoce, y así estuvo `<app-button>` —todos los botones del CRM con el
+`ease` por defecto— hasta el 2026-09-23.
+
+`loader` gira solo (lo hace el átomo del ícono): no le añadas el giro de Tailwind por fuera —gira el doble— ni
+lo uses como ícono de «Reintentar», que parecería estar cargando. Reintentar es `rotate-cw`.
 
 **Gráficos y bloques pesados bajo el pliegue van en `@defer (on viewport)`**, con un
 `<app-loading-skeleton>` de **altura exacta** en el `@placeholder`. Si el esqueleto mide distinto
@@ -130,7 +136,7 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 
 | Componente | Selector | API |
 |---|---|---|
-| Button | `<app-button>` | `variant` (primary/secondary/ghost/**critical** — destructiva; negro de paleta, no rojo), `size`, `type`, `icon`, `loading`, `disabled`, `fullWidth`, `circle`, **`ariaLabel`** (obligatorio en los solo-ícono: sin texto proyectado el lector de pantalla solo dice "botón") · `(clicked)` |
+| Button | `<app-button>` | `variant` (primary/secondary/ghost/**critical** — destructiva; negro de paleta, no rojo), `size` (**xs** = acción de solo ícono en filas densas, círculo de 28 px con `[circle]` · sm = cabeceras y barras, como el cerrar del cajón · md), `type`, `icon`, `loading`, `disabled`, `fullWidth`, `circle`, **`ariaLabel`** (obligatorio en los solo-ícono: sin texto proyectado el lector de pantalla solo dice "botón") · `(clicked)` |
 | Switch | `<app-switch>` | `disabled`, `ariaLabel` · `[(value)]` — enciende/apaga una capacidad. `role="switch"`, no un checkbox: un checkbox marca una opción de un conjunto, un switch activa algo |
 | Select | `<app-select>` | `label`, `size` (sm=filtro de barra / md=campo de formulario), `icono`, `disabled`, `fullWidth`, `ariaLabel`, `activo` (filtro con valor puesto: se tiñe de primario) · `[(value)]` · proyecta sus `<option>` — **el único desplegable**; no escribas un `<select>` a mano |
 | Input | `<app-input>` | `label`, `type` (incl. password con toggle), `placeholder`, `autocomplete`, `error`, `disabled`, `multiline` (renderiza `<textarea>` en vez de `<input>`, mismo wrapper/label/error), `rows` (solo con `multiline`) · `[(value)]` |
@@ -328,18 +334,19 @@ número, era que la misma forma decía tres cosas incompatibles. Elegí cuál es
 | Una **acción de contacto** (`<a>` a WhatsApp o `tel:`) | `.crm-accion-enlace` (+ `-whatsapp`). Son enlaces, no botones: abren otra app y se copian |
 | Una fila o tarjeta **vencida** | `.crm-vencida` — filo izquierdo, no fondo teñido |
 | Un **control segmentado** (Lista/Calendario, Bs/USD) | `.crm-segmento` + `.crm-segmento-opcion` (+ `-activo`). En una barra densa —la topbar— se le suma `.crm-segmento-compacto`, que solo reduce cuerpo y sube la opción activa a `--color-primary` para que se lea a 11px |
+| La **barra de pestañas** de una página (Finanzas, Servicios) | `.crm-segmento .crm-segmento-pestanas` — mide lo que sus etiquetas y scrollea; eran dos copias idénticas con sombra y tokens propios |
+| Una **acción en línea de texto** («Limpiar todos», «Ver adjunto», «Quitar») | `.crm-enlace` (+ `-critico`). El tamaño lo pone el contexto. No dentro de una burbuja de chat, que hereda su color |
 | La **línea de WhatsApp** de un chat | `.crm-linea` — punto en `secondary` (el token declarado para *indicadores*, no `primary`, que es de botones y estados activos) + nombre en voz baja. **No es cápsula:** la píldora es del estado y una línea es un canal |
 
 `check:skills` rechaza cualquier `class` que junte `rounded-full` con un tamaño
 de texto de 11px o menos, fuera de `shared/components/`. Los átomos arman sus
 clases en el `.ts`, así que no caen en la red.
 
-> **La red tiene un hueco conocido: solo mira `rounded-full`.** La misma cápsula
-> escrita con `rounded` a secas la esquiva, y así vivía la píldora de PAC de
-> Actividades —`px-1.5 py-0.5 rounded text-[10px] font-mono … bg-primary/10`,
-> copiada byte a byte en la tabla y en la tarjeta móvil— hasta el 2026-09-14.
-> Si ves un radio cualquiera con texto diminuto, decide qué es con la tabla de
-> arriba aunque el build no se queje.
+> **El hueco de `rounded` a secas está cerrado (2026-09-23).** La misma cápsula
+> escrita con `rounded` o `rounded-md` esquivaba esta red: así vivieron la
+> píldora de PAC —escrita de cinco formas en Clientes, Leads, Ventas y dos
+> buscadores— y las etiquetas del cliente. Ahora `verificarRadiosEnPlantillas`
+> rechaza esos radios en cualquier plantilla, y el PAC va en `.crm-meta-clave`.
 
 **Ojo con `.crm-meta` y la cascada**: vive fuera de toda `@layer` y Tailwind pone
 sus utilidades en `@layer utilities`, así que su `font-size` **le gana** a un
@@ -475,6 +482,7 @@ rompa lo que este archivo declara ley**:
 | Un solo cajón | `animate-drawer-in` o el `panelClass` del cajón fuera de su dueño — se usa `<app-drawer>` y `DialogService.abrirCajon()` |
 | Nombre de cliente | `{{ …cliente.nombre }}` o `iniciales(…cliente.nombre)` en crudo — va por `nombreCliente` / `inicialesCliente` |
 | Píldoras a mano | `rounded-full` + `text-[≤11px]` en un `class` fuera de `shared/components/` — usa el nombre que le corresponda |
+| Radios en plantillas | `rounded` / `rounded-sm` / `rounded-md` en cualquier `class`, y `rounded-lg` en un `<button>` — la regla de radios solo miraba `.css`, y por ahí entraron 81 (2026-09-23) |
 
 Existe porque el inbox había acumulado **17 desviaciones** —una escala ámbar completa donde la
 paleta excluye ámbares a propósito, cinco sombras ajenas, ocho radios distintos— sin que nada
