@@ -2,7 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, input, model, output } fr
 
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { InputComponent } from '../../../../shared/components/input/input.component';
+import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PlantillaResumen } from '../../conversacion.model';
 import { etiquetaVariable, faltaParaEnviar, renderizarPlantilla } from '../../plantillas';
 
@@ -16,7 +18,7 @@ import { etiquetaVariable, faltaParaEnviar, renderizarPlantilla } from '../../pl
  */
 @Component({
   selector: 'app-envio-plantilla',
-  imports: [BadgeComponent, ButtonComponent, InputComponent],
+  imports: [BadgeComponent, ButtonComponent, IconComponent, InputComponent, LoadingSkeletonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './envio-plantilla.component.html',
   styleUrl: './envio-plantilla.component.css',

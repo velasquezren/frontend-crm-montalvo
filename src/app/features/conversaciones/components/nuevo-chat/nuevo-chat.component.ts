@@ -6,13 +6,15 @@ import { paginaVacia, RespuestaPaginada } from '../../../../core/api/pagination.
 import { AuthService } from '../../../../core/auth/auth.service';
 import { esRolOperativo } from '../../../../core/auth/roles';
 import { ToastService } from '../../../../core/toast/toast.service';
+import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { DrawerComponent } from '../../../../shared/components/drawer/drawer.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { InputComponent } from '../../../../shared/components/input/input.component';
+import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { SelectComponent } from '../../../../shared/components/select/select.component';
 import { telefonoParaEscribir } from '../../../../shared/models/telefono';
-import { NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
+import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 import { Cliente } from '../../../clientes/cliente.model';
 import { ClientesService } from '../../../clientes/clientes.service';
 import { PlantillaResumen } from '../../conversacion.model';
@@ -23,7 +25,7 @@ import { EnvioPlantillaComponent } from '../envio-plantilla/envio-plantilla.comp
 
 /** A quién se le escribe: una ficha de la base o un número tecleado. */
 type Destino =
-  | { readonly tipo: 'PACIENTE'; readonly cliente: Pick<Cliente, 'id' | 'nombre' | 'telefono'> }
+  | { readonly tipo: 'PACIENTE'; readonly cliente: Pick<Cliente, 'id' | 'nombre' | 'telefono' | 'pac'> }
   | { readonly tipo: 'NUMERO'; readonly telefono: string };
 
 /**
@@ -41,7 +43,18 @@ type Destino =
  */
 @Component({
   selector: 'app-nuevo-chat',
-  imports: [ButtonComponent, DrawerComponent, EnvioPlantillaComponent, IconComponent, InputComponent, NombreClientePipe, SelectComponent],
+  imports: [
+    AvatarComponent,
+    ButtonComponent,
+    DrawerComponent,
+    EnvioPlantillaComponent,
+    IconComponent,
+    InicialesClientePipe,
+    InputComponent,
+    LoadingSkeletonComponent,
+    NombreClientePipe,
+    SelectComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './nuevo-chat.component.html',
   styleUrl: './nuevo-chat.component.css',
@@ -106,6 +119,15 @@ export class NuevoChatComponent {
     const p = this.plantilla();
     if (!p) return 'Elige la plantilla del primer mensaje.';
     return faltaParaEnviar(p, this.valores());
+  });
+
+  /* Cada paso se marca con ✓ en cuanto está resuelto; el tercero, solo cuando
+     la plantilla elegida ya se puede enviar (variables completas). */
+  protected readonly pasoLineaHecho = computed(() => !!this.lineaElegida());
+  protected readonly pasoDestinoHecho = computed(() => !!this.destino());
+  protected readonly pasoMensajeHecho = computed(() => {
+    const p = this.plantilla();
+    return !!p && !faltaParaEnviar(p, this.valores());
   });
 
   constructor() {

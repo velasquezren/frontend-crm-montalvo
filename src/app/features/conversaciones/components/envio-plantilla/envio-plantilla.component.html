@@ -7,7 +7,10 @@
 </div>
 
 @if (cargando()) {
-  <p class="text-xs text-text-muted text-center py-6">Cargando plantillas…</p>
+  <div class="space-y-2" aria-label="Cargando plantillas">
+    <app-loading-skeleton height="84px" />
+    <app-loading-skeleton height="84px" />
+  </div>
 } @else if (error()) {
   <p role="alert" class="text-xs text-critical py-4">No se pudieron consultar las plantillas. Pulsa «Actualizar desde Meta» para volver a intentar.</p>
 } @else if (plantillas().length === 0) {
@@ -27,8 +30,13 @@
         class="plantilla-opcion"
         [class.plantilla-opcion--elegida]="seleccionada()?.nombre === p.nombre && seleccionada()?.idioma === p.idioma">
         <span class="flex items-center justify-between gap-2">
-          <span class="text-xs font-bold text-text-dark">{{ p.nombre }}</span>
-          <app-badge variant="info">{{ p.categoria }}</app-badge>
+          <span class="flex items-center gap-1.5 min-w-0">
+            @if (seleccionada()?.nombre === p.nombre && seleccionada()?.idioma === p.idioma) {
+              <app-icon name="check-circle" [size]="14" class="text-primary shrink-0" />
+            }
+            <span class="text-xs font-bold text-text-dark truncate">{{ p.nombre }}</span>
+          </span>
+          <app-badge variant="info" class="shrink-0">{{ p.categoria }}</app-badge>
         </span>
         <span class="block text-xs text-text-muted mt-1 whitespace-pre-wrap line-clamp-3">{{ p.cuerpo }}</span>
         @if (!p.enviable) {
@@ -40,7 +48,7 @@
 
   @if (seleccionada(); as p) {
     @if (p.nombresVariables.length > 0) {
-      <div class="p-4 rounded-xl bg-bg-light border border-border space-y-3">
+      <div class="p-4 rounded-xl bg-bg-workspace border border-border space-y-3">
         <h4 class="text-xs font-bold text-text-dark uppercase tracking-wider">Completa los datos</h4>
         @for (nombre of p.nombresVariables; track nombre; let i = $index) {
           <app-input
