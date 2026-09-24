@@ -20,7 +20,6 @@ import {
 import { ActividadesService } from '../../../actividades/actividades.service';
 import {
   CATEGORIA_BADGE,
-  CATEGORIA_ICON,
   CATEGORIA_LABEL,
 } from '../../../../shared/models/cliente-categoria.model';
 import { generarIniciales } from '../../../../core/auth/user.model';
@@ -74,7 +73,6 @@ export class ConversacionSidebarComponent {
   protected readonly rolLabel = ROL_LABEL;
   protected readonly categoriaLabel = CATEGORIA_LABEL;
   protected readonly categoriaBadge = CATEGORIA_BADGE;
-  protected readonly categoriaIcon = CATEGORIA_ICON;
   protected readonly iniciales = generarIniciales;
 
   /** El átomo emite `string`; la señal quiere el enum. Un solo sitio donde cae el cast. */

@@ -1,5 +1,4 @@
 import { BadgeVariant } from '../components/badge/badge.component';
-import { IconName } from '../components/icon/icon.component';
 import { CategoriaCliente } from '../../core/api/db-enums';
 
 export type { CategoriaCliente };
@@ -21,13 +20,6 @@ export const CATEGORIA_BADGE: Record<CategoriaCliente, BadgeVariant> = {
   SILVER: 'info',
   BRONZE: 'neutral',
   PROSPECTO: 'neutral',
-};
-
-export const CATEGORIA_ICON: Partial<Record<CategoriaCliente, IconName>> = {
-  GOLD: 'star',
-  SILVER: 'check-circle',
-  BRONZE: 'users',
-  PROSPECTO: 'users',
 };
 
 /** Canales de origen de un cliente/lead — Ref: RF-06. */

@@ -27,7 +27,6 @@ import {
 import { ToastService } from '../../core/toast/toast.service';
 import {
   CATEGORIA_BADGE,
-  CATEGORIA_ICON,
   CATEGORIA_LABEL,
   CategoriaCliente,
 } from '../../shared/models/cliente-categoria.model';
@@ -90,7 +89,6 @@ export class ClientesPage {
 
   protected readonly categoriaLabel = CATEGORIA_LABEL;
   protected readonly categoriaBadge = CATEGORIA_BADGE;
-  protected readonly categoriaIcon = CATEGORIA_ICON;
 
   /* Un contacto que llegó por WhatsApp sin dar su nombre se guarda como
      "WhatsApp +591…", que no es un nombre. Ver `shared/models/nombre-cliente`. */
