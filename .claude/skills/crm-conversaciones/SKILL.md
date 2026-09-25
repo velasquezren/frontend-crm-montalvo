@@ -196,8 +196,18 @@ Eran tres causas, y ninguna era la consulta a la base:
   - Visibilidad total: ven todas las conversaciones del centro, sin asignar y asignadas a cualquier vendedora/agente.
   - Pueden reasignar conversaciones entre agentes.
 - **Agente Comercial (`AGENTE`)**:
-  - Visibilidad acotada: solo ve las conversaciones **asignadas a su propio ID** y las **conversaciones sin asignar** (pool general).
+  - Visibilidad acotada: solo ve las conversaciones **asignadas a su propio ID** y las **conversaciones sin asignar** (pool general), siempre dentro de **sus líneas**.
   - Toda consulta en el backend pasa obligatoriamente por `whereVisibilidad(soloAgenteId)`.
+- **Recepción y asistente (roles operativos, `esRolOperativo`)**: ven y responden **todos** los chats de sus líneas, aunque tengan responsable. Sin alcance comercial.
+
+**Contestar solo reclama en una línea comercial (2026-09-25).** En la comercial,
+quien responde primero un chat del pool se lo queda (cartera). En una línea no
+comercial —Recepción, CLIMON— la atención es compartida: contestar **no** asigna.
+Antes asignaba, y toda persona de la línea sin rol operativo (una agente de
+ventas con acceso a Recepción) dejaba de ver el chat. El frontend lo refleja en
+`reconciliarEnvioLocal` (la fila solo pasa a quien contestó si `linea.comercial`)
+y «Sin asignar» solo se pinta en líneas comerciales. Asignar a propósito sigue
+existiendo (`PATCH /:id/agente`, ADMIN).
 
 ## 3. Arquitectura en Tiempo Real y Estado Frontend
 
@@ -374,6 +384,30 @@ La vista `conversaciones` se estructura en submódulos desacoplados gobernados p
 
 ## 5. Acuse Automático Fuera de Horario
 - Si un mensaje entrante llega fuera del horario de atención comercial (`horario-atencion.ts`), el servicio `acuse-automatico.service.ts` emite una respuesta automática configurada con botones de navegación interactivos.
+
+## 6. Ubicación de la clínica (2026-09-25)
+
+Un solo lugar (`ubicacion-clinica.ts` del backend: coordenadas, dirección,
+enlace de Maps) y dos caminos que mandan el **pin nativo** de WhatsApp —la
+tarjeta con mapa que abre Maps/Waze—. Si Meta rechaza el pin, sale el enlace
+como texto; el historial del CRM guarda ese texto (`CONTENIDO_PIN`).
+
+- **Automático**: si el mensaje entrante pregunta dónde queda la clínica
+  (`preguntaPorUbicacion`, conservadora a propósito: «¿dónde están mis
+  resultados?» no dispara), en cualquier línea. Es `automatico: true`, así que
+  **no** saca el chat de «Sin responder». No se repite en 12 h, no interrumpe si
+  una persona escribió en los últimos 15 min, y corre DESPUÉS del acuse para no
+  taparlo. `UBICACION_AUTOMATICA=off` lo apaga.
+- **Botón «Ubicación»**: primer chip de la barra de respuestas rápidas del
+  compositor (`quick-reply-chip--accion`). Un clic, sin cajón, `POST
+  /:id/ubicacion`. Es un envío de una persona: **sí** cuenta como respuesta y
+  reclama igual que un texto. Deshabilitado fuera de la ventana de 24 h (un pin
+  no es plantilla). Una clave `clientMessageId` **por chat**, que solo se
+  renueva tras un envío correcto.
+
+Límite conocido: la deduplicación del automático es «leer y luego escribir»,
+igual que el acuse; dos webhooks casi simultáneos que preguntan lo mismo
+pueden mandar dos pines.
 
 ## Líneas y recepción (2026-09-13)
 
