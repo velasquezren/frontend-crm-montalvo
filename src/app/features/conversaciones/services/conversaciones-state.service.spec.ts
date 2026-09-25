@@ -203,6 +203,15 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     expect(state.detalle.value()?.mensajes).toEqual([MENSAJE]);
   });
 
+  /* Espejo del backend: contestar solo reclama el chat en una línea comercial. */
+  it.each([[true, 'agente-1'], [false, null]] as const)(
+    'al contestar un chat sin responsable en línea comercial=%s, la fila queda con: %s', (comercial, esperado) => {
+      state.inbox.set({ ...PAGINA, datos: [{ ...CHAT, agente: null, linea: { ...CHAT.linea, comercial } }] });
+      state.reconciliarEnvioLocal(CHAT.id, 'optimista-1', MENSAJE);
+      expect(state.paginaInbox().datos[0].agente?.id ?? null).toBe(esperado);
+    },
+  );
+
   it('conserva una sola copia si realtime confirmó el mensaje antes del POST', async () => {
     await recargarDetalle({ ...CHAT, mensajes: [MENSAJE] });
     state.reconciliarEnvioLocal(CHAT.id, 'optimista-1', MENSAJE);

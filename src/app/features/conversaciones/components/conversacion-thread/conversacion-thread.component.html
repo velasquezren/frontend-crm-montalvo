@@ -111,7 +111,8 @@
           <app-avatar [initials]="iniciales(chat.agente.nombre)" size="sm" variant="solid" />
           <span class="text-xs font-medium text-text-dark max-w-[80px] truncate">{{ chat.agente.nombre.split(' ')[0] }}</span>
         </div>
-      } @else {
+      } @else if (chat.linea.comercial) {
+        <!-- En una línea no comercial la atención es compartida: sin responsable no falta nada. -->
         <app-badge variant="neutral" icon="alert-circle" class="hidden sm:inline-flex">Sin asignar</app-badge>
       }
 

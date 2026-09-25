@@ -1028,12 +1028,15 @@ export class ConversacionesStateService {
        nota de `enviarMensaje()`— pero el POST no devuelve el `agente`
        resultante. La regla es determinista, así que se reproduce aquí en
        vez de dejar la fila con el dueño viejo hasta el próximo reload:
-       si estaba sin asignar, ahora es de quien acaba de escribir. */
+       si estaba sin asignar en una línea comercial, ahora es de quien acaba
+       de escribir. En una línea no comercial la atención es compartida y
+       contestar no asigna. */
+    const reclama = !actual.agente && actual.linea.comercial;
     const actualizada: ConversacionResumen = {
       ...actual,
       mensajes: [real],
       updatedAt: real.createdAt,
-      agente: actual.agente ?? { id: this.currentUserId(), nombre: this.authService.user()?.nombre ?? '' },
+      agente: reclama ? { id: this.currentUserId(), nombre: this.authService.user()?.nombre ?? '' } : actual.agente,
       /* Acaba de contestar una persona: sale de "Sin responder". Es la misma
          regla que aplica el backend en la transacción del mensaje, reproducida
          aquí para que la fila no se contradiga hasta el próximo refresco. */
