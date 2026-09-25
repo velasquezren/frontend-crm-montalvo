@@ -77,24 +77,6 @@
   color: var(--color-primary);
 }
 
-/* Acción fija de la barra (hoy, la ubicación): mismo chip, pero delineado en
-   primary para que se lea como «enviar», no como un texto guardado. */
-.quick-reply-chip--accion {
-  gap: 4px;
-  background: var(--color-background);
-  border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
-  color: var(--color-primary);
-  font-weight: 600;
-}
-
-.quick-reply-chip--accion:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background: var(--color-background);
-  border-color: var(--color-border);
-  color: var(--color-text-muted);
-}
-
 .quick-reply-divisor {
   flex-shrink: 0;
   width: 1px;

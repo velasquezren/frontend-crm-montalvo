@@ -30,18 +30,19 @@
       <div class="quick-reply-chips">
         <!-- Fija y primera: la pregunta más repetida, a un clic. Envía el pin
              de WhatsApp (mapa que abre Maps/Waze), no inserta texto. -->
-        <button
-          type="button"
-          class="quick-reply-chip quick-reply-chip--accion"
-          [disabled]="enviandoUbicacion() || state.fueraDeVentana24h()"
-          [attr.aria-busy]="enviandoUbicacion()"
+        <app-button
+          variant="secondary"
+          size="xs"
+          icon="map-pin"
+          class="shrink-0"
+          [loading]="enviandoUbicacion()"
+          [disabled]="state.fueraDeVentana24h()"
           [title]="state.fueraDeVentana24h()
             ? 'Pasaron más de 24 h desde el último mensaje del paciente: la ubicación solo se puede enviar con la conversación abierta'
             : 'Enviar la ubicación de la clínica como mapa de WhatsApp'"
-          (click)="enviarUbicacion()">
-          <app-icon [name]="enviandoUbicacion() ? 'loader' : 'map-pin'" [size]="12" />
+          (clicked)="enviarUbicacion()">
           Ubicación
-        </button>
+        </app-button>
         <span class="quick-reply-divisor" aria-hidden="true"></span>
         @for (plantilla of misRespuestas(); track plantilla.id) {
           <button

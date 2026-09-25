@@ -398,16 +398,20 @@ como texto; el historial del CRM guarda ese texto (`CONTENIDO_PIN`).
   **no** saca el chat de «Sin responder». No se repite en 12 h, no interrumpe si
   una persona escribió en los últimos 15 min, y corre DESPUÉS del acuse para no
   taparlo. `UBICACION_AUTOMATICA=off` lo apaga.
-- **Botón «Ubicación»**: primer chip de la barra de respuestas rápidas del
-  compositor (`quick-reply-chip--accion`). Un clic, sin cajón, `POST
+- **Botón «Ubicación»**: primer elemento de la barra de respuestas rápidas del
+  compositor, un `<app-button variant="secondary" size="xs">` (no un botón a
+  mano: el átomo ya trae carga y deshabilitado). Un clic, sin cajón, `POST
   /:id/ubicacion`. Es un envío de una persona: **sí** cuenta como respuesta y
   reclama igual que un texto. Deshabilitado fuera de la ventana de 24 h (un pin
   no es plantilla). Una clave `clientMessageId` **por chat**, que solo se
   renueva tras un envío correcto.
 
-Límite conocido: la deduplicación del automático es «leer y luego escribir»,
-igual que el acuse; dos webhooks casi simultáneos que preguntan lo mismo
-pueden mandar dos pines.
+**Un candado por conversación para todos los automáticos** (acuse, pedido de
+datos, ubicación): `guardarMensajeAutomatico` pregunta «¿ya se mandó?» y guarda
+dentro de una transacción con `pg_advisory_xact_lock`. Antes era «leer y luego
+escribir», y Meta entrega en paralelo: tres mensajes simultáneos daban dos o
+tres acuses o mapas. Fijado en `conversaciones.integracion.spec.ts` con
+`Promise.all`; sin el candado, esas pruebas fallan.
 
 ## Líneas y recepción (2026-09-13)
 
