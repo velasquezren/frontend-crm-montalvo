@@ -161,6 +161,11 @@ export class ConversacionesService {
     return this.api.post<MensajeApi>(`/conversaciones/${conversacionId}/plantilla`, payload);
   }
 
+  /** El pin de ubicación de la clínica. Solo dentro de la ventana de 24 h. */
+  enviarUbicacion(conversacionId: string, clientMessageId: string): Promise<MensajeApi> {
+    return this.api.post<MensajeApi>(`/conversaciones/${conversacionId}/ubicacion`, { clientMessageId });
+  }
+
   /** Escribirle primero a una paciente o a un número nuevo desde una línea. */
   iniciarConversacion(
     payload: EnvioPlantilla & { lineaId: string; clienteId?: string; telefono?: string; nombre?: string },

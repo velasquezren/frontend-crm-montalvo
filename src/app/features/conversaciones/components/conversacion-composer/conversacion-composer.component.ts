@@ -157,6 +157,12 @@ export class ConversacionComposerComponent implements OnDestroy {
   /** Una intención de envío por apertura del cajón: el doble clic reusa la clave y el servidor no manda dos. */
   private claveEnvioPlantilla = crypto.randomUUID();
 
+  /* ── Ubicación de la clínica ───────────────────────────────────── */
+  protected readonly enviandoUbicacion = signal(false);
+  /** Una clave por chat: un reintento tras un error reusa la del mismo chat y
+      el servidor no manda dos pines; otro chat nunca hereda la clave de este. */
+  private claveUbicacion: { chat: string; clave: string } | null = null;
+
   /* ── Gestión de Respuestas Rápidas ──────────────────────────────── */
   protected readonly editandoPlantillaId = signal<string | null>(null);
   protected readonly formPlantillaTitulo = signal('');
@@ -572,6 +578,31 @@ export class ConversacionComposerComponent implements OnDestroy {
     if (!caja) return;
     caja.style.height = 'auto';
     caja.style.height = `${caja.scrollHeight}px`;
+  }
+
+  /**
+   * Manda el pin de ubicación de la clínica —el mismo que sale solo cuando la
+   * paciente pregunta dónde queda—. Un clic, sin cajón: el contenido es fijo.
+   * Igual que la plantilla, se agrega al hilo con la respuesta real del servidor.
+   */
+  protected async enviarUbicacion(): Promise<void> {
+    const id = this.state.seleccionadaId();
+    if (!id || this.enviandoUbicacion() || this.state.fueraDeVentana24h()) return;
+
+    if (this.claveUbicacion?.chat !== id) this.claveUbicacion = { chat: id, clave: crypto.randomUUID() };
+    const contexto = this.state.contextoChat();
+    this.enviandoUbicacion.set(true);
+    try {
+      const real = await this.conversacionesService.enviarUbicacion(id, this.claveUbicacion.clave);
+      this.claveUbicacion = null;
+      if (contexto !== this.state.contextoChat()) return;
+      this.state.reconciliarEnvioLocal(id, null, real);
+      this.toast.success('Ubicación enviada.');
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo enviar la ubicación.'));
+    } finally {
+      this.enviandoUbicacion.set(false);
+    }
   }
 
   /* ── Modales de Plantillas Oficiales de WhatsApp ─────────────────── */
