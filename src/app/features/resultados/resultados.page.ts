@@ -60,6 +60,7 @@ export class ResultadosPage {
 
   private readonly plantillaConfirmar = viewChild.required<TemplateRef<unknown>>('confirmar');
   private readonly plantillaTelefono = viewChild.required<TemplateRef<unknown>>('editarTelefono');
+  private readonly plantillaAlta = viewChild.required<TemplateRef<unknown>>('crearFicha');
   private overlay: OverlayRef | null = null;
 
   protected readonly pagina = signal(1);
@@ -120,6 +121,61 @@ export class ResultadosPage {
       this.toast.error(mensajeDeError(err, 'No se pudo cambiar el teléfono.'), 'Error');
     } finally {
       this.guardandoTelefono.set(false);
+    }
+  }
+
+  /** Paciente del portal que no tiene ficha: se está creando la suya. */
+  protected readonly creando = signal<EntregaResultado | null>(null);
+  protected readonly telefonoAlta = signal('');
+  protected readonly guardandoAlta = signal(false);
+
+  /**
+   * Alta desde la cola de un paciente que el portal conoce y el CRM no.
+   *
+   * Pasa más de lo que parece: la importación de FileMaker dejó fuera 36.372
+   * fichas por no tener celular válido, y son justo ésas las que el médico
+   * sigue atendiendo. Sin ficha no hay número, y sin número no hay aviso; hasta
+   * ahora había que ir a Clientes, darla de alta a mano copiando el nombre y el
+   * PAC, y volver.
+   *
+   * El nombre y los identificadores vienen del portal; lo único que falta —y
+   * que el CRM no puede inventar— es el teléfono.
+   */
+  protected abrirAlta(fila: EntregaResultado): void {
+    this.creando.set(fila);
+    this.telefonoAlta.set('');
+    this.overlay = this.dialog.openTemplate(this.plantillaAlta(), this.vcr);
+  }
+
+  protected cerrarAlta(): void {
+    this.overlay?.dispose();
+    this.overlay = null;
+    this.creando.set(null);
+  }
+
+  protected async guardarAlta(): Promise<void> {
+    const fila = this.creando();
+    const telefono = this.telefonoAlta().trim();
+    if (!fila || !telefono) return;
+    this.guardandoAlta.set(true);
+    try {
+      await this.clientesService.crear({
+        nombre: fila.pacientePortal.nombre,
+        telefono,
+        pac: fila.pacientePortal.pac,
+        ci: fila.pacientePortal.ci,
+      });
+      this.cerrarAlta();
+      /* Al recargar, el backend vuelve a cruzar por PAC y la fila queda lista
+         para enviar: no hace falta decirle a nadie que refresque. */
+      this.toast.success('Ya puedes enviarle el informe.', 'Ficha creada');
+      this.entregas.reload();
+    } catch (err) {
+      /* Teléfono y PAC son únicos: si chocan, la ficha ya existe con otros
+         datos y hay que resolverlo en Clientes, no insistir aquí. */
+      this.toast.error(mensajeDeError(err, 'No se pudo crear la ficha.'), 'Error');
+    } finally {
+      this.guardandoAlta.set(false);
     }
   }
 

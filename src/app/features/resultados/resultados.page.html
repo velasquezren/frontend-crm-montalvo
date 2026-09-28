@@ -91,6 +91,15 @@
                 (clicked)="pedirConfirmacion(fila, true)">
                 Renovar y enviar
               </app-button>
+            } @else if (fila.sinFicha === 'SIN_COINCIDENCIA') {
+              <app-button
+                size="sm"
+                variant="secondary"
+                icon="user-plus"
+                [disabled]="enviando() !== null"
+                (clicked)="abrirAlta(fila)">
+                Crear ficha
+              </app-button>
             } @else {
               <span class="text-sm text-text-muted">{{ motivoBloqueo(fila) }}</span>
             }
@@ -173,6 +182,36 @@
     <div class="mt-6 flex justify-end gap-3">
       <app-button variant="ghost" [disabled]="guardandoTelefono()" (clicked)="cerrarTelefono()">Cancelar</app-button>
       <app-button icon="check" [loading]="guardandoTelefono()" (clicked)="guardarTelefono()">Guardar</app-button>
+    </div>
+  </div>
+</ng-template>
+
+<!-- El portal conoce a la paciente y el CRM no: la importación de FileMaker
+     dejó fuera las fichas sin celular. Lo único que falta es el número. -->
+<ng-template #crearFicha>
+  <div class="pointer-events-auto w-full max-w-sm bg-background rounded-2xl shadow-lifted p-6 animate-modal-pop">
+    @if (creando(); as fila) {
+      <h2 class="text-base font-bold text-text-dark">Crear la ficha de {{ fila.pacientePortal.nombre }}</h2>
+      <div class="crm-meta crm-meta-sm mt-2">
+        @if (fila.pacientePortal.pac; as pac) { <span class="crm-meta-clave">{{ pac }}</span> }
+        @if (fila.pacientePortal.ci; as ci) { <span class="crm-meta-clave">CI {{ ci }}</span> }
+      </div>
+      <p class="mt-3 text-sm text-text-muted">
+        El nombre y el PAC vienen del portal. Falta su WhatsApp, que es a donde
+        irá el aviso: con código de país, por ejemplo +59170000000.
+      </p>
+      <input
+        class="crm-input mt-4 w-full tabular-nums"
+        type="tel"
+        inputmode="tel"
+        autocomplete="off"
+        placeholder="+591…"
+        [value]="telefonoAlta()"
+        (input)="telefonoAlta.set($any($event.target).value)" />
+    }
+    <div class="mt-6 flex justify-end gap-3">
+      <app-button variant="ghost" [disabled]="guardandoAlta()" (clicked)="cerrarAlta()">Cancelar</app-button>
+      <app-button icon="check" [loading]="guardandoAlta()" (clicked)="guardarAlta()">Crear ficha</app-button>
     </div>
   </div>
 </ng-template>

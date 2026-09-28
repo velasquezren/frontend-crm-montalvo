@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { cubreRol, puedeEntregarResultados } from '../../core/auth/roles';
 import { RolUsuario } from '../../core/auth/user.model';
 import { NAV_GROUPS } from '../../shared/components/layout/nav-items';
-import { EntregaResultado, estadoEntrega, nombresDistintos, sePuedeEntregar, sePuedeRenovar } from './resultado.model';
+import { EntregaResultado, estadoEntrega, motivoBloqueo, nombresDistintos, sePuedeEntregar, sePuedeRenovar } from './resultado.model';
 
 /**
  * La parte de esta pantalla que decide algo, aislada de Angular: cuándo se
@@ -140,5 +140,37 @@ describe('el enlace del informe', () => {
     const sinFicha: EntregaResultado = { ...base, paciente: null, sinFicha: 'SIN_COINCIDENCIA', vinculo: null };
     expect(sePuedeEntregar(sinFicha)).toBe(false);
     expect(sinFicha.enlace).toBe(base.enlace);
+  });
+});
+
+/* El caso más frecuente en producción: el portal conoce a la paciente y el CRM
+   no. La importación de FileMaker dejó fuera 36.372 fichas por no tener celular,
+   y son las que el médico sigue atendiendo. Sin ficha no hay número. */
+describe('paciente que el CRM no conoce', () => {
+  const sinFicha: EntregaResultado = {
+    ...base,
+    paciente: null,
+    vinculo: null,
+    sinFicha: 'SIN_COINCIDENCIA',
+    pacientePortal: { nombre: 'Wilma Maria Villarroel Cartagena', pac: 'PAC22768', ci: null },
+  };
+
+  it('no se puede enviar, y se dice por qué', () => {
+    expect(sePuedeEntregar(sinFicha)).toBe(false);
+    expect(motivoBloqueo(sinFicha)).toContain('Sin ficha');
+  });
+
+  it('el alta se arma con lo que el portal sí sabe', () => {
+    // Nombre y PAC vienen del portal; el teléfono es lo único que falta y lo
+    // teclea la asistente. Si esto se invirtiera, se crearían fichas con el
+    // nombre de la ficha equivocada.
+    expect(sinFicha.pacientePortal.nombre).toBeTruthy();
+    expect(sinFicha.pacientePortal.pac).toBe('PAC22768');
+    expect(sinFicha.paciente).toBeNull();
+  });
+
+  it('CI repetido NO ofrece alta: hay que resolver el duplicado', () => {
+    const repetido: EntregaResultado = { ...sinFicha, sinFicha: 'CI_REPETIDO' };
+    expect(motivoBloqueo(repetido)).toContain('dos fichas');
   });
 });
