@@ -7,8 +7,8 @@ import {
   effect,
   EffectCleanupRegisterFn,
   inject,
+  input,
   linkedSignal,
-  OnDestroy,
   signal,
   TemplateRef,
   viewChild,
@@ -48,7 +48,7 @@ import {
 } from '../../shared/models/estados.model';
 import { Lead, ORIGEN_LABEL, OrigenLeadApi } from './lead.model';
 import { FiltroLeads, LeadsService, ResumenLeads } from './leads.service';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 
 type FiltroOrigen = OrigenLeadApi | 'TODOS';
@@ -96,10 +96,9 @@ type FiltroOrigen = OrigenLeadApi | 'TODOS';
   templateUrl: './leads.page.html',
   styleUrl: './leads.page.css',
 })
-export class LeadsPage implements OnDestroy {
+export class LeadsPage {
   private readonly leadsService = inject(LeadsService);
   private readonly toastService = inject(ToastService);
-  private readonly route = inject(ActivatedRoute);
   private readonly dialogService = inject(DialogService);
   private readonly vcr = inject(ViewContainerRef);
 
@@ -136,10 +135,6 @@ export class LeadsPage implements OnDestroy {
     'Consulta Médica',
   ];
 
-  ngOnDestroy(): void {
-    this.activeOverlayRef?.dispose();
-  }
-
   protected readonly estadoBadge = ESTADO_LEAD_BADGE;
   protected readonly estadoLabel = ESTADO_LEAD_LABEL;
   protected readonly origenLabel = ORIGEN_LABEL;
@@ -170,8 +165,20 @@ export class LeadsPage implements OnDestroy {
   protected readonly modoVista = signal<'PIPELINE' | 'LISTA'>(
     typeof window !== 'undefined' && window.innerWidth <= 768 ? 'LISTA' : 'PIPELINE',
   );
-  protected readonly filtro = signal<FiltroOrigen>('TODOS');
-  protected readonly pagina = signal(1);
+  /**
+   * `?origen=` con el que llega desde el dashboard. Lo enlaza el router
+   * (`withComponentInputBinding`) antes del primer render, así que la primera
+   * petición ya sale filtrada. Un valor que no es un origen se ignora: mandarlo
+   * tal cual haría que el backend respondiera 400 y la vista mostrara un error.
+   */
+  readonly origen = input<string>();
+
+  protected readonly filtro = linkedSignal<FiltroOrigen>(() => {
+    const origen = this.origen();
+    return origen && Object.hasOwn(ORIGEN_LABEL, origen) ? (origen as OrigenLeadApi) : 'TODOS';
+  });
+  /** Cambiar de filtro —con el chip o por la URL— vuelve a la página 1. */
+  protected readonly pagina = linkedSignal({ source: this.filtro, computation: () => 1 });
   protected readonly busqueda = signal('');
   private readonly busquedaDebounced = signal('');
 
@@ -251,22 +258,10 @@ export class LeadsPage implements OnDestroy {
       }, 200);
       onCleanup(() => clearTimeout(timer));
     });
-
-    const origenParam = this.route.snapshot.queryParamMap.get('origen');
-    if (origenParam) {
-      this.filtro.set(origenParam as FiltroOrigen);
-    }
-
-    this.route.queryParams.subscribe(params => {
-      if (params['origen']) {
-        this.filtro.set(params['origen'] as FiltroOrigen);
-      }
-    });
   }
 
   protected cambiarFiltro(valor: FiltroOrigen): void {
     this.filtro.set(valor);
-    this.pagina.set(1);
   }
 
   protected setVista(modo: 'PIPELINE' | 'LISTA'): void {

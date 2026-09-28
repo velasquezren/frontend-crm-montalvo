@@ -4,7 +4,7 @@ import { SelectorLineasComponent } from '../lineas-whatsapp/selector-lineas.comp
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, HostListener, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
 import { mensajeDeError } from '../../core/api/http-error';
 import { AuthService } from '../../core/auth/auth.service';
@@ -199,7 +199,9 @@ export class AgentesPage {
     this.modalCrearAbierto.set(true);
     if (template) {
       this.activeOverlayRef?.dispose();
-      this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr);
+      this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
+        onClose: () => this.cerrarModal(),
+      });
     }
   }
 
@@ -297,7 +299,9 @@ export class AgentesPage {
     this.modalEditarAbierto.set(true);
     if (template) {
       this.activeOverlayRef?.dispose();
-      this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr);
+      this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
+        onClose: () => this.cerrarEdicion(),
+      });
     }
   }
 
@@ -369,7 +373,9 @@ export class AgentesPage {
     this.agenteABaja.set(agente);
     if (template) {
       this.activeOverlayRef?.dispose();
-      this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr);
+      this.activeOverlayRef = this.dialogService.openTemplate(template, this.vcr, {
+        onClose: () => this.cancelarBaja(),
+      });
     }
   }
 
@@ -403,13 +409,5 @@ export class AgentesPage {
           'Error',
         );
       });
-  }
-
-  /** Cierra cualquier modal abierto con Escape. */
-  @HostListener('document:keydown.escape')
-  protected onEscape(): void {
-    if (this.agenteABaja()) return this.cancelarBaja();
-    if (this.modalEditarAbierto()) return this.cerrarEdicion();
-    if (this.modalCrearAbierto()) this.cerrarModal();
   }
 }
