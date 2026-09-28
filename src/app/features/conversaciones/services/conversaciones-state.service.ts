@@ -295,8 +295,6 @@ export class ConversacionesStateService {
   readonly mensajeNuevo = signal('');
   readonly enviando = signal(false);
   readonly asignando = signal(false);
-  readonly lightboxImagenUrl = signal<string | null>(null);
-  readonly velocidadesAudio = signal<Record<string, number>>({});
 
   /** Sube cada vez que `reconciliarEnvioLocal` reconcilia un envío PROPIO
    *  (nunca uno entrante). El hilo lo usa para saber que debe bajar al fondo
@@ -359,18 +357,6 @@ export class ConversacionesStateService {
     () => this.conversacionesFiltradas().length < this.totalFiltrado(),
   );
 
-  readonly sugerenciasAtajo = computed(() => {
-    const texto = this.mensajeNuevo().trim();
-    if (!texto.startsWith('/')) return [];
-    const busquedaAtajo = texto.toLowerCase();
-    const lista = this.plantillasAgente.value();
-    return lista.filter(
-      p =>
-        (p.atajo && p.atajo.toLowerCase().includes(busquedaAtajo)) ||
-        p.titulo.toLowerCase().includes(busquedaAtajo.substring(1)),
-    );
-  });
-
   /** Fecha en que el lead hizo clic en el anuncio de Meta Ads, si aplica. */
   readonly fechaCampanaMeta = computed<Date | null>(() => {
     const chat = this.detalleActual();
@@ -405,13 +391,6 @@ export class ConversacionesStateService {
     return horasDesdeCampana >= 0 && horasDesdeCampana < 72;
   });
 
-  readonly esLeadMetaAds = computed(() => {
-    const chat = this.detalleActual();
-    if (!chat) return false;
-    const datos = chat.cliente.datosExtra;
-    return Boolean(datos?.['campanaOrigen'] || datos?.['referral']);
-  });
-
   /** El texto libre siempre depende únicamente de la CSW de 24h. */
   readonly horasVentanaMeta = computed(() => 24);
 
@@ -428,25 +407,6 @@ export class ConversacionesStateService {
 
     const haceHoras = (Date.now() - new Date(ultimoEntrante.createdAt).getTime()) / (1000 * 60 * 60);
     return haceHoras >= 24;
-  });
-
-  /** Horas que quedan de la CSW de 24h antes de que se bloquee el texto libre. */
-  readonly horasRestantesVentana = computed(() => {
-    const chat = this.detalleActual();
-    if (!chat) return 0;
-    const ultimoEntrante = [...chat.mensajes].reverse().find(m => m.direccion === 'ENTRANTE');
-    if (!ultimoEntrante) return 0;
-
-    const haceHorasMsg = (Date.now() - new Date(ultimoEntrante.createdAt).getTime()) / (1000 * 60 * 60);
-    return Math.round(Math.max(0, 24 - haceHorasMsg) * 10) / 10;
-  });
-
-  readonly notaMedicaFijada = computed(() => {
-    const chat = this.detalleActual();
-    if (!chat) return null;
-    const datos = chat.cliente.datosExtra;
-    const texto = textoExtra(datos, 'notaFijada');
-    return texto || null;
   });
 
   /**
@@ -937,13 +897,6 @@ export class ConversacionesStateService {
     if (nuevoIdx < 0) nuevoIdx = lista.length - 1;
     if (nuevoIdx >= lista.length) nuevoIdx = 0;
     this.indiceCoincidencia.set(nuevoIdx);
-  }
-
-  cambiarVelocidadAudio(msgId: string, audioElement: HTMLAudioElement): void {
-    const actual = this.velocidadesAudio()[msgId] ?? 1;
-    const siguiente = actual === 1 ? 1.5 : actual === 1.5 ? 2 : 1;
-    audioElement.playbackRate = siguiente;
-    this.velocidadesAudio.update(v => ({ ...v, [msgId]: siguiente }));
   }
 
   /**
