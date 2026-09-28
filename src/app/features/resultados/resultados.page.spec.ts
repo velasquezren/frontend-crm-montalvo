@@ -27,6 +27,7 @@ const base: EntregaResultado = {
   pacientePortal: { nombre: 'Paciente', pac: 'PAC33009', ci: null },
   aviso: null,
   abiertoEn: null,
+  enlace: 'https://resultados.ejemplo/resultados/acc-1',
 };
 
 describe('cuándo se puede entregar un resultado', () => {
@@ -121,5 +122,23 @@ describe('quién ve la entrega de resultados en el menú', () => {
   it('el menú coincide con puedeEntregarResultados para todos los roles', () => {
     const roles: RolUsuario[] = ['RECEPCION', 'ASISTENTE', 'AGENTE', 'ADMIN', 'SUPER_ADMIN'];
     for (const rol of roles) expect(ve(rol)).toBe(puedeEntregarResultados(rol));
+  });
+});
+
+/* El enlace es el MISMO que recibe el paciente: sirve para comprobar qué PDF se
+   va a mandar ANTES de mandarlo, que es la única forma de no enviar el informe
+   de otra persona. */
+describe('el enlace del informe', () => {
+  it('lo arma el servidor, no la pantalla', () => {
+    // Si algún día la pantalla lo construye concatenando un dominio, el día del
+    // dominio propio habría que tocar el frontend en vez de una variable.
+    expect(base.enlace.startsWith('http')).toBe(true);
+    expect(base.enlace).toContain('/resultados/');
+  });
+
+  it('existe aunque la fila no se pueda enviar: para eso está', () => {
+    const sinFicha: EntregaResultado = { ...base, paciente: null, sinFicha: 'SIN_COINCIDENCIA', vinculo: null };
+    expect(sePuedeEntregar(sinFicha)).toBe(false);
+    expect(sinFicha.enlace).toBe(base.enlace);
   });
 });

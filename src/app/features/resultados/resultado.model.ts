@@ -29,6 +29,12 @@ export interface EntregaResultado {
   readonly aviso: { readonly enviadoEn: string; readonly estadoMensaje: EstadoMensaje | null } | null;
   /** Primera vez que el paciente abrió su informe. Entregado no es visto: esto sí. */
   readonly abiertoEn: string | null;
+  /**
+   * El MISMO enlace que recibe el paciente: sirve para comprobar qué PDF se va
+   * a enviar antes de mandarlo. Lo arma el servidor, así que el día que haya
+   * dominio propio no hay que tocar esta pantalla.
+   */
+  readonly enlace: string;
 }
 
 /**

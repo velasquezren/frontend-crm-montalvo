@@ -33,6 +33,12 @@
               <p class="font-medium text-text-dark">{{ ficha | nombreCliente }}</p>
               <div class="crm-meta crm-meta-sm mt-0.5">
                 <span class="crm-meta-clave">{{ ficha.telefono }}</span>
+                <button
+                  type="button"
+                  class="text-primary hover:underline inline-flex items-center gap-1"
+                  (click)="abrirTelefono(fila)">
+                  <app-icon name="edit" [size]="12" />Cambiar
+                </button>
                 @if (fila.vinculo === 'CI') { <span>Vinculado por CI</span> }
               </div>
               <!-- Con CI el cruce es por un número tecleado en dos sistemas:
@@ -48,7 +54,16 @@
               </div>
             }
           </td>
-          <td class="text-left">{{ fila.estudio }}</td>
+          <td class="text-left">
+            {{ fila.estudio }}
+            <a
+              [href]="fila.enlace"
+              target="_blank"
+              rel="noopener"
+              class="mt-0.5 text-xs text-primary font-bold hover:underline flex items-center gap-1.5">
+              <app-icon name="external-link" [size]="12" />Ver el informe
+            </a>
+          </td>
           <td class="text-left">{{ fila.fechaEstudio | date: 'd MMM y' : 'UTC' }}</td>
           <td class="text-left">
             @let estado = estadoEntrega(fila);
@@ -134,6 +149,30 @@
       <app-button icon="message-circle" (clicked)="confirmarEnvio()">
         {{ candidato()?.renovar ? 'Renovar y enviar' : 'Enviar aviso' }}
       </app-button>
+    </div>
+  </div>
+</ng-template>
+
+<!-- El aviso va al número de la FICHA del CRM, no al del portal. Corregirlo
+     aquí evita salir a Clientes y volver, con el mensaje ya a punto de salir. -->
+<ng-template #editarTelefono>
+  <div class="pointer-events-auto w-full max-w-sm bg-background rounded-2xl shadow-lifted p-6 animate-modal-pop">
+    @if (editando(); as ficha) {
+      <h2 class="text-base font-bold text-text-dark">Teléfono de {{ ficha.nombre }}</h2>
+      <p class="mt-2 text-sm text-text-muted">
+        Es el número al que saldrá el aviso. Con código de país, por ejemplo +59170000000.
+      </p>
+      <input
+        class="crm-input mt-4 w-full tabular-nums"
+        type="tel"
+        inputmode="tel"
+        autocomplete="off"
+        [value]="telefonoNuevo()"
+        (input)="telefonoNuevo.set($any($event.target).value)" />
+    }
+    <div class="mt-6 flex justify-end gap-3">
+      <app-button variant="ghost" [disabled]="guardandoTelefono()" (clicked)="cerrarTelefono()">Cancelar</app-button>
+      <app-button icon="check" [loading]="guardandoTelefono()" (clicked)="guardarTelefono()">Guardar</app-button>
     </div>
   </div>
 </ng-template>

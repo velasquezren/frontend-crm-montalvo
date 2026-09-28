@@ -10,6 +10,7 @@ import { ButtonComponent } from '../../shared/components/button/button.component
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
+import { IconComponent } from '../../shared/components/icon/icon.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
@@ -17,6 +18,7 @@ import { TableComponent } from '../../shared/components/table/table.component';
 import { nombreParaMostrar } from '../../shared/models/nombre-cliente';
 import { NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { ToastService } from '../../core/toast/toast.service';
+import { ClientesService } from '../clientes/clientes.service';
 import { EntregaResultado, estadoEntrega, motivoBloqueo, nombresDistintos, sePuedeEntregar, sePuedeRenovar } from './resultado.model';
 import { ResultadosService } from './resultados.service';
 
@@ -37,6 +39,7 @@ import { ResultadosService } from './resultados.service';
     ButtonComponent,
     EmptyStateComponent,
     ErrorCargaComponent,
+    IconComponent,
     LoadingSkeletonComponent,
     NombreClientePipe,
     PageHeaderComponent,
@@ -51,7 +54,12 @@ export class ResultadosPage {
   private readonly vcr = inject(ViewContainerRef);
   private readonly toast = inject(ToastService);
 
+  /* El dueño de la ficha del paciente es Clientes: el teléfono se corrige por
+     su service, no con una ruta propia de esta pantalla. */
+  private readonly clientesService = inject(ClientesService);
+
   private readonly plantillaConfirmar = viewChild.required<TemplateRef<unknown>>('confirmar');
+  private readonly plantillaTelefono = viewChild.required<TemplateRef<unknown>>('editarTelefono');
   private overlay: OverlayRef | null = null;
 
   protected readonly pagina = signal(1);
@@ -72,6 +80,48 @@ export class ResultadosPage {
   protected readonly motivoBloqueo = motivoBloqueo;
   protected readonly estadoEntrega = estadoEntrega;
   protected readonly distintos = nombresDistintos;
+
+  /** Ficha cuyo teléfono se está corrigiendo, y el valor tecleado. */
+  protected readonly editando = signal<{ id: string; nombre: string } | null>(null);
+  protected readonly telefonoNuevo = signal('');
+  protected readonly guardandoTelefono = signal(false);
+
+  /**
+   * El número al que va el mensaje sale de la ficha del CRM, no del portal. Si
+   * está mal, hasta ahora había que salir a Clientes, buscar y volver — y el
+   * aviso se manda una sola vez.
+   */
+  protected abrirTelefono(fila: EntregaResultado): void {
+    if (!fila.paciente) return;
+    this.editando.set({ id: fila.paciente.id, nombre: nombreParaMostrar(fila.paciente) });
+    this.telefonoNuevo.set(fila.paciente.telefono);
+    this.overlay = this.dialog.openTemplate(this.plantillaTelefono(), this.vcr);
+  }
+
+  protected cerrarTelefono(): void {
+    this.overlay?.dispose();
+    this.overlay = null;
+    this.editando.set(null);
+  }
+
+  protected async guardarTelefono(): Promise<void> {
+    const ficha = this.editando();
+    const telefono = this.telefonoNuevo().trim();
+    if (!ficha || !telefono) return;
+    this.guardandoTelefono.set(true);
+    try {
+      await this.clientesService.actualizar(ficha.id, { telefono });
+      this.cerrarTelefono();
+      this.toast.success('El aviso saldrá a ese número.', 'Teléfono actualizado');
+      this.entregas.reload();
+    } catch (err) {
+      /* El teléfono es único en el CRM: si ya es de otra ficha, el backend lo
+         dice y hay que resolver el duplicado, no insistir aquí. */
+      this.toast.error(mensajeDeError(err, 'No se pudo cambiar el teléfono.'), 'Error');
+    } finally {
+      this.guardandoTelefono.set(false);
+    }
+  }
 
   protected pedirConfirmacion(fila: EntregaResultado, renovar = false): void {
     this.candidato.set({ fila, renovar });
