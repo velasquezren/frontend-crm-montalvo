@@ -1,7 +1,7 @@
 import { validarPaginaInbox, validarResumenInbox } from './validar-canal';
 import { inject, Injectable } from '@angular/core';
 
-import { ApiService, ResourceRequest } from '../../core/api/api.service';
+import { ApiService, QueryParams, ResourceRequest } from '../../core/api/api.service';
 import {
   ConversacionDetalle,
   ConversacionIniciada,
@@ -10,6 +10,24 @@ import {
   PaginaInbox,
   ResumenInbox,
 } from './conversacion.model';
+
+/**
+ * Los filtros del inbox tal como los entiende `GET /conversaciones`.
+ *
+ * Una sola vez para las tres lecturas —la página del recurso, «cargar más» y
+ * el resumen de una fila por tiempo real—: si una añade un filtro y otra no,
+ * la fila que llega por socket se evalúa contra una pestaña distinta de la que
+ * se está viendo.
+ */
+function parametrosInbox(filtros: FiltrosInbox): QueryParams {
+  return {
+    lineaId: filtros.lineaId ?? undefined,
+    tab: filtros.tab === 'TODAS' ? undefined : filtros.tab,
+    busqueda: filtros.busqueda.trim() || undefined,
+    agenteId: filtros.agenteId ?? undefined,
+    soloMios: filtros.soloMios ? 'true' : undefined,
+  };
+}
 
 /** Lo que viaja al mandar una plantilla. Sin texto: lo compone el servidor. */
 export interface EnvioPlantilla {
@@ -41,11 +59,7 @@ export class ConversacionesService {
    */
   listarRequest(filtros: FiltrosInbox, pagina = 1): ResourceRequest {
     return this.api.request('/conversaciones', {
-      lineaId: filtros.lineaId ?? undefined,
-      tab: filtros.tab === 'TODAS' ? undefined : filtros.tab,
-      busqueda: filtros.busqueda.trim() || undefined,
-      agenteId: filtros.agenteId ?? undefined,
-      soloMios: filtros.soloMios ? 'true' : undefined,
+      ...parametrosInbox(filtros),
       pagina: pagina > 1 ? String(pagina) : undefined,
     });
   }
@@ -53,11 +67,7 @@ export class ConversacionesService {
   /** Una página del inbox como promesa — para el botón "cargar más". */
   async listarPagina(filtros: FiltrosInbox, pagina: number): Promise<PaginaInbox> {
     return validarPaginaInbox(await this.api.get<unknown>('/conversaciones', {
-      lineaId: filtros.lineaId ?? undefined,
-      tab: filtros.tab === 'TODAS' ? undefined : filtros.tab,
-      busqueda: filtros.busqueda.trim() || undefined,
-      agenteId: filtros.agenteId ?? undefined,
-      soloMios: filtros.soloMios ? 'true' : undefined,
+      ...parametrosInbox(filtros),
       pagina: String(pagina),
     }));
   }
@@ -70,13 +80,9 @@ export class ConversacionesService {
    * vista la quita en vez de dejar una fila que ya no corresponde.
    */
   async resumenParaInbox(id: string, filtros: FiltrosInbox): Promise<ResumenInbox> {
-    return validarResumenInbox(await this.api.get<unknown>(`/conversaciones/${id}/resumen`, {
-      lineaId: filtros.lineaId ?? undefined,
-      tab: filtros.tab === 'TODAS' ? undefined : filtros.tab,
-      busqueda: filtros.busqueda.trim() || undefined,
-      agenteId: filtros.agenteId ?? undefined,
-      soloMios: filtros.soloMios ? 'true' : undefined,
-    }));
+    return validarResumenInbox(
+      await this.api.get<unknown>(`/conversaciones/${id}/resumen`, parametrosInbox(filtros)),
+    );
   }
 
   detalleRequest(id: string): ResourceRequest {
