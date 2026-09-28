@@ -67,7 +67,12 @@
           <div
             class="fila-periodo"
             [class.fila-periodo--reciente]="first"
-            (click)="seleccionar(p.id)">
+            tabindex="0"
+            role="button"
+            [attr.aria-label]="'Abrir ' + nombreMes(p.mes) + ' ' + p.anio"
+            (click)="seleccionar(p.id)"
+            (keydown.enter)="seleccionar(p.id)"
+            (keydown.space)="$event.preventDefault(); seleccionar(p.id)">
             <!-- Mes y Año -->
             <div class="flex items-center gap-2 min-w-[160px]">
               <app-icon name="calendar" [size]="14" [class.text-primary]="first" [class.text-text-muted]="!first" />

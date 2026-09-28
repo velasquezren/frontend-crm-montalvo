@@ -188,7 +188,12 @@
               <tr
                 class="fila-interactiva"
                 [class.fila-activa]="p.id === periodoId()"
-                (click)="abrirPeriodo(p.id)">
+                tabindex="0"
+                role="button"
+                [attr.aria-label]="'Abrir ' + nombreMes(p.mes) + ' ' + p.anio"
+                (click)="abrirPeriodo(p.id)"
+                (keydown.enter)="abrirPeriodo(p.id)"
+                (keydown.space)="$event.preventDefault(); abrirPeriodo(p.id)">
                 <td class="text-left font-semibold text-text-dark">{{ nombreMes(p.mes) }} {{ p.anio }}</td>
                 <td class="text-center">
                   <app-badge [variant]="estadoPeriodoBadge[p.estado]">

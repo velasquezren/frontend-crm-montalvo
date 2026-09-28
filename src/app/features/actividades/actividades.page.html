@@ -214,7 +214,12 @@
             <tr
               class="cursor-pointer hover:bg-bg-workspace/60 transition-colors"
               [class.crm-vencida]="esVencida(actividad)"
-              (click)="abrirDetalle(actividad)">
+              tabindex="0"
+              role="button"
+              [attr.aria-label]="'Ver actividad de ' + (actividad.cliente | nombreCliente)"
+              (click)="abrirDetalle(actividad)"
+              (keydown.enter)="abrirDetalle(actividad)"
+              (keydown.space)="$event.preventDefault(); abrirDetalle(actividad)">
               <td class="text-left">
                 <span class="crm-tipo">
                   <app-icon [name]="tipoIcono[actividad.tipo]" [size]="14" />
@@ -327,7 +332,12 @@
         <div
           class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-3 cursor-pointer hover:border-primary/40 transition-colors"
           [class.crm-vencida]="rel.urgente"
-          (click)="abrirDetalle(actividad)">
+          tabindex="0"
+          role="button"
+          [attr.aria-label]="'Ver actividad de ' + (actividad.cliente | nombreCliente)"
+          (click)="abrirDetalle(actividad)"
+          (keydown.enter)="abrirDetalle(actividad)"
+          (keydown.space)="$event.preventDefault(); abrirDetalle(actividad)">
 
           <!-- Cabecera Móvil: Tipo + Momento + Estado -->
           <div class="flex items-center justify-between gap-2">
