@@ -3,9 +3,9 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   effect,
   inject,
-  OnDestroy,
   untracked,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -74,7 +74,7 @@ export function debeRefrescar(ticks: number, conectado: boolean, oculto: boolean
   templateUrl: './conversaciones.page.html',
   styleUrl: './conversaciones.page.css',
 })
-export class ConversacionesPage implements AfterViewInit, OnDestroy {
+export class ConversacionesPage implements AfterViewInit {
   protected readonly state = inject(ConversacionesStateService);
   private readonly conversacionesService = inject(ConversacionesService);
   private readonly realtimeService = inject(RealtimeService);
@@ -83,9 +83,8 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  private pollingInterval: ReturnType<typeof setInterval> | null = null;
-  private alVolverAlFrente: (() => void) | null = null;
   private ticksDesdeUltimoRefresco = 0;
 
   /** Chat abierto según la URL. */
@@ -287,15 +286,6 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
     this.startPolling();
   }
 
-  ngOnDestroy(): void {
-    if (this.pollingInterval) {
-      clearInterval(this.pollingInterval);
-    }
-    if (this.alVolverAlFrente) {
-      document.removeEventListener('visibilitychange', this.alVolverAlFrente);
-    }
-  }
-
   /**
    * Respaldo por temporizador — y respaldo de verdad, no un segundo canal.
    *
@@ -316,7 +306,7 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
    * lo que se habría preguntado mientras no se veía.
    */
   private startPolling(): void {
-    this.pollingInterval = setInterval(() => {
+    const intervalo = setInterval(() => {
       this.ticksDesdeUltimoRefresco++;
       if (!debeRefrescar(this.ticksDesdeUltimoRefresco, this.realtimeService.conectado(), document.hidden)) {
         return;
@@ -328,7 +318,7 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
 
     /* Volver a la pestaña es la señal más fuerte de que alguien quiere ver algo
        al día: se refresca una vez y se reinicia la cuenta. */
-    this.alVolverAlFrente = () => {
+    const alVolverAlFrente = () => {
       if (document.hidden) return;
       this.ticksDesdeUltimoRefresco = 0;
       this.refrescar();
@@ -337,7 +327,12 @@ export class ConversacionesPage implements AfterViewInit, OnDestroy {
       const abierta = this.state.seleccionadaId();
       if (abierta) void this.conversacionesService.marcarLeido(abierta, false).catch(() => {});
     };
-    document.addEventListener('visibilitychange', this.alVolverAlFrente);
+    document.addEventListener('visibilitychange', alVolverAlFrente);
+
+    this.destroyRef.onDestroy(() => {
+      clearInterval(intervalo);
+      document.removeEventListener('visibilitychange', alVolverAlFrente);
+    });
   }
 
   private refrescar(): void {

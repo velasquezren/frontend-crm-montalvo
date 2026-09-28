@@ -9,7 +9,7 @@ import {
   input,
   signal,
   TemplateRef,
-  ViewChild,
+  viewChild,
   ViewContainerRef,
 } from '@angular/core';
 
@@ -75,8 +75,8 @@ export class InfoHintComponent {
 
   protected readonly abierto = signal(false);
 
-  @ViewChild('disparador', { static: true }) private disparador!: ElementRef<HTMLElement>;
-  @ViewChild('panel', { static: true }) private panel!: TemplateRef<unknown>;
+  private readonly disparador = viewChild.required<ElementRef<HTMLElement>>('disparador');
+  private readonly panel = viewChild.required<TemplateRef<unknown>>('panel');
 
   private overlayRef?: OverlayRef;
 
@@ -101,7 +101,7 @@ export class InfoHintComponent {
       scrollStrategy: this.overlay.scrollStrategies.reposition(),
       positionStrategy: this.overlay
         .position()
-        .flexibleConnectedTo(this.disparador)
+        .flexibleConnectedTo(this.disparador())
         .withPush(true)
         .withPositions([
           { originX: 'center', originY: 'bottom', overlayX: 'center', overlayY: 'top', offsetY: 8 },
@@ -110,7 +110,7 @@ export class InfoHintComponent {
         ]),
     });
 
-    this.overlayRef.attach(new TemplatePortal(this.panel, this.vcr));
+    this.overlayRef.attach(new TemplatePortal(this.panel(), this.vcr));
     this.overlayRef.backdropClick().subscribe(() => this.cerrar());
     this.overlayRef.keydownEvents().subscribe(e => {
       if (e.key === 'Escape') this.cerrar();

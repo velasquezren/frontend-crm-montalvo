@@ -5,7 +5,6 @@ import {
   computed,
   effect,
   inject,
-  OnDestroy,
   signal,
   TemplateRef,
   viewChild,
@@ -78,7 +77,7 @@ function tipoBase(mime: string): string {
   templateUrl: './conversacion-composer.component.html',
   styleUrl: './conversacion-composer.component.css',
 })
-export class ConversacionComposerComponent implements OnDestroy {
+export class ConversacionComposerComponent {
   protected readonly state = inject(ConversacionesStateService);
   private readonly conversacionesService = inject(ConversacionesService);
   /** Textos con un POST en vuelo: frena el doble submit sin frenar el uso rápido. */
@@ -218,10 +217,6 @@ export class ConversacionComposerComponent implements OnDestroy {
       this.ultimoTypingPorChat.set(id, ahora);
       void this.conversacionesService.marcarLeido(id, true).catch(() => {});
     });
-  }
-
-  ngOnDestroy(): void {
-    this.overlayRef?.dispose();
   }
 
   /* ── Drag & Drop de Archivos ───────────────────────────────────── */

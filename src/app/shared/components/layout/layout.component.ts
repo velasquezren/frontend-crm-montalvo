@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { MonedaService } from '../../../core/moneda/moneda.service';
@@ -34,6 +34,11 @@ import { NAV_GROUPS } from './nav-items';
     ToastContainerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '(window:beforeinstallprompt)': 'onBeforeInstallPrompt($event)',
+    '(window:appinstalled)': 'onAppInstalled()',
+    '(document:click)': 'onDocumentClick($event)',
+  },
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css',
 })
@@ -106,7 +111,6 @@ export class LayoutComponent {
   private deferredPrompt: BeforeInstallPromptEvent | null = null;
   protected readonly showInstallBanner = signal(false);
 
-  @HostListener('window:beforeinstallprompt', ['$event'])
   onBeforeInstallPrompt(event: BeforeInstallPromptEvent): void {
     // Prevent the default browser prompt
     event.preventDefault();
@@ -118,7 +122,6 @@ export class LayoutComponent {
     }
   }
 
-  @HostListener('window:appinstalled')
   onAppInstalled(): void {
     this.deferredPrompt = null;
     this.showInstallBanner.set(false);
@@ -284,7 +287,6 @@ export class LayoutComponent {
     }
   }
 
-  @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     if (!this.sidebarExpanded()) return;
     // En escritorio el sidebar es parte del layout docked flow, no se cierra al hacer clic en el workspace

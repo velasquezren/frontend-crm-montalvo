@@ -2,7 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
-  ViewChild,
+  viewChild,
   computed,
   effect,
   EffectCleanupRegisterFn,
@@ -108,7 +108,7 @@ export class PerfilPage {
     this.recursosMemoriaRecurso.reload();
   }
 
-  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  private readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
 
   protected readonly perfilForm = new FormGroup({
     nombre: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -153,7 +153,7 @@ export class PerfilPage {
   }
 
   protected triggerFileInput(): void {
-    this.fileInput.nativeElement.click();
+    this.fileInput()?.nativeElement.click();
   }
 
   protected async onFileSelected(event: Event): Promise<void> {
@@ -208,9 +208,8 @@ export class PerfilPage {
 
   protected removeFoto(): void {
     this.previewFoto.set(null);
-    if (this.fileInput) {
-      this.fileInput.nativeElement.value = '';
-    }
+    const input = this.fileInput();
+    if (input) input.nativeElement.value = '';
   }
 
   protected onSubmit(): void {

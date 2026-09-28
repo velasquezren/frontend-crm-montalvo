@@ -4,7 +4,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   EffectCleanupRegisterFn,
-  OnDestroy,
   TemplateRef,
   ViewContainerRef,
   computed,
@@ -106,7 +105,7 @@ const TIPOS: readonly TipoActividad[] = ['LLAMADA', 'REUNION', 'TAREA', 'RECORDA
   ],
   templateUrl: './actividades.page.html',
 })
-export class ActividadesPage implements OnDestroy {
+export class ActividadesPage {
   private readonly actividadesService = inject(ActividadesService);
   private readonly authService = inject(AuthService);
   private readonly toast = inject(ToastService);
@@ -201,12 +200,6 @@ export class ActividadesPage implements OnDestroy {
         this.resumen.reload();
       });
     });
-  }
-
-  ngOnDestroy(): void {
-    this.activeOverlayRef?.dispose();
-    this.activeDrawerRef?.dispose();
-    this.overlayCancelar?.dispose();
   }
 
   /** Agentes comerciales activos para selector de filtrado (solo ADMIN). */

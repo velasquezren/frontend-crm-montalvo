@@ -5,7 +5,6 @@ import {
   Component,
   DestroyRef,
   ElementRef,
-  HostListener,
   computed,
   effect,
   inject,
@@ -54,6 +53,7 @@ function finDeHoyIso(): string {
   imports: [
     NombreClientePipe,ButtonComponent, DatePipe, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(document:click)': 'onDocumentClick($event)' },
   templateUrl: './notificaciones-bell.component.html',
   styleUrl: './notificaciones-bell.component.css',
 })
@@ -167,7 +167,6 @@ export class NotificacionesBellComponent {
     this.abierto.set(false);
   }
 
-  @HostListener('document:click', ['$event'])
   protected onDocumentClick(event: MouseEvent): void {
     if (!this.abierto()) return;
     if (!this.elementRef.nativeElement.contains(event.target)) {

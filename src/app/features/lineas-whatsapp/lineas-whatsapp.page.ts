@@ -4,7 +4,6 @@ import {
   computed,
   inject,
   signal,
-  OnDestroy,
   TemplateRef,
   ViewContainerRef,
 } from '@angular/core';
@@ -50,10 +49,7 @@ import { LineasWhatsappService } from './lineas-whatsapp.service';
   ],
   templateUrl: './lineas-whatsapp.page.html',
 })
-export class LineasWhatsappPage implements OnDestroy {
-  ngOnDestroy(): void {
-    this.overlay?.dispose();
-  }
+export class LineasWhatsappPage {
   private readonly service = inject(LineasWhatsappService);
   private readonly dialog = inject(DialogService);
   private readonly vcr = inject(ViewContainerRef);

@@ -7,7 +7,6 @@ import {
   effect,
   EffectCleanupRegisterFn,
   inject,
-  OnDestroy,
   signal,
   TemplateRef,
   untracked,
@@ -172,7 +171,7 @@ function calcularRangoFechas(
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './ventas.page.html',
 })
-export class VentasPage implements OnDestroy {
+export class VentasPage {
   /* Los KPI se formatean con el servicio y no con `formatearBs`, que imprimía
      siempre "Bs": leer aquí la señal de moneda hace que este computed se
      recalcule al pulsar el selector, y así las tarjetas dejan de contradecir a
@@ -363,11 +362,6 @@ export class VentasPage implements OnDestroy {
       });
     });
   }
-  ngOnDestroy(): void {
-    this.activeOverlayRef?.dispose();
-    this.activeDrawerRef?.dispose();
-  }
-
   protected abrirFormulario(template: TemplateRef<unknown>): void {
     this.pacienteFormulario.set(null);
     this.leadFormulario.set(null);

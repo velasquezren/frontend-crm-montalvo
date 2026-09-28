@@ -6,11 +6,11 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   EffectCleanupRegisterFn,
   inject,
   input,
-  OnDestroy,
   signal,
   untracked,
   TemplateRef,
@@ -117,7 +117,7 @@ interface VentasConTotales extends RespuestaPaginada<VentaImportada> {
   templateUrl: './planilla-comisiones.page.html',
   styleUrl: './planilla-comisiones.page.css',
 })
-export class PlanillaComisionesPage implements OnDestroy {
+export class PlanillaComisionesPage {
   readonly embedded = input(false);
 
   /**
@@ -440,6 +440,10 @@ export class PlanillaComisionesPage implements OnDestroy {
     if (typeof window !== 'undefined') {
       window.addEventListener('dragover', this.preventDefaultDrag);
       window.addEventListener('drop', this.preventDefaultDrag);
+      inject(DestroyRef).onDestroy(() => {
+        window.removeEventListener('dragover', this.preventDefaultDrag);
+        window.removeEventListener('drop', this.preventDefaultDrag);
+      });
     }
 
     effect((onCleanup: EffectCleanupRegisterFn) => {
@@ -479,13 +483,6 @@ export class PlanillaComisionesPage implements OnDestroy {
        ver el docblock de `usarTipoCambioDePeriodo`. Restaura el global sola
        al destruirse, así que no hace falta nada más aquí para eso. */
     usarTipoCambioDePeriodo(this.activo, this.periodoActual);
-  }
-
-  ngOnDestroy(): void {
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('dragover', this.preventDefaultDrag);
-      window.removeEventListener('drop', this.preventDefaultDrag);
-    }
   }
 
   /* ── Recursos ───────────────────────────────────────────────────────── */

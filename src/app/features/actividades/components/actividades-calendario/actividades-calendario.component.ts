@@ -1,7 +1,7 @@
 // Schedule-X usa el global y valida con instanceof. Debe ser la misma
 // implementación que convierte nuestras fechas, incluso con Temporal nativo.
 import 'temporal-polyfill/global';
-import { ChangeDetectionStrategy, Component, OnDestroy, ViewEncapsulation, effect, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ViewEncapsulation, effect, inject, input, output } from '@angular/core';
 import { CalendarComponent as SxCalendarComponent } from '@schedule-x/angular';
 import {
   CalendarApp,
@@ -155,7 +155,7 @@ function aEventoCalendario(a: Actividad): CalendarEventExternal {
   ],
   encapsulation: ViewEncapsulation.None,
 })
-export class ActividadesCalendarioComponent implements OnDestroy {
+export class ActividadesCalendarioComponent {
   readonly actividades = input.required<readonly Actividad[]>();
 
   /** Clic en un evento — la página abre su cajón de detalle. */
@@ -216,11 +216,9 @@ export class ActividadesCalendarioComponent implements OnDestroy {
     effect(() => {
       this.eventosServicio.set(this.actividades().map(aEventoCalendario));
     });
-  }
 
-  ngOnDestroy(): void {
     // El adaptador Angular no destruye CalendarApp: libera plugins y timers
     // al volver a Lista o navegar a otra pantalla.
-    this.calendarApp.destroy();
+    inject(DestroyRef).onDestroy(() => this.calendarApp.destroy());
   }
 }
