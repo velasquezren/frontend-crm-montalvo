@@ -27,7 +27,6 @@ const base: EntregaResultado = {
   pacientePortal: { nombre: 'Paciente', pac: 'PAC33009', ci: null },
   aviso: null,
   abiertoEn: null,
-  enlace: 'https://resultados.ejemplo/resultados/acc-1',
 };
 
 describe('cuándo se puede entregar un resultado', () => {
@@ -125,21 +124,20 @@ describe('quién ve la entrega de resultados en el menú', () => {
   });
 });
 
-/* El enlace es el MISMO que recibe el paciente: sirve para comprobar qué PDF se
-   va a mandar ANTES de mandarlo, que es la única forma de no enviar el informe
-   de otra persona. */
-describe('el enlace del informe', () => {
-  it('lo arma el servidor, no la pantalla', () => {
-    // Si algún día la pantalla lo construye concatenando un dominio, el día del
-    // dominio propio habría que tocar el frontend en vez de una variable.
-    expect(base.enlace.startsWith('http')).toBe(true);
-    expect(base.enlace).toContain('/resultados/');
+/* Revisar el informe NO puede parecer que lo vio la paciente: «abierto» es la
+   señal con la que recepción decide a quién seguir. Por eso la fila no trae el
+   enlace del paciente — se quitó a propósito — y el PDF lo sirve el CRM. */
+describe('revisar el informe antes de enviarlo', () => {
+  it('la fila no expone el enlace del paciente', () => {
+    // Si alguien lo vuelve a añadir y la pantalla enlaza ahí, abrir para
+    // comprobar marcaría «Abierto por el paciente» y la señal se vuelve mentira.
+    expect('enlace' in base).toBe(false);
   });
 
-  it('existe aunque la fila no se pueda enviar: para eso está', () => {
+  it('se puede revisar aunque la fila no se pueda enviar: para eso está', () => {
     const sinFicha: EntregaResultado = { ...base, paciente: null, sinFicha: 'SIN_COINCIDENCIA', vinculo: null };
     expect(sePuedeEntregar(sinFicha)).toBe(false);
-    expect(sinFicha.enlace).toBe(base.enlace);
+    expect(sinFicha.informeId).toBe(base.informeId);
   });
 });
 

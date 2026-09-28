@@ -56,13 +56,14 @@
           </td>
           <td class="text-left">
             {{ fila.estudio }}
-            <a
-              [href]="fila.enlace"
-              target="_blank"
-              rel="noopener"
-              class="mt-0.5 text-xs text-primary font-bold hover:underline flex items-center gap-1.5">
-              <app-icon name="external-link" [size]="12" />Ver el informe
-            </a>
+            <button
+              type="button"
+              class="mt-0.5 text-xs text-primary font-bold hover:underline flex items-center gap-1.5 disabled:opacity-50"
+              [disabled]="abriendo() === fila.informeId"
+              (click)="verInforme(fila)">
+              <app-icon name="eye" [size]="12" />
+              {{ abriendo() === fila.informeId ? 'Abriendo…' : 'Ver el informe' }}
+            </button>
           </td>
           <td class="text-left">{{ fila.fechaEstudio | date: 'd MMM y' : 'UTC' }}</td>
           <td class="text-left">

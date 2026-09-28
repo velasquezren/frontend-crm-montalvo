@@ -124,6 +124,33 @@ export class ResultadosPage {
     }
   }
 
+  /** Informe cuyo PDF se está trayendo para revisarlo. */
+  protected readonly abriendo = signal<string | null>(null);
+
+  /**
+   * Abre el PDF en otra pestaña para comprobar qué informe se va a enviar.
+   *
+   * No enlaza al enlace del paciente a propósito: ese marca «abierto por el
+   * paciente», y usarlo para revisar convertiría en mentira la única señal que
+   * dice a quién hay que seguir. El PDF lo sirve el CRM, autenticado.
+   */
+  protected async verInforme(fila: EntregaResultado): Promise<void> {
+    if (this.abriendo()) return;
+    this.abriendo.set(fila.informeId);
+    try {
+      const pdf = await this.resultadosService.pdf(fila.informeId);
+      const url = URL.createObjectURL(pdf);
+      window.open(url, '_blank', 'noopener');
+      /* El objeto vive hasta que la pestaña lo carga; liberarlo al instante la
+         dejaría en blanco. Un minuto basta y no acumula memoria. */
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      this.toast.error(mensajeDeError(err, 'No se pudo abrir el informe.'), 'Error');
+    } finally {
+      this.abriendo.set(null);
+    }
+  }
+
   /** Paciente del portal que no tiene ficha: se está creando la suya. */
   protected readonly creando = signal<EntregaResultado | null>(null);
   protected readonly telefonoAlta = signal('');
