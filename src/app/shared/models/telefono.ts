@@ -42,14 +42,26 @@ export function enlaceLlamada(telefono: string | null | undefined): string {
 }
 
 /**
+ * El aviso cuando `telefonoParaEscribir` no reconoce lo tecleado. Uno solo:
+ * cada formulario tenía el suyo y ninguno decía lo mismo.
+ */
+export const AVISO_TELEFONO_INVALIDO = 'Escribe un celular de 8 dígitos (70012345) o con código de país (+34…).';
+
+/**
  * Lo que la agente escribe como destino de un chat nuevo, en E.164
  * (`70012345` → `+59170012345`), o `null` si no parece un teléfono.
  *
- * Sirve para mostrar «Escribir a +591 7001 2345» mientras teclea y, en
- * Resultados, para mandar el número ya con `+`: el DTO de Clientes exige
- * formato internacional y un `70012345` a secas volvía como error. La
- * normalización que vale sigue siendo la del backend (`normalizarTelefono`),
- * que conoce la numeración de cada país. Sin prefijo se asume Bolivia.
+ * Es la ÚNICA regla de teléfono del frontend: la usan el chat nuevo, las
+ * altas (Clientes, Leads, Registro presencial, el alta express de
+ * Actividades) y Resultados. El DTO del backend exige formato internacional
+ * (`@IsPhoneNumber()` sin región), así que un `70012345` a secas volvía como
+ * error; aquí sale ya con `+`. Había cuatro copias y no coincidían: dos
+ * aceptaban cualquier número de 8 dígitos y `+` con 9-13, otra solo
+ * normalizaba sin validar y Clientes mandaba lo tecleado tal cual.
+ *
+ * La normalización que vale sigue siendo la del backend
+ * (`normalizarTelefono`), que conoce la numeración de cada país. Sin prefijo
+ * se asume Bolivia.
  */
 export function telefonoParaEscribir(valor: string): string | null {
   const texto = valor.trim();

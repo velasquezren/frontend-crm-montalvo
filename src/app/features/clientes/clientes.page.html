@@ -226,7 +226,8 @@
             <app-input
               label="Teléfono / WhatsApp *"
               type="tel"
-              placeholder="Ej. +59170000000"
+              placeholder="70012345 o +591…"
+              [error]="errorTelefono()"
               [(value)]="editTelefono" />
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -485,7 +486,8 @@
                 <app-input
                   label="Teléfono / WhatsApp *"
                   type="tel"
-                  placeholder="Ej. +59170000000"
+                  placeholder="70012345 o +591…"
+                  [error]="errorTelefono()"
                   [(value)]="editTelefono" />
               </div>
 

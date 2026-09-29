@@ -67,4 +67,13 @@ describe('telefonoParaEscribir', () => {
     expect(telefonoParaEscribir('María')).toBeNull();
     expect(telefonoParaEscribir('1234')).toBeNull();
   });
+
+  /* Las altas tenían su propia copia que aceptaba CUALQUIER número de 8
+     dígitos y le pegaba +591. Un 8 o un 9 delante no es un número de Bolivia:
+     salía una ficha con un teléfono al que nunca llegaría un WhatsApp. */
+  it('un número local que no empieza como en Bolivia no se inventa el +591', () => {
+    expect(telefonoParaEscribir('80012345')).toBeNull();
+    expect(telefonoParaEscribir('90012345')).toBeNull();
+    expect(telefonoParaEscribir('22123456')).toBe('+59122123456');
+  });
 });

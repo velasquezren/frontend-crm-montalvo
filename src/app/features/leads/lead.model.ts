@@ -16,6 +16,23 @@ export const ORIGEN_LABEL: Record<OrigenLeadApi, string> = {
   IMPORTACION: 'Importación histórica',
 };
 
+/**
+ * Intereses que se ofrecen con un toque al dar de alta un lead. Una sola lista
+ * para el alta rápida de Leads y el Registro presencial: el registro tenía una
+ * propia de clínica dental (limpieza, ortodoncia, implantes) que no es de esta
+ * clínica, y lo que la agente tocaba ahí quedaba guardado como interés.
+ */
+export const INTERESES_SUGERIDOS: readonly string[] = [
+  'Parto Humanizado',
+  'Cesárea',
+  'Ginecología',
+  'Ecografía 5D',
+  'Cirugía Plástica',
+  'Pediatría',
+  'Laboratorio',
+  'Consulta Médica',
+];
+
 /** Respuesta de GET /leads. */
 export interface Lead {
   readonly id: string;

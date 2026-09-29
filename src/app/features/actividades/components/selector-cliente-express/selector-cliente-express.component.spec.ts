@@ -10,6 +10,7 @@ import {
   SeleccionPaciente,
   SelectorClienteExpressComponent,
 } from './selector-cliente-express.component';
+import { AVISO_TELEFONO_INVALIDO } from '../../../../shared/models/telefono';
 
 /**
  * A4.1 · el selector de paciente y su alta express.
@@ -255,7 +256,7 @@ describe('A4.1 · SelectorClienteExpressComponent', () => {
 
     /* Su redacción es distinta de la del atajo, y eso se conserva: aquí se dice
        QUÉ campo está mal. */
-    expect(componente['errorNuevoCliente']()).toContain('celular válido');
+    expect(componente['errorNuevoCliente']()).toBe(AVISO_TELEFONO_INVALIDO);
     expect(altasDeCliente()).toHaveLength(0);
   });
 

@@ -26,6 +26,7 @@ import { FilterChipComponent } from '../../../../shared/components/filter-chip/f
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { InputComponent } from '../../../../shared/components/input/input.component';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
+import { AVISO_TELEFONO_INVALIDO, telefonoParaEscribir } from '../../../../shared/models/telefono';
 
 /** Lo mínimo del paciente que hace falta mostrar y mandar. */
 export interface ClienteMinimo {
@@ -238,17 +239,6 @@ export class SelectorClienteExpressComponent {
     this.errorNuevoCliente.set('');
   }
 
-  private normalizarTelefono(valor: string): string | null {
-    const limpio = valor.replace(/[^\d+]/g, '');
-    if (/^\+\d{9,13}$/.test(limpio)) {
-      return limpio;
-    }
-    if (/^\d{8}$/.test(limpio)) {
-      return `+591${limpio}`;
-    }
-    return null;
-  }
-
   /**
    * La mecánica del alta express, una sola vez.
    *
@@ -261,7 +251,7 @@ export class SelectorClienteExpressComponent {
     const nombre = this.nuevoClienteNombre().trim();
     if (nombre.length < 2) return { ok: false, motivo: 'NOMBRE_CORTO' };
 
-    const telefono = this.normalizarTelefono(this.nuevoClienteTelefono());
+    const telefono = telefonoParaEscribir(this.nuevoClienteTelefono());
     if (!telefono) return { ok: false, motivo: 'TELEFONO_INVALIDO' };
 
     this.creandoCliente.set(true);
@@ -292,7 +282,7 @@ export class SelectorClienteExpressComponent {
       return;
     }
     if (resultado.motivo === 'TELEFONO_INVALIDO') {
-      this.errorNuevoCliente.set('Ingresa un celular válido (8 dígitos locales o formato +591…).');
+      this.errorNuevoCliente.set(AVISO_TELEFONO_INVALIDO);
       return;
     }
     if (resultado.motivo === 'FALLO_ALTA') {

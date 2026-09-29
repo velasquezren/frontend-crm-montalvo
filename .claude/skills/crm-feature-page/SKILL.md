@@ -283,6 +283,8 @@ Barrido del 2026-09-14, con lo que salió:
 | `nombreMes` | **6** | Un mes fuera de 1-12 daba `Mes 13`, `13` o **cadena vacía** según la vista. La última dejaba una etiqueta de periodo en blanco en Comisiones |
 | Campaña de origen | 2 | Una leía siete campos y la otra cuatro |
 | Etiquetas de paciente | 2, con dos nombres | Aún idénticas — pero el siguiente arreglo entraba en una sola |
+| Teléfono tecleado → E.164 | **5** (2026-09-28) | Dos aceptaban cualquier número de 8 dígitos y le pegaban `+591`; Leads normalizaba sin validar; Clientes y Resultados mandaban lo tecleado y un `70012345` volvía como error del backend. Hoy todas usan `telefonoParaEscribir` + `AVISO_TELEFONO_INVALIDO` (`shared/models/telefono.ts`) |
+| Intereses sugeridos | 2 (2026-09-28) | El Registro presencial ofrecía los de una clínica **dental**; lo tocado quedaba guardado como interés. Hoy `INTERESES_SUGERIDOS` en `lead.model.ts` |
 
 Todas viven ahora en `shared/models/` (o en `core/api/datos-extra.ts` cuando
 derivan del JSON), con pruebas que fijan **el caso raro**, no el feliz.

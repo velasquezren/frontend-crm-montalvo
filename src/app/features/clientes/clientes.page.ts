@@ -39,6 +39,7 @@ import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { OverlayRef } from '@angular/cdk/overlay';
 import { TemplateRef, ViewContainerRef } from '@angular/core';
+import { AVISO_TELEFONO_INVALIDO, telefonoParaEscribir } from '../../shared/models/telefono';
 import { Router, RouterLink } from '@angular/router';
 import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { SelectComponent } from '../../shared/components/select/select.component';
@@ -192,6 +193,20 @@ export class ClientesPage {
   protected readonly editNombre = signal('');
   protected readonly editEmail = signal('');
   protected readonly editTelefono = signal('');
+  /**
+   * Lo que se guarda: lo tecleado en formato internacional (`70012345` →
+   * `+59170012345`), que es lo que exige el backend. Si no se tocó, va tal
+   * cual — una ficha importada con un número raro no debe impedir corregir
+   * su email.
+   */
+  protected readonly telefonoAGuardar = computed(() => {
+    const tecleado = this.editTelefono().trim();
+    if (!this.esCreacion() && tecleado === this.clienteSeleccionado()?.telefono) return tecleado;
+    return telefonoParaEscribir(tecleado);
+  });
+  protected readonly errorTelefono = computed(() =>
+    this.editTelefono().trim() && !this.telefonoAGuardar() ? AVISO_TELEFONO_INVALIDO : undefined,
+  );
   protected readonly editPac = signal('');
   protected readonly editCi = signal('');
   protected readonly editEmpresa = signal('');
@@ -347,11 +362,12 @@ export class ClientesPage {
     if (this.guardando()) return;
 
     const nombre = this.editNombre().trim();
-    const telefono = this.editTelefono().trim();
-    if (!nombre || !telefono) {
+    if (!nombre || !this.editTelefono().trim()) {
       this.toast.error('Nombre y teléfono son requeridos', 'Ficha Cliente');
       return;
     }
+    const telefono = this.telefonoAGuardar();
+    if (!telefono) return; // el aviso ya está en el campo
 
     this.guardando.set(true);
     try {

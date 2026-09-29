@@ -46,7 +46,8 @@ import {
   ESTADO_LEAD_LABEL,
   EstadoLead,
 } from '../../shared/models/estados.model';
-import { Lead, ORIGEN_LABEL, OrigenLeadApi } from './lead.model';
+import { INTERESES_SUGERIDOS, Lead, ORIGEN_LABEL, OrigenLeadApi } from './lead.model';
+import { AVISO_TELEFONO_INVALIDO, telefonoParaEscribir } from '../../shared/models/telefono';
 import { FiltroLeads, LeadsService, ResumenLeads } from './leads.service';
 import { RouterLink } from '@angular/router';
 import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
@@ -124,16 +125,7 @@ export class LeadsPage {
   protected readonly guardandoLead = signal(false);
   protected readonly errorCrearLead = signal<string | null>(null);
 
-  protected readonly interesesSugeridos: readonly string[] = [
-    'Parto Humanizado',
-    'Cesárea',
-    'Ginecología',
-    'Ecografía 5D',
-    'Cirugía Plástica',
-    'Pediatría',
-    'Laboratorio',
-    'Consulta Médica',
-  ];
+  protected readonly interesesSugeridos = INTERESES_SUGERIDOS;
 
   protected readonly estadoBadge = ESTADO_LEAD_BADGE;
   protected readonly estadoLabel = ESTADO_LEAD_LABEL;
@@ -308,20 +300,14 @@ export class LeadsPage {
     if (this.guardandoLead()) return;
 
     const nombre = this.nuevoLeadNombre().trim();
-    let telefono = this.nuevoLeadTelefono().trim();
-    if (!nombre || !telefono) {
+    if (!nombre || !this.nuevoLeadTelefono().trim()) {
       this.errorCrearLead.set('Nombre y teléfono son requeridos.');
       return;
     }
-
-    // Normalizar a formato E.164 (+591 para Bolivia) para satisfacer @IsPhoneNumber()
-    if (!telefono.startsWith('+')) {
-      const digitos = telefono.replace(/\D/g, '');
-      if (digitos.length === 8) {
-        telefono = `+591${digitos}`;
-      } else if (digitos.startsWith('591') && digitos.length === 11) {
-        telefono = `+${digitos}`;
-      }
+    const telefono = telefonoParaEscribir(this.nuevoLeadTelefono());
+    if (!telefono) {
+      this.errorCrearLead.set(AVISO_TELEFONO_INVALIDO);
+      return;
     }
 
     this.guardandoLead.set(true);

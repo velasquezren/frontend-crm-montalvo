@@ -10,6 +10,8 @@ import { FilterChipComponent } from '../../../shared/components/filter-chip/filt
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { InputComponent } from '../../../shared/components/input/input.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
+import { AVISO_TELEFONO_INVALIDO, telefonoParaEscribir } from '../../../shared/models/telefono';
+import { INTERESES_SUGERIDOS } from '../lead.model';
 import { LeadsService } from '../leads.service';
 
 /**
@@ -49,29 +51,12 @@ export class RegistroPresencialPage {
 
   protected readonly agente = computed(() => this.authService.user());
 
-  /* Intereses frecuentes — un toque en vez de tipear (RNF-07) */
-  protected readonly interesesRapidos: readonly string[] = [
-    'Limpieza dental',
-    'Ortodoncia',
-    'Blanqueamiento',
-    'Implantes',
-    'Consulta general',
-  ];
+  /* Intereses frecuentes — un toque en vez de tipear (RNF-07). La misma
+     lista que el alta rápida de Leads: aquí había una de clínica dental. */
+  protected readonly interesesRapidos = INTERESES_SUGERIDOS;
 
   protected alternarInteres(opcion: string): void {
     this.interes.set(this.interes() === opcion ? '' : opcion);
-  }
-
-  /** Bolivia: 8 dígitos locales → +591XXXXXXXX (formato que exige el backend). */
-  private normalizarTelefono(valor: string): string | null {
-    const limpio = valor.replace(/[^\d+]/g, '');
-    if (/^\+\d{9,13}$/.test(limpio)) {
-      return limpio;
-    }
-    if (/^\d{8}$/.test(limpio)) {
-      return `+591${limpio}`;
-    }
-    return null;
   }
 
   protected async registrar(event: Event): Promise<void> {
@@ -81,13 +66,13 @@ export class RegistroPresencialPage {
     this.errorGeneral.set('');
 
     const nombre = this.nombre().trim();
-    const telefono = this.normalizarTelefono(this.telefono());
+    const telefono = telefonoParaEscribir(this.telefono());
 
     if (!nombre) {
       this.errorNombre.set('El nombre es obligatorio.');
     }
     if (!telefono) {
-      this.errorTelefono.set('Ingresa un celular de 8 dígitos o formato +591…');
+      this.errorTelefono.set(AVISO_TELEFONO_INVALIDO);
     }
     if (!nombre || !telefono) {
       return;
