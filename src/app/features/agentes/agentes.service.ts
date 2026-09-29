@@ -7,6 +7,8 @@ import { Agente, CreateAgentePayload } from './agente.model';
 /** Campos editables de un agente. La contraseña solo viaja si se cambia. */
 export interface ActualizarAgenteDto {
   lineaIds?: string[];
+  /** Ausente = el backend conserva lo que había; ver `CreateUsuarioDto`. */
+  lineasSilenciadas?: string[];
   nombre?: string;
   email?: string;
   rol?: RolUsuario;

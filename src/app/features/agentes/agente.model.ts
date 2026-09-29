@@ -1,4 +1,5 @@
 import { RolUsuario } from '../../core/auth/user.model';
+import { AccesoLinea } from '../lineas-whatsapp/linea-whatsapp.model';
 
 export interface Agente {
   id: string;
@@ -6,7 +7,7 @@ export interface Agente {
   email: string;
   rol: RolUsuario;
   activo: boolean;
-  lineasWhatsapp: { lineaId: string }[];
+  lineasWhatsapp: AccesoLinea[];
   foto?: string | null;
   /**
    * Identificador que usa la empresa para esta persona (el `vendedora_pk` de
@@ -20,6 +21,8 @@ export interface Agente {
 
 export interface CreateAgentePayload {
   lineaIds: string[];
+  /** Subconjunto de `lineaIds` cuyos mensajes no le suenan. */
+  lineasSilenciadas: string[];
   nombre: string;
   email: string;
   password: string;

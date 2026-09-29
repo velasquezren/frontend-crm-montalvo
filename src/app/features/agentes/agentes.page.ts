@@ -1,5 +1,5 @@
 import { LineasWhatsappService } from '../lineas-whatsapp/lineas-whatsapp.service';
-import { LineaWhatsapp } from '../lineas-whatsapp/linea-whatsapp.model';
+import { LineaWhatsapp, lineasSilenciadasDe, silencioParaGuardar } from '../lineas-whatsapp/linea-whatsapp.model';
 import { SelectorLineasComponent } from '../lineas-whatsapp/selector-lineas.component';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { DatePipe } from '@angular/common';
@@ -69,6 +69,8 @@ export class AgentesPage {
   protected readonly lineas = httpResource<RespuestaPaginada<LineaWhatsapp>>(() => this.lineasService.listarRequest(), { defaultValue: paginaVacia<LineaWhatsapp>() });
   protected readonly formLineas = signal<string[]>([]);
   protected readonly editLineas = signal<string[]>([]);
+  protected readonly formSilenciadas = signal<string[]>([]);
+  protected readonly editSilenciadas = signal<string[]>([]);
   /* Un rol operativo no puede tener la línea comercial: el backend lo rechaza,
      así que no se ofrece. */
   protected readonly lineasCreacion = computed(() => this.lineas.value().datos.filter(l => !esRolOperativo(this.formRol()) || !l.comercial));
@@ -191,6 +193,7 @@ export class AgentesPage {
 
   abrirModal(template?: TemplateRef<unknown>): void {
     this.formLineas.set([]);
+    this.formSilenciadas.set([]);
     this.formNombre.set('');
     this.formEmail.set('');
     this.formPassword.set('');
@@ -227,12 +230,14 @@ export class AgentesPage {
     this.guardando.set(true);
     this.errorMensaje.set(null);
 
+    const lineaIds = this.formLineas().filter(id => this.lineasCreacion().some(l => l.id === id));
     const payload: CreateAgentePayload = {
       nombre: this.formNombre().trim(),
       email: this.formEmail().trim().toLowerCase(),
       password: this.formPassword(),
       rol: this.formRol(),
-      lineaIds: this.formLineas().filter(id => this.lineasCreacion().some(l => l.id === id)),
+      lineaIds,
+      lineasSilenciadas: silencioParaGuardar(this.formSilenciadas(), lineaIds),
     };
 
     this.agentesService
@@ -294,6 +299,7 @@ export class AgentesPage {
     this.editCodigo.set(agente.codigo ?? '');
     this.editRol.set(agente.rol);
     this.editLineas.set(agente.lineasWhatsapp.map(l => l.lineaId));
+    this.editSilenciadas.set(lineasSilenciadasDe(agente.lineasWhatsapp));
     this.editPassword.set('');
     this.errorMensaje.set(null);
     this.modalEditarAbierto.set(true);
@@ -333,13 +339,17 @@ export class AgentesPage {
 
     this.guardando.set(true);
     this.errorMensaje.set(null);
+    const lineaIds = this.editLineas().filter(id => this.lineasEdicion().some(l => l.id === id));
 
     this.agentesService
       .actualizar(agente.id, {
         nombre,
         email,
         rol: this.editRol(),
-        lineaIds: this.editLineas().filter(id => this.lineasEdicion().some(l => l.id === id)),
+        lineaIds,
+        /* Siempre explícito: el formulario muestra el estado entero, así que lo
+           que se guarda es lo que la admin ve, no una mezcla con lo anterior. */
+        lineasSilenciadas: silencioParaGuardar(this.editSilenciadas(), lineaIds),
         /* Vacío = se limpia el código (el backend lo guarda como NULL). */
         codigo: this.editCodigo().trim(),
         /* La contraseña solo se envía si el admin escribió una nueva. */
