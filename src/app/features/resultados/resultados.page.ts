@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal, TemplateRef, viewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, TemplateRef, untracked, viewChild, ViewContainerRef } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { OverlayRef } from '@angular/cdk/overlay';
@@ -17,7 +17,7 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 import { nombreParaMostrar } from '../../shared/models/nombre-cliente';
-import { telefonoParaEscribir } from '../../shared/models/telefono';
+import { AVISO_TELEFONO_INVALIDO, telefonoParaEscribir } from '../../shared/models/telefono';
 import { NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { ToastService } from '../../core/toast/toast.service';
 import { ClientesService } from '../clientes/clientes.service';
@@ -192,6 +192,33 @@ export class ResultadosPage {
   protected readonly telefonoAlta = signal('');
   protected readonly guardandoAlta = signal(false);
   protected readonly telefonoAltaE164 = computed(() => telefonoParaEscribir(this.telefonoAlta()));
+  /**
+   * Informe cuya ficha se acaba de crear. Crear la ficha es solo el medio: lo
+   * que la asistente quería era enviarlo. En cuanto la cola vuelve del
+   * servidor con la fila ya vinculada, se le ofrece el envío sin que tenga que
+   * buscarla — con la fila que dice el SERVIDOR, no con una armada aquí: el
+   * cruce por PAC lo hace el backend y es él quien sabe si ya se puede.
+   */
+  private readonly ofrecerEnvioDe = signal<string | null>(null);
+
+  constructor() {
+    effect(() => {
+      const informeId = this.ofrecerEnvioDe();
+      if (!informeId || this.entregas.isLoading()) return;
+      const fila = this.entregas.value().datos.find(f => f.informeId === informeId);
+      untracked(() => {
+        this.ofrecerEnvioDe.set(null);
+        if (fila && sePuedeEntregar(fila)) {
+          this.pedirConfirmacion(fila);
+        } else {
+          this.toast.info(
+            fila ? motivoBloqueo(fila) : 'El informe ya no está en esta página de la cola.',
+            'Ficha creada, sin enviar',
+          );
+        }
+      });
+    });
+  }
   protected readonly errorTelefonoAlta = computed(() => errorDeTelefono(this.telefonoAlta(), this.telefonoAltaE164()));
 
   /**
@@ -231,10 +258,11 @@ export class ResultadosPage {
         ci: fila.pacientePortal.ci,
       });
       this.cerrarAlta();
-      /* Al recargar, el backend vuelve a cruzar por PAC y la fila queda lista
-         para enviar: no hace falta decirle a nadie que refresque. */
-      this.toast.success('Ya puedes enviarle el informe.', 'Ficha creada');
+      /* Al recargar, el backend vuelve a cruzar por PAC; cuando llega, el
+         effect del constructor abre la confirmación de envío. */
+      this.toast.success('Revisa el envío del informe.', 'Ficha creada');
       this.entregas.reload();
+      this.ofrecerEnvioDe.set(fila.informeId);
     } catch (err) {
       /* Teléfono y PAC son únicos: si chocan, la ficha ya existe con otros
          datos y hay que resolverlo en Clientes, no insistir aquí. */
@@ -283,5 +311,5 @@ export class ResultadosPage {
  */
 function errorDeTelefono(tecleado: string, e164: string | null): string | undefined {
   if (!tecleado.trim() || e164) return undefined;
-  return 'Escribe un celular de 8 dígitos (70012345) o con código de país (+34…).';
+  return AVISO_TELEFONO_INVALIDO;
 }
