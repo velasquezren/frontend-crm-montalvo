@@ -16,6 +16,7 @@ import {
   TemplateRef,
   ViewContainerRef,
   viewChild,
+  WritableSignal,
 } from '@angular/core';
 
 import { descargarArchivo } from '../../core/api/descargar-archivo';
@@ -85,6 +86,22 @@ type Pestana = 'IMPORTAR' | 'CLASIFICACION' | 'PLANES' | 'REPORTES' | 'CONFIGURA
 interface VentasConTotales extends RespuestaPaginada<VentaImportada> {
   readonly totales: TotalesVentas;
   readonly porVendedora: readonly SubtotalVendedora[];
+}
+
+/** Los tres documentos que se descargan de un periodo. */
+type DocumentoPeriodo = 'EXCEL' | 'INFORME' | 'METRICAS';
+
+/** Cómo se pide cada documento y qué dice la interfaz mientras y después. */
+interface DocumentoDescargable {
+  readonly pedir: (
+    periodoId: string,
+    anio: number,
+    mes: number,
+    incluirOcultas: boolean,
+  ) => Promise<{ blob: Blob; nombre: string }>;
+  readonly enCurso: WritableSignal<boolean>;
+  readonly titulo: string;
+  readonly error: string;
 }
 
 @Component({
@@ -431,7 +448,6 @@ export class PlanillaComisionesPage {
     await this.refrescarPanelesDelPeriodo(id);
   }
   protected readonly configuracion = signal<ConfiguracionPlanilla | null>(null);
-  protected readonly descargandoExcel = signal(false);
 
   private readonly preventDefaultDrag = (e: DragEvent) => e.preventDefault();
 
@@ -1283,91 +1299,6 @@ export class PlanillaComisionesPage {
   }
 
   /**
-   * Descarga el Excel completo del periodo ACTIVO: el mismo resumen que la
-   * pantalla, más lo que la tabla web no puede mostrar por falta de ancho —
-   * el desglose por tipo y sección y cada venta del mes, en una hoja aparte
-   * por vendedora. Botón de la barra superior, visible en cualquier
-   * pestaña — antes vivía escondido dentro de "Planilla por Persona", en
-   * Reportes, y había que entrar ahí para encontrarlo.
-   */
-  protected descargarExcel(): Promise<void> {
-    const periodo = this.periodoActual();
-    return periodo ? this.descargarExcelDe(periodo) : Promise.resolve();
-  }
-
-  /**
-   * Un periodo cualquiera, no necesariamente el activo — botón por fila en
-   * "Planillas cargadas en el sistema" (pestaña Importar): antes había que
-   * abrir cada mes para descargar el suyo; ahora se puede desde el
-   * histórico directamente.
-   */
-  protected readonly descargandoInforme = signal(false);
-
-  /** El informe firmable del periodo ACTIVO (botón de la barra superior). */
-  protected descargarInforme(): Promise<void> {
-    const periodo = this.periodoActual();
-    return periodo ? this.descargarInformeDe(periodo) : Promise.resolve();
-  }
-
-  /**
-   * El informe firmable de un periodo cualquiera — también desde la tabla de
-   * planillas cargadas, sin tener que abrir el mes primero.
-   *
-   * Respeta el mismo interruptor de "incluir dadas de baja" que el Excel y la
-   * pantalla: lo que se ve es lo que se firma. Un informe que no coincidiera
-   * con la tabla de arriba sería peor que no tenerlo, porque es el que se
-   * archiva.
-   */
-  protected async descargarInformeDe(periodo: PeriodoComision): Promise<void> {
-    if (this.descargandoInforme()) return;
-
-    this.descargandoInforme.set(true);
-    try {
-      const { blob, nombre } = await this.service.descargarInforme(
-        periodo.id,
-        periodo.anio,
-        periodo.mes,
-        this.incluirOcultas(),
-      );
-      descargarArchivo(blob, nombre);
-      this.toast.success(`${nombre} descargado.`, 'Informe listo');
-    } catch (err) {
-      this.toast.error(mensajeDeError(err, 'No se pudo generar el informe.'), 'Error');
-    } finally {
-      this.descargandoInforme.set(false);
-    }
-  }
-
-  protected readonly descargandoMetricas = signal(false);
-
-  /** Las métricas del periodo activo (botón de la barra superior). */
-  protected descargarMetricas(): Promise<void> {
-    const periodo = this.periodoActual();
-    return periodo ? this.descargarMetricasDe(periodo) : Promise.resolve();
-  }
-
-  /** Las métricas de un periodo cualquiera, también desde la tabla de planillas. */
-  protected async descargarMetricasDe(periodo: PeriodoComision): Promise<void> {
-    if (this.descargandoMetricas()) return;
-
-    this.descargandoMetricas.set(true);
-    try {
-      const { blob, nombre } = await this.service.descargarMetricas(
-        periodo.id,
-        periodo.anio,
-        periodo.mes,
-        this.incluirOcultas(),
-      );
-      descargarArchivo(blob, nombre);
-      this.toast.success(`${nombre} descargado.`, 'Métricas listas');
-    } catch (err) {
-      this.toast.error(mensajeDeError(err, 'No se pudieron generar las métricas.'), 'Error');
-    } finally {
-      this.descargandoMetricas.set(false);
-    }
-  }
-
-  /**
    * Si el periodo todavía admite cambios. Espejo de `esEditable()` del backend.
    *
    * La tabla de planillas comparaba con `CERRADO` a mano, así que al aparecer
@@ -1378,23 +1309,74 @@ export class PlanillaComisionesPage {
     return periodo.estado === 'BORRADOR' || periodo.estado === 'CALCULADO';
   }
 
-  protected async descargarExcelDe(periodo: PeriodoComision): Promise<void> {
-    if (this.descargandoExcel()) return;
+  /* ── Descargas del periodo ──────────────────────────────────────────── */
 
-    this.descargandoExcel.set(true);
+  protected readonly descargandoExcel = signal(false);
+  protected readonly descargandoInforme = signal(false);
+  protected readonly descargandoMetricas = signal(false);
+
+  /**
+   * Los tres documentos del mes. No son el mismo archivo en otro formato:
+   *
+   * - **Excel**: el mismo resumen que la pantalla, más lo que la tabla web no
+   *   puede mostrar por falta de ancho —el desglose por tipo y sección y cada
+   *   venta del mes, en una hoja aparte por vendedora—. Sirve para auditar.
+   * - **Informe Word**: la hoja que administración revisa, edita si hace falta
+   *   y firma.
+   * - **Métricas PDF**: el acompañante del informe, que se imprime junto a él.
+   *
+   * Los tres respetan el interruptor de "incluir dadas de baja", igual que la
+   * pantalla: lo que se ve es lo que se firma. Un informe que no coincidiera
+   * con la tabla de arriba sería peor que no tenerlo, porque es el que se
+   * archiva.
+   */
+  private readonly documentos: Record<DocumentoPeriodo, DocumentoDescargable> = {
+    EXCEL: {
+      pedir: (...a) => this.service.descargarExcel(...a),
+      enCurso: this.descargandoExcel,
+      titulo: 'Excel listo',
+      error: 'No se pudo generar el Excel.',
+    },
+    INFORME: {
+      pedir: (...a) => this.service.descargarInforme(...a),
+      enCurso: this.descargandoInforme,
+      titulo: 'Informe listo',
+      error: 'No se pudo generar el informe.',
+    },
+    METRICAS: {
+      pedir: (...a) => this.service.descargarMetricas(...a),
+      enCurso: this.descargandoMetricas,
+      titulo: 'Métricas listas',
+      error: 'No se pudieron generar las métricas.',
+    },
+  };
+
+  /**
+   * Descarga un documento del periodo.
+   *
+   * Sin periodo, el ACTIVO: los botones de la barra superior, visibles en
+   * cualquier pestaña —antes el Excel vivía escondido dentro de "Planilla por
+   * Persona", en Reportes—. Con periodo, uno cualquiera: los botones por fila
+   * de "Planillas cargadas en el sistema", para bajar varios meses sin abrir
+   * cada uno.
+   */
+  protected async descargar(
+    documento: DocumentoPeriodo,
+    periodo: PeriodoComision | null = this.periodoActual(),
+  ): Promise<void> {
+    if (!periodo) return;
+    const { pedir, enCurso, titulo, error } = this.documentos[documento];
+    if (enCurso()) return;
+
+    enCurso.set(true);
     try {
-      const { blob, nombre } = await this.service.descargarExcel(
-        periodo.id,
-        periodo.anio,
-        periodo.mes,
-        this.incluirOcultas(),
-      );
+      const { blob, nombre } = await pedir(periodo.id, periodo.anio, periodo.mes, this.incluirOcultas());
       descargarArchivo(blob, nombre);
-      this.toast.success(`${nombre} descargado.`, 'Excel listo');
+      this.toast.success(`${nombre} descargado.`, titulo);
     } catch (err) {
-      this.toast.error(mensajeDeError(err, 'No se pudo generar el Excel.'), 'Error');
+      this.toast.error(mensajeDeError(err, error), 'Error');
     } finally {
-      this.descargandoExcel.set(false);
+      enCurso.set(false);
     }
   }
 }

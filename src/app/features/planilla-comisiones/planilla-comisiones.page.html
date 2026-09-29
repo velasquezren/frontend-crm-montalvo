@@ -43,7 +43,7 @@
         size="sm"
         icon="download"
         [loading]="descargandoExcel()"
-        (clicked)="descargarExcel()">
+        (clicked)="descargar('EXCEL')">
         Descargar Excel
       </app-button>
       <!-- El informe no es el Excel en otro formato: es el documento de una
@@ -54,7 +54,7 @@
         size="sm"
         icon="file-text"
         [loading]="descargandoInforme()"
-        (clicked)="descargarInforme()">
+        (clicked)="descargar('INFORME')">
         Informe Word
       </app-button>
       <!-- Las métricas acompañan al informe: se imprimen juntas cuando se
@@ -64,7 +64,7 @@
         size="sm"
         icon="bar-chart"
         [loading]="descargandoMetricas()"
-        (clicked)="descargarMetricas()">
+        (clicked)="descargar('METRICAS')">
         Métricas PDF
       </app-button>
       <!-- El Excel sale con lo mismo que hay en pantalla, así que cuando el
@@ -220,7 +220,7 @@
                       size="sm"
                       icon="download"
                       [loading]="descargandoExcel()"
-                      (clicked)="descargarExcelDe(p)">
+                      (clicked)="descargar('EXCEL', p)">
                       Excel
                     </app-button>
                     <app-button
@@ -228,7 +228,7 @@
                       size="sm"
                       icon="file-text"
                       [loading]="descargandoInforme()"
-                      (clicked)="descargarInformeDe(p)">
+                      (clicked)="descargar('INFORME', p)">
                       Word
                     </app-button>
                     <app-button
@@ -236,7 +236,7 @@
                       size="sm"
                       icon="bar-chart"
                       [loading]="descargandoMetricas()"
-                      (clicked)="descargarMetricasDe(p)">
+                      (clicked)="descargar('METRICAS', p)">
                       Métricas
                     </app-button>
                     <!-- Borrar solo mientras el mes siga siendo editable: en
