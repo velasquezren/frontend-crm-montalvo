@@ -125,10 +125,14 @@
 
 <!-- Enviar cuesta dinero y no se puede deshacer: se confirma a quién va. -->
 <ng-template #confirmar>
-  <div class="pointer-events-auto w-full max-w-md bg-background rounded-2xl shadow-lifted p-6 animate-modal-pop">
+  <div
+    class="pointer-events-auto w-full max-w-md bg-background rounded-2xl shadow-lifted p-6 animate-modal-pop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="titulo-envio">
     @if (candidato(); as c) {
       @let fila = c.fila;
-      <h2 class="text-base font-bold text-text-dark">
+      <h2 id="titulo-envio" class="text-base font-bold text-text-dark">
         {{ c.renovar ? 'Renovar el enlace y enviarlo' : 'Enviar el resultado por WhatsApp' }}
       </h2>
       @if (fila.paciente; as ficha) {
@@ -166,53 +170,80 @@
 <!-- El aviso va al número de la FICHA del CRM, no al del portal. Corregirlo
      aquí evita salir a Clientes y volver, con el mensaje ya a punto de salir. -->
 <ng-template #editarTelefono>
-  <div class="pointer-events-auto w-full max-w-sm bg-background rounded-2xl shadow-lifted p-6 animate-modal-pop">
+  <form
+    class="pointer-events-auto w-full max-w-sm bg-background rounded-2xl shadow-lifted p-6 animate-modal-pop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="titulo-telefono"
+    (submit)="$event.preventDefault(); guardarTelefono()">
     @if (editando(); as ficha) {
-      <h2 class="text-base font-bold text-text-dark">Teléfono de {{ ficha.nombre }}</h2>
-      <p class="mt-2 text-sm text-text-muted">
-        Es el número al que saldrá el aviso. Con código de país, por ejemplo +59170000000.
-      </p>
-      <input
-        class="crm-input mt-4 w-full tabular-nums"
-        type="tel"
-        inputmode="tel"
-        autocomplete="off"
-        [value]="telefonoNuevo()"
-        (input)="telefonoNuevo.set($any($event.target).value)" />
+      <h2 id="titulo-telefono" class="text-base font-bold text-text-dark">Teléfono de {{ ficha.nombre }}</h2>
+      <p class="mt-2 text-sm text-text-muted">Es el número al que saldrá el aviso.</p>
+      <div class="mt-4">
+        <app-input
+          type="tel"
+          label="WhatsApp"
+          placeholder="70012345 o +591…"
+          [error]="errorTelefonoNuevo()"
+          [(value)]="telefonoNuevo" />
+        @if (telefonoNuevoE164(); as e164) {
+          @if (e164 !== telefonoNuevo().trim()) {
+            <p class="mt-1.5 text-xs text-text-muted">Se guardará como <span class="tabular-nums">{{ e164 }}</span></p>
+          }
+        }
+      </div>
     }
     <div class="mt-6 flex justify-end gap-3">
       <app-button variant="ghost" [disabled]="guardandoTelefono()" (clicked)="cerrarTelefono()">Cancelar</app-button>
-      <app-button icon="check" [loading]="guardandoTelefono()" (clicked)="guardarTelefono()">Guardar</app-button>
+      <app-button
+        type="submit"
+        icon="check"
+        [loading]="guardandoTelefono()"
+        [disabled]="!telefonoNuevoE164() || telefonoSinCambios()">
+        Guardar
+      </app-button>
     </div>
-  </div>
+  </form>
 </ng-template>
 
 <!-- El portal conoce a la paciente y el CRM no: la importación de FileMaker
      dejó fuera las fichas sin celular. Lo único que falta es el número. -->
 <ng-template #crearFicha>
-  <div class="pointer-events-auto w-full max-w-sm bg-background rounded-2xl shadow-lifted p-6 animate-modal-pop">
+  <form
+    class="pointer-events-auto w-full max-w-sm bg-background rounded-2xl shadow-lifted p-6 animate-modal-pop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="titulo-alta"
+    (submit)="$event.preventDefault(); guardarAlta()">
     @if (creando(); as fila) {
-      <h2 class="text-base font-bold text-text-dark">Crear la ficha de {{ fila.pacientePortal.nombre }}</h2>
+      <h2 id="titulo-alta" class="text-base font-bold text-text-dark">Crear la ficha de {{ fila.pacientePortal.nombre }}</h2>
       <div class="crm-meta crm-meta-sm mt-2">
         @if (fila.pacientePortal.pac; as pac) { <span class="crm-meta-clave">{{ pac }}</span> }
         @if (fila.pacientePortal.ci; as ci) { <span class="crm-meta-clave">CI {{ ci }}</span> }
       </div>
       <p class="mt-3 text-sm text-text-muted">
         El nombre y el PAC vienen del portal. Falta su WhatsApp, que es a donde
-        irá el aviso: con código de país, por ejemplo +59170000000.
+        irá el aviso.
       </p>
-      <input
-        class="crm-input mt-4 w-full tabular-nums"
-        type="tel"
-        inputmode="tel"
-        autocomplete="off"
-        placeholder="+591…"
-        [value]="telefonoAlta()"
-        (input)="telefonoAlta.set($any($event.target).value)" />
+      <div class="mt-4">
+        <app-input
+          type="tel"
+          label="WhatsApp"
+          placeholder="70012345 o +591…"
+          [error]="errorTelefonoAlta()"
+          [(value)]="telefonoAlta" />
+        @if (telefonoAltaE164(); as e164) {
+          @if (e164 !== telefonoAlta().trim()) {
+            <p class="mt-1.5 text-xs text-text-muted">Se guardará como <span class="tabular-nums">{{ e164 }}</span></p>
+          }
+        }
+      </div>
     }
     <div class="mt-6 flex justify-end gap-3">
       <app-button variant="ghost" [disabled]="guardandoAlta()" (clicked)="cerrarAlta()">Cancelar</app-button>
-      <app-button icon="check" [loading]="guardandoAlta()" (clicked)="guardarAlta()">Crear ficha</app-button>
+      <app-button type="submit" icon="check" [loading]="guardandoAlta()" [disabled]="!telefonoAltaE164()">
+        Crear ficha
+      </app-button>
     </div>
-  </div>
+  </form>
 </ng-template>

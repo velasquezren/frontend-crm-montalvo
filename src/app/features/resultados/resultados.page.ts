@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal, TemplateRef, viewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, TemplateRef, viewChild, ViewContainerRef } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { OverlayRef } from '@angular/cdk/overlay';
@@ -11,11 +11,13 @@ import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { InputComponent } from '../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 import { nombreParaMostrar } from '../../shared/models/nombre-cliente';
+import { telefonoParaEscribir } from '../../shared/models/telefono';
 import { NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { ToastService } from '../../core/toast/toast.service';
 import { ClientesService } from '../clientes/clientes.service';
@@ -40,6 +42,7 @@ import { ResultadosService } from './resultados.service';
     EmptyStateComponent,
     ErrorCargaComponent,
     IconComponent,
+    InputComponent,
     LoadingSkeletonComponent,
     NombreClientePipe,
     PageHeaderComponent,
@@ -63,6 +66,18 @@ export class ResultadosPage {
   private readonly plantillaAlta = viewChild.required<TemplateRef<unknown>>('crearFicha');
   private overlay: OverlayRef | null = null;
 
+  /**
+   * Los tres modales de la vista se abren igual: cierra el que hubiera, limpia
+   * su estado también al salir con Escape o tocando el fondo (`onClose`), y
+   * pone el foco en el primer campo para que se pueda teclear sin buscar el
+   * cursor — la asistente abre «Cambiar» para escribir un número, nada más.
+   */
+  private abrirModal(plantilla: TemplateRef<unknown>, alCerrar: () => void): void {
+    this.overlay?.dispose();
+    this.overlay = this.dialog.openTemplate(plantilla, this.vcr, { onClose: alCerrar });
+    this.overlay.overlayElement.querySelector<HTMLInputElement>('input')?.focus();
+  }
+
   protected readonly pagina = signal(1);
   /** Informe que se está enviando: bloquea solo su fila, no la tabla entera. */
   protected readonly enviando = signal<string | null>(null);
@@ -83,9 +98,14 @@ export class ResultadosPage {
   protected readonly distintos = nombresDistintos;
 
   /** Ficha cuyo teléfono se está corrigiendo, y el valor tecleado. */
-  protected readonly editando = signal<{ id: string; nombre: string } | null>(null);
+  protected readonly editando = signal<{ id: string; nombre: string; telefono: string } | null>(null);
   protected readonly telefonoNuevo = signal('');
   protected readonly guardandoTelefono = signal(false);
+  /** Lo tecleado en el formato que exige el backend: `70012345` → `+59170012345`. */
+  protected readonly telefonoNuevoE164 = computed(() => telefonoParaEscribir(this.telefonoNuevo()));
+  protected readonly errorTelefonoNuevo = computed(() => errorDeTelefono(this.telefonoNuevo(), this.telefonoNuevoE164()));
+  /** Guardar el mismo número no cambia nada: el botón no se ofrece. */
+  protected readonly telefonoSinCambios = computed(() => this.telefonoNuevoE164() === this.editando()?.telefono);
 
   /**
    * El número al que va el mensaje sale de la ficha del CRM, no del portal. Si
@@ -94,9 +114,9 @@ export class ResultadosPage {
    */
   protected abrirTelefono(fila: EntregaResultado): void {
     if (!fila.paciente) return;
-    this.editando.set({ id: fila.paciente.id, nombre: nombreParaMostrar(fila.paciente) });
+    this.editando.set({ id: fila.paciente.id, nombre: nombreParaMostrar(fila.paciente), telefono: fila.paciente.telefono });
     this.telefonoNuevo.set(fila.paciente.telefono);
-    this.overlay = this.dialog.openTemplate(this.plantillaTelefono(), this.vcr);
+    this.abrirModal(this.plantillaTelefono(), () => this.cerrarTelefono());
   }
 
   protected cerrarTelefono(): void {
@@ -107,8 +127,8 @@ export class ResultadosPage {
 
   protected async guardarTelefono(): Promise<void> {
     const ficha = this.editando();
-    const telefono = this.telefonoNuevo().trim();
-    if (!ficha || !telefono) return;
+    const telefono = this.telefonoNuevoE164();
+    if (!ficha || !telefono || this.telefonoSinCambios() || this.guardandoTelefono()) return;
     this.guardandoTelefono.set(true);
     try {
       await this.clientesService.actualizar(ficha.id, { telefono });
@@ -137,14 +157,30 @@ export class ResultadosPage {
   protected async verInforme(fila: EntregaResultado): Promise<void> {
     if (this.abriendo()) return;
     this.abriendo.set(fila.informeId);
+    /* La pestaña se abre YA, dentro del clic, y el PDF se carga en ella al
+       llegar. Abrirla después del `await` la bloquea el navegador —Safari
+       siempre, Chrome si la descarga tarda—: ya no cuenta como gesto de la
+       usuaria. Y con `noopener` `window.open` devuelve null siempre, así que
+       el bloqueo ni se notaba: el botón decía «Abriendo…» y no pasaba nada. */
+    const pestana = window.open('', '_blank');
+    if (pestana) {
+      pestana.document.title = 'Informe';
+      pestana.document.body.textContent = 'Cargando el informe…';
+    }
     try {
       const pdf = await this.resultadosService.pdf(fila.informeId);
       const url = URL.createObjectURL(pdf);
-      window.open(url, '_blank', 'noopener');
+      if (pestana) {
+        pestana.opener = null;
+        pestana.location.href = url;
+      } else {
+        this.toast.error('El navegador bloqueó la pestaña nueva. Permite las ventanas emergentes de este sitio.', 'No se pudo abrir');
+      }
       /* El objeto vive hasta que la pestaña lo carga; liberarlo al instante la
          dejaría en blanco. Un minuto basta y no acumula memoria. */
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (err) {
+      pestana?.close();
       this.toast.error(mensajeDeError(err, 'No se pudo abrir el informe.'), 'Error');
     } finally {
       this.abriendo.set(null);
@@ -155,6 +191,8 @@ export class ResultadosPage {
   protected readonly creando = signal<EntregaResultado | null>(null);
   protected readonly telefonoAlta = signal('');
   protected readonly guardandoAlta = signal(false);
+  protected readonly telefonoAltaE164 = computed(() => telefonoParaEscribir(this.telefonoAlta()));
+  protected readonly errorTelefonoAlta = computed(() => errorDeTelefono(this.telefonoAlta(), this.telefonoAltaE164()));
 
   /**
    * Alta desde la cola de un paciente que el portal conoce y el CRM no.
@@ -171,7 +209,7 @@ export class ResultadosPage {
   protected abrirAlta(fila: EntregaResultado): void {
     this.creando.set(fila);
     this.telefonoAlta.set('');
-    this.overlay = this.dialog.openTemplate(this.plantillaAlta(), this.vcr);
+    this.abrirModal(this.plantillaAlta(), () => this.cerrarAlta());
   }
 
   protected cerrarAlta(): void {
@@ -182,8 +220,8 @@ export class ResultadosPage {
 
   protected async guardarAlta(): Promise<void> {
     const fila = this.creando();
-    const telefono = this.telefonoAlta().trim();
-    if (!fila || !telefono) return;
+    const telefono = this.telefonoAltaE164();
+    if (!fila || !telefono || this.guardandoAlta()) return;
     this.guardandoAlta.set(true);
     try {
       await this.clientesService.crear({
@@ -208,7 +246,7 @@ export class ResultadosPage {
 
   protected pedirConfirmacion(fila: EntregaResultado, renovar = false): void {
     this.candidato.set({ fila, renovar });
-    this.overlay = this.dialog.openTemplate(this.plantillaConfirmar(), this.vcr);
+    this.abrirModal(this.plantillaConfirmar(), () => this.cerrarConfirmacion());
   }
 
   protected cerrarConfirmacion(): void {
@@ -237,4 +275,13 @@ export class ResultadosPage {
       this.enviando.set(null);
     }
   }
+}
+
+/**
+ * El aviso de un teléfono mal escrito, solo cuando ya hay algo escrito: un
+ * campo vacío recién abierto no es un error, es un campo por llenar.
+ */
+function errorDeTelefono(tecleado: string, e164: string | null): string | undefined {
+  if (!tecleado.trim() || e164) return undefined;
+  return 'Escribe un celular de 8 dígitos (70012345) o con código de país (+34…).';
 }

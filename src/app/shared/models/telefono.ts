@@ -45,9 +45,11 @@ export function enlaceLlamada(telefono: string | null | undefined): string {
  * Lo que la agente escribe como destino de un chat nuevo, en E.164
  * (`70012345` → `+59170012345`), o `null` si no parece un teléfono.
  *
- * Solo sirve para mostrar «Escribir a +591 7001 2345» mientras teclea: la
- * normalización que vale es la del backend (`normalizarTelefono`), que conoce
- * la numeración de cada país. Sin prefijo se asume Bolivia.
+ * Sirve para mostrar «Escribir a +591 7001 2345» mientras teclea y, en
+ * Resultados, para mandar el número ya con `+`: el DTO de Clientes exige
+ * formato internacional y un `70012345` a secas volvía como error. La
+ * normalización que vale sigue siendo la del backend (`normalizarTelefono`),
+ * que conoce la numeración de cada país. Sin prefijo se asume Bolivia.
  */
 export function telefonoParaEscribir(valor: string): string | null {
   const texto = valor.trim();
