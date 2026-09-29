@@ -3,7 +3,7 @@ import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { OverlayRef } from '@angular/cdk/overlay';
 
-import { mensajeDeError } from '../../core/api/http-error';
+import { campoEnConflicto, Choque, choqueDe, esConflicto, mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -103,7 +103,13 @@ export class ResultadosPage {
   protected readonly guardandoTelefono = signal(false);
   /** Lo tecleado en el formato que exige el backend: `70012345` → `+59170012345`. */
   protected readonly telefonoNuevoE164 = computed(() => telefonoParaEscribir(this.telefonoNuevo()));
-  protected readonly errorTelefonoNuevo = computed(() => errorDeTelefono(this.telefonoNuevo(), this.telefonoNuevoE164()));
+  /** Número que el servidor ya rechazó por ser de otra ficha, y lo que dijo. */
+  private readonly telefonoChocado = signal<Choque | null>(null);
+  protected readonly errorTelefonoNuevo = computed(
+    () =>
+      choqueDe(this.telefonoChocado(), this.telefonoNuevoE164()) ??
+      errorDeTelefono(this.telefonoNuevo(), this.telefonoNuevoE164()),
+  );
   /** Guardar el mismo número no cambia nada: el botón no se ofrece. */
   protected readonly telefonoSinCambios = computed(() => this.telefonoNuevoE164() === this.editando()?.telefono);
 
@@ -116,6 +122,7 @@ export class ResultadosPage {
     if (!fila.paciente) return;
     this.editando.set({ id: fila.paciente.id, nombre: nombreParaMostrar(fila.paciente), telefono: fila.paciente.telefono });
     this.telefonoNuevo.set(fila.paciente.telefono);
+    this.telefonoChocado.set(null);
     this.abrirModal(this.plantillaTelefono(), () => this.cerrarTelefono());
   }
 
@@ -128,7 +135,7 @@ export class ResultadosPage {
   protected async guardarTelefono(): Promise<void> {
     const ficha = this.editando();
     const telefono = this.telefonoNuevoE164();
-    if (!ficha || !telefono || this.telefonoSinCambios() || this.guardandoTelefono()) return;
+    if (!ficha || !telefono || this.telefonoSinCambios() || this.errorTelefonoNuevo() || this.guardandoTelefono()) return;
     this.guardandoTelefono.set(true);
     try {
       await this.clientesService.actualizar(ficha.id, { telefono });
@@ -136,8 +143,13 @@ export class ResultadosPage {
       this.toast.success('El aviso saldrá a ese número.', 'Teléfono actualizado');
       this.entregas.reload();
     } catch (err) {
-      /* El teléfono es único en el CRM: si ya es de otra ficha, el backend lo
-         dice y hay que resolver el duplicado, no insistir aquí. */
+      /* El teléfono es único en el CRM. Que ya sea de otra ficha no es un
+         fallo del sistema: es un dato que corregir, y el backend dice de quién
+         es. Se marca el campo y el modal sigue abierto con lo tecleado. */
+      if (esConflicto(err)) {
+        this.telefonoChocado.set({ valor: telefono, mensaje: mensajeDeError(err, MENSAJE_DUPLICADO) });
+        return;
+      }
       this.toast.error(mensajeDeError(err, 'No se pudo cambiar el teléfono.'), 'Error');
     } finally {
       this.guardandoTelefono.set(false);
@@ -219,7 +231,13 @@ export class ResultadosPage {
       });
     });
   }
-  protected readonly errorTelefonoAlta = computed(() => errorDeTelefono(this.telefonoAlta(), this.telefonoAltaE164()));
+  /** Número que el servidor ya rechazó al dar de alta, y lo que dijo. */
+  private readonly altaChocada = signal<Choque | null>(null);
+  protected readonly errorTelefonoAlta = computed(
+    () =>
+      choqueDe(this.altaChocada(), this.telefonoAltaE164()) ??
+      errorDeTelefono(this.telefonoAlta(), this.telefonoAltaE164()),
+  );
 
   /**
    * Alta desde la cola de un paciente que el portal conoce y el CRM no.
@@ -236,6 +254,7 @@ export class ResultadosPage {
   protected abrirAlta(fila: EntregaResultado): void {
     this.creando.set(fila);
     this.telefonoAlta.set('');
+    this.altaChocada.set(null);
     this.abrirModal(this.plantillaAlta(), () => this.cerrarAlta());
   }
 
@@ -248,7 +267,7 @@ export class ResultadosPage {
   protected async guardarAlta(): Promise<void> {
     const fila = this.creando();
     const telefono = this.telefonoAltaE164();
-    if (!fila || !telefono || this.guardandoAlta()) return;
+    if (!fila || !telefono || this.errorTelefonoAlta() || this.guardandoAlta()) return;
     this.guardandoAlta.set(true);
     try {
       await this.clientesService.crear({
@@ -264,8 +283,18 @@ export class ResultadosPage {
       this.entregas.reload();
       this.ofrecerEnvioDe.set(fila.informeId);
     } catch (err) {
-      /* Teléfono y PAC son únicos: si chocan, la ficha ya existe con otros
-         datos y hay que resolverlo en Clientes, no insistir aquí. */
+      /* Teléfono y PAC son únicos. El teléfono se corrige aquí mismo; un PAC
+         repetido significa que la ficha ya existe y el cruce no la encontró,
+         y eso no se arregla en este modal: se avisa sin pintarlo de rojo. */
+      if (esConflicto(err)) {
+        const aviso = mensajeDeError(err, MENSAJE_DUPLICADO);
+        if (campoEnConflicto(err) === 'telefono') {
+          this.altaChocada.set({ valor: telefono, mensaje: aviso });
+        } else {
+          this.toast.warning(aviso, 'Esa ficha ya existe');
+        }
+        return;
+      }
       this.toast.error(mensajeDeError(err, 'No se pudo crear la ficha.'), 'Error');
     } finally {
       this.guardandoAlta.set(false);
@@ -313,3 +342,6 @@ function errorDeTelefono(tecleado: string, e164: string | null): string | undefi
   if (!tecleado.trim() || e164) return undefined;
   return AVISO_TELEFONO_INVALIDO;
 }
+
+/** Si el backend no nombró al dueño del dato, al menos que se entienda qué pasa. */
+const MENSAJE_DUPLICADO = 'Ya existe un paciente con ese número.';

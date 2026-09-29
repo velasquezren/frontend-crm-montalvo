@@ -199,7 +199,7 @@
         type="submit"
         icon="check"
         [loading]="guardandoTelefono()"
-        [disabled]="!telefonoNuevoE164() || telefonoSinCambios()">
+        [disabled]="!telefonoNuevoE164() || telefonoSinCambios() || !!errorTelefonoNuevo()">
         Guardar
       </app-button>
     </div>
@@ -241,7 +241,11 @@
     }
     <div class="mt-6 flex justify-end gap-3">
       <app-button variant="ghost" [disabled]="guardandoAlta()" (clicked)="cerrarAlta()">Cancelar</app-button>
-      <app-button type="submit" icon="check" [loading]="guardandoAlta()" [disabled]="!telefonoAltaE164()">
+      <app-button
+        type="submit"
+        icon="check"
+        [loading]="guardandoAlta()"
+        [disabled]="!telefonoAltaE164() || !!errorTelefonoAlta()">
         Crear ficha
       </app-button>
     </div>
