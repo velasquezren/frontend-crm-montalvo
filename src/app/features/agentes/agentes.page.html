@@ -207,7 +207,7 @@
         } @else if (lineas.error()) {
           <app-error-carga que="las líneas" (reintentar)="lineas.reload()" />
         } @else if (cubreRol(formRol(), 'ADMIN')) {
-          <p class="crm-meta"><span>Los administradores tienen acceso a todas las líneas.</span></p>
+          <p class="text-sm text-text-muted">Los administradores ven todas las líneas. Qué líneas les avisan lo elige cada uno en su Perfil.</p>
         } @else {
           <app-selector-lineas [lineas]="lineasCreacion()" [(ids)]="formLineas" [(silenciadas)]="formSilenciadas" />
         }
@@ -310,7 +310,7 @@
 
       @if (lineas.isLoading()) { <p class="text-sm text-text-muted">Cargando líneas…</p> }
       @else if (lineas.error()) { <app-error-carga que="las líneas" (reintentar)="lineas.reload()" /> }
-      @else if (cubreRol(editRol(), 'ADMIN')) { <p class="text-sm text-text-muted">Los administradores tienen acceso a todas las líneas.</p> }
+      @else if (cubreRol(editRol(), 'ADMIN')) { <p class="text-sm text-text-muted">Los administradores ven todas las líneas. Qué líneas les avisan lo elige cada uno en su Perfil.</p> }
       @else { <app-selector-lineas [lineas]="lineasEdicion()" [(ids)]="editLineas" [(silenciadas)]="editSilenciadas" /> }
         <!-- Contraseña -->
         <section class="flex flex-col gap-4 pt-2 border-t border-border">

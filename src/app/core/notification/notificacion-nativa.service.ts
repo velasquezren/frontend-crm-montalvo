@@ -29,6 +29,13 @@ export class NotificacionNativaService {
   private readonly api = inject(ApiService);
   private readonly swPush = inject(SwPush);
 
+  /**
+   * Si este navegador puede mostrar notificaciones. En iPhone, Safari solo las
+   * ofrece con el CRM instalado en la pantalla de inicio (iOS 16.4+); abierto
+   * como página normal, la API ni existe, y pedir permiso no haría nada.
+   */
+  readonly soportado = typeof Notification !== 'undefined';
+
   readonly permiso = signal<NotificationPermission>(
     typeof Notification !== 'undefined' ? Notification.permission : 'default',
   );

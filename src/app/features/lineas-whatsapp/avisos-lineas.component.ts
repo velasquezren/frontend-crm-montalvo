@@ -10,9 +10,9 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
 import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PaginatorComponent } from '../../shared/components/paginator/paginator.component';
-import { SwitchComponent } from '../../shared/components/switch/switch.component';
 import { AvisoLinea } from './linea-whatsapp.model';
 import { LineasWhatsappService } from './lineas-whatsapp.service';
+import { ListaAvisosLineasComponent } from './lista-avisos-lineas.component';
 
 /**
  * «¿Quiero que me suene esta línea?», decidido por cada persona para sí.
@@ -28,7 +28,7 @@ import { LineasWhatsappService } from './lineas-whatsapp.service';
  */
 @Component({
   selector: 'app-avisos-lineas',
-  imports: [ButtonComponent, EmptyStateComponent, ErrorCargaComponent, LoadingSkeletonComponent, PaginatorComponent, SwitchComponent],
+  imports: [ButtonComponent, EmptyStateComponent, ErrorCargaComponent, ListaAvisosLineasComponent, LoadingSkeletonComponent, PaginatorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="bg-white rounded-2xl border border-border p-6 shadow-subtle space-y-4" aria-labelledby="titulo-avisos">
@@ -42,7 +42,12 @@ import { LineasWhatsappService } from './lineas-whatsapp.service';
 
       <!-- El interruptor de la línea no sirve si el navegador tiene bloqueadas
            las notificaciones: se dice aquí y no se deja adivinar. -->
-      @if (notificaciones.permiso() === 'default') {
+      @if (!notificaciones.soportado) {
+        <p class="rounded-xl bg-bg-light px-3 py-2.5 text-sm text-text-dark">
+          Este navegador no muestra notificaciones. En iPhone, añade el CRM a la pantalla de
+          inicio (Compartir → «Añadir a pantalla de inicio») y ábrelo desde ahí.
+        </p>
+      } @else if (notificaciones.permiso() === 'default') {
         <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-bg-light px-3 py-2.5">
           <p class="text-sm text-text-dark">Este dispositivo todavía no tiene las notificaciones activadas.</p>
           <app-button size="sm" variant="secondary" icon="bell" (clicked)="activarEnEsteDispositivo()">Activar</app-button>
@@ -60,21 +65,10 @@ import { LineasWhatsappService } from './lineas-whatsapp.service';
       } @else if (avisos.error()) {
         <app-error-carga que="tus líneas" (reintentar)="avisos.reload()" />
       } @else if (avisos.value().datos.length > 0) {
-        <ul class="rounded-xl border border-border divide-y divide-border">
-          @for (aviso of avisos.value().datos; track aviso.lineaId) {
-            <li class="flex items-center justify-between gap-3 px-3 py-2.5">
-              <div class="min-w-0">
-                <p class="text-sm font-medium text-text-dark truncate">{{ aviso.nombre }}</p>
-                @if (aviso.telefono) { <p class="text-xs text-text-muted tabular-nums">{{ aviso.telefono }}</p> }
-              </div>
-              <app-switch
-                [value]="aviso.suena"
-                [disabled]="enVuelo().includes(aviso.lineaId)"
-                (valueChange)="alternar(aviso.lineaId, $event)"
-                [ariaLabel]="'Avisos de ' + aviso.nombre" />
-            </li>
-          }
-        </ul>
+        <app-lista-avisos-lineas
+          [avisos]="avisos.value().datos"
+          [enEspera]="enVuelo()"
+          (cambio)="alternar($event.lineaId, $event.suena)" />
         <app-paginator
           [pagina]="avisos.value().pagina"
           [totalPaginas]="avisos.value().totalPaginas"
@@ -124,7 +118,7 @@ export class AvisosLineasComponent {
   }
 
   protected async activarEnEsteDispositivo(): Promise<void> {
-    if (!(await this.notificaciones.solicitarPermiso()) && this.notificaciones.permiso() !== 'granted') {
+    if (!(await this.notificaciones.solicitarPermiso())) {
       this.toast.info('Sin permiso del navegador no pueden llegar avisos a este dispositivo.', 'Notificaciones');
     }
   }

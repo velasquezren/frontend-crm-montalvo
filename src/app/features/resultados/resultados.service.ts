@@ -35,6 +35,22 @@ export class ResultadosService {
     return this.api.post<{ enviado: true; mensajeId: string }>(`/resultados/${informeId}/enviar`);
   }
 
+  /**
+   * Corrige el teléfono de la ficha a la que va el aviso de este informe.
+   *
+   * Sobre el INFORME y no sobre la ficha: la asistente no entra en Clientes
+   * —esa ruta exige rango de agente y le respondía 403—, y el servidor decide
+   * qué ficha es con el mismo cruce por PAC o CI de la cola.
+   */
+  corregirTelefono(informeId: string, telefono: string): Promise<{ clienteId: string; telefono: string }> {
+    return this.api.patch<{ clienteId: string; telefono: string }>(`/resultados/${informeId}/telefono`, { telefono });
+  }
+
+  /** Alta de la ficha del paciente del informe: nombre y PAC los pone el portal. */
+  crearFicha(informeId: string, telefono: string): Promise<{ clienteId: string }> {
+    return this.api.post<{ clienteId: string }>(`/resultados/${informeId}/ficha`, { telefono });
+  }
+
   /** El enlace venció: se extiende 30 días y se vuelve a avisar al paciente. */
   renovarYEnviar(informeId: string): Promise<{ enviado: true; mensajeId: string }> {
     return this.api.post<{ enviado: true; mensajeId: string }>(`/resultados/${informeId}/renovar-y-enviar`);

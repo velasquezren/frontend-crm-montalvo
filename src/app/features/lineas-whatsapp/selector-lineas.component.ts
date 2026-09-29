@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
-import { SwitchComponent } from '../../shared/components/switch/switch.component';
-import { LineaWhatsapp } from './linea-whatsapp.model';
+import { AvisoLinea, LineaWhatsapp } from './linea-whatsapp.model';
+import { ListaAvisosLineasComponent } from './lista-avisos-lineas.component';
 
 /**
  * Qué líneas ve una cuenta y cuáles de ellas le suenan.
@@ -14,7 +14,7 @@ import { LineaWhatsapp } from './linea-whatsapp.model';
  */
 @Component({
   selector: 'app-selector-lineas',
-  imports: [FilterChipComponent, SwitchComponent],
+  imports: [FilterChipComponent, ListaAvisosLineasComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: ` <fieldset class="space-y-2">
     <legend class="text-sm font-medium text-text-dark">Líneas autorizadas</legend>
@@ -33,24 +33,14 @@ import { LineaWhatsapp } from './linea-whatsapp.model';
       </p>
     }
   </fieldset>
-  @if (asignadas().length) {
+  @if (avisosAsignadas().length) {
     <fieldset class="space-y-2 pt-2">
       <legend class="text-sm font-medium text-text-dark">Avisos de mensajes nuevos</legend>
       <p class="text-xs text-text-muted">
         Apagado, sigue viendo esos chats pero no le suenan en el teléfono ni en la
         pestaña. Los chats que tenga asignados le avisan igual.
       </p>
-      <ul class="rounded-xl border border-border divide-y divide-border">
-        @for (linea of asignadas(); track linea.id) {
-          <li class="flex items-center justify-between gap-3 px-3 py-2.5">
-            <span class="text-sm text-text-dark">{{ linea.nombre }}</span>
-            <app-switch
-              [value]="!silenciadas().includes(linea.id)"
-              (valueChange)="alternarAviso(linea.id, $event)"
-              [ariaLabel]="'Avisos de ' + linea.nombre" />
-          </li>
-        }
-      </ul>
+      <app-lista-avisos-lineas [avisos]="avisosAsignadas()" (cambio)="alternarAviso($event.lineaId, $event.suena)" />
     </fieldset>
   }`,
 })
@@ -60,7 +50,12 @@ export class SelectorLineasComponent {
   /** Líneas asignadas cuyos mensajes no le suenan. */
   readonly silenciadas = model<string[]>([]);
 
-  protected readonly asignadas = computed(() => this.lineas().filter(l => this.ids().includes(l.id)));
+  /** Las líneas asignadas, en la forma del renglón compartido. */
+  protected readonly avisosAsignadas = computed<AvisoLinea[]>(() =>
+    this.lineas()
+      .filter(l => this.ids().includes(l.id))
+      .map(l => ({ lineaId: l.id, nombre: l.nombre, telefono: l.telefono, suena: !this.silenciadas().includes(l.id) })),
+  );
 
   alternar(id: string): void {
     const quitada = this.ids().includes(id);

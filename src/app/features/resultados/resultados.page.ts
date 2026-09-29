@@ -20,7 +20,6 @@ import { nombreParaMostrar } from '../../shared/models/nombre-cliente';
 import { AVISO_TELEFONO_INVALIDO, telefonoParaEscribir } from '../../shared/models/telefono';
 import { NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { ToastService } from '../../core/toast/toast.service';
-import { ClientesService } from '../clientes/clientes.service';
 import { EntregaResultado, estadoEntrega, motivoBloqueo, nombresDistintos, sePuedeEntregar, sePuedeRenovar } from './resultado.model';
 import { ResultadosService } from './resultados.service';
 
@@ -56,10 +55,6 @@ export class ResultadosPage {
   private readonly dialog = inject(DialogService);
   private readonly vcr = inject(ViewContainerRef);
   private readonly toast = inject(ToastService);
-
-  /* El dueño de la ficha del paciente es Clientes: el teléfono se corrige por
-     su service, no con una ruta propia de esta pantalla. */
-  private readonly clientesService = inject(ClientesService);
 
   private readonly plantillaConfirmar = viewChild.required<TemplateRef<unknown>>('confirmar');
   private readonly plantillaTelefono = viewChild.required<TemplateRef<unknown>>('editarTelefono');
@@ -98,7 +93,8 @@ export class ResultadosPage {
   protected readonly distintos = nombresDistintos;
 
   /** Ficha cuyo teléfono se está corrigiendo, y el valor tecleado. */
-  protected readonly editando = signal<{ id: string; nombre: string; telefono: string } | null>(null);
+  /* Se guarda el INFORME, no la ficha: el backend decide a qué ficha va. */
+  protected readonly editando = signal<{ informeId: string; nombre: string; telefono: string } | null>(null);
   protected readonly telefonoNuevo = signal('');
   protected readonly guardandoTelefono = signal(false);
   /** Lo tecleado en el formato que exige el backend: `70012345` → `+59170012345`. */
@@ -120,7 +116,7 @@ export class ResultadosPage {
    */
   protected abrirTelefono(fila: EntregaResultado): void {
     if (!fila.paciente) return;
-    this.editando.set({ id: fila.paciente.id, nombre: nombreParaMostrar(fila.paciente), telefono: fila.paciente.telefono });
+    this.editando.set({ informeId: fila.informeId, nombre: nombreParaMostrar(fila.paciente), telefono: fila.paciente.telefono });
     this.telefonoNuevo.set(fila.paciente.telefono);
     this.telefonoChocado.set(null);
     this.abrirModal(this.plantillaTelefono(), () => this.cerrarTelefono());
@@ -133,12 +129,12 @@ export class ResultadosPage {
   }
 
   protected async guardarTelefono(): Promise<void> {
-    const ficha = this.editando();
+    const edicion = this.editando();
     const telefono = this.telefonoNuevoE164();
-    if (!ficha || !telefono || this.telefonoSinCambios() || this.errorTelefonoNuevo() || this.guardandoTelefono()) return;
+    if (!edicion || !telefono || this.telefonoSinCambios() || this.errorTelefonoNuevo() || this.guardandoTelefono()) return;
     this.guardandoTelefono.set(true);
     try {
-      await this.clientesService.actualizar(ficha.id, { telefono });
+      await this.resultadosService.corregirTelefono(edicion.informeId, telefono);
       this.cerrarTelefono();
       this.toast.success('El aviso saldrá a ese número.', 'Teléfono actualizado');
       this.entregas.reload();
@@ -270,12 +266,9 @@ export class ResultadosPage {
     if (!fila || !telefono || this.errorTelefonoAlta() || this.guardandoAlta()) return;
     this.guardandoAlta.set(true);
     try {
-      await this.clientesService.crear({
-        nombre: fila.pacientePortal.nombre,
-        telefono,
-        pac: fila.pacientePortal.pac,
-        ci: fila.pacientePortal.ci,
-      });
+      /* Nombre, PAC y CI los pone el backend desde el portal: aquí solo viaja
+         lo que el CRM no puede saber. */
+      await this.resultadosService.crearFicha(fila.informeId, telefono);
       this.cerrarAlta();
       /* Al recargar, el backend vuelve a cruzar por PAC; cuando llega, el
          effect del constructor abre la confirmación de envío. */
