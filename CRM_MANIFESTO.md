@@ -50,7 +50,7 @@
 | Regla | Descripción |
 |-------|-------------|
 | **Encapsulamiento de Módulo** | Cada dominio bajo `src/modules/` debe ser 100% autocontenido. La lista de módulos reales cambia con el producto — no la copies en un documento nuevo; `ls backend-crm-montalvo/src/modules/` o el skill `crm-backend-arquitectura` la tienen siempre al día. |
-| **Aislamiento de Persistencia** | Un módulo tiene **estrictamente prohibido** consultar o modificar la base de datos de otro módulo. Toda comunicación cruzada se realiza exponiendo y consumiendo métodos públicos a través de los **Services**. |
+| **Aislamiento de Persistencia** | Un módulo tiene **prohibido escribir** en las tablas de otro módulo: le pide el cambio al **Service** dueño. Leer tablas ajenas para agregar o informar (KPIs, Servicios) sí está permitido. Las pocas escrituras cruzadas que existen hoy, con su motivo, están en `docs/PANORAMA.md` del backend («Quién escribe cada tabla»), y una nueva se apunta ahí. |
 | **Validación Perimetral** | Toda entrada externa de datos (webhooks de Meta, inputs de ventanilla) debe ser procesada y validada estrictamente por un **DTO** antes de tocar la lógica de negocio. |
 | **Modelo Único** | El archivo `schema.prisma` es la **única fuente de verdad**. No se permite duplicar tipos de datos manuales en archivos externos. |
 
@@ -526,3 +526,9 @@ La IA debe ser capaz de responder afirmativamente a **todas** estas preguntas an
 > esta sesión — la estrategia elegida fue recortar los inventarios que se
 > desactualizan solos y reemplazarlos por punteros a los skills que sí se
 > verifican en cada build, en vez de volver a escribirlos a mano acá.
+>
+> **Corregido el 2026-09-29** (§1.1, «Aislamiento de Persistencia»): decía que
+> estaba prohibido incluso *consultar* la base de otro módulo, cosa que el
+> backend no cumple ni debe cumplir —KPIs y Servicios agregan sobre tablas
+> ajenas—. Ahora dice la regla que sí se cumple (no escribir la tabla de otro
+> dominio) y remite a la lista de excepciones del backend.
