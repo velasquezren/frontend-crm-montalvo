@@ -15,7 +15,6 @@ import {
   ReglaClasificacionCreada,
   ReporteConsolidado,
   ResultadoAprobacion,
-  RevisionPeriodo,
   RespuestaImportacion,
   ResultadoCalculo,
   CambiosVendedora,
@@ -110,10 +109,6 @@ export class PlanillaComisionesService {
       limite: filtro.limite,
       mesCompleto: filtro.mesCompleto ? true : undefined,
     });
-  }
-
-  alertasRequest(periodoId: string): ResourceRequest {
-    return this.api.request(`/planilla-comisiones/periodos/${periodoId}/alertas`);
   }
 
   /**
@@ -262,10 +257,6 @@ export class PlanillaComisionesService {
 
   revisionRequest(periodoId: string): ResourceRequest {
     return this.api.request(`/planilla-comisiones/periodos/${periodoId}/revision`);
-  }
-
-  obtenerRevision(periodoId: string): Promise<RevisionPeriodo> {
-    return this.api.get<RevisionPeriodo>(`/planilla-comisiones/periodos/${periodoId}/revision`);
   }
 
   enviarARevision(periodoId: string): Promise<PeriodoComision> {

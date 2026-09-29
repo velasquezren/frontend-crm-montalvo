@@ -115,7 +115,6 @@ export class LeadsPage {
      criterio que "Quitar comisión" en la planilla de FileMaker. */
   protected readonly leadParaPerder = signal<Lead | null>(null);
   protected readonly motivoPerdidaTexto = signal('');
-  protected readonly guardandoMotivoPerdida = signal(false);
   private onConfirmarMotivoPerdida?: (motivo: string) => void;
 
   /* ── Alta rápida de Lead (Presencial / Entrada) ────────────────────── */
