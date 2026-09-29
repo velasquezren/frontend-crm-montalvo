@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { lineasSilenciadasDe, silencioParaGuardar } from './linea-whatsapp.model';
+import { silencioParaGuardar } from './linea-whatsapp.model';
 
 /**
  * Qué líneas le suenan a una cuenta. La regla de fondo vive en el backend
@@ -10,21 +10,6 @@ import { lineasSilenciadasDe, silencioParaGuardar } from './linea-whatsapp.model
 
 const RECEPCION = 'linea-recepcion';
 const VENTAS = 'linea-ventas';
-
-describe('lineasSilenciadasDe', () => {
-  it('lee del acceso qué líneas no le suenan', () => {
-    expect(
-      lineasSilenciadasDe([
-        { lineaId: VENTAS, notificar: true },
-        { lineaId: RECEPCION, notificar: false },
-      ]),
-    ).toEqual([RECEPCION]);
-  });
-
-  it('sin nada silenciado, todo suena', () => {
-    expect(lineasSilenciadasDe([{ lineaId: VENTAS, notificar: true }])).toEqual([]);
-  });
-});
 
 describe('silencioParaGuardar', () => {
   it('manda el silencio de las líneas que sigue teniendo', () => {

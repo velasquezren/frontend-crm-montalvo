@@ -1,5 +1,5 @@
 import { LineasWhatsappService } from '../lineas-whatsapp/lineas-whatsapp.service';
-import { LineaWhatsapp, lineasSilenciadasDe, silencioParaGuardar } from '../lineas-whatsapp/linea-whatsapp.model';
+import { LineaWhatsapp, silencioParaGuardar } from '../lineas-whatsapp/linea-whatsapp.model';
 import { SelectorLineasComponent } from '../lineas-whatsapp/selector-lineas.component';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { DatePipe } from '@angular/common';
@@ -237,7 +237,7 @@ export class AgentesPage {
       password: this.formPassword(),
       rol: this.formRol(),
       lineaIds,
-      lineasSilenciadas: silencioParaGuardar(this.formSilenciadas(), lineaIds),
+      ...this.silencioDelFormulario(this.formRol(), this.formSilenciadas(), lineaIds),
     };
 
     this.agentesService
@@ -299,7 +299,7 @@ export class AgentesPage {
     this.editCodigo.set(agente.codigo ?? '');
     this.editRol.set(agente.rol);
     this.editLineas.set(agente.lineasWhatsapp.map(l => l.lineaId));
-    this.editSilenciadas.set(lineasSilenciadasDe(agente.lineasWhatsapp));
+    this.editSilenciadas.set(agente.lineasSilenciadas);
     this.editPassword.set('');
     this.errorMensaje.set(null);
     this.modalEditarAbierto.set(true);
@@ -309,6 +309,19 @@ export class AgentesPage {
         onClose: () => this.cerrarEdicion(),
       });
     }
+  }
+
+  /**
+   * Lo que el formulario manda sobre los avisos.
+   *
+   * Para un rol global, NADA: el formulario no muestra sus líneas —las ve todas
+   * por su rol— ni, por tanto, sus avisos, y mandar `[]` borraría lo que esa
+   * persona eligió en su perfil sin que nadie lo viera. Sin el campo, el
+   * backend lo conserva. Para el resto, siempre explícito: lo que se guarda es
+   * lo que la admin está viendo.
+   */
+  private silencioDelFormulario(rol: RolUsuario, silenciadas: string[], lineaIds: string[]): { lineasSilenciadas?: string[] } {
+    return cubreRol(rol, 'ADMIN') ? {} : { lineasSilenciadas: silencioParaGuardar(silenciadas, lineaIds) };
   }
 
   cerrarEdicion(): void {
@@ -347,9 +360,7 @@ export class AgentesPage {
         email,
         rol: this.editRol(),
         lineaIds,
-        /* Siempre explícito: el formulario muestra el estado entero, así que lo
-           que se guarda es lo que la admin ve, no una mezcla con lo anterior. */
-        lineasSilenciadas: silencioParaGuardar(this.editSilenciadas(), lineaIds),
+        ...this.silencioDelFormulario(this.editRol(), this.editSilenciadas(), lineaIds),
         /* Vacío = se limpia el código (el backend lo guarda como NULL). */
         codigo: this.editCodigo().trim(),
         /* La contraseña solo se envía si el admin escribió una nueva. */

@@ -18,20 +18,21 @@ export interface ActualizarLinea {
   activa: boolean;
 }
 
-/** Un acceso de una cuenta a una línea, tal como lo devuelve `/usuarios`. */
-export interface AccesoLinea {
+/**
+ * Una línea que la persona ve y si le suena, tal como lo devuelve
+ * `GET /lineas-whatsapp/avisos`. Es de QUIEN PREGUNTA: no hay forma de pedir
+ * los de otra.
+ */
+export interface AvisoLinea {
   readonly lineaId: string;
+  readonly nombre: string;
+  readonly telefono: string | null;
   /**
-   * `false` = ve esa línea, pero sus mensajes no le suenan (ni push ni aviso
-   * en la pestaña), salvo los chats que tenga asignados. Ver
+   * `false` = la ve, pero sus mensajes no le suenan (ni push ni aviso en la
+   * pestaña), salvo los chats que tenga asignados. Ver
    * `LineasWhatsappService.audiencia` en el backend.
    */
-  readonly notificar: boolean;
-}
-
-/** Las líneas que esa cuenta tiene silenciadas. */
-export function lineasSilenciadasDe(accesos: readonly AccesoLinea[]): string[] {
-  return accesos.filter(a => !a.notificar).map(a => a.lineaId);
+  readonly suena: boolean;
 }
 
 /**

@@ -31,6 +31,7 @@ import { MemoriaAgenteService } from '../memoria-agente/memoria-agente.service';
 
 import { ActivatedRoute } from '@angular/router';
 import { ImageViewerComponent } from '../../shared/components/image-viewer/image-viewer.component';
+import { AvisosLineasComponent } from '../lineas-whatsapp/avisos-lineas.component';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,6 +46,7 @@ import { ImageViewerComponent } from '../../shared/components/image-viewer/image
     BadgeComponent,
     InputComponent,
     ImageViewerComponent,
+    AvisosLineasComponent,
   ],
   templateUrl: './perfil.page.html',
   styleUrl: './perfil.page.css',
