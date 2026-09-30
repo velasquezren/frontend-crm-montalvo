@@ -46,6 +46,7 @@ import { agruparPlanes } from './agrupar-planes';
 import { SubtotalVendedora, TotalesVentas, PlanillaComisionesService } from './planilla-comisiones.service';
 import { TablaLiquidacionComponent } from './components/tabla-liquidacion.component';
 import { ConfiguracionComisionesComponent } from './components/configuracion-comisiones.component';
+import { CierrePeriodoComponent } from './components/cierre-periodo.component';
 import { SeleccionPlanesComponent } from './components/seleccion-planes.component';
 import {
   Alertas,
@@ -54,7 +55,6 @@ import {
   ClasifComision,
   CLASIF_LABEL,
   ConfiguracionPlanilla,
-  ESTADO_PERIODO_AYUDA,
   ESTADO_PERIODO_BADGE,
   ESTADO_PERIODO_LABEL,
   etiquetaTipoFila,
@@ -107,6 +107,7 @@ interface DocumentoDescargable {
 @Component({
   selector: 'app-planilla-comisiones',
   imports: [
+    CierrePeriodoComponent,
     TablaLiquidacionComponent,
     DesgloseComisionesComponent,
     ConfiguracionComisionesComponent,
@@ -323,118 +324,7 @@ export class PlanillaComisionesPage {
     { defaultValue: undefined },
   );
 
-  protected readonly estadoPeriodoLabel = ESTADO_PERIODO_LABEL;
   protected readonly estadoPeriodoBadge = ESTADO_PERIODO_BADGE;
-  protected readonly estadoPeriodoAyuda = ESTADO_PERIODO_AYUDA;
-
-  protected readonly enviandoARevision = signal(false);
-  protected readonly aprobando = signal(false);
-  protected readonly comentarioAprobacion = signal('');
-
-  /** Rechazar y reabrir comparten modal: los dos piden lo mismo, un motivo. */
-  protected readonly accionConMotivo = signal<'RECHAZAR' | 'REABRIR' | null>(null);
-  protected readonly motivoAccion = signal('');
-  protected readonly guardandoMotivo = signal(false);
-  private readonly plantillaMotivo = viewChild<TemplateRef<unknown>>('modalMotivo');
-  private overlayMotivo: OverlayRef | null = null;
-
-  protected async enviarARevision(): Promise<void> {
-    const id = this.periodoId();
-    if (!id) return;
-
-    this.enviandoARevision.set(true);
-    try {
-      await this.service.enviarARevision(id);
-      this.toast.success(
-        'El mes queda congelado hasta que se apruebe o se rechace.',
-        'Enviado a revisión',
-      );
-      await this.refrescarCierre(id);
-    } catch (err) {
-      this.toast.error(mensajeDeError(err, 'No se pudo enviar a revisión.'), 'Error');
-    } finally {
-      this.enviandoARevision.set(false);
-    }
-  }
-
-  protected async aprobar(): Promise<void> {
-    const id = this.periodoId();
-    if (!id) return;
-
-    this.aprobando.set(true);
-    try {
-      const resultado = await this.service.aprobarPeriodo(id, this.comentarioAprobacion());
-      /* El mensaje distingue los dos desenlaces porque desde la pantalla son
-         indistinguibles: en los dos casos el botón desaparece. */
-      if (resultado.cerrado) {
-        this.toast.success('El mes queda cerrado con las cifras revisadas.', 'Cerrado');
-      } else {
-        this.toast.success(
-          `Falta ${resultado.faltan.map(f => f.nombre).join(', ')} para cerrar el mes.`,
-          'Aprobación registrada',
-        );
-      }
-      this.comentarioAprobacion.set('');
-      await this.refrescarCierre(id);
-    } catch (err) {
-      this.toast.error(mensajeDeError(err, 'No se pudo aprobar el periodo.'), 'Error');
-    } finally {
-      this.aprobando.set(false);
-    }
-  }
-
-  protected async registrarPago(): Promise<void> {
-    const id = this.periodoId();
-    if (!id) return;
-
-    try {
-      await this.service.registrarPago(id);
-      this.toast.success('El mes queda como pagado y ya no se modifica.', 'Pago registrado');
-      await this.refrescarCierre(id);
-    } catch (err) {
-      this.toast.error(mensajeDeError(err, 'No se pudo registrar el pago.'), 'Error');
-    }
-  }
-
-  protected abrirAccionConMotivo(accion: 'RECHAZAR' | 'REABRIR'): void {
-    this.motivoAccion.set('');
-    this.accionConMotivo.set(accion);
-    const tpl = this.plantillaMotivo();
-    if (!tpl) return;
-    this.overlayMotivo?.dispose();
-    this.overlayMotivo = this.dialogService.openTemplate(tpl, this.vcr);
-    this.overlayMotivo.backdropClick().subscribe(() => this.cerrarAccionConMotivo());
-  }
-
-  protected cerrarAccionConMotivo(): void {
-    this.accionConMotivo.set(null);
-    this.overlayMotivo?.dispose();
-    this.overlayMotivo = null;
-  }
-
-  protected async confirmarAccionConMotivo(): Promise<void> {
-    const id = this.periodoId();
-    const accion = this.accionConMotivo();
-    const motivo = this.motivoAccion().trim();
-    if (!id || !accion || motivo.length < 3) return;
-
-    this.guardandoMotivo.set(true);
-    try {
-      if (accion === 'RECHAZAR') {
-        await this.service.rechazarPeriodo(id, motivo);
-        this.toast.success('El mes vuelve a edición y se borran las aprobaciones.', 'Rechazado');
-      } else {
-        await this.service.reabrirPeriodo(id, motivo);
-        this.toast.success('El mes vuelve a edición. Queda registrado quién y por qué.', 'Reabierto');
-      }
-      this.cerrarAccionConMotivo();
-      await this.refrescarCierre(id);
-    } catch (err) {
-      this.toast.error(mensajeDeError(err, 'No se pudo completar la acción.'), 'Error');
-    } finally {
-      this.guardandoMotivo.set(false);
-    }
-  }
 
   /**
    * Tras un cambio de estado hay que refrescar TODO lo que depende de él: el
@@ -442,6 +332,9 @@ export class PlanillaComisionesPage {
    * alertas. Sin el `periodos.reload()` la cabecera seguía diciendo "Calculado"
    * sobre un mes ya cerrado.
    */
+  /** Lo que `<app-cierre-periodo>` espera tras cada acción. */
+  protected readonly refrescarTrasCierre = (id: string): Promise<void> => this.refrescarCierre(id);
+
   private async refrescarCierre(id: string): Promise<void> {
     this.revision.reload();
     this.periodos.reload();
