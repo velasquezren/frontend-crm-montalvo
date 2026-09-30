@@ -74,57 +74,50 @@
     </p>
   }
   <div class="sidebar-filters">
+    <!-- Las cuatro pestañas de trabajo: solo abiertas. Una sola definición
+         (`pestanas` en el componente) en vez de cuatro botones copiados, para
+         que añadir o renombrar una no deje las demás con otro estilo. -->
     <div class="tabs-inbox flex items-center justify-around py-1.5">
-      <button
-        type="button"
-        (click)="setFiltroTab('TODAS'); filtrarPorAgente(null)"
-        [class]="state.filtroTab() === 'TODAS' && !state.filtroAgenteId() ? 'text-primary font-bold border-b-2 border-primary -mb-[11px] pb-2' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent -mb-[11px] pb-2'"
-        class="flex flex-col items-center gap-1 px-3 transition-all cursor-pointer">
-        <span class="text-xs leading-tight">Todas</span>
-        <span class="crm-contador" [class.crm-contador-activo]="state.filtroTab() === 'TODAS' && !state.filtroAgenteId()">
-          {{ state.stats().total }}
+      @for (p of pestanas; track p.tab; let primera = $first) {
+        @if (!primera) {
+          <div class="tab-divisor w-px h-6 bg-border/50 shrink-0"></div>
+        }
+        <button
+          type="button"
+          (click)="elegirPestana(p.tab)"
+          [attr.aria-pressed]="esActiva(p.tab)"
+          [title]="p.ayuda"
+          [class]="esActiva(p.tab) ? 'text-primary font-bold border-b-2 border-primary -mb-[11px] pb-2' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent -mb-[11px] pb-2'"
+          class="flex flex-col items-center gap-1 px-3 transition-all cursor-pointer">
+          <span class="text-xs leading-tight">{{ p.etiqueta }}</span>
+          <span class="crm-contador" [class.crm-contador-activo]="esActiva(p.tab)">
+            {{ state.stats()[p.contador] }}
+          </span>
+        </button>
+      }
+    </div>
+
+    <!-- El archivo: fuera de las pestañas de trabajo a propósito (el modelo de
+         Intercom y Front). Una cerrada no es trabajo pendiente; mezclarla con
+         ellas es lo que inflaba «Sin responder». -->
+    <div class="inbox-cerradas" [class.inbox-cerradas--activa]="viendoCerradas()">
+      @if (viendoCerradas()) {
+        <span class="inbox-cerradas__nota">
+          <app-icon name="check-circle" [size]="12" class="shrink-0" />
+          Cerradas · se reabren solas si la paciente escribe
         </span>
-      </button>
-
-      <div class="tab-divisor w-px h-6 bg-border/50 shrink-0"></div>
-
-      <!-- Sin responder: el paciente escribió y nadie contestó después -->
-      <button
-        type="button"
-        (click)="setFiltroTab('SIN_RESPONDER')"
-        [class]="state.filtroTab() === 'SIN_RESPONDER' ? 'text-primary font-bold border-b-2 border-primary -mb-[11px] pb-2' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent -mb-[11px] pb-2'"
-        class="flex flex-col items-center gap-1 px-3 transition-all cursor-pointer">
-        <span class="text-xs leading-tight">Sin responder</span>
-        <span class="crm-contador" [class.crm-contador-activo]="state.filtroTab() === 'SIN_RESPONDER'">
-          {{ state.stats().sinResponder }}
-        </span>
-      </button>
-
-      <div class="tab-divisor w-px h-6 bg-border/50 shrink-0"></div>
-
-      <button
-        type="button"
-        (click)="setFiltroTab('SIN_ASIGNAR')"
-        [class]="state.filtroTab() === 'SIN_ASIGNAR' ? 'text-primary font-bold border-b-2 border-primary -mb-[11px] pb-2' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent -mb-[11px] pb-2'"
-        class="flex flex-col items-center gap-1 px-3 transition-all cursor-pointer">
-        <span class="text-xs leading-tight">Sin asignar</span>
-        <span class="crm-contador" [class.crm-contador-activo]="state.filtroTab() === 'SIN_ASIGNAR'">
-          {{ state.stats().sinAsignar }}
-        </span>
-      </button>
-
-      <div class="tab-divisor w-px h-6 bg-border/50 shrink-0"></div>
-
-      <button
-        type="button"
-        (click)="setFiltroTab('MIS_CHATS')"
-        [class]="state.filtroTab() === 'MIS_CHATS' ? 'text-primary font-bold border-b-2 border-primary -mb-[11px] pb-2' : 'text-text-muted hover:text-text-dark font-medium border-b-2 border-transparent -mb-[11px] pb-2'"
-        class="flex flex-col items-center gap-1 px-3 transition-all cursor-pointer">
-        <span class="text-xs leading-tight">Mis chats</span>
-        <span class="crm-contador" [class.crm-contador-activo]="state.filtroTab() === 'MIS_CHATS'">
-          {{ state.stats().misChats }}
-        </span>
-      </button>
+        <button type="button" class="inbox-cerradas__boton" (click)="elegirPestana('TODAS')">
+          <app-icon name="chevron-left" [size]="12" />
+          Volver a las abiertas
+        </button>
+      } @else {
+        <button type="button" class="inbox-cerradas__boton" (click)="elegirPestana('CERRADAS')"
+          title="Chats resueltos o sin actividad en 30 días. Se reabren solos si la paciente escribe.">
+          <app-icon name="check-circle" [size]="12" />
+          Ver cerradas
+          <span class="crm-contador">{{ state.stats().cerradas }}</span>
+        </button>
+      }
     </div>
 
     <!-- Filtro por agente (solo admin con chats activos) -->
@@ -223,6 +216,11 @@
                     {{ chat.cliente.pac }}
                   </span>
                 }
+                <!-- Solo aparece fuera del archivo: al buscar, «Todas» también
+                     encuentra las cerradas, y hay que distinguirlas. -->
+                @if (chat.cerradaEn && !viendoCerradas()) {
+                  <app-badge variant="neutral" icon="check-circle" class="shrink-0">Cerrada</app-badge>
+                }
               </div>
               <span class="text-[10px] text-text-muted shrink-0 leading-none">
                 {{ tiempoRelativo(chat.updatedAt) }}
@@ -261,8 +259,13 @@
           </div>
         </button>
       } @empty {
-        <app-empty-state icon="message-circle" title="Sin resultados"
-          description="No hay conversaciones que coincidan con tu filtro." />
+        @if (viendoCerradas() && !state.busqueda().trim()) {
+          <app-empty-state icon="check-circle" title="Ninguna cerrada"
+            description="Cierra un chat resuelto desde su cabecera. Si la paciente vuelve a escribir, se reabre solo." />
+        } @else {
+          <app-empty-state icon="message-circle" title="Sin resultados"
+            description="No hay conversaciones que coincidan con tu filtro." />
+        }
       }
 
       <!-- Paginación real: el inbox ya no se corta en 500 conversaciones.

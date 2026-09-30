@@ -1,6 +1,7 @@
 import { LineaWhatsapp } from '../lineas-whatsapp/linea-whatsapp.model';
 import { Rol } from '../../core/api/db-enums';
 import { DatosExtra } from '../../core/api/datos-extra';
+import { ZONA_CLINICA } from '../actividades/zona-clinica';
 
 import { EstadoMensaje, TipoMensaje } from '../../core/api/db-enums';
 
@@ -103,11 +104,37 @@ export interface ConversacionResumen {
    * y no solo sobre las que el navegador tenga cargadas.
    */
   readonly esperandoRespuesta?: boolean;
+  /**
+   * Cuándo se dio por resuelta, o null si está abierta. Una cerrada no cuenta
+   * en las pestañas de trabajo y se reabre sola cuando escribe la paciente o
+   * le contesta la clínica. Ver `estado-conversacion.ts` del backend.
+   */
+  readonly cerradaEn?: string | null;
 }
 
 export interface ConversacionDetalle extends Omit<ConversacionResumen, 'mensajes'> {
   /** El detalle incluye el hilo completo en orden cronológico. */
   readonly mensajes: readonly MensajeApi[];
+  /** Quién la cerró; null con `cerradaEn` = la cerró el sistema por inactividad. */
+  readonly cerradaPor?: { readonly id: string; readonly nombre: string } | null;
+}
+
+/**
+ * La franja de un chat cerrado: quién lo cerró y cuándo, y que se reabre solo.
+ * Sin `cerradaPor` lo cerró el barrido de inactividad, no una persona.
+ */
+export function describirCierre(chat: Pick<ConversacionDetalle, 'cerradaEn' | 'cerradaPor'>): string | null {
+  if (!chat.cerradaEn) return null;
+  const fecha = new Date(chat.cerradaEn).toLocaleDateString('es-BO', { day: 'numeric', month: 'long', timeZone: ZONA_CLINICA });
+  const quien = chat.cerradaPor ? `por ${chat.cerradaPor.nombre.split(' ')[0]}` : 'por inactividad';
+  return `Cerrada ${quien} el ${fecha}. Se reabre sola si la paciente escribe o si le contestas.`;
+}
+
+/** Lo que devuelven `POST /conversaciones/:id/cerrar` y `/reabrir`. */
+export interface EstadoConversacion {
+  readonly id: string;
+  readonly cerradaEn: string | null;
+  readonly cerradaPor: { readonly id: string; readonly nombre: string } | null;
 }
 
 /** Agente para dropdown de asignación (GET /conversaciones/meta/agentes). */
@@ -156,8 +183,11 @@ export interface PlantillaAgente {
   readonly updatedAt: string;
 }
 
-/** Filtros de la vista del inbox. */
-export const FILTROS_INBOX = ['TODAS', 'SIN_RESPONDER', 'SIN_ASIGNAR', 'MIS_CHATS'] as const;
+/**
+ * Filtros de la vista del inbox. Espejo de `TABS_INBOX` del backend.
+ * Las cuatro primeras son de trabajo (solo abiertas); `CERRADAS` es el archivo.
+ */
+export const FILTROS_INBOX = ['TODAS', 'SIN_RESPONDER', 'SIN_ASIGNAR', 'MIS_CHATS', 'CERRADAS'] as const;
 export type FiltroInbox = (typeof FILTROS_INBOX)[number];
 
 /** Un valor que llega por URL solo cuenta si es una pestaña que existe. */
@@ -165,12 +195,17 @@ export function esFiltroInbox(valor: string | null): valor is FiltroInbox {
   return (FILTROS_INBOX as readonly string[]).includes(valor ?? '');
 }
 
-/** Los números de las cuatro pestañas, calculados por el servidor. */
+/**
+ * Los números de las pestañas, calculados por el servidor con el MISMO filtro
+ * que la lista: cada número es exactamente lo que aparece al pulsarla.
+ */
 export interface ContadoresInbox {
+  /** Abiertas. */
   readonly total: number;
   readonly sinAsignar: number;
   readonly misChats: number;
   readonly sinResponder: number;
+  readonly cerradas: number;
 }
 
 /** Filtros de vista que viajan al servidor con cada petición del listado. */
@@ -210,6 +245,8 @@ export interface ResumenInbox {
  * conteste.
  */
 export function estaSinResponder(c: ConversacionResumen): boolean {
+  /* Cerrada = resuelta: no espera a nadie, aunque lo último sea de la paciente. */
+  if (c.cerradaEn) return false;
   if (c.esperandoRespuesta !== undefined) return c.esperandoRespuesta;
 
   const ultimo = c.mensajes[0];
@@ -219,6 +256,16 @@ export function estaSinResponder(c: ConversacionResumen): boolean {
      Sin esta línea, todo lo que entra un fin de semana desaparecería de la
      pestaña y el lunes nadie sabría quién escribió. */
   return ultimo.direccion === 'ENTRANTE' || ultimo.automatico === true;
+}
+
+/**
+ * Los contadores justo después de que una persona conteste `chat`, hasta que
+ * llegue el refresco del servidor. Contestar la saca de «Sin responder» y, si
+ * estaba cerrada, la reabre: vuelve a contar como abierta.
+ */
+export function contadoresTrasResponder(c: ContadoresInbox, chat: ConversacionResumen): ContadoresInbox {
+  if (chat.cerradaEn) return { ...c, cerradas: Math.max(0, c.cerradas - 1), total: c.total + 1 };
+  return estaSinResponder(chat) ? { ...c, sinResponder: Math.max(0, c.sinResponder - 1) } : c;
 }
 
 /** Momento en que el paciente quedó esperando, o null si ya se le respondió. */

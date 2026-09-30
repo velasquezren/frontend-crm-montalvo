@@ -27,7 +27,7 @@ import { envioSeReintentaSinRiesgo } from '../../clasificar-error-envio';
 import { explicacionErrorWhatsapp } from '../../error-whatsapp';
 import { ConversacionesService } from '../../conversaciones.service';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
-import { ConversacionResumen, MensajeApi } from '../../conversacion.model';
+import { ConversacionResumen, describirCierre, MensajeApi } from '../../conversacion.model';
 import { textoExtra } from '../../../../core/api/datos-extra';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 
@@ -64,6 +64,7 @@ export class ConversacionThreadComponent {
   private readonly toast = inject(ToastService);
 
   protected readonly iniciales = generarIniciales;
+  protected readonly describirCierre = describirCierre;
 
   /**
    * Las URLs de imagen que manda Meta en el `referral` caducan. Una miniatura

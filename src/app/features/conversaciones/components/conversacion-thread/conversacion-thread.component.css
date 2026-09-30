@@ -165,6 +165,26 @@
 }
 
 /* ── Aviso clínico fijado ───────────────────────────────────── */
+/* ── Chat cerrado ─────────────────────────────────────────────
+   Informativa, no alarma: cerrar es un estado normal y reversible. */
+.chat-cerrada {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--color-bg-workspace);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.chat-cerrada__texto {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .pinned-note-banner {
   display: flex;
   align-items: center;

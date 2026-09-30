@@ -116,6 +116,19 @@
         <app-badge variant="neutral" icon="alert-circle" class="hidden sm:inline-flex">Sin asignar</app-badge>
       }
 
+      <!-- Cerrar = dar por resuelta. Sin confirmación: no se pierde nada (se
+           reabre sola si escribe) y el aviso ofrece «Deshacer». -->
+      @if (!chat.cerradaEn) {
+        <app-button
+          variant="ghost" size="sm" icon="check-circle"
+          ariaLabel="Cerrar conversación"
+          title="Cerrar: sale de las pestañas de trabajo. Se reabre sola si la paciente escribe."
+          [loading]="state.cambiandoEstado()"
+          (clicked)="state.cambiarEstado(true)">
+          <span class="hidden sm:inline">Cerrar</span>
+        </app-button>
+      }
+
       <!-- Interruptor de la ficha -->
       <button
         type="button"
@@ -129,6 +142,17 @@
       </button>
     </div>
   </header>
+
+  @if (describirCierre(chat); as cierre) {
+    <div class="chat-cerrada" role="status">
+      <app-icon name="check-circle" [size]="14" class="shrink-0" />
+      <p class="chat-cerrada__texto">{{ cierre }}</p>
+      <app-button
+        variant="secondary" size="sm" icon="rotate-cw"
+        [loading]="state.cambiandoEstado()"
+        (clicked)="state.cambiarEstado(false)">Reabrir</app-button>
+    </div>
+  }
 
   <!-- Campaña de origen (Meta Ads / Click-to-WhatsApp).
 

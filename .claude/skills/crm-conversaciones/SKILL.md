@@ -214,8 +214,23 @@ existiendo (`PATCH /:id/agente`, ADMIN).
 ### El listado se pagina y se filtra EN EL SERVIDOR (desde 2026-08-27)
 
 `GET /conversaciones` devuelve `RespuestaPaginada` más los contadores de las
-cuatro pestañas. Las cuatro operaciones —ordenar, filtrar por pestaña, filtrar
-por agente y buscar— las resuelve Postgres.
+pestañas (`ContadoresInbox`). Las cuatro operaciones —ordenar, filtrar por pestaña, filtrar
+por agente y buscar— las resuelve Postgres. **Cada contador es exactamente el total de
+su pestaña con los mismos filtros** (el backend lo prueba contra Postgres). No sumes ni
+restes contadores en el cliente salvo en el envío optimista (`contadoresTrasResponder`).
+
+**Abierta / cerrada** (2026-09-30). Las cuatro pestañas de trabajo solo muestran
+abiertas. `CERRADAS` es el archivo y va fuera de ellas, en la franja «Ver cerradas» bajo
+las pestañas: una cerrada no es trabajo pendiente, y mezclarla es lo que inflaba «Sin
+responder» a 427. Las pestañas salen de un solo arreglo (`pestanas` en
+`conversacion-lista`), no de botones copiados.
+- «Cerrar» en la cabecera del chat no pide confirmación, porque no se pierde nada: se
+  reabre sola si la paciente escribe o si alguien le contesta. El aviso ofrece «Deshacer»
+  (`cambiarEstado`).
+- Con `cerradaEn`, la franja `describirCierre` dice quién la cerró (sin `cerradaPor`, fue
+  por inactividad) y ofrece «Reabrir».
+- `estaSinResponder()` devuelve `false` para una cerrada.
+- Al buscar en «Todas» también salen cerradas, marcadas con la insignia «Cerrada».
 
 **No lo devuelvas a memoria por hacer que una pestaña cambie "más rápido".** Así
 estaba, y el precio fue este: el backend cortaba en las 500 más recientes y la

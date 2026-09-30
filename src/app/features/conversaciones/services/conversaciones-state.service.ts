@@ -25,7 +25,7 @@ import {
   AgenteResumen,
   ConversacionDetalle,
   ConversacionResumen,
-  estaSinResponder,
+  contadoresTrasResponder,
   FiltroInbox,
   FiltrosInbox,
   ItemHilo,
@@ -57,7 +57,7 @@ const PAGINA_VACIA: PaginaInbox = {
   pagina: 1,
   limite: 50,
   totalPaginas: 1,
-  contadores: { total: 0, sinAsignar: 0, misChats: 0, sinResponder: 0 },
+  contadores: { total: 0, sinAsignar: 0, misChats: 0, sinResponder: 0, cerradas: 0 },
 };
 
 /**
@@ -297,6 +297,8 @@ export class ConversacionesStateService {
   readonly mensajeNuevo = signal('');
   readonly enviando = signal(false);
   readonly asignando = signal(false);
+  /** Cerrando o reabriendo el chat abierto: bloquea el botón contra el doble toque. */
+  readonly cambiandoEstado = signal(false);
 
   /** Sube cada vez que `reconciliarEnvioLocal` reconcilia un envío PROPIO
    *  (nunca uno entrante). El hilo lo usa para saber que debe bajar al fondo
@@ -793,6 +795,35 @@ export class ConversacionesStateService {
     }
   }
 
+  /**
+   * Cierra (da por resuelto) o reabre el chat abierto.
+   *
+   * Cerrar ofrece «Deshacer» en el aviso: es el gesto que más se equivoca con
+   * el dedo, y el chat desaparece de la pestaña en el acto. No hace falta
+   * confirmar antes porque no se pierde nada: se reabre solo si la paciente
+   * escribe.
+   */
+  async cambiarEstado(cerrar: boolean, id = this.seleccionadaId()): Promise<void> {
+    if (!id || this.cambiandoEstado()) return;
+
+    this.cambiandoEstado.set(true);
+    try {
+      await (cerrar ? this.conversacionesService.cerrar(id) : this.conversacionesService.reabrir(id));
+      if (this.seleccionadaId() === id) this.detalle.reload();
+      this.inbox.reload();
+      if (cerrar) {
+        this.toastService.show('Sale de las pestañas de trabajo. Se reabre sola si la paciente escribe.', 'success',
+          'Conversación cerrada', 6000, 'Deshacer', () => void this.cambiarEstado(false, id));
+      } else {
+        this.toastService.success('Vuelve a las pestañas de trabajo.', 'Conversación reabierta');
+      }
+    } catch (err) {
+      this.toastService.error(mensajeDeError(err, cerrar ? 'No se pudo cerrar la conversación.' : 'No se pudo reabrir la conversación.'));
+    } finally {
+      this.cambiandoEstado.set(false);
+    }
+  }
+
   async guardarNotaFijada(): Promise<void> {
     const chat = this.detalleActual();
     if (!chat || this.guardandoNotaFijada()) return;
@@ -963,7 +994,8 @@ export class ConversacionesStateService {
                 : m,
             )
           : [...chat.mensajes, real];
-      const nuevoDetalle = { ...chat, mensajes, updatedAt: real.createdAt };
+      /* Contestar la reabre: la misma regla que el backend (`REABRIR`). */
+      const nuevoDetalle = { ...chat, mensajes, updatedAt: real.createdAt, cerradaEn: null, cerradaPor: null };
       this.detalle.set(nuevoDetalle);
       this.versionEnvioPropio.update(v => v + 1);
     }
@@ -991,6 +1023,7 @@ export class ConversacionesStateService {
          regla que aplica el backend en la transacción del mensaje, reproducida
          aquí para que la fila no se contradiga hasta el próximo refresco. */
       esperandoRespuesta: false,
+      cerradaEn: null,
     };
 
     /* Si estaba en una página siguiente, sube al tope de la primera: el orden
@@ -1002,9 +1035,7 @@ export class ConversacionesStateService {
       datos: [actualizada, ...pagina.datos.filter(c => c.id !== conversacionId)],
       /* Si sale de "Sin responder", el badge tiene que bajar en el acto: es la
          cuenta que la agente mira para saber a quién le falta contestar. */
-      contadores: estaSinResponder(actual)
-        ? { ...pagina.contadores, sinResponder: Math.max(0, pagina.contadores.sinResponder - 1) }
-        : pagina.contadores,
+      contadores: contadoresTrasResponder(pagina.contadores, actual),
     });
   }
 }

@@ -53,7 +53,7 @@ const FILA_A = fila('chat-a', 'Paciente A');
 const DETALLE_A: ConversacionDetalle = { ...FILA_A, mensajes: [mensaje('a-1')] };
 const PAGINA: PaginaInbox = {
   datos: [FILA_A], total: 1, pagina: 1, limite: 50, totalPaginas: 1,
-  contadores: { total: 1, sinAsignar: 0, misChats: 1, sinResponder: 0 },
+  contadores: { total: 1, sinAsignar: 0, misChats: 1, sinResponder: 0, cerradas: 0 },
 };
 
 /** Globo optimista con adjunto, tal como lo deja el compositor. */

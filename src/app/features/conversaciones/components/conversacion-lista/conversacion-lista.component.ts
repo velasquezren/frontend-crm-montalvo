@@ -15,6 +15,7 @@ import { LoadingSkeletonComponent } from '../../../../shared/components/loading-
 import { generarIniciales } from '../../../../core/auth/user.model';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
 import {
+  ContadoresInbox,
   ConversacionResumen,
   esperandoDesde,
   FiltroInbox,
@@ -22,10 +23,18 @@ import {
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 import { ConversacionPreviewComponent } from './conversacion-preview.component';
 
+interface PestanaInbox {
+  readonly tab: FiltroInbox;
+  readonly etiqueta: string;
+  readonly contador: keyof ContadoresInbox;
+  readonly ayuda: string;
+}
+
 /**
  * Panel lateral izquierdo con la bandeja de entrada (Inbox).
  * Permite filtrar por pestañas (Todas, Sin responder, Sin asignar, Mis chats),
- * filtrar por agente asignado (en vista Admin) y buscar por nombre/teléfono.
+ * ver las cerradas, filtrar por agente asignado (en vista Admin) y buscar por
+ * nombre/teléfono.
  */
 @Component({
   selector: 'app-conversacion-lista',
@@ -147,6 +156,26 @@ export class ConversacionListaComponent {
   });
 
   /* ── Filtro tabs & agentes ──────────────────────────────────────── */
+  /** Las pestañas de trabajo, con el contador que les corresponde. */
+  protected readonly pestanas: readonly PestanaInbox[] = [
+    { tab: 'TODAS', etiqueta: 'Todas', contador: 'total', ayuda: 'Todos los chats abiertos' },
+    { tab: 'SIN_RESPONDER', etiqueta: 'Sin responder', contador: 'sinResponder', ayuda: 'La paciente escribió y nadie le contestó todavía' },
+    { tab: 'SIN_ASIGNAR', etiqueta: 'Sin asignar', contador: 'sinAsignar', ayuda: 'Abiertos sin agente responsable' },
+    { tab: 'MIS_CHATS', etiqueta: 'Mis chats', contador: 'misChats', ayuda: 'Abiertos y asignados a ti' },
+  ];
+
+  protected readonly viendoCerradas = computed(() => this.state.filtroTab() === 'CERRADAS');
+
+  /** «Todas» con un agente elegido no es «Todas»: lo marca el chip del agente. */
+  protected esActiva(tab: FiltroInbox): boolean {
+    return this.state.filtroTab() === tab && (tab !== 'TODAS' || !this.state.filtroAgenteId());
+  }
+
+  protected elegirPestana(tab: FiltroInbox): void {
+    this.setFiltroTab(tab);
+    if (tab === 'TODAS') this.filtrarPorAgente(null);
+  }
+
   protected setFiltroTab(tab: FiltroInbox): void {
     this.state.filtroTab.set(tab);
     if (tab !== 'TODAS') {

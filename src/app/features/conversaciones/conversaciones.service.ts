@@ -5,6 +5,7 @@ import { ApiService, QueryParams, ResourceRequest } from '../../core/api/api.ser
 import {
   ConversacionDetalle,
   ConversacionIniciada,
+  EstadoConversacion,
   FiltrosInbox,
   MensajeApi,
   PaginaInbox,
@@ -154,6 +155,15 @@ export class ConversacionesService {
     return this.api.patch<ConversacionDetalle>(`/conversaciones/${conversacionId}/agente`, {
       agenteId,
     });
+  }
+
+  /** La da por resuelta: sale de las pestañas de trabajo hasta que haya actividad. */
+  cerrar(conversacionId: string): Promise<EstadoConversacion> {
+    return this.api.post<EstadoConversacion>(`/conversaciones/${conversacionId}/cerrar`, {});
+  }
+
+  reabrir(conversacionId: string): Promise<EstadoConversacion> {
+    return this.api.post<EstadoConversacion>(`/conversaciones/${conversacionId}/reabrir`, {});
   }
 
   /** Plantillas aprobadas de la WABA — para escribirle a un paciente fuera de la ventana de 24h. */

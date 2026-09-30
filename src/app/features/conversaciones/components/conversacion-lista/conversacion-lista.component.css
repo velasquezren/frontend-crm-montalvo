@@ -49,6 +49,46 @@
   padding: 4px 16px 8px;
 }
 
+/* ── Acceso a las cerradas ───────────────────────────────────── */
+.inbox-cerradas {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+  min-height: 22px;
+}
+
+.inbox-cerradas--activa {
+  justify-content: space-between;
+}
+
+.inbox-cerradas__nota {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.inbox-cerradas__boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.inbox-cerradas__boton:hover,
+.inbox-cerradas--activa .inbox-cerradas__boton {
+  color: var(--color-primary);
+}
+
 .sidebar-search {
   padding: 4px 16px 12px;
   border-bottom: 1px solid var(--color-border);

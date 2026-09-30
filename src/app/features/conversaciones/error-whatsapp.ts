@@ -20,6 +20,10 @@ export function explicacionErrorWhatsapp(codigo?: number | null): string {
     case 132015:
     case 132016:
       return 'La plantilla no está disponible para enviar. Actualiza las plantillas y elige una aprobada.';
+    case 131050:
+      return 'La paciente desactivó las promociones de la clínica en WhatsApp. Quedó registrada la baja; las plantillas de citas y resultados le siguen llegando.';
+    case 131049:
+      return 'Meta ya le mandó hoy todas las promociones que permite a esta persona. No se reintenta sola: vuelve a intentarlo mañana o escríbele cuando conteste.';
     case 130429:
     case 131056:
       return 'WhatsApp está limitando la frecuencia de envío. Espera antes de volver a enviar.';

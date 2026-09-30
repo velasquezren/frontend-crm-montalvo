@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { API_URL } from '../../../core/api/api.constants';
 import { AuthService } from '../../../core/auth/auth.service';
+import { ToastService } from '../../../core/toast/toast.service';
 import { ConversacionDetalle, MensajeApi, PaginaInbox } from '../conversacion.model';
 import { ErrorCanalWhatsapp } from '../validar-canal';
 import { ConversacionesStateService } from './conversaciones-state.service';
@@ -28,7 +29,7 @@ const CHAT: ConversacionDetalle = {
 };
 const PAGINA: PaginaInbox = {
   datos: [CHAT], total: 1, pagina: 1, limite: 50, totalPaginas: 1,
-  contadores: { total: 1, sinAsignar: 0, misChats: 1, sinResponder: 0 },
+  contadores: { total: 1, sinAsignar: 0, misChats: 1, sinResponder: 0, cerradas: 0 },
 };
 
 describe('F07 · sincronización de conversaciones con igual fecha y cantidad', () => {
@@ -224,7 +225,7 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     responder('/conversaciones/chat-1/resumen', { conversacion: CHAT, contadores: PAGINA.contadores });
     await pendiente;
     TestBed.tick();
-    responder('/conversaciones', { ...PAGINA, datos: [], total: 0, contadores: { total: 0, misChats: 0, sinAsignar: 0, sinResponder: 0 } });
+    responder('/conversaciones', { ...PAGINA, datos: [], total: 0, contadores: { total: 0, misChats: 0, sinAsignar: 0, sinResponder: 0, cerradas: 0 } });
     await app.whenStable();
     expect(state.detalle.value()).toBeNull();
     expect(state.conversacionesFiltradas()).toEqual([]);
@@ -238,7 +239,7 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     TestBed.tick();
     responder('/conversaciones/chat-1/resumen', { conversacion: CHAT, contadores: PAGINA.contadores });
     await pendiente;
-    responder('/conversaciones', { ...PAGINA, datos: [], total: 0, contadores: { total: 0, misChats: 0, sinAsignar: 0, sinResponder: 0 } });
+    responder('/conversaciones', { ...PAGINA, datos: [], total: 0, contadores: { total: 0, misChats: 0, sinAsignar: 0, sinResponder: 0, cerradas: 0 } });
     responder('/lineas-whatsapp', { datos: [], total: 0, pagina: 1, limite: 100, totalPaginas: 1 });
     await app.whenStable();
     expect(state.seleccionadaId()).toBeNull();
@@ -295,4 +296,42 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     expect(state.hayMasConversaciones()).toBe(true);
   });
 
+  /* Cerrar desaparece el chat de la pestaña en el acto: el aviso tiene que
+     ofrecer deshacerlo, y deshacer tiene que reabrir ESE chat aunque ya se
+     haya abierto otro. */
+  it('cerrar pide al servidor, refresca hilo y bandeja, y «Deshacer» lo reabre', async () => {
+    const toast = TestBed.inject(ToastService);
+    const aviso = vi.spyOn(toast, 'show');
+
+    const cierre = state.cambiarEstado(true);
+    const post = http.expectOne(req => req.url === `${API_URL}/conversaciones/chat-1/cerrar`);
+    expect(post.request.method).toBe('POST');
+    expect(state.cambiandoEstado()).toBe(true);
+    post.flush({ id: 'chat-1', cerradaEn: FECHA, cerradaPor: { id: 'agente-1', nombre: 'Agente de prueba' } });
+    await cierre;
+    TestBed.tick();
+    responder('/conversaciones/chat-1', { ...CHAT, cerradaEn: FECHA, cerradaPor: { id: 'agente-1', nombre: 'Agente de prueba' } });
+    responder('/conversaciones', { ...PAGINA, datos: [], total: 0, contadores: { ...PAGINA.contadores, total: 0, misChats: 0, cerradas: 1 } });
+    await app.whenStable();
+    expect(state.cambiandoEstado()).toBe(false);
+    expect(state.stats().cerradas).toBe(1);
+
+    const [, , titulo, , accion, deshacer] = aviso.mock.calls[0];
+    expect([titulo, accion]).toEqual(['Conversación cerrada', 'Deshacer']);
+    state.seleccionadaId.set(null);
+    deshacer!();
+    http.expectOne(req => req.url === `${API_URL}/conversaciones/chat-1/reabrir`).flush({ id: 'chat-1', cerradaEn: null, cerradaPor: null });
+    await vi.waitFor(() => { TestBed.tick(); responder('/conversaciones', structuredClone(PAGINA)); });
+    await app.whenStable();
+  });
+
+  it('si el servidor rechaza el cierre, lo dice y libera el botón', async () => {
+    const error = vi.spyOn(TestBed.inject(ToastService), 'error');
+    const cierre = state.cambiarEstado(true);
+    http.expectOne(req => req.url.endsWith('/cerrar')).flush({ message: 'Conversación chat-1 no encontrada' }, { status: 404, statusText: 'Not Found' });
+    await cierre;
+    expect(error).toHaveBeenCalledWith('Conversación chat-1 no encontrada');
+    expect(state.cambiandoEstado()).toBe(false);
+  });
 });
+
