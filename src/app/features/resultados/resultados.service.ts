@@ -1,8 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 
-import { Observable } from 'rxjs';
-
-import { ApiService, EstadoDescarga, ResourceRequest } from '../../core/api/api.service';
+import { ApiService, ResourceRequest } from '../../core/api/api.service';
 
 /**
  * Entrega de informes del portal de resultados al WhatsApp del paciente.
@@ -21,15 +19,14 @@ export class ResultadosService {
   }
 
   /**
-   * El PDF, para comprobar qué informe se va a enviar.
+   * El enlace para revisar el informe antes de enviarlo: la vista del portal
+   * de resultados, con el visor del médico y la versión liviana del PDF.
    *
-   * Va por la API del CRM y no al enlace del paciente: ese marca «abierto por
-   * el paciente», y abrirlo para revisar convertiría esa señal en mentira.
-   * Como el CRM autentica por cabecera, no sirve un `<a href>`: hay que pedirlo
-   * y abrir el resultado.
+   * No es el enlace del paciente: ese marca «abierto por el paciente», y
+   * abrirlo para revisar convertiría esa señal en mentira. Dura 10 minutos.
    */
-  pdf(informeId: string): Observable<EstadoDescarga> {
-    return this.api.descargaConProgreso(`/resultados/${informeId}/pdf`);
+  enlaceRevision(informeId: string): Promise<{ url: string; expiraEn: string }> {
+    return this.api.post<{ url: string; expiraEn: string }>(`/resultados/${informeId}/revision`);
   }
 
   enviar(informeId: string): Promise<{ enviado: true; mensajeId: string }> {
