@@ -1,11 +1,19 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpEventType } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { filter, firstValueFrom, map, Observable } from 'rxjs';
 
 import { API_URL } from './api.constants';
 
 /** Parámetros de query admitidos por la API (se omiten los vacíos). */
 export type QueryParams = Record<string, string | number | boolean | undefined | null>;
+
+/**
+ * Cómo va una descarga binaria: los bytes que llevan llegados mientras baja
+ * (`total` es null si el servidor no dijo el tamaño) y el archivo al terminar.
+ */
+export type EstadoDescarga =
+  | { readonly listo: false; readonly cargados: number; readonly total: number | null }
+  | { readonly listo: true; readonly blob: Blob };
 
 /** Forma de petición que consume `httpResource()` en las páginas. */
 export interface ResourceRequest {
@@ -91,6 +99,35 @@ export class ApiService {
     const cabecera = respuesta.headers.get('content-disposition') ?? '';
     const nombre = /filename="?([^"]+)"?/.exec(cabecera)?.[1] ?? nombrePorDefecto;
     return { blob: respuesta.body as Blob, nombre };
+  }
+
+  /**
+   * Descarga binaria que avisa cuánto lleva: para un archivo que tarda lo
+   * bastante como para que una pantalla en blanco parezca colgada (el PDF de
+   * una ecografía son 3-5 MB).
+   *
+   * Es un `Observable` y no una promesa porque desuscribirse ABORTA la
+   * petición: una precarga que ya nadie va a mirar no debe seguir gastando la
+   * conexión de la clínica.
+   */
+  descargaConProgreso(path: string, params?: QueryParams): Observable<EstadoDescarga> {
+    return this.http
+      .get(this.url(path), {
+        params: limpiarParams(params),
+        responseType: 'blob',
+        reportProgress: true,
+        observe: 'events',
+      })
+      .pipe(
+        map((evento): EstadoDescarga | null => {
+          if (evento.type === HttpEventType.Response) return { listo: true, blob: evento.body as Blob };
+          if (evento.type === HttpEventType.DownloadProgress) {
+            return { listo: false, cargados: evento.loaded, total: evento.total ?? null };
+          }
+          return null;
+        }),
+        filter((estado): estado is EstadoDescarga => estado !== null),
+      );
   }
 }
 

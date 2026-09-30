@@ -62,7 +62,7 @@
               [disabled]="abriendo() === fila.informeId"
               (click)="verInforme(fila)">
               <app-icon name="eye" [size]="12" />
-              {{ abriendo() === fila.informeId ? 'Abriendo…' : 'Ver el informe' }}
+              {{ abriendo() === fila.informeId ? textoAbriendo() : 'Ver el informe' }}
             </button>
           </td>
           <td class="text-left">{{ fila.fechaEstudio | date: 'd MMM y' : 'UTC' }}</td>

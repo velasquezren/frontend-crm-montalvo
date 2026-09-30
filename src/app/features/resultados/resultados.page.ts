@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, TemplateRef, untracked, viewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, Injector, signal, TemplateRef, untracked, viewChild, ViewContainerRef } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { OverlayRef } from '@angular/cdk/overlay';
@@ -21,6 +21,7 @@ import { AVISO_TELEFONO_INVALIDO, telefonoParaEscribir } from '../../shared/mode
 import { NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { ToastService } from '../../core/toast/toast.service';
 import { EntregaResultado, estadoEntrega, motivoBloqueo, nombresDistintos, sePuedeEntregar, sePuedeRenovar } from './resultado.model';
+import { DescargaInforme, PRECARGAS_POR_PAGINA, PrecargaInformes } from './precarga-informes';
 import { ResultadosService } from './resultados.service';
 
 /**
@@ -49,9 +50,13 @@ import { ResultadosService } from './resultados.service';
     TableComponent,
   ],
   templateUrl: './resultados.page.html',
+  /* En la página y no en `root`: los PDF precargados se sueltan al salir. */
+  providers: [PrecargaInformes],
 })
 export class ResultadosPage {
   private readonly resultadosService = inject(ResultadosService);
+  private readonly precarga = inject(PrecargaInformes);
+  private readonly injector = inject(Injector);
   private readonly dialog = inject(DialogService);
   private readonly vcr = inject(ViewContainerRef);
   private readonly toast = inject(ToastService);
@@ -152,8 +157,15 @@ export class ResultadosPage {
     }
   }
 
-  /** Informe cuyo PDF se está trayendo para revisarlo. */
+  /** Informe cuyo PDF se está trayendo para revisarlo, y cómo va. */
   protected readonly abriendo = signal<string | null>(null);
+  private readonly descargaAbierta = signal<DescargaInforme | null>(null);
+  /** «Abriendo… 45%» en el botón: la descarga ya no es una espera muda. */
+  protected readonly textoAbriendo = computed(() => {
+    const descarga = this.descargaAbierta();
+    const avance = descarga ? textoAvance(descarga.progreso(), descarga.cargados()) : '';
+    return avance ? `Abriendo… ${avance}` : 'Abriendo…';
+  });
 
   /**
    * Abre el PDF en otra pestaña para comprobar qué informe se va a enviar.
@@ -161,6 +173,9 @@ export class ResultadosPage {
    * No enlaza al enlace del paciente a propósito: ese marca «abierto por el
    * paciente», y usarlo para revisar convertiría en mentira la única señal que
    * dice a quién hay que seguir. El PDF lo sirve el CRM, autenticado.
+   *
+   * Casi siempre ya está en memoria: `PrecargaInformes` lo bajó al abrir la
+   * cola. Si no llegó a tiempo, la pestaña dice cuánto falta.
    */
   protected async verInforme(fila: EntregaResultado): Promise<void> {
     if (this.abriendo()) return;
@@ -171,12 +186,24 @@ export class ResultadosPage {
        usuaria. Y con `noopener` `window.open` devuelve null siempre, así que
        el bloqueo ni se notaba: el botón decía «Abriendo…» y no pasaba nada. */
     const pestana = window.open('', '_blank');
-    if (pestana) {
-      pestana.document.title = 'Informe';
-      pestana.document.body.textContent = 'Cargando el informe…';
-    }
+    const descarga = this.precarga.obtener(fila.informeId);
+    this.descargaAbierta.set(descarga);
+
+    /* Mientras baja, la pestaña dice cuánto lleva; sin esto era una página en
+       blanco durante segundos, que parece colgada. */
+    const avisoEnPestana = pestana
+      ? effect(
+          () => {
+            const avance = textoAvance(descarga.progreso(), descarga.cargados());
+            pestana.document.title = 'Informe';
+            pestana.document.body.textContent = avance ? `Descargando el informe… ${avance}` : 'Descargando el informe…';
+          },
+          { injector: this.injector },
+        )
+      : null;
+
     try {
-      const pdf = await this.resultadosService.pdf(fila.informeId);
+      const pdf = await descarga.pdf;
       const url = URL.createObjectURL(pdf);
       if (pestana) {
         pestana.opener = null;
@@ -191,6 +218,8 @@ export class ResultadosPage {
       pestana?.close();
       this.toast.error(mensajeDeError(err, 'No se pudo abrir el informe.'), 'Error');
     } finally {
+      avisoEnPestana?.destroy();
+      this.descargaAbierta.set(null);
       this.abriendo.set(null);
     }
   }
@@ -210,6 +239,19 @@ export class ResultadosPage {
   private readonly ofrecerEnvioDe = signal<string | null>(null);
 
   constructor() {
+    /* En cuanto llega la cola se empiezan a bajar los PDF de las primeras
+       filas por enviar: son los que la asistente va a abrir. Si el dispositivo
+       pide ahorrar datos, no se baja nada por adelantado. */
+    effect(() => {
+      if (this.entregas.isLoading() || this.entregas.error()) return;
+      const porEnviar = this.entregas
+        .value()
+        .datos.filter(f => sePuedeEntregar(f) || sePuedeRenovar(f))
+        .slice(0, PRECARGAS_POR_PAGINA)
+        .map(f => f.informeId);
+      if (porEnviar.length > 0 && !ahorraDatos()) untracked(() => this.precarga.precargar(porEnviar));
+    });
+
     effect(() => {
       const informeId = this.ofrecerEnvioDe();
       if (!informeId || this.entregas.isLoading()) return;
@@ -338,3 +380,16 @@ function errorDeTelefono(tecleado: string, e164: string | null): string | undefi
 
 /** Si el backend no nombró al dueño del dato, al menos que se entienda qué pasa. */
 const MENSAJE_DUPLICADO = 'Ya existe un paciente con ese número.';
+
+/** El dispositivo pidió ahorrar datos (Android «Ahorro de datos», Chrome Lite). */
+function ahorraDatos(): boolean {
+  const conexion = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+  return conexion?.saveData === true;
+}
+
+/** «45%» si se sabe el total; si no, los MB que llevan llegados. */
+export function textoAvance(progreso: number | null, cargados: number): string {
+  if (progreso !== null) return `${Math.round(progreso * 100)}%`;
+  if (cargados > 0) return `${(cargados / 1_048_576).toFixed(1).replace('.', ',')} MB`;
+  return '';
+}
