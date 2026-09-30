@@ -29,6 +29,7 @@ import { ConversacionesService } from '../../conversaciones.service';
 import { MemoriaAgenteService } from '../../../memoria-agente/memoria-agente.service';
 import { RecursoMemoria } from '../../../memoria-agente/memoria-agente.model';
 import { MensajeApi, PlantillaResumen } from '../../conversacion.model';
+import { GestionRespuestasComponent } from '../gestion-respuestas/gestion-respuestas.component';
 import { EnvioPlantillaComponent } from '../envio-plantilla/envio-plantilla.component';
 import { faltaParaEnviar } from '../../plantillas';
 import { NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
@@ -67,6 +68,7 @@ function tipoBase(mime: string): string {
   imports: [
     DrawerComponent,
     EnvioPlantillaComponent,
+    GestionRespuestasComponent,
     RouterLink,
     ButtonComponent,
     IconComponent,
@@ -161,13 +163,6 @@ export class ConversacionComposerComponent {
   /** Una clave por chat: un reintento tras un error reusa la del mismo chat y
       el servidor no manda dos pines; otro chat nunca hereda la clave de este. */
   private claveUbicacion: { chat: string; clave: string } | null = null;
-
-  /* ── Gestión de Respuestas Rápidas ──────────────────────────────── */
-  protected readonly editandoPlantillaId = signal<string | null>(null);
-  protected readonly formPlantillaTitulo = signal('');
-  protected readonly formPlantillaAtajo = signal('');
-  protected readonly formPlantillaContenido = signal('');
-  protected readonly guardandoPlantilla = signal(false);
 
   /**
    * "Escribiendo…" del lado del paciente mientras la agente redacta.
@@ -652,73 +647,19 @@ export class ConversacionComposerComponent {
   protected abrirGestionPlantillas(): void {
     const tmpl = this.modalGestionPlantillas();
     if (!tmpl) return;
-    this.resetFormPlantilla();
     this.overlayRef?.dispose();
+    /* El formulario vive en `<app-gestion-respuestas>` y nace vacío con cada
+       apertura: no hay nada que limpiar al abrir ni al cerrar. */
     this.overlayRef = this.dialogService.abrirCajon(tmpl, this.vcr, {
       onClose: () => {
-        this.resetFormPlantilla();
         this.overlayRef = undefined;
       },
     });
   }
 
   protected cerrarGestionPlantillas(): void {
-    this.resetFormPlantilla();
     this.overlayRef?.dispose();
     this.overlayRef = undefined;
-  }
-
-  protected editarPlantilla(p: { id: string; titulo: string; atajo: string | null; contenido: string }): void {
-    this.editandoPlantillaId.set(p.id);
-    this.formPlantillaTitulo.set(p.titulo);
-    this.formPlantillaAtajo.set(p.atajo || '');
-    this.formPlantillaContenido.set(p.contenido);
-  }
-
-  protected resetFormPlantilla(): void {
-    this.editandoPlantillaId.set(null);
-    this.formPlantillaTitulo.set('');
-    this.formPlantillaAtajo.set('');
-    this.formPlantillaContenido.set('');
-  }
-
-  protected async guardarPlantillaAgente(): Promise<void> {
-    const titulo = this.formPlantillaTitulo().trim();
-    const contenido = this.formPlantillaContenido().trim();
-    const atajo = this.formPlantillaAtajo().trim() || undefined;
-
-    if (!titulo || !contenido) {
-      this.toast.warning('Título y contenido son requeridos.');
-      return;
-    }
-
-    this.guardandoPlantilla.set(true);
-    try {
-      const editId = this.editandoPlantillaId();
-      if (editId) {
-        await this.conversacionesService.actualizarPlantillaAgente(editId, { titulo, atajo, contenido });
-        this.toast.success('Respuesta rápida actualizada.');
-      } else {
-        await this.conversacionesService.crearPlantillaAgente({ titulo, atajo, contenido });
-        this.toast.success('Respuesta rápida creada.');
-      }
-      this.resetFormPlantilla();
-      this.state.plantillasAgente.reload();
-    } catch (err) {
-      this.toast.error(mensajeDeError(err, 'No se pudo guardar la respuesta rápida.'));
-    } finally {
-      this.guardandoPlantilla.set(false);
-    }
-  }
-
-  protected async eliminarPlantillaAgente(id: string): Promise<void> {
-    try {
-      await this.conversacionesService.eliminarPlantillaAgente(id);
-      this.toast.success('Respuesta rápida eliminada.');
-      this.state.plantillasAgente.reload();
-    } catch (err) {
-      this.toast.error(mensajeDeError(err, 'No se pudo eliminar la respuesta rápida.'));
-    }
   }
 }
 

@@ -1,0 +1,61 @@
+<!-- Formulario -->
+<div class="p-4 rounded-xl bg-bg-light border border-border space-y-3">
+  <h4 class="text-xs font-bold text-text-dark uppercase tracking-wider">
+    {{ editandoPlantillaId() ? 'Editar Respuesta' : 'Nueva Respuesta Rápida' }}
+  </h4>
+  <app-input
+    label="Título corto *"
+    placeholder="Ej: Horarios y Ubicación"
+    [(value)]="formPlantillaTitulo" />
+  <app-input
+    label="Atajo /comando (opcional)"
+    placeholder="Ej: /horarios"
+    [(value)]="formPlantillaAtajo" />
+  <app-input
+    label="Contenido * (usa {{ '{' }}{{ '{' }}nombre{{ '}' }}{{ '}' }} para autocompletar)"
+    [multiline]="true"
+    [rows]="3"
+    placeholder="Escribe el mensaje completo…"
+    [(value)]="formPlantillaContenido" />
+  <div class="flex items-center justify-end gap-2 pt-1">
+    @if (editandoPlantillaId()) {
+      <button
+        type="button"
+        (click)="resetFormPlantilla()"
+        class="px-3 py-1.5 text-xs text-text-muted hover:text-text-dark cursor-pointer">
+        Cancelar
+      </button>
+    }
+    <app-button
+      variant="primary"
+      size="sm"
+      [loading]="guardandoPlantilla()"
+      (clicked)="guardarPlantillaAgente()">
+      {{ editandoPlantillaId() ? 'Guardar Cambios' : 'Crear Respuesta' }}
+    </app-button>
+  </div>
+</div>
+
+<!-- Lista de respuestas del agente -->
+<div class="space-y-2">
+  <h4 class="text-xs font-bold text-text-dark uppercase tracking-wider">Respuestas guardadas</h4>
+  @for (p of misRespuestas(); track p.id) {
+    <div class="p-3 rounded-xl border border-border hover:border-primary/30 bg-white transition-all flex items-start justify-between gap-3">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-text-dark">{{ p.titulo }}</span>
+          @if (p.atajo) {
+            <span class="crm-atajo">{{ p.atajo }}</span>
+          }
+        </div>
+        <p class="text-xs text-text-muted mt-1 line-clamp-2">{{ p.contenido }}</p>
+      </div>
+      <div class="flex items-center gap-1 shrink-0">
+        <app-button variant="ghost" size="xs" [circle]="true" icon="edit" title="Editar respuesta" ariaLabel="Editar respuesta" (clicked)="editarPlantilla(p)" />
+        <app-button variant="ghost" size="xs" [circle]="true" icon="trash" title="Eliminar respuesta" ariaLabel="Eliminar respuesta" (clicked)="eliminarPlantillaAgente(p.id)" />
+      </div>
+    </div>
+  } @empty {
+    <p class="text-xs text-text-muted text-center py-4">No tienes respuestas rápidas creadas.</p>
+  }
+</div>
