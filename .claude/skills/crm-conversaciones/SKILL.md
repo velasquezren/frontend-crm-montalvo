@@ -474,6 +474,7 @@ La vista `conversaciones` se estructura en submódulos desacoplados gobernados p
 2. **`conversacion-lista`**: Bandeja lateral izquierda: alcance (línea, agente), pestañas de trabajo (Todas / Sin responder / Sin asignar / Mis chats), interruptor de cerradas, buscador y tarjetas de conversación.
 3. **`conversacion-thread`**: Hilo central de mensajes, separadores de fecha, burbujas, lightbox y reproducción de audio.
 4. **`conversacion-composer`**: Área de redacción, soporte de pegado (`Ctrl+V`), Drag & Drop, atajos (`/`), grabación de voz y selector de plantillas.
+   - **`gestion-respuestas`** (`<app-gestion-respuestas>`): el contenido del cajón «Mis respuestas rápidas» (crear, editar y borrar las respuestas personales). El compositor abre el cajón y pone el marco; el formulario nace vacío en cada apertura.
 5. **`conversaciones.page`**: Orquestador que sincroniza rutas, modo inmersivo móvil y eventos globales.
 
 ## 5. Acuse Automático Fuera de Horario
