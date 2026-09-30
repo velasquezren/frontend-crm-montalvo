@@ -84,6 +84,11 @@ export interface ConversacionResumen {
     ciLugar?: string | null;
     datosExtra?: DatosExtra | null;
     intereses?: readonly { id: string; descripcion: string }[];
+    /**
+     * Cuándo pidió no recibir más promociones (tocó «No me interesa»), o null.
+     * Solo viaja en el DETALLE del chat. Ver `Cliente.bajaPromocionesEn`.
+     */
+    bajaPromocionesEn?: string | null;
   };
   readonly agente: { id: string; nombre: string } | null;
   /** El listado incluye solo el último mensaje (take: 1, desc). */
@@ -126,7 +131,9 @@ export interface PlantillaResumen {
   readonly formato: 'POSITIONAL' | 'NAMED';
   readonly pie: string | null;
   readonly botones: readonly string[];
-  /** false si lleva algo que el chat no sabe rellenar (imagen de encabezado, enlace variable). */
+  /** URL de la imagen de cabecera, si la lleva y el CRM la tiene; se adjunta sola al enviar. */
+  readonly imagenCabecera: string | null;
+  /** false si lleva algo que el chat no sabe rellenar (una imagen que el CRM no tiene, un enlace variable). */
   readonly enviable: boolean;
   readonly motivoNoEnviable: string | null;
 }

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal, TemplateRef, ViewContainerRef } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { OverlayRef } from '@angular/cdk/overlay';
 
 import { CampanaOrigen, campanaOrigenDe } from '../../../../shared/models/campana-origen';
@@ -10,6 +11,7 @@ import { DrawerComponent } from '../../../../shared/components/drawer/drawer.com
 import { DialogService } from '../../../../shared/components/dialog/dialog.service';
 import { FilterChipComponent } from '../../../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { SwitchComponent } from '../../../../shared/components/switch/switch.component';
 import { InputComponent } from '../../../../shared/components/input/input.component';
 import {
   TIPO_ACTIVIDAD_ICONO,
@@ -48,6 +50,7 @@ type ClienteChat = ConversacionResumen['cliente'];
 @Component({
   selector: 'app-conversacion-sidebar',
   imports: [
+    DatePipe,
     FormularioVentaComponent,
     SelectComponent,
     InicialesClientePipe,
@@ -59,6 +62,7 @@ type ClienteChat = ConversacionResumen['cliente'];
     FilterChipComponent,
     IconComponent,
     InputComponent,
+    SwitchComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './conversacion-sidebar.component.html',

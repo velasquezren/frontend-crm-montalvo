@@ -284,6 +284,8 @@ export class ConversacionesStateService {
   readonly editCategoria = signal<CategoriaCliente>('PROSPECTO');
   readonly editNotas = signal('');
   readonly editTags = signal('');
+  /** `false` = no quiere promociones. Ver `Cliente.bajaPromocionesEn`. */
+  readonly editRecibePromociones = signal(true);
   readonly guardandoFicha = signal(false);
 
   /* ── Notas Médicas Fijadas ──────────────────────────────────────── */
@@ -829,6 +831,7 @@ export class ConversacionesStateService {
     this.editCategoria.set(ficha.categoria);
     this.editNotas.set(ficha.notas);
     this.editTags.set(ficha.etiquetas);
+    this.editRecibePromociones.set(!chat.cliente.bajaPromocionesEn);
     this.editandoFicha.set(true);
   }
 
@@ -853,18 +856,25 @@ export class ConversacionesStateService {
          reenviar el JSON entero. */
       await this.clientesService.actualizar(
         chat.cliente.id,
-        cambiosDeFicha({
-          nombre,
-          email: this.editEmail(),
-          pac: this.editPac(),
-          ci: this.editCi(),
-          empresa: this.editEmpresa(),
-          fechaNacimiento: this.editFechaNacimiento(),
-          lugarNacimiento: this.editLugarNacimiento(),
-          categoria: this.editCategoria(),
-          notas: this.editNotas(),
-          etiquetas: this.editTags(),
-        }),
+        {
+          ...cambiosDeFicha({
+            nombre,
+            email: this.editEmail(),
+            pac: this.editPac(),
+            ci: this.editCi(),
+            empresa: this.editEmpresa(),
+            fechaNacimiento: this.editFechaNacimiento(),
+            lugarNacimiento: this.editLugarNacimiento(),
+            categoria: this.editCategoria(),
+            notas: this.editNotas(),
+            etiquetas: this.editTags(),
+          }),
+          /* Solo si cambió: guardar otro dato de la ficha no toca la baja, ni
+             le cambia la fecha a quien la pidió. */
+          ...(this.editRecibePromociones() !== !chat.cliente.bajaPromocionesEn
+            ? { recibePromociones: this.editRecibePromociones() }
+            : {}),
+        },
       );
       this.toastService.success('Ficha de cliente actualizada.');
       this.editandoFicha.set(false);

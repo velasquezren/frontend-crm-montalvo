@@ -120,6 +120,16 @@
                 <label class="edit-label">Tags (separadas por comas)</label>
                 <app-input placeholder="ej. cirugía, vip, preferente" [(value)]="state.editTags" />
               </div>
+              <!-- Normalmente la baja la registra ella al tocar «No me interesa».
+                   Esto es para cuando lo dice de palabra, en un sentido o en el
+                   otro. Citas y resultados le llegan igual. -->
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="edit-label">Recibe promociones</p>
+                  <p class="text-xs text-text-muted">Apagado, no se le pueden mandar plantillas de publicidad.</p>
+                </div>
+                <app-switch [(value)]="state.editRecibePromociones" ariaLabel="Recibe promociones" />
+              </div>
             </div>
           </div>
         </div>
@@ -155,6 +165,14 @@
               [variant]="categoriaBadge[chat.cliente.categoria]">
               {{ categoriaLabel[chat.cliente.categoria] }}
             </app-badge>
+            @if (chat.cliente.bajaPromocionesEn; as baja) {
+              <!-- Tocó «No me interesa»: las plantillas de Marketing ya no le
+                   salen; citas y resultados, sí. Se reactiva editando la ficha,
+                   y solo si ella lo pide. -->
+              <app-badge variant="neutral" [title]="'Pidió no recibir promociones el ' + (baja | date: 'd MMM y')">
+                Sin promociones
+              </app-badge>
+            }
             @if (chat.cliente.pac; as codigo) {
               <!-- La categoría de arriba SÍ es estado y por eso es badge; el PAC
                    es un dato, y se escribe como tal. El botón de copiar queda

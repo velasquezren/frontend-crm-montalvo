@@ -253,6 +253,7 @@
         [cargando]="state.plantillasWhatsApp.isLoading()"
         [error]="!!state.plantillasWhatsApp.error()"
         [linea]="state.detalleActual()?.linea?.nombre ?? null"
+        [bajaPromocionesEn]="state.detalleActual()?.cliente?.bajaPromocionesEn ?? null"
         [(seleccionada)]="plantillaSeleccionada"
         [(valores)]="variablesPlantilla"
         (actualizar)="state.actualizarPlantillasWhatsApp()" />

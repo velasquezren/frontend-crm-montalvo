@@ -6,7 +6,7 @@ import { IconComponent } from '../../../../shared/components/icon/icon.component
 import { InputComponent } from '../../../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PlantillaResumen } from '../../conversacion.model';
-import { etiquetaVariable, faltaParaEnviar, renderizarPlantilla } from '../../plantillas';
+import { etiquetaVariable, faltaParaEnviar, motivoNoDisponible, renderizarPlantilla } from '../../plantillas';
 
 /**
  * Elegir una plantilla aprobada, completar sus datos y ver el mensaje tal como
@@ -29,6 +29,12 @@ export class EnvioPlantillaComponent {
   readonly error = input(false);
   /** Nombre de la línea, para que quede claro desde qué número sale. */
   readonly linea = input<string | null>(null);
+  /**
+   * Si la paciente pidió no recibir promociones, desde cuándo. Apaga las de
+   * Marketing con el motivo a la vista. «Nuevo chat» a un número nuevo no lo
+   * sabe: ahí lo frena el backend.
+   */
+  readonly bajaPromocionesEn = input<string | null>(null);
 
   readonly seleccionada = model<PlantillaResumen | null>(null);
   readonly valores = model<readonly string[]>([]);
@@ -36,6 +42,12 @@ export class EnvioPlantillaComponent {
   readonly actualizar = output<void>();
 
   protected readonly etiqueta = etiquetaVariable;
+
+  /** Por qué no se puede elegir cada una, en el orden de la lista (`null` = se puede). */
+  protected readonly motivos = computed(() => {
+    const baja = this.bajaPromocionesEn();
+    return new Map(this.plantillas().map(p => [p, motivoNoDisponible(p, baja)]));
+  });
 
   protected readonly vistaPrevia = computed(() => {
     const p = this.seleccionada();
@@ -48,7 +60,7 @@ export class EnvioPlantillaComponent {
   });
 
   protected elegir(p: PlantillaResumen): void {
-    if (!p.enviable || this.seleccionada()?.nombre === p.nombre) return;
+    if (this.motivos().get(p) || this.seleccionada()?.nombre === p.nombre) return;
     this.seleccionada.set(p);
     this.valores.set(p.nombresVariables.map(() => ''));
   }

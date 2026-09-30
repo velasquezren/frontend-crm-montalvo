@@ -25,7 +25,7 @@
         type="button"
         role="option"
         [attr.aria-selected]="seleccionada()?.nombre === p.nombre"
-        [disabled]="!p.enviable"
+        [disabled]="!!motivos().get(p)"
         (click)="elegir(p)"
         class="plantilla-opcion"
         [class.plantilla-opcion--elegida]="seleccionada()?.nombre === p.nombre && seleccionada()?.idioma === p.idioma">
@@ -39,8 +39,8 @@
           <app-badge variant="info" class="shrink-0">{{ p.categoria }}</app-badge>
         </span>
         <span class="block text-xs text-text-muted mt-1 whitespace-pre-wrap line-clamp-3">{{ p.cuerpo }}</span>
-        @if (!p.enviable) {
-          <span class="block text-[11px] text-text-muted mt-1.5 italic">{{ p.motivoNoEnviable }}</span>
+        @if (motivos().get(p); as motivo) {
+          <span class="block text-[11px] text-text-muted mt-1.5 italic">{{ motivo }}</span>
         }
       </button>
     }
@@ -63,6 +63,10 @@
     <div>
       <h4 class="text-xs font-bold text-text-dark uppercase tracking-wider mb-2">Así lo verá el paciente</h4>
       <div class="vista-previa">
+        @if (p.imagenCabecera; as imagen) {
+          <!-- La misma imagen que recibirá: el CRM la adjunta sola al enviar. -->
+          <img class="vista-previa__imagen" [src]="imagen" alt="Imagen de cabecera de la plantilla" loading="lazy" />
+        }
         <p class="vista-previa__burbuja">{{ vistaPrevia() }}</p>
         @for (boton of p.botones; track boton) {
           <span class="vista-previa__boton">{{ boton }}</span>

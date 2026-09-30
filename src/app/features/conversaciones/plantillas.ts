@@ -38,3 +38,22 @@ export function faltaParaEnviar(plantilla: PlantillaResumen, valores: readonly s
   }
   return null;
 }
+
+/**
+ * Por qué esta plantilla no se ofrece a ESTA paciente, o `null` si se puede
+ * elegir. Además de lo que la plantilla no sabe rellenar: a quien pidió no
+ * recibir promociones no se le ofrecen las de Marketing —las de citas y
+ * resultados, sí—. El backend lo vuelve a comprobar al enviar; esto evita
+ * ofrecer una opción que iba a rebotar.
+ */
+export function motivoNoDisponible(plantilla: PlantillaResumen, bajaPromocionesEn: string | null | undefined): string | null {
+  if (!plantilla.enviable) return plantilla.motivoNoEnviable ?? 'Esta plantilla no se puede enviar desde el chat.';
+  if (plantilla.categoria === 'MARKETING' && bajaPromocionesEn) {
+    const fecha = new Date(bajaPromocionesEn).toLocaleDateString('es-BO', {
+      day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/La_Paz',
+    });
+    return `Pidió no recibir promociones el ${fecha}.`;
+  }
+  return null;
+}
+

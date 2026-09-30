@@ -38,6 +38,11 @@ export interface ActualizarClienteDto {
   fechaNacimiento?: string | null;
   lugarNacimiento?: string;
   datosExtra?: DatosExtra;
+  /**
+   * `false` la da de baja de las promociones; `true` las reactiva. Solo se
+   * manda si cambió: la baja la registra ella misma al tocar «No me interesa».
+   */
+  recibePromociones?: boolean;
 }
 
 export interface CrearClienteDto {
