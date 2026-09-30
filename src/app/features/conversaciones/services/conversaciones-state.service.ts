@@ -19,7 +19,7 @@ import { cubreRol } from '../../../core/auth/roles';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ToastService } from '../../../core/toast/toast.service';
 import { mensajeDeError } from '../../../core/api/http-error';
-import { listaExtra, textoExtra } from '../../../core/api/datos-extra';
+import { cambiosDeFicha, valoresDeFicha } from '../../clientes/ficha-paciente';
 import { ClientesService } from '../../clientes/clientes.service';
 import {
   AgenteResumen,
@@ -818,17 +818,17 @@ export class ConversacionesStateService {
   iniciarEdicionFicha(): void {
     const chat = this.detalleActual();
     if (!chat) return;
-    const c = chat.cliente;
-    this.editNombre.set(c.nombre);
-    this.editEmail.set(c.email || '');
-    this.editPac.set(c.pac || '');
-    this.editCi.set(c.ci || '');
-    this.editEmpresa.set(c.empresaTrabajo || textoExtra(c.datosExtra, 'empresa'));
-    this.editFechaNacimiento.set(c.fechaNacimiento?.slice(0, 10) ?? '');
-    this.editLugarNacimiento.set(c.ciLugar || textoExtra(c.datosExtra, 'lugarNacimiento', 'CI.Lug.Pac'));
-    this.editCategoria.set(c.categoria || 'PROSPECTO');
-    this.editNotas.set(textoExtra(c.datosExtra, 'notas'));
-    this.editTags.set(listaExtra(c.datosExtra, 'tags').join(', '));
+    const ficha = valoresDeFicha(chat.cliente);
+    this.editNombre.set(ficha.nombre);
+    this.editEmail.set(ficha.email);
+    this.editPac.set(ficha.pac);
+    this.editCi.set(ficha.ci);
+    this.editEmpresa.set(ficha.empresa);
+    this.editFechaNacimiento.set(ficha.fechaNacimiento);
+    this.editLugarNacimiento.set(ficha.lugarNacimiento);
+    this.editCategoria.set(ficha.categoria);
+    this.editNotas.set(ficha.notas);
+    this.editTags.set(ficha.etiquetas);
     this.editandoFicha.set(true);
   }
 
@@ -848,37 +848,24 @@ export class ConversacionesStateService {
 
     this.guardandoFicha.set(true);
     try {
-      const tagsArray = this.editTags()
-        .split(',')
-        .map(t => t.trim())
-        .filter(Boolean);
-
-      const datosExtraPrevios = (chat.cliente.datosExtra as Record<string, unknown>) ?? {};
-      const nuevosDatosExtra = {
-        ...datosExtraPrevios,
-        empresa: this.editEmpresa().trim() || null,
-        lugarNacimiento: this.editLugarNacimiento().trim() || null,
-        fechaNacimiento: this.editFechaNacimiento() || null,
-        notas: this.editNotas().trim() || null,
-        tags: tagsArray,
-      };
-
-      const pacTrim = this.editPac().trim().toUpperCase();
-      const ciTrim = this.editCi().trim();
-
-      const payload = {
-        nombre,
-        email: this.editEmail().trim() || null,
-        categoria: this.editCategoria(),
-        pac: pacTrim || null,
-        ci: ciTrim || null,
-        empresa: this.editEmpresa().trim() || undefined,
-        fechaNacimiento: this.editFechaNacimiento() || undefined,
-        lugarNacimiento: this.editLugarNacimiento().trim() || undefined,
-        datosExtra: nuevosDatosExtra,
-      };
-
-      await this.clientesService.actualizar(chat.cliente.id, payload);
+      /* La misma ficha que edita Clientes: ver `ficha-paciente.ts`. El
+         backend fusiona `datosExtra` con lo guardado, así que no hace falta
+         reenviar el JSON entero. */
+      await this.clientesService.actualizar(
+        chat.cliente.id,
+        cambiosDeFicha({
+          nombre,
+          email: this.editEmail(),
+          pac: this.editPac(),
+          ci: this.editCi(),
+          empresa: this.editEmpresa(),
+          fechaNacimiento: this.editFechaNacimiento(),
+          lugarNacimiento: this.editLugarNacimiento(),
+          categoria: this.editCategoria(),
+          notas: this.editNotas(),
+          etiquetas: this.editTags(),
+        }),
+      );
       this.toastService.success('Ficha de cliente actualizada.');
       this.editandoFicha.set(false);
       this.detalle.reload();

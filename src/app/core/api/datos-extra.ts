@@ -5,7 +5,9 @@
  * castear a `any` en cada punto de lectura.
  *
  * Claves que escribe la aplicación (el resto viene de FileMaker y varía):
- * `empresa`, `lugarNacimiento`, `notas`, `tags`, `notaFijada`. La edad NO se
+ * `notas`, `tags`, `notaFijada`. Empresa, lugar y fecha de nacimiento tienen
+ * columna propia; el chat las copiaba también aquí y al guardar una ficha esas
+ * copias se anulan (ver `features/clientes/ficha-paciente.ts`). La edad NO se
  * guarda aquí: se calcula desde `fechaNacimiento`.
  */
 export type DatosExtra = Record<string, unknown>;

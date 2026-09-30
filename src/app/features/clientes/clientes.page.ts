@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { DatePipe } from '@angular/common';
 
 import { etiquetasDe, textoExtra, textoExtraOpcional } from '../../core/api/datos-extra';
+import { cambiosDeFicha, valoresDeFicha } from './ficha-paciente';
 import { edadDePaciente } from '../../core/api/edad';
 import { mensajeDeError } from '../../core/api/http-error';
 import { enlaceAlChat } from '../conversaciones/enlace-chat';
@@ -303,25 +304,19 @@ export class ClientesPage {
     this.esCreacion.set(false);
     this.pestanaModal.set('EXPEDIENTE');
     this.clienteSeleccionado.set(cliente);
-    this.editNombre.set(cliente.nombre);
-    this.editEmail.set(cliente.email || '');
+    const ficha = valoresDeFicha(cliente);
+    this.editNombre.set(ficha.nombre);
+    this.editEmail.set(ficha.email);
     this.editTelefono.set(cliente.telefono);
-    this.editPac.set(cliente.pac || '');
-    this.editCi.set(cliente.ci || '');
+    this.editPac.set(ficha.pac);
+    this.editCi.set(ficha.ci);
     this.editAgenteId.set(cliente.agente?.id || cliente.agenteId || null);
-    const datosExtra = cliente.datosExtra;
-    this.editEmpresa.set(cliente.empresaTrabajo || textoExtra(datosExtra, 'empresa'));
-    const fn = cliente.fechaNacimiento || textoExtra(datosExtra, 'fechaNacimiento', 'fn');
-    this.editFechaNacimiento.set(fn ? fn.slice(0, 10) : '');
-    this.editLugarNacimiento.set(
-      cliente.ciLugar || textoExtra(datosExtra, 'lugarNacimiento', 'CI.Lug.Pac'),
-    );
-    this.editCategoria.set(cliente.categoria || 'PROSPECTO');
-    this.editNotas.set(textoExtra(datosExtra, 'notas'));
-    const tags = datosExtra?.['tags'];
-    const directTags = cliente.intereses?.map(i => i.descripcion) ?? [];
-    const combinedTags = [...new Set([...(Array.isArray(tags) ? tags : []), ...directTags])];
-    this.editTags.set(combinedTags.join(', '));
+    this.editEmpresa.set(ficha.empresa);
+    this.editFechaNacimiento.set(ficha.fechaNacimiento);
+    this.editLugarNacimiento.set(ficha.lugarNacimiento);
+    this.editCategoria.set(ficha.categoria);
+    this.editNotas.set(ficha.notas);
+    this.editTags.set(ficha.etiquetas);
     this.modalEditarAbierto.set(true);
     if (template) {
       this.activeOverlayRef?.dispose();
@@ -371,37 +366,29 @@ export class ClientesPage {
 
     this.guardando.set(true);
     try {
-      const tagsArray = this.editTags()
-        .split(',')
-        .map(t => t.trim())
-        .filter(Boolean);
-
-      const pacTrim = this.editPac().trim().toUpperCase();
-      const ciTrim = this.editCi().trim();
-
-      const payload = {
-        nombre,
-        telefono,
-        email: this.editEmail().trim() || null,
-        categoria: this.editCategoria(),
-        agenteId: this.editAgenteId() || null,
-        pac: pacTrim || null,
-        ci: ciTrim || null,
-        /* Con columna propia: van al primer nivel para que el backend
-           los guarde donde la ficha luego los lee. */
-        empresa: this.editEmpresa().trim(),
-        fechaNacimiento: this.editFechaNacimiento() || undefined,
-        lugarNacimiento: this.editLugarNacimiento().trim(),
-        /* Sin columna: se quedan en el JSON libre. */
-        datosExtra: {
-          notas: this.editNotas().trim() || null,
-          tags: tagsArray,
+      const alta = this.esCreacion();
+      const ficha = cambiosDeFicha(
+        {
+          nombre,
+          email: this.editEmail(),
+          pac: this.editPac(),
+          ci: this.editCi(),
+          empresa: this.editEmpresa(),
+          fechaNacimiento: this.editFechaNacimiento(),
+          lugarNacimiento: this.editLugarNacimiento(),
+          categoria: this.editCategoria(),
+          notas: this.editNotas(),
+          etiquetas: this.editTags(),
         },
-      };
+        { alta },
+      );
 
-      if (this.esCreacion()) {
+      if (alta) {
         await this.clientesService.crear({
-          ...payload,
+          ...ficha,
+          nombre,
+          telefono,
+          fechaNacimiento: ficha.fechaNacimiento ?? undefined,
           agenteId: this.editAgenteId() || undefined,
         });
         this.toast.success('Cliente o prospecto creado exitosamente', 'Guardado');
@@ -409,7 +396,8 @@ export class ClientesPage {
         const cliente = this.clienteSeleccionado();
         if (!cliente) return;
         await this.clientesService.actualizar(cliente.id, {
-          ...payload,
+          ...ficha,
+          telefono,
           agenteId: this.editAgenteId() || null,
         });
         this.toast.success('Ficha de cliente actualizada', 'Guardado');

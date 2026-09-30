@@ -34,7 +34,8 @@ export interface ActualizarClienteDto {
   pac?: string | null;
   ci?: string | null;
   empresa?: string;
-  fechaNacimiento?: string;
+  /** `null` la borra; ausente, no la toca. */
+  fechaNacimiento?: string | null;
   lugarNacimiento?: string;
   datosExtra?: DatosExtra;
 }
