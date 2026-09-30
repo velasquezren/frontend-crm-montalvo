@@ -1,4 +1,5 @@
 import { EstadoMensaje } from '../../core/api/db-enums';
+import { RespuestaPaginada } from '../../core/api/pagination.model';
 import { BadgeVariant } from '../../shared/components/badge/badge.component';
 import { IconName } from '../../shared/components/icon/icon.component';
 
@@ -29,6 +30,80 @@ export interface EntregaResultado {
   readonly aviso: { readonly enviadoEn: string; readonly estadoMensaje: EstadoMensaje | null } | null;
   /** Primera vez que el paciente abrió su informe. Entregado no es visto: esto sí. */
   readonly abiertoEn: string | null;
+  /** Su chat en la línea de resultados, si ya existe: donde está el aviso y donde contestará. */
+  readonly conversacionId: string | null;
+}
+
+/**
+ * Las pestañas de la cola, por lo que hay que HACER. Espejo de `ESTADOS_COLA`
+ * (backend: modules/resultados/dto/query-resultados.dto.ts).
+ */
+export const ESTADOS_COLA = ['POR_AVISAR', 'ESPERANDO', 'VENCIDOS', 'ABIERTOS', 'TODOS'] as const;
+export type EstadoCola = (typeof ESTADOS_COLA)[number];
+
+/**
+ * Cómo se presenta cada pestaña. Aquí y no en la plantilla: el chip, el título
+ * del vacío y la prueba leen lo mismo, y tres copias de un texto divergen.
+ */
+export const PESTANAS_COLA: Readonly<Record<EstadoCola, { etiqueta: string; vacio: string; vacioDetalle: string }>> = {
+  POR_AVISAR: {
+    etiqueta: 'Por avisar',
+    vacio: 'Todo al día',
+    vacioDetalle: 'No queda ningún informe publicado sin avisar. Los nuevos aparecerán aquí en cuanto el médico los publique.',
+  },
+  ESPERANDO: {
+    etiqueta: 'Esperando lectura',
+    vacio: 'Nadie pendiente de leer',
+    vacioDetalle: 'Aquí aparecen los pacientes ya avisados que todavía no abrieron su informe.',
+  },
+  VENCIDOS: {
+    etiqueta: 'Enlace vencido',
+    vacio: 'Ningún enlace vencido',
+    vacioDetalle: 'Si un paciente no abre su informe en 30 días, aparecerá aquí para renovarlo y volver a avisarle.',
+  },
+  ABIERTOS: {
+    etiqueta: 'Abiertos',
+    vacio: 'Todavía nadie abrió su informe',
+    vacioDetalle: 'Cuando un paciente abra el suyo, aparecerá aquí.',
+  },
+  TODOS: {
+    etiqueta: 'Todos',
+    vacio: 'No hay informes publicados',
+    vacioDetalle: 'Cuando un médico publique un informe en el portal de resultados, aparecerá aquí.',
+  },
+};
+
+/** Una página de la cola, con el total de cada pestaña (sin la búsqueda). */
+export interface ColaEntrega extends RespuestaPaginada<EntregaResultado> {
+  readonly contadores: Readonly<Record<EstadoCola, number>>;
+  /** El conjunto de trabajo superó el tope del portal: se avisa, no se calla. */
+  readonly truncado: boolean;
+}
+
+/** Valor inicial de la cola: página vacía y contadores en cero. */
+export function colaVacia(): ColaEntrega {
+  return {
+    datos: [], total: 0, pagina: 1, limite: 25, totalPaginas: 1, truncado: false,
+    contadores: { POR_AVISAR: 0, ESPERANDO: 0, VENCIDOS: 0, ABIERTOS: 0, TODOS: 0 },
+  };
+}
+
+/**
+ * La pestaña que pide la URL, o «por avisar» si no pide ninguna válida. Una
+ * URL guardada o tecleada a mano no puede dejar la cola en un estado que el
+ * backend rechazaría con 400.
+ */
+export function estadoDeUrl(valor: string | null): EstadoCola {
+  return (ESTADOS_COLA as readonly string[]).includes(valor ?? '') ? (valor as EstadoCola) : 'POR_AVISAR';
+}
+
+/**
+ * Lo que se manda como búsqueda: recortado, y nada si tiene menos de dos
+ * caracteres —el backend exige dos, y una letra suelta casa con media cola—.
+ */
+export function busquedaParaEnviar(tecleado: string): string | undefined {
+  const limpio = tecleado.trim();
+  return limpio.length >= 2 ? limpio : undefined;
 }
 
 /**

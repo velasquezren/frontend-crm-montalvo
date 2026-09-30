@@ -1,14 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, TemplateRef, untracked, viewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, linkedSignal, signal, TemplateRef, untracked, viewChild, ViewContainerRef } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { OverlayRef } from '@angular/cdk/overlay';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { campoEnConflicto, Choque, choqueDe, datoDeConflicto, esConflicto, mensajeDeError } from '../../core/api/http-error';
-import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
+import { RealtimeService } from '../../core/realtime/realtime.service';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
+import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { InputComponent } from '../../shared/components/input/input.component';
@@ -20,7 +22,23 @@ import { nombreParaMostrar } from '../../shared/models/nombre-cliente';
 import { AVISO_TELEFONO_INVALIDO, telefonoParaEscribir } from '../../shared/models/telefono';
 import { NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { ToastService } from '../../core/toast/toast.service';
-import { EntregaResultado, estadoEntrega, FichaVinculable, fichaVinculable, motivoBloqueo, nombresDistintos, sePuedeEntregar, sePuedeRenovar } from './resultado.model';
+import {
+  busquedaParaEnviar,
+  ColaEntrega,
+  colaVacia,
+  EntregaResultado,
+  EstadoCola,
+  estadoDeUrl,
+  estadoEntrega,
+  ESTADOS_COLA,
+  FichaVinculable,
+  fichaVinculable,
+  motivoBloqueo,
+  nombresDistintos,
+  PESTANAS_COLA,
+  sePuedeEntregar,
+  sePuedeRenovar,
+} from './resultado.model';
 import { ResultadosService } from './resultados.service';
 
 /**
@@ -40,12 +58,14 @@ import { ResultadosService } from './resultados.service';
     ButtonComponent,
     EmptyStateComponent,
     ErrorCargaComponent,
+    FilterChipComponent,
     IconComponent,
     InputComponent,
     LoadingSkeletonComponent,
     NombreClientePipe,
     PageHeaderComponent,
     PaginatorComponent,
+    RouterLink,
     TableComponent,
   ],
   templateUrl: './resultados.page.html',
@@ -73,16 +93,84 @@ export class ResultadosPage {
     this.overlay.overlayElement.querySelector<HTMLInputElement>('input')?.focus();
   }
 
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly realtime = inject(RealtimeService);
+  private readonly destroyRef = inject(DestroyRef);
+
   protected readonly pagina = signal(1);
+
+  /* ── Pestañas y búsqueda ────────────────────────────────────────────
+     Viven en la URL (`?estado=&q=`): al volver del chat con «atrás», la
+     asistente sigue en la pestaña y la búsqueda donde estaba. */
+  protected readonly pestanas = ESTADOS_COLA;
+  protected readonly textos = PESTANAS_COLA;
+  protected readonly estado = signal<EstadoCola>(estadoDeUrl(this.route.snapshot.queryParamMap.get('estado')));
+  /** Lo tecleado en el buscador. */
+  protected readonly busqueda = signal(this.route.snapshot.queryParamMap.get('q') ?? '');
+  /** Lo que de verdad se busca: tras una pausa, para no pedir una cola por tecla. */
+  protected readonly busquedaAplicada = signal(busquedaParaEnviar(this.busqueda()));
+
   /** Informe que se está enviando: bloquea solo su fila, no la tabla entera. */
   protected readonly enviando = signal<string | null>(null);
   /** A quién se va a enviar y si antes hay que renovar su enlace vencido. */
   protected readonly candidato = signal<{ fila: EntregaResultado; renovar: boolean } | null>(null);
 
-  protected readonly entregas = httpResource<RespuestaPaginada<EntregaResultado>>(
-    () => this.resultadosService.pendientesRequest(this.pagina()),
-    { defaultValue: paginaVacia<EntregaResultado>() },
+  protected readonly entregas = httpResource<ColaEntrega>(
+    () => this.resultadosService.pendientesRequest({
+      pagina: this.pagina(),
+      estado: this.estado(),
+      busqueda: this.busquedaAplicada(),
+    }),
+    { defaultValue: colaVacia() },
   );
+
+  /**
+   * El esqueleto solo cuando no hay nada que enseñar: al cambiar de pestaña o
+   * de página. Un refresco de fondo —tiempo real, volver a la pestaña, el
+   * botón— recarga sin borrar la tabla, que es lo que la asistente está leyendo.
+   */
+  protected readonly cargando = computed(() => this.entregas.status() === 'loading');
+
+  /**
+   * Los contadores de los chips, que no dependen de la pestaña: se conservan
+   * mientras carga la nueva en vez de caer a cero y volver, que haría parpadear
+   * cinco números a la vez en cada clic.
+   */
+  protected readonly contadores = linkedSignal<ColaEntrega['contadores'] | undefined, ColaEntrega['contadores']>({
+    source: () => (this.entregas.status() === 'resolved' || this.entregas.status() === 'reloading' ? this.entregas.value().contadores : undefined),
+    computation: (nuevos, previo) => nuevos ?? previo?.value ?? colaVacia().contadores,
+  });
+
+  protected cambiarEstado(estado: EstadoCola): void {
+    if (estado === this.estado()) return;
+    this.estado.set(estado);
+    /* Otra pestaña es otra lista: quedarse en la página 5 de la anterior
+       dejaría a la asistente en una página que no existe. */
+    this.pagina.set(1);
+    this.sincronizarUrl();
+  }
+
+  protected limpiarBusqueda(): void {
+    this.busqueda.set('');
+    this.busquedaAplicada.set(undefined);
+    this.pagina.set(1);
+    this.sincronizarUrl();
+  }
+
+  private sincronizarUrl(): void {
+    void this.router.navigate([], {
+      queryParams: { estado: this.estado() === 'POR_AVISAR' ? null : this.estado(), q: this.busquedaAplicada() ?? null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  /** Refresco sin esqueleto: la tabla sigue a la vista mientras llega. */
+  protected actualizar(): void {
+    this.entregas.reload();
+  }
+  private recargaPendiente: ReturnType<typeof setTimeout> | undefined;
 
   /* Las dos reglas viven en el modelo: la plantilla las consulta y la prueba
      las fija, y escritas dos veces divergen. */
@@ -207,6 +295,44 @@ export class ResultadosPage {
   private readonly ofrecerEnvioDe = signal<string | null>(null);
 
   constructor() {
+    /* Búsqueda con pausa de 300 ms (crm-feature-page): el `onCleanup` cancela
+       la anterior en cada tecla y al destruir la página. */
+    effect(onCleanup => {
+      const tecleado = this.busqueda();
+      const temporizador = setTimeout(() => {
+        const aplicar = busquedaParaEnviar(tecleado);
+        if (aplicar === untracked(this.busquedaAplicada)) return;
+        this.busquedaAplicada.set(aplicar);
+        this.pagina.set(1);
+        this.sincronizarUrl();
+      }, 300);
+      onCleanup(() => clearTimeout(temporizador));
+    });
+
+    /* WhatsApp confirma la entrega y la lectura por el socket: si es el chat de
+       una fila visible, la cola se refresca sola —«Enviado» pasa a «Entregado»
+       sin que nadie pulse nada—. Con pausa: un acuse de Meta llega en ráfaga. */
+    effect(() => {
+      const aviso = this.realtime.actividad();
+      if (!aviso) return;
+      const visible = untracked(() => this.entregas.value().datos.some(fila => fila.conversacionId === aviso.conversacionId));
+      if (!visible) return;
+      clearTimeout(this.recargaPendiente);
+      this.recargaPendiente = setTimeout(() => this.entregas.reload(), 800);
+    });
+
+    /* Lo que cambia en el PORTAL —un informe nuevo que publicó FileMaker, un
+       paciente que abrió el suyo— no llega por socket. Al volver a la pestaña
+       se refresca: es justo cuando la asistente mira. */
+    const alVolver = () => {
+      if (!document.hidden) this.entregas.reload();
+    };
+    document.addEventListener('visibilitychange', alVolver);
+    this.destroyRef.onDestroy(() => {
+      document.removeEventListener('visibilitychange', alVolver);
+      clearTimeout(this.recargaPendiente);
+    });
+
     effect(() => {
       const informeId = this.ofrecerEnvioDe();
       if (!informeId || this.entregas.isLoading()) return;
@@ -369,8 +495,10 @@ export class ResultadosPage {
     try {
       await (renovar ? this.resultadosService.renovarYEnviar(fila.informeId) : this.resultadosService.enviar(fila.informeId));
       this.toast.success(
-        /* Meta confirma después: el estado real aparece en la fila. */
-        `El enlace del informe va en camino a ${fila.paciente ? nombreParaMostrar(fila.paciente) : 'el paciente'}.`,
+        /* Meta confirma después: el estado real aparece en la fila. Y la fila
+           se va de «Por avisar»: se dice a dónde, o parecería perdida. */
+        `El enlace va en camino a ${fila.paciente ? nombreParaMostrar(fila.paciente) : 'el paciente'}. ` +
+          `Lo verás en «${PESTANAS_COLA.ESPERANDO.etiqueta}».`,
         'Aviso enviado',
       );
       this.entregas.reload();

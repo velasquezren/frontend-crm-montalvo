@@ -3,7 +3,20 @@ import { describe, expect, it } from 'vitest';
 import { cubreRol, puedeEntregarResultados } from '../../core/auth/roles';
 import { RolUsuario } from '../../core/auth/user.model';
 import { NAV_GROUPS } from '../../shared/components/layout/nav-items';
-import { EntregaResultado, estadoEntrega, fichaVinculable, motivoBloqueo, nombresDistintos, sePuedeEntregar, sePuedeRenovar } from './resultado.model';
+import {
+  busquedaParaEnviar,
+  colaVacia,
+  EntregaResultado,
+  estadoDeUrl,
+  estadoEntrega,
+  ESTADOS_COLA,
+  fichaVinculable,
+  motivoBloqueo,
+  nombresDistintos,
+  PESTANAS_COLA,
+  sePuedeEntregar,
+  sePuedeRenovar,
+} from './resultado.model';
 
 /**
  * La parte de esta pantalla que decide algo, aislada de Angular: cuándo se
@@ -27,6 +40,7 @@ const base: EntregaResultado = {
   pacientePortal: { nombre: 'Paciente', pac: 'PAC33009', ci: null },
   aviso: null,
   abiertoEn: null,
+  conversacionId: null,
 };
 
 describe('cuándo se puede entregar un resultado', () => {
@@ -187,5 +201,31 @@ describe('la ficha vinculable que manda el 409', () => {
     expect(fichaVinculable('Carla')).toBeNull();
     expect(fichaVinculable({ otro: 1 })).toBeNull();
     expect(fichaVinculable({ nombre: 7 })).toBeNull();
+  });
+});
+
+describe('las pestañas de la cola', () => {
+  /* Una URL guardada o tecleada a mano no puede dejar la cola en un estado que
+     el backend rechazaría con 400: sin pestaña válida, «por avisar». */
+  it('lee la pestaña de la URL y cae en «por avisar» si no es válida', () => {
+    expect(estadoDeUrl('ABIERTOS')).toBe('ABIERTOS');
+    expect(estadoDeUrl(null)).toBe('POR_AVISAR');
+    expect(estadoDeUrl('abiertos')).toBe('POR_AVISAR');
+    expect(estadoDeUrl('<script>')).toBe('POR_AVISAR');
+  });
+
+  /* El backend exige dos caracteres; una letra suelta casa con media cola. */
+  it('solo busca con dos caracteres o más, recortados', () => {
+    expect(busquedaParaEnviar('  ro  ')).toBe('ro');
+    expect(busquedaParaEnviar('r')).toBeUndefined();
+    expect(busquedaParaEnviar('   ')).toBeUndefined();
+  });
+
+  /* Si se añade una pestaña en un lado y no en el otro, el chip sale sin
+     texto o el contador sin chip. */
+  it('cada pestaña tiene su texto y su contador', () => {
+    expect(Object.keys(PESTANAS_COLA).sort()).toEqual([...ESTADOS_COLA].sort());
+    expect(Object.keys(colaVacia().contadores).sort()).toEqual([...ESTADOS_COLA].sort());
+    for (const estado of ESTADOS_COLA) expect(PESTANAS_COLA[estado].etiqueta).toBeTruthy();
   });
 });

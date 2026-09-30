@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
+import { EstadoCola } from './resultado.model';
 
 /**
  * Entrega de informes del portal de resultados al WhatsApp del paciente.
@@ -13,9 +14,13 @@ import { ApiService, ResourceRequest } from '../../core/api/api.service';
 export class ResultadosService {
   private readonly api = inject(ApiService);
 
-  /** Cola de entrega. La paginación la manda el portal, que tiene el total real. */
-  pendientesRequest(pagina: number): ResourceRequest {
-    return this.api.request('/resultados/pendientes', { pagina });
+  /**
+   * Cola de entrega, por pestaña. Filtrar y paginar lo hace el backend —con el
+   * portal— sobre la lista entera de cada pestaña: filtrar aquí una página ya
+   * cortada diría «no hay más» con informes en la página siguiente.
+   */
+  pendientesRequest(filtro: { pagina: number; estado: EstadoCola; busqueda?: string }): ResourceRequest {
+    return this.api.request('/resultados/pendientes', filtro);
   }
 
   /**

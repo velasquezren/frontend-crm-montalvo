@@ -57,4 +57,12 @@ describe('ResultadosService', () => {
     await expect(hecho).resolves.toEqual({ clienteId: 'c-3' });
     http.verify();
   });
+
+  /* Filtrar y paginar lo hace el backend sobre la lista entera de la pestaña. */
+  it('pide la cola con la pestaña y la búsqueda; sin búsqueda no manda el parámetro', () => {
+    const conBusqueda = servicio.pendientesRequest({ pagina: 2, estado: 'ESPERANDO', busqueda: 'rocío' });
+    expect(conBusqueda.url).toMatch(/\/resultados\/pendientes$/);
+    expect(conBusqueda.params).toEqual({ pagina: 2, estado: 'ESPERANDO', busqueda: 'rocío' });
+    expect(servicio.pendientesRequest({ pagina: 1, estado: 'POR_AVISAR' }).params).toEqual({ pagina: 1, estado: 'POR_AVISAR' });
+  });
 });

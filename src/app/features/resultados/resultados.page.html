@@ -1,8 +1,47 @@
 <app-page-header
   title="Entrega de Resultados"
-  subtitle="Informes publicados por los médicos. Envía al paciente el enlace para consultarlo." />
+  subtitle="Informes publicados por los médicos. Envía al paciente el enlace para consultarlo.">
+  <!-- Lo que cambia en el portal (un informe nuevo, un paciente que abre el
+       suyo) no llega por socket: se refresca al volver a la pestaña, y aquí
+       cuando la asistente quiere mirar ya. Sin esqueleto: la tabla sigue. -->
+  <app-button
+    variant="secondary"
+    icon="rotate-cw"
+    [loading]="entregas.status() === 'reloading'"
+    (clicked)="actualizar()">
+    Actualizar
+  </app-button>
+</app-page-header>
 
-@if (entregas.isLoading()) {
+<!-- ── Búsqueda y pestañas: el mismo patrón que Clientes y Leads ───────── -->
+<div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6">
+  <div class="w-full sm:w-80">
+    <app-input
+      placeholder="Buscar por nombre, PAC o CI…"
+      icon="search"
+      [(value)]="busqueda" />
+  </div>
+  <!-- Cada chip cuenta el total de su pestaña, no lo que queda al combinarlo
+       con la búsqueda: un número que cambia mientras escribes no sirve para
+       decidir (crm-design-system, «Filtros»). -->
+  <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none" role="group" aria-label="Estado de los informes">
+    @for (pestana of pestanas; track pestana) {
+      <app-filter-chip [active]="estado() === pestana" [count]="contadores()[pestana]" (clicked)="cambiarEstado(pestana)">
+        {{ textos[pestana].etiqueta }}
+      </app-filter-chip>
+    }
+  </div>
+</div>
+
+@if (entregas.value().truncado) {
+  <!-- Nunca pasa a esta escala (el enlace dura 30 días), pero si pasa se dice:
+       una pestaña cortada en silencio se lee como «no hay más». -->
+  <p class="mb-4 rounded-xl bg-bg-light px-3 py-2.5 text-sm text-text-dark" role="status">
+    Hay más informes vigentes sin abrir de los que la cola puede mostrar a la vez. Usa la búsqueda para encontrar uno concreto.
+  </p>
+}
+
+@if (cargando()) {
   <app-loading-skeleton shape="text" height="3rem" />
   <app-loading-skeleton shape="text" height="3rem" />
   <app-loading-skeleton shape="text" height="3rem" />
@@ -73,37 +112,53 @@
             </app-badge>
           </td>
           <td class="text-right">
-            @if (sePuedeEnviar(fila)) {
-              <app-button
-                size="sm"
-                icon="message-circle"
-                [loading]="enviando() === fila.informeId"
-                [disabled]="enviando() !== null"
-                (clicked)="pedirConfirmacion(fila)">
-                {{ fila.aviso ? 'Reenviar' : 'Enviar por WhatsApp' }}
-              </app-button>
-            } @else if (sePuedeRenovar(fila)) {
-              <app-button
-                size="sm"
-                variant="secondary"
-                icon="rotate-cw"
-                [loading]="enviando() === fila.informeId"
-                [disabled]="enviando() !== null"
-                (clicked)="pedirConfirmacion(fila, true)">
-                Renovar y enviar
-              </app-button>
-            } @else if (fila.sinFicha === 'SIN_COINCIDENCIA') {
-              <app-button
-                size="sm"
-                variant="secondary"
-                icon="user-plus"
-                [disabled]="enviando() !== null"
-                (clicked)="abrirAlta(fila)">
-                Crear ficha
-              </app-button>
-            } @else {
-              <span class="text-sm text-text-muted">{{ motivoBloqueo(fila) }}</span>
-            }
+            <div class="flex items-center justify-end gap-2">
+              <!-- El chat de la línea de resultados: donde está el aviso y donde
+                   contestará el paciente. Por id, no por teléfono: con teléfono,
+                   a un admin se le podía abrir el chat comercial de la misma
+                   paciente. -->
+              @if (fila.conversacionId; as chat) {
+                <a
+                  routerLink="/conversaciones"
+                  [queryParams]="{ id: chat }"
+                  class="crm-accion-enlace crm-accion-enlace-whatsapp"
+                  title="Ir al chat del paciente"
+                  aria-label="Ir al chat del paciente">
+                  <app-icon name="message-circle" [size]="14" />
+                </a>
+              }
+              @if (sePuedeEnviar(fila)) {
+                <app-button
+                  size="sm"
+                  icon="send"
+                  [loading]="enviando() === fila.informeId"
+                  [disabled]="enviando() !== null"
+                  (clicked)="pedirConfirmacion(fila)">
+                  {{ fila.aviso ? 'Reenviar' : 'Enviar por WhatsApp' }}
+                </app-button>
+              } @else if (sePuedeRenovar(fila)) {
+                <app-button
+                  size="sm"
+                  variant="secondary"
+                  icon="rotate-cw"
+                  [loading]="enviando() === fila.informeId"
+                  [disabled]="enviando() !== null"
+                  (clicked)="pedirConfirmacion(fila, true)">
+                  Renovar y enviar
+                </app-button>
+              } @else if (fila.sinFicha === 'SIN_COINCIDENCIA') {
+                <app-button
+                  size="sm"
+                  variant="secondary"
+                  icon="user-plus"
+                  [disabled]="enviando() !== null"
+                  (clicked)="abrirAlta(fila)">
+                  Crear ficha
+                </app-button>
+              } @else {
+                <span class="text-sm text-text-muted">{{ motivoBloqueo(fila) }}</span>
+              }
+            </div>
           </td>
         </tr>
       }
@@ -116,11 +171,20 @@
     [total]="entregas.value().total"
     [limite]="entregas.value().limite"
     (cambiar)="pagina.set($event)" />
+} @else if (busquedaAplicada(); as buscado) {
+  <!-- Con búsqueda, el vacío dice QUÉ no se encontró y DÓNDE, y ofrece salir:
+       «no hay informes» a secas haría creer que la paciente no tiene. -->
+  <app-empty-state
+    icon="search"
+    title="Sin resultados"
+    [description]="'Nada en «' + textos[estado()].etiqueta + '» para «' + buscado + '». Prueba en «Todos» o revisa el PAC.'">
+    <app-button variant="ghost" size="sm" icon="x" (clicked)="limpiarBusqueda()">Limpiar búsqueda</app-button>
+  </app-empty-state>
 } @else {
   <app-empty-state
-    icon="file-text"
-    title="No hay informes publicados"
-    description="Cuando un médico publique un informe en el portal de resultados, aparecerá aquí para avisar al paciente." />
+    [icon]="estado() === 'POR_AVISAR' ? 'check-check' : 'file-text'"
+    [title]="textos[estado()].vacio"
+    [description]="textos[estado()].vacioDetalle" />
 }
 
 <!-- Enviar cuesta dinero y no se puede deshacer: se confirma a quién va. -->
