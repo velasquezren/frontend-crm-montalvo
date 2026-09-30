@@ -72,12 +72,28 @@ export function valoresDeFicha(cliente: ClienteConFicha): ValoresFicha {
     pac: cliente.pac || '',
     ci: cliente.ci || '',
     empresa: cliente.empresaTrabajo || textoExtra(extra, 'empresa'),
-    fechaNacimiento: fecha ? fecha.slice(0, 10) : '',
+    fechaNacimiento: fechaDeFormulario(fecha),
     lugarNacimiento: cliente.ciLugar || textoExtra(extra, 'lugarNacimiento', 'CI.Lug.Pac'),
     categoria: cliente.categoria || 'PROSPECTO',
     notas: textoExtra(extra, 'notas'),
     etiquetas: listaExtra(extra, 'tags').join(', '),
   };
+}
+
+/**
+ * La fecha como la piden `<input type="date">` y el backend (`@IsDateString`):
+ * `AAAA-MM-DD`, o vacío.
+ *
+ * La columna siempre llega así, pero `fn` es texto de FileMaker y puede venir
+ * suelto (ver `calcularEdad`). Antes se recortaba a 10 caracteres y se ponía
+ * en el formulario tal cual: el campo de fecha lo mostraba vacío, pero la
+ * señal lo guardaba, y al guardar CUALQUIER cambio de la ficha —una nota— se
+ * mandaba ese texto y el backend rechazaba el PATCH entero. Lo que no es una
+ * fecha de calendario no se precarga: `fn` sigue en el JSON (la edad se sigue
+ * calculando con él) y guardar no lo toca.
+ */
+function fechaDeFormulario(valor: string | null | undefined): string {
+  return /^\d{4}-\d{2}-\d{2}/.exec(valor ?? '')?.[0] ?? '';
 }
 
 /** Los cambios de ficha que entiende `PATCH /clientes/:id` (y, con `alta`, el `POST`). */

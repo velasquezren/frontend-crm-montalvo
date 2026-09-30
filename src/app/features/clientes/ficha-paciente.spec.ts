@@ -30,6 +30,12 @@ describe('valoresDeFicha', () => {
     expect(soloFileMaker).toMatchObject({ fechaNacimiento: '1980-01-01', lugarNacimiento: 'LPZ' });
   });
 
+  it('una fecha de FileMaker que no es AAAA-MM-DD no se precarga: guardaría texto y el PATCH fallaría', () => {
+    const suelta = valoresDeFicha({ nombre: 'Ana', fechaNacimiento: null, datosExtra: { fn: '15/03/1985' } });
+    expect(suelta.fechaNacimiento).toBe('');
+    expect(cambiosDeFicha(suelta).fechaNacimiento).toBeNull();
+  });
+
   it('edita solo las etiquetas guardadas, no los intereses', () => {
     const v = valoresDeFicha({ nombre: 'Ana', datosExtra: { tags: ['vip', 'cirugía'] } });
     expect(v.etiquetas).toBe('vip, cirugía');
