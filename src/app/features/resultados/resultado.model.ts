@@ -110,3 +110,24 @@ export function nombresDistintos(uno: string, otro: string): boolean {
       .join(' ');
   return palabras(uno) !== palabras(otro);
 }
+
+/**
+ * La ficha que ya tiene el número tecleado en «Crear ficha», cuando puede ser la
+ * misma paciente: no tiene PAC y nada la contradice. El backend la manda en el
+ * 409 (`vinculable`); `nombre` es `null` si la ficha solo tenía el nombre
+ * provisional de un contacto de WhatsApp.
+ *
+ * Existe porque la paciente que escribió por WhatsApp antes de ir a la clínica
+ * tiene ficha sin PAC, y crearle otra con su número rebotaba. Se vincula, no se
+ * duplica — pero lo decide una persona: madre e hija comparten WhatsApp.
+ */
+export interface FichaVinculable {
+  readonly nombre: string | null;
+}
+
+/** Lee `vinculable` del 409, o `null` si no viene o no tiene la forma esperada. */
+export function fichaVinculable(dato: unknown): FichaVinculable | null {
+  if (!dato || typeof dato !== 'object' || !('nombre' in dato)) return null;
+  const nombre = (dato as { nombre: unknown }).nombre;
+  return typeof nombre === 'string' || nombre === null ? { nombre } : null;
+}

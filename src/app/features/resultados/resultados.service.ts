@@ -49,6 +49,15 @@ export class ResultadosService {
     return this.api.post<{ clienteId: string }>(`/resultados/${informeId}/ficha`, { telefono });
   }
 
+  /**
+   * El número ya tiene una ficha sin PAC y la asistente confirmó que es la
+   * misma paciente: se le pone el PAC del informe. El servidor la busca por ese
+   * teléfono; no viaja ningún id de ficha.
+   */
+  vincularFicha(informeId: string, telefono: string): Promise<{ clienteId: string }> {
+    return this.api.post<{ clienteId: string }>(`/resultados/${informeId}/vincular`, { telefono });
+  }
+
   /** El enlace venció: se extiende 30 días y se vuelve a avisar al paciente. */
   renovarYEnviar(informeId: string): Promise<{ enviado: true; mensajeId: string }> {
     return this.api.post<{ enviado: true; mensajeId: string }>(`/resultados/${informeId}/renovar-y-enviar`);

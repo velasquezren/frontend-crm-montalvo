@@ -214,40 +214,64 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="titulo-alta"
-    (submit)="$event.preventDefault(); guardarAlta()">
+    (submit)="$event.preventDefault(); alEnviarAlta()">
     @if (creando(); as fila) {
-      <h2 id="titulo-alta" class="text-base font-bold text-text-dark">Crear la ficha de {{ fila.pacientePortal.nombre }}</h2>
+      <h2 id="titulo-alta" class="text-base font-bold text-text-dark">
+        {{ vinculable() ? '¿Es la misma paciente?' : 'Crear la ficha de ' + fila.pacientePortal.nombre }}
+      </h2>
       <div class="crm-meta crm-meta-sm mt-2">
         @if (fila.pacientePortal.pac; as pac) { <span class="crm-meta-clave">{{ pac }}</span> }
         @if (fila.pacientePortal.ci; as ci) { <span class="crm-meta-clave">CI {{ ci }}</span> }
       </div>
-      <p class="mt-3 text-sm text-text-muted">
-        El nombre y el PAC vienen del portal. Falta su WhatsApp, que es a donde
-        irá el aviso.
-      </p>
-      <div class="mt-4">
-        <app-input
-          type="tel"
-          label="WhatsApp"
-          placeholder="70012345 o +591…"
-          [error]="errorTelefonoAlta()"
-          [(value)]="telefonoAlta" />
-        @if (telefonoAltaE164(); as e164) {
-          @if (e164 !== telefonoAlta().trim()) {
-            <p class="mt-1.5 text-xs text-text-muted">Se guardará como <span class="tabular-nums">{{ e164 }}</span></p>
+      @if (vinculable(); as candidata) {
+        <!-- La paciente escribió por WhatsApp antes de ir a la clínica: ya
+             tiene ficha, sin PAC. Se vincula, no se duplica — pero lo decide
+             ella viendo el nombre: madre e hija comparten WhatsApp. -->
+        <div class="mt-4 rounded-xl bg-bg-light px-3 py-3 text-sm text-text-dark" role="status">
+          <p>
+            El <span class="tabular-nums font-medium">{{ candidata.telefono }}</span> ya tiene una ficha sin PAC:
+            <strong>{{ candidata.ficha.nombre ?? 'un contacto de WhatsApp sin nombre' }}</strong>.
+          </p>
+          <p class="mt-2">
+            Si es {{ fila.pacientePortal.nombre }}, esa ficha recibirá el PAC del informe y sus próximos
+            informes se reconocerán solos.
+          </p>
+        </div>
+        <p class="mt-3 text-xs text-text-muted">Si es un familiar que comparte el WhatsApp, no la vincules.</p>
+      } @else {
+        <p class="mt-3 text-sm text-text-muted">
+          El nombre y el PAC vienen del portal. Falta su WhatsApp, que es a donde
+          irá el aviso.
+        </p>
+        <div class="mt-4">
+          <app-input
+            type="tel"
+            label="WhatsApp"
+            placeholder="70012345 o +591…"
+            [error]="errorTelefonoAlta()"
+            [(value)]="telefonoAlta" />
+          @if (telefonoAltaE164(); as e164) {
+            @if (e164 !== telefonoAlta().trim()) {
+              <p class="mt-1.5 text-xs text-text-muted">Se guardará como <span class="tabular-nums">{{ e164 }}</span></p>
+            }
           }
-        }
-      </div>
+        </div>
+      }
     }
     <div class="mt-6 flex justify-end gap-3">
-      <app-button variant="ghost" [disabled]="guardandoAlta()" (clicked)="cerrarAlta()">Cancelar</app-button>
-      <app-button
-        type="submit"
-        icon="check"
-        [loading]="guardandoAlta()"
-        [disabled]="!telefonoAltaE164() || !!errorTelefonoAlta()">
-        Crear ficha
-      </app-button>
+      @if (vinculable()) {
+        <app-button variant="ghost" [disabled]="vinculando()" (clicked)="noEsLaMisma()">No, es otra persona</app-button>
+        <app-button type="submit" icon="check" [loading]="vinculando()">Sí, vincular</app-button>
+      } @else {
+        <app-button variant="ghost" [disabled]="guardandoAlta()" (clicked)="cerrarAlta()">Cancelar</app-button>
+        <app-button
+          type="submit"
+          icon="check"
+          [loading]="guardandoAlta()"
+          [disabled]="!telefonoAltaE164() || !!errorTelefonoAlta()">
+          Crear ficha
+        </app-button>
+      }
     </div>
   </form>
 </ng-template>

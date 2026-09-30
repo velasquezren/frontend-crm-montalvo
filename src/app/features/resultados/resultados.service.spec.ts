@@ -46,4 +46,15 @@ describe('ResultadosService', () => {
     await expect(hecho).resolves.toEqual({ clienteId: 'c-2' });
     http.verify();
   });
+
+  /* La ficha la busca el servidor por el teléfono: no viaja ningún id. */
+  it('vincula sobre el informe mandando solo el teléfono', async () => {
+    const hecho = servicio.vincularFicha(INFORME, '+59170012345');
+    const peticion = http.expectOne(r => r.url.endsWith(`/resultados/${INFORME}/vincular`));
+    expect(peticion.request.method).toBe('POST');
+    expect(peticion.request.body).toEqual({ telefono: '+59170012345' });
+    peticion.flush({ clienteId: 'c-3' });
+    await expect(hecho).resolves.toEqual({ clienteId: 'c-3' });
+    http.verify();
+  });
 });

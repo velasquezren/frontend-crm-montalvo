@@ -3,7 +3,7 @@ import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { OverlayRef } from '@angular/cdk/overlay';
 
-import { campoEnConflicto, Choque, choqueDe, esConflicto, mensajeDeError } from '../../core/api/http-error';
+import { campoEnConflicto, Choque, choqueDe, datoDeConflicto, esConflicto, mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -20,7 +20,7 @@ import { nombreParaMostrar } from '../../shared/models/nombre-cliente';
 import { AVISO_TELEFONO_INVALIDO, telefonoParaEscribir } from '../../shared/models/telefono';
 import { NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { ToastService } from '../../core/toast/toast.service';
-import { EntregaResultado, estadoEntrega, motivoBloqueo, nombresDistintos, sePuedeEntregar, sePuedeRenovar } from './resultado.model';
+import { EntregaResultado, estadoEntrega, FichaVinculable, fichaVinculable, motivoBloqueo, nombresDistintos, sePuedeEntregar, sePuedeRenovar } from './resultado.model';
 import { ResultadosService } from './resultados.service';
 
 /**
@@ -248,6 +248,7 @@ export class ResultadosPage {
     this.creando.set(fila);
     this.telefonoAlta.set('');
     this.altaChocada.set(null);
+    this.vinculable.set(null);
     this.abrirModal(this.plantillaAlta(), () => this.cerrarAlta());
   }
 
@@ -255,6 +256,57 @@ export class ResultadosPage {
     this.overlay?.dispose();
     this.overlay = null;
     this.creando.set(null);
+    this.vinculable.set(null);
+  }
+
+  /**
+   * La ficha que ya tiene el número tecleado, cuando puede ser la misma
+   * paciente (sin PAC, nada que la contradiga). Mientras está puesta, el modal
+   * pregunta en vez de crear. Ver `FichaVinculable`.
+   */
+  protected readonly vinculable = signal<{ ficha: FichaVinculable; telefono: string } | null>(null);
+  protected readonly vinculando = signal(false);
+
+  /** Enter en el modal hace lo que dice el botón principal que se ve. */
+  protected alEnviarAlta(): void {
+    void (this.vinculable() ? this.confirmarVinculo() : this.guardarAlta());
+  }
+
+  protected async confirmarVinculo(): Promise<void> {
+    const fila = this.creando();
+    const candidata = this.vinculable();
+    if (!fila || !candidata || this.vinculando()) return;
+    this.vinculando.set(true);
+    try {
+      await this.resultadosService.vincularFicha(fila.informeId, candidata.telefono);
+      this.cerrarAlta();
+      /* Mismo final que un alta: la cola ahora la reconoce por PAC y el effect
+         del constructor abre la confirmación de envío. */
+      this.toast.success('Desde ahora sus informes se reconocen solos.', 'Ficha vinculada');
+      this.entregas.reload();
+      this.ofrecerEnvioDe.set(fila.informeId);
+    } catch (err) {
+      /* La ficha cambió entre la pregunta y el «sí»: se vuelve al número. */
+      this.vinculable.set(null);
+      this.toast.warning(mensajeDeError(err, 'No se pudo vincular la ficha.'), 'No se vinculó');
+    } finally {
+      this.vinculando.set(false);
+    }
+  }
+
+  /**
+   * No es ella: casi siempre un familiar con el mismo WhatsApp. El CRM admite
+   * una ficha por número, así que lo que queda es otro número de la paciente.
+   */
+  protected noEsLaMisma(): void {
+    const candidata = this.vinculable();
+    this.vinculable.set(null);
+    if (candidata) {
+      this.altaChocada.set({
+        valor: candidata.telefono,
+        mensaje: 'Ese número ya es de otra persona y el CRM admite una ficha por número. Usa otro WhatsApp de la paciente.',
+      });
+    }
   }
 
   protected async guardarAlta(): Promise<void> {
@@ -276,6 +328,12 @@ export class ResultadosPage {
       /* Teléfono y PAC son únicos. El teléfono se corrige aquí mismo; un PAC
          repetido significa que la ficha ya existe y el cruce no la encontró,
          y eso no se arregla en este modal: se avisa sin pintarlo de rojo. */
+      /* El número ya es de una ficha sin PAC: puede ser ella. Se pregunta. */
+      const candidata = fichaVinculable(datoDeConflicto(err, 'vinculable'));
+      if (candidata) {
+        this.vinculable.set({ ficha: candidata, telefono });
+        return;
+      }
       if (esConflicto(err)) {
         const aviso = mensajeDeError(err, MENSAJE_DUPLICADO);
         if (campoEnConflicto(err) === 'telefono') {

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { cubreRol, puedeEntregarResultados } from '../../core/auth/roles';
 import { RolUsuario } from '../../core/auth/user.model';
 import { NAV_GROUPS } from '../../shared/components/layout/nav-items';
-import { EntregaResultado, estadoEntrega, motivoBloqueo, nombresDistintos, sePuedeEntregar, sePuedeRenovar } from './resultado.model';
+import { EntregaResultado, estadoEntrega, fichaVinculable, motivoBloqueo, nombresDistintos, sePuedeEntregar, sePuedeRenovar } from './resultado.model';
 
 /**
  * La parte de esta pantalla que decide algo, aislada de Angular: cuándo se
@@ -170,5 +170,22 @@ describe('paciente que el CRM no conoce', () => {
   it('CI repetido NO ofrece alta: hay que resolver el duplicado', () => {
     const repetido: EntregaResultado = { ...sinFicha, sinFicha: 'CI_REPETIDO' };
     expect(motivoBloqueo(repetido)).toContain('dos fichas');
+  });
+});
+
+describe('la ficha vinculable que manda el 409', () => {
+  /* El backend la manda cuando el número ya es de una ficha sin PAC. */
+  it('lee el nombre, o null si la ficha era un contacto de WhatsApp sin nombre', () => {
+    expect(fichaVinculable({ nombre: 'Carla Arauz' })).toEqual({ nombre: 'Carla Arauz' });
+    expect(fichaVinculable({ nombre: null })).toEqual({ nombre: null });
+  });
+
+  /* Un 409 cualquiera —otro PAC, un familiar— no debe convertirse en la
+     pregunta «¿es la misma?»: sería ofrecer vincular a otra persona. */
+  it('sin el dato, o con otra forma, no hay nada que vincular', () => {
+    expect(fichaVinculable(undefined)).toBeNull();
+    expect(fichaVinculable('Carla')).toBeNull();
+    expect(fichaVinculable({ otro: 1 })).toBeNull();
+    expect(fichaVinculable({ nombre: 7 })).toBeNull();
   });
 });

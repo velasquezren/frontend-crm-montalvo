@@ -33,6 +33,16 @@ export function campoEnConflicto(error: unknown): string | undefined {
   return typeof campo === 'string' && campo ? campo : undefined;
 }
 
+/**
+ * Un dato extra del cuerpo de un 409 (`{ message, campo, <clave>: … }`), sin
+ * interpretar: quien lo pide valida su forma.
+ */
+export function datoDeConflicto(error: unknown, clave: string): unknown {
+  if (!esConflicto(error)) return undefined;
+  const cuerpo: unknown = (error as HttpErrorResponse).error;
+  return cuerpo && typeof cuerpo === 'object' ? (cuerpo as Record<string, unknown>)[clave] : undefined;
+}
+
 /** Lo que el servidor rechazó por duplicado: el valor exacto y lo que dijo. */
 export interface Choque {
   readonly valor: string;
