@@ -90,7 +90,14 @@ export interface ConversacionResumen {
      * Solo viaja en el DETALLE del chat. Ver `Cliente.bajaPromocionesEn`.
      */
     bajaPromocionesEn?: string | null;
+    /**
+     * La DUEÑA de la paciente (su cartera comercial). No es quien atiende el
+     * chat: eso es `agente`, más abajo. Solo en líneas comerciales; en las
+     * demás llega `null`.
+     */
+    agente?: { readonly id: string; readonly nombre: string } | null;
   };
+  /** Quien ATIENDE este chat, o `null` si está libre. Ver `duenaDelChatLibre`. */
   readonly agente: { id: string; nombre: string } | null;
   /** El listado incluye solo el último mensaje (take: 1, desc). */
   readonly mensajes: readonly MensajeApi[];
@@ -215,6 +222,58 @@ export interface FiltrosInbox {
   readonly busqueda: string;
   readonly agenteId: string | null;
   readonly soloMios: boolean;
+}
+
+/**
+ * La dueña de la paciente cuando el chat está LIBRE: «Sin asignar · paciente
+ * de Ana». `null` si alguien lo atiende o si la paciente no tiene dueña.
+ *
+ * Quién atiende y de quién es la paciente son dos cosas. Hasta el 2026-09-30
+ * el backend rellenaba `agente` con la dueña cuando el chat estaba libre, y la
+ * fila decía «Ana» con el chat en «Sin asignar»: cualquiera podía contestarlo
+ * y quedárselo. Es a propósito —la clínica prefiere que ninguna paciente de
+ * Ventas se quede sin respuesta—, así que lo que se corrigió es la etiqueta.
+ */
+export function duenaDelChatLibre(
+  chat: Pick<ConversacionResumen, 'agente' | 'cliente'>,
+): { readonly id: string; readonly nombre: string } | null {
+  return chat.agente ? null : (chat.cliente.agente ?? null);
+}
+
+/**
+ * A quién mira un admin: todo el equipo, lo suyo más el pool sin asignar, o
+ * una agente concreta.
+ *
+ * Es UN valor y no dos interruptores. Estuvieron separados —un botón
+ * «Todo/Míos» junto al buscador y unos chips de agente plegables— y se podían
+ * encender a la vez: «los de Ana que además son míos o del pool», un AND que
+ * no significa nada y casi siempre daba vacío.
+ *
+ * Es ALCANCE, como la línea: acota las cuatro pestañas, las cerradas y todos
+ * sus contadores (`whereAlcanceInbox` en el backend). Antes solo valía en
+ * «Todas»: con una agente elegida, «Sin responder» marcaba los de ella, y al
+ * pulsarla el filtro se soltaba y la lista traía los de todo el equipo —el
+ * número no era lo que aparecía—.
+ */
+export type AlcanceInbox = 'EQUIPO' | 'MIOS' | { readonly agenteId: string };
+
+/** El `value` del `<option>` que representa un alcance. */
+export function opcionDeAlcance(alcance: AlcanceInbox): string {
+  return typeof alcance === 'string' ? alcance : alcance.agenteId;
+}
+
+/** La vuelta de `opcionDeAlcance`. Un valor vacío es el equipo, nunca «la agente ''». */
+export function alcanceDeOpcion(valor: string): AlcanceInbox {
+  if (!valor || valor === 'EQUIPO') return 'EQUIPO';
+  return valor === 'MIOS' ? 'MIOS' : { agenteId: valor };
+}
+
+/** Lo que el alcance pone en la petición del listado. */
+export function filtrosDeAlcance(alcance: AlcanceInbox): Pick<FiltrosInbox, 'agenteId' | 'soloMios'> {
+  return {
+    agenteId: typeof alcance === 'string' ? null : alcance.agenteId,
+    soloMios: alcance === 'MIOS',
+  };
 }
 
 /** Lo que responde `GET /conversaciones`: una página más los contadores. */

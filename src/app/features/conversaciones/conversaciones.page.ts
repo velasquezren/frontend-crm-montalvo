@@ -120,10 +120,7 @@ export class ConversacionesPage implements AfterViewInit {
     effect(() => {
       const pestana = this.pestanaEnRuta();
       if (!esFiltroInbox(pestana)) return;
-      this.state.filtroTab.set(pestana);
-      this.state.filtroLineaId.set(null);
-      this.state.filtroAgenteId.set(null);
-      this.state.soloMisChatsAdmin.set(false);
+      this.state.restablecerFiltros(pestana);
     });
 
     /* Actualizar badge de la PWA según chats sin responder */
@@ -184,10 +181,7 @@ export class ConversacionesPage implements AfterViewInit {
       const q = this.busquedaEnRuta();
       if (!q) return;
       this.state.busqueda.set(q);
-      this.state.filtroLineaId.set(null);
-      this.state.filtroTab.set('TODAS');
-      this.state.filtroAgenteId.set(null);
-      this.state.soloMisChatsAdmin.set(false);
+      this.state.restablecerFiltros();
     });
 
     effect(() => {
@@ -251,10 +245,7 @@ export class ConversacionesPage implements AfterViewInit {
    * ser antiguo o de otra línea que no está en pantalla.
    */
   private async abrirChatDePaciente(telefono: string): Promise<void> {
-    this.state.filtroLineaId.set(null);
-    this.state.filtroTab.set('TODAS');
-    this.state.filtroAgenteId.set(null);
-    this.state.soloMisChatsAdmin.set(false);
+    this.state.restablecerFiltros();
     try {
       const pagina = await this.conversacionesService.listarPagina(
         { lineaId: null, tab: 'TODAS', busqueda: telefono, agenteId: null, soloMios: false },

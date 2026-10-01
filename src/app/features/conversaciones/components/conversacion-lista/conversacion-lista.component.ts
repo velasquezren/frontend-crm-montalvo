@@ -9,16 +9,19 @@ import { BadgeComponent } from '../../../../shared/components/badge/badge.compon
 import { SelectComponent } from '../../../../shared/components/select/select.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { FilterChipComponent } from '../../../../shared/components/filter-chip/filter-chip.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { InputComponent } from '../../../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
-import { generarIniciales } from '../../../../core/auth/user.model';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
 import {
+  alcanceDeOpcion,
   ContadoresInbox,
   ConversacionResumen,
+  duenaDelChatLibre,
   esperandoDesde,
   FiltroInbox,
+  opcionDeAlcance,
 } from '../../conversacion.model';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 import { ConversacionPreviewComponent } from './conversacion-preview.component';
@@ -32,9 +35,11 @@ interface PestanaInbox {
 
 /**
  * Panel lateral izquierdo con la bandeja de entrada (Inbox).
- * Permite filtrar por pestañas (Todas, Sin responder, Sin asignar, Mis chats),
- * ver las cerradas, filtrar por agente asignado (en vista Admin) y buscar por
- * nombre/teléfono.
+ *
+ * De arriba abajo, de lo más amplio a lo más fino: el ALCANCE (línea y, para
+ * el admin, a quién mira), las pestañas de trabajo con sus contadores, y el
+ * buscador. El archivo de cerradas es un interruptor en la cabecera, fuera de
+ * las pestañas: una cerrada no es trabajo pendiente.
  */
 @Component({
   selector: 'app-conversacion-lista',
@@ -46,6 +51,7 @@ interface PestanaInbox {
     ButtonComponent,
     SelectComponent,
     EmptyStateComponent,
+    FilterChipComponent,
     IconComponent,
     InputComponent,
     LoadingSkeletonComponent,
@@ -110,52 +116,21 @@ export class ConversacionListaComponent {
   );
 
   protected readonly state = inject(ConversacionesStateService);
-  protected readonly iniciales = generarIniciales;
+  protected readonly duenaDelChatLibre = duenaDelChatLibre;
 
-  /* ── Agentes con chats para filtro rápido de Admin ──────────────── */
-  /**
-   * Agentes para el filtro rápido del admin.
-   *
-   * El conteo por agente sale de las conversaciones CARGADAS, así que es
-   * orientativo, no exacto — antes tampoco lo era (contaba sobre el corte de
-   * 500). La lista de agentes en sí viene completa de `/meta/agentes`, que es
-   * lo que hace falta para poder filtrar por cualquiera de ellas.
-   */
-  protected readonly agentesConChats = computed(() => {
-    const lista = this.state.conversacionesFiltradas();
-    const todosAgentes = this.state.agentesActuales();
-    const conteos = new Map<string, number>();
+  /** Las agentes por nombre, para el selector de alcance del admin. */
+  protected readonly agentesPorNombre = computed(() =>
+    [...this.state.agentesActuales()].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')),
+  );
 
-    for (const c of lista) {
-      if (c.agente) {
-        conteos.set(c.agente.id, (conteos.get(c.agente.id) ?? 0) + 1);
-      }
-    }
+  /** El alcance como `value` del selector, y su vuelta. */
+  protected readonly opcionAlcance = computed(() => opcionDeAlcance(this.state.alcance()));
 
-    if (todosAgentes.length > 0) {
-      return todosAgentes.map(ag => ({
-        id: ag.id,
-        nombre: ag.nombre,
-        rol: ag.rol,
-        count: conteos.get(ag.id) ?? 0,
-      })).sort((a, b) => b.count - a.count || a.nombre.localeCompare(b.nombre));
-    }
+  protected cambiarAlcance(valor: string): void {
+    this.state.alcance.set(alcanceDeOpcion(valor));
+  }
 
-    const map = new Map<string, { id: string; nombre: string; count: number }>();
-    for (const c of lista) {
-      if (c.agente) {
-        const prev = map.get(c.agente.id);
-        map.set(c.agente.id, {
-          id: c.agente.id,
-          nombre: c.agente.nombre,
-          count: (prev?.count ?? 0) + 1,
-        });
-      }
-    }
-    return [...map.values()].sort((a, b) => a.nombre.localeCompare(b.nombre));
-  });
-
-  /* ── Filtro tabs & agentes ──────────────────────────────────────── */
+  /* ── Pestañas y archivo ─────────────────────────────────────────── */
   /** Las pestañas de trabajo, con el contador que les corresponde. */
   protected readonly pestanas: readonly PestanaInbox[] = [
     { tab: 'TODAS', etiqueta: 'Todas', contador: 'total', ayuda: 'Todos los chats abiertos' },
@@ -166,32 +141,13 @@ export class ConversacionListaComponent {
 
   protected readonly viendoCerradas = computed(() => this.state.filtroTab() === 'CERRADAS');
 
-  /** «Todas» con un agente elegido no es «Todas»: lo marca el chip del agente. */
-  protected esActiva(tab: FiltroInbox): boolean {
-    return this.state.filtroTab() === tab && (tab !== 'TODAS' || !this.state.filtroAgenteId());
-  }
-
   protected elegirPestana(tab: FiltroInbox): void {
-    this.setFiltroTab(tab);
-    if (tab === 'TODAS') this.filtrarPorAgente(null);
-  }
-
-  protected setFiltroTab(tab: FiltroInbox): void {
     this.state.filtroTab.set(tab);
-    if (tab !== 'TODAS') {
-      this.state.filtroAgenteId.set(null);
-    }
   }
 
-  protected filtrarPorAgente(agenteId: string | null): void {
-    this.state.filtroAgenteId.set(agenteId);
-    if (agenteId) {
-      this.state.filtroTab.set('TODAS');
-    }
-  }
-
-  protected toggleMostrarFiltroAgente(): void {
-    this.state.mostrarFiltroAgentes.update(v => !v);
+  /** El archivo se entra y se sale con el mismo botón; al salir, a «Todas». */
+  protected alternarCerradas(): void {
+    this.elegirPestana(this.viendoCerradas() ? 'TODAS' : 'CERRADAS');
   }
 
   /* ── Helpers de tiempo de espera ───────────────────────────────── */

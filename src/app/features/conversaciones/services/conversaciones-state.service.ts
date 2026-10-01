@@ -23,11 +23,13 @@ import { cambiosDeFicha, valoresDeFicha } from '../../clientes/ficha-paciente';
 import { ClientesService } from '../../clientes/clientes.service';
 import {
   AgenteResumen,
+  AlcanceInbox,
   ConversacionDetalle,
   ConversacionResumen,
   contadoresTrasResponder,
   FiltroInbox,
   FiltrosInbox,
+  filtrosDeAlcance,
   ItemHilo,
   MensajeApi,
   PaginaInbox,
@@ -95,10 +97,9 @@ export class ConversacionesStateService {
   /** Lo mismo, pero con retardo: es esto lo que viaja al servidor. */
   private readonly busquedaDebounced = signal('');
   readonly filtroTab = signal<FiltroInbox>('TODAS');
-  readonly filtroAgenteId = signal<string | null>(null);
-  readonly mostrarFiltroAgentes = signal(false);
+  /** A quién mira un admin. Para el resto no aplica: su alcance lo pone el servidor. */
+  readonly alcance = signal<AlcanceInbox>('EQUIPO');
   readonly dropdownAgenteAbierto = signal(false);
-  readonly soloMisChatsAdmin = signal(false);
 
   /**
    * Lo que de verdad viaja al servidor. `busqueda` va con retardo (ver el
@@ -106,16 +107,25 @@ export class ConversacionesStateService {
    */
   readonly filtros = computed<FiltrosInbox>(() => {
     this.authService.generacionSesion();
-    return ({
-    lineaId: this.filtroLineaId(),
-    tab: this.filtroTab(),
-    /* El filtro por agente solo aplica en "Todas", igual que antes en memoria:
-       combinarlo con "Mis chats" daría siempre vacío. */
-    agenteId: this.filtroTab() === 'TODAS' ? this.filtroAgenteId() : null,
-    busqueda: this.busquedaDebounced(),
-    soloMios: this.isAdmin() && this.soloMisChatsAdmin(),
+    return {
+      lineaId: this.filtroLineaId(),
+      tab: this.filtroTab(),
+      busqueda: this.busquedaDebounced(),
+      ...filtrosDeAlcance(this.isAdmin() ? this.alcance() : 'EQUIPO'),
+    };
   });
-  });
+
+  /**
+   * Vuelve a la bandeja sin filtros heredados: toda línea y todo el equipo.
+   * La usan los enlaces que llegan de otra pantalla (dashboard, agenda, ficha):
+   * lo que buscan tiene que verse aunque la visita anterior dejara la bandeja
+   * recortada.
+   */
+  restablecerFiltros(tab: FiltroInbox = 'TODAS'): void {
+    this.filtroLineaId.set(null);
+    this.filtroTab.set(tab);
+    this.alcance.set('EQUIPO');
+  }
 
   /**
    * La PRIMERA página del inbox, ya filtrada por el servidor.

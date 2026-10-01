@@ -209,6 +209,28 @@ ventas con acceso a Recepción) dejaba de ver el chat. El frontend lo refleja en
 y «Sin asignar» solo se pinta en líneas comerciales. Asignar a propósito sigue
 existiendo (`PATCH /:id/agente`, ADMIN).
 
+### Quién atiende y de quién es la paciente (2026-09-30)
+
+Son dos datos distintos y no se mezclan:
+
+| Dato | Campo | Qué dice |
+|---|---|---|
+| Quién **atiende** el chat | `Conversacion.agenteId` → `chat.agente` | Lo que miran «Sin asignar», «Mis chats» y el filtro por agente |
+| De quién **es** la paciente | `Cliente.agenteId` → `chat.cliente.agente` | Su cartera comercial. Solo en líneas comerciales |
+
+**Un chat libre de una paciente con dueña sigue libre, a propósito.** Lo decidió el
+propietario: en Ventas lo que importa es que ninguna paciente se quede sin respuesta, la
+cooperación entre agentes es parte del trabajo y por eso todas las agentes de ventas son
+admin. Quien conteste primero se lo queda, también si es paciente de otra.
+
+**Cicatriz:** el backend rellenaba `agente` con la dueña cuando el chat estaba libre
+(`?? cliente.agente`). La fila decía «Ana» con el chat en «Sin asignar», no salía al
+filtrar por Ana, y el envío optimista (`reconciliarEnvioLocal`) veía un responsable y no
+reflejaba que quien contestó se lo había quedado. Ahora `agente` es solo quien atiende, y
+`duenaDelChatLibre()` da la etiqueta «Sin asignar · paciente de Ana» en la fila y en la
+ficha lateral. No vuelvas a fundirlos: si un día la regla cambia a «el chat nace de la
+dueña», se cambia al CREAR la conversación, no en lo que se muestra.
+
 ## 3. Arquitectura en Tiempo Real y Estado Frontend
 
 ### El listado se pagina y se filtra EN EL SERVIDOR (desde 2026-08-27)
@@ -220,10 +242,11 @@ su pestaña con los mismos filtros** (el backend lo prueba contra Postgres). No 
 restes contadores en el cliente salvo en el envío optimista (`contadoresTrasResponder`).
 
 **Abierta / cerrada** (2026-09-30). Las cuatro pestañas de trabajo solo muestran
-abiertas. `CERRADAS` es el archivo y va fuera de ellas, en la franja «Ver cerradas» bajo
-las pestañas: una cerrada no es trabajo pendiente, y mezclarla es lo que inflaba «Sin
-responder» a 427. Las pestañas salen de un solo arreglo (`pestanas` en
-`conversacion-lista`), no de botones copiados.
+abiertas. `CERRADAS` es el archivo y va fuera de ellas, en el interruptor «Cerradas» de
+la cabecera del inbox (`alternarCerradas`): una cerrada no es trabajo pendiente, y
+mezclarla es lo que inflaba «Sin responder» a 427. Viéndolas, ninguna pestaña queda
+marcada y el subtítulo dice «Cerradas · se reabren solas». Las pestañas salen de un solo
+arreglo (`pestanas` en `conversacion-lista`), no de botones copiados.
 - «Cerrar» en la cabecera del chat no pide confirmación, porque no se pierde nada: se
   reabre sola si la paciente escribe o si alguien le contesta. El aviso ofrece «Deshacer»
   (`cambiarEstado`).
@@ -231,6 +254,33 @@ responder» a 427. Las pestañas salen de un solo arreglo (`pestanas` en
   por inactividad) y ofrece «Reabrir».
 - `estaSinResponder()` devuelve `false` para una cerrada.
 - Al buscar en «Todas» también salen cerradas, marcadas con la insignia «Cerrada».
+
+### La barra del inbox: de lo más amplio a lo más fino (2026-09-30)
+
+De arriba abajo: cabecera (título, «Cerradas», «Nuevo chat») → **alcance** (línea y, para
+el admin, a quién mira, lado a lado) → pestañas → buscador. Cada banda tiene contenido:
+antes había una franja casi vacía solo para «Ver cerradas», otra plegable «Por agente»
+y una píldora «727 chats» que repetía el contador de «Todas».
+
+**El alcance del admin es UN valor** (`AlcanceInbox`: `'EQUIPO' | 'MIOS' | { agenteId }`,
+señal `state.alcance`). Eran dos controles y los dos fallaban:
+
+- **Se combinaban en algo sin sentido.** El botón «Todo/Míos» y los chips de agente se
+  encendían a la vez: «los de Ana que además son míos o del pool» casi siempre daba vacío.
+  Ahora son opciones del mismo `<app-select>` y `filtrosDeAlcance` nunca manda
+  `agenteId` con `soloMios`.
+- **El número no era lo que aparecía.** El filtro de agente solo valía en «Todas» y
+  cambiar de pestaña lo soltaba. Pero el backend aplica el alcance a TODOS los
+  contadores (`whereAlcanceInbox`): con una agente elegida, «Sin responder» contaba los
+  de ella y al pulsarla la lista traía los de todo el equipo. Ahora el alcance acota todas las
+  pestañas y las cerradas, igual que la línea, y nada lo suelta salvo
+  `restablecerFiltros()`: la llaman los enlaces que llegan de otra pantalla (dashboard,
+  agenda, ficha), porque lo que buscan tiene que verse aunque la visita anterior dejara
+  la bandeja recortada.
+
+Los chips contaban sobre la página cargada (50 filas), así que su número era orientativo.
+El selector no lleva número: al elegir una agente, las pestañas ya muestran los de ella,
+contados por el servidor.
 
 **No lo devuelvas a memoria por hacer que una pestaña cambie "más rápido".** Así
 estaba, y el precio fue este: el backend cortaba en las 500 más recientes y la
@@ -392,7 +442,7 @@ el mismo error que el backend ya había corregido en el push.
 La vista `conversaciones` se estructura en submódulos desacoplados gobernados por `ConversacionesStateService`:
 
 1. **`conversacion-sidebar`**: Ficha del paciente, notas médicas fijadas, edición rápida de datos y asignación.
-2. **`conversacion-lista`**: Bandeja lateral izquierda, pestañas de filtrado (Todas / Sin asignar / Mis chats) y tarjetas de conversación.
+2. **`conversacion-lista`**: Bandeja lateral izquierda: alcance (línea, agente), pestañas de trabajo (Todas / Sin responder / Sin asignar / Mis chats), interruptor de cerradas, buscador y tarjetas de conversación.
 3. **`conversacion-thread`**: Hilo central de mensajes, separadores de fecha, burbujas, lightbox y reproducción de audio.
 4. **`conversacion-composer`**: Área de redacción, soporte de pegado (`Ctrl+V`), Drag & Drop, atajos (`/`), grabación de voz y selector de plantillas.
 5. **`conversaciones.page`**: Orquestador que sincroniza rutas, modo inmersivo móvil y eventos globales.

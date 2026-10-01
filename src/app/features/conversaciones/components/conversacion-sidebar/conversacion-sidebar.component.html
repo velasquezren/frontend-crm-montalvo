@@ -400,7 +400,12 @@
           } @else {
             <div class="no-agent-banner">
               <app-icon name="alert-circle" [size]="16" class="text-text-muted shrink-0" />
-              <p class="text-xs text-text-muted">Nadie atiende este chat aún.</p>
+              <p class="text-xs text-text-muted">
+                Nadie atiende este chat aún.
+                @if (duenaDelChatLibre(chat); as duena) {
+                  Es paciente de {{ duena.nombre }}; quien conteste primero se lo queda.
+                }
+              </p>
             </div>
             @if (state.isAdmin()) {
               <div class="mt-2">

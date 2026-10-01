@@ -34,7 +34,7 @@ import { ToastService } from '../../../../core/toast/toast.service';
 import { FormularioVentaComponent } from '../../../ventas/formulario-venta/formulario-venta.component';
 import { Venta } from '../../../ventas/venta.model';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
-import { ConversacionResumen } from '../../conversacion.model';
+import { ConversacionResumen, duenaDelChatLibre } from '../../conversacion.model';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 import { SelectComponent } from '../../../../shared/components/select/select.component';
 import { CategoriaCliente } from '../../../../shared/models/cliente-categoria.model';
@@ -78,6 +78,7 @@ export class ConversacionSidebarComponent {
   protected readonly categoriaLabel = CATEGORIA_LABEL;
   protected readonly categoriaBadge = CATEGORIA_BADGE;
   protected readonly iniciales = generarIniciales;
+  protected readonly duenaDelChatLibre = duenaDelChatLibre;
 
   /** El átomo emite `string`; la señal quiere el enum. Un solo sitio donde cae el cast. */
   protected cambiarCategoria(valor: string): void {

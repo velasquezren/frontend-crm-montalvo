@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ContadoresInbox, ConversacionResumen, contadoresTrasResponder, describirCierre, estaSinResponder } from './conversacion.model';
+import { ContadoresInbox, ConversacionResumen, contadoresTrasResponder, describirCierre, duenaDelChatLibre, estaSinResponder } from './conversacion.model';
 
 const CONTADORES: ContadoresInbox = { total: 10, sinAsignar: 2, misChats: 5, sinResponder: 4, cerradas: 7 };
 const CHAT = {
@@ -30,5 +30,20 @@ describe('conversación abierta o cerrada', () => {
       .toBe('Cerrada por Ana el 30 de septiembre. Se reabre sola si la paciente escribe o si le contestas.');
     expect(describirCierre({ cerradaEn: '2026-10-01T02:00:00.000Z', cerradaPor: null })).toMatch(/^Cerrada por inactividad el 30 de septiembre/);
     expect(describirCierre({ cerradaEn: null, cerradaPor: null })).toBeNull();
+  });
+});
+
+describe('quién atiende y de quién es la paciente', () => {
+  const ANA = { id: 'ana', nombre: 'Ana Pérez' };
+  const BETO = { id: 'beto', nombre: 'Beto Rojas' };
+  const sinDuena = { ...CHAT, cliente: { ...CHAT.cliente, agente: null } };
+  const conDuena = { ...CHAT, cliente: { ...CHAT.cliente, agente: ANA } };
+
+  /* La fila decía «Ana» con el chat en «Sin asignar». Libre, la dueña se dice
+     como dueña; con responsable, manda el responsable. */
+  it('la dueña solo se menciona cuando el chat está libre', () => {
+    expect(duenaDelChatLibre({ ...conDuena, agente: null })).toEqual(ANA);
+    expect(duenaDelChatLibre({ ...conDuena, agente: BETO })).toBeNull();
+    expect(duenaDelChatLibre({ ...sinDuena, agente: null })).toBeNull();
   });
 });
