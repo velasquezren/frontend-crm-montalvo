@@ -209,6 +209,16 @@ ventas con acceso a Recepción) dejaba de ver el chat. El frontend lo refleja en
 y «Sin asignar» solo se pinta en líneas comerciales. Asignar a propósito sigue
 existiendo (`PATCH /:id/agente`, ADMIN).
 
+### El sello Gold en la bandeja (2026-09-30)
+
+La fila de una paciente Gold lleva `<app-badge variant="gold" icon="star">Gold</app-badge>`
+junto al nombre: es lo que deja ver, antes de abrir el chat, a quién vale la pena
+atender primero. **Solo Gold**: Silver y Bronze viven en la ficha; en cada fila serían
+ruido. La categoría es por valor (FileMaker + CRM) o fijada a mano por SUPER_ADMIN —ver
+`crm-backend-module`, «Categoría del paciente»—, y en la ficha del chat se cambia con
+`<app-categoria-paciente>`, el mismo control que en Clientes: se guarda al elegir, no
+con el «Guardar» de la ficha.
+
 ### Quién atiende y de quién es la paciente (2026-09-30)
 
 Son dos datos distintos y no se mezclan:

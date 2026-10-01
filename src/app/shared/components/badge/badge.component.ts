@@ -2,7 +2,11 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 
 import { IconComponent, IconName } from '../icon/icon.component';
 
-export type BadgeVariant = 'success' | 'info' | 'neutral' | 'critical';
+/**
+ * `gold` no es un estado: es el sello de la paciente Gold, el único uso del
+ * latón (`--color-gold`). No lo uses para otra cosa.
+ */
+export type BadgeVariant = 'success' | 'info' | 'neutral' | 'critical' | 'gold';
 
 /**
  * Átomo Badge — pares bg/texto derivados de la paleta (styles.css §Tokens de Estado).
@@ -34,6 +38,7 @@ export class BadgeComponent {
       info: 'bg-info-bg text-info',
       neutral: 'bg-neutral-bg text-neutral',
       critical: 'bg-critical-bg text-critical',
+      gold: 'bg-gold-bg text-gold',
     };
 
     return [base, variants[this.variant()]].join(' ');

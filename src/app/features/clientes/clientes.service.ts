@@ -4,7 +4,7 @@ import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
 import { DireccionOrden } from '../../shared/components/table/th-ordenable.component';
-import { CategoriaCliente } from '../../shared/models/cliente-categoria.model';
+import { CategoriaCliente, EstadoCategoria } from '../../shared/models/cliente-categoria.model';
 import { Cliente, HistorialPaciente } from './cliente.model';
 
 export interface FiltroClientes {
@@ -29,7 +29,6 @@ export interface ActualizarClienteDto {
   nombre?: string;
   telefono?: string;
   email?: string | null;
-  categoria?: CategoriaCliente;
   agenteId?: string | null;
   pac?: string | null;
   ci?: string | null;
@@ -49,7 +48,6 @@ export interface CrearClienteDto {
   nombre: string;
   telefono: string;
   email?: string | null;
-  categoria?: CategoriaCliente;
   agenteId?: string | null;
   pac?: string | null;
   ci?: string | null;
@@ -99,6 +97,15 @@ export class ClientesService {
    */
   obtener(id: string): Promise<Cliente> {
     return this.api.get<Cliente>(`/clientes/${id}`);
+  }
+
+  /**
+   * Fija la categoría a mano, o la devuelve a automática con `null`. Solo
+   * SUPER_ADMIN: la categoría ya no viaja en `actualizar` —la calcula el valor
+   * de la paciente—, y el backend responde 403 a cualquier otro rol.
+   */
+  fijarCategoria(id: string, categoria: CategoriaCliente | null): Promise<EstadoCategoria> {
+    return this.api.put<EstadoCategoria>(`/clientes/${id}/categoria`, { categoria });
   }
 
   /** Servicios que se le realizaron al paciente, cruzados por su PAC. */

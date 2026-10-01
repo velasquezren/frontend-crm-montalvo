@@ -268,9 +268,10 @@ const COLOR_AJENO =
 
 /** Hexadecimales sueltos en CSS: la paleta es cerrada y todo tono se deriva con
     `color-mix()` sobre un token, nunca con un hex nuevo. Los nueve de la paleta
-    se admiten como fallback de `var(--token, #hex)`. */
+    —y el latón de Gold, el único añadido (2026-09-30)— se admiten como
+    fallback de `var(--token, #hex)`. */
 const HEX_AJENO =
-  /#(?!006156|39ADA3|FFFFFF|EAF7F5|1F2937|6B7280|000000|F8F9FA|E5E7EB)[0-9a-f]{6}\b/gi;
+  /#(?!006156|39ADA3|FFFFFF|EAF7F5|1F2937|6B7280|000000|F8F9FA|E5E7EB|86671C)[0-9a-f]{6}\b/gi;
 
 const SOMBRA_AJENA = /\bshadow-(?:2xs|xs|sm|md|lg|xl|2xl|inner)\b/g;
 

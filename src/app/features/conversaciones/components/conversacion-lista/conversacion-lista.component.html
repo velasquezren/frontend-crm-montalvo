@@ -178,6 +178,12 @@
                 <p class="font-medium text-text-dark text-sm truncate leading-tight">
                   {{ chat.cliente | nombreCliente }}
                 </p>
+                <!-- El único sello de categoría en la bandeja: Gold, para que una
+                     paciente que vale la pena se vea antes de abrir el chat.
+                     Silver y Bronze viven en su ficha; aquí serían ruido. -->
+                @if (chat.cliente.categoria === 'GOLD') {
+                  <app-badge variant="gold" icon="star" class="shrink-0" title="Paciente Gold: gastó $3.500 o más en 12 meses, o la fijaron a mano">Gold</app-badge>
+                }
                 @if (chat.cliente.pac) {
                   <span class="crm-meta-clave text-[10px] shrink-0" title="Código PAC en FileMaker">
                     {{ chat.cliente.pac }}

@@ -10,7 +10,6 @@ const vacia: ValoresFicha = {
   empresa: '',
   fechaNacimiento: '',
   lugarNacimiento: '',
-  categoria: 'PROSPECTO',
   notas: '',
   etiquetas: '',
 };

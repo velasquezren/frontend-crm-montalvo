@@ -1,5 +1,4 @@
 import { DatosExtra, listaExtra, textoExtra } from '../../core/api/datos-extra';
-import { CategoriaCliente } from '../../shared/models/cliente-categoria.model';
 import { ActualizarClienteDto } from './clientes.service';
 
 /**
@@ -34,7 +33,6 @@ export interface ValoresFicha {
   /** `AAAA-MM-DD`, o vacío. */
   readonly fechaNacimiento: string;
   readonly lugarNacimiento: string;
-  readonly categoria: CategoriaCliente;
   readonly notas: string;
   /** Separadas por coma, como se escriben en el campo. */
   readonly etiquetas: string;
@@ -46,7 +44,6 @@ export interface ClienteConFicha {
   readonly email?: string | null;
   readonly pac?: string | null;
   readonly ci?: string | null;
-  readonly categoria?: CategoriaCliente | null;
   readonly empresaTrabajo?: string | null;
   readonly fechaNacimiento?: string | null;
   readonly ciLugar?: string | null;
@@ -74,7 +71,6 @@ export function valoresDeFicha(cliente: ClienteConFicha): ValoresFicha {
     empresa: cliente.empresaTrabajo || textoExtra(extra, 'empresa'),
     fechaNacimiento: fechaDeFormulario(fecha),
     lugarNacimiento: cliente.ciLugar || textoExtra(extra, 'lugarNacimiento', 'CI.Lug.Pac'),
-    categoria: cliente.categoria || 'PROSPECTO',
     notas: textoExtra(extra, 'notas'),
     etiquetas: listaExtra(extra, 'tags').join(', '),
   };
@@ -99,7 +95,7 @@ function fechaDeFormulario(valor: string | null | undefined): string {
 /** Los cambios de ficha que entiende `PATCH /clientes/:id` (y, con `alta`, el `POST`). */
 export type CambiosFicha = Pick<
   ActualizarClienteDto,
-  'nombre' | 'email' | 'categoria' | 'pac' | 'ci' | 'empresa' | 'fechaNacimiento' | 'lugarNacimiento' | 'datosExtra'
+  'nombre' | 'email' | 'pac' | 'ci' | 'empresa' | 'fechaNacimiento' | 'lugarNacimiento' | 'datosExtra'
 >;
 
 /**
@@ -132,7 +128,6 @@ export function cambiosDeFicha(valores: ValoresFicha, { alta = false } = {}): Ca
   return {
     nombre: valores.nombre.trim(),
     email: valores.email.trim() || null,
-    categoria: valores.categoria,
     pac: valores.pac.trim().toUpperCase() || null,
     ci: valores.ci.trim() || null,
     empresa: valores.empresa.trim(),

@@ -57,17 +57,14 @@
                   <app-input placeholder="Ej. 6849201" [(value)]="state.editCi" />
                 </div>
               </div>
+              <!-- Se guarda al elegir, no con «Guardar»: ver `CategoriaPacienteComponent`. -->
               <div>
-                <label class="edit-label">Categoría / Nivel</label>
-                <app-select
-                  [value]="state.editCategoria()"
-                  (valueChange)="cambiarCategoria($event)"
-                  ariaLabel="Categoría del paciente">
-                  <option value="GOLD">Gold (VIP)</option>
-                  <option value="SILVER">Silver</option>
-                  <option value="BRONZE">Bronze</option>
-                  <option value="PROSPECTO">Prospecto</option>
-                </app-select>
+                <span class="edit-label">Categoría</span>
+                <app-categoria-paciente
+                  [clienteId]="chat.cliente.id"
+                  [categoria]="chat.cliente.categoria"
+                  [fijadaEn]="chat.cliente.categoriaFijadaEn"
+                  (cambiada)="state.refrescarTrasCambioDeFicha()" />
               </div>
               <div>
                 <label class="edit-label">Correo Electrónico</label>
@@ -162,7 +159,9 @@
           </p>
           <div class="mt-2 flex flex-wrap items-center justify-center gap-1.5">
             <app-badge
-              [variant]="categoriaBadge[chat.cliente.categoria]">
+              [variant]="categoriaBadge[chat.cliente.categoria]"
+              [icon]="chat.cliente.categoria === 'GOLD' ? 'star' : undefined"
+              [title]="origenDeCategoria(chat.cliente.categoriaFijadaEn)">
               {{ categoriaLabel[chat.cliente.categoria] }}
             </app-badge>
             @if (chat.cliente.bajaPromocionesEn; as baja) {

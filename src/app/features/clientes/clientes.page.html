@@ -242,26 +242,14 @@
           </div>
       </div>
 
-      <!-- 2. Clasificación y Agente -->
+      <!-- 2. Agente. Sin categoría: una paciente nueva nace Prospecto y sube
+           sola con lo que compre (FileMaker y CRM); fijarla a mano se hace
+           desde su ficha, y solo SUPER_ADMIN. -->
       <div class="space-y-3 pt-2 border-t border-border/60">
         <span class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">
-          2. Asignación y Clasificación
+          2. Asignación
         </span>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <!-- Categoría -->
-          <div class="space-y-1">
-            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Categoría / Nivel</label>
-            <app-select
-              [value]="editCategoria()"
-              (valueChange)="onCambiarCategoria($event)"
-              ariaLabel="Categoría del paciente">
-              <option value="GOLD">Gold (VIP)</option>
-              <option value="SILVER">Silver</option>
-              <option value="BRONZE">Bronze</option>
-              <option value="PROSPECTO">Prospecto</option>
-            </app-select>
-          </div>
-
           <!-- Agente Asignado -->
           <div class="space-y-1">
             <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Agente Asignado</label>
@@ -365,7 +353,9 @@
             </h2>
             <app-badge
               class="shrink-0"
-              [variant]="categoriaBadge[cli.categoria]">
+              [variant]="categoriaBadge[cli.categoria]"
+              [icon]="cli.categoria === 'GOLD' ? 'star' : undefined"
+              [title]="origenDeCategoria(cli.categoriaFijadaEn)">
               {{ categoriaLabel[cli.categoria] }}
             </app-badge>
           </div>
@@ -498,17 +488,14 @@
                   placeholder="correo@ejemplo.com"
                   [(value)]="editEmail" />
 
+                <!-- Se guarda al elegir, no con «Guardar»: ver `CategoriaPacienteComponent`. -->
                 <div class="space-y-1">
-                  <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Categoría / Nivel</label>
-                  <app-select
-                    [value]="editCategoria()"
-                    (valueChange)="onCambiarCategoria($event)"
-                    ariaLabel="Categoría del paciente">
-                    <option value="GOLD">Gold (VIP)</option>
-                    <option value="SILVER">Silver</option>
-                    <option value="BRONZE">Bronze</option>
-                    <option value="PROSPECTO">Prospecto</option>
-                  </app-select>
+                  <span class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Categoría</span>
+                  <app-categoria-paciente
+                    [clienteId]="cli.id"
+                    [categoria]="cli.categoria"
+                    [fijadaEn]="cli.categoriaFijadaEn"
+                    (cambiada)="alCambiarCategoria(cli, $event)" />
                 </div>
 
                 <div class="space-y-1">

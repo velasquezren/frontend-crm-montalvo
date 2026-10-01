@@ -76,6 +76,8 @@ export interface ConversacionResumen {
     telefono: string;
     email: string | null;
     categoria: CategoriaCliente;
+    /** Fijada a mano, o null si es la calculada. Solo viaja en el DETALLE. */
+    categoriaFijadaEn?: string | null;
     /* Columnas reales del paciente; viajan en listado y detalle. */
     pac?: string | null;
     ci?: string | null;

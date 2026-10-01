@@ -23,7 +23,9 @@ import { ActividadesService } from '../../../actividades/actividades.service';
 import {
   CATEGORIA_BADGE,
   CATEGORIA_LABEL,
+  origenDeCategoria,
 } from '../../../../shared/models/cliente-categoria.model';
+import { CategoriaPacienteComponent } from '../../../clientes/components/categoria-paciente.component';
 import { generarIniciales } from '../../../../core/auth/user.model';
 import { ROL_LABEL } from '../../../../core/auth/roles';
 import { edadDePaciente } from '../../../../core/api/edad';
@@ -37,7 +39,6 @@ import { ConversacionesStateService } from '../../services/conversaciones-state.
 import { ConversacionResumen, duenaDelChatLibre } from '../../conversacion.model';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 import { SelectComponent } from '../../../../shared/components/select/select.component';
-import { CategoriaCliente } from '../../../../shared/models/cliente-categoria.model';
 
 type ClienteChat = ConversacionResumen['cliente'];
 
@@ -58,6 +59,7 @@ type ClienteChat = ConversacionResumen['cliente'];
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,
+    CategoriaPacienteComponent,
     DrawerComponent,
     FilterChipComponent,
     IconComponent,
@@ -77,14 +79,11 @@ export class ConversacionSidebarComponent {
   protected readonly rolLabel = ROL_LABEL;
   protected readonly categoriaLabel = CATEGORIA_LABEL;
   protected readonly categoriaBadge = CATEGORIA_BADGE;
+  protected readonly origenDeCategoria = origenDeCategoria;
   protected readonly iniciales = generarIniciales;
   protected readonly duenaDelChatLibre = duenaDelChatLibre;
 
   /** El átomo emite `string`; la señal quiere el enum. Un solo sitio donde cae el cast. */
-  protected cambiarCategoria(valor: string): void {
-    if (valor) this.state.editCategoria.set(valor as CategoriaCliente);
-  }
-
   protected enlaceWhatsApp(telefono: string): string {
     return enlaceWhatsApp(telefono);
   }

@@ -17,6 +17,8 @@ export interface Cliente {
   readonly telefono: string;
   readonly email: string | null;
   readonly categoria: CategoriaCliente;
+  /** Fijada a mano por un SUPER_ADMIN, o null si es la calculada. */
+  readonly categoriaFijadaEn?: string | null;
   readonly agenteId: string | null;
   readonly agente: { id: string; nombre: string } | null;
   readonly intereses: readonly InteresApi[];

@@ -56,6 +56,13 @@
   --color-bg-workspace: #F8F9FA;
   --color-border: #E5E7EB;
 
+  /* 🥇 El único tono fuera de la paleta base, y con un solo uso: el sello de
+     la paciente Gold. Lo aprobó el propietario el 2026-09-30 (cambio de
+     identidad visual). Latón apagado y no amarillo: se lee como «premium» sin
+     gritar, y mide 5,29:1 sobre blanco y 4,52:1 sobre su fondo (AA). No es un
+     color de estado ni de alerta: no lo uses para nada que no sea Gold. */
+  --color-gold: #86671C;
+
   /* 🏷️ Tokens de Estado — derivados de la paleta base (§3.1) vía color-mix().
      Ningún tono nuevo se inventa: éxito/info reutilizan primary/secondary,
      "critical" reutiliza text-critical (negro) en vez de un rojo de alarma,
@@ -68,6 +75,7 @@
   --color-neutral-bg: color-mix(in srgb, var(--color-text-muted) 10%, white);
   --color-critical: var(--color-text-critical);
   --color-critical-bg: color-mix(in srgb, var(--color-text-critical) 6%, white);
+  --color-gold-bg: color-mix(in srgb, var(--color-gold) 12%, white);
 
   /* 📐 Sombras del Sistema de Diseño (§3.2) */
   --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.08);

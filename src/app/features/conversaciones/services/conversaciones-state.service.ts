@@ -38,7 +38,6 @@ import {
   ResumenInbox,
 } from '../conversacion.model';
 import { ConversacionesService } from '../conversaciones.service';
-import { CategoriaCliente } from '../../../shared/models/cliente-categoria.model';
 
 const LOTE_HISTORIAL = 50;
 
@@ -291,7 +290,6 @@ export class ConversacionesStateService {
   readonly editEmpresa = signal('');
   readonly editFechaNacimiento = signal('');
   readonly editLugarNacimiento = signal('');
-  readonly editCategoria = signal<CategoriaCliente>('PROSPECTO');
   readonly editNotas = signal('');
   readonly editTags = signal('');
   /** `false` = no quiere promociones. Ver `Cliente.bajaPromocionesEn`. */
@@ -869,7 +867,6 @@ export class ConversacionesStateService {
     this.editEmpresa.set(ficha.empresa);
     this.editFechaNacimiento.set(ficha.fechaNacimiento);
     this.editLugarNacimiento.set(ficha.lugarNacimiento);
-    this.editCategoria.set(ficha.categoria);
     this.editNotas.set(ficha.notas);
     this.editTags.set(ficha.etiquetas);
     this.editRecibePromociones.set(!chat.cliente.bajaPromocionesEn);
@@ -906,7 +903,6 @@ export class ConversacionesStateService {
             empresa: this.editEmpresa(),
             fechaNacimiento: this.editFechaNacimiento(),
             lugarNacimiento: this.editLugarNacimiento(),
-            categoria: this.editCategoria(),
             notas: this.editNotas(),
             etiquetas: this.editTags(),
           }),
@@ -919,13 +915,18 @@ export class ConversacionesStateService {
       );
       this.toastService.success('Ficha de cliente actualizada.');
       this.editandoFicha.set(false);
-      this.detalle.reload();
-      this.inbox.reload();
+      this.refrescarTrasCambioDeFicha();
     } catch (err) {
       this.toastService.error(mensajeDeError(err, 'No se pudo guardar la ficha.'));
     } finally {
       this.guardandoFicha.set(false);
     }
+  }
+
+  /** La ficha cambió en el servidor: el chat abierto y su fila en la bandeja se vuelven a pedir. */
+  refrescarTrasCambioDeFicha(): void {
+    this.detalle.reload();
+    this.inbox.reload();
   }
 
   irACoincidencia(delta: number): void {

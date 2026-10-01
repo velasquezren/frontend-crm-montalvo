@@ -33,9 +33,16 @@ visual, porque después solo uno de los dos recibe los arreglos.
 | `text-muted` | `#6B7280` | Texto secundario |
 | `text-critical` | `#000000` | Texto de estado crítico |
 | `border` | `#E5E7EB` | Bordes sutiles |
+| `gold` | `#86671C` | **Solo** el sello de la paciente Gold (`<app-badge variant="gold">`) |
 
 Cualquier tono adicional se **deriva** con `color-mix()` dentro de `styles.css`; nunca se escribe
 un hex nuevo en un componente.
+
+**`gold` es la única excepción a la paleta base, y tiene dueño.** La aprobó el propietario el
+2026-09-30 para que una paciente Gold se distinga al instante en el inbox y en la ficha. Es latón
+apagado, no amarillo: 5,29:1 sobre blanco y 4,52:1 sobre `gold-bg` (AA). No es un estado ni una
+alerta, y no se usa para nada más: si otra cosa "necesita dorado", la respuesta es la de los
+canales del dashboard —distinguir por etiqueta, no por color—.
 
 ### Estados semánticos
 
@@ -43,6 +50,7 @@ No hay rojo ni ámbar de alarma, y es deliberado: la línea es "premium médico"
 reutilizan la paleta base, cada uno con su par `-bg`:
 
 - `success` = primary · `info` = secondary · `neutral` = text-muted · **`critical` = negro, no rojo**
+- `gold` no es un estado: es la variante del sello Gold (`CATEGORIA_BADGE`), el único uso del latón
 
 Se consumen **solo** vía `<app-badge variant="…">`. Si una vista necesita un rojo de alerta,
 eso es un cambio de identidad visual: consúltalo antes de introducirlo, no lo resuelvas con un
@@ -140,7 +148,7 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 | Switch | `<app-switch>` | `disabled`, `ariaLabel` · `[(value)]` — enciende/apaga una capacidad. `role="switch"`, no un checkbox: un checkbox marca una opción de un conjunto, un switch activa algo |
 | Select | `<app-select>` | `label`, `size` (sm=filtro de barra / md=campo de formulario), `icono`, `disabled`, `fullWidth`, `ariaLabel`, `activo` (filtro con valor puesto: se tiñe de primario) · `[(value)]` · proyecta sus `<option>` — **el único desplegable**; no escribas un `<select>` a mano |
 | Input | `<app-input>` | `label`, `type` (incl. password con toggle), `placeholder`, `autocomplete`, `error`, `disabled`, `multiline` (renderiza `<textarea>` en vez de `<input>`, mismo wrapper/label/error), `rows` (solo con `multiline`) · `[(value)]` |
-| Badge | `<app-badge>` | `variant` (success/info/neutral/critical), `icon` |
+| Badge | `<app-badge>` | `variant` (success/info/neutral/critical/gold — gold solo para la categoría Gold), `icon` |
 | Card | `<app-card>` | `padding` (sm/md/lg), `hoverable` |
 | Drawer | `<app-drawer>` | `ancho` (sm/md/lg/xl/ancho), `alto` (pantalla/contenido), `titulo`, `subtitulo`, `icono`, `etiqueta` · `(cerrar)` · slots `[cabecera]` (fila del título) y `[subcabecera]` (bloque a todo el ancho) — **el único cajón lateral**; se abre con `DialogService.abrirCajon()` |
 | KpiCard | `<app-kpi-card>` | `label`, `valor` (requeridos; número → lo formatea el átomo), `icon`, `tono` (primary/secondary/neutral/critical), `tonoValor`, `destacado`, `compacto`, `pie`, `pieIcono` + contenido proyectado |

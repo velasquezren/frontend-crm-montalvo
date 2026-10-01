@@ -30,7 +30,10 @@ import {
   CATEGORIA_BADGE,
   CATEGORIA_LABEL,
   CategoriaCliente,
+  EstadoCategoria,
+  origenDeCategoria,
 } from '../../shared/models/cliente-categoria.model';
+import { CategoriaPacienteComponent } from './components/categoria-paciente.component';
 import { Cliente } from './cliente.model';
 import { esNombreProvisional } from '../../shared/models/nombre-cliente';
 import { ClientesService, OrdenCliente } from './clientes.service';
@@ -66,6 +69,7 @@ type PestanaModal = 'EXPEDIENTE' | 'CONTACTO' | 'NOTAS';
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,
+    CategoriaPacienteComponent,
     DrawerComponent,
     IconComponent,
     KpiCardComponent,
@@ -91,6 +95,7 @@ export class ClientesPage {
 
   protected readonly categoriaLabel = CATEGORIA_LABEL;
   protected readonly categoriaBadge = CATEGORIA_BADGE;
+  protected readonly origenDeCategoria = origenDeCategoria;
 
   /* Un contacto que llegó por WhatsApp sin dar su nombre se guarda como
      "WhatsApp +591…", que no es un nombre. Ver `shared/models/nombre-cliente`. */
@@ -213,7 +218,6 @@ export class ClientesPage {
   protected readonly editEmpresa = signal('');
   protected readonly editFechaNacimiento = signal('');
   protected readonly editLugarNacimiento = signal('');
-  protected readonly editCategoria = signal<CategoriaCliente>('PROSPECTO');
   protected readonly editAgenteId = signal<string | null>(null);
   protected readonly editNotas = signal('');
   protected readonly editTags = signal('');
@@ -287,7 +291,6 @@ export class ClientesPage {
     this.editEmpresa.set('');
     this.editFechaNacimiento.set('');
     this.editLugarNacimiento.set('');
-    this.editCategoria.set('PROSPECTO');
     this.editAgenteId.set(null);
     this.editNotas.set('');
     this.editTags.set('');
@@ -314,7 +317,6 @@ export class ClientesPage {
     this.editEmpresa.set(ficha.empresa);
     this.editFechaNacimiento.set(ficha.fechaNacimiento);
     this.editLugarNacimiento.set(ficha.lugarNacimiento);
-    this.editCategoria.set(ficha.categoria);
     this.editNotas.set(ficha.notas);
     this.editTags.set(ficha.etiquetas);
     this.modalEditarAbierto.set(true);
@@ -344,8 +346,10 @@ export class ClientesPage {
      acá (`event.target as HTMLSelectElement`) lo hace el átomo una vez. Lo que
      queda es lo único propio de esta vista — el estrechamiento de tipo y que
      "sin agente" se guarda como null, no como cadena vacía. */
-  protected onCambiarCategoria(valor: string): void {
-    if (valor) this.editCategoria.set(valor as CategoriaCliente);
+  /** La categoría se fijó o volvió a automática: la ficha abierta y la lista lo reflejan. */
+  protected alCambiarCategoria(cliente: Cliente, estado: EstadoCategoria): void {
+    this.clienteSeleccionado.set({ ...cliente, categoria: estado.categoria, categoriaFijadaEn: estado.categoriaFijadaEn });
+    this.clientes.reload();
   }
 
   protected onCambiarAgente(valor: string): void {
@@ -376,7 +380,6 @@ export class ClientesPage {
           empresa: this.editEmpresa(),
           fechaNacimiento: this.editFechaNacimiento(),
           lugarNacimiento: this.editLugarNacimiento(),
-          categoria: this.editCategoria(),
           notas: this.editNotas(),
           etiquetas: this.editTags(),
         },
