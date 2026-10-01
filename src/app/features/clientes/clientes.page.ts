@@ -7,7 +7,6 @@ import { cambiosDeFicha, valoresDeFicha } from './ficha-paciente';
 import { edadDePaciente } from '../../core/api/edad';
 import { mensajeDeError } from '../../core/api/http-error';
 import { enlaceAlChat } from '../conversaciones/enlace-chat';
-import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -28,13 +27,14 @@ import {
 import { ToastService } from '../../core/toast/toast.service';
 import {
   CATEGORIA_BADGE,
+  CATEGORIA_ICONO,
   CATEGORIA_LABEL,
   CategoriaCliente,
   EstadoCategoria,
   origenDeCategoria,
 } from '../../shared/models/cliente-categoria.model';
 import { CategoriaPacienteComponent } from './components/categoria-paciente.component';
-import { Cliente } from './cliente.model';
+import { Cliente, PaginaClientes, paginaClientesVacia } from './cliente.model';
 import { esNombreProvisional } from '../../shared/models/nombre-cliente';
 import { ClientesService, OrdenCliente } from './clientes.service';
 import { ConversacionesService } from '../conversaciones/conversaciones.service';
@@ -95,6 +95,7 @@ export class ClientesPage {
 
   protected readonly categoriaLabel = CATEGORIA_LABEL;
   protected readonly categoriaBadge = CATEGORIA_BADGE;
+  protected readonly categoriaIcono = CATEGORIA_ICONO;
   protected readonly origenDeCategoria = origenDeCategoria;
 
   /* Un contacto que llegó por WhatsApp sin dar su nombre se guarda como
@@ -154,7 +155,7 @@ export class ClientesPage {
     return list;
   });
 
-  protected readonly clientes = httpResource<RespuestaPaginada<Cliente>>(
+  protected readonly clientes = httpResource<PaginaClientes>(
     () => {
       const filtro = this.filtro();
       return this.clientesService.listarRequest({
@@ -165,14 +166,19 @@ export class ClientesPage {
         direccion: this.direccion(),
       });
     },
-    { defaultValue: paginaVacia<Cliente>() },
+    { defaultValue: paginaClientesVacia() },
   );
 
   /* ── Métricas y KPIs Superiores ────────────────────────────────── */
-  protected readonly totalPacientes = computed(() => this.clientes.value().total);
-  protected readonly totalGold = computed(() => this.clientes.value().datos.filter(c => c.categoria === 'GOLD').length);
-  protected readonly totalProspectos = computed(() => this.clientes.value().datos.filter(c => c.categoria === 'PROSPECTO').length);
-  protected readonly totalSinAsignar = computed(() => this.clientes.value().datos.filter(c => !c.agente).length);
+  /* Como los otros tres: todas las visibles, no lo que deja el filtro. El
+     total filtrado ya lo dice el paginador. */
+  protected readonly totalPacientes = computed(() =>
+    Object.values(this.clientes.value().resumen.porCategoria).reduce((suma, n) => suma + n, 0),
+  );
+  /* Del servidor, sobre todo lo visible: ver `ResumenClientes`. */
+  protected readonly totalGold = computed(() => this.clientes.value().resumen.porCategoria.GOLD);
+  protected readonly totalProspectos = computed(() => this.clientes.value().resumen.porCategoria.PROSPECTO);
+  protected readonly totalSinAsignar = computed(() => this.clientes.value().resumen.sinAsignar);
 
   /**
    * Cambiar el orden vuelve a la primera página: seguir en la 7 tras reordenar

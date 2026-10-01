@@ -1,4 +1,5 @@
 import { BadgeVariant } from '../components/badge/badge.component';
+import { IconName } from '../components/icon/icon.component';
 import { CategoriaCliente } from '../../core/api/db-enums';
 import { ZONA_CLINICA } from '../../features/actividades/zona-clinica';
 
@@ -21,6 +22,14 @@ export const CATEGORIA_BADGE: Record<CategoriaCliente, BadgeVariant> = {
   SILVER: 'info',
   BRONZE: 'neutral',
   PROSPECTO: 'neutral',
+};
+
+/** El ícono del sello: solo Gold lleva estrella, en todas las vistas. */
+export const CATEGORIA_ICONO: Record<CategoriaCliente, IconName | undefined> = {
+  GOLD: 'star',
+  SILVER: undefined,
+  BRONZE: undefined,
+  PROSPECTO: undefined,
 };
 
 /** Lo que responde `PUT /clientes/:id/categoria`. */

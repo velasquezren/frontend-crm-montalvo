@@ -1,5 +1,6 @@
 import { DatosExtra } from '../../core/api/datos-extra';
 
+import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { CategoriaCliente } from '../../shared/models/cliente-categoria.model';
 
 /** Respuesta de GET /clientes del backend (schema.prisma es la fuente de verdad). */
@@ -48,6 +49,28 @@ export interface Cliente {
   readonly datosExtra?: DatosExtra | null;
   readonly createdAt: string;
   readonly updatedAt: string;
+}
+
+/**
+ * Los números de la cabecera de Clientes. Los cuenta el SERVIDOR sobre todo lo
+ * que el usuario puede ver: antes se contaban aquí sobre las 25 filas de la
+ * página, y «Pacientes Gold» decía cuántas había en esa página.
+ */
+export interface ResumenClientes {
+  readonly porCategoria: Readonly<Record<CategoriaCliente, number>>;
+  readonly sinAsignar: number;
+}
+
+/** Lo que responde `GET /clientes`: una página más los números de la cabecera. */
+export interface PaginaClientes extends RespuestaPaginada<Cliente> {
+  readonly resumen: ResumenClientes;
+}
+
+export function paginaClientesVacia(): PaginaClientes {
+  return {
+    ...paginaVacia<Cliente>(),
+    resumen: { porCategoria: { GOLD: 0, SILVER: 0, BRONZE: 0, PROSPECTO: 0 }, sinAsignar: 0 },
+  };
 }
 
 /** Un servicio realizado al paciente, tomado de las planillas importadas. */

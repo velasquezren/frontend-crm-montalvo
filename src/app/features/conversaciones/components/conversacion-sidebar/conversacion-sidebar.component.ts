@@ -22,6 +22,7 @@ import {
 import { ActividadesService } from '../../../actividades/actividades.service';
 import {
   CATEGORIA_BADGE,
+  CATEGORIA_ICONO,
   CATEGORIA_LABEL,
   origenDeCategoria,
 } from '../../../../shared/models/cliente-categoria.model';
@@ -38,7 +39,6 @@ import { Venta } from '../../../ventas/venta.model';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
 import { ConversacionResumen, duenaDelChatLibre } from '../../conversacion.model';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
-import { SelectComponent } from '../../../../shared/components/select/select.component';
 
 type ClienteChat = ConversacionResumen['cliente'];
 
@@ -53,7 +53,6 @@ type ClienteChat = ConversacionResumen['cliente'];
   imports: [
     DatePipe,
     FormularioVentaComponent,
-    SelectComponent,
     InicialesClientePipe,
     NombreClientePipe,
     AvatarComponent,
@@ -79,6 +78,7 @@ export class ConversacionSidebarComponent {
   protected readonly rolLabel = ROL_LABEL;
   protected readonly categoriaLabel = CATEGORIA_LABEL;
   protected readonly categoriaBadge = CATEGORIA_BADGE;
+  protected readonly categoriaIcono = CATEGORIA_ICONO;
   protected readonly origenDeCategoria = origenDeCategoria;
   protected readonly iniciales = generarIniciales;
   protected readonly duenaDelChatLibre = duenaDelChatLibre;

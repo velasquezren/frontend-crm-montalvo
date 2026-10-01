@@ -7,6 +7,7 @@ import { BadgeComponent } from '../../../shared/components/badge/badge.component
 import { SelectComponent } from '../../../shared/components/select/select.component';
 import {
   CATEGORIA_BADGE,
+  CATEGORIA_ICONO,
   CATEGORIA_LABEL,
   CategoriaCliente,
   EstadoCategoria,
@@ -33,7 +34,7 @@ const AUTOMATICA = 'AUTOMATICA';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex flex-wrap items-center gap-2">
-      <app-badge [variant]="badge[categoria()]" [icon]="categoria() === 'GOLD' ? 'star' : undefined" [title]="origen()">
+      <app-badge [variant]="badge[categoria()]" [icon]="icono[categoria()]" [title]="origen()">
         {{ etiqueta[categoria()] }}
       </app-badge>
       <span class="text-[11px] text-text-muted">{{ fijadaEn() ? 'Fijada a mano' : 'Automática' }}</span>
@@ -69,6 +70,7 @@ export class CategoriaPacienteComponent {
 
   protected readonly badge = CATEGORIA_BADGE;
   protected readonly etiqueta = CATEGORIA_LABEL;
+  protected readonly icono = CATEGORIA_ICONO;
   protected readonly puedeFijar = inject(AuthService).isSuperAdmin;
   protected readonly guardando = signal(false);
   protected readonly origen = computed(() => origenDeCategoria(this.fijadaEn()));

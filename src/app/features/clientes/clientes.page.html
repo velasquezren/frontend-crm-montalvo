@@ -129,7 +129,8 @@
             <td class="whitespace-nowrap font-mono text-xs">{{ cliente.telefono }}</td>
             <td>
               <app-badge
-                [variant]="categoriaBadge[cliente.categoria]">
+                [variant]="categoriaBadge[cliente.categoria]"
+                [icon]="categoriaIcono[cliente.categoria]">
                 {{ categoriaLabel[cliente.categoria] }}
               </app-badge>
             </td>
@@ -354,7 +355,7 @@
             <app-badge
               class="shrink-0"
               [variant]="categoriaBadge[cli.categoria]"
-              [icon]="cli.categoria === 'GOLD' ? 'star' : undefined"
+              [icon]="categoriaIcono[cli.categoria]"
               [title]="origenDeCategoria(cli.categoriaFijadaEn)">
               {{ categoriaLabel[cli.categoria] }}
             </app-badge>

@@ -160,7 +160,7 @@
           <div class="mt-2 flex flex-wrap items-center justify-center gap-1.5">
             <app-badge
               [variant]="categoriaBadge[chat.cliente.categoria]"
-              [icon]="chat.cliente.categoria === 'GOLD' ? 'star' : undefined"
+              [icon]="categoriaIcono[chat.cliente.categoria]"
               [title]="origenDeCategoria(chat.cliente.categoriaFijadaEn)">
               {{ categoriaLabel[chat.cliente.categoria] }}
             </app-badge>

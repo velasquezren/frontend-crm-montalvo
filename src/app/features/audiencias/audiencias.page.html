@@ -1,0 +1,203 @@
+<!-- ══════════════════════════════════════════════════════════════════════
+     Audiencias — a quién mandarle una campaña hoy.
+     Cruza cuánto vale cada paciente con si conviene escribirle ahora. Todo lo
+     decide `GET /audiencias`; esta vista elige, pinta y estima. No envía.
+     ══════════════════════════════════════════════════════════════════════ -->
+
+<app-page-header
+  title="Audiencias"
+  subtitle="A quién vale la pena mandarle una campaña hoy, y cuánto costaría." />
+
+<!-- ── Quiénes: categorías, plazo y conversación ─────────────────────── -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+  <div class="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0" role="group" aria-label="Categorías de la audiencia">
+    @for (cat of categoriasDisponibles; track cat) {
+      <app-filter-chip [active]="estaElegida(cat)" (clicked)="alternarCategoria(cat)">
+        {{ categoriaLabel[cat] }}
+      </app-filter-chip>
+    }
+  </div>
+
+  <div class="flex flex-wrap items-center gap-3">
+    <div class="w-56">
+      <app-select
+        size="sm"
+        ariaLabel="Dejar fuera a quien recibió una campaña hace poco"
+        [activo]="diasSinCampana() !== 30"
+        [value]="'' + diasSinCampana()"
+        (valueChange)="cambiarPlazo($event)">
+        @for (p of plazos; track p.dias) {
+          <option [value]="'' + p.dias">{{ p.etiqueta }}</option>
+        }
+      </app-select>
+    </div>
+    <div class="flex items-center gap-2">
+      <app-switch [(value)]="soloConversaron" ariaLabel="Solo quienes ya conversaron por WhatsApp" />
+      <span class="text-xs text-text-dark">Solo quienes ya nos escribieron</span>
+    </div>
+  </div>
+</div>
+
+@if (audiencia.isLoading() && audiencia.value().resumen.enCategorias === 0) {
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-6">
+    @for (n of [1, 2, 3, 4]; track n) {
+      <app-loading-skeleton height="88px" />
+    }
+  </div>
+  <div class="bg-white rounded-2xl p-6 shadow-subtle flex flex-col gap-4">
+    @for (n of [1, 2, 3, 4, 5]; track n) {
+      <app-loading-skeleton height="48px" />
+    }
+  </div>
+} @else if (audiencia.error()) {
+  <app-error-carga que="la audiencia" (reintentar)="audiencia.reload()" />
+} @else {
+  <!-- ── El embudo: de cuántas se parte, cuántas quedan y cuánto cuesta ─── -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-4">
+    <app-kpi-card
+      label="En las categorías elegidas"
+      [valor]="resumen().enCategorias"
+      icon="users"
+      tono="neutral"
+      [compacto]="true" />
+    <app-kpi-card
+      label="Elegibles hoy"
+      [valor]="resumen().elegibles"
+      icon="send"
+      tono="primary"
+      [destacado]="true"
+      [compacto]="true"
+      [pie]="resumen().elegiblesPorCategoria.GOLD + ' Gold · ' + resumen().elegiblesPorCategoria.SILVER + ' Silver'" />
+    <app-kpi-card
+      label="Ya nos escribieron"
+      [valor]="resumen().elegiblesQueConversaron"
+      icon="message-circle"
+      tono="secondary"
+      [compacto]="true"
+      pie="Las más probables de leer" />
+    <app-kpi-card
+      label="Costo máximo estimado"
+      [valor]="tarifaInvalida() ? '—' : (costo() | moneda)"
+      icon="dollar-sign"
+      tono="neutral"
+      [compacto]="true"
+      pie="Meta cobra solo lo entregado" />
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-3.5 mb-6">
+    <!-- Por qué el resto queda fuera, en el orden en que se aplica: cada
+         paciente cuenta una vez, por su primer motivo, y todo suma el total. -->
+    <section class="lg:col-span-2 bg-white rounded-2xl border border-border p-4">
+      <h2 class="text-[10px] font-bold uppercase tracking-wider text-text-muted mb-3">Quedan fuera</h2>
+      <ul class="flex flex-col gap-2">
+        @for (m of motivos(); track m.motivo) {
+          <li class="flex items-center justify-between gap-3 text-sm">
+            <span class="flex items-center gap-1.5 text-text-dark min-w-0">
+              <span class="truncate">{{ m.etiqueta }}</span>
+              <app-info-hint [titulo]="m.etiqueta">{{ m.ayuda }}</app-info-hint>
+            </span>
+            <span class="font-semibold tabular-nums text-text-muted shrink-0">{{ resumen().excluidas[m.motivo] }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section class="bg-white rounded-2xl border border-border p-4 flex flex-col gap-2">
+      <app-input
+        type="number"
+        label="Tarifa de Meta por mensaje ($us)"
+        [error]="tarifaInvalida() ? 'Escribe un monto en dólares, como 0.055' : ''"
+        [(value)]="tarifa" />
+      <p class="text-[11px] leading-relaxed text-text-muted">
+        Dólares por plantilla de Marketing entregada a Bolivia. Es aproximada: Meta publica la exacta en su
+        tarifario y puede cambiarla cada trimestre.
+      </p>
+    </section>
+  </div>
+
+  <!-- ── Las elegibles, de más a menos gasto ────────────────────────────── -->
+  @if (audiencia.value().datos.length > 0) {
+    <app-table>
+      <thead>
+        <tr>
+          <th>Paciente</th>
+          <th>Categoría</th>
+          <th class="text-right">Gastó en 12 meses</th>
+          <th>Última compra</th>
+          <th>WhatsApp</th>
+          <th>Agente</th>
+          <th class="text-right">Chat</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of audiencia.value().datos; track p.id) {
+          <tr>
+            <td>
+              <p class="font-medium text-text-dark leading-tight">{{ p | nombreCliente }}</p>
+              <div class="crm-meta mt-0.5">
+                <span class="crm-meta-clave">{{ p.telefono }}</span>
+                @if (p.pac; as codigo) {
+                  <span class="crm-meta-clave">{{ codigo }}</span>
+                }
+              </div>
+            </td>
+            <td>
+              <app-badge [variant]="categoriaBadge[p.categoria]" [icon]="categoriaIcono[p.categoria]">
+                {{ categoriaLabel[p.categoria] }}
+              </app-badge>
+            </td>
+            <td class="text-right tabular-nums font-semibold text-text-dark">{{ p.gastoRecienteUsd | moneda }}</td>
+            <td class="text-xs text-text-muted whitespace-nowrap">
+              {{ p.ultimaCompra ? (p.ultimaCompra | date: 'd MMM y') : '—' }}
+            </td>
+            <td>
+              <!-- Las dos señales de que lee: que alguna vez escribió y que leyó
+                   lo último que le mandamos. Sin ninguna, se le escribe en frío. -->
+              <div class="flex flex-wrap gap-1.5">
+                @if (p.converso) {
+                  <app-badge variant="info" icon="message-circle">Nos escribió</app-badge>
+                }
+                @if (p.leyoUltimo === true) {
+                  <app-badge variant="success" icon="check-check">Leyó lo último</app-badge>
+                } @else if (p.leyoUltimo === false) {
+                  <app-badge variant="neutral">No leyó lo último</app-badge>
+                }
+                @if (!p.converso && p.leyoUltimo === null) {
+                  <span class="text-xs text-text-muted italic">Nunca le escribimos</span>
+                }
+              </div>
+            </td>
+            <td>
+              @if (p.agente; as ag) {
+                <span class="text-xs font-medium text-text-dark">{{ ag.nombre }}</span>
+              } @else {
+                <span class="text-xs text-text-muted italic">Sin asignar</span>
+              }
+            </td>
+            <td class="text-right">
+              <a
+                [routerLink]="['/conversaciones']"
+                [queryParams]="{ telefono: p.telefono }"
+                class="crm-accion-enlace crm-accion-enlace-whatsapp"
+                title="Abrir su chat"
+                aria-label="Abrir su chat">
+                <app-icon name="message-circle" [size]="14" />
+              </a>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </app-table>
+    <app-paginator
+      [pagina]="audiencia.value().pagina"
+      [totalPaginas]="audiencia.value().totalPaginas"
+      [total]="audiencia.value().total"
+      [limite]="audiencia.value().limite"
+      (cambiar)="pagina.set($event)" />
+  } @else {
+    <app-empty-state
+      icon="users"
+      title="Nadie para esta campaña"
+      description="Con estos filtros no queda ninguna paciente: prueba con más categorías o un plazo más corto sin campaña." />
+  }
+}

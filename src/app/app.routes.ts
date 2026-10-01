@@ -121,6 +121,13 @@ export const routes: Routes = [
           import('./features/clientes/clientes.page').then(m => m.ClientesPage),
       },
       {
+        /* Lista pacientes de toda la clínica: administración, igual que el backend. */
+        path: 'audiencias',
+        canActivate: [exigeRol('ADMIN')],
+        loadComponent: () =>
+          import('./features/audiencias/audiencias.page').then(m => m.AudienciasPage),
+      },
+      {
         path: 'leads',
         canActivate: [exigeRol('AGENTE')],
         loadComponent: () =>
