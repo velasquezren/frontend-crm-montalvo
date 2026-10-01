@@ -2,6 +2,7 @@ import { EstadoCampana, EstadoDestinatario, EstadoMensaje } from '../../core/api
 import { BadgeVariant } from '../../shared/components/badge/badge.component';
 import { CategoriaCliente } from '../../shared/models/cliente-categoria.model';
 import { esNombreProvisional } from '../../shared/models/nombre-cliente';
+import { ZONA_CLINICA } from '../actividades/zona-clinica';
 
 /**
  * Campañas: una plantilla de Marketing a una audiencia congelada. Espejo de
@@ -130,4 +131,21 @@ export function nombreDePila(nombre: string): string | null {
 /** Los valores de las variables para una paciente: lo que la vista previa muestra y el backend manda. */
 export function valoresPara(variables: readonly VariableCampana[], nombre: string): string[] {
   return variables.map(v => (v.tipo === 'NOMBRE' ? (nombreDePila(nombre) ?? v.respaldo) : v.texto).trim());
+}
+
+/**
+ * El horario en que salen las campañas, en La Paz. Espejo de `HORARIO_ENVIO`
+ * del backend, que es el que manda: aquí solo se usa para decir «espera a las
+ * 9:00» en vez de mostrar una campaña «Enviando» que no avanza.
+ */
+export const HORARIO_ENVIO = { desdeHora: 9, hastaHora: 20 } as const;
+
+export function dentroDeHorarioEnvio(instante: Date): boolean {
+  const hora = Number(new Intl.DateTimeFormat('en-US', { timeZone: ZONA_CLINICA, hour: '2-digit', hour12: false }).format(instante)) % 24;
+  return hora >= HORARIO_ENVIO.desdeHora && hora < HORARIO_ENVIO.hastaHora;
+}
+
+/** Cuánto lleva: lo que ya no está pendiente (enviado, omitido o fallido) sobre el total. */
+export function avance(m: Pick<MetricasCampana, 'total' | 'pendientes'>): number {
+  return m.total > 0 ? Math.round(((m.total - m.pendientes) / m.total) * 100) : 0;
 }

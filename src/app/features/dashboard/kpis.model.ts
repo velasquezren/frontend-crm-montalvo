@@ -63,6 +63,8 @@ export interface KpiResumen {
   /** Lo que pide acción ya; no depende del periodo. */
   readonly ahora: {
     readonly chatsSinResponder: number;
+    /** Las Gold entre ellas: el mismo número que «Gold» en «Sin responder». */
+    readonly chatsGoldSinResponder: number;
     readonly leadsHoy: number;
   };
   readonly embudo: {
@@ -132,4 +134,19 @@ export function variacion(
     corto: `${cambio > 0 ? '+' : '−'}${Math.abs(cambio)} %`,
     sube: cambio > 0,
   };
+}
+
+/**
+ * Cuánto lleva un periodo que empezó hace poco («hace 3 horas», «hace 1 día»),
+ * o null si ya pasaron `dias`. El Dashboard lo usa para avisar que «Este mes»
+ * todavía tiene pocos datos: el día 1 a las 00:09 salía todo en cero y se leyó
+ * como que no traía datos.
+ */
+export function inicioReciente(desde: string, ahora: Date, dias: number): string | null {
+  const horas = Math.floor((ahora.getTime() - new Date(desde).getTime()) / 3_600_000);
+  if (horas < 0 || horas >= dias * 24) return null;
+  if (horas < 1) return 'hace menos de una hora';
+  if (horas < 24) return `hace ${horas} ${horas === 1 ? 'hora' : 'horas'}`;
+  const d = Math.floor(horas / 24);
+  return `hace ${d} ${d === 1 ? 'día' : 'días'}`;
 }

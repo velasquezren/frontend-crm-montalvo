@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { esFiltroInbox } from '../conversaciones/conversacion.model';
-import { formatearEspera, porcentaje, variacion } from './kpis.model';
+import { formatearEspera, inicioReciente, porcentaje, variacion } from './kpis.model';
 
 /**
  * Lo que el dashboard le DICE a la agente sale de estas tres funciones. Se
@@ -43,5 +43,19 @@ describe('pestaña del inbox pedida por URL', () => {
     expect(esFiltroInbox('SIN_RESPONDER')).toBe(true);
     expect(esFiltroInbox('BORRADOS')).toBe(false);
     expect(esFiltroInbox(null)).toBe(false);
+  });
+});
+
+/* El 1 de octubre a las 00:09 el Dashboard salía en cero y parecía roto. */
+describe('inicioReciente', () => {
+  const desde = '2026-10-01T04:00:00.000Z'; // 00:00 en La Paz
+  it('dice cuánto lleva el periodo mientras es reciente', () => {
+    expect(inicioReciente(desde, new Date('2026-10-01T04:09:00Z'), 3)).toBe('hace menos de una hora');
+    expect(inicioReciente(desde, new Date('2026-10-01T05:00:00Z'), 3)).toBe('hace 1 hora');
+    expect(inicioReciente(desde, new Date('2026-10-02T06:00:00Z'), 3)).toBe('hace 1 día');
+  });
+
+  it('pasados los días, no dice nada', () => {
+    expect(inicioReciente(desde, new Date('2026-10-04T04:00:00Z'), 3)).toBeNull();
   });
 });

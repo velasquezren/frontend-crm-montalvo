@@ -132,6 +132,21 @@ export class AudienciasPage {
   protected readonly tarifaUsd = computed(() => Number(this.tarifa().replace(',', '.')));
   protected readonly tarifaInvalida = computed(() => !Number.isFinite(this.tarifaUsd()) || this.tarifaUsd() < 0);
   protected readonly costo = computed(() => costoMaximoUsd(this.resumen().elegibles, this.tarifaUsd()));
+  /** «12 Gold · 35 Silver»: de las categorías ELEGIDAS, no siempre de las dos primeras. */
+  protected readonly elegiblesPorCategoria = computed(() =>
+    this.categorias()
+      .map(c => `${this.resumen().elegiblesPorCategoria[c]} ${c === 'GOLD' ? 'Gold' : CATEGORIA_LABEL[c]}`)
+      .join(' · '),
+  );
+  protected readonly totalExcluidas = computed(() => this.resumen().enCategorias - this.resumen().elegibles);
+  /** Por qué no se puede lanzar todavía, para el `title` del botón; null si se puede. */
+  protected readonly motivoSinCampana = computed(() => {
+    if (this.audiencia.isLoading()) return 'Esperando la audiencia…';
+    if (this.audiencia.error()) return 'No se pudo calcular la audiencia.';
+    if (this.resumen().elegibles === 0) return 'Con estos filtros no queda nadie.';
+    if (this.tarifaInvalida()) return 'Corrige la tarifa de Meta.';
+    return null;
+  });
 
   /* ── Acciones ──────────────────────────────────────────────────── */
   protected estaElegida(categoria: CategoriaCliente): boolean {

@@ -39,7 +39,10 @@ import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import { NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import {
   accionesDe,
+  avance,
   Campana,
+  dentroDeHorarioEnvio,
+  HORARIO_ENVIO,
   DestinatarioCampana,
   ESTADO_CAMPANA,
   ESTADO_DESTINATARIO,
@@ -85,6 +88,7 @@ const FILTROS_DESTINATARIO: readonly (EstadoDestinatario | null)[] = [null, 'PEN
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './campanas.page.html',
+  styleUrl: './campanas.page.css',
 })
 export class CampanasPage {
   private readonly campanasService = inject(CampanasService);
@@ -104,6 +108,13 @@ export class CampanasPage {
   protected readonly categoriaLabel = CATEGORIA_LABEL;
   protected readonly porcentaje = porcentaje;
   protected readonly accionesDe = accionesDe;
+  protected readonly avance = avance;
+  protected readonly horario = HORARIO_ENVIO;
+  /** Se recalcula con cada refresco de la ficha: es la hora en que se miró. */
+  protected readonly enHorario = computed(() => {
+    this.detalle.value();
+    return dentroDeHorarioEnvio(new Date());
+  });
 
   /* ── Listado ───────────────────────────────────────────────────── */
   protected readonly pagina = signal(1);

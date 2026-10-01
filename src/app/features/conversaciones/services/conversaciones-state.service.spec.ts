@@ -299,6 +299,24 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
   /* Cerrar desaparece el chat de la pestaña en el acto: el aviso tiene que
      ofrecer deshacerlo, y deshacer tiene que reabrir ESE chat aunque ya se
      haya abierto otro. */
+  /* El enlace «Gold esperan respuesta» del Dashboard y el botón del inbox: la
+     categoría viaja al servidor, que acota lista y contadores a la vez. */
+  it('«Gold» pide al servidor solo las Gold, y restablecer los filtros lo quita', async () => {
+    state.soloGold.set(true);
+    TestBed.tick();
+    const conGold = http.expectOne(req => req.url === `${API_URL}/conversaciones`);
+    expect(conGold.request.params.get('categoria')).toBe('GOLD');
+    conGold.flush(structuredClone(PAGINA));
+    await app.whenStable();
+
+    state.restablecerFiltros();
+    TestBed.tick();
+    const sinGold = http.expectOne(req => req.url === `${API_URL}/conversaciones`);
+    expect(sinGold.request.params.has('categoria')).toBe(false);
+    sinGold.flush(structuredClone(PAGINA));
+    await app.whenStable();
+  });
+
   it('cerrar pide al servidor, refresca hilo y bandeja, y «Deshacer» lo reabre', async () => {
     const toast = TestBed.inject(ToastService);
     const aviso = vi.spyOn(toast, 'show');

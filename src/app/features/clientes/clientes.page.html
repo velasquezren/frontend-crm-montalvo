@@ -53,11 +53,14 @@
       [(value)]="busqueda" />
   </div>
 
-  <!-- Filtros rápidos por Categoría -->
-  <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+  <!-- Filtros rápidos por Categoría. El número es el total de la categoría
+       (del servidor, `resumen`), no lo que deja la búsqueda: avisa antes de
+       pulsar que un chip va a vaciar la tabla (crm-design-system, «Filtros»). -->
+  <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none" role="group" aria-label="Filtrar por categoría">
     @for (cat of filtros; track cat) {
       <app-filter-chip
         [active]="filtro() === cat"
+        [count]="cat === 'TODOS' ? totalPacientes() : clientes.value().resumen.porCategoria[cat]"
         (clicked)="cambiarFiltro(cat)">
         {{ cat === 'TODOS' ? 'Todos' : categoriaLabel[cat] }}
       </app-filter-chip>

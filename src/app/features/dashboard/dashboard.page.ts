@@ -18,8 +18,11 @@ import { SparklineComponent } from '../../shared/components/sparkline/sparkline.
 import { NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { ORIGEN_LABEL } from '../leads/lead.model';
 import { enlaceAlChat } from '../conversaciones/enlace-chat';
-import { ActividadItem, formatearEspera, KpiResumen, PeriodoKpi, porcentaje, variacion } from './kpis.model';
+import { ActividadItem, formatearEspera, inicioReciente, KpiResumen, PeriodoKpi, porcentaje, variacion } from './kpis.model';
 import { KpisService } from './kpis.service';
+
+/** Durante cuántos días «Este mes» avisa que todavía tiene pocos datos. */
+const DIAS_MES_RECIEN_EMPEZADO = 3;
 
 const PERIODOS: ReadonlyArray<{ clave: PeriodoKpi; label: string; comparado: string; corto: string }> = [
   { clave: 'MES', label: 'Este mes', comparado: 'el mes pasado a esta altura', corto: 'vs. mes pasado' },
@@ -118,6 +121,17 @@ export class DashboardPage {
   });
 
   private readonly periodoActual = computed(() => PERIODOS.find(p => p.clave === this.periodo()) ?? PERIODOS[0]);
+
+  /**
+   * «Este mes» los primeros días: cuánto lleva, o null si ya no hace falta
+   * decirlo. El 1 a las 00:09 el mes tenía nueve minutos y todo salía en cero
+   * —también la comparación, que es «el mes pasado a esta altura»—, y se leyó
+   * como que el Dashboard no traía datos.
+   */
+  protected readonly mesRecienEmpezado = computed(() => {
+    const r = this.datos();
+    return this.periodo() === 'MES' && r ? inicioReciente(r.periodo.desde, new Date(), DIAS_MES_RECIEN_EMPEZADO) : null;
+  });
 
   protected readonly tarjetas = computed<Tarjeta[]>(() => {
     const r = this.datos();

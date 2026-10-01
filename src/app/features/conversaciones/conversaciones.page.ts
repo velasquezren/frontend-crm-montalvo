@@ -106,6 +106,11 @@ export class ConversacionesPage implements AfterViewInit {
   );
 
   /** Pestaña pedida por URL: el dashboard enlaza a «Sin responder». */
+  /** `?categoria=GOLD` junto a `?pestana=`: el «Gold esperan respuesta» del Dashboard. */
+  private readonly categoriaEnRuta = toSignal(
+    this.route.queryParamMap.pipe(map(p => p.get('categoria'))),
+    { initialValue: null },
+  );
   private readonly pestanaEnRuta = toSignal(
     this.route.queryParamMap.pipe(map(p => p.get('pestana'))),
     { initialValue: null },
@@ -121,6 +126,7 @@ export class ConversacionesPage implements AfterViewInit {
       const pestana = this.pestanaEnRuta();
       if (!esFiltroInbox(pestana)) return;
       this.state.restablecerFiltros(pestana);
+      this.state.soloGold.set(this.categoriaEnRuta() === 'GOLD');
     });
 
     /* Actualizar badge de la PWA según chats sin responder */
@@ -248,7 +254,7 @@ export class ConversacionesPage implements AfterViewInit {
     this.state.restablecerFiltros();
     try {
       const pagina = await this.conversacionesService.listarPagina(
-        { lineaId: null, tab: 'TODAS', busqueda: telefono, agenteId: null, soloMios: false },
+        { lineaId: null, tab: 'TODAS', busqueda: telefono, agenteId: null, soloMios: false, categoria: null },
         1,
       );
       const chat = resolverChatDePaciente(pagina.datos, telefono);

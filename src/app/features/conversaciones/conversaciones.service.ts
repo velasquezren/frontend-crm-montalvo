@@ -27,6 +27,7 @@ function parametrosInbox(filtros: FiltrosInbox): QueryParams {
     busqueda: filtros.busqueda.trim() || undefined,
     agenteId: filtros.agenteId ?? undefined,
     soloMios: filtros.soloMios ? 'true' : undefined,
+    categoria: filtros.categoria ?? undefined,
   };
 }
 

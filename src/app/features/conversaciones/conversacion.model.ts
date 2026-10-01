@@ -224,6 +224,8 @@ export interface FiltrosInbox {
   readonly busqueda: string;
   readonly agenteId: string | null;
   readonly soloMios: boolean;
+  /** «Gold»: solo las pacientes de esa categoría. Alcance, como la línea: acota también los contadores. */
+  readonly categoria: CategoriaCliente | null;
 }
 
 /**

@@ -10,7 +10,8 @@
   @if (puedeLanzar()) {
     <app-button
       icon="send"
-      [disabled]="audiencia.isLoading() || !!audiencia.error() || resumen().elegibles === 0 || tarifaInvalida()"
+      [disabled]="!!motivoSinCampana()"
+      [title]="motivoSinCampana() ?? 'Lanzar una campaña de Marketing a estas ' + resumen().elegibles + ' pacientes'"
       (clicked)="abrirNuevaCampana()">
       Crear campaña
     </app-button>
@@ -76,7 +77,7 @@
       tono="primary"
       [destacado]="true"
       [compacto]="true"
-      [pie]="resumen().elegiblesPorCategoria.GOLD + ' Gold · ' + resumen().elegiblesPorCategoria.SILVER + ' Silver'" />
+      [pie]="elegiblesPorCategoria()" />
     <app-kpi-card
       label="Ya nos escribieron"
       [valor]="resumen().elegiblesQueConversaron"
@@ -97,7 +98,10 @@
     <!-- Por qué el resto queda fuera, en el orden en que se aplica: cada
          paciente cuenta una vez, por su primer motivo, y todo suma el total. -->
     <section class="lg:col-span-2 bg-white rounded-2xl border border-border p-4">
-      <h2 class="text-[10px] font-bold uppercase tracking-wider text-text-muted mb-3">Quedan fuera</h2>
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <h2 class="text-[10px] font-bold uppercase tracking-wider text-text-muted">Quedan fuera</h2>
+        <span class="text-xs font-semibold tabular-nums text-text-dark">{{ totalExcluidas() }}</span>
+      </div>
       <ul class="flex flex-col gap-2">
         @for (m of motivos(); track m.motivo) {
           <li class="flex items-center justify-between gap-3 text-sm">

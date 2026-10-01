@@ -232,6 +232,12 @@ ruido. La categoría es por valor (FileMaker + CRM) o fijada a mano por SUPER_AD
 `<app-categoria-paciente>`, el mismo control que en Clientes: se guarda al elegir, no
 con el «Guardar» de la ficha.
 
+**Filtro «Gold»** (2026-10-01), junto al buscador: `state.soloGold` manda
+`categoria=GOLD`, y el backend lo trata como ALCANCE (`whereAlcanceInbox`): acota la
+lista, las cuatro pestañas y las cerradas con sus contadores. El Dashboard enlaza
+`?pestana=SIN_RESPONDER&categoria=GOLD` («N pacientes Gold esperan respuesta», solo si
+hay alguna) y su número es el mismo `where`. `restablecerFiltros()` lo apaga.
+
 ### Quién atiende y de quién es la paciente (2026-09-30)
 
 Son dos datos distintos y no se mezclan:

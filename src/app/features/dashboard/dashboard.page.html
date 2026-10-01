@@ -56,6 +56,13 @@
         <app-button variant="ghost" size="sm" (clicked)="kpiData.reload()">Reintentar</app-button>
       </p>
     }
+    @if (mesRecienEmpezado(); as hace) {
+      <p role="status" class="dash-aviso">
+        <app-icon name="calendar" [size]="14" class="shrink-0" />
+        El mes empezó {{ hace }}: todavía hay pocos datos, y la comparación es con el mismo rato del mes pasado.
+        <app-button variant="ghost" size="sm" (clicked)="periodo.set('MES_ANTERIOR')">Ver el mes anterior</app-button>
+      </p>
+    }
     @let r = datos()!;
 
     <!-- ── 1. Pendiente ahora: lo único que pide acción ─────────────────── -->
@@ -68,6 +75,17 @@
         </span>
         <app-icon name="chevron-right" [size]="14" class="dash-ahora-flecha" />
       </a>
+      <!-- Solo si hay alguna: es la urgencia de las urgencias, y un «0» sería ruido. -->
+      @if (r.ahora.chatsGoldSinResponder > 0) {
+        <a class="dash-ahora-item" routerLink="/conversaciones" [queryParams]="{ pestana: 'SIN_RESPONDER', categoria: 'GOLD' }">
+          <app-icon name="star" [size]="16" class="text-gold shrink-0" />
+          <span class="dash-ahora-numero">{{ r.ahora.chatsGoldSinResponder }}</span>
+          <span class="text-sm text-text-muted">
+            {{ r.ahora.chatsGoldSinResponder === 1 ? 'paciente Gold espera' : 'pacientes Gold esperan' }} respuesta
+          </span>
+          <app-icon name="chevron-right" [size]="14" class="dash-ahora-flecha" />
+        </a>
+      }
       <a class="dash-ahora-item" routerLink="/leads">
         <app-icon name="user-plus" [size]="16" class="text-primary shrink-0" />
         <span class="dash-ahora-numero">{{ r.ahora.leadsHoy }}</span>

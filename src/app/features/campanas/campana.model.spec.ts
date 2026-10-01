@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { accionesDe, porcentaje, valoresPara } from './campana.model';
+import { accionesDe, avance, dentroDeHorarioEnvio, porcentaje, valoresPara } from './campana.model';
 
 describe('campaña', () => {
   /* Espejo de `parametrosPara` del backend: la vista previa tiene que decir lo que se manda. */
@@ -20,5 +20,17 @@ describe('campaña', () => {
   it('un porcentaje sin base es null, no 0', () => {
     expect(porcentaje(0, 0)).toBeNull();
     expect(porcentaje(1, 3)).toBe(33);
+  });
+
+  /* Mismo horario que el backend (La Paz, UTC−4): de 9:00 a 19:59. */
+  it('sabe si es hora de enviar en La Paz', () => {
+    expect(dentroDeHorarioEnvio(new Date('2026-10-01T12:59:00Z'))).toBe(false);
+    expect(dentroDeHorarioEnvio(new Date('2026-10-01T13:00:00Z'))).toBe(true);
+    expect(dentroDeHorarioEnvio(new Date('2026-10-02T00:00:00Z'))).toBe(false);
+  });
+
+  it('el avance cuenta todo lo que ya no está pendiente', () => {
+    expect(avance({ total: 4, pendientes: 1 })).toBe(75);
+    expect(avance({ total: 0, pendientes: 0 })).toBe(0);
   });
 });

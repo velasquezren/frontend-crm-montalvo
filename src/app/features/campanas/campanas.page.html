@@ -40,7 +40,12 @@
             </div>
           </td>
           <td><app-badge [variant]="estadoCampana[c.estado].variante">{{ estadoCampana[c.estado].etiqueta }}</app-badge></td>
-          <td class="text-right tabular-nums">{{ c.metricas.enviados }} / {{ c.metricas.total }}</td>
+          <td class="text-right tabular-nums">
+            {{ c.metricas.enviados }} / {{ c.metricas.total }}
+            <span class="campana-avance mt-1 ml-auto" aria-hidden="true">
+              <span class="campana-avance__relleno" [style.width.%]="avance(c.metricas)"></span>
+            </span>
+          </td>
           <td class="text-right tabular-nums">{{ c.metricas.entregados }}</td>
           <td class="text-right tabular-nums">{{ c.metricas.leidos }}</td>
           <td class="text-right tabular-nums">{{ c.metricas.respondieron }}</td>
@@ -87,6 +92,17 @@
             <span>Lanzada por {{ c.creadaPor.nombre }}</span>
             <span>{{ c.estado === 'PROGRAMADA' ? 'Empieza' : 'Desde' }} el {{ c.programadaPara | date: "d MMM y, HH:mm" }}</span>
           </div>
+          @if (c.estado === 'ENVIANDO' || c.estado === 'PROGRAMADA') {
+            <div class="flex items-center gap-2" role="progressbar" [attr.aria-valuenow]="avance(m)" aria-valuemin="0" aria-valuemax="100" aria-label="Avance de la campaña">
+              <span class="campana-avance campana-avance--ancha"><span class="campana-avance__relleno" [style.width.%]="avance(m)"></span></span>
+              <span class="text-xs font-semibold tabular-nums text-text-dark shrink-0">{{ avance(m) }} %</span>
+            </div>
+          }
+          @if (c.estado === 'ENVIANDO' && !enHorario() && m.pendientes > 0) {
+            <p role="status" class="text-xs text-text-muted">
+              Fuera del horario de envío: las {{ m.pendientes }} pendientes salen desde las {{ horario.desdeHora }}:00 (hora de La Paz).
+            </p>
+          }
           @if (c.estado === 'PAUSADA' && c.motivoPausa) {
             <p role="alert" class="text-xs text-text-dark bg-critical-bg rounded-xl px-3 py-2">
               La pausó el sistema: {{ c.motivoPausa }} Corrige eso y reanúdala; nadie quedó sin su turno.

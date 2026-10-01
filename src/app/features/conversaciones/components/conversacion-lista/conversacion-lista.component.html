@@ -132,8 +132,21 @@
     </div>
   </div>
 
-  <div class="sidebar-search">
-    <app-input type="search" placeholder="Buscar por nombre, teléfono o PAC…" [(value)]="state.busqueda" />
+  <!-- «Gold» junto al buscador: acota a las pacientes que más valen, en
+       todas las pestañas y sus contadores. Lo usa el Dashboard para «Gold
+       esperan respuesta». -->
+  <div class="sidebar-search flex items-center gap-2">
+    <div class="flex-1 min-w-0">
+      <app-input type="search" placeholder="Buscar por nombre, teléfono o PAC…" [(value)]="state.busqueda" />
+    </div>
+    <app-filter-chip
+      class="shrink-0"
+      title="Solo pacientes Gold: gastaron $3.500 o más en 12 meses, o las fijaron a mano"
+      [active]="state.soloGold()"
+      (clicked)="state.soloGold.set(!state.soloGold())">
+      <app-icon name="star" [size]="12" />
+      Gold
+    </app-filter-chip>
   </div>
 
   <!-- Lista de conversaciones -->

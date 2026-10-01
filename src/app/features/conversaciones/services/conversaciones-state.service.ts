@@ -98,6 +98,8 @@ export class ConversacionesStateService {
   readonly filtroTab = signal<FiltroInbox>('TODAS');
   /** A quién mira un admin. Para el resto no aplica: su alcance lo pone el servidor. */
   readonly alcance = signal<AlcanceInbox>('EQUIPO');
+  /** «Gold»: solo las pacientes Gold. Para todos los roles: las que más valen no esperan. */
+  readonly soloGold = signal(false);
   readonly dropdownAgenteAbierto = signal(false);
 
   /**
@@ -111,6 +113,7 @@ export class ConversacionesStateService {
       tab: this.filtroTab(),
       busqueda: this.busquedaDebounced(),
       ...filtrosDeAlcance(this.isAdmin() ? this.alcance() : 'EQUIPO'),
+      categoria: this.soloGold() ? 'GOLD' : null,
     };
   });
 
@@ -124,6 +127,7 @@ export class ConversacionesStateService {
     this.filtroLineaId.set(null);
     this.filtroTab.set(tab);
     this.alcance.set('EQUIPO');
+    this.soloGold.set(false);
   }
 
   /**
