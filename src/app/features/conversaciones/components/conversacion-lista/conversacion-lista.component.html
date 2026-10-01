@@ -21,6 +21,7 @@
       <div class="flex items-center gap-1.5 shrink-0">
         <app-filter-chip
           size="sm"
+          [transitions]="false"
           title="Chats resueltos o sin mensajes en 30 días. Se reabren solos si la paciente escribe o si le contestas."
           [active]="viendoCerradas()"
           [count]="state.stats().cerradas"
@@ -122,7 +123,7 @@
           [attr.aria-pressed]="state.filtroTab() === p.tab"
           [title]="p.ayuda"
           [class]="state.filtroTab() === p.tab ? 'text-primary font-bold border-primary' : 'text-text-muted hover:text-text-dark font-medium border-transparent'"
-          class="flex flex-col items-center gap-1 px-3 pb-2 -mb-px border-b-2 transition-all cursor-pointer">
+          class="flex flex-col items-center gap-1 px-3 pb-2 -mb-px border-b-2 cursor-pointer">
           <span class="text-xs leading-tight">{{ p.etiqueta }}</span>
           <span class="crm-contador" [class.crm-contador-activo]="state.filtroTab() === p.tab">
             {{ state.stats()[p.contador] }}
@@ -141,6 +142,7 @@
     </div>
     <app-filter-chip
       class="shrink-0"
+      [transitions]="false"
       title="Solo pacientes Gold: gastaron $3.500 o más en 12 meses, o las fijaron a mano"
       [active]="state.soloGold()"
       (clicked)="state.soloGold.set(!state.soloGold())">

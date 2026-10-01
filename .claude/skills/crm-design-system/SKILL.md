@@ -158,7 +158,7 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 | ErrorCarga | `<app-error-carga>` | `que` ("los clientes"), `titulo`, `descripcion` · `(reintentar)` — estado de error de una vista con datos remotos |
 | LoadingSkeleton | `<app-loading-skeleton>` | `shape`, `width`, `height` |
 | PageHeader | `<app-page-header>` | `title` (requerido), **`subtitle`** + acciones proyectadas |
-| FilterChip | `<app-filter-chip>` | `active`, `count`, `size` · `(clicked)` |
+| FilterChip | `<app-filter-chip>` | `active`, `count`, `size`, `transitions` (true por defecto; false en los filtros del inbox para pintar y cambiar de estado sin fundidos) · `(clicked)` |
 | Table | `<app-table>` | `dense`, `maxHeight` — proyecta `<thead>`/`<tbody>` nativos |
 | ThOrdenable | `th[appOrdenable]` | `appOrdenable` (columna, requerido), `orden`, `direccion`, `direccionInicial` · `(ordenar)` — cabecera ordenable; **ordena el servidor**, no el cliente |
 | Paginator | `<app-paginator>` | `pagina`, `totalPaginas`, `total` (requeridos), `limite` · `(cambiar)` |
