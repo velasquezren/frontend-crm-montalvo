@@ -74,3 +74,7 @@ export type TipoActividad = 'LLAMADA' | 'REUNION' | 'TAREA' | 'RECORDATORIO';
 export type EstadoActividad = 'PENDIENTE' | 'COMPLETADA' | 'CANCELADA';
 
 export type FrecuenciaRepeticion = 'SEMANAL' | 'QUINCENAL' | 'MENSUAL';
+
+export type EstadoCampana = 'PROGRAMADA' | 'ENVIANDO' | 'PAUSADA' | 'TERMINADA' | 'CANCELADA';
+
+export type EstadoDestinatario = 'PENDIENTE' | 'ENVIANDO' | 'ENVIADO' | 'OMITIDO' | 'FALLIDO';

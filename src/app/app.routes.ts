@@ -128,6 +128,13 @@ export const routes: Routes = [
           import('./features/audiencias/audiencias.page').then(m => m.AudienciasPage),
       },
       {
+        /* Lanzar y controlar es de SUPER_ADMIN (lo exige el backend); verlas, de administración. */
+        path: 'campanas',
+        canActivate: [exigeRol('ADMIN')],
+        loadComponent: () =>
+          import('./features/campanas/campanas.page').then(m => m.CampanasPage),
+      },
+      {
         path: 'leads',
         canActivate: [exigeRol('AGENTE')],
         loadComponent: () =>

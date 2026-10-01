@@ -6,7 +6,16 @@
 
 <app-page-header
   title="Audiencias"
-  subtitle="A quién vale la pena mandarle una campaña hoy, y cuánto costaría." />
+  subtitle="A quién vale la pena mandarle una campaña hoy, y cuánto costaría.">
+  @if (puedeLanzar()) {
+    <app-button
+      icon="send"
+      [disabled]="audiencia.isLoading() || !!audiencia.error() || resumen().elegibles === 0 || tarifaInvalida()"
+      (clicked)="abrirNuevaCampana()">
+      Crear campaña
+    </app-button>
+  }
+</app-page-header>
 
 <!-- ── Quiénes: categorías, plazo y conversación ─────────────────────── -->
 <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
@@ -201,3 +210,12 @@
       description="Con estos filtros no queda ninguna paciente: prueba con más categorías o un plazo más corto sin campaña." />
   }
 }
+
+<ng-template #nuevaCampanaTpl>
+  <app-nueva-campana
+    [filtro]="filtroCampana()"
+    [elegibles]="resumen().elegibles"
+    [tarifaUsd]="tarifaUsd()"
+    (cerrar)="cerrarNuevaCampana()"
+    (creada)="alCrearCampana($event)" />
+</ng-template>

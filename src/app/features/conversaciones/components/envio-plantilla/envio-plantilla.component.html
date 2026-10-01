@@ -62,16 +62,7 @@
 
     <div>
       <h4 class="text-xs font-bold text-text-dark uppercase tracking-wider mb-2">Así lo verá el paciente</h4>
-      <div class="vista-previa">
-        @if (p.imagenCabecera; as imagen) {
-          <!-- La misma imagen que recibirá: el CRM la adjunta sola al enviar. -->
-          <img class="vista-previa__imagen" [src]="imagen" alt="Imagen de cabecera de la plantilla" loading="lazy" />
-        }
-        <p class="vista-previa__burbuja">{{ vistaPrevia() }}</p>
-        @for (boton of p.botones; track boton) {
-          <span class="vista-previa__boton">{{ boton }}</span>
-        }
-      </div>
+      <app-vista-previa-plantilla [plantilla]="p" [valores]="valores()" />
       @if (falta(); as motivo) {
         <p class="text-xs text-text-muted mt-2">{{ motivo }}</p>
       }

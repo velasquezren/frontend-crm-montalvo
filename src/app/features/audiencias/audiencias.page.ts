@@ -1,7 +1,14 @@
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, signal, TemplateRef, viewChild, ViewContainerRef } from '@angular/core';
+import { OverlayRef } from '@angular/cdk/overlay';
+import { Router, RouterLink } from '@angular/router';
+
+import { AuthService } from '../../core/auth/auth.service';
+import { ButtonComponent } from '../../shared/components/button/button.component';
+import { DialogService } from '../../shared/components/dialog/dialog.service';
+import { Campana } from '../campanas/campana.model';
+import { NuevaCampanaComponent } from '../campanas/nueva-campana/nueva-campana.component';
 
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
@@ -51,6 +58,7 @@ const CATEGORIAS: readonly CategoriaCliente[] = ['GOLD', 'SILVER', 'BRONZE', 'PR
   selector: 'app-audiencias-page',
   imports: [
     BadgeComponent,
+    ButtonComponent,
     DatePipe,
     EmptyStateComponent,
     ErrorCargaComponent,
@@ -61,6 +69,7 @@ const CATEGORIAS: readonly CategoriaCliente[] = ['GOLD', 'SILVER', 'BRONZE', 'PR
     KpiCardComponent,
     LoadingSkeletonComponent,
     MonedaPipe,
+    NuevaCampanaComponent,
     NombreClientePipe,
     PageHeaderComponent,
     PaginatorComponent,
@@ -74,6 +83,14 @@ const CATEGORIAS: readonly CategoriaCliente[] = ['GOLD', 'SILVER', 'BRONZE', 'PR
 })
 export class AudienciasPage {
   private readonly audiencias = inject(AudienciasService);
+  private readonly dialog = inject(DialogService);
+  private readonly vcr = inject(ViewContainerRef);
+  private readonly router = inject(Router);
+  private readonly nuevaCampanaTpl = viewChild.required<TemplateRef<unknown>>('nuevaCampanaTpl');
+  private cajon?: OverlayRef;
+
+  /** Lanzar una campaña es del propietario: el backend lo exige (403). */
+  protected readonly puedeLanzar = inject(AuthService).isSuperAdmin;
 
   protected readonly categoriasDisponibles = CATEGORIAS;
   protected readonly categoriaLabel = CATEGORIA_LABEL;
@@ -133,5 +150,28 @@ export class AudienciasPage {
 
   protected cambiarPlazo(valor: string): void {
     this.diasSinCampana.set(Number(valor));
+  }
+
+  /** El filtro que se está viendo, tal como viaja con la campaña. */
+  protected readonly filtroCampana = computed(() => ({
+    categorias: this.categorias(),
+    diasSinCampana: this.diasSinCampana(),
+    soloConversaron: this.soloConversaron(),
+  }));
+
+  protected abrirNuevaCampana(): void {
+    this.cajon?.dispose();
+    this.cajon = this.dialog.abrirCajon(this.nuevaCampanaTpl(), this.vcr, { onClose: () => (this.cajon = undefined) });
+  }
+
+  protected cerrarNuevaCampana(): void {
+    this.cajon?.dispose();
+    this.cajon = undefined;
+  }
+
+  /** Creada: a su ficha en Campañas, donde se sigue cómo sale. */
+  protected alCrearCampana(campana: Campana): void {
+    this.cerrarNuevaCampana();
+    void this.router.navigate(['/campanas'], { queryParams: { id: campana.id } });
   }
 }

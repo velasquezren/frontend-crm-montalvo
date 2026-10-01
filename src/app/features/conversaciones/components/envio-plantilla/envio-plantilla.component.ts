@@ -6,7 +6,8 @@ import { IconComponent } from '../../../../shared/components/icon/icon.component
 import { InputComponent } from '../../../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PlantillaResumen } from '../../conversacion.model';
-import { etiquetaVariable, faltaParaEnviar, motivoNoDisponible, renderizarPlantilla } from '../../plantillas';
+import { etiquetaVariable, faltaParaEnviar, motivoNoDisponible } from '../../plantillas';
+import { VistaPreviaPlantillaComponent } from '../vista-previa-plantilla/vista-previa-plantilla.component';
 
 /**
  * Elegir una plantilla aprobada, completar sus datos y ver el mensaje tal como
@@ -18,7 +19,7 @@ import { etiquetaVariable, faltaParaEnviar, motivoNoDisponible, renderizarPlanti
  */
 @Component({
   selector: 'app-envio-plantilla',
-  imports: [BadgeComponent, ButtonComponent, IconComponent, InputComponent, LoadingSkeletonComponent],
+  imports: [BadgeComponent, ButtonComponent, IconComponent, InputComponent, LoadingSkeletonComponent, VistaPreviaPlantillaComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './envio-plantilla.component.html',
   styleUrl: './envio-plantilla.component.css',
@@ -47,11 +48,6 @@ export class EnvioPlantillaComponent {
   protected readonly motivos = computed(() => {
     const baja = this.bajaPromocionesEn();
     return new Map(this.plantillas().map(p => [p, motivoNoDisponible(p, baja)]));
-  });
-
-  protected readonly vistaPrevia = computed(() => {
-    const p = this.seleccionada();
-    return p ? renderizarPlantilla(p, this.valores()) : '';
   });
 
   protected readonly falta = computed(() => {

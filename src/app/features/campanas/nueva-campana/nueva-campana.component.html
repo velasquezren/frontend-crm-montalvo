@@ -1,0 +1,93 @@
+<app-drawer ancho="lg" titulo="Nueva campaña" subtitulo="Una plantilla de Marketing a esta audiencia" icono="send" (cerrar)="cerrar.emit()">
+  <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-5">
+    <app-input label="Nombre de la campaña" placeholder="Ej. Ecografías octubre, Gold" [(value)]="nombre" />
+
+    <!-- Línea: cada una tiene sus plantillas. -->
+    @if (todasLasLineas.isLoading()) {
+      <app-loading-skeleton height="2.75rem" />
+    } @else if (todasLasLineas.error()) {
+      <p role="alert" class="text-xs text-text-muted">No se pudieron cargar las líneas. Ciérralo y vuelve a intentar.</p>
+    } @else if (lineas().length === 0) {
+      <p class="text-xs text-text-muted">No hay ninguna línea conectada a WhatsApp desde la que se pueda escribir.</p>
+    } @else {
+      <app-select label="Sale desde la línea" ariaLabel="Línea de WhatsApp" [value]="lineaId()" (valueChange)="lineaId.set($event)">
+        <option value="">Elige una línea…</option>
+        @for (l of lineas(); track l.id) {
+          <option [value]="l.id">{{ l.nombre }}</option>
+        }
+      </app-select>
+    }
+
+    @if (lineaId()) {
+      @if (todasLasPlantillas.isLoading()) {
+        <app-loading-skeleton height="2.75rem" />
+      } @else if (todasLasPlantillas.error()) {
+        <p role="alert" class="text-xs text-text-muted">No se pudieron consultar las plantillas de esta línea. Ciérralo y vuelve a intentar.</p>
+      } @else if (plantillas().length === 0) {
+        <p class="text-xs text-text-muted">
+          Esta línea no tiene plantillas de Marketing aprobadas que el CRM sepa rellenar. Las de Utilidad no sirven
+          para una campaña: no pueden llevar publicidad.
+        </p>
+      } @else {
+        <app-select label="Plantilla de Marketing" ariaLabel="Plantilla de Marketing" [value]="plantillaClave()" (valueChange)="plantillaClave.set($event)">
+          <option value="">Elige una plantilla…</option>
+          @for (p of plantillas(); track claveDe(p)) {
+            <option [value]="claveDe(p)">{{ p.nombre }} ({{ p.idioma }})</option>
+          }
+        </app-select>
+      }
+    }
+
+    @if (plantilla(); as p) {
+      @if (variables().length > 0) {
+        <section class="p-4 rounded-xl bg-bg-workspace border border-border flex flex-col gap-3">
+          <h3 class="text-xs font-bold text-text-dark uppercase tracking-wider">Qué va en cada dato</h3>
+          @for (v of variables(); track $index; let i = $index) {
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 items-end">
+              <app-select size="sm" [label]="etiqueta(p, i)" [ariaLabel]="'Origen de ' + etiqueta(p, i)" [value]="v.tipo" (valueChange)="cambiarTipo(i, $event)">
+                <option value="NOMBRE">El nombre de la paciente</option>
+                <option value="TEXTO">Un texto fijo</option>
+              </app-select>
+              <app-input
+                [placeholder]="v.tipo === 'NOMBRE' ? 'Si no tiene nombre, por ej. «hola»' : 'Lo que leerán todas'"
+                [value]="v.valor"
+                (valueChange)="cambiarValor(i, $event)" />
+            </div>
+          }
+        </section>
+      }
+
+      <section class="flex flex-col gap-2">
+        <h3 class="text-xs font-bold text-text-dark uppercase tracking-wider">Así le llegará a una paciente llamada María</h3>
+        <app-vista-previa-plantilla [plantilla]="p" [valores]="ejemplo()" />
+        @if (usaNombre()) {
+          <p class="text-[11px] text-text-muted">A un contacto sin nombre: «{{ ejemploSinNombre().join(' · ') }}» donde iría el nombre.</p>
+        }
+      </section>
+    }
+
+    <section class="flex flex-col gap-2">
+      <div class="flex items-center gap-2">
+        <app-switch [(value)]="programar" ariaLabel="Programar para más tarde" />
+        <span class="text-xs text-text-dark">Programar para más tarde</span>
+      </div>
+      @if (programar()) {
+        <app-input type="datetime-local" label="Empieza el" [(value)]="programadaPara" />
+      }
+      <p class="text-[11px] text-text-muted leading-relaxed">
+        Sale de a poco (unas 80 por minuto), de las que más gastaron a las que menos, y solo de 9:00 a 20:00
+        en La Paz: fuera de esa hora espera. Puedes pausarla o cancelarla en Campañas.
+      </p>
+    </section>
+  </div>
+
+  <div class="flex items-center justify-between gap-3 px-5 py-3 shrink-0 border-t border-border bg-bg-light">
+    <p class="flex items-center gap-1.5 text-xs min-w-0" [class.text-primary]="!falta()" [class.font-semibold]="!falta()" [class.text-text-muted]="!!falta()">
+      <app-icon [name]="falta() ? 'circle' : 'check-circle'" [size]="14" class="shrink-0" />
+      <span>{{ falta() ?? (elegibles() + ' pacientes · hasta ' + (costo() | moneda)) }}</span>
+    </p>
+    <app-button variant="primary" size="sm" icon="send" class="shrink-0" [disabled]="!!falta() || enviando()" [loading]="enviando()" (clicked)="lanzar()">
+      {{ programar() ? 'Programar' : 'Enviar a ' + elegibles() }}
+    </app-button>
+  </div>
+</app-drawer>

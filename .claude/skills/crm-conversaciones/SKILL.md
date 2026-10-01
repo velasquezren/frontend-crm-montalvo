@@ -150,6 +150,19 @@ de alta nada.
   `enviable: false` y su motivo: el chat no sabe rellenarla y Meta la rechazaría.
 - **Una clave `clientMessageId` por apertura del cajón**: un doble clic no manda
   —ni cobra— dos plantillas.
+- La burbuja de vista previa es `<app-vista-previa-plantilla>` (`components/`): la
+  comparten este selector y el formulario de campañas. Vivía aquí con su CSS
+  encapsulado, y la otra vista habría tenido que copiarla.
+
+### Mensajes de campaña en el chat (2026-09-30)
+
+Una campaña (`/campanas`, backend `modules/campanas`) deja su plantilla en el
+historial de cada paciente como un mensaje **automático** (`automatico: true`,
+`plantillaCategoria: 'MARKETING'`). A propósito no se comporta como una agente:
+no asigna el chat, no lo reabre, no lo sube en la bandeja ni saca a nadie de «Sin
+responder», y si la paciente no tenía chat en esa línea, nace cerrado. Lo que lo
+pone en la bandeja es que ella responda: la ingesta lo reabre como a cualquier
+otro. Si una agente ve una promoción en un chat que nadie tocó, es eso.
 
 ### Llegar al chat de una paciente desde otra pantalla
 

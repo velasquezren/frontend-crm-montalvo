@@ -35,6 +35,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       { path: '/clientes', label: 'Clientes y Pacientes', icon: 'users', rolMinimo: 'AGENTE' },
       { path: '/leads', label: 'Leads y Prospectos', icon: 'user-plus', rolMinimo: 'AGENTE' },
       { path: '/audiencias', label: 'Audiencias', icon: 'award', rolMinimo: 'ADMIN' },
+      { path: '/campanas', label: 'Campañas', icon: 'send', rolMinimo: 'ADMIN' },
       { path: '/actividades', label: 'Actividades', icon: 'calendar', rolMinimo: 'RECEPCION' },
       {
         path: '/resultados',
