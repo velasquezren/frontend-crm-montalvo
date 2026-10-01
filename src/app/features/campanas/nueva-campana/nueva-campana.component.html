@@ -6,7 +6,8 @@
     @if (todasLasLineas.isLoading()) {
       <app-loading-skeleton height="2.75rem" />
     } @else if (todasLasLineas.error()) {
-      <p role="alert" class="text-xs text-text-muted">No se pudieron cargar las líneas. Ciérralo y vuelve a intentar.</p>
+      <p role="alert" class="text-xs text-text-muted">No se pudieron cargar las líneas.</p>
+      <app-button variant="secondary" size="sm" (clicked)="todasLasLineas.reload()">Reintentar</app-button>
     } @else if (lineas().length === 0) {
       <p class="text-xs text-text-muted">No hay ninguna línea conectada a WhatsApp desde la que se pueda escribir.</p>
     } @else {
@@ -22,7 +23,8 @@
       @if (todasLasPlantillas.isLoading()) {
         <app-loading-skeleton height="2.75rem" />
       } @else if (todasLasPlantillas.error()) {
-        <p role="alert" class="text-xs text-text-muted">No se pudieron consultar las plantillas de esta línea. Ciérralo y vuelve a intentar.</p>
+        <p role="alert" class="text-xs text-text-muted">No se pudieron consultar las plantillas de esta línea.</p>
+        <app-button variant="secondary" size="sm" (clicked)="todasLasPlantillas.reload()">Reintentar plantillas</app-button>
       } @else if (plantillas().length === 0) {
         <p class="text-xs text-text-muted">
           Esta línea no tiene plantillas de Marketing aprobadas que el CRM sepa rellenar. Las de Utilidad no sirven
@@ -49,6 +51,7 @@
                 <option value="TEXTO">Un texto fijo</option>
               </app-select>
               <app-input
+                [label]="(v.tipo === 'NOMBRE' ? 'Respaldo de ' : 'Texto de ') + etiqueta(p, i)"
                 [placeholder]="v.tipo === 'NOMBRE' ? 'Si no tiene nombre, por ej. «hola»' : 'Lo que leerán todas'"
                 [value]="v.valor"
                 (valueChange)="cambiarValor(i, $event)" />
@@ -72,7 +75,7 @@
         <span class="text-xs text-text-dark">Programar para más tarde</span>
       </div>
       @if (programar()) {
-        <app-input type="datetime-local" label="Empieza el" [(value)]="programadaPara" />
+        <app-input type="datetime-local" label="Empieza el (hora de La Paz)" [(value)]="programadaPara" />
       }
       <p class="text-[11px] text-text-muted leading-relaxed">
         Sale de a poco (unas 80 por minuto), de las que más gastaron a las que menos, y solo de 9:00 a 20:00

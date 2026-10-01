@@ -45,8 +45,29 @@ El CRM de Clínica Montalvo es una plataforma web centralizada diseñada para:
 | **Inbox WhatsApp (Chats)** | Mis chats + sin asignar | Visibilidad y reasignación total | Visibilidad y reasignación total |
 | **Agenda de Actividades (`/actividades`)** | Sus tareas, llamadas y citas | Agenda global de toda la clínica | Agenda global y filtros por agente |
 | **Registro de Ventas** | Registrar ventas propias | Registrar, auditar y anular | Registrar, auditar y anular |
-| **Módulo de Comisiones (`/finanzas`)** | Consultar sus comisiones | Liquidar y auditar reportes | Modificar reglas, exclusiones y cerrar |
+| **Módulo de Comisiones (`/finanzas`)** | No tiene acceso a esta ruta | Consultar, calcular y revisar | Aprobar, cerrar, pagar y administrar |
 | **Gestión de Agentes/Usuarios** | ❌ No permitido | ❌ No permitido | ✅ Crear, desactivar y editar usuarios |
+
+Recepción y Asistente atienden los chats de sus líneas y sus actividades propias,
+incluso cuando otra persona tomó el chat. No tienen acceso comercial a leads,
+ventas o fichas completas. Asistente y administración pueden entregar resultados,
+si además tienen asignada esa línea. Los permisos del servidor son la autoridad;
+el mapa vigente está en [PANORAMA](../../backend-crm-montalvo/docs/PANORAMA.md).
+
+### Campañas y audiencias
+
+Administración puede consultar Audiencias y Campañas. Solo Super Admin puede
+lanzar, pausar, reanudar o cancelar una campaña. El lanzamiento muestra la
+plantilla, sus variables, el número de destinatarias y un costo estimado con
+tarifa editable; cada campaña admite hasta 2.000 pacientes. Si la audiencia
+cambió de tamaño, debe revisarse antes de continuar.
+
+Al programar, la hora elegida y la que aparece en la ficha son de **La Paz**,
+aunque el dispositivo esté en otra zona. Las campañas salen de 9:00 a 20:00.
+Una plantilla enviada no equivale a una entrega: la ficha distingue rechazos
+de Meta y resultados sin confirmar. Entregas, lecturas y compras pueden seguir
+cambiando después de que termine el lote; la ficha abierta se actualiza cada
+minuto mientras la pestaña está visible.
 
 ---
 

@@ -43,6 +43,8 @@ let nextId = 0;
             [value]="value()"
             (input)="value.set($any($event.target).value)"
             [disabled]="disabled()"
+            [attr.aria-invalid]="error() ? 'true' : null"
+            [attr.aria-describedby]="error() ? id + '-error' : null"
             [rows]="rows()"
             [class]="inputClasses()"></textarea>
         } @else {
@@ -54,6 +56,8 @@ let nextId = 0;
             (input)="value.set($any($event.target).value)"
             [autocomplete]="autocomplete()"
             [disabled]="disabled()"
+            [attr.aria-invalid]="error() ? 'true' : null"
+            [attr.aria-describedby]="error() ? id + '-error' : null"
             [class]="inputClasses()" />
 
           @if (type() === 'password') {
@@ -70,7 +74,7 @@ let nextId = 0;
       </div>
 
       @if (error()) {
-        <p class="text-xs text-critical">{{ error() }}</p>
+        <p [id]="id + '-error'" role="alert" class="text-xs text-critical">{{ error() }}</p>
       }
     </div>
   `,

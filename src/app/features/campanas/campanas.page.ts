@@ -112,7 +112,7 @@ export class CampanasPage {
   protected readonly horario = HORARIO_ENVIO;
   /** Se recalcula con cada refresco de la ficha: es la hora en que se miró. */
   protected readonly enHorario = computed(() => {
-    this.detalle.value();
+    if (this.detalle.hasValue()) this.detalle.value();
     return dentroDeHorarioEnvio(new Date());
   });
 
@@ -161,11 +161,13 @@ export class CampanasPage {
       });
     });
 
-    /* Mientras la abierta está saliendo, se refresca sola. */
+    /* Entregas, lecturas y compras siguen llegando después de TERMINADA.
+       Una ficha abierta se refresca también tras terminar, sin hacer trabajo
+       en pestañas ocultas; al cerrar/destruir la ficha se limpia el timer. */
     effect(onCleanup => {
-      const estado = this.detalle.hasValue() ? this.detalle.value().estado : null;
-      if (estado !== 'ENVIANDO' && estado !== 'PROGRAMADA') return;
+      if (!this.seleccionadaId()) return;
       const temporizador = setInterval(() => {
+        if (document.visibilityState === 'hidden') return;
         this.detalle.reload();
         this.destinatarios.reload();
         this.campanas.reload();
@@ -231,5 +233,5 @@ export class CampanasPage {
     return 'Enviado';
   }
 
-  protected readonly hayCampanas = computed(() => this.campanas.value().datos.length > 0);
+  protected readonly hayCampanas = computed(() => this.campanas.hasValue() && this.campanas.value().datos.length > 0);
 }

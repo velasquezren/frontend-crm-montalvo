@@ -32,11 +32,11 @@
       @for (c of campanas.value().datos; track c.id) {
         <tr class="cursor-pointer hover:bg-bg-light/40 transition-colors" (click)="abrir(c.id)">
           <td>
-            <p class="font-medium text-text-dark leading-tight">{{ c.nombre }}</p>
+            <app-button variant="ghost" size="sm" [ariaLabel]="'Ver campaña ' + c.nombre" (clicked)="$event.stopPropagation(); abrir(c.id)">{{ c.nombre }}</app-button>
             <div class="crm-meta mt-0.5">
               <span>{{ c.plantilla }}</span>
               <span>{{ c.linea.nombre }}</span>
-              <span>{{ c.createdAt | date: 'd MMM y' }}</span>
+              <span>{{ c.createdAt | date: 'd MMM y' : '-0400' }}</span>
             </div>
           </td>
           <td><app-badge [variant]="estadoCampana[c.estado].variante">{{ estadoCampana[c.estado].etiqueta }}</app-badge></td>
@@ -90,7 +90,7 @@
             <span>{{ c.plantilla }}</span>
             <span>{{ c.linea.nombre }}</span>
             <span>Lanzada por {{ c.creadaPor.nombre }}</span>
-            <span>{{ c.estado === 'PROGRAMADA' ? 'Empieza' : 'Desde' }} el {{ c.programadaPara | date: "d MMM y, HH:mm" }}</span>
+            <span>{{ c.estado === 'PROGRAMADA' ? 'Empieza' : 'Desde' }} el {{ c.programadaPara | date: "d MMM y, HH:mm" : '-0400' }} (La Paz)</span>
           </div>
           @if (c.estado === 'ENVIANDO' || c.estado === 'PROGRAMADA') {
             <div class="flex items-center gap-2" role="progressbar" [attr.aria-valuenow]="avance(m)" aria-valuemin="0" aria-valuemax="100" aria-label="Avance de la campaña">

@@ -20,8 +20,8 @@ Antes de iniciar la configuración técnica, necesitas cumplir con los siguiente
 - **Cuenta Comercial de Meta (Business Manager)** verificada (o en proceso de verificación si planeas enviar plantillas a gran escala).
 - **Página de Facebook** de la clínica/empresa (asociada a tu cuenta comercial).
 - **Cuenta de Instagram Profesional/Creador** vinculada a la Página de Facebook (si deseas capturar leads/mensajes desde Instagram).
-- **Número de teléfono limpio**: Un número telefónico destinado a WhatsApp Business API que **no esté registrado** actualmente en ninguna app de WhatsApp (personal o business en teléfonos móviles). Si está registrado, debes dar de baja la cuenta en el celular antes de usar la API.
-- **Método de pago (Línea de crédito)** configurado en el Administrador Comercial (Meta ofrece un cupo gratuito mensual de 1,000 conversaciones iniciadas por el usuario, pero requiere tarjeta de crédito para activar el servicio).
+- **Número y modalidad de conexión**: confirmar el método de alta o migración antes de intervenir un número existente. Hay integraciones con coexistencia entre WhatsApp Business App y API, como [HubSpot](https://knowledge.hubspot.com/inbox/connect-a-whatsapp-number-to-hubspot-using-coexistence). Eso no demuestra que esté habilitada en este CRM. No eliminar una cuenta como paso genérico de esta guía; verificar elegibilidad, historial y procedimiento de Meta para la línea concreta.
+- **Facturación** configurada en el Administrador Comercial cuando corresponda. El modelo vigente es por mensajes entregados, mercado y categoría; consultar [precios oficiales](https://business.whatsapp.com/products/platform-pricing) y [META_COSTOS.md](META_COSTOS.md). La antigua referencia a 1.000 conversaciones gratuitas no describe ese modelo.
 
 ---
 
@@ -85,8 +85,8 @@ Si realizas campañas publicitarias con Formularios Instantáneos en Meta Ads, p
 2. En el panel del producto Webhooks, selecciona **Page** (Página) en el menú desplegable superior.
 3. Haz clic en **Suscribirse a este objeto** (Subscribe to this object).
 4. Configura los datos del endpoint de tu backend NestJS destinado a los Leads:
-   - **URL de devolución de llamada (Callback URL)**: `https://api.montalvocrm.com/leads/meta/webhook`
-   - **Token de verificación (Verify Token)**: Tu clave secreta definida para Leads.
+   - **URL de devolución de llamada (Callback URL)**: `<origen público del backend>/webhooks/meta`.
+   - **Token de verificación (Verify Token)**: El mismo `META_VERIFY_TOKEN` que verifica WhatsApp, como especifica el código.
 5. Haz clic en **Verificar y guardar**.
 6. En la lista de campos, suscríbete a:
    - **`leadgen`** (Activa el webhook cada vez que un usuario completa un formulario de anuncios).

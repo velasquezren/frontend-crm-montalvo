@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, linkedSignal, output, signal } from '@angular/core';
 
 import { mensajeDeError } from '../../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../../core/api/pagination.model';
@@ -19,7 +19,7 @@ import { etiquetaVariable, faltaParaEnviar } from '../../conversaciones/plantill
 import { LineaWhatsapp } from '../../lineas-whatsapp/linea-whatsapp.model';
 import { LineasWhatsappService } from '../../lineas-whatsapp/lineas-whatsapp.service';
 import { costoMaximoUsd } from '../../audiencias/audiencia.model';
-import { Campana, FiltroCampana, valoresPara, VariableCampana } from '../campana.model';
+import { Campana, faltaProgramacion, FiltroCampana, instanteProgramado, MAX_DESTINATARIOS_CAMPANA, valoresPara, VariableCampana } from '../campana.model';
 import { CampanasService } from '../campanas.service';
 
 /** Cómo se rellena una variable, mientras se edita. */
@@ -63,6 +63,7 @@ export class NuevaCampanaComponent {
   private readonly conversaciones = inject(ConversacionesService);
   private readonly lineasService = inject(LineasWhatsappService);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly filtro = input.required<FiltroCampana>();
   readonly elegibles = input.required<number>();
@@ -83,7 +84,7 @@ export class NuevaCampanaComponent {
   );
   /** Las que pueden escribir hoy; las comerciales primero, que es donde se vende. */
   protected readonly lineas = computed(() =>
-    this.todasLasLineas.value().datos
+    (this.todasLasLineas.hasValue() ? this.todasLasLineas.value().datos : [])
       .filter(l => l.activa && l.conectada)
       .sort((a, b) => Number(b.comercial) - Number(a.comercial) || a.nombre.localeCompare(b.nombre, 'es')),
   );
@@ -94,7 +95,7 @@ export class NuevaCampanaComponent {
   );
   /** Solo Marketing y que el CRM sepa rellenar: el backend rechaza el resto. */
   protected readonly plantillas = computed(() =>
-    this.todasLasPlantillas.value().filter(p => p.categoria === 'MARKETING' && p.enviable),
+    (this.todasLasPlantillas.hasValue() ? this.todasLasPlantillas.value() : []).filter(p => p.categoria === 'MARKETING' && p.enviable),
   );
   protected readonly plantilla = computed(
     () => this.plantillas().find(p => claveDe(p) === this.plantillaClave()) ?? null,
@@ -113,19 +114,23 @@ export class NuevaCampanaComponent {
   protected readonly ejemploSinNombre = computed(() => valoresPara(this.paraEnviar(), EJEMPLO_SIN_NOMBRE));
   protected readonly usaNombre = computed(() => this.variables().some(v => v.tipo === 'NOMBRE'));
   protected readonly costo = computed(() => costoMaximoUsd(this.elegibles(), this.tarifaUsd()));
+  private readonly instante = computed(() => instanteProgramado(this.programadaPara()));
 
   /** Qué falta para lanzarla, en palabras; null si está lista. */
   protected readonly falta = computed(() => {
     if (this.nombre().trim().length < 3) return 'Ponle un nombre a la campaña.';
+    if (this.nombre().trim().length > 120) return 'El nombre admite hasta 120 caracteres.';
+    if (this.elegibles() < 1 || this.elegibles() > MAX_DESTINATARIOS_CAMPANA) return 'Elige una audiencia de 1 a 2000 pacientes.';
     if (!this.lineaId()) return 'Elige la línea desde la que sale.';
     const p = this.plantilla();
     if (!p) return 'Elige una plantilla de Marketing.';
     const sinValor = this.variables().findIndex(v => !v.valor.trim());
     if (sinValor >= 0) return `Completa «${etiquetaVariable(p, sinValor)}».`;
+    const demasiadoLargo = this.variables().findIndex(v => v.valor.trim().length > (v.tipo === 'NOMBRE' ? 60 : 200));
+    if (demasiadoLargo >= 0) return `Acorta «${etiquetaVariable(p, demasiadoLargo)}»: admite ${this.variables()[demasiadoLargo].tipo === 'NOMBRE' ? 60 : 200} caracteres.`;
     const formato = faltaParaEnviar(p, this.ejemplo()) ?? faltaParaEnviar(p, this.ejemploSinNombre());
     if (formato) return formato;
-    if (this.programar() && !this.programadaPara()) return 'Elige el día y la hora.';
-    return null;
+    return this.programar() ? faltaProgramacion(this.instante()) : null;
   });
 
   protected readonly etiqueta = etiquetaVariable;
@@ -144,6 +149,10 @@ export class NuevaCampanaComponent {
   protected async lanzar(): Promise<void> {
     const p = this.plantilla();
     if (!p || this.falta() || this.enviando()) return;
+    // Comprobar otra vez el reloj: un formulario abierto puede haber esperado
+    // hasta después de su hora, sin que cambie ninguna señal de edición.
+    const fechaInvalida = this.programar() ? faltaProgramacion(this.instante()) : null;
+    if (fechaInvalida) { this.toast.error(fechaInvalida); return; }
     this.enviando.set(true);
     try {
       const campana = await this.campanas.crear({
@@ -154,9 +163,10 @@ export class NuevaCampanaComponent {
         variables: this.paraEnviar(),
         filtro: this.filtro(),
         tarifaUsd: this.tarifaUsd(),
-        ...(this.programar() ? { programadaPara: new Date(this.programadaPara()).toISOString() } : {}),
+        ...(this.programar() ? { programadaPara: this.instante()! } : {}),
         elegiblesVistas: this.elegibles(),
       });
+      if (this.destroyRef.destroyed) return;
       this.toast.success(
         campana.estado === 'PROGRAMADA'
           ? `«${campana.nombre}» quedó programada.`
@@ -164,7 +174,7 @@ export class NuevaCampanaComponent {
       );
       this.creada.emit(campana);
     } catch (error) {
-      this.toast.error(mensajeDeError(error, 'No se pudo crear la campaña.'));
+      if (!this.destroyRef.destroyed) this.toast.error(mensajeDeError(error, 'No se pudo crear la campaña.'));
     } finally {
       this.enviando.set(false);
     }

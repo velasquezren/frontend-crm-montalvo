@@ -13,6 +13,7 @@
     "sello:build": "node tools/generar-sello-build.mjs",
     "sync:tipos": "node tools/generar-db-enums.mjs",
     "check:tipos": "node tools/generar-db-enums.mjs --check",
+    "check:tests": "tsc -p tsconfig.spec.json --noEmit",
     "check:skills": "node tools/verificar-skills.mjs"
   },
   "private": true,

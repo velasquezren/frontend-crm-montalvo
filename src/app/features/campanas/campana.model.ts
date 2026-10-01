@@ -1,4 +1,5 @@
 import { EstadoCampana, EstadoDestinatario, EstadoMensaje } from '../../core/api/db-enums';
+import { Temporal } from 'temporal-polyfill';
 import { BadgeVariant } from '../../shared/components/badge/badge.component';
 import { CategoriaCliente } from '../../shared/models/cliente-categoria.model';
 import { esNombreProvisional } from '../../shared/models/nombre-cliente';
@@ -11,6 +12,28 @@ import { ZONA_CLINICA } from '../actividades/zona-clinica';
  */
 
 export type { EstadoCampana, EstadoDestinatario };
+
+/** Espejo del límite de creación del backend. */
+export const MAX_DESTINATARIOS_CAMPANA = 2_000;
+
+/** El reloj del formulario es el de la clínica, independientemente del navegador. */
+export function instanteProgramado(valor: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(valor)) return null;
+  try {
+    return Temporal.PlainDateTime.from(valor).toZonedDateTime(ZONA_CLINICA).toInstant().toString();
+  } catch {
+    return null;
+  }
+}
+
+/** Validación UX; el backend vuelve a comprobar el horizonte de 30 días. */
+export function faltaProgramacion(instante: string | null, ahora = new Date()): string | null {
+  if (!instante) return 'Elige un día y una hora válidos en La Paz.';
+  const fecha = new Date(instante).getTime();
+  if (fecha <= ahora.getTime()) return 'Elige una hora futura para programar.';
+  if (fecha > ahora.getTime() + 30 * 24 * 60 * 60 * 1000) return 'Puedes programar hasta 30 días por adelantado.';
+  return null;
+}
 
 /** De dónde sale cada variable. Espejo de `VariableCampana` (backend, `campana.ts`). */
 export type VariableCampana =

@@ -7,7 +7,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
-import { Campana } from '../campanas/campana.model';
+import { Campana, MAX_DESTINATARIOS_CAMPANA } from '../campanas/campana.model';
 import { NuevaCampanaComponent } from '../campanas/nueva-campana/nueva-campana.component';
 
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
@@ -124,13 +124,13 @@ export class AudienciasPage {
   );
 
   /* ── Derivados ─────────────────────────────────────────────────── */
-  protected readonly resumen = computed(() => this.audiencia.value().resumen);
+  protected readonly resumen = computed(() => this.audiencia.hasValue() ? this.audiencia.value().resumen : paginaAudienciaVacia().resumen);
   /** Los pasos del embudo que aplican: «nunca escribió» solo si se pidió. */
   protected readonly motivos = computed(() =>
     MOTIVOS_EXCLUSION.filter(m => m.motivo !== 'SIN_CONVERSAR' || this.soloConversaron()),
   );
   protected readonly tarifaUsd = computed(() => Number(this.tarifa().replace(',', '.')));
-  protected readonly tarifaInvalida = computed(() => !Number.isFinite(this.tarifaUsd()) || this.tarifaUsd() < 0);
+  protected readonly tarifaInvalida = computed(() => !/^\d+(?:[.,]\d{1,4})?$/.test(this.tarifa().trim()) || this.tarifaUsd() < 0 || this.tarifaUsd() > 1);
   protected readonly costo = computed(() => costoMaximoUsd(this.resumen().elegibles, this.tarifaUsd()));
   /** «12 Gold · 35 Silver»: de las categorías ELEGIDAS, no siempre de las dos primeras. */
   protected readonly elegiblesPorCategoria = computed(() =>
@@ -144,6 +144,7 @@ export class AudienciasPage {
     if (this.audiencia.isLoading()) return 'Esperando la audiencia…';
     if (this.audiencia.error()) return 'No se pudo calcular la audiencia.';
     if (this.resumen().elegibles === 0) return 'Con estos filtros no queda nadie.';
+    if (this.resumen().elegibles > MAX_DESTINATARIOS_CAMPANA) return 'Acota la audiencia: cada campaña admite hasta 2000 pacientes.';
     if (this.tarifaInvalida()) return 'Corrige la tarifa de Meta.';
     return null;
   });
@@ -175,6 +176,7 @@ export class AudienciasPage {
   }));
 
   protected abrirNuevaCampana(): void {
+    if (!this.puedeLanzar() || this.motivoSinCampana()) return;
     this.cajon?.dispose();
     this.cajon = this.dialog.abrirCajon(this.nuevaCampanaTpl(), this.vcr, { onClose: () => (this.cajon = undefined) });
   }

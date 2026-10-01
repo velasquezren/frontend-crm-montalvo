@@ -25,6 +25,7 @@ Espera al backend en `http://localhost:3001`. Para levantarlo, ver [instalación
 
 ```bash
 npm run build   # check:tipos + check:skills + ng build — la compuerta real
+npm run check:tests        # también comprueba tipos de los archivos de pruebas
 npm test -- --watch=false  # Vitest, ejecución finita
 ```
 
@@ -36,6 +37,11 @@ npm test -- --watch=false  # Vitest, ejecución finita
 - **`check:skills`** verifica que los `.claude/skills/` sigan describiendo el
   código real: rutas citadas, roles, helpers exportados.
 - **`ng build`** compila.
+
+`.github/workflows/calidad.yml` ejecuta estas comprobaciones en PR y push a
+main. Clona el schema del backend en un SHA fijo para que check:tipos no se
+omita; actualizar ese SHA al cambiar enums. El workflow no despliega ni
+configura por sí solo una compuerta en Vercel.
 
 ## Dónde está lo demás
 

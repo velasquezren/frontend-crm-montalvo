@@ -1,8 +1,20 @@
 import { describe, expect, it } from 'vitest';
 
-import { accionesDe, avance, dentroDeHorarioEnvio, porcentaje, valoresPara } from './campana.model';
+import { accionesDe, avance, dentroDeHorarioEnvio, faltaProgramacion, instanteProgramado, porcentaje, valoresPara } from './campana.model';
 
 describe('campaña', () => {
+  it('interpreta el día y la hora en La Paz, incluso al cruzar medianoche UTC', () => {
+    expect(instanteProgramado('2026-10-01T23:30')).toBe('2026-10-02T03:30:00Z');
+    expect(instanteProgramado('2026-02-30T10:00')).toBeNull();
+    expect(instanteProgramado('2026-10-01T10:00Z')).toBeNull();
+  });
+
+  it('programar requiere una hora futura y no más de 30 días', () => {
+    const ahora = new Date('2026-10-01T14:00:00Z');
+    expect(faltaProgramacion('2026-10-01T14:00:00Z', ahora)).toContain('futura');
+    expect(faltaProgramacion('2026-11-01T14:00:00Z', ahora)).toContain('30 días');
+    expect(faltaProgramacion('2026-10-02T14:00:00Z', ahora)).toBeNull();
+  });
   /* Espejo de `parametrosPara` del backend: la vista previa tiene que decir lo que se manda. */
   it('rellena con el nombre de pila o el respaldo, y con el texto fijo', () => {
     const variables = [{ tipo: 'NOMBRE', respaldo: 'hola' }, { tipo: 'TEXTO', texto: ' 20 % ' }] as const;

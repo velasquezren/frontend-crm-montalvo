@@ -131,8 +131,13 @@ Se resuelve con el átomo, no maquetando el bloque en cada vista:
 }
 ```
 
-El orden importa: el error va **antes** de comprobar si hay datos, porque cuando la petición
-falla el recurso devuelve su `defaultValue` —una página vacía— y caería en el estado vacío.
+El orden importa: el error va **antes** de leer datos. En Angular 21, `.value()`
+puede lanzar cuando el recurso está en error, incluso con `defaultValue`.
+En derivados que se evalúan fuera de esa rama de la plantilla, comprobar
+`.hasValue()` antes de leer `.value()` y ofrecer un respaldo tipado. Véanse
+`NuevaCampanaComponent.lineas/plantillas` y `AudienciasPage.resumen`, con pruebas
+HTTP que fuerzan 502/503. Un fallo no debe convertirse en «no hay datos» ni
+interrumpir el render antes de mostrar el error y el botón de reintento.
 
 `npm run check:skills` falla si una vista usa `httpResource` y su plantilla no declara error.
 
