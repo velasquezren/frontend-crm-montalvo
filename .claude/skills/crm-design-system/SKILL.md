@@ -342,7 +342,8 @@ número, era que la misma forma decía tres cosas incompatibles. Elegí cuál es
 | Una **acción de contacto** (`<a>` a WhatsApp o `tel:`) | `.crm-accion-enlace` (+ `-whatsapp`). Son enlaces, no botones: abren otra app y se copian |
 | Una fila o tarjeta **vencida** | `.crm-vencida` — filo izquierdo, no fondo teñido |
 | Un **control segmentado** (Lista/Calendario, Bs/USD) | `.crm-segmento` + `.crm-segmento-opcion` (+ `-activo`). En una barra densa —la topbar— se le suma `.crm-segmento-compacto`, que solo reduce cuerpo y sube la opción activa a `--color-primary` para que se lea a 11px |
-| La **barra de pestañas** de una página (Finanzas, Servicios) | `.crm-segmento .crm-segmento-pestanas` — mide lo que sus etiquetas y scrollea; eran dos copias idénticas con sombra y tokens propios |
+| La **barra de pestañas** de una página (Finanzas, Servicios, Campañas) | `.crm-segmento .crm-segmento-pestanas` — mide lo que sus etiquetas y scrollea; eran dos copias idénticas con sombra y tokens propios |
+| El **cuerpo** de esas pestañas, que se quedan montadas | `.crm-pestanas-cuerpo` > `.crm-pestana-panel` (+ `.crm-pestana-panel-oculta` y `[attr.inert]` en la que no se mira). Aparta sin `display: none`: no rehace el layout al volver |
 | Una **acción en línea de texto** («Limpiar todos», «Ver adjunto», «Quitar») | `.crm-enlace` (+ `-critico`). El tamaño lo pone el contexto. No dentro de una burbuja de chat, que hereda su color |
 | La **línea de WhatsApp** de un chat | `.crm-linea` — punto en `secondary` (el token declarado para *indicadores*, no `primary`, que es de botones y estados activos) + nombre en voz baja. **No es cápsula:** la píldora es del estado y una línea es un canal |
 

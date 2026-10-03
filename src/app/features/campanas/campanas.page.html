@@ -1,210 +1,56 @@
 <!-- ══════════════════════════════════════════════════════════════════════
-     Campañas — qué se mandó, cómo va y qué pasó. Se lanzan desde Audiencias.
+     Campañas — a quién escribirle, qué se le mandó y qué logró.
+     Dos pestañas de un mismo trabajo; cada una es su componente.
      ══════════════════════════════════════════════════════════════════════ -->
+<div class="flex flex-col gap-5 w-full">
+  <header class="flex flex-col gap-3.5">
+    <app-page-header
+      title="Campañas"
+      subtitle="Mensajes de Marketing por WhatsApp: a quién escribirle hoy, y qué logró cada envío." />
 
-<app-page-header title="Campañas" subtitle="Envíos de Marketing a una audiencia, y lo que lograron.">
-  <a routerLink="/audiencias" class="crm-enlace text-sm">Armar una audiencia</a>
-</app-page-header>
+    <nav class="crm-segmento crm-segmento-pestanas" role="tablist" aria-label="Secciones de Campañas">
+      @for (t of tabs; track t.id) {
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="tabActiva() === t.id"
+          [attr.aria-controls]="'panel-' + t.id"
+          [id]="'tab-' + t.id"
+          (click)="cambiarTab(t.id)"
+          class="crm-segmento-opcion"
+          [class.crm-segmento-opcion-activo]="tabActiva() === t.id">
+          <app-icon [name]="t.icon" [size]="14" />
+          <span>{{ t.label }}</span>
+        </button>
+      }
+    </nav>
+  </header>
 
-@if (campanas.isLoading() && !hayCampanas()) {
-  <div class="bg-white rounded-2xl p-6 shadow-subtle flex flex-col gap-4">
-    @for (n of [1, 2, 3, 4]; track n) {
-      <app-loading-skeleton height="48px" />
+  <!-- `@if` decide si la pestaña EXISTE (y pide sus datos); la clase decide si
+       se ve. Ver `.crm-pestana-panel-oculta` en styles.css. -->
+  <main class="crm-pestanas-cuerpo">
+    @if (estaMontada('campanas')) {
+      <div
+        id="panel-campanas"
+        aria-labelledby="tab-campanas"
+        class="crm-pestana-panel"
+        [class.crm-pestana-panel-oculta]="tabActiva() !== 'campanas'"
+        [attr.inert]="tabActiva() === 'campanas' ? null : ''"
+        role="tabpanel">
+        <app-campanas-lista (armarAudiencia)="cambiarTab('audiencia')" />
+      </div>
     }
-  </div>
-} @else if (campanas.error()) {
-  <app-error-carga que="las campañas" (reintentar)="campanas.reload()" />
-} @else if (hayCampanas()) {
-  <app-table>
-    <thead>
-      <tr>
-        <th>Campaña</th>
-        <th>Estado</th>
-        <th class="text-right">Enviados</th>
-        <th class="text-right">Entregados</th>
-        <th class="text-right">Leídos</th>
-        <th class="text-right">Respondieron</th>
-        <th class="text-right">Compraron</th>
-        <th class="text-right">Costo</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (c of campanas.value().datos; track c.id) {
-        <tr class="cursor-pointer hover:bg-bg-light/40 transition-colors" (click)="abrir(c.id)">
-          <td>
-            <app-button variant="ghost" size="sm" [ariaLabel]="'Ver campaña ' + c.nombre" (clicked)="$event.stopPropagation(); abrir(c.id)">{{ c.nombre }}</app-button>
-            <div class="crm-meta mt-0.5">
-              <span>{{ c.plantilla }}</span>
-              <span>{{ c.linea.nombre }}</span>
-              <span>{{ c.createdAt | date: 'd MMM y' : '-0400' }}</span>
-            </div>
-          </td>
-          <td><app-badge [variant]="estadoCampana[c.estado].variante">{{ estadoCampana[c.estado].etiqueta }}</app-badge></td>
-          <td class="text-right tabular-nums">
-            {{ c.metricas.enviados }} / {{ c.metricas.total }}
-            <span class="campana-avance mt-1 ml-auto" aria-hidden="true">
-              <span class="campana-avance__relleno" [style.width.%]="avance(c.metricas)"></span>
-            </span>
-          </td>
-          <td class="text-right tabular-nums">{{ c.metricas.entregados }}</td>
-          <td class="text-right tabular-nums">{{ c.metricas.leidos }}</td>
-          <td class="text-right tabular-nums">{{ c.metricas.respondieron }}</td>
-          <td class="text-right tabular-nums">{{ c.metricas.compraron }}</td>
-          <td class="text-right tabular-nums">{{ c.metricas.costoEstimadoUsd | moneda }}</td>
-        </tr>
-      }
-    </tbody>
-  </app-table>
-  <app-paginator
-    [pagina]="campanas.value().pagina"
-    [totalPaginas]="campanas.value().totalPaginas"
-    [total]="campanas.value().total"
-    [limite]="campanas.value().limite"
-    (cambiar)="pagina.set($event)" />
-} @else {
-  <app-empty-state
-    icon="send"
-    title="Todavía no hay campañas"
-    description="Arma una audiencia en Audiencias y lánzala desde ahí: sale de a poco, en horario, y aquí ves qué logró." />
-}
 
-<ng-template #fichaTpl>
-  <app-drawer ancho="xl" titulo="Campaña" icono="send" (cerrar)="cerrar()">
-    <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-5">
-      @if (detalle.isLoading() && !detalle.hasValue()) {
-        <app-loading-skeleton height="88px" />
-        <app-loading-skeleton height="200px" />
-      } @else if (detalle.error()) {
-        <app-error-carga que="la campaña" (reintentar)="detalle.reload()" />
-      } @else if (detalle.hasValue()) {
-        @let c = detalle.value();
-        @let m = c.metricas;
-        @let acciones = accionesDe(c.estado);
-
-        <section class="flex flex-col gap-2">
-          <div class="flex items-center gap-2 min-w-0">
-            <h2 class="text-base font-bold text-text-dark truncate">{{ c.nombre }}</h2>
-            <app-badge class="shrink-0" [variant]="estadoCampana[c.estado].variante">{{ estadoCampana[c.estado].etiqueta }}</app-badge>
-          </div>
-          <div class="crm-meta">
-            <span>{{ c.plantilla }}</span>
-            <span>{{ c.linea.nombre }}</span>
-            <span>Lanzada por {{ c.creadaPor.nombre }}</span>
-            <span>{{ c.estado === 'PROGRAMADA' ? 'Empieza' : 'Desde' }} el {{ c.programadaPara | date: "d MMM y, HH:mm" : '-0400' }} (La Paz)</span>
-          </div>
-          @if (c.estado === 'ENVIANDO' || c.estado === 'PROGRAMADA') {
-            <div class="flex items-center gap-2" role="progressbar" [attr.aria-valuenow]="avance(m)" aria-valuemin="0" aria-valuemax="100" aria-label="Avance de la campaña">
-              <span class="campana-avance campana-avance--ancha"><span class="campana-avance__relleno" [style.width.%]="avance(m)"></span></span>
-              <span class="text-xs font-semibold tabular-nums text-text-dark shrink-0">{{ avance(m) }} %</span>
-            </div>
-          }
-          @if (c.estado === 'ENVIANDO' && !enHorario() && m.pendientes > 0) {
-            <p role="status" class="text-xs text-text-muted">
-              Fuera del horario de envío: las {{ m.pendientes }} pendientes salen desde las {{ horario.desdeHora }}:00 (hora de La Paz).
-            </p>
-          }
-          @if (c.estado === 'PAUSADA' && c.motivoPausa) {
-            <p role="alert" class="text-xs text-text-dark bg-critical-bg rounded-xl px-3 py-2">
-              La pausó el sistema: {{ c.motivoPausa }} Corrige eso y reanúdala; nadie quedó sin su turno.
-            </p>
-          }
-        </section>
-
-        @if (puedeControlar() && (acciones.pausar || acciones.reanudar || acciones.cancelar)) {
-          <div class="flex flex-wrap items-center gap-2">
-            @if (acciones.pausar) {
-              <app-button variant="secondary" size="sm" [loading]="ocupada()" (clicked)="pausar(c)">Pausar</app-button>
-            }
-            @if (acciones.reanudar) {
-              <app-button variant="primary" size="sm" [loading]="ocupada()" (clicked)="reanudar(c)">Reanudar</app-button>
-            }
-            @if (acciones.cancelar) {
-              @if (confirmandoCancelacion()) {
-                <span class="text-xs text-text-dark">¿Cancelarla? Las {{ m.pendientes }} pendientes no saldrán, y no se deshace.</span>
-                <app-button variant="critical" size="sm" [loading]="ocupada()" (clicked)="cancelar(c)">Sí, cancelar</app-button>
-                <app-button variant="ghost" size="sm" (clicked)="confirmandoCancelacion.set(false)">No</app-button>
-              } @else {
-                <app-button variant="ghost" size="sm" (clicked)="confirmandoCancelacion.set(true)">Cancelar campaña</app-button>
-              }
-            }
-          </div>
-        }
-
-        <!-- Lo que logró. Los porcentajes, sobre lo enviado: lo omitido nunca salió. -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <app-kpi-card label="Enviados" [valor]="m.enviados + ' / ' + m.total" icon="send" tono="primary" [compacto]="true"
-            [pie]="m.pendientes + ' pendientes · ' + m.omitidos + ' omitidas'" />
-          <app-kpi-card label="Entregados" [valor]="m.entregados" icon="check" tono="neutral" [compacto]="true"
-            [pie]="porcentaje(m.entregados, m.enviados) === null ? '—' : porcentaje(m.entregados, m.enviados) + ' % de lo enviado'" />
-          <app-kpi-card label="Leídos" [valor]="m.leidos" icon="check-check" tono="secondary" [compacto]="true"
-            [pie]="porcentaje(m.leidos, m.entregados) === null ? '—' : porcentaje(m.leidos, m.entregados) + ' % de lo entregado'" />
-          <app-kpi-card label="Respondieron" [valor]="m.respondieron" icon="message-circle" tono="primary" [compacto]="true"
-            pie="En los 7 días siguientes" />
-          <app-kpi-card label="Compraron" [valor]="m.compraron" icon="shopping-bag" tono="primary" [destacado]="true" [compacto]="true"
-            [pie]="(m.ingresoUsd | moneda) + ' en 30 días'" />
-          <app-kpi-card label="Costo estimado" [valor]="m.costoEstimadoUsd | moneda" icon="dollar-sign" tono="neutral" [compacto]="true"
-            [pie]="'Entregados × ' + c.tarifaUsd + ' $us'" />
-          <app-kpi-card label="Pidieron la baja" [valor]="m.bajas" icon="x-circle" tono="neutral" [compacto]="true"
-            pie="Después de recibirla" />
-          <app-kpi-card label="No entregados" [valor]="m.rechazadosMeta + m.fallidos" icon="alert-circle" tono="neutral" [compacto]="true"
-            [pie]="m.limiteMeta + ' por el tope de Meta por persona'" />
-        </div>
-        <p class="text-[11px] text-text-muted leading-relaxed">
-          «Compraron» cuenta a quien compró en los 30 días siguientes (FileMaker o CRM): dice que compró después,
-          no prueba que fue por la campaña.
-        </p>
-
-        <section class="flex flex-col gap-3">
-          <div class="flex items-center gap-2 overflow-x-auto" role="group" aria-label="Filtrar pacientes por estado">
-            @for (e of filtrosDestinatario; track e) {
-              <app-filter-chip size="sm" [active]="filtroDestinatario() === e" (clicked)="filtroDestinatario.set(e)">
-                {{ e ? estadoDestinatario[e] : 'Todas' }}
-              </app-filter-chip>
-            }
-          </div>
-          @if (destinatarios.isLoading() && destinatarios.value().datos.length === 0) {
-            <app-loading-skeleton height="160px" />
-          } @else if (destinatarios.error()) {
-            <app-error-carga que="las pacientes de la campaña" (reintentar)="destinatarios.reload()" />
-          } @else if (destinatarios.value().datos.length > 0) {
-            <app-table [dense]="true">
-              <thead>
-                <tr><th>Paciente</th><th>Categoría</th><th>Estado</th><th>Mensaje</th></tr>
-              </thead>
-              <tbody>
-                @for (d of destinatarios.value().datos; track d.id) {
-                  <tr>
-                    <td>
-                      <p class="font-medium text-text-dark leading-tight">{{ d.cliente | nombreCliente }}</p>
-                      <span class="crm-meta-clave text-[11px]">{{ d.cliente.telefono }}</span>
-                    </td>
-                    <td>
-                      <app-badge [variant]="categoriaBadge[d.cliente.categoria]" [icon]="categoriaIcono[d.cliente.categoria]">
-                        {{ categoriaLabel[d.cliente.categoria] }}
-                      </app-badge>
-                    </td>
-                    <td>
-                      <span class="text-xs text-text-dark">{{ estadoDestinatario[d.estado] }}</span>
-                      @if (d.motivo) {
-                        <span class="block text-[11px] text-text-muted">{{ d.motivo }}</span>
-                      }
-                    </td>
-                    <td class="text-xs text-text-muted">{{ entregaDe(d) }}</td>
-                  </tr>
-                }
-              </tbody>
-            </app-table>
-            <app-paginator
-              [pagina]="destinatarios.value().pagina"
-              [totalPaginas]="destinatarios.value().totalPaginas"
-              [total]="destinatarios.value().total"
-              [limite]="destinatarios.value().limite"
-              (cambiar)="paginaDestinatarios.set($event)" />
-          } @else {
-            <app-empty-state icon="users" title="Nadie en este estado" />
-          }
-        </section>
-      }
-    </div>
-  </app-drawer>
-</ng-template>
+    @if (estaMontada('audiencia')) {
+      <div
+        id="panel-audiencia"
+        aria-labelledby="tab-audiencia"
+        class="crm-pestana-panel"
+        [class.crm-pestana-panel-oculta]="tabActiva() !== 'audiencia'"
+        [attr.inert]="tabActiva() === 'audiencia' ? null : ''"
+        role="tabpanel">
+        <app-campana-audiencia (creada)="alCrearCampana($event)" />
+      </div>
+    }
+  </main>
+</div>

@@ -54,10 +54,12 @@ ventas o fichas completas. Asistente y administración pueden entregar resultado
 si además tienen asignada esa línea. Los permisos del servidor son la autoridad;
 el mapa vigente está en [PANORAMA](../../backend-crm-montalvo/docs/PANORAMA.md).
 
-### Campañas y audiencias
+### Campañas
 
-Administración puede consultar Audiencias y Campañas. Solo Super Admin puede
-lanzar, pausar, reanudar o cancelar una campaña. El lanzamiento muestra la
+Todo está en **Campañas**, con dos pestañas: **Campañas** (lo que se mandó y qué
+logró) y **Audiencia** (a quién conviene escribirle hoy, y desde ahí se lanza
+con «Crear campaña»). Administración puede consultar las dos. Solo Super Admin
+puede lanzar, pausar, reanudar o cancelar una campaña. El lanzamiento muestra la
 plantilla, sus variables, el número de destinatarias y un costo estimado con
 tarifa editable; cada campaña admite hasta 2.000 pacientes. Si la audiencia
 cambió de tamaño, debe revisarse antes de continuar.

@@ -4,8 +4,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { paginaVacia } from '../../../core/api/pagination.model';
-import { PlantillaResumen } from '../../conversaciones/conversacion.model';
+import { paginaVacia } from '../../../../core/api/pagination.model';
+import { PlantillaResumen } from '../../../conversaciones/conversacion.model';
 import { NuevaCampanaComponent } from './nueva-campana.component';
 
 const plantilla: PlantillaResumen = {

@@ -2,8 +2,8 @@ import { RespuestaPaginada, paginaVacia } from '../../core/api/pagination.model'
 import { CategoriaCliente } from '../../shared/models/cliente-categoria.model';
 
 /**
- * Audiencias: a quién mandarle una campaña HOY. Espejo de
- * `GET /audiencias` (`modules/audiencias` del backend), que decide todo: aquí
+ * La audiencia de una campaña: a quién mandarle HOY. Espejo de
+ * `GET /campanas/audiencia` (`AudienciasService` del backend), que decide todo: aquí
  * solo se pinta y se estima el costo.
  */
 

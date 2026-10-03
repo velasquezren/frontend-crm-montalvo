@@ -28,6 +28,30 @@ features/clientes/
 └── clientes.page.html     # plantilla sobre átomos compartidos
 ```
 
+### Un dominio con varias pestañas: una página, un componente por pestaña
+
+Finanzas y Campañas son así:
+
+```
+features/campanas/
+├── audiencia.model.ts / campana.model.ts   # un modelo por concepto
+├── campanas.service.ts                     # UN servicio para todo el dominio
+├── campanas.page.ts / .html                # cabecera + pestañas, nada más
+└── components/
+    ├── campana-audiencia/                  # pestaña «Audiencia»
+    ├── campanas-lista/                     # pestaña «Campañas» (+ su ficha)
+    └── nueva-campana/                      # cajón que lanza la audiencia
+```
+
+- La pestaña vive en la URL (`?tab=`): se comparte, sobrevive a F5 y Atrás la respeta.
+- Cada pestaña se monta al visitarla y se queda montada (`.crm-pestanas-cuerpo`,
+  `.crm-pestana-panel`, `.crm-pestana-panel-oculta` en `styles.css`, más
+  `[attr.inert]`): volver no pide datos de nuevo ni pierde los filtros.
+- Si un trabajo obliga a ir y volver entre dos entradas del menú, es UNA página.
+  Audiencias y Campañas nacieron separadas (2026-10-01) y se unieron dos días
+  después: la audiencia no tiene otro uso que lanzar una campaña. La ruta vieja
+  redirige con la pestaña puesta (`redirectTo` con `createUrlTree`).
+
 ## Servicio de dominio
 
 Dos tipos de método:
@@ -135,7 +159,7 @@ El orden importa: el error va **antes** de leer datos. En Angular 21, `.value()`
 puede lanzar cuando el recurso está en error, incluso con `defaultValue`.
 En derivados que se evalúan fuera de esa rama de la plantilla, comprobar
 `.hasValue()` antes de leer `.value()` y ofrecer un respaldo tipado. Véanse
-`NuevaCampanaComponent.lineas/plantillas` y `AudienciasPage.resumen`, con pruebas
+`NuevaCampanaComponent.lineas/plantillas` y `CampanaAudienciaComponent.resumen`, con pruebas
 HTTP que fuerzan 502/503. Un fallo no debe convertirse en «no hay datos» ni
 interrumpir el render antes de mostrar el error y el botón de reintento.
 

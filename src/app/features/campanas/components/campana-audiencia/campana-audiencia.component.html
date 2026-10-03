@@ -1,22 +1,9 @@
 <!-- ══════════════════════════════════════════════════════════════════════
-     Audiencias — a quién mandarle una campaña hoy.
+     Pestaña «Audiencia» de Campañas — a quién mandarle una campaña hoy.
      Cruza cuánto vale cada paciente con si conviene escribirle ahora. Todo lo
-     decide `GET /audiencias`; esta vista elige, pinta y estima. No envía.
+     decide `GET /campanas/audiencia`; aquí se elige, se pinta, se estima y,
+     si eres SUPER_ADMIN, se lanza.
      ══════════════════════════════════════════════════════════════════════ -->
-
-<app-page-header
-  title="Audiencias"
-  subtitle="A quién vale la pena mandarle una campaña hoy, y cuánto costaría.">
-  @if (puedeLanzar()) {
-    <app-button
-      icon="send"
-      [disabled]="!!motivoSinCampana()"
-      [title]="motivoSinCampana() ?? 'Lanzar una campaña de Marketing a estas ' + resumen().elegibles + ' pacientes'"
-      (clicked)="abrirNuevaCampana()">
-      Crear campaña
-    </app-button>
-  }
-</app-page-header>
 
 <!-- ── Quiénes: categorías, plazo y conversación ─────────────────────── -->
 <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
@@ -45,6 +32,16 @@
       <app-switch [(value)]="soloConversaron" ariaLabel="Solo quienes ya conversaron por WhatsApp" />
       <span class="text-xs text-text-dark">Solo quienes ya nos escribieron</span>
     </div>
+    <!-- Junto a lo que define la audiencia: se lanza a ESTAS pacientes. -->
+    @if (puedeLanzar()) {
+      <app-button
+        icon="send"
+        [disabled]="!!motivoSinCampana()"
+        [title]="motivoSinCampana() ?? 'Lanzar una campaña de Marketing a estas ' + resumen().elegibles + ' pacientes'"
+        (clicked)="abrirNuevaCampana()">
+        Crear campaña
+      </app-button>
+    }
   </div>
 </div>
 

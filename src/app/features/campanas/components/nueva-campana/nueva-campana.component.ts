@@ -1,26 +1,26 @@
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, linkedSignal, output, signal } from '@angular/core';
 
-import { mensajeDeError } from '../../../core/api/http-error';
-import { paginaVacia, RespuestaPaginada } from '../../../core/api/pagination.model';
-import { ToastService } from '../../../core/toast/toast.service';
-import { ButtonComponent } from '../../../shared/components/button/button.component';
-import { DrawerComponent } from '../../../shared/components/drawer/drawer.component';
-import { IconComponent } from '../../../shared/components/icon/icon.component';
-import { InputComponent } from '../../../shared/components/input/input.component';
-import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton/loading-skeleton.component';
-import { SelectComponent } from '../../../shared/components/select/select.component';
-import { SwitchComponent } from '../../../shared/components/switch/switch.component';
-import { MonedaPipe } from '../../../shared/pipes/moneda.pipe';
-import { PlantillaResumen } from '../../conversaciones/conversacion.model';
-import { ConversacionesService } from '../../conversaciones/conversaciones.service';
-import { VistaPreviaPlantillaComponent } from '../../conversaciones/components/vista-previa-plantilla/vista-previa-plantilla.component';
-import { etiquetaVariable, faltaParaEnviar } from '../../conversaciones/plantillas';
-import { LineaWhatsapp } from '../../lineas-whatsapp/linea-whatsapp.model';
-import { LineasWhatsappService } from '../../lineas-whatsapp/lineas-whatsapp.service';
-import { costoMaximoUsd } from '../../audiencias/audiencia.model';
-import { Campana, faltaProgramacion, FiltroCampana, instanteProgramado, MAX_DESTINATARIOS_CAMPANA, valoresPara, VariableCampana } from '../campana.model';
-import { CampanasService } from '../campanas.service';
+import { mensajeDeError } from '../../../../core/api/http-error';
+import { paginaVacia, RespuestaPaginada } from '../../../../core/api/pagination.model';
+import { ToastService } from '../../../../core/toast/toast.service';
+import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { DrawerComponent } from '../../../../shared/components/drawer/drawer.component';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { InputComponent } from '../../../../shared/components/input/input.component';
+import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
+import { SelectComponent } from '../../../../shared/components/select/select.component';
+import { SwitchComponent } from '../../../../shared/components/switch/switch.component';
+import { MonedaPipe } from '../../../../shared/pipes/moneda.pipe';
+import { PlantillaResumen } from '../../../conversaciones/conversacion.model';
+import { ConversacionesService } from '../../../conversaciones/conversaciones.service';
+import { VistaPreviaPlantillaComponent } from '../../../conversaciones/components/vista-previa-plantilla/vista-previa-plantilla.component';
+import { etiquetaVariable, faltaParaEnviar } from '../../../conversaciones/plantillas';
+import { LineaWhatsapp } from '../../../lineas-whatsapp/linea-whatsapp.model';
+import { LineasWhatsappService } from '../../../lineas-whatsapp/lineas-whatsapp.service';
+import { costoMaximoUsd } from '../../audiencia.model';
+import { Campana, faltaProgramacion, FiltroCampana, instanteProgramado, MAX_DESTINATARIOS_CAMPANA, valoresPara, VariableCampana } from '../../campana.model';
+import { CampanasService } from '../../campanas.service';
 
 /** Cómo se rellena una variable, mientras se edita. */
 interface VariableEnEdicion {

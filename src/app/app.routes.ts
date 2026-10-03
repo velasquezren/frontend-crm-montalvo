@@ -1,4 +1,5 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Router, Routes } from '@angular/router';
 
 import { authGuard } from './core/auth/auth.guard';
 import { exigeEntregaResultados, exigeRol } from './core/auth/roles';
@@ -121,14 +122,16 @@ export const routes: Routes = [
           import('./features/clientes/clientes.page').then(m => m.ClientesPage),
       },
       {
-        /* Lista pacientes de toda la clínica: administración, igual que el backend. */
+        /* Audiencias fue su propia página: ahora es una pestaña de Campañas.
+           Redirige con la pestaña puesta para no romper un marcador. */
         path: 'audiencias',
-        canActivate: [exigeRol('ADMIN')],
-        loadComponent: () =>
-          import('./features/audiencias/audiencias.page').then(m => m.AudienciasPage),
+        redirectTo: () => inject(Router).createUrlTree(['/campanas'], { queryParams: { tab: 'audiencia' } }),
+        pathMatch: 'full',
       },
       {
-        /* Lanzar y controlar es de SUPER_ADMIN (lo exige el backend); verlas, de administración. */
+        /* Audiencia y campañas en una página. Ver (y la audiencia, que lista
+           pacientes de toda la clínica) es de administración; lanzar y
+           controlar, de SUPER_ADMIN. El backend lo exige. */
         path: 'campanas',
         canActivate: [exigeRol('ADMIN')],
         loadComponent: () =>

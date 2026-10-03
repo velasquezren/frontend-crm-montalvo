@@ -2,64 +2,126 @@ import '@angular/compiler';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute, convertToParamMap, ParamMap, provideRouter, Route, Router, UrlTree } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { routes } from '../../app.routes';
 import { paginaVacia } from '../../core/api/pagination.model';
 import { AuthService } from '../../core/auth/auth.service';
-import { CampanasPage } from './campanas.page';
+import { paginaAudienciaVacia } from './audiencia.model';
+import { CampanasPage, tabCampanasDe } from './campanas.page';
 
-describe('ficha de campañas y errores de carga', () => {
-  let fixture: ComponentFixture<CampanasPage>;
+/**
+ * Audiencias y Campañas eran dos páginas; ahora son dos pestañas de una. Lo
+ * que se fija aquí es lo que se rompería sin avisar: qué pestaña pide sus datos,
+ * que volver a una no los pida otra vez, que la URL mande y que crear una
+ * campaña lleve a su ficha.
+ */
+describe('Campañas: audiencia y campañas en una página', () => {
   let http: HttpTestingController;
+  let query: BehaviorSubject<ParamMap>;
+  let navegar: ReturnType<typeof vi.fn>;
+
   async function asentar() {
     for (let i = 0; i < 4; i++) { await Promise.resolve(); TestBed.tick(); }
   }
-  beforeEach(async () => {
-    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+
+  function montar(params: Record<string, string> = {}) {
+    query = new BehaviorSubject(convertToParamMap(params));
     TestBed.configureTestingModule({ providers: [
       provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
       { provide: AuthService, useValue: { isSuperAdmin: signal(false) } },
+      { provide: ActivatedRoute, useValue: { queryParamMap: query, snapshot: { queryParamMap: query.value } } },
     ] });
     http = TestBed.inject(HttpTestingController);
-    fixture = TestBed.createComponent(CampanasPage);
+    navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(CampanasPage);
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  const pidioLista = () => http.match(r => r.url.endsWith('/campanas'));
+  const pidioAudiencia = () => http.match(r => r.url.endsWith('/campanas/audiencia'));
+
+  beforeEach(() => TestBed.resetTestingModule());
+  afterEach(() => { http.verify(); vi.restoreAllMocks(); });
+
+  it('abre en «Campañas» y no pide la audiencia hasta que se la mira', async () => {
+    const fixture = montar();
+    await asentar();
+    expect(pidioLista()).toHaveLength(1);
+    expect(pidioAudiencia()).toHaveLength(0);
+    expect(fixture.nativeElement.querySelector('#panel-audiencia')).toBeNull();
+    fixture.destroy();
+  });
+
+  it('volver a una pestaña no la vuelve a pedir: se queda montada y solo se aparta', async () => {
+    const fixture = montar();
+    await asentar();
+    pidioLista().forEach(r => r.flush(paginaVacia()));
+
+    fixture.componentInstance['cambiarTab']('audiencia');
     fixture.detectChanges();
     await asentar();
-  });
-  afterEach(() => { fixture.destroy(); http.verify(); vi.restoreAllMocks(); vi.useRealTimers(); });
+    pidioAudiencia().forEach(r => r.flush(paginaAudienciaVacia()));
+    // La línea de WhatsApp no se pide aquí: el cajón de nueva campaña no está abierto.
+    expect(navegar).toHaveBeenCalledWith([], expect.objectContaining({ queryParams: { tab: 'audiencia' }, replaceUrl: true }));
 
-  it('un listado fallido no rompe los derivados y muestra el reintento', async () => {
-    http.expectOne(r => r.url.endsWith('/campanas')).flush({}, { status: 503, statusText: 'Unavailable' });
+    fixture.componentInstance['cambiarTab']('campanas');
+    fixture.detectChanges();
     await asentar();
-    expect(fixture.componentInstance['hayCampanas']()).toBe(false);
-    expect(fixture.nativeElement.textContent).toContain('Reintentar');
+    expect(pidioLista()).toHaveLength(0);
+    const audiencia: HTMLElement = fixture.nativeElement.querySelector('#panel-audiencia');
+    expect(audiencia.classList).toContain('crm-pestana-panel-oculta');
+    expect(audiencia.hasAttribute('inert')).toBe(true);
+    expect(navegar).toHaveBeenLastCalledWith([], expect.objectContaining({ queryParams: { tab: null } }));
+    fixture.destroy();
   });
 
-  it('refresca entregas de una campaña terminada; pausa en pestaña oculta y limpia al cerrar', async () => {
-    http.expectOne(r => r.url.endsWith('/campanas')).flush(paginaVacia());
-    const c = fixture.componentInstance;
-    c['seleccionadaId'].set('c1');
+  it('la URL manda: `?tab=audiencia` abre ahí, y Atrás vuelve a «Campañas»', async () => {
+    const fixture = montar({ tab: 'audiencia' });
     await asentar();
-    // La ficha se consume al proyectar el drawer: aquí basta su contrato de estado.
-    http.expectOne(r => r.url.endsWith('/campanas/c1')).flush({ id: 'c1', estado: 'TERMINADA' });
-    http.expectOne(r => r.url.endsWith('/destinatarios')).flush(paginaVacia());
+    expect(pidioAudiencia()).toHaveLength(1);
+    expect(pidioLista()).toHaveLength(0);
+
+    query.next(convertToParamMap({}));
+    fixture.detectChanges();
     await asentar();
-    const visibilidad = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
-    vi.advanceTimersByTime(60_000);
+    expect(fixture.componentInstance['tabActiva']()).toBe('campanas');
+    expect(pidioLista()).toHaveLength(1);
+    fixture.destroy();
+  });
+
+  it('crear una campaña lleva a «Campañas» con su ficha (`?id=`)', async () => {
+    const fixture = montar({ tab: 'audiencia' });
     await asentar();
-    const refrescos = http.match(() => true);
-    expect(refrescos).toHaveLength(3);
-    for (const r of refrescos) r.flush(r.request.url.endsWith('/campanas/c1') ? { id: 'c1', estado: 'TERMINADA' } : paginaVacia());
+    pidioAudiencia().forEach(r => r.flush(paginaAudienciaVacia()));
+
+    fixture.componentInstance['alCrearCampana']({ id: 'c-nueva' } as never);
+    fixture.detectChanges();
     await asentar();
-    visibilidad.mockReturnValue('hidden');
-    vi.advanceTimersByTime(60_000);
-    await asentar();
-    http.expectNone(() => true);
-    c['cerrar']();
-    await asentar();
-    visibilidad.mockReturnValue('visible');
-    vi.advanceTimersByTime(60_000);
-    await asentar();
-    http.expectNone(() => true);
+    expect(fixture.componentInstance['tabActiva']()).toBe('campanas');
+    expect(navegar).toHaveBeenLastCalledWith([], expect.objectContaining({ queryParams: { tab: null, id: 'c-nueva' } }));
+    pidioLista().forEach(r => r.flush(paginaVacia()));
+    fixture.destroy();
+  });
+
+  it('una pestaña desconocida en la URL cae en «Campañas»', () => {
+    expect(tabCampanasDe('audiencia')).toBe('audiencia');
+    expect(tabCampanasDe('nada')).toBe('campanas');
+    expect(tabCampanasDe(null)).toBe('campanas');
+  });
+
+  /* Un marcador a la página vieja no puede llevar a una pantalla en blanco. */
+  it('/audiencias redirige a la pestaña «Audiencia» de Campañas', () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    const buscar = (lista: readonly Route[]): Route | undefined =>
+      lista.flatMap(r => [r, ...(r.children ? [buscar(r.children)].filter(Boolean) as Route[] : [])]).find(r => r.path === 'audiencias');
+    const ruta = buscar(routes);
+    expect(typeof ruta?.redirectTo).toBe('function');
+    const destino = TestBed.runInInjectionContext(() => (ruta!.redirectTo as () => UrlTree)());
+    expect(TestBed.inject(Router).serializeUrl(destino)).toBe('/campanas?tab=audiencia');
   });
 });

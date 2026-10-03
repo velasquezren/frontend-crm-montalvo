@@ -717,6 +717,50 @@ tr:hover .celda-sticky {
   flex-shrink: 0;
 }
 
+/* ── El cuerpo de una página con pestañas (Finanzas, Campañas) ───────────
+   Cada pestaña se monta al visitarla (`@if`) y después se queda montada:
+   volver a ella no vuelve a pedir sus datos ni pierde lo que se eligió.
+   Vivía como `.finanzas-tab-panel` dentro de Finanzas; Campañas necesitaba lo
+   mismo, y la copia es la que deja de ocultarse bien al primer ajuste.
+
+   **La pestaña que no se mira se aparta, NO se apaga.** Con `display: none`
+   (`[hidden]`) el navegador tira el layout del panel y lo rehace entero al
+   volver: se reinician las animaciones CSS, se pierde el scroll horizontal de
+   las tablas anchas y un `@defer (on viewport)` se dispara justo al cambiar
+   de pestaña. Los tres se ven como un parpadeo. `visibility: hidden` conserva
+   el layout y lo saca igual del árbol de accesibilidad y del orden de
+   tabulación (junto con `[attr.inert]` en el panel). El `position: absolute`
+   con alto cero impide que el panel oculto alargue la página. */
+.crm-pestanas-cuerpo {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.crm-pestana-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* El panel oculto mide 0 de alto y, sin esto, un flex en columna aplastaría
+   su contenido para caber: justo el rehacer-el-layout que se quiere evitar. */
+.crm-pestana-panel > * {
+  flex-shrink: 0;
+}
+
+.crm-pestana-panel-oculta {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 @media (max-width: 768px) {
   .crm-segmento-pestanas {
     width: 100%;
