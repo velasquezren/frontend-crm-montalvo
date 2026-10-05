@@ -37,6 +37,15 @@ Dos skills, y casi cualquier cambio necesita los dos:
 Documentan **cicatrices**, no teoría. Si una regla parece excesiva, probablemente
 estás a punto de reintroducir el bug que la motivó.
 
+**Skill de terceros: `web-design-guidelines`** (de
+[vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills), copiado tal
+cual). Revisa una vista contra las Web Interface Guidelines de Vercel: accesibilidad,
+foco, formularios, contenido, móvil. **Si contradice a este repo, manda este repo**:
+el sistema de diseño (`crm-design-system`) decide colores, radios y sombras, y los
+textos van en español con mayúscula solo al inicio, no en «Title Case». No se usa
+`frontend-design` de Anthropic a propósito: pide paletas y tipografías «distintivas»,
+y aquí la paleta es cerrada y la hace cumplir el build.
+
 ## Comandos
 
 ```bash
