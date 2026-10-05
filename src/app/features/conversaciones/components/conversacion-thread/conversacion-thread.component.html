@@ -393,7 +393,9 @@
                  cualquier imagen de cualquier servidor, y las URLs firmadas
                  viejas que se pegaban en el texto ya habían caducado, así que se
                  veían rotas. La media real viaja por `mediaKey` (arriba). -->
-            @if (item.mensaje.contenido) {
+            @if (item.mensaje.interaccion; as interaccion) {
+              <app-interaccion-preview [habilitada]="true" [historial]="true" [interaccion]="interaccion" />
+            } @else if (item.mensaje.contenido) {
               <p class="bubble-text" [innerHTML]="item.mensaje.contenido | whatsappMarkdown"></p>
             }
 
