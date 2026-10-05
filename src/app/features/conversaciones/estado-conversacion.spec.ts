@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ContadoresInbox, ConversacionResumen, contadoresTrasResponder, describirCierre, duenaDelChatLibre, estaSinResponder } from './conversacion.model';
 
-const CONTADORES: ContadoresInbox = { total: 10, sinAsignar: 2, misChats: 5, sinResponder: 4, cerradas: 7 };
+const CONTADORES: ContadoresInbox = { total: 10, sinAsignar: 2, misChats: 5, sinResponder: 4, cerradas: 7, esperandoHumano: 0, enAtencion: 0 };
 const CHAT = {
   id: 'chat-1', updatedAt: '2026-09-30T15:00:00.000Z', esperandoRespuesta: true, cerradaEn: null,
   mensajes: [{ id: 'm1', direccion: 'ENTRANTE', contenido: 'Hola', createdAt: '2026-09-30T15:00:00.000Z' }],

@@ -3,6 +3,7 @@ import type { InteraccionVista } from './components/interaccion-preview/interacc
 import { Rol } from '../../core/api/db-enums';
 import { DatosExtra } from '../../core/api/datos-extra';
 import { ZONA_CLINICA } from '../actividades/zona-clinica';
+import type { AtencionFila, ContextoAtencion } from './atencion-humana';
 
 import { EstadoMensaje, TipoMensaje } from '../../core/api/db-enums';
 
@@ -121,6 +122,12 @@ export interface ConversacionResumen {
    * le contesta la clínica. Ver `estado-conversacion.ts` del backend.
    */
   readonly cerradaEn?: string | null;
+  /**
+   * La solicitud de atención humana viva, o null. La decide el servidor
+   * (estado, motivo, prioridad); ver `atencion-humana.ts`. Opcional porque una
+   * fila construida por el envío optimista no la trae.
+   */
+  readonly atencion?: AtencionFila | null;
 }
 
 export interface ConversacionDetalle extends Omit<ConversacionResumen, 'mensajes'> {
@@ -128,6 +135,10 @@ export interface ConversacionDetalle extends Omit<ConversacionResumen, 'mensajes
   readonly mensajes: readonly MensajeApi[];
   /** Quién la cerró; null con `cerradaEn` = la cerró el sistema por inactividad. */
   readonly cerradaPor?: { readonly id: string; readonly nombre: string } | null;
+  /** El contexto del traspaso a una persona: qué pidió, qué eligió, desde cuándo espera. */
+  readonly atencion?: ContextoAtencion | null;
+  /** La automatización no escribe en este chat hasta que alguien la reanude a propósito. */
+  readonly automatizacionPausadaEn?: string | null;
 }
 
 /**
@@ -198,7 +209,7 @@ export interface PlantillaAgente {
  * Filtros de la vista del inbox. Espejo de `TABS_INBOX` del backend.
  * Las cuatro primeras son de trabajo (solo abiertas); `CERRADAS` es el archivo.
  */
-export const FILTROS_INBOX = ['TODAS', 'SIN_RESPONDER', 'SIN_ASIGNAR', 'MIS_CHATS', 'CERRADAS'] as const;
+export const FILTROS_INBOX = ['TODAS', 'SIN_RESPONDER', 'SIN_ASIGNAR', 'MIS_CHATS', 'CERRADAS', 'ATENCION'] as const;
 export type FiltroInbox = (typeof FILTROS_INBOX)[number];
 
 /** Un valor que llega por URL solo cuenta si es una pestaña que existe. */
@@ -217,6 +228,10 @@ export interface ContadoresInbox {
   readonly misChats: number;
   readonly sinResponder: number;
   readonly cerradas: number;
+  /** Pidieron una persona y nadie la tomó todavía. */
+  readonly esperandoHumano: number;
+  /** Solicitudes que alguien está atendiendo. Con la anterior, la pestaña «Atención». */
+  readonly enAtencion: number;
 }
 
 /** Filtros de vista que viajan al servidor con cada petición del listado. */

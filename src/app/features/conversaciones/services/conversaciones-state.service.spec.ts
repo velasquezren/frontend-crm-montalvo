@@ -29,7 +29,7 @@ const CHAT: ConversacionDetalle = {
 };
 const PAGINA: PaginaInbox = {
   datos: [CHAT], total: 1, pagina: 1, limite: 50, totalPaginas: 1,
-  contadores: { total: 1, sinAsignar: 0, misChats: 1, sinResponder: 0, cerradas: 0 },
+  contadores: { total: 1, sinAsignar: 0, misChats: 1, sinResponder: 0, cerradas: 0, esperandoHumano: 0, enAtencion: 0 },
 };
 
 describe('F07 · sincronización de conversaciones con igual fecha y cantidad', () => {
@@ -225,7 +225,7 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     responder('/conversaciones/chat-1/resumen', { conversacion: CHAT, contadores: PAGINA.contadores });
     await pendiente;
     TestBed.tick();
-    responder('/conversaciones', { ...PAGINA, datos: [], total: 0, contadores: { total: 0, misChats: 0, sinAsignar: 0, sinResponder: 0, cerradas: 0 } });
+    responder('/conversaciones', { ...PAGINA, datos: [], total: 0, contadores: { total: 0, misChats: 0, sinAsignar: 0, sinResponder: 0, cerradas: 0, esperandoHumano: 0, enAtencion: 0 } });
     await app.whenStable();
     expect(state.detalle.value()).toBeNull();
     expect(state.conversacionesFiltradas()).toEqual([]);
@@ -239,7 +239,7 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     TestBed.tick();
     responder('/conversaciones/chat-1/resumen', { conversacion: CHAT, contadores: PAGINA.contadores });
     await pendiente;
-    responder('/conversaciones', { ...PAGINA, datos: [], total: 0, contadores: { total: 0, misChats: 0, sinAsignar: 0, sinResponder: 0, cerradas: 0 } });
+    responder('/conversaciones', { ...PAGINA, datos: [], total: 0, contadores: { total: 0, misChats: 0, sinAsignar: 0, sinResponder: 0, cerradas: 0, esperandoHumano: 0, enAtencion: 0 } });
     responder('/lineas-whatsapp', { datos: [], total: 0, pagina: 1, limite: 100, totalPaginas: 1 });
     await app.whenStable();
     expect(state.seleccionadaId()).toBeNull();
@@ -314,6 +314,57 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     const sinGold = http.expectOne(req => req.url === `${API_URL}/conversaciones`);
     expect(sinGold.request.params.has('categoria')).toBe(false);
     sinGold.flush(structuredClone(PAGINA));
+    await app.whenStable();
+  });
+
+  /* Si otra persona tomó la solicitud un instante antes, lo que tiene que verse
+     es la verdad del servidor, no el botón que se acaba de pulsar. */
+  it('tomar una solicitud que ya tomó otra: avisa y vuelve a leer hilo y fila', async () => {
+    const toast = TestBed.inject(ToastService);
+    const error = vi.spyOn(toast, 'error');
+
+    const toma = state.cambiarAtencion('tomar');
+    const post = http.expectOne(req => req.url === `${API_URL}/conversaciones/chat-1/atencion/tomar`);
+    expect(post.request.method).toBe('POST');
+    expect(state.cambiandoAtencion()).toBe('tomar');
+    post.flush({ statusCode: 409, message: 'Ya la está atendiendo Ana.' }, { status: 409, statusText: 'Conflict' });
+    await toma;
+    TestBed.tick();
+    expect(state.cambiandoAtencion()).toBeNull();
+    expect(error.mock.calls[0][0]).toContain('Ya la está atendiendo Ana.');
+    responder('/conversaciones/chat-1', structuredClone(CHAT));
+    responder('/conversaciones/chat-1/resumen', { conversacion: structuredClone(CHAT), contadores: PAGINA.contadores });
+    await app.whenStable();
+  });
+
+  it('si se dejó el chat mientras viajaba la petición, la respuesta no recarga ningún hilo', async () => {
+    const resolucion = state.cambiarAtencion('resolver');
+    state.seleccionadaId.set(null);
+    http.expectOne(req => req.url === `${API_URL}/conversaciones/chat-1/atencion/resolver`)
+      .flush({ id: 'chat-1', estado: null, tomadaEn: null, tomadaPor: null, automatizacionPausadaEn: FECHA });
+    await resolucion;
+    TestBed.tick();
+    http.expectNone(req => req.url === `${API_URL}/conversaciones/chat-1`);
+    /* La fila sí se pone al día: el número de «Atención» tiene que bajar. */
+    responder('/conversaciones/chat-1/resumen', { conversacion: structuredClone(CHAT), contadores: PAGINA.contadores });
+    await app.whenStable();
+  });
+
+  /* «Atención» se ordena por espera y prioridad: un aviso en vivo no puede
+     subir una fila al tope. Se le vuelve a pedir el orden al servidor. */
+  it('en «Atención» un aviso en vivo recarga la lista en vez de reordenarla en memoria', async () => {
+    state.filtroTab.set('ATENCION');
+    TestBed.tick();
+    const lista = http.expectOne(req => req.url === `${API_URL}/conversaciones`);
+    expect(lista.request.params.get('tab')).toBe('ATENCION');
+    lista.flush(structuredClone(PAGINA));
+    await app.whenStable();
+
+    const refresco = state.refrescarFilaPorRealtime('chat-1');
+    responder('/conversaciones/chat-1/resumen', { conversacion: structuredClone(CHAT), contadores: PAGINA.contadores });
+    await refresco;
+    TestBed.tick();
+    responder('/conversaciones', structuredClone(PAGINA));
     await app.whenStable();
   });
 

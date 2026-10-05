@@ -51,7 +51,7 @@ function detalle(base: ConversacionResumen, cuantos: number): ConversacionDetall
 
 const PAGINA: PaginaInbox = {
   datos: [FILA_A, FILA_B, FILA_C], total: 3, pagina: 1, limite: 50, totalPaginas: 1,
-  contadores: { total: 3, sinAsignar: 0, misChats: 3, sinResponder: 0, cerradas: 0 },
+  contadores: { total: 3, sinAsignar: 0, misChats: 3, sinResponder: 0, cerradas: 0, esperandoHumano: 0, enAtencion: 0 },
 };
 
 describe('apertura inmediata de una conversación', () => {

@@ -1,4 +1,5 @@
 import { validarPaginaInbox, validarResumenInbox } from './validar-canal';
+import type { AccionAtencion, EstadoDeAtencion } from './atencion-humana';
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, QueryParams, ResourceRequest } from '../../core/api/api.service';
@@ -165,6 +166,16 @@ export class ConversacionesService {
 
   reabrir(conversacionId: string): Promise<EstadoConversacion> {
     return this.api.post<EstadoConversacion>(`/conversaciones/${conversacionId}/reabrir`, {});
+  }
+
+  /**
+   * Transiciones de la atención humana. Las valida el servidor (permiso,
+   * línea, estado vigente, concurrencia): un 409 aquí es «otra persona llegó
+   * antes» o «ya no está pendiente», no un fallo.
+   */
+  cambiarAtencion(conversacionId: string, accion: AccionAtencion): Promise<EstadoDeAtencion> {
+    const ruta = accion === 'reanudar' ? 'automatizacion/reanudar' : `atencion/${accion}`;
+    return this.api.post<EstadoDeAtencion>(`/conversaciones/${conversacionId}/${ruta}`, {});
   }
 
   /** Plantillas aprobadas de la WABA — para escribirle a un paciente fuera de la ventana de 24h. */

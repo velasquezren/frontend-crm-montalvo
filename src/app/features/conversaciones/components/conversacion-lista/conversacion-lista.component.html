@@ -113,7 +113,7 @@
        las cerradas ninguna está marcada: lo marca el interruptor. -->
   <div class="sidebar-filters">
     <div class="tabs-inbox flex items-end justify-around pt-1.5" role="group" aria-label="Pestañas del inbox">
-      @for (p of pestanas; track p.tab; let primera = $first) {
+      @for (p of pestanas(); track p.tab; let primera = $first) {
         @if (!primera) {
           <div class="tab-divisor self-center w-px h-6 bg-border/50 shrink-0"></div>
         }
@@ -123,10 +123,10 @@
           [attr.aria-pressed]="state.filtroTab() === p.tab"
           [title]="p.ayuda"
           [class]="state.filtroTab() === p.tab ? 'text-primary font-bold border-primary' : 'text-text-muted hover:text-text-dark font-medium border-transparent'"
-          class="flex flex-col items-center gap-1 px-3 pb-2 -mb-px border-b-2 cursor-pointer">
+          class="flex-1 min-w-0 flex flex-col items-center gap-1 px-1.5 pb-2 -mb-px border-b-2 cursor-pointer">
           <span class="text-xs leading-tight">{{ p.etiqueta }}</span>
           <span class="crm-contador" [class.crm-contador-activo]="state.filtroTab() === p.tab">
-            {{ state.stats()[p.contador] }}
+            {{ p.contador(state.stats()) }}
           </span>
         </button>
       }
@@ -150,6 +150,15 @@
       Gold
     </app-filter-chip>
   </div>
+
+  <!-- Dentro de «Atención», los dos números que la componen: cuántas esperan
+       a alguien y cuántas ya se están atendiendo. Del servidor, como todos. -->
+  @if (state.filtroTab() === 'ATENCION') {
+    <p class="atencion-resumen crm-meta" role="status">
+      <span>{{ state.stats().esperandoHumano }} {{ state.stats().esperandoHumano === 1 ? 'espera' : 'esperan' }} a una persona</span>
+      <span>{{ state.stats().enAtencion }} en atención</span>
+    </p>
+  }
 
   <!-- Lista de conversaciones -->
   <div class="sidebar-list">
@@ -224,9 +233,24 @@
                 <app-conversacion-preview [mensaje]="chat.mensajes[0]" />
               </div>
 
-              <!-- Tiempo esperando respuesta + conteo de NO LEÍDOS -->
+              <!-- Tiempo esperando respuesta + conteo de NO LEÍDOS. Una solicitud de
+                   atención manda sobre el reloj de «Sin responder»: dos relojes en
+                   la misma fila no dicen nada. Color solo si es prioritaria. -->
               <div class="flex items-center gap-1.5 shrink-0">
-                @if (tiempoEsperando(chat); as espera) {
+                @if (chat.atencion; as atencion) {
+                  @if (atencion.estado === 'ESPERANDO') {
+                    <app-badge
+                      [variant]="atencion.prioridad === 'NORMAL' ? 'info' : 'critical'"
+                      icon="user"
+                      [title]="motivoCorto[atencion.motivo] + ': espera desde hace ' + tiempoDeEspera(atencion.solicitadaEn)">
+                      {{ motivoCorto[atencion.motivo] }} · {{ tiempoDeEspera(atencion.solicitadaEn) }}
+                    </app-badge>
+                  } @else if (atencion.tomadaPor; as quien) {
+                    <app-badge variant="neutral" icon="user" [title]="'En atención por ' + quien.nombre">
+                      {{ primerNombre(quien.nombre) }}
+                    </app-badge>
+                  }
+                } @else if (tiempoEsperando(chat); as espera) {
                   <app-badge
                     [variant]="esperaLarga(chat) ? 'critical' : 'info'"
                     icon="clock">{{ espera }}</app-badge>
@@ -254,7 +278,10 @@
           </div>
         </button>
       } @empty {
-        @if (viendoCerradas() && !state.busqueda().trim()) {
+        @if (state.filtroTab() === 'ATENCION' && !state.busqueda().trim()) {
+          <app-empty-state icon="check-circle" title="Nadie espera a una persona"
+            description="Cuando una paciente pida hablar con recepción o envíe una solicitud, aparecerá aquí primero." />
+        } @else if (viendoCerradas() && !state.busqueda().trim()) {
           <app-empty-state icon="check-circle" title="Ninguna cerrada"
             description="Cierra un chat resuelto desde su cabecera. Si la paciente vuelve a escribir, se reabre solo." />
         } @else {

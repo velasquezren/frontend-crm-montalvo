@@ -19,6 +19,15 @@ import { cubreRol } from '../../../core/auth/roles';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ToastService } from '../../../core/toast/toast.service';
 import { mensajeDeError } from '../../../core/api/http-error';
+import { AccionAtencion } from '../atencion-humana';
+
+/** Lo que dice el aviso tras cada transición de atención. */
+const AVISO_ATENCION: Readonly<Record<AccionAtencion, string>> = {
+  tomar: 'La estás atendiendo. Las demás lo ven en su bandeja.',
+  liberar: 'Vuelve a la espera, con su tiempo original.',
+  resolver: 'Sale de «Atención». La automatización sigue en pausa en este chat.',
+  reanudar: 'Las respuestas automáticas vuelven a funcionar en este chat.',
+};
 import { cambiosDeFicha, valoresDeFicha } from '../../clientes/ficha-paciente';
 import { ClientesService } from '../../clientes/clientes.service';
 import {
@@ -58,7 +67,7 @@ const PAGINA_VACIA: PaginaInbox = {
   pagina: 1,
   limite: 50,
   totalPaginas: 1,
-  contadores: { total: 0, sinAsignar: 0, misChats: 0, sinResponder: 0, cerradas: 0 },
+  contadores: { total: 0, sinAsignar: 0, misChats: 0, sinResponder: 0, cerradas: 0, esperandoHumano: 0, enAtencion: 0 },
 };
 
 /**
@@ -649,6 +658,14 @@ export class ConversacionesStateService {
     if (filtros !== this.filtros()) return respuesta.conversacion;
     const { conversacion, contadores } = respuesta;
 
+    /* «Atención» no ordena por actividad sino por espera y prioridad: subir la
+       fila al tope mentiría sobre a quién atender primero. Ahí se le pide el
+       orden al servidor. */
+    if (filtros.tab === 'ATENCION') {
+      this.inbox.reload();
+      return conversacion;
+    }
+
     /* Fuera de las páginas siguientes en los dos casos: si vuelve, sube al
        tope; si no, es que ya no va. */
     this.paginasExtra.update(lista => lista.filter(c => c.id !== conversacionId));
@@ -833,6 +850,34 @@ export class ConversacionesStateService {
       this.toastService.error(mensajeDeError(err, cerrar ? 'No se pudo cerrar la conversación.' : 'No se pudo reabrir la conversación.'));
     } finally {
       this.cambiandoEstado.set(false);
+    }
+  }
+
+  /** La transición de atención humana en curso, para el `loading` de su botón. */
+  readonly cambiandoAtencion = signal<AccionAtencion | null>(null);
+
+  /**
+   * Tomar, liberar o resolver una solicitud de atención, o reanudar la
+   * automatización. Lo valida el servidor; aquí solo se refleja.
+   *
+   * Pase lo que pase se vuelve a leer la fila y el detalle: si otra persona la
+   * tomó antes (409), lo que se tiene que ver es la verdad del servidor —«En
+   * atención por Ana»—, no el botón que se acaba de pulsar. Si mientras tanto
+   * se abrió otro chat, el detalle no se toca: la respuesta es de este.
+   */
+  async cambiarAtencion(accion: AccionAtencion, id = this.seleccionadaId()): Promise<void> {
+    if (!id || this.cambiandoAtencion()) return;
+
+    this.cambiandoAtencion.set(accion);
+    try {
+      await this.conversacionesService.cambiarAtencion(id, accion);
+      this.toastService.success(AVISO_ATENCION[accion]);
+    } catch (err) {
+      this.toastService.error(mensajeDeError(err, 'No se pudo actualizar la solicitud de atención.'));
+    } finally {
+      this.cambiandoAtencion.set(null);
+      if (this.seleccionadaId() === id) this.detalle.reload();
+      void this.refrescarFilaPorRealtime(id);
     }
   }
 

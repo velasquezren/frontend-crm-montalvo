@@ -44,7 +44,7 @@ const DETALLE_B: ConversacionDetalle = { ...FILA_B, mensajes: [mensaje('b-1')] }
 
 const PAGINA: PaginaInbox = {
   datos: [FILA_A, FILA_B], total: 2, pagina: 1, limite: 50, totalPaginas: 1,
-  contadores: { total: 2, sinAsignar: 0, misChats: 2, sinResponder: 0, cerradas: 0 },
+  contadores: { total: 2, sinAsignar: 0, misChats: 2, sinResponder: 0, cerradas: 0, esperandoHumano: 0, enAtencion: 0 },
 };
 
 /** Lo que devuelve el POST: el mensaje ya persistido, con id e instante reales. */

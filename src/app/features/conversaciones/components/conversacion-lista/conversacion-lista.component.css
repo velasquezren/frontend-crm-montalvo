@@ -119,7 +119,9 @@
 @media (max-width: 768px) {
   .tabs-inbox {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    /* Cuatro o cinco columnas iguales: «Atención» solo está cuando hay solicitudes. */
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
     gap: 2px;
     justify-content: stretch;
   }
@@ -182,4 +184,10 @@
 .nuevo-chat-btn:focus-visible {
   color: var(--color-primary);
   background: var(--color-bg-light);
+}
+
+/* Los dos números de «Atención», bajo el buscador: datos de apoyo, no estados. */
+.atencion-resumen {
+  padding: 6px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
 }

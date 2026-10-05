@@ -25,13 +25,26 @@ import {
 } from '../../conversacion.model';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 import { ConversacionPreviewComponent } from './conversacion-preview.component';
+import { MOTIVO_ATENCION_CORTO, primerNombre, tiempoDeEspera } from '../../atencion-humana';
 
 interface PestanaInbox {
   readonly tab: FiltroInbox;
   readonly etiqueta: string;
-  readonly contador: keyof ContadoresInbox;
+  readonly contador: (c: ContadoresInbox) => number;
   readonly ayuda: string;
 }
+
+/**
+ * «Atención»: quien pidió una persona, o mandó algo que hay que revisar. El
+ * número son las solicitudes vivas (en espera + en atención), del servidor y con
+ * el mismo alcance que la lista; dentro, las que esperan van primero.
+ */
+const PESTANA_ATENCION: PestanaInbox = {
+  tab: 'ATENCION',
+  etiqueta: 'Atención',
+  contador: c => c.esperandoHumano + c.enAtencion,
+  ayuda: 'Pidieron una persona o enviaron algo para revisar. Primero las que nadie tomó.',
+};
 
 /**
  * Panel lateral izquierdo con la bandeja de entrada (Inbox).
@@ -132,12 +145,27 @@ export class ConversacionListaComponent {
 
   /* ── Pestañas y archivo ─────────────────────────────────────────── */
   /** Las pestañas de trabajo, con el contador que les corresponde. */
-  protected readonly pestanas: readonly PestanaInbox[] = [
-    { tab: 'TODAS', etiqueta: 'Todas', contador: 'total', ayuda: 'Todos los chats abiertos' },
-    { tab: 'SIN_RESPONDER', etiqueta: 'Sin responder', contador: 'sinResponder', ayuda: 'La paciente escribió y nadie le contestó todavía' },
-    { tab: 'SIN_ASIGNAR', etiqueta: 'Sin asignar', contador: 'sinAsignar', ayuda: 'Abiertos sin agente responsable' },
-    { tab: 'MIS_CHATS', etiqueta: 'Mis chats', contador: 'misChats', ayuda: 'Abiertos y asignados a ti' },
+  private readonly pestanasDeTrabajo: readonly PestanaInbox[] = [
+    { tab: 'TODAS', etiqueta: 'Todas', contador: c => c.total, ayuda: 'Todos los chats abiertos' },
+    { tab: 'SIN_RESPONDER', etiqueta: 'Sin responder', contador: c => c.sinResponder, ayuda: 'La paciente escribió y nadie le contestó todavía' },
+    { tab: 'SIN_ASIGNAR', etiqueta: 'Sin asignar', contador: c => c.sinAsignar, ayuda: 'Abiertos sin agente responsable' },
+    { tab: 'MIS_CHATS', etiqueta: 'Mis chats', contador: c => c.misChats, ayuda: 'Abiertos y asignados a ti' },
   ];
+
+  /**
+   * «Atención» va primera y solo aparece cuando hay solicitudes (o si está
+   * elegida): mientras las interacciones de WhatsApp estén apagadas no nace
+   * ninguna, y una pestaña siempre en cero solo sería ruido en la barra.
+   */
+  protected readonly pestanas = computed<readonly PestanaInbox[]>(() =>
+    PESTANA_ATENCION.contador(this.state.stats()) > 0 || this.state.filtroTab() === 'ATENCION'
+      ? [PESTANA_ATENCION, ...this.pestanasDeTrabajo]
+      : this.pestanasDeTrabajo,
+  );
+
+  protected readonly motivoCorto = MOTIVO_ATENCION_CORTO;
+  protected readonly tiempoDeEspera = tiempoDeEspera;
+  protected readonly primerNombre = primerNombre;
 
   protected readonly viendoCerradas = computed(() => this.state.filtroTab() === 'CERRADAS');
 
