@@ -51,7 +51,12 @@
 .crm-atencion-disclosure {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
+  /* Del alto de «Tomar atención» y «Resolver» (32 px): con solo el chevron en el móvil
+     medía 30×22, por debajo del mínimo de WCAG 2.2 AA (24 px) para un objetivo táctil. */
+  min-height: 32px;
+  min-width: 32px;
   padding: 4px 8px;
   border-radius: 9999px;
   font-size: 12px;

@@ -14,7 +14,7 @@ import { ToastService } from './toast.service';
   imports: [IconComponent, ButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="fixed top-4 right-4 sm:top-5 sm:right-5 w-[calc(100%-2rem)] sm:w-auto sm:max-w-sm z-50 flex flex-col gap-2.5 pointer-events-none">
+    <div class="fixed top-4 right-4 sm:top-5 sm:right-5 w-[calc(100%-2rem)] sm:w-auto sm:max-w-sm z-50 flex flex-col gap-2.5 pointer-events-none" role="region" aria-label="Avisos" aria-live="polite">
       @for (toast of toasts(); track toast.id) {
         <div
           class="pointer-events-auto flex items-start gap-3.5 p-4 rounded-2xl bg-white border border-border text-text-dark shadow-lifted transition-all duration-200 animate-toast-slide">

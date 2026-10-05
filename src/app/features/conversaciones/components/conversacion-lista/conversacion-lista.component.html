@@ -227,30 +227,37 @@
             <span class="crm-linea mt-1" [title]="chat.linea.nombre">
               <span>{{ chat.linea.nombre }}</span>
             </span>
+            <!-- La solicitud de atención (motivo y espera) tiene su propia fila: junto al
+                 último mensaje lo dejaba en tres letras —y lo que la paciente escribió
+                 DESPUÉS de pedir una persona es lo que más importa leer—, y junto a la
+                 línea recortaba su nombre, que en varias líneas es lo que distingue el
+                 chat. Manda sobre el reloj de «Sin responder»: dos relojes en la misma
+                 tarjeta no dicen nada. Color solo si es prioritaria. -->
+            @if (chat.atencion; as atencion) {
+              <div class="mt-1.5">
+                @if (atencion.estado === 'ESPERANDO') {
+                  <app-badge
+                    [variant]="atencion.prioridad === 'NORMAL' ? 'info' : 'critical'"
+                    icon="user"
+                    [title]="motivoCorto[atencion.motivo] + ': espera desde hace ' + tiempoDeEspera(atencion.solicitadaEn)">
+                    {{ motivoCorto[atencion.motivo] }} · {{ tiempoDeEspera(atencion.solicitadaEn) }}
+                  </app-badge>
+                } @else if (atencion.tomadaPor; as quien) {
+                  <app-badge variant="neutral" icon="user" [title]="'En atención por ' + quien.nombre">
+                    En atención · {{ primerNombre(quien.nombre) }}
+                  </app-badge>
+                }
+              </div>
+            }
             <!-- Último mensaje + badge de agente -->
             <div class="flex items-center justify-between gap-2 mt-1">
               <div class="flex-1 min-w-0">
                 <app-conversacion-preview [mensaje]="chat.mensajes[0]" />
               </div>
 
-              <!-- Tiempo esperando respuesta + conteo de NO LEÍDOS. Una solicitud de
-                   atención manda sobre el reloj de «Sin responder»: dos relojes en
-                   la misma fila no dicen nada. Color solo si es prioritaria. -->
+              <!-- Tiempo esperando respuesta + conteo de NO LEÍDOS. -->
               <div class="flex items-center gap-1.5 shrink-0">
-                @if (chat.atencion; as atencion) {
-                  @if (atencion.estado === 'ESPERANDO') {
-                    <app-badge
-                      [variant]="atencion.prioridad === 'NORMAL' ? 'info' : 'critical'"
-                      icon="user"
-                      [title]="motivoCorto[atencion.motivo] + ': espera desde hace ' + tiempoDeEspera(atencion.solicitadaEn)">
-                      {{ motivoCorto[atencion.motivo] }} · {{ tiempoDeEspera(atencion.solicitadaEn) }}
-                    </app-badge>
-                  } @else if (atencion.tomadaPor; as quien) {
-                    <app-badge variant="neutral" icon="user" [title]="'En atención por ' + quien.nombre">
-                      {{ primerNombre(quien.nombre) }}
-                    </app-badge>
-                  }
-                } @else if (tiempoEsperando(chat); as espera) {
+                @if (!chat.atencion && tiempoEsperando(chat); as espera) {
                   <app-badge
                     [variant]="esperaLarga(chat) ? 'critical' : 'info'"
                     icon="clock">{{ espera }}</app-badge>

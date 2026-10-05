@@ -12,7 +12,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { httpResource } from '@angular/common/http';
+import { HttpErrorResponse, httpResource } from '@angular/common/http';
 import { Router } from '@angular/router';
 
 import { cubreRol } from '../../../core/auth/roles';
@@ -869,15 +869,23 @@ export class ConversacionesStateService {
     if (!id || this.cambiandoAtencion()) return;
 
     this.cambiandoAtencion.set(accion);
+    /* Sin respuesta del servidor (sin red) no hay verdad nueva que leer, y recargar el
+       hilo ahora lo reemplazaría por «No se pudieron cargar los mensajes»: la persona
+       perdería el chat por un fallo de conexión. Al volver la red, el socket recarga
+       lo autoritativo por su cuenta. */
+    let sinRespuesta = false;
     try {
       await this.conversacionesService.cambiarAtencion(id, accion);
       this.toastService.success(AVISO_ATENCION[accion]);
     } catch (err) {
+      sinRespuesta = err instanceof HttpErrorResponse && err.status === 0;
       this.toastService.error(mensajeDeError(err, 'No se pudo actualizar la solicitud de atención.'));
     } finally {
       this.cambiandoAtencion.set(null);
-      if (this.seleccionadaId() === id) this.detalle.reload();
-      void this.refrescarFilaPorRealtime(id);
+      if (!sinRespuesta) {
+        if (this.seleccionadaId() === id) this.detalle.reload();
+        void this.refrescarFilaPorRealtime(id);
+      }
     }
   }
 

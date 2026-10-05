@@ -337,6 +337,23 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     await app.whenStable();
   });
 
+  /* Sin red no hay respuesta que leer; recargar el hilo ahora lo cambiaría por el error de carga. */
+  it('sin red: avisa, deja de cargar y NO recarga el hilo abierto', async () => {
+    const toast = TestBed.inject(ToastService);
+    const error = vi.spyOn(toast, 'error');
+
+    const toma = state.cambiarAtencion('tomar');
+    http.expectOne(req => req.url === `${API_URL}/conversaciones/chat-1/atencion/tomar`)
+      .error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
+    await toma;
+    TestBed.tick();
+
+    expect(state.cambiandoAtencion()).toBeNull();
+    expect(error).toHaveBeenCalledTimes(1);
+    http.expectNone(req => req.url === `${API_URL}/conversaciones/chat-1`);
+    http.expectNone(req => req.url === `${API_URL}/conversaciones/chat-1/resumen`);
+  });
+
   it('si se dejó el chat mientras viajaba la petición, la respuesta no recarga ningún hilo', async () => {
     const resolucion = state.cambiarAtencion('resolver');
     state.seleccionadaId.set(null);

@@ -298,15 +298,24 @@ solicitud (backend: `crm-backend-module`, «Atención humana»). Aquí solo se p
   aviso en vivo recarga la lista** en vez de subir la fila al tope.
 - **La tarjeta** cambia el reloj de «Sin responder» por el de la solicitud
   (`atencion.solicitadaEn`, que no se reinicia al recargar). Color solo si es
-  prioritaria; en atención, el primer nombre de quien la tomó, en neutro.
+  prioritaria; en atención, «En atención · Ana» en neutro. **Va en su propia fila,
+  entre la línea y el último mensaje**: junto al mensaje lo dejaba en tres letras
+  (y lo que la paciente escribe DESPUÉS de pedir una persona es lo que hay que leer)
+  y junto a la línea recortaba su nombre, que en varias líneas distingue el chat.
 - **`<app-atencion-humana>`** bajo la cabecera del hilo, antes de la campaña: una
   línea con motivo y espera, o «En atención por Ana», y las acciones; el contexto
   (lo que se le ofreció, lo que eligió, los datos del Flow, su último mensaje) se
   despliega a pedido. Nunca dice «cita confirmada»: un Flow de cita es una
   solicitud.
-- Las cuatro transiciones van por `state.cambiarAtencion()`. Pase lo que pase se
-  vuelve a leer la fila y el detalle: un 409 («Ya la atiende Ana») tiene que
-  terminar mostrando a Ana, no el botón pulsado.
+- Las cuatro transiciones van por `state.cambiarAtencion()`. Con respuesta del servidor
+  —también un 409— se vuelve a leer la fila y el detalle: «Ya la atiende Ana» tiene que
+  terminar mostrando a Ana, no el botón pulsado. **Sin respuesta (sin red) NO se
+  recarga el hilo**: la recarga fallaría y lo cambiaría por «No se pudieron cargar los
+  mensajes»; al volver la red el socket recarga lo autoritativo.
+- **Validado con un navegador real** (Chrome 151, datos sintéticos, dos sesiones): orden y
+  contadores, toma simultánea y 409, liberar sin reiniciar el reloj, resolver y estado
+  vacío en vivo, error de red y reconexión, 390 px sin desborde y teclado con foco
+  visible. Los avisos (`<app-toast-container>`) son una región `aria-live`.
 - Textos y etiquetas en `atencion-humana.ts`; **ninguna regla de negocio**: el
   estado, el motivo y la prioridad los decide el servidor.
 
