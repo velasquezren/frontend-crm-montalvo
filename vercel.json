@@ -1,5 +1,10 @@
 {
   "version": 2,
+  "git": {
+    "deploymentEnabled": {
+      "codex/meta-interacciones-fase-2": false
+    }
+  },
   "outputDirectory": "dist/montalvo-crm-frontend/browser",
   "rewrites": [
     {

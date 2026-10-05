@@ -1,4 +1,5 @@
 import { LineaWhatsapp } from '../lineas-whatsapp/linea-whatsapp.model';
+import type { InteraccionVista } from './components/interaccion-preview/interaccion-preview.component';
 import { Rol } from '../../core/api/db-enums';
 import { DatosExtra } from '../../core/api/datos-extra';
 import { ZONA_CLINICA } from '../actividades/zona-clinica';
@@ -22,6 +23,7 @@ export type EstadoEnvioMensaje = EstadoMensaje;
 /** Tipo de contenido del mensaje. */
 /** Respuestas de GET /conversaciones y GET /conversaciones/:id. */
 export interface MensajeApi {
+  readonly interaccion?: InteraccionVista;
   readonly id: string;
   readonly direccion: 'ENTRANTE' | 'SALIENTE';
   readonly contenido: string;
@@ -342,4 +344,3 @@ export function esperandoDesde(c: ConversacionResumen): Date | null {
 export type ItemHilo =
   | { readonly tipo: 'separador-fecha'; readonly fecha: string }
   | { readonly tipo: 'mensaje'; readonly mensaje: MensajeApi };
-

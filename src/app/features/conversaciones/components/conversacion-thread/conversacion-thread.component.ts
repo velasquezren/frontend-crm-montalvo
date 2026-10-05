@@ -30,6 +30,7 @@ import { ConversacionesStateService } from '../../services/conversaciones-state.
 import { ConversacionResumen, describirCierre, MensajeApi } from '../../conversacion.model';
 import { textoExtra } from '../../../../core/api/datos-extra';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
+import { InteraccionPreviewComponent } from '../interaccion-preview/interaccion-preview.component';
 
 
 /**
@@ -40,6 +41,7 @@ import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipe
 @Component({
   selector: 'app-conversacion-thread',
   imports: [
+    InteraccionPreviewComponent,
     CajaImagenPipe,
     InicialesClientePipe,
     NombreClientePipe,
