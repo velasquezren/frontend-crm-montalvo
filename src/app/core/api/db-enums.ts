@@ -26,7 +26,7 @@ export type EstadoLead = 'NUEVO' | 'CONTACTADO' | 'CONVERTIDO' | 'PERDIDO';
 
 export type DireccionMensaje = 'ENTRANTE' | 'SALIENTE';
 
-export type MotivoAtencion = 'SOLICITUD_EXPLICITA' | 'SOLICITUD_CITA' | 'REVISION';
+export type MotivoAtencion = 'EMERGENCIA' | 'SOLICITUD_EXPLICITA' | 'SOLICITUD_CITA' | 'REVISION';
 
 export type TipoMensaje = 'TEXTO' | 'IMAGEN' | 'DOCUMENTO' | 'AUDIO' | 'VIDEO' | 'STICKER';
 

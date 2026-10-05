@@ -237,14 +237,18 @@
               <div class="mt-1.5">
                 @if (atencion.estado === 'ESPERANDO') {
                   <app-badge
-                    [variant]="atencion.prioridad === 'NORMAL' ? 'info' : 'critical'"
-                    icon="user"
+                    [variant]="varianteDeAtencion(atencion.prioridad)"
+                    [icon]="iconoDeAtencion(atencion.prioridad)"
                     [title]="motivoCorto[atencion.motivo] + ': espera desde hace ' + tiempoDeEspera(atencion.solicitadaEn)">
                     {{ motivoCorto[atencion.motivo] }} · {{ tiempoDeEspera(atencion.solicitadaEn) }}
                   </app-badge>
                 } @else if (atencion.tomadaPor; as quien) {
-                  <app-badge variant="neutral" icon="user" [title]="'En atención por ' + quien.nombre">
-                    En atención · {{ primerNombre(quien.nombre) }}
+                  <!-- Una emergencia sigue marcada mientras se atiende, como el bloque del chat. -->
+                  <app-badge
+                    [variant]="atencion.prioridad === 'CRITICA' ? 'critical' : 'neutral'"
+                    [icon]="iconoDeAtencion(atencion.prioridad)"
+                    [title]="(atencion.prioridad === 'CRITICA' ? 'Emergencia en atención por ' : 'En atención por ') + quien.nombre">
+                    {{ atencion.prioridad === 'CRITICA' ? 'Emergencia' : 'En atención' }} · {{ primerNombre(quien.nombre) }}
                   </app-badge>
                 }
               </div>

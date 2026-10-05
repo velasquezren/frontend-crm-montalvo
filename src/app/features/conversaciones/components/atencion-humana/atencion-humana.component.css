@@ -17,6 +17,17 @@
   box-shadow: inset 3px 0 0 var(--color-primary);
 }
 
+/* Emergencia: el `critical` de la paleta (negro, no rojo: ver crm-design-system),
+   en espera y también en atención —hasta que se resuelva sigue siendo eso—. */
+.crm-atencion--critica {
+  background: var(--color-critical-bg);
+  box-shadow: inset 3px 0 0 var(--color-critical);
+}
+
+.crm-atencion--critica .crm-atencion-icono {
+  color: var(--color-critical);
+}
+
 .crm-atencion-barra {
   display: flex;
   flex-wrap: wrap;

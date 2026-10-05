@@ -7,6 +7,7 @@ import { ZONA_CLINICA } from '../../../actividades/zona-clinica';
 import {
   ACCION_ATENCION,
   ContextoAtencion,
+  iconoDeAtencion,
   MOTIVO_ATENCION,
   primerNombre,
   tiempoDeEspera,
@@ -49,6 +50,7 @@ export class AtencionHumanaComponent {
   protected readonly acciones = ACCION_ATENCION;
   protected readonly primerNombre = primerNombre;
   protected readonly tiempoDeEspera = tiempoDeEspera;
+  protected readonly iconoDeAtencion = iconoDeAtencion;
 
   /** Liberar es de quien la tomó, o de quien reparte el trabajo (el servidor lo vuelve a exigir). */
   protected readonly puedeLiberar = computed(() => {
