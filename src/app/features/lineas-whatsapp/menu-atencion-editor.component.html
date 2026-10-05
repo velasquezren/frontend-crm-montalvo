@@ -1,0 +1,191 @@
+<app-drawer ancho="xl" icono="menu" titulo="Menú de atención" [subtitulo]="nombre()" (cerrar)="cerrar.emit()">
+  @if (datos.isLoading() && !datos.hasValue()) {
+    <div class="flex-1 p-5 space-y-3">
+      <app-loading-skeleton height="2.75rem" />
+      <app-loading-skeleton shape="text" height="12rem" />
+    </div>
+  } @else if (datos.error()) {
+    <div class="flex-1 p-5">
+      <app-error-carga que="el menú de esta línea" (reintentar)="datos.reload()" />
+    </div>
+  } @else {
+    <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+      <div class="crm-menu-rejilla p-5">
+        <div class="min-w-0 space-y-5">
+          <!-- Vacío: la línea todavía no tiene menú. No se carga uno de ejemplo:
+               el saludo y los textos los escribe la clínica. -->
+          @if (!datos.value()?.menu) {
+            <p class="crm-menu-aviso">
+              <app-icon name="message-circle" [size]="14" class="shrink-0 text-primary" />
+              <span>Esta línea todavía no tiene menú. Empieza por el saludo y agrega las opciones que la clínica atiende.</span>
+            </p>
+          }
+          @if (datos.value()?.enviosHabilitados === false) {
+            <p class="crm-menu-aviso" role="status">
+              <app-icon name="alert-circle" [size]="14" class="shrink-0" />
+              <span>Los envíos interactivos están apagados en el servidor: aunque el menú esté encendido, no sale hasta activarlos.</span>
+            </p>
+          }
+          @if (erroresGuardados().length) {
+            <div class="crm-menu-errores" role="alert">
+              <p class="font-semibold">El menú guardado no se está enviando:</p>
+              <ul>@for (e of erroresGuardados(); track e) { <li>{{ e }}</li> }</ul>
+            </div>
+          }
+
+          <!-- Encender: va primero y con su consecuencia escrita, como el envío de la línea. -->
+          <div class="flex items-start justify-between gap-4 p-3.5 rounded-xl border border-border bg-bg-workspace">
+            <div class="min-w-0">
+              <p class="text-xs font-semibold text-text-dark">Enviar el menú a quien escribe</p>
+              <p class="text-[11px] text-text-muted leading-relaxed mt-0.5">
+                Al empezar una conversación (si nadie del equipo le escribió en las últimas 24 h). Apagado, la línea funciona como siempre.
+              </p>
+            </div>
+            <app-switch class="mt-0.5" [value]="borrador().activo" (valueChange)="cambiar({ activo: $event })" ariaLabel="Enviar el menú a quien escribe" />
+          </div>
+
+          <app-input
+            label="Saludo"
+            [multiline]="true" [rows]="3"
+            placeholder="Ej.: Hola, gracias por escribir a la clínica. ¿En qué te ayudamos?…"
+            [value]="borrador().saludo"
+            (valueChange)="cambiar({ saludo: $event })"
+            [error]="excede(borrador().saludo, limites.texto)" />
+
+          <section aria-labelledby="menu-opciones-titulo" class="space-y-3">
+            <div class="flex items-baseline justify-between gap-3">
+              <h3 id="menu-opciones-titulo" class="text-sm font-semibold text-text-dark">Opciones</h3>
+              <span class="text-[11px] text-text-muted tabular-nums">{{ borrador().opciones.length }}/{{ limites.opciones }}</span>
+            </div>
+
+            <ol class="space-y-3">
+              @for (o of borrador().opciones; track o.uid; let i = $index; let primera = $first; let ultima = $last) {
+                <li class="crm-menu-opcion" [class.crm-menu-opcion--critica]="o.tipo === 'EMERGENCIA'">
+                  <div class="flex items-center gap-2">
+                    <app-icon [name]="tipos[o.tipo].icono" [size]="14" class="crm-menu-opcion-icono shrink-0" />
+                    <span class="min-w-0 text-xs font-semibold text-text-dark truncate">{{ tipos[o.tipo].nombre }}</span>
+                    <span class="ml-auto flex items-center gap-1 shrink-0">
+                      <app-button variant="ghost" size="xs" [circle]="true" icon="chevron-up" [ariaLabel]="'Subir ' + (o.titulo || tipos[o.tipo].nombre)" [disabled]="primera" (clicked)="mover(i, -1)" />
+                      <app-button variant="ghost" size="xs" [circle]="true" icon="chevron-down" [ariaLabel]="'Bajar ' + (o.titulo || tipos[o.tipo].nombre)" [disabled]="ultima" (clicked)="mover(i, 1)" />
+                      @if (o.tipo !== 'PERSONA') {
+                        <app-button variant="ghost" size="xs" [circle]="true" icon="trash" [ariaLabel]="'Quitar ' + (o.titulo || tipos[o.tipo].nombre)" (clicked)="quitar(i)" />
+                      }
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-text-muted leading-relaxed">{{ tipos[o.tipo].efecto }}</p>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <app-input
+                      label="Texto del botón"
+                      [value]="o.titulo"
+                      (valueChange)="cambiarOpcion(i, { titulo: $event })"
+                      [error]="excede(o.titulo, limites.titulo)" />
+                    <app-input
+                      label="Descripción (opcional)"
+                      placeholder="Solo se ve si sale como lista…"
+                      [value]="o.descripcion ?? ''"
+                      (valueChange)="cambiarOpcion(i, { descripcion: $event })"
+                      [error]="excede(o.descripcion, limites.descripcion)" />
+                  </div>
+                  <app-input
+                    [label]="tipos[o.tipo].respuesta.etiqueta"
+                    [multiline]="true" [rows]="o.tipo === 'EMERGENCIA' || o.tipo === 'RESPUESTA' ? 3 : 2"
+                    [value]="o.respuesta ?? ''"
+                    (valueChange)="cambiarOpcion(i, { respuesta: $event })"
+                    [error]="excede(o.respuesta, limites.texto)" />
+                  <p class="text-[11px] text-text-muted leading-relaxed">{{ tipos[o.tipo].respuesta.ayuda }}</p>
+                </li>
+              }
+            </ol>
+
+            <!-- Quitar borra lo escrito en esa opción: se puede deshacer hasta guardar. -->
+            @if (quitada(); as q) {
+              <div class="crm-menu-aviso justify-between" role="status">
+                <span class="min-w-0">Quitaste «{{ q.opcion.titulo || tipos[q.opcion.tipo].nombre }}».</span>
+                <app-button variant="ghost" size="sm" icon="rotate-cw" (clicked)="deshacerQuitar()">Deshacer</app-button>
+              </div>
+            }
+
+            @if (disponibles().length) {
+              <div class="flex flex-col sm:flex-row sm:items-end gap-2">
+                <app-select class="flex-1" label="Agregar una opción" ariaLabel="Tipo de opción a agregar" [value]="tipoNuevo()" (valueChange)="tipoNuevo.set($event)">
+                  <option value="">Elige qué hace…</option>
+                  @for (t of disponibles(); track t) {
+                    <option [value]="t">{{ tipos[t].nombre }}</option>
+                  }
+                </app-select>
+                <app-button variant="secondary" size="sm" icon="plus" [disabled]="!tipoNuevo()" (clicked)="agregar()">Agregar</app-button>
+              </div>
+            }
+          </section>
+
+          @if (conPromociones()) {
+            <section aria-labelledby="menu-promos-titulo" class="space-y-3">
+              <div class="flex items-baseline justify-between gap-3">
+                <h3 id="menu-promos-titulo" class="text-sm font-semibold text-text-dark">Promociones vigentes</h3>
+                <span class="text-[11px] text-text-muted tabular-nums">{{ borrador().promociones.length }}/{{ limites.promociones }}</span>
+              </div>
+              @if (!ofrecePromociones()) {
+                <p class="crm-menu-aviso" role="status">
+                  <app-icon name="alert-circle" [size]="14" class="shrink-0" />
+                  <span>No se ofrecen: el menú no tiene la opción «Promociones». Agrégala o quítalas.</span>
+                </p>
+              }
+              @if (borrador().promociones.length === 0) {
+                <p class="text-[11px] text-text-muted leading-relaxed">
+                  Ninguna cargada. El CRM no inventa promociones: carga las vigentes, con el nombre con el que la clínica las ofrece.
+                </p>
+              }
+              <ul class="space-y-2">
+                @for (p of borrador().promociones; track p.uid; let i = $index) {
+                  <li class="crm-menu-promo">
+                    <app-input
+                      label="Nombre"
+                      [value]="p.titulo"
+                      (valueChange)="cambiarPromocion(i, { titulo: $event })"
+                      [error]="excede(p.titulo, limites.titulo)" />
+                    <app-input
+                      label="Detalle (opcional)"
+                      [value]="p.descripcion ?? ''"
+                      (valueChange)="cambiarPromocion(i, { descripcion: $event })"
+                      [error]="excede(p.descripcion, limites.descripcion)" />
+                    <app-button class="sm:mb-1" variant="ghost" size="xs" [circle]="true" icon="trash" [ariaLabel]="'Quitar ' + (p.titulo || 'promoción')" (clicked)="quitarPromocion(i)" />
+                  </li>
+                }
+              </ul>
+              @if (borrador().promociones.length < limites.promociones) {
+                <app-button variant="secondary" size="sm" icon="plus" (clicked)="agregarPromocion()">Agregar promoción</app-button>
+              }
+            </section>
+          }
+        </div>
+
+        <!-- Cómo lo verá ella. Fija a la derecha en escritorio; debajo en el móvil. -->
+        <aside class="crm-menu-previa" aria-label="Vista previa del menú">
+          <app-interaccion-preview [habilitada]="true" titulo="Así lo verá la paciente" [interaccion]="vista()" />
+          <p class="text-[11px] text-text-muted leading-relaxed mt-2">
+            {{ vista().tipo === 'botones' ? 'Hasta tres opciones cortas salen como botones.' : 'Con más opciones, o con descripciones, sale como lista.' }}
+          </p>
+        </aside>
+      </div>
+    </div>
+
+    <div class="shrink-0 border-t border-border bg-bg-light">
+      @if (errores().length) {
+        <div class="crm-menu-errores mx-5 mt-3" role="alert">
+          <p class="font-semibold">No se guardó:</p>
+          <ul>@for (e of errores(); track e) { <li>{{ e }}</li> }</ul>
+        </div>
+      }
+      <div class="flex items-center justify-between gap-3 px-5 py-3">
+        <p class="text-[11px] text-text-muted min-w-0 truncate">
+          @if (sinGuardar()) { Cambios sin guardar } @else if (ultimaEdicion(); as ultima) { Última edición: {{ ultima }} } @else { Sin guardar todavía }
+        </p>
+        <div class="flex items-center gap-2 shrink-0">
+          <app-button variant="ghost" size="sm" (clicked)="cerrar.emit()">Cerrar</app-button>
+          <app-button size="sm" icon="check" [loading]="guardando()" (clicked)="guardar()">Guardar menú</app-button>
+        </div>
+      </div>
+    </div>
+  }
+</app-drawer>

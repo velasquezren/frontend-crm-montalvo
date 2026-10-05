@@ -28,6 +28,7 @@ import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.comp
 import { SwitchComponent } from '../../shared/components/switch/switch.component';
 import { LineaWhatsapp } from './linea-whatsapp.model';
 import { LineasWhatsappService } from './lineas-whatsapp.service';
+import { MenuAtencionEditorComponent } from './menu-atencion-editor.component';
 
 @Component({
   selector: 'app-lineas-whatsapp-page',
@@ -46,6 +47,7 @@ import { LineasWhatsappService } from './lineas-whatsapp.service';
     IconComponent,
     KpiCardComponent,
     SwitchComponent,
+    MenuAtencionEditorComponent,
   ],
   templateUrl: './lineas-whatsapp.page.html',
 })
@@ -70,6 +72,10 @@ export class LineasWhatsappPage {
   );
 
   protected readonly seleccionada = signal<LineaWhatsapp | null>(null);
+  /** La línea cuyo menú de atención se edita, en su propio cajón. */
+  protected readonly menuDe = signal<LineaWhatsapp | null>(null);
+  /** El editor del menú avisa si hay cambios sin guardar; cerrar con ellos pide confirmación. */
+  protected readonly menuSinGuardar = signal(false);
   protected readonly nombre = signal('');
   protected readonly telefono = signal('');
   protected readonly phoneNumberId = signal('');
@@ -90,6 +96,36 @@ export class LineasWhatsappPage {
     this.error.set('');
     this.overlay?.dispose();
     this.overlay = this.dialog.abrirCajon(template, this.vcr, { onClose: () => this.seleccionada.set(null) });
+  }
+  protected editarMenu(linea: LineaWhatsapp, template: TemplateRef<unknown>): void {
+    this.menuDe.set(linea);
+    this.menuSinGuardar.set(false);
+    this.overlay?.dispose();
+    this.overlay = this.dialog.abrirCajon(template, this.vcr, {
+      onClose: () => {
+        this.menuDe.set(null);
+        this.menuSinGuardar.set(false);
+      },
+      puedeCerrar: () => this.descartarMenu(),
+    });
+  }
+  /**
+   * Salir de la página (Atrás, otro enlace) con el menú a medio editar pregunta
+   * igual que cerrar el cajón: `beforeunload` no cubre la navegación interna.
+   */
+  puedeSalir(): boolean {
+    return this.descartarMenu();
+  }
+  /** Sin cambios, cierra; con cambios, solo si se confirma descartarlos. */
+  private descartarMenu(): boolean {
+    return !this.menuSinGuardar() || window.confirm('Hay cambios sin guardar en el menú. ¿Cerrar y descartarlos?');
+  }
+  protected cerrarMenu(): void {
+    if (!this.descartarMenu()) return;
+    this.overlay?.dispose();
+    this.overlay = undefined;
+    this.menuDe.set(null);
+    this.menuSinGuardar.set(false);
   }
   protected cerrar(): void {
     this.overlay?.dispose();
