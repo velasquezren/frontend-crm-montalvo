@@ -284,6 +284,32 @@ arreglo (`pestanas` en `conversacion-lista`), no de botones copiados.
 - `estaSinResponder()` devuelve `false` para una cerrada.
 - Al buscar en «Todas» también salen cerradas, marcadas con la insignia «Cerrada».
 
+### Atención humana: «Atención», la tarjeta y el bloque del chat (2026-10-05)
+
+Cuando una paciente toca «Hablar con recepción», completa el Flow de cita o manda
+una respuesta interactiva que hay que revisar, el **servidor** registra una
+solicitud (backend: `crm-backend-module`, «Atención humana»). Aquí solo se pinta:
+
+- **Pestaña «Atención»**, primera de la fila y **solo si hay solicitudes** (o si está
+  elegida): con las interacciones apagadas no nace ninguna y una pestaña siempre
+  en cero sería ruido. Su número es `esperandoHumano + enAtencion`, del servidor;
+  dentro, una línea dice los dos por separado. El orden lo da el servidor (en
+  espera primero, prioridad, espera más larga), así que **en esta pestaña un
+  aviso en vivo recarga la lista** en vez de subir la fila al tope.
+- **La tarjeta** cambia el reloj de «Sin responder» por el de la solicitud
+  (`atencion.solicitadaEn`, que no se reinicia al recargar). Color solo si es
+  prioritaria; en atención, el primer nombre de quien la tomó, en neutro.
+- **`<app-atencion-humana>`** bajo la cabecera del hilo, antes de la campaña: una
+  línea con motivo y espera, o «En atención por Ana», y las acciones; el contexto
+  (lo que se le ofreció, lo que eligió, los datos del Flow, su último mensaje) se
+  despliega a pedido. Nunca dice «cita confirmada»: un Flow de cita es una
+  solicitud.
+- Las cuatro transiciones van por `state.cambiarAtencion()`. Pase lo que pase se
+  vuelve a leer la fila y el detalle: un 409 («Ya la atiende Ana») tiene que
+  terminar mostrando a Ana, no el botón pulsado.
+- Textos y etiquetas en `atencion-humana.ts`; **ninguna regla de negocio**: el
+  estado, el motivo y la prioridad los decide el servidor.
+
 ### La barra del inbox: de lo más amplio a lo más fino (2026-09-30)
 
 De arriba abajo: cabecera (título, «Cerradas», «Nuevo chat») → **alcance** (línea y, para
