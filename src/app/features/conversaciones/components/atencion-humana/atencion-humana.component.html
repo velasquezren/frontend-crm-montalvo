@@ -1,0 +1,123 @@
+@if (atencion(); as a) {
+  <section
+    class="crm-atencion shrink-0"
+    [class.crm-atencion--espera]="a.estado === 'ESPERANDO'"
+    [class.crm-atencion--prioritaria]="a.estado === 'ESPERANDO' && a.prioridad !== 'NORMAL'"
+    aria-label="Atención humana">
+    <div class="crm-atencion-barra">
+      <app-icon name="user" [size]="14" class="crm-atencion-icono shrink-0" />
+
+      <!-- Lo que hay que saber de un vistazo: el motivo y cuánto lleva, o quién la atiende. -->
+      <p class="crm-atencion-titulo" role="status">
+        @if (a.estado === 'ESPERANDO') {
+          <span class="font-semibold text-text-dark">{{ motivos[a.motivo] }}</span>
+          <span class="crm-atencion-espera"> · espera {{ tiempoDeEspera(a.solicitadaEn) }}</span>
+        } @else if (a.tomadaPor; as quien) {
+          <span class="font-semibold text-text-dark">En atención por {{ primerNombre(quien.nombre) }}</span>
+          <span class="crm-atencion-espera"> · {{ motivos[a.motivo] }}</span>
+        }
+      </p>
+
+      <div class="crm-atencion-acciones">
+        @if (hayContexto()) {
+          <button
+            type="button"
+            class="crm-atencion-disclosure"
+            [attr.aria-expanded]="abierto()"
+            aria-controls="atencion-contexto"
+            aria-label="Contexto de la solicitud"
+            (click)="abierto.update(v => !v)">
+            <span class="hidden sm:inline">Contexto</span>
+            <app-icon [name]="abierto() ? 'chevron-up' : 'chevron-down'" [size]="14" />
+          </button>
+        }
+        @if (a.estado === 'ESPERANDO') {
+          <app-button
+            size="sm" icon="user"
+            [loading]="state.cambiandoAtencion() === 'tomar'"
+            [disabled]="!!state.cambiandoAtencion()"
+            (clicked)="state.cambiarAtencion('tomar')">Tomar atención</app-button>
+        }
+        @if (puedeLiberar()) {
+          <app-button
+            variant="ghost" size="sm" icon="rotate-cw"
+            ariaLabel="Liberar: vuelve a la espera para que la tome otra persona"
+            title="Liberar: vuelve a la espera, con su tiempo original"
+            [loading]="state.cambiandoAtencion() === 'liberar'"
+            [disabled]="!!state.cambiandoAtencion()"
+            (clicked)="state.cambiarAtencion('liberar')"><span class="hidden sm:inline">Liberar</span></app-button>
+        }
+        <app-button
+          variant="secondary" size="sm" icon="check-circle"
+          ariaLabel="Resolver la solicitud de atención"
+          title="Resolver: sale de «Atención». El chat sigue abierto."
+          [loading]="state.cambiandoAtencion() === 'resolver'"
+          [disabled]="!!state.cambiandoAtencion()"
+          (clicked)="state.cambiarAtencion('resolver')"><span class="hidden sm:inline">Resolver</span></app-button>
+      </div>
+    </div>
+
+    @if (abierto() && hayContexto()) {
+      <dl id="atencion-contexto" class="crm-atencion-contexto animate-fade-scale">
+        <div class="crm-atencion-fila">
+          <dt>Qué hacer</dt>
+          <dd>{{ acciones[a.motivo] }}</dd>
+        </div>
+        @if (a.origen; as origen) {
+          @if (origen.ofrecido; as ofrecido) {
+            <div class="crm-atencion-fila">
+              <dt>Le ofrecimos</dt>
+              <dd>
+                {{ ofrecido.cuerpo }}
+                @if (ofrecido.opciones.length) {
+                  <span class="crm-meta crm-meta-sm mt-0.5">
+                    @for (o of ofrecido.opciones; track o) { <span>{{ o }}</span> }
+                  </span>
+                }
+              </dd>
+            </div>
+          }
+          <!-- Un Flow no repite su descripción: ya la dicen «Qué hacer» y «Estado». -->
+          <div class="crm-atencion-fila">
+            <dt>{{ origen.tipo === 'respuesta_flow' ? 'Formulario' : 'Eligió' }}</dt>
+            <dd>
+              @if (origen.tipo !== 'respuesta_flow') { {{ origen.cuerpo }} }
+              <span class="crm-atencion-hora">{{ hora(origen.recibidoEn) }}@if (origen.versionFlow) { · versión {{ origen.versionFlow }}}</span>
+            </dd>
+          </div>
+          @for (dato of origen.datos; track dato.etiqueta) {
+            <div class="crm-atencion-fila">
+              <dt>{{ dato.etiqueta }}</dt>
+              <dd>{{ valorLegible(dato.valor) }}</dd>
+            </div>
+          }
+          @if (origen.tipo === 'respuesta_flow') {
+            <div class="crm-atencion-fila">
+              <dt>Estado</dt>
+              <dd><app-badge variant="neutral">Solicitud pendiente · sin cita reservada</app-badge></dd>
+            </div>
+          }
+        }
+        @if (a.ultimoMensaje; as ultimo) {
+          <div class="crm-atencion-fila">
+            <dt>Último mensaje</dt>
+            <dd>
+              «{{ ultimo.contenido }}»
+              <span class="crm-atencion-hora">{{ hora(ultimo.createdAt) }}</span>
+            </dd>
+          </div>
+        }
+      </dl>
+    }
+  </section>
+} @else if (automatizacionPausadaEn()) {
+  <!-- Sin solicitud viva: queda constancia de que la automatización no escribe aquí. -->
+  <div class="crm-atencion-pausa shrink-0" role="status">
+    <app-icon name="user" [size]="13" class="shrink-0" />
+    <p class="flex-1 min-w-0">Respuestas automáticas en pausa en este chat desde que pidió una persona.</p>
+    <app-button
+      variant="ghost" size="sm" icon="rotate-cw"
+      [loading]="state.cambiandoAtencion() === 'reanudar'"
+      (clicked)="state.cambiarAtencion('reanudar')">Reanudar</app-button>
+  </div>
+}

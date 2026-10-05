@@ -1,0 +1,127 @@
+/*
+ * Mismo cuerpo que las bandas del hilo (cerrada, campaña): una línea bajo la
+ * cabecera, `flex-shrink: 0` para que nunca se vaya de pantalla. El color se
+ * reserva para lo que importa: en espera, fondo suave; prioritaria, además un
+ * filo primario a la izquierda (como `.crm-vencida`). En atención, neutro.
+ */
+.crm-atencion {
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-workspace);
+}
+
+.crm-atencion--espera {
+  background: var(--color-bg-light);
+}
+
+.crm-atencion--prioritaria {
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+.crm-atencion-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  padding: 8px 16px;
+}
+
+.crm-atencion-icono {
+  color: var(--color-primary);
+}
+
+.crm-atencion-titulo {
+  flex: 1 1 12rem;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.crm-atencion-espera {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.crm-atencion-acciones {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.crm-atencion-disclosure {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 9999px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background-color 200ms, color 200ms;
+}
+
+.crm-atencion-disclosure:hover {
+  color: var(--color-text-dark);
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
+}
+
+.crm-atencion-disclosure:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Contexto: pares etiqueta/valor, compactos y con tope de altura para no
+   empujar el hilo fuera de la pantalla en el móvil. */
+.crm-atencion-contexto {
+  display: grid;
+  gap: 6px;
+  max-height: 40vh;
+  overflow-y: auto;
+  padding: 0 16px 10px 38px;
+  font-size: 12px;
+}
+
+.crm-atencion-fila {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: 8px;
+}
+
+.crm-atencion-fila dt {
+  color: var(--color-text-muted);
+}
+
+.crm-atencion-fila dd {
+  color: var(--color-text-dark);
+  overflow-wrap: anywhere;
+}
+
+.crm-atencion-hora {
+  margin-left: 4px;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  /* En el teléfono el hilo manda: desplegado, el contexto no pasa de un tercio. */
+  .crm-atencion-contexto {
+    max-height: 32vh;
+    padding-left: 16px;
+  }
+
+  .crm-atencion-fila {
+    grid-template-columns: 7rem minmax(0, 1fr);
+    gap: 6px;
+  }
+}
+
+.crm-atencion-pausa {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-workspace);
+  color: var(--color-text-muted);
+  font-size: 12px;
+}

@@ -154,6 +154,10 @@
     </div>
   }
 
+  <!-- Atención humana: quién pidió una persona y desde cuándo, con «Tomar».
+       Antes de la campaña: es lo que hay que hacer ahora. -->
+  <app-atencion-humana [conversacionId]="chat.id" [atencion]="chat.atencion ?? null" [automatizacionPausadaEn]="chat.automatizacionPausadaEn ?? null" />
+
   <!-- Campaña de origen (Meta Ads / Click-to-WhatsApp).
 
        Se pliega a propósito. Antes era una franja fija que en móvil solo
