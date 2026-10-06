@@ -42,6 +42,9 @@ export class PagoPromocionComponent {
 
   /** Confirmar registra una venta: la agente o un admin (el servidor lo vuelve a exigir). */
   protected readonly puedeConfirmar = this.state.puedeGestionComercial;
+  protected readonly puedeCompletar = computed(() => this.puedeConfirmar()
+    && !!this.pago()?.registroPendiente
+    && this.pago()?.cerradoPor?.id === this.state.currentUserId());
 
   /** El mensaje del comprobante, del hilo cargado: su enlace firmado y si es una imagen. */
   protected readonly comprobante = computed(() => {

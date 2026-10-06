@@ -1,7 +1,7 @@
 @if (pago(); as p) {
   <section
     class="crm-pago shrink-0"
-    [class.crm-pago--verificar]="p.estado === 'COMPROBANTE_ENVIADO'"
+    [class.crm-pago--verificar]="p.estado === 'COMPROBANTE_ENVIADO' || p.registroPendiente"
     aria-label="Pago de promoción">
     <div class="crm-pago-barra">
       <app-icon name="wallet" [size]="14" class="crm-pago-icono shrink-0" />
@@ -9,9 +9,15 @@
         <span class="font-semibold text-text-dark tabular-nums">{{ p.monto | moneda }}</span>
         <span class="crm-pago-promo" [title]="p.promocion.titulo + ' · ' + p.promocion.codigo"> · {{ p.promocion.titulo }}</span>
       </p>
-      <app-badge [variant]="variantes[p.estado]">{{ estados[p.estado] }}</app-badge>
+      <app-badge [variant]="p.registroPendiente ? 'info' : variantes[p.estado]">{{ p.registroPendiente ? 'Registro pendiente' : estados[p.estado] }}</app-badge>
 
       <div class="crm-pago-acciones">
+        @if (puedeCompletar()) {
+          <app-button size="sm" icon="rotate-cw"
+            [loading]="state.cambiandoPago() === 'confirmar'"
+            [disabled]="!!state.cambiandoPago()"
+            (clicked)="confirmar()">Completar registro</app-button>
+        }
         @if (p.estado === 'COMPROBANTE_ENVIADO') {
           @if (puedeConfirmar()) {
             <app-button
@@ -65,6 +71,11 @@
         } @else {
           Se le envió el QR. Falta que mande el comprobante.
         }
+      </p>
+    } @else if (p.registroPendiente) {
+      <p class="crm-pago-detalle text-text-muted" role="status">
+        Falta completar el registro de la venta.
+        {{ p.cerradoPor ? primerNombre(p.cerradoPor.nombre) + ', que inició la confirmación, puede retomarlo.' : 'Revisa el registro antes de volver a cobrar.' }}
       </p>
     } @else if (p.estado === 'CONFIRMADO') {
       <p class="crm-pago-detalle text-text-muted">

@@ -23,7 +23,7 @@ describe('bloque de pago de una promoción en el chat', () => {
     comercial.set(true);
     TestBed.configureTestingModule({
       providers: [{ provide: ConversacionesStateService, useValue: {
-        accionPago, cambiandoPago: signal<AccionPago | null>(null), puedeGestionComercial: comercial, detalleActual: detalle,
+        currentUserId: signal('u1'), accionPago, cambiandoPago: signal<AccionPago | null>(null), puedeGestionComercial: comercial, detalleActual: detalle,
       } }],
     });
   });
@@ -94,6 +94,22 @@ describe('bloque de pago de una promoción en el chat', () => {
     expect(el.textContent).toContain('Pago confirmado');
     expect(el.textContent).toContain('Confirmado por Ana');
     expect(el.querySelectorAll('button')).toHaveLength(0);
+  });
+
+  it('un registro interrumpido no dice que la venta existe y permite retomarlo a quien confirmó', async () => {
+    const { el } = await montar({ ...BASE, estado: 'CONFIRMADO', registroPendiente: true, cerradoPor: { id: 'u1', nombre: 'Ana Pérez' } });
+    expect(el.textContent).toContain('Registro pendiente');
+    expect(el.textContent).not.toContain('la venta quedó registrada');
+    boton(el, 'Completar registro')!.click();
+    expect(accionPago).toHaveBeenCalledWith('pago-1', 'confirmar');
+    expect(boton(el, 'Anular el pago')).toBeUndefined();
+  });
+
+  it('otra persona ve quién debe completar la confirmación, sin ofrecerle cobrar otra vez', async () => {
+    const { el } = await montar({ ...BASE, estado: 'CONFIRMADO', registroPendiente: true, cerradoPor: { id: 'otra', nombre: 'Marta Pérez' } });
+    expect(el.textContent).toContain('Marta');
+    expect(boton(el, 'Completar registro')).toBeUndefined();
+    expect(el.textContent).not.toContain('Pago confirmado');
   });
 
   it('sin pago, si llegó por el código de una promoción, una línea lo dice', async () => {

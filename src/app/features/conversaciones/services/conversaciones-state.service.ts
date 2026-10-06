@@ -1,4 +1,4 @@
-import { AccionPago, AVISO_PAGO } from '../pago-promocion';
+import { AccionPago, avisoDeAccionPago } from '../pago-promocion';
 import { ErrorCanalWhatsapp, validarDetalle, validarPaginaInbox } from '../validar-canal';
 import { LineasWhatsappService } from '../../lineas-whatsapp/lineas-whatsapp.service';
 import { LineaWhatsapp } from '../../lineas-whatsapp/linea-whatsapp.model';
@@ -905,8 +905,10 @@ export class ConversacionesStateService {
     let sinRespuesta = false;
     let ok = false;
     try {
-      await this.conversacionesService.accionPago(id, pagoId, accion, motivo);
-      this.toastService.success(AVISO_PAGO[accion]);
+      const resultado = await this.conversacionesService.accionPago(id, pagoId, accion, motivo);
+      const aviso = avisoDeAccionPago(accion, resultado);
+      if (aviso.advertencia) this.toastService.warning(aviso.texto);
+      else this.toastService.success(aviso.texto);
       ok = true;
     } catch (err) {
       sinRespuesta = err instanceof HttpErrorResponse && err.status === 0;

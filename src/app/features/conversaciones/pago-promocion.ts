@@ -17,6 +17,10 @@ export interface PagoDelChat {
   /** Por qué se le pidió otro comprobante, si se le pidió. */
   readonly motivoRechazo: string | null;
   readonly ventaId: string | null;
+  /** Confirmación iniciada, todavía sin venta enlazada. */
+  readonly registroPendiente?: boolean;
+  /** Resultado del intento de aviso, solo en la respuesta de una acción. */
+  readonly avisoPaciente?: 'ENCOLADO' | 'NO_ENVIADO';
   readonly cerradoPor: { readonly id: string; readonly nombre: string } | null;
   readonly cerradoEn: string | null;
   readonly createdAt: string;
@@ -49,7 +53,16 @@ export const VARIANTE_PAGO: Readonly<Record<EstadoPagoPromocion, 'info' | 'criti
 
 /** Lo que dice el aviso al terminar cada acción. */
 export const AVISO_PAGO: Readonly<Record<AccionPago, string>> = {
-  confirmar: 'Pago confirmado: se registró la venta y se le avisó a la paciente.',
-  'pedir-otro': 'Se le pidió otro comprobante.',
+  confirmar: 'Pago confirmado: se registró la venta.',
+  'pedir-otro': 'Pago pendiente de un nuevo comprobante.',
   anular: 'Pago anulado.',
 };
+
+/** Guardar el pago y enviar su aviso son resultados diferentes. */
+export function avisoDeAccionPago(accion: AccionPago, resultado: PagoDelChat | null): { texto: string; advertencia: boolean } {
+  const texto = AVISO_PAGO[accion];
+  if (resultado?.avisoPaciente === 'NO_ENVIADO') {
+    return { texto: `${texto} No se pudo enviar el aviso. Revisa el chat y avisa a la paciente; si pasaron 24 horas, usa una plantilla.`, advertencia: true };
+  }
+  return { texto: texto + (resultado?.avisoPaciente === 'ENCOLADO' ? ' Aviso preparado; consulta su entrega en el chat.' : ''), advertencia: false };
+}
