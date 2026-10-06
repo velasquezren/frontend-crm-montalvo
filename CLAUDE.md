@@ -33,6 +33,9 @@ Dos skills, y casi cualquier cambio necesita los dos:
   un modal u ocultar algo por rol.
 - **`crm-design-system`** — antes de escribir HTML o CSS, elegir un color o crear
   cualquier control.
+- **`crm-ui-desde-codigo`** — antes de dar por terminada una vista: cómo «verla» leyendo
+  el código (anchos reales, qué se trunca a 390 px, foco, objetivos táctiles). Es la
+  validación visual de este proyecto, porque aquí no se usa navegador.
 
 Documentan **cicatrices**, no teoría. Si una regla parece excesiva, probablemente
 estás a punto de reintroducir el bug que la motivó.
