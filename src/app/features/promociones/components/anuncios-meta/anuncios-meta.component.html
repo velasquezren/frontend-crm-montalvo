@@ -30,13 +30,21 @@
           <tr>
             <td>
               <div class="flex items-center gap-3 min-w-0">
-                <span class="anuncio-miniatura shrink-0">
-                  @if (a.imagenUrl) {
-                    <img [src]="a.imagenUrl" alt="" loading="lazy" width="44" height="44" referrerpolicy="no-referrer" />
-                  } @else {
-                    <app-icon name="image" [size]="16" />
-                  }
-                </span>
+                <!-- La imagen entera (contain), no un recorte: un anuncio puede ser
+                     horizontal, cuadrado o vertical. Clic: a pantalla completa. -->
+                @if (a.imagenUrl && !fallidas().has(a.anuncioId)) {
+                  <button
+                    type="button"
+                    class="anuncio-miniatura shrink-0"
+                    [attr.aria-label]="'Ver la imagen del anuncio ' + (a.titular ?? a.anuncioId)"
+                    (click)="ampliar(a)">
+                    <img [src]="a.imagenUrl" alt="" loading="lazy" width="72" height="72" referrerpolicy="no-referrer" (error)="noCargo(a.anuncioId)" />
+                  </button>
+                } @else {
+                  <span class="anuncio-miniatura shrink-0" [title]="a.imagenUrl ? 'La imagen de Meta ya no está disponible' : 'Llegó sin imagen'">
+                    <app-icon name="image" [size]="18" />
+                  </span>
+                }
                 <div class="min-w-0">
                   <p class="text-sm font-medium text-text-dark truncate">{{ a.titular ?? 'Sin titular' }}</p>
                   <span class="crm-meta-clave text-[11px]">{{ a.anuncioId }}</span>
@@ -74,3 +82,6 @@
       description="Cuando una paciente escriba por un anuncio que todavía no está enlazado, aparecerá aquí." />
   }
 </div>
+
+<!-- Visor a pantalla completa (montado siempre; se abre con una URL). -->
+<app-image-viewer [imageUrl]="ampliada()?.url ?? null" [title]="ampliada()?.titulo" (closed)="ampliada.set(null)" />

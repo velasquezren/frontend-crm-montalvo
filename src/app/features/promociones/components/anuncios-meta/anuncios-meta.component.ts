@@ -8,6 +8,7 @@ import { ToastService } from '../../../../core/toast/toast.service';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { ErrorCargaComponent } from '../../../../shared/components/error-carga/error-carga.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { ImageViewerComponent } from '../../../../shared/components/image-viewer/image-viewer.component';
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { PaginatorComponent } from '../../../../shared/components/paginator/paginator.component';
 import { SelectComponent } from '../../../../shared/components/select/select.component';
@@ -24,7 +25,17 @@ import { PromocionesService } from '../../promociones.service';
  */
 @Component({
   selector: 'app-anuncios-meta',
-  imports: [DatePipe, EmptyStateComponent, ErrorCargaComponent, IconComponent, LoadingSkeletonComponent, PaginatorComponent, SelectComponent, TableComponent],
+  imports: [
+    DatePipe,
+    EmptyStateComponent,
+    ErrorCargaComponent,
+    IconComponent,
+    ImageViewerComponent,
+    LoadingSkeletonComponent,
+    PaginatorComponent,
+    SelectComponent,
+    TableComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './anuncios-meta.component.html',
   styleUrl: './anuncios-meta.component.css',
@@ -48,6 +59,22 @@ export class AnunciosMetaComponent {
     this.promociones.hasValue() ? this.promociones.value().datos.filter(p => p.estado !== 'ARCHIVADA') : [],
   );
   protected readonly enlazando = signal<string | null>(null);
+
+  /** La imagen abierta en el visor a pantalla completa. */
+  protected readonly ampliada = signal<{ readonly url: string; readonly titulo: string } | null>(null);
+  /**
+   * Imágenes que no cargaron. Las URL que manda Meta en el referral son del CDN de
+   * Facebook y caducan a las semanas: sin esto la celda quedaba vacía, sin decir nada.
+   */
+  protected readonly fallidas = signal<ReadonlySet<string>>(new Set());
+
+  protected ampliar(a: AnuncioSinPromocion): void {
+    if (a.imagenUrl && !this.fallidas().has(a.anuncioId)) this.ampliada.set({ url: a.imagenUrl, titulo: a.titular ?? `Anuncio ${a.anuncioId}` });
+  }
+
+  protected noCargo(anuncioId: string): void {
+    this.fallidas.update(f => new Set(f).add(anuncioId));
+  }
 
   protected async enlazar(anuncioId: string, promocionId: string): Promise<void> {
     if (!promocionId || this.enlazando()) return;
