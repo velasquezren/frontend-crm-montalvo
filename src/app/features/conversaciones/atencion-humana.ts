@@ -97,3 +97,22 @@ export function tiempoDeEspera(desde: string, ahora = Date.now()): string {
 export function primerNombre(nombre: string): string {
   return nombre.split(' ')[0] || nombre;
 }
+
+/**
+ * El ícono de una solicitud: la emergencia se distingue también por forma, no
+ * solo por color —el `critical` de la paleta es negro, y la tarjeta tiene que
+ * leerse igual en una pantalla con poco contraste—.
+ */
+export function iconoDeAtencion(prioridad: PrioridadAtencion): 'alert-circle' | 'user' {
+  return prioridad === 'CRITICA' ? 'alert-circle' : 'user';
+}
+
+/**
+ * El color de la solicitud en la tarjeta, alineado con el bloque del chat: el
+ * `critical` (negro) es solo de la emergencia; pedir una persona va en primario y
+ * lo demás en `info`. Si la alta fuera negra también, «primero la emergencia» no
+ * se vería en la bandeja.
+ */
+export function varianteDeAtencion(prioridad: PrioridadAtencion): 'critical' | 'success' | 'info' {
+  return prioridad === 'CRITICA' ? 'critical' : prioridad === 'ALTA' ? 'success' : 'info';
+}

@@ -21,7 +21,7 @@ export interface InteraccionVista {
         class="min-w-0 space-y-3 rounded-2xl border border-border bg-bg-light p-4 text-sm text-text-dark"
         [attr.aria-label]="historial() ? 'Interacción de WhatsApp' : 'Vista previa de interacción'"
       >
-        <p class="font-semibold text-primary">{{ historial() ? 'Interacción de WhatsApp' : 'Demostración local · sin envío' }}</p>
+        <p class="font-semibold text-primary">{{ titulo() ?? (historial() ? 'Interacción de WhatsApp' : 'Demostración local · sin envío') }}</p>
         @if (cargando()) {
           <p role="status">Preparando vista previa…</p>
         } @else if (interaccion(); as vista) {
@@ -101,6 +101,8 @@ export class InteraccionPreviewComponent {
   readonly habilitada = input(false);
   readonly cargando = input(false);
   readonly interaccion = input<InteraccionVista | null>(null);
+  /** Cabecera propia (p. ej. la vista previa del menú de atención). */
+  readonly titulo = input<string | null>(null);
   protected describirEstado(estado: NonNullable<InteraccionVista['estado']>): string {
     return ({
       CORRELACIONADA: 'Respuesta vinculada al mensaje original. Atención por el personal.',

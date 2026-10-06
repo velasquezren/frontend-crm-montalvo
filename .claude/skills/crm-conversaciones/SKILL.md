@@ -297,8 +297,10 @@ solicitud (backend: `crm-backend-module`, «Atención humana»). Aquí solo se p
   espera primero, prioridad, espera más larga), así que **en esta pestaña un
   aviso en vivo recarga la lista** en vez de subir la fila al tope.
 - **La tarjeta** cambia el reloj de «Sin responder» por el de la solicitud
-  (`atencion.solicitadaEn`, que no se reinicia al recargar). Color solo si es
-  prioritaria; en atención, «En atención · Ana» en neutro. **Va en su propia fila,
+  (`atencion.solicitadaEn`, que no se reinicia al recargar). El color sale de
+  `varianteDeAtencion`: negro (`critical`) **solo** para la emergencia, primario para
+  pedir una persona, `info` para lo demás; en atención, «En atención · Ana» en neutro
+  (una emergencia sigue en negro hasta resolverla). **Va en su propia fila,
   entre la línea y el último mensaje**: junto al mensaje lo dejaba en tres letras
   (y lo que la paciente escribe DESPUÉS de pedir una persona es lo que hay que leer)
   y junto a la línea recortaba su nombre, que en varias líneas distingue el chat.
@@ -318,6 +320,23 @@ solicitud (backend: `crm-backend-module`, «Atención humana»). Aquí solo se p
   visible. Los avisos (`<app-toast-container>`) son una región `aria-live`.
 - Textos y etiquetas en `atencion-humana.ts`; **ninguna regla de negocio**: el
   estado, el motivo y la prioridad los decide el servidor.
+- **Emergencia (`EMERGENCIA`, prioridad `CRITICA`, 2026-10-05)**: la declara la paciente
+  desde el menú de atención o escribiendo «es una emergencia». Se distingue por **forma
+  además de color** (`iconoDeAtencion`: `alert-circle`), porque el `critical` de la paleta
+  es negro: badge `critical` en la tarjeta y `.crm-atencion--critica` en el bloque, que se
+  mantiene también en atención hasta resolverla. Nunca un rojo nuevo.
+
+### Menú de atención: se configura en Líneas, no en el inbox (2026-10-05)
+
+El menú con el que cada línea recibe a la paciente se edita en
+`features/lineas-whatsapp/menu-atencion-editor.component.ts` (SUPER_ADMIN, su propio
+cajón). Lo que la paciente toca llega al inbox como cualquier solicitud de arriba: no
+hay vista nueva. El editor manda el menú entero (`PUT /menu-atencion/:lineaId`) y, ante
+un 400, muestra **la lista de motivos del servidor**, uno por línea, sin perder lo
+escrito. `menu-atencion.model.ts` solo ayuda a quien configura (límites, catálogo,
+vista previa); la regla de botones-o-lista copia la del backend y, si divergen, manda el
+backend. Ningún texto para la paciente tiene valor por defecto. Diseño:
+`../backend-crm-montalvo/docs/menu-atencion.md`.
 
 ### La barra del inbox: de lo más amplio a lo más fino (2026-09-30)
 

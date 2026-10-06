@@ -86,9 +86,14 @@
             </app-badge>
           </td>
           <td class="text-right" (click)="$event.stopPropagation()">
-            <app-button variant="secondary" size="sm" icon="edit" (clicked)="editar(linea, formulario)">
-              Configurar
-            </app-button>
+            <span class="inline-flex items-center gap-2">
+              <app-button variant="secondary" size="sm" icon="menu" [ariaLabel]="'Menú de atención de ' + linea.nombre" (clicked)="editarMenu(linea, menuAtencion)">
+                Menú
+              </app-button>
+              <app-button variant="secondary" size="sm" icon="edit" (clicked)="editar(linea, formulario)">
+                Configurar
+              </app-button>
+            </span>
           </td>
         </tr>
       }
@@ -166,4 +171,16 @@
       </div>
     </form>
   </app-drawer>
+</ng-template>
+
+<!-- El menú con el que la línea recibe a la paciente: su propio cajón, porque se
+     edita aparte de la conexión y lo que cambia es lo que reciben las pacientes. -->
+<ng-template #menuAtencion>
+  @if (menuDe(); as linea) {
+    <app-menu-atencion-editor
+      [lineaId]="linea.id"
+      [nombre]="linea.nombre"
+      (cambiosSinGuardar)="menuSinGuardar.set($event)"
+      (cerrar)="cerrarMenu()" />
+  }
 </ng-template>

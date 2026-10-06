@@ -8,6 +8,12 @@ export interface DialogOptions {
   backdropClass?: string | string[];
   disableClose?: boolean;
   onClose?: () => void;
+  /**
+   * Se pregunta antes de cerrar con Escape o con un clic fuera. `false` lo deja
+   * abierto: un formulario con cambios sin guardar pide confirmación en vez de
+   * perder lo escrito por un clic distraído.
+   */
+  puedeCerrar?: () => boolean;
 }
 
 /**
@@ -78,6 +84,7 @@ export class DialogService {
 
     if (!options.disableClose) {
       const cerrar = () => {
+        if (options.puedeCerrar && !options.puedeCerrar()) return;
         options.onClose?.();
         overlayRef.dispose();
       };

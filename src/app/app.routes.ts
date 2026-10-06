@@ -219,6 +219,8 @@ export const routes: Routes = [
       {
         path: 'lineas-whatsapp',
         canActivate: [exigeRol('SUPER_ADMIN')],
+        /* El menú de atención a medio editar no se pierde por un «Atrás». */
+        canDeactivate: [(pagina: { puedeSalir(): boolean }) => pagina.puedeSalir()],
         loadComponent: () => import('./features/lineas-whatsapp/lineas-whatsapp.page').then(m => m.LineasWhatsappPage),
       },
       {

@@ -1,0 +1,86 @@
+/*
+ * Dos columnas en escritorio —lo que se edita y cómo lo verá la paciente—; una
+ * sola en el móvil, con la vista previa debajo. El color se reserva para la
+ * emergencia, con el `critical` de la paleta (negro, no rojo).
+ */
+.crm-menu-rejilla {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+
+@media (min-width: 1024px) {
+  .crm-menu-rejilla {
+    grid-template-columns: minmax(0, 1fr) 18rem;
+    align-items: start;
+  }
+
+  .crm-menu-previa {
+    position: sticky;
+    top: 0;
+  }
+}
+
+.crm-menu-opcion {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-background);
+}
+
+.crm-menu-opcion-icono {
+  color: var(--color-primary);
+}
+
+.crm-menu-opcion--critica {
+  box-shadow: inset 3px 0 0 var(--color-critical);
+}
+
+.crm-menu-opcion--critica .crm-menu-opcion-icono {
+  color: var(--color-critical);
+}
+
+.crm-menu-promo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  align-items: end;
+}
+
+@media (min-width: 640px) {
+  .crm-menu-promo {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  }
+}
+
+.crm-menu-aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--color-bg-workspace);
+  border: 1px solid var(--color-border);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-dark);
+}
+
+.crm-menu-errores {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--color-critical-bg);
+  border: 1px solid var(--color-border);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-dark);
+}
+
+.crm-menu-errores ul {
+  margin-top: 4px;
+  padding-left: 16px;
+  list-style: disc;
+}

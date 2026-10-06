@@ -3,9 +3,10 @@
     class="crm-atencion shrink-0"
     [class.crm-atencion--espera]="a.estado === 'ESPERANDO'"
     [class.crm-atencion--prioritaria]="a.estado === 'ESPERANDO' && a.prioridad !== 'NORMAL'"
+    [class.crm-atencion--critica]="a.prioridad === 'CRITICA'"
     aria-label="Atención humana">
     <div class="crm-atencion-barra">
-      <app-icon name="user" [size]="14" class="crm-atencion-icono shrink-0" />
+      <app-icon [name]="iconoDeAtencion(a.prioridad)" [size]="14" class="crm-atencion-icono shrink-0" />
 
       <!-- Lo que hay que saber de un vistazo: el motivo y cuánto lleva, o quién la atiende. -->
       <p class="crm-atencion-titulo" role="status">

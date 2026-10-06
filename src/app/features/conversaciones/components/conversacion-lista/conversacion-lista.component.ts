@@ -25,7 +25,7 @@ import {
 } from '../../conversacion.model';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 import { ConversacionPreviewComponent } from './conversacion-preview.component';
-import { MOTIVO_ATENCION_CORTO, primerNombre, tiempoDeEspera } from '../../atencion-humana';
+import { iconoDeAtencion, MOTIVO_ATENCION_CORTO, primerNombre, tiempoDeEspera, varianteDeAtencion } from '../../atencion-humana';
 
 interface PestanaInbox {
   readonly tab: FiltroInbox;
@@ -164,6 +164,8 @@ export class ConversacionListaComponent {
   );
 
   protected readonly motivoCorto = MOTIVO_ATENCION_CORTO;
+  protected readonly iconoDeAtencion = iconoDeAtencion;
+  protected readonly varianteDeAtencion = varianteDeAtencion;
   protected readonly tiempoDeEspera = tiempoDeEspera;
   protected readonly primerNombre = primerNombre;
 

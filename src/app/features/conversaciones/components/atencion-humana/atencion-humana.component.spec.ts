@@ -61,6 +61,17 @@ describe('bloque de atención humana del chat', () => {
     expect(botones(el).some(t => t.includes('Liberar'))).toBe(false);
   });
 
+  it('una emergencia se distingue también por forma y sigue marcada mientras se atiende', async () => {
+    const emergencia: ContextoAtencion = { ...ESPERANDO, motivo: 'EMERGENCIA', prioridad: 'CRITICA' };
+    const { el } = await montar(emergencia);
+    expect(el.textContent).toContain('Indicó una emergencia');
+    expect(el.querySelector('.crm-atencion--critica')).not.toBeNull();
+    const atendida = await montar({ ...emergencia, estado: 'EN_ATENCION', tomadaEn: HACE_8_MIN, tomadaPor: { id: 'rec-1', nombre: 'Rosa' } });
+    expect(atendida.el.querySelector('.crm-atencion--critica')).not.toBeNull();
+    /* Una solicitud normal no lleva la marca. */
+    expect((await montar(ESPERANDO)).el.querySelector('.crm-atencion--critica')).toBeNull();
+  });
+
   it('tomada por otra persona: lo dice, y no ofrece tomarla ni liberarla', async () => {
     const { el } = await montar({ ...ESPERANDO, estado: 'EN_ATENCION', tomadaEn: HACE_8_MIN, tomadaPor: { id: 'rec-2', nombre: 'Ana Pérez' } });
     expect(el.textContent).toContain('En atención por Ana');
