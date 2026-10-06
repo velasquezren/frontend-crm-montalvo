@@ -58,6 +58,7 @@ export interface EstadoDeAtencion {
 
 /** El motivo, dicho como lo diría recepción. */
 export const MOTIVO_ATENCION: Readonly<Record<MotivoAtencion, string>> = {
+  EMERGENCIA: 'Indicó una emergencia',
   SOLICITUD_EXPLICITA: 'Pidió hablar con una persona',
   SOLICITUD_CITA: 'Solicitud de cita',
   REVISION: 'Respuesta para revisar',
@@ -65,6 +66,7 @@ export const MOTIVO_ATENCION: Readonly<Record<MotivoAtencion, string>> = {
 
 /** Qué hacer ahora. Una sola frase, sin prometer nada que el sistema no hizo. */
 export const ACCION_ATENCION: Readonly<Record<MotivoAtencion, string>> = {
+  EMERGENCIA: 'Contactarla ya. Lo declaró ella: el CRM no evalúa si es una emergencia médica.',
   SOLICITUD_EXPLICITA: 'Contestarle: está esperando a una persona.',
   SOLICITUD_CITA: 'Revisar la solicitud y proponerle una cita. Todavía no hay nada reservado.',
   REVISION: 'Revisar su respuesta: no se ejecutó ninguna acción automática.',
@@ -72,6 +74,7 @@ export const ACCION_ATENCION: Readonly<Record<MotivoAtencion, string>> = {
 
 /** El motivo, corto, para la tarjeta del inbox (que no tiene sitio para la frase entera). */
 export const MOTIVO_ATENCION_CORTO: Readonly<Record<MotivoAtencion, string>> = {
+  EMERGENCIA: 'Emergencia',
   SOLICITUD_EXPLICITA: 'Pidió persona',
   SOLICITUD_CITA: 'Solicitud de cita',
   REVISION: 'Revisar',
