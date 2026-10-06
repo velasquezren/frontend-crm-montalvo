@@ -1,0 +1,278 @@
+<app-drawer ancho="xl" [titulo]="detalle.hasValue() ? detalle.value().titulo : 'Promoción'" icono="percent" (cerrar)="cerrar.emit()">
+  <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-6">
+    @if (detalle.isLoading() && !detalle.hasValue()) {
+      <app-loading-skeleton height="96px" />
+      <app-loading-skeleton height="240px" />
+    } @else if (detalle.error()) {
+      <app-error-carga que="la promoción" (reintentar)="detalle.reload()" />
+    } @else if (detalle.hasValue() && borrador(); as b) {
+      @let p = detalle.value();
+
+      <!-- ── Estado, quién y qué falta ─────────────────────────────── -->
+      <section class="flex flex-col gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
+          <app-badge [variant]="estados[p.estado].variante">{{ estados[p.estado].etiqueta }}</app-badge>
+          <span class="text-xs text-text-dark">{{ vigencias[p.vigencia] }} · {{ rangoVigencia(p.vigenteDesde, p.vigenteHasta) }}</span>
+        </div>
+        <div class="crm-meta">
+          <span class="crm-meta-clave">{{ p.codigo }}</span>
+          @if (p.creadaPor; as autor) { <span>Redactó {{ autor.nombre }}</span> }
+          @if (p.publicadaEn) { <span>Publicada el {{ p.publicadaEn | date: 'd MMM y' : '-0400' }}</span> }
+          @if (p.revisadaPor; as rev) { <span>Revisó {{ rev.nombre }}</span> }
+        </div>
+
+        @if (p.estado === 'BORRADOR' && p.motivoDevolucion) {
+          <p role="alert" class="text-xs text-text-dark bg-critical-bg rounded-xl px-3 py-2">
+            La devolvieron: {{ p.motivoDevolucion }}
+          </p>
+        }
+
+        @if (p.faltantes.length > 0 && p.estado !== 'ARCHIVADA') {
+          <div class="ficha-faltantes" role="status">
+            <p class="text-xs font-semibold text-text-dark">Para publicarla falta:</p>
+            <ul class="mt-1 flex flex-col gap-0.5">
+              @for (f of p.faltantes; track f) {
+                <li class="flex items-start gap-1.5 text-xs text-text-dark">
+                  <app-icon name="circle" [size]="12" class="mt-0.5 shrink-0 text-text-muted" />
+                  <span>{{ f }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </section>
+
+      <!-- ── Acciones del ciclo de vida: las que el servidor dice que esta persona puede ── -->
+      @if (p.acciones.length > 0) {
+        <section class="flex flex-col gap-2" aria-label="Acciones de la promoción">
+          @if (confirmando(); as accion) {
+            <div class="ficha-confirmacion">
+              @if (accion === 'devolver') {
+                <app-input label="¿Por qué la devuelves?" placeholder="Ej. Falta aclarar qué incluye el precio" [(value)]="motivo" />
+                <div class="flex items-center gap-2">
+                  <app-button size="sm" [disabled]="motivo().trim().length < 5" [loading]="ocupada() === 'devolver'" (clicked)="ejecutar('devolver')">Devolver a borrador</app-button>
+                  <app-button variant="ghost" size="sm" (clicked)="confirmando.set(null)">Cancelar</app-button>
+                </div>
+              } @else {
+                <p class="text-xs text-text-dark">¿Archivarla? Deja de mostrarse y no se puede volver a publicar; para repetirla se crea otra.</p>
+                <div class="flex items-center gap-2">
+                  <app-button variant="critical" size="sm" [loading]="ocupada() === 'archivar'" (clicked)="ejecutar('archivar')">Sí, archivar</app-button>
+                  <app-button variant="ghost" size="sm" (clicked)="confirmando.set(null)">No</app-button>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="flex flex-wrap items-center gap-2">
+              @for (accion of p.acciones; track accion) {
+                <app-button
+                  size="sm"
+                  [variant]="accion === 'publicar' || accion === 'enviar' ? 'primary' : 'secondary'"
+                  [disabled]="hayCambios() || !!ocupada() || ((accion === 'publicar' || accion === 'enviar') && p.faltantes.length > 0)"
+                  [loading]="ocupada() === accion"
+                  (clicked)="pedir(accion)">
+                  {{ acciones[accion].boton }}
+                </app-button>
+              }
+            </div>
+            @if (hayCambios()) {
+              <p class="text-[11px] text-text-muted">Guarda o descarta los cambios antes de cambiar el estado.</p>
+            }
+          }
+        </section>
+      }
+
+      <!-- ── Contenido ─────────────────────────────────────────────── -->
+      <section class="flex flex-col gap-4" aria-labelledby="ficha-contenido">
+        <div class="flex items-center justify-between gap-2">
+          <h3 id="ficha-contenido" class="text-xs font-bold text-text-dark uppercase tracking-wider">Contenido</h3>
+          @if (!p.puedeEditar && p.estado !== 'ARCHIVADA') {
+            <span class="text-[11px] text-text-muted">En este estado solo la edita un administrador.</span>
+          }
+        </div>
+        <app-input label="Título" [disabled]="!p.puedeEditar" [value]="b.titulo" (valueChange)="editar('titulo', $event)" />
+        <app-input label="Resumen de una línea" [disabled]="!p.puedeEditar" [value]="b.resumen" (valueChange)="editar('resumen', $event)" />
+        <app-input label="Descripción" [multiline]="true" [rows]="4" [disabled]="!p.puedeEditar" [value]="b.descripcion" (valueChange)="editar('descripcion', $event)" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <app-input label="Precio regular (Bs)" type="number" placeholder="600" [disabled]="!p.puedeEditar" [value]="b.precioRegular" (valueChange)="editar('precioRegular', $event)" />
+          <app-input label="Precio promocional (Bs)" type="number" placeholder="480" [disabled]="!p.puedeEditar" [value]="b.precioPromocional" (valueChange)="editar('precioPromocional', $event)" />
+          <app-input label="Sello de la oferta" placeholder="-20 %, 2x1" [disabled]="!p.puedeEditar" [value]="b.etiquetaOferta" (valueChange)="editar('etiquetaOferta', $event)" />
+        </div>
+        <app-input
+          label="Condiciones"
+          placeholder="Qué incluye, qué no, hasta cuándo, si requiere evaluación previa…"
+          [multiline]="true"
+          [rows]="3"
+          [disabled]="!p.puedeEditar"
+          [value]="b.condiciones"
+          (valueChange)="editar('condiciones', $event)" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <app-input type="date" label="Vale desde" [disabled]="!p.puedeEditar" [value]="b.vigenteDesde" (valueChange)="editar('vigenteDesde', $event)" />
+          <app-input type="date" label="Hasta (vacío = sin fecha de fin)" [disabled]="!p.puedeEditar" [value]="b.vigenteHasta" (valueChange)="editar('vigenteHasta', $event)" />
+        </div>
+
+        <app-select label="Especialidad" ariaLabel="Especialidad de la promoción" [disabled]="!p.puedeEditar" [value]="b.especialidadId" (valueChange)="editar('especialidadId', $event)">
+          <option value="">Ninguna</option>
+          @for (e of opcionesEspecialidad(); track e.id) {
+            <option [value]="e.id">{{ e.nombre }}</option>
+          }
+        </app-select>
+
+        <div class="flex flex-col gap-2">
+          <span class="text-sm font-medium text-text-dark">Médicos que la atienden</span>
+          @if (medicosElegidos().length > 0) {
+            <ul class="flex flex-wrap gap-2" aria-label="Médicos elegidos">
+              @for (m of medicosElegidos(); track m.id) {
+                <li class="ficha-elegido">
+                  <span>{{ m.nombre }}</span>
+                  @if (p.puedeEditar) {
+                    <app-button variant="ghost" size="xs" [circle]="true" icon="x" [ariaLabel]="'Quitar a ' + m.nombre" (clicked)="quitarMedico(m.id)" />
+                  }
+                </li>
+              }
+            </ul>
+          }
+          @if (p.puedeEditar) {
+            @if (fichas.error()) {
+              <p class="text-xs text-text-muted">No se pudo cargar el directorio médico. <button type="button" class="crm-enlace" (click)="fichas.reload()">Reintentar</button></p>
+            } @else if (medicosElegibles().length > 0) {
+              <app-select size="sm" ariaLabel="Agregar un médico" [value]="''" (valueChange)="agregarMedico($event)">
+                <option value="">Agregar un médico…</option>
+                @for (f of medicosElegibles(); track f.id) {
+                  <option [value]="f.id">{{ f.nombrePublico }}</option>
+                }
+              </app-select>
+            } @else if (medicoIds().length === 0) {
+              <p class="text-xs text-text-muted">Todavía no hay fichas en el Directorio médico.</p>
+            }
+          }
+        </div>
+
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center gap-2">
+            <app-switch [disabled]="!p.puedeEditar" [value]="b.enLanding" (valueChange)="editar('enLanding', $event)" ariaLabel="Mostrar en la landing" />
+            <span class="text-xs text-text-dark">Mostrar en la landing</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <app-switch [disabled]="!p.puedeEditar" [value]="b.enWhatsapp" (valueChange)="editar('enWhatsapp', $event)" ariaLabel="Ofrecer por WhatsApp" />
+            <span class="text-xs text-text-dark">Ofrecer por WhatsApp</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <app-switch [disabled]="!p.puedeEditar" [value]="b.destacada" (valueChange)="editar('destacada', $event)" ariaLabel="Destacarla" />
+            <span class="text-xs text-text-dark">Destacarla (sale primero en la landing)</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Banners ───────────────────────────────────────────────── -->
+      <section class="flex flex-col gap-3" aria-labelledby="ficha-banners">
+        <h3 id="ficha-banners" class="text-xs font-bold text-text-dark uppercase tracking-wider">Banners</h3>
+        @if (p.puedeEditar) {
+          <app-input label="Texto alternativo (qué muestra el banner, para quien no lo ve)" [(value)]="textoAlternativo" />
+        }
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          @for (f of formatos; track f.formato) {
+            @let img = banner(p, f.formato);
+            <article class="ficha-banner">
+              <div class="ficha-banner-marco" [attr.data-formato]="f.formato">
+                @if (img?.url; as url) {
+                  <img [src]="url" [alt]="img!.textoAlternativo" loading="lazy" />
+                } @else {
+                  <app-icon name="image" [size]="20" />
+                }
+              </div>
+              <div class="flex flex-col gap-1 min-w-0">
+                <p class="text-xs font-semibold text-text-dark">
+                  {{ f.nombre }}
+                  @if (f.obligatorio) { <span class="font-normal text-text-muted">· obligatorio</span> }
+                </p>
+                <p class="text-[11px] text-text-muted leading-snug">{{ f.medida }} · {{ f.uso }}</p>
+                @if (img) {
+                  <p class="text-[11px] text-text-muted tabular-nums">{{ img.ancho }}×{{ img.alto }} px</p>
+                }
+                @if (p.puedeEditar) {
+                  <div class="flex items-center gap-2 mt-1">
+                    <label class="crm-subir-archivo" [class.crm-subir-archivo-ocupado]="subiendo() === f.formato">
+                      <app-icon [name]="subiendo() === f.formato ? 'loader' : 'download'" [size]="14" />
+                      <span>{{ subiendo() === f.formato ? 'Subiendo…' : img ? 'Reemplazar' : 'Subir' }}</span>
+                      <input type="file" class="sr-only" [accept]="tiposBanner" [disabled]="!!subiendo()" (change)="elegirBanner(f.formato, $event)" />
+                    </label>
+                    @if (img) {
+                      <app-button variant="ghost" size="xs" [circle]="true" icon="trash" [ariaLabel]="'Quitar el banner ' + f.nombre" [disabled]="!!subiendo()" (clicked)="quitarBanner(f.formato)" />
+                    }
+                  </div>
+                }
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+
+      <!-- ── Meta: anuncios y lo que trajeron ──────────────────────── -->
+      <section class="flex flex-col gap-3" aria-labelledby="ficha-anuncios">
+        <h3 id="ficha-anuncios" class="text-xs font-bold text-text-dark uppercase tracking-wider">Anuncios de Meta</h3>
+        <p class="text-[11px] text-text-muted leading-relaxed">
+          Cuando una paciente llega por un anuncio de Facebook o Instagram, el CRM guarda su id. Enlázalo aquí y el chat
+          sabrá que vino por esta promoción. El id está en el Administrador de anuncios, o en la pestaña «Anuncios de Meta».
+        </p>
+        @if (p.anuncios.length > 0) {
+          <ul class="flex flex-wrap gap-2" aria-label="Anuncios enlazados">
+            @for (a of p.anuncios; track a.anuncioId) {
+              <li class="ficha-elegido">
+                <span class="crm-meta-clave">{{ a.anuncioId }}</span>
+                @if (p.estado !== 'ARCHIVADA') {
+                  <app-button variant="ghost" size="xs" [circle]="true" icon="x" [ariaLabel]="'Quitar el anuncio ' + a.anuncioId" [disabled]="trabajandoAnuncio()" (clicked)="quitarAnuncio(a.anuncioId)" />
+                }
+              </li>
+            }
+          </ul>
+        }
+        @if (p.estado !== 'ARCHIVADA') {
+          <div class="flex items-end gap-2">
+            <div class="flex-1 min-w-0">
+              <app-input label="Id del anuncio" placeholder="120210000000000000" [(value)]="nuevoAnuncio" />
+            </div>
+            <app-button size="sm" variant="secondary" icon="plus" [disabled]="!anuncioValido()" [loading]="trabajandoAnuncio()" (clicked)="enlazarAnuncio()">Enlazar</app-button>
+          </div>
+        }
+        @if (p.anuncios.length > 0) {
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <app-kpi-card label="Pacientes que llegaron" [valor]="p.resultados.leads" icon="users" tono="primary" [compacto]="true" pie="Por sus anuncios" />
+            <app-kpi-card label="Ventas ganadas" [valor]="p.resultados.ventasGanadas" icon="shopping-bag" tono="secondary" [compacto]="true" pie="De esas pacientes" />
+            <app-kpi-card label="Vendido" [valor]="p.resultados.montoVendido | moneda" icon="dollar-sign" tono="primary" [destacado]="true" [compacto]="true" pie="Atribución por anuncio" />
+          </div>
+        }
+      </section>
+
+      <!-- ── Lo que escribe la paciente desde la landing ───────────── -->
+      <section class="flex flex-col gap-2" aria-labelledby="ficha-whatsapp">
+        <h3 id="ficha-whatsapp" class="text-xs font-bold text-text-dark uppercase tracking-wider">Mensaje de WhatsApp</h3>
+        <p class="text-[11px] text-text-muted">Lo que la landing pone en el botón de WhatsApp. El código identifica la promoción en el chat.</p>
+        <div class="flex items-center gap-2">
+          <p class="flex-1 min-w-0 text-xs text-text-dark bg-bg-workspace border border-border rounded-xl px-3 py-2">{{ p.mensajeWhatsapp }}</p>
+          <app-button variant="ghost" size="xs" [circle]="true" icon="copy" ariaLabel="Copiar el mensaje" (clicked)="copiarMensaje(p.mensajeWhatsapp)" />
+        </div>
+      </section>
+    }
+  </div>
+
+  @if (detalle.hasValue() && detalle.value().puedeEditar) {
+    <div class="flex items-center justify-between gap-3 px-5 py-3 shrink-0 border-t border-border bg-bg-light">
+      @if (conflicto()) {
+        <p role="alert" class="text-xs text-text-dark min-w-0">Otra persona guardó cambios. <button type="button" class="crm-enlace" (click)="recargar()">Recargar y perder los míos</button></p>
+      } @else {
+        <p class="flex items-center gap-1.5 text-xs min-w-0" [class.text-text-muted]="!errorFormulario()" [class.text-text-dark]="!!errorFormulario()">
+          <app-icon [name]="errorFormulario() ? 'alert-circle' : hayCambios() ? 'edit' : 'check-circle'" [size]="14" class="shrink-0" />
+          <span>{{ errorFormulario() ?? (hayCambios() ? 'Hay cambios sin guardar' : 'Todo guardado') }}</span>
+        </p>
+      }
+      <div class="flex items-center gap-2 shrink-0">
+        @if (hayCambios()) {
+          <app-button variant="ghost" size="sm" [disabled]="guardando()" (clicked)="descartar()">Descartar</app-button>
+        }
+        <app-button size="sm" icon="check" [disabled]="!hayCambios() || !!errorFormulario() || guardando()" [loading]="guardando()" (clicked)="guardar()">Guardar</app-button>
+      </div>
+    </div>
+  }
+</app-drawer>

@@ -1,0 +1,24 @@
+<app-drawer ancho="md" alto="contenido" titulo="Nueva promoción" subtitulo="Nace como borrador; nadie la ve hasta que se publique" icono="percent" (cerrar)="cerrar.emit()">
+  <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
+    <app-input label="Título" placeholder="Ej. Control prenatal completo" [(value)]="titulo" />
+    <app-input label="Resumen de una línea" placeholder="Ej. Tres controles con ecografía incluida" [(value)]="resumen" />
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <app-input type="date" label="Vale desde" [(value)]="vigenteDesde" />
+      <app-input type="date" label="Hasta (opcional)" [(value)]="vigenteHasta" />
+    </div>
+    <p class="text-[11px] text-text-muted leading-relaxed">
+      Días de calendario de La Paz, incluidos los dos. Después vas a poder subir los banners, poner el precio y
+      las condiciones, y mandarla a revisión.
+    </p>
+  </div>
+
+  <div class="flex items-center justify-between gap-3 px-5 py-3 shrink-0 border-t border-border bg-bg-light">
+    <p class="flex items-center gap-1.5 text-xs min-w-0" [class.text-primary]="!falta()" [class.font-semibold]="!falta()" [class.text-text-muted]="!!falta()">
+      <app-icon [name]="falta() ? 'circle' : 'check-circle'" [size]="14" class="shrink-0" />
+      <span>{{ falta() ?? 'Lista para crear' }}</span>
+    </p>
+    <app-button variant="primary" size="sm" icon="plus" class="shrink-0" [disabled]="!!falta() || creando()" [loading]="creando()" (clicked)="crear()">
+      Crear borrador
+    </app-button>
+  </div>
+</app-drawer>

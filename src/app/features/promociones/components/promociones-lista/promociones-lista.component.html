@@ -1,0 +1,116 @@
+<!-- ══════════════════════════════════════════════════════════════════════
+     Pestaña «Promociones» — todas, por estado, con su ficha en un cajón.
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="flex flex-col gap-4">
+  <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0" role="group" aria-label="Filtrar promociones por estado">
+      @for (e of filtros; track e) {
+        <app-filter-chip size="sm" [active]="estado() === e" (clicked)="filtrar(e)">
+          {{ e ? estados[e].etiqueta : 'Todas' }}
+        </app-filter-chip>
+      }
+    </div>
+    <div class="w-full sm:w-72 shrink-0">
+      <app-input type="search" placeholder="Buscar por título o código PRM-…" ariaLabel="Buscar promociones" [(value)]="busqueda" />
+    </div>
+  </div>
+
+  @if (promociones.isLoading() && !hayPromociones()) {
+    <div class="bg-white rounded-2xl p-6 shadow-subtle flex flex-col gap-4">
+      @for (n of [1, 2, 3, 4]; track n) {
+        <app-loading-skeleton height="56px" />
+      }
+    </div>
+  } @else if (promociones.error()) {
+    <app-error-carga que="las promociones" (reintentar)="promociones.reload()" />
+  } @else if (hayPromociones()) {
+    <app-table>
+      <thead>
+        <tr>
+          <th>Promoción</th>
+          <th>Estado</th>
+          <th>Vigencia</th>
+          <th class="text-right">Precio</th>
+          <th>Dónde se ofrece</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of promociones.value().datos; track p.id) {
+          <tr class="fila-clicable" (click)="abrir(p.id)">
+            <td>
+              <div class="flex items-center gap-3 min-w-0">
+                <!-- La miniatura del banner cuadrado: se reconoce antes de leer el título. -->
+                <span class="promo-miniatura shrink-0">
+                  @if (p.bannerUrl) {
+                    <img [src]="p.bannerUrl" alt="" loading="lazy" width="44" height="44" />
+                  } @else {
+                    <app-icon name="image" [size]="16" />
+                  }
+                </span>
+                <div class="min-w-0">
+                  <app-button variant="ghost" size="sm" [ariaLabel]="'Ver promoción ' + p.titulo" (clicked)="$event.stopPropagation(); abrir(p.id)">
+                    {{ p.titulo }}
+                  </app-button>
+                  <div class="crm-meta mt-0.5">
+                    <span class="crm-meta-clave">{{ p.codigo }}</span>
+                    @if (p.especialidad; as e) { <span>{{ e.nombre }}</span> }
+                    @if (p.destacada) { <span>Destacada</span> }
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td><app-badge [variant]="estados[p.estado].variante">{{ estados[p.estado].etiqueta }}</app-badge></td>
+            <td>
+              <span class="block text-xs text-text-dark">{{ vigencias[p.vigencia] }}</span>
+              <span class="block text-[11px] text-text-muted">{{ rangoVigencia(p.vigenteDesde, p.vigenteHasta) }}</span>
+            </td>
+            <td class="text-right tabular-nums">
+              @if (p.precioPromocional !== null) {
+                <span class="block font-semibold text-text-dark">{{ p.precioPromocional | moneda }}</span>
+                @if (p.precioRegular !== null) {
+                  <span class="block text-[11px] text-text-muted line-through">{{ p.precioRegular | moneda }}</span>
+                }
+              } @else if (p.precioRegular !== null) {
+                <span class="text-text-dark">{{ p.precioRegular | moneda }}</span>
+              } @else if (p.etiquetaOferta) {
+                <span class="text-xs text-text-dark">{{ p.etiquetaOferta }}</span>
+              } @else {
+                <span class="text-text-muted">—</span>
+              }
+            </td>
+            <td>
+              <div class="crm-meta">
+                @if (p.enLanding) { <span>Landing</span> }
+                @if (p.enWhatsapp) { <span>WhatsApp</span> }
+                @if (p.anuncios > 0) { <span>{{ p.anuncios }} {{ p.anuncios === 1 ? 'anuncio' : 'anuncios' }}</span> }
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </app-table>
+    <app-paginator
+      [pagina]="promociones.value().pagina"
+      [totalPaginas]="promociones.value().totalPaginas"
+      [total]="promociones.value().total"
+      [limite]="promociones.value().limite"
+      (cambiar)="pagina.set($event)" />
+  } @else if (filtrando()) {
+    <app-empty-state icon="search" title="Ninguna promoción con ese filtro" description="Prueba con otro estado o borra la búsqueda." />
+  } @else {
+    <app-empty-state
+      icon="percent"
+      title="Todavía no hay promociones"
+      description="Una promoción lleva su banner, su precio y hasta cuándo vale. La redacta una agente y la publica un administrador.">
+      @if (puedeRedactar()) {
+        <app-button icon="plus" (clicked)="nueva.emit()">Nueva promoción</app-button>
+      }
+    </app-empty-state>
+  }
+</div>
+
+<ng-template #fichaTpl>
+  @if (seleccionadaId(); as id) {
+    <app-promocion-ficha [id]="id" (cambio)="promociones.reload()" (cerrar)="cerrar()" />
+  }
+</ng-template>

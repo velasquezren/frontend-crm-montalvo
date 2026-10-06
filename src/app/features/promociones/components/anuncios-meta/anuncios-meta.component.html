@@ -1,0 +1,76 @@
+<!-- ══════════════════════════════════════════════════════════════════════
+     Pestaña «Anuncios de Meta» — los que trajeron pacientes y nadie enlazó.
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="flex flex-col gap-4">
+  <p class="text-xs text-text-muted leading-relaxed max-w-3xl">
+    Anuncios de Facebook e Instagram por los que ya escribieron pacientes, todavía sin promoción. Elige a cuál
+    corresponde cada uno: desde entonces el chat dirá de qué promoción vino la paciente y la promoción contará sus ventas.
+  </p>
+
+  @if (anuncios.isLoading() && !hayAnuncios()) {
+    <div class="bg-white rounded-2xl p-6 shadow-subtle flex flex-col gap-4">
+      @for (n of [1, 2, 3]; track n) {
+        <app-loading-skeleton height="56px" />
+      }
+    </div>
+  } @else if (anuncios.error()) {
+    <app-error-carga que="los anuncios" (reintentar)="anuncios.reload()" />
+  } @else if (hayAnuncios()) {
+    <app-table>
+      <thead>
+        <tr>
+          <th>Anuncio</th>
+          <th class="text-right">Pacientes</th>
+          <th>Último</th>
+          <th>Enlazar a</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (a of anuncios.value().datos; track a.anuncioId) {
+          <tr>
+            <td>
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="anuncio-miniatura shrink-0">
+                  @if (a.imagenUrl) {
+                    <img [src]="a.imagenUrl" alt="" loading="lazy" width="44" height="44" referrerpolicy="no-referrer" />
+                  } @else {
+                    <app-icon name="image" [size]="16" />
+                  }
+                </span>
+                <div class="min-w-0">
+                  <p class="text-sm font-medium text-text-dark truncate">{{ a.titular ?? 'Sin titular' }}</p>
+                  <span class="crm-meta-clave text-[11px]">{{ a.anuncioId }}</span>
+                </div>
+              </div>
+            </td>
+            <td class="text-right tabular-nums">{{ a.leads }}</td>
+            <td class="text-xs text-text-muted">{{ a.ultimoEn | date: 'd MMM y' : '-0400' }}</td>
+            <td class="min-w-56">
+              @if (destinos().length > 0) {
+                <app-select size="sm" [ariaLabel]="'Promoción del anuncio ' + a.anuncioId" [value]="''" [disabled]="enlazando() === a.anuncioId" (valueChange)="enlazar(a.anuncioId, $event)">
+                  <option value="">Elige una promoción…</option>
+                  @for (p of destinos(); track p.id) {
+                    <option [value]="p.id">{{ p.titulo }}</option>
+                  }
+                </app-select>
+              } @else {
+                <span class="text-xs text-text-muted">Primero crea una promoción.</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </app-table>
+    <app-paginator
+      [pagina]="anuncios.value().pagina"
+      [totalPaginas]="anuncios.value().totalPaginas"
+      [total]="anuncios.value().total"
+      [limite]="anuncios.value().limite"
+      (cambiar)="pagina.set($event)" />
+  } @else {
+    <app-empty-state
+      icon="check-circle"
+      title="Ningún anuncio sin promoción"
+      description="Cuando una paciente escriba por un anuncio que todavía no está enlazado, aparecerá aquí." />
+  }
+</div>

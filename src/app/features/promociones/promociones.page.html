@@ -1,0 +1,66 @@
+<!-- ══════════════════════════════════════════════════════════════════════
+     Promociones — lo que la clínica ofrece por tiempo limitado, y los
+     anuncios de Meta que las publicitan. Cada pestaña es su componente.
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="flex flex-col gap-5 w-full">
+  <header class="flex flex-col gap-3.5">
+    <app-page-header
+      title="Promociones"
+      subtitle="Ofertas con banner, precio y vigencia. Las agentes las redactan; un administrador las publica en la landing y WhatsApp.">
+      @if (puedeRedactar()) {
+        <app-button icon="plus" (clicked)="abrirNueva()">Nueva promoción</app-button>
+      }
+    </app-page-header>
+
+    @if (tabsVisibles().length > 1) {
+      <nav class="crm-segmento crm-segmento-pestanas" role="tablist" aria-label="Secciones de Promociones">
+        @for (t of tabsVisibles(); track t.id) {
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="tabActiva() === t.id"
+            [attr.aria-controls]="'panel-' + t.id"
+            [id]="'tab-' + t.id"
+            (click)="cambiarTab(t.id)"
+            class="crm-segmento-opcion"
+            [class.crm-segmento-opcion-activo]="tabActiva() === t.id">
+            <app-icon [name]="t.icon" [size]="14" />
+            <span>{{ t.label }}</span>
+          </button>
+        }
+      </nav>
+    }
+  </header>
+
+  <!-- `@if` decide si la pestaña EXISTE (y pide sus datos); la clase decide si
+       se ve. Ver `.crm-pestana-panel-oculta` en styles.css. -->
+  <main class="crm-pestanas-cuerpo">
+    @if (estaMontada('promociones')) {
+      <div
+        id="panel-promociones"
+        aria-labelledby="tab-promociones"
+        class="crm-pestana-panel"
+        [class.crm-pestana-panel-oculta]="tabActiva() !== 'promociones'"
+        [attr.inert]="tabActiva() === 'promociones' ? null : ''"
+        role="tabpanel">
+        <app-promociones-lista (nueva)="abrirNueva()" />
+      </div>
+    }
+
+    @if (estaMontada('anuncios')) {
+      <div
+        id="panel-anuncios"
+        aria-labelledby="tab-anuncios"
+        class="crm-pestana-panel"
+        [class.crm-pestana-panel-oculta]="tabActiva() !== 'anuncios'"
+        [attr.inert]="tabActiva() === 'anuncios' ? null : ''"
+        role="tabpanel">
+        <app-anuncios-meta />
+      </div>
+    }
+  </main>
+</div>
+
+<ng-template #nuevaTpl>
+  <app-nueva-promocion (creada)="alCrear($event)" (cerrar)="cerrarNueva()" />
+</ng-template>
