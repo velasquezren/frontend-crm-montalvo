@@ -26,7 +26,7 @@ export type EstadoLead = 'NUEVO' | 'CONTACTADO' | 'CONVERTIDO' | 'PERDIDO';
 
 export type DireccionMensaje = 'ENTRANTE' | 'SALIENTE';
 
-export type MotivoAtencion = 'SOLICITUD_EXPLICITA' | 'SOLICITUD_CITA' | 'REVISION';
+export type MotivoAtencion = 'EMERGENCIA' | 'SOLICITUD_EXPLICITA' | 'SOLICITUD_CITA' | 'REVISION';
 
 export type TipoMensaje = 'TEXTO' | 'IMAGEN' | 'DOCUMENTO' | 'AUDIO' | 'VIDEO' | 'STICKER';
 
@@ -80,3 +80,7 @@ export type FrecuenciaRepeticion = 'SEMANAL' | 'QUINCENAL' | 'MENSUAL';
 export type EstadoCampana = 'PROGRAMADA' | 'ENVIANDO' | 'PAUSADA' | 'TERMINADA' | 'CANCELADA';
 
 export type EstadoDestinatario = 'PENDIENTE' | 'ENVIANDO' | 'ENVIADO' | 'OMITIDO' | 'FALLIDO';
+
+export type EstadoPromocion = 'BORRADOR' | 'EN_REVISION' | 'PUBLICADA' | 'PAUSADA' | 'ARCHIVADA';
+
+export type FormatoBanner = 'CUADRADO' | 'VERTICAL' | 'HISTORIA' | 'HORIZONTAL';
