@@ -71,6 +71,41 @@ de Meta y resultados sin confirmar. Entregas, lecturas y compras pueden seguir
 cambiando después de que termine el lote; la ficha abierta se actualiza cada
 minuto mientras la pestaña está visible.
 
+### Promociones
+
+**Promociones** reúne lo que la clínica ofrece por tiempo limitado. Todos pueden
+consultarlas (recepción las ofrece al paciente). Una **agente** las redacta y un
+**administrador** las publica:
+
+1. «Nueva promoción»: título, resumen y vigencia. Nace como **borrador**; nadie la ve.
+2. En su ficha se completan el precio regular y el promocional (en Bs), el sello de
+   la oferta («-20 %»), las condiciones, la especialidad, los médicos y los
+   **banners**. El cuadrado (1080×1080) es obligatorio; el vertical, la historia y el
+   horizontal son para Instagram, Facebook y la cabecera de la landing. La ficha dice
+   qué medida pide cada uno y qué falta para publicarla.
+3. «Enviar a revisión». Desde ahí la agente ya no la cambia.
+4. Un administrador la **publica** (o la **devuelve** con un motivo). Publicada y
+   vigente, la ven la landing y WhatsApp. Se puede **pausar** y volver a publicar;
+   **archivar** la retira para siempre (para repetirla se crea otra).
+
+Si dos personas editan la misma promoción a la vez, la segunda recibe un aviso y
+puede recargar: nadie pisa los cambios de nadie sin saberlo.
+
+**Anuncios de Meta** (pestaña): los anuncios de Facebook e Instagram por los que ya
+escribieron pacientes y que nadie enlazó a una promoción. Al elegir la promoción de
+cada uno, el CRM sabe de cuál vino cada paciente y la promoción cuenta sus ventas
+(es atribución por anuncio, no prueba que el anuncio causara la venta).
+
+### Directorio médico
+
+**Directorio médico** tiene los médicos (con su foto, especialidades, precio de
+consulta y horario de atención) y las especialidades. Todos lo consultan; lo edita
+administración. Lo **publicado** aparece en la landing. El horario es
+**informativo**: las citas se siguen agendando en el sistema de la clínica. Las
+ausencias (vacaciones, congresos) avisan en la landing que el médico no atiende
+esos días. Al crear una ficha conviene enlazarla con el médico de la planilla (su
+código de FileMaker): así es la misma persona en ventas, comisiones y directorio.
+
 ---
 
 ## 💼 4. Casos de Uso Principales (Paso a Paso)
