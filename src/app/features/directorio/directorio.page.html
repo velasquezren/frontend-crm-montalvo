@@ -1,0 +1,61 @@
+<!-- ══════════════════════════════════════════════════════════════════════
+     Directorio médico — quién atiende, de qué y cuándo.
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="flex flex-col gap-5 w-full">
+  <header class="flex flex-col gap-3.5">
+    <app-page-header
+      title="Directorio médico"
+      subtitle="Médicos, especialidades y horario de atención. Lo publicado aparece en la landing; las citas siguen en la agenda de la clínica.">
+      @if (puedeEditar() && tabActiva() === 'medicos') {
+        <app-button icon="plus" (clicked)="abrirNueva()">Nueva ficha</app-button>
+      }
+    </app-page-header>
+
+    <nav class="crm-segmento crm-segmento-pestanas" role="tablist" aria-label="Secciones del Directorio médico">
+      @for (t of tabs; track t.id) {
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="tabActiva() === t.id"
+          [attr.aria-controls]="'panel-' + t.id"
+          [id]="'tab-' + t.id"
+          (click)="cambiarTab(t.id)"
+          class="crm-segmento-opcion"
+          [class.crm-segmento-opcion-activo]="tabActiva() === t.id">
+          <app-icon [name]="t.icon" [size]="14" />
+          <span>{{ t.label }}</span>
+        </button>
+      }
+    </nav>
+  </header>
+
+  <main class="crm-pestanas-cuerpo">
+    @if (estaMontada('medicos')) {
+      <div
+        id="panel-medicos"
+        aria-labelledby="tab-medicos"
+        class="crm-pestana-panel"
+        [class.crm-pestana-panel-oculta]="tabActiva() !== 'medicos'"
+        [attr.inert]="tabActiva() === 'medicos' ? null : ''"
+        role="tabpanel">
+        <app-medicos-lista (nueva)="abrirNueva()" />
+      </div>
+    }
+
+    @if (estaMontada('especialidades')) {
+      <div
+        id="panel-especialidades"
+        aria-labelledby="tab-especialidades"
+        class="crm-pestana-panel"
+        [class.crm-pestana-panel-oculta]="tabActiva() !== 'especialidades'"
+        [attr.inert]="tabActiva() === 'especialidades' ? null : ''"
+        role="tabpanel">
+        <app-especialidades-lista />
+      </div>
+    }
+  </main>
+</div>
+
+<ng-template #nuevaTpl>
+  <app-nueva-ficha (creada)="alCrear($event)" (cerrar)="cerrarNueva()" />
+</ng-template>

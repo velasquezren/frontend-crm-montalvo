@@ -1,0 +1,175 @@
+<app-drawer ancho="xl" [titulo]="detalle.hasValue() ? detalle.value().nombrePublico : 'Ficha del médico'" icono="user" (cerrar)="cerrar.emit()">
+  <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-6">
+    @if (detalle.isLoading() && !detalle.hasValue()) {
+      <app-loading-skeleton height="96px" />
+      <app-loading-skeleton height="240px" />
+    } @else if (detalle.error()) {
+      <app-error-carga que="la ficha" (reintentar)="detalle.reload()" />
+    } @else if (detalle.hasValue() && datos(); as d) {
+      @let f = detalle.value();
+
+      @if (conflicto()) {
+        <p role="alert" class="text-xs text-text-dark bg-critical-bg rounded-xl px-3 py-2">
+          Otra persona guardó cambios en esta ficha. <button type="button" class="crm-enlace" (click)="recargar()">Recargar y perder los míos</button>
+        </p>
+      }
+
+      <!-- ── Foto, estado y publicación ──────────────────────────── -->
+      <section class="flex items-start gap-4">
+        <app-avatar [initials]="iniciales(f.nombrePublico)" [imageUrl]="f.fotoUrl" [nombre]="f.nombrePublico" size="lg" />
+        <div class="flex flex-col gap-2 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <app-badge [variant]="f.publicado ? 'success' : 'neutral'">{{ f.publicado ? 'Publicado en la landing' : 'Oculto' }}</app-badge>
+          </div>
+          <div class="crm-meta">
+            @if (f.medico; as m) { <span>Planilla: {{ m.nombre }}</span><span class="crm-meta-clave">{{ m.codigo }}</span> }
+            @else { <span>Sin enlazar a la planilla</span> }
+          </div>
+          @if (puedeEditar()) {
+            <div class="flex flex-wrap items-center gap-2">
+              <label class="crm-subir-archivo" [class.crm-subir-archivo-ocupado]="ocupado() === 'foto'">
+                <app-icon [name]="ocupado() === 'foto' ? 'loader' : 'download'" [size]="14" />
+                <span>{{ f.fotoUrl ? 'Cambiar foto' : 'Subir foto' }}</span>
+                <input type="file" class="sr-only" [accept]="tiposFoto" [disabled]="!!ocupado()" (change)="elegirFoto($event)" />
+              </label>
+              @if (f.fotoUrl) {
+                <app-button variant="ghost" size="sm" [disabled]="!!ocupado()" (clicked)="quitarFoto()">Quitar foto</app-button>
+              }
+              <app-button
+                size="sm"
+                [variant]="f.publicado ? 'secondary' : 'primary'"
+                [disabled]="!!ocupado() || hayCambiosDatos() || hayCambiosHorario()"
+                [loading]="ocupado() === 'publicar'"
+                (clicked)="publicar(!f.publicado)">
+                {{ f.publicado ? 'Ocultar' : 'Publicar' }}
+              </app-button>
+            </div>
+            @if (!f.publicado && f.especialidades.length === 0) {
+              <p class="text-[11px] text-text-muted">Para publicarla, asígnale al menos una especialidad.</p>
+            }
+          }
+        </div>
+      </section>
+
+      <!-- ── Datos ─────────────────────────────────────────────────── -->
+      <section class="flex flex-col gap-4" aria-labelledby="ficha-datos">
+        <h3 id="ficha-datos" class="text-xs font-bold text-text-dark uppercase tracking-wider">Datos</h3>
+        <app-input label="Nombre con que se presenta" [disabled]="!puedeEditar()" [value]="d.nombrePublico" (valueChange)="editar('nombrePublico', $event)" />
+        <app-input label="Resumen (una línea para la tarjeta)" placeholder="Ej. Control prenatal y parto humanizado" [disabled]="!puedeEditar()" [value]="d.resumen" (valueChange)="editar('resumen', $event)" />
+        <app-input label="Biografía" [multiline]="true" [rows]="4" [disabled]="!puedeEditar()" [value]="d.biografia" (valueChange)="editar('biografia', $event)" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <app-input label="Matrícula (opcional)" [disabled]="!puedeEditar()" [value]="d.matricula" (valueChange)="editar('matricula', $event)" />
+          <app-input label="Precio de la consulta (Bs, opcional)" type="number" [disabled]="!puedeEditar()" [value]="d.precioConsulta" (valueChange)="editar('precioConsulta', $event)" />
+        </div>
+        <div class="flex flex-col gap-2">
+          <span class="text-sm font-medium text-text-dark">Especialidades</span>
+          @if (especialidades.error()) {
+            <p class="text-xs text-text-muted">No se pudieron cargar las especialidades. <button type="button" class="crm-enlace" (click)="especialidades.reload()">Reintentar</button></p>
+          } @else if (puedeEditar()) {
+            <div class="flex flex-wrap gap-2" role="group" aria-label="Especialidades del médico">
+              @for (e of opcionesEspecialidad(); track e.id) {
+                <app-filter-chip size="sm" [active]="especialidadIds().includes(e.id)" (clicked)="alternarEspecialidad(e.id)">{{ e.nombre }}</app-filter-chip>
+              }
+            </div>
+          } @else {
+            <p class="text-xs text-text-dark">
+              @for (e of f.especialidades; track e.id; let ultimo = $last) { {{ e.nombre }}@if (!ultimo) {, } } @empty { Sin especialidad }
+            </p>
+          }
+        </div>
+        @if (puedeEditar() && hayCambiosDatos()) {
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-xs" [class.text-text-dark]="!!errorDatos()" [class.text-text-muted]="!errorDatos()">{{ errorDatos() ?? 'Hay cambios sin guardar.' }}</p>
+            <div class="flex items-center gap-2 shrink-0">
+              <app-button variant="ghost" size="sm" (clicked)="descartarDatos()">Descartar</app-button>
+              <app-button size="sm" icon="check" [disabled]="!!errorDatos() || !!ocupado()" [loading]="ocupado() === 'datos'" (clicked)="guardarDatos()">Guardar datos</app-button>
+            </div>
+          </div>
+        }
+      </section>
+
+      <!-- ── Horario semanal ───────────────────────────────────────── -->
+      <section class="flex flex-col gap-3" aria-labelledby="ficha-horario">
+        <div class="flex items-center justify-between gap-2">
+          <h3 id="ficha-horario" class="text-xs font-bold text-text-dark uppercase tracking-wider">Horario de atención</h3>
+          <span class="text-[11px] text-text-muted">Informativo: las citas siguen en la agenda de la clínica.</span>
+        </div>
+        <p class="text-xs text-text-dark">{{ f.resumenHorario }}</p>
+
+        @if (puedeEditar()) {
+          @if (bloques().length > 0) {
+            <ul class="flex flex-col gap-2" aria-label="Bloques del horario">
+              @for (b of bloques(); track $index; let i = $index) {
+                <li class="ficha-bloque">
+                  <app-select size="sm" [ariaLabel]="'Día del bloque ' + (i + 1)" [value]="'' + b.diaSemana" (valueChange)="editarBloque(i, 'diaSemana', $event)">
+                    @for (dia of dias; track dia.valor) {
+                      <option [value]="'' + dia.valor">{{ dia.nombre }}</option>
+                    }
+                  </app-select>
+                  <app-input type="time" label="Desde" [value]="b.desde" (valueChange)="editarBloque(i, 'desde', $event)" />
+                  <app-input type="time" label="Hasta" [value]="b.hasta" (valueChange)="editarBloque(i, 'hasta', $event)" />
+                  <app-input label="Lugar (opcional)" placeholder="Consultorio 3" [value]="b.lugar" (valueChange)="editarBloque(i, 'lugar', $event)" />
+                  <app-button variant="ghost" size="xs" [circle]="true" icon="trash" class="self-end mb-1" [ariaLabel]="'Quitar el bloque del ' + nombreDia(b.diaSemana)" (clicked)="quitarBloque(i)" />
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="text-xs text-text-muted">Sin bloques: la landing dirá «Con cita a solicitud».</p>
+          }
+          @if (problemasHorario().length > 0) {
+            <ul class="flex flex-col gap-0.5" role="alert">
+              @for (problema of problemasHorario(); track problema) {
+                <li class="text-xs text-text-dark">{{ problema }}</li>
+              }
+            </ul>
+          }
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <app-button variant="secondary" size="sm" icon="plus" (clicked)="agregarBloque()">Agregar bloque</app-button>
+            @if (hayCambiosHorario()) {
+              <div class="flex items-center gap-2">
+                <app-button variant="ghost" size="sm" (clicked)="descartarHorario()">Descartar</app-button>
+                <app-button size="sm" icon="check" [disabled]="problemasHorario().length > 0 || !!ocupado()" [loading]="ocupado() === 'horario'" (clicked)="guardarHorario()">Guardar horario</app-button>
+              </div>
+            }
+          </div>
+        } @else if (f.horario.length > 0) {
+          <ul class="flex flex-col gap-1" aria-label="Horario">
+            @for (b of f.horario; track $index) {
+              <li class="text-xs text-text-dark tabular-nums">{{ nombreDia(b.diaSemana) }} · {{ b.desde }}–{{ b.hasta }}@if (b.lugar) { · {{ b.lugar }} }</li>
+            }
+          </ul>
+        }
+      </section>
+
+      <!-- ── Ausencias ─────────────────────────────────────────────── -->
+      <section class="flex flex-col gap-3" aria-labelledby="ficha-ausencias">
+        <h3 id="ficha-ausencias" class="text-xs font-bold text-text-dark uppercase tracking-wider">Ausencias</h3>
+        @if (f.ausencias.length > 0) {
+          <ul class="flex flex-col gap-1.5" aria-label="Próximas ausencias">
+            @for (a of f.ausencias; track a.id) {
+              <li class="flex items-center justify-between gap-2 text-xs text-text-dark">
+                <span>Del {{ fechaCorta(a.desde) }} al {{ fechaCorta(a.hasta) }}@if (a.motivoPublico) { · {{ a.motivoPublico }} }</span>
+                @if (puedeEditar()) {
+                  <app-button variant="ghost" size="xs" [circle]="true" icon="x" ariaLabel="Quitar la ausencia" [disabled]="!!ocupado()" (clicked)="quitarAusencia(a.id)" />
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="text-xs text-text-muted">No hay ausencias próximas.</p>
+        }
+        @if (puedeEditar()) {
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+            <app-input type="date" label="Desde" [(value)]="ausenciaDesde" />
+            <app-input type="date" label="Hasta" [(value)]="ausenciaHasta" />
+            <app-input label="Motivo público (opcional)" placeholder="Vacaciones, congreso" [(value)]="ausenciaMotivo" />
+          </div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[11px] text-text-muted">{{ faltaAusencia() ?? 'La landing avisará que no atiende esos días.' }}</span>
+            <app-button variant="secondary" size="sm" icon="plus" [disabled]="!!faltaAusencia() || !!ocupado()" [loading]="ocupado() === 'ausencia'" (clicked)="agregarAusencia()">Agregar ausencia</app-button>
+          </div>
+        }
+      </section>
+    }
+  </div>
+</app-drawer>

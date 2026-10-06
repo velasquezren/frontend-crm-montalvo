@@ -138,6 +138,23 @@ export const routes: Routes = [
           import('./features/campanas/campanas.page').then(m => m.CampanasPage),
       },
       {
+        /* Promociones y anuncios de Meta. Verlas: cualquier sesión (recepción las
+           ofrece). Redactar y los anuncios: desde AGENTE; publicar: ADMIN. El
+           backend lo exige; la página solo oculta. */
+        path: 'promociones',
+        canActivate: [exigeRol('RECEPCION')],
+        loadComponent: () =>
+          import('./features/promociones/promociones.page').then(m => m.PromocionesPage),
+      },
+      {
+        /* Directorio médico: especialidades, fichas y horario informativo.
+           Leerlo: cualquier sesión; editarlo: ADMIN (el backend lo exige). */
+        path: 'directorio',
+        canActivate: [exigeRol('RECEPCION')],
+        loadComponent: () =>
+          import('./features/directorio/directorio.page').then(m => m.DirectorioPage),
+      },
+      {
         path: 'leads',
         canActivate: [exigeRol('AGENTE')],
         loadComponent: () =>

@@ -1,0 +1,90 @@
+<!-- ══════════════════════════════════════════════════════════════════════
+     Pestaña «Especialidades» — se desactivan, nunca se borran.
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="flex flex-col gap-4">
+  <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+    <div class="flex items-center gap-2" role="group" aria-label="Qué especialidades mostrar">
+      <app-filter-chip size="sm" [active]="!incluirInactivas()" (clicked)="verInactivas(false)">Activas</app-filter-chip>
+      <app-filter-chip size="sm" [active]="incluirInactivas()" (clicked)="verInactivas(true)">Todas, también inactivas</app-filter-chip>
+    </div>
+    @if (puedeEditar()) {
+      <app-button size="sm" icon="plus" (clicked)="abrir(null)">Nueva especialidad</app-button>
+    }
+  </div>
+
+  @if (especialidades.isLoading() && !hayEspecialidades()) {
+    <div class="bg-white rounded-2xl p-6 shadow-subtle flex flex-col gap-4">
+      @for (n of [1, 2, 3]; track n) {
+        <app-loading-skeleton height="48px" />
+      }
+    </div>
+  } @else if (especialidades.error()) {
+    <app-error-carga que="las especialidades" (reintentar)="especialidades.reload()" />
+  } @else if (hayEspecialidades()) {
+    <app-table>
+      <thead>
+        <tr>
+          <th>Especialidad</th>
+          <th class="text-right">Médicos</th>
+          <th class="text-right">Orden</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of especialidades.value().datos; track e.id) {
+          <tr [class.fila-clicable]="puedeEditar()" (click)="puedeEditar() && abrir(e)">
+            <td>
+              @if (puedeEditar()) {
+                <app-button variant="ghost" size="sm" [ariaLabel]="'Editar ' + e.nombre" (clicked)="$event.stopPropagation(); abrir(e)">{{ e.nombre }}</app-button>
+              } @else {
+                <span class="text-sm font-medium text-text-dark">{{ e.nombre }}</span>
+              }
+              @if (e.descripcion) {
+                <span class="block text-[11px] text-text-muted truncate max-w-md">{{ e.descripcion }}</span>
+              }
+            </td>
+            <td class="text-right tabular-nums">{{ e.medicos }}</td>
+            <td class="text-right tabular-nums">{{ e.orden }}</td>
+            <td><app-badge [variant]="e.activa ? 'success' : 'neutral'">{{ e.activa ? 'Activa' : 'Inactiva' }}</app-badge></td>
+          </tr>
+        }
+      </tbody>
+    </app-table>
+    <app-paginator
+      [pagina]="especialidades.value().pagina"
+      [totalPaginas]="especialidades.value().totalPaginas"
+      [total]="especialidades.value().total"
+      [limite]="especialidades.value().limite"
+      (cambiar)="pagina.set($event)" />
+  } @else {
+    <app-empty-state
+      icon="briefcase"
+      title="Todavía no hay especialidades"
+      description="Las especialidades ordenan el directorio y las promociones. Empieza por las que la clínica ofrece.">
+      @if (puedeEditar()) {
+        <app-button icon="plus" (clicked)="abrir(null)">Nueva especialidad</app-button>
+      }
+    </app-empty-state>
+  }
+</div>
+
+<ng-template #editorTpl>
+  <app-drawer ancho="sm" alto="contenido" [titulo]="editando() ? 'Editar especialidad' : 'Nueva especialidad'" icono="briefcase" (cerrar)="cerrar()">
+    <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
+      <app-input label="Nombre" placeholder="Ej. Ginecología" [(value)]="nombre" />
+      <app-input label="Descripción (la ve la landing)" [multiline]="true" [rows]="3" [(value)]="descripcion" />
+      <app-input label="Orden (0 va primero)" type="number" [(value)]="orden" />
+      @if (editando(); as e) {
+        <div class="flex items-center gap-2">
+          <app-switch [(value)]="activa" ariaLabel="Especialidad activa" />
+          <span class="text-xs text-text-dark">Activa (se ofrece y se muestra)</span>
+        </div>
+        <p class="text-[11px] text-text-muted">Dirección en la landing: <span class="crm-meta-clave">{{ e.slug }}</span>. No cambia aunque cambie el nombre.</p>
+      }
+    </div>
+    <div class="flex items-center justify-between gap-3 px-5 py-3 shrink-0 border-t border-border bg-bg-light">
+      <span class="text-xs text-text-muted min-w-0">{{ falta() ?? '' }}</span>
+      <app-button size="sm" icon="check" [disabled]="!!falta() || guardando()" [loading]="guardando()" (clicked)="guardar()">Guardar</app-button>
+    </div>
+  </app-drawer>
+</ng-template>

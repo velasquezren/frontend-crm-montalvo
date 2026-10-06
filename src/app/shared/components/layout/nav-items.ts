@@ -35,6 +35,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       { path: '/clientes', label: 'Clientes y Pacientes', icon: 'users', rolMinimo: 'AGENTE' },
       { path: '/leads', label: 'Leads y Prospectos', icon: 'user-plus', rolMinimo: 'AGENTE' },
       { path: '/campanas', label: 'Campañas', icon: 'send', rolMinimo: 'ADMIN' },
+      { path: '/promociones', label: 'Promociones', icon: 'percent', rolMinimo: 'RECEPCION' },
       { path: '/actividades', label: 'Actividades', icon: 'calendar', rolMinimo: 'RECEPCION' },
       {
         path: '/resultados',
@@ -59,6 +60,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
   {
     titulo: 'Gestión & Clínica',
     items: [
+      { path: '/directorio', label: 'Directorio médico', icon: 'user', rolMinimo: 'RECEPCION' },
       { path: '/servicios', label: 'Historial de Servicios', icon: 'activity', rolMinimo: 'ADMIN' },
       { path: '/lineas-whatsapp', label: 'Líneas WhatsApp', icon: 'message-circle', rolMinimo: 'SUPER_ADMIN' },
       { path: '/usuarios', label: 'Usuarios y Accesos', icon: 'shield', rolMinimo: 'SUPER_ADMIN' },

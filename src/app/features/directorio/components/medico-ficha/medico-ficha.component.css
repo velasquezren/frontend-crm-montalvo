@@ -1,0 +1,17 @@
+/* Un bloque del horario: día, desde, hasta, lugar y quitar, en una fila que se apila en el móvil. */
+.ficha-bloque {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-workspace);
+}
+
+@media (min-width: 640px) {
+  .ficha-bloque {
+    grid-template-columns: 9rem 7rem 7rem 1fr auto;
+    align-items: end;
+  }
+}
