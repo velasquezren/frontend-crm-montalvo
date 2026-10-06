@@ -865,3 +865,37 @@ tr:hover .celda-sticky {
     animation: none;
   }
 }
+
+/* ── Elegir un archivo con aspecto de botón secundario chico ─────────────────
+   Un <label> que envuelve un <input type="file" class="sr-only">: el input
+   sigue siendo alcanzable con el teclado (con `hidden` no lo es) y el foco se
+   ve en el label. Lo usan los banners de Promociones y la foto del Directorio
+   médico; un átomo propio no compraría nada más que esto. */
+.crm-subir-archivo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: all 200ms;
+}
+
+.crm-subir-archivo:hover {
+  background: var(--color-bg-light);
+}
+
+.crm-subir-archivo:focus-within {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.crm-subir-archivo-ocupado {
+  cursor: progress;
+  opacity: 0.7;
+}

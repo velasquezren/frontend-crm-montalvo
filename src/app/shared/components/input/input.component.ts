@@ -10,13 +10,15 @@ export type InputType =
   | 'search'
   | 'date'
   | 'datetime-local'
+  | 'time'
   | 'number';
 
 /* `date`, `datetime-local` y `number` se añaden al átomo en vez de poner un
    <input> suelto en la vista: así el selector de fecha hereda los mismos
    bordes, foco y estados de error que el resto de campos del sistema de
    diseño. `datetime-local` lo suma el módulo de Actividades: una actividad
-   necesita hora, no solo día (agendar "llamar a las 15:30"). */
+   necesita hora, no solo día (agendar "llamar a las 15:30"). `time` lo suma
+   el horario semanal del Directorio médico ("08:00" a "12:00"). */
 
 let nextId = 0;
 
@@ -46,6 +48,7 @@ let nextId = 0;
             [attr.aria-invalid]="error() ? 'true' : null"
             [attr.aria-describedby]="error() ? id + '-error' : null"
             [rows]="rows()"
+            [attr.aria-label]="label() ? null : ariaLabel() || null"
             [class]="inputClasses()"></textarea>
         } @else {
           <input
@@ -55,6 +58,7 @@ let nextId = 0;
             [value]="value()"
             (input)="value.set($any($event.target).value)"
             [autocomplete]="autocomplete()"
+            [attr.aria-label]="label() ? null : ariaLabel() || null"
             [disabled]="disabled()"
             [attr.aria-invalid]="error() ? 'true' : null"
             [attr.aria-describedby]="error() ? id + '-error' : null"
@@ -88,6 +92,11 @@ export class InputComponent {
   readonly autocomplete = input<string>('off');
   readonly disabled = input(false);
   readonly error = input<string | undefined>(undefined);
+  /**
+   * Nombre accesible cuando el campo no lleva `label` visible (un buscador en
+   * una barra de filtros). Con `label`, manda el label: no se anuncia dos veces.
+   */
+  readonly ariaLabel = input<string>('');
 
   /**
    * `<textarea>` en vez de `<input>` — mismo wrapper, label y estado de

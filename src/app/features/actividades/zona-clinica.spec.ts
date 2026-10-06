@@ -125,3 +125,11 @@ describe('A5.3 · horaClinica', () => {
     expect(horaClinica(new Date('2026-09-16T13:05:00.000Z'))).toBe('09:05');
   });
 });
+
+describe('fechaCivilClinica', () => {
+  it('a las 21:00 de La Paz sigue siendo el mismo día, aunque en UTC ya sea mañana (igual que el backend)', async () => {
+    const { fechaCivilClinica } = await import('./zona-clinica');
+    expect(fechaCivilClinica(new Date('2026-10-14T01:00:00Z'))).toBe('2026-10-13');
+    expect(fechaCivilClinica(new Date('2026-10-14T04:00:00Z'))).toBe('2026-10-14');
+  });
+});

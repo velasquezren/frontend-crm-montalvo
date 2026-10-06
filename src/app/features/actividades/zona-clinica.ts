@@ -76,3 +76,12 @@ export function horaClinica(instante: Date): string {
   const z = enClinica(instante);
   return `${String(z.hour).padStart(2, '0')}:${String(z.minute).padStart(2, '0')}`;
 }
+
+/**
+ * El día de calendario de La Paz como «2026-10-13»: el formato de las columnas
+ * `@db.Date` del backend (vigencias de promociones, ausencias de médicos).
+ * Gemelo de `fechaCivilClinica` en el backend.
+ */
+export function fechaCivilClinica(instante: Date): string {
+  return Temporal.Instant.fromEpochMilliseconds(instante.getTime()).toZonedDateTimeISO(ZONA_CLINICA).toPlainDate().toString();
+}
