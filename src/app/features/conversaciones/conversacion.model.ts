@@ -4,6 +4,7 @@ import { Rol } from '../../core/api/db-enums';
 import { DatosExtra } from '../../core/api/datos-extra';
 import { ZONA_CLINICA } from '../actividades/zona-clinica';
 import type { AtencionFila, ContextoAtencion } from './atencion-humana';
+import type { PagoDelChat, PromocionDelChat } from './pago-promocion';
 
 import { EstadoMensaje, TipoMensaje } from '../../core/api/db-enums';
 
@@ -139,6 +140,10 @@ export interface ConversacionDetalle extends Omit<ConversacionResumen, 'mensajes
   readonly atencion?: ContextoAtencion | null;
   /** La automatización no escribe en este chat hasta que alguien la reanude a propósito. */
   readonly automatizacionPausadaEn?: string | null;
+  /** El pago de una promoción en curso, o el último cerrado hace poco. */
+  readonly pago?: PagoDelChat | null;
+  /** La promoción por la que llegó con su código (solo la línea comercial). */
+  readonly promocion?: PromocionDelChat | null;
 }
 
 /**

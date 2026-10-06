@@ -119,45 +119,6 @@
             }
           </section>
 
-          @if (conPromociones()) {
-            <section aria-labelledby="menu-promos-titulo" class="space-y-3">
-              <div class="flex items-baseline justify-between gap-3">
-                <h3 id="menu-promos-titulo" class="text-sm font-semibold text-text-dark">Promociones vigentes</h3>
-                <span class="text-[11px] text-text-muted tabular-nums">{{ borrador().promociones.length }}/{{ limites.promociones }}</span>
-              </div>
-              @if (!ofrecePromociones()) {
-                <p class="crm-menu-aviso" role="status">
-                  <app-icon name="alert-circle" [size]="14" class="shrink-0" />
-                  <span>No se ofrecen: el menú no tiene la opción «Promociones». Agrégala o quítalas.</span>
-                </p>
-              }
-              @if (borrador().promociones.length === 0) {
-                <p class="text-[11px] text-text-muted leading-relaxed">
-                  Ninguna cargada. El CRM no inventa promociones: carga las vigentes, con el nombre con el que la clínica las ofrece.
-                </p>
-              }
-              <ul class="space-y-2">
-                @for (p of borrador().promociones; track p.uid; let i = $index) {
-                  <li class="crm-menu-promo">
-                    <app-input
-                      label="Nombre"
-                      [value]="p.titulo"
-                      (valueChange)="cambiarPromocion(i, { titulo: $event })"
-                      [error]="excede(p.titulo, limites.titulo)" />
-                    <app-input
-                      label="Detalle (opcional)"
-                      [value]="p.descripcion ?? ''"
-                      (valueChange)="cambiarPromocion(i, { descripcion: $event })"
-                      [error]="excede(p.descripcion, limites.descripcion)" />
-                    <app-button class="sm:mb-1" variant="ghost" size="xs" [circle]="true" icon="trash" [ariaLabel]="'Quitar ' + (p.titulo || 'promoción')" (clicked)="quitarPromocion(i)" />
-                  </li>
-                }
-              </ul>
-              @if (borrador().promociones.length < limites.promociones) {
-                <app-button variant="secondary" size="sm" icon="plus" (clicked)="agregarPromocion()">Agregar promoción</app-button>
-              }
-            </section>
-          }
         </div>
 
         <!-- Cómo lo verá ella. Fija a la derecha en escritorio; debajo en el móvil. -->

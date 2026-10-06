@@ -26,7 +26,14 @@ export type EstadoLead = 'NUEVO' | 'CONTACTADO' | 'CONVERTIDO' | 'PERDIDO';
 
 export type DireccionMensaje = 'ENTRANTE' | 'SALIENTE';
 
-export type MotivoAtencion = 'EMERGENCIA' | 'SOLICITUD_EXPLICITA' | 'SOLICITUD_CITA' | 'REVISION';
+export type EstadoPagoPromocion = 'PENDIENTE' | 'COMPROBANTE_ENVIADO' | 'CONFIRMADO' | 'ANULADO';
+
+export type MotivoAtencion =
+  | 'EMERGENCIA'
+  | 'SOLICITUD_EXPLICITA'
+  | 'SOLICITUD_CITA'
+  | 'COMPROBANTE_PAGO'
+  | 'REVISION';
 
 export type TipoMensaje = 'TEXTO' | 'IMAGEN' | 'DOCUMENTO' | 'AUDIO' | 'VIDEO' | 'STICKER';
 

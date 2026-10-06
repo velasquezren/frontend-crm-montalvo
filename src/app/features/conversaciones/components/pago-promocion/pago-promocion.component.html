@@ -1,0 +1,96 @@
+@if (pago(); as p) {
+  <section
+    class="crm-pago shrink-0"
+    [class.crm-pago--verificar]="p.estado === 'COMPROBANTE_ENVIADO'"
+    aria-label="Pago de promoción">
+    <div class="crm-pago-barra">
+      <app-icon name="wallet" [size]="14" class="crm-pago-icono shrink-0" />
+      <p class="crm-pago-titulo">
+        <span class="font-semibold text-text-dark tabular-nums">{{ p.monto | moneda }}</span>
+        <span class="crm-pago-promo" [title]="p.promocion.titulo + ' · ' + p.promocion.codigo"> · {{ p.promocion.titulo }}</span>
+      </p>
+      <app-badge [variant]="variantes[p.estado]">{{ estados[p.estado] }}</app-badge>
+
+      <div class="crm-pago-acciones">
+        @if (p.estado === 'COMPROBANTE_ENVIADO') {
+          @if (puedeConfirmar()) {
+            <app-button
+              size="sm" icon="check-circle"
+              [loading]="state.cambiandoPago() === 'confirmar'"
+              [disabled]="!!state.cambiandoPago()"
+              (clicked)="confirmar()">Confirmar pago</app-button>
+          }
+          <app-button
+            variant="secondary" size="sm" icon="rotate-cw"
+            [disabled]="!!state.cambiandoPago()"
+            [ariaLabel]="'Pedir otro comprobante'"
+            (clicked)="pidiendoOtro.set(true)"><span class="hidden sm:inline">Pedir otro</span></app-button>
+        }
+        @if (p.estado === 'PENDIENTE' || p.estado === 'COMPROBANTE_ENVIADO') {
+          <app-button
+            variant="ghost" size="sm" icon="x"
+            ariaLabel="Anular el pago"
+            [loading]="state.cambiandoPago() === 'anular'"
+            [disabled]="!!state.cambiandoPago()"
+            (clicked)="anular()"><span class="hidden sm:inline">Anular</span></app-button>
+        }
+      </div>
+    </div>
+
+    <!-- Lo que hay que saber para decidir, en una línea. -->
+    @if (p.estado === 'COMPROBANTE_ENVIADO') {
+      <div class="crm-pago-detalle">
+        @if (comprobante(); as c) {
+          @if (c.url) {
+            <a class="crm-pago-comprobante" [href]="c.url" target="_blank" rel="noopener" [attr.aria-label]="'Abrir el comprobante: ' + c.nombre">
+              @if (c.imagen) {
+                <img [src]="c.url" alt="" width="40" height="40" class="crm-pago-miniatura" />
+              } @else {
+                <app-icon name="file-text" [size]="14" />
+              }
+              <span>Ver comprobante</span>
+            </a>
+          } @else {
+            <span class="text-text-muted">El comprobante se está descargando…</span>
+          }
+        } @else {
+          <span class="text-text-muted">El comprobante está más arriba en el chat.</span>
+        }
+        <span class="text-text-muted"> · Revisa monto, fecha y a nombre de quién, y confírmalo o pide otro.</span>
+      </div>
+    } @else if (p.estado === 'PENDIENTE') {
+      <p class="crm-pago-detalle text-text-muted">
+        @if (p.motivoRechazo) {
+          Se le pidió otro comprobante: {{ p.motivoRechazo }}
+        } @else {
+          Se le envió el QR. Falta que mande el comprobante.
+        }
+      </p>
+    } @else if (p.estado === 'CONFIRMADO') {
+      <p class="crm-pago-detalle text-text-muted">
+        Confirmado{{ p.cerradoPor ? ' por ' + primerNombre(p.cerradoPor.nombre) : '' }} · la venta quedó registrada.
+      </p>
+    }
+
+    @if (pidiendoOtro() && p.estado === 'COMPROBANTE_ENVIADO') {
+      <form class="crm-pago-pedido" (submit)="enviarPedido($event)" aria-label="Pedir otro comprobante">
+        <app-input
+          class="flex-1"
+          label="Motivo (lo leerá la paciente)"
+          placeholder="Ej.: el monto no coincide…"
+          [value]="motivo()"
+          (valueChange)="motivo.set($event)"
+          [error]="errorMotivo()" />
+        <div class="flex items-center gap-2">
+          <app-button variant="ghost" size="sm" (clicked)="pidiendoOtro.set(false)">Cancelar</app-button>
+          <app-button type="submit" size="sm" icon="send" [loading]="state.cambiandoPago() === 'pedir-otro'">Pedir otro</app-button>
+        </div>
+      </form>
+    }
+  </section>
+} @else if (promocion(); as pr) {
+  <p class="crm-pago-origen shrink-0">
+    <app-icon name="percent" [size]="12" class="shrink-0" />
+    <span class="min-w-0 truncate">Llegó por la promoción «{{ pr.titulo }}» ({{ pr.codigo }})</span>
+  </p>
+}

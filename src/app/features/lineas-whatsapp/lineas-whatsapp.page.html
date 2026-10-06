@@ -90,6 +90,9 @@
               <app-button variant="secondary" size="sm" icon="menu" [ariaLabel]="'Menú de atención de ' + linea.nombre" (clicked)="editarMenu(linea, menuAtencion)">
                 Menú
               </app-button>
+              <app-button variant="secondary" size="sm" icon="wallet" [ariaLabel]="'Cobro por WhatsApp de ' + linea.nombre" (clicked)="editarCobro(linea, cobroLinea)">
+                Cobro
+              </app-button>
               <app-button variant="secondary" size="sm" icon="edit" (clicked)="editar(linea, formulario)">
                 Configurar
               </app-button>
@@ -180,7 +183,18 @@
     <app-menu-atencion-editor
       [lineaId]="linea.id"
       [nombre]="linea.nombre"
-      (cambiosSinGuardar)="menuSinGuardar.set($event)"
+      (cambiosSinGuardar)="editorSinGuardar.set($event)"
       (cerrar)="cerrarMenu()" />
+  }
+</ng-template>
+
+<!-- El QR con que la línea cobra una promoción: su propio cajón, como el menú. -->
+<ng-template #cobroLinea>
+  @if (cobroDe(); as linea) {
+    <app-cobro-linea-editor
+      [lineaId]="linea.id"
+      [nombre]="linea.nombre"
+      (cambiosSinGuardar)="editorSinGuardar.set($event)"
+      (cerrar)="cerrarCobro()" />
   }
 </ng-template>

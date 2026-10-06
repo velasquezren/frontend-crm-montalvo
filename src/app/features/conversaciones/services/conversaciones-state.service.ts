@@ -1,3 +1,4 @@
+import { AccionPago, AVISO_PAGO } from '../pago-promocion';
 import { ErrorCanalWhatsapp, validarDetalle, validarPaginaInbox } from '../validar-canal';
 import { LineasWhatsappService } from '../../lineas-whatsapp/lineas-whatsapp.service';
 import { LineaWhatsapp } from '../../lineas-whatsapp/linea-whatsapp.model';
@@ -887,6 +888,37 @@ export class ConversacionesStateService {
         void this.refrescarFilaPorRealtime(id);
       }
     }
+  }
+
+  /** La acción sobre el pago de una promoción en curso, para el `loading` de su botón. */
+  readonly cambiandoPago = signal<AccionPago | null>(null);
+
+  /**
+   * Confirmar el pago (registra la venta), pedir otro comprobante o anular. Lo
+   * valida el servidor; igual que en la atención, pase lo que pase se vuelve a
+   * leer el detalle —salvo sin red—: si otra persona lo resolvió antes, lo que se
+   * ve es la verdad del servidor. Devuelve si salió bien.
+   */
+  async accionPago(pagoId: string, accion: AccionPago, motivo?: string, id = this.seleccionadaId()): Promise<boolean> {
+    if (!id || this.cambiandoPago()) return false;
+    this.cambiandoPago.set(accion);
+    let sinRespuesta = false;
+    let ok = false;
+    try {
+      await this.conversacionesService.accionPago(id, pagoId, accion, motivo);
+      this.toastService.success(AVISO_PAGO[accion]);
+      ok = true;
+    } catch (err) {
+      sinRespuesta = err instanceof HttpErrorResponse && err.status === 0;
+      this.toastService.error(mensajeDeError(err, 'No se pudo actualizar el pago.'));
+    } finally {
+      this.cambiandoPago.set(null);
+      if (!sinRespuesta) {
+        if (this.seleccionadaId() === id) this.detalle.reload();
+        void this.refrescarFilaPorRealtime(id);
+      }
+    }
+    return ok;
   }
 
   async guardarNotaFijada(): Promise<void> {

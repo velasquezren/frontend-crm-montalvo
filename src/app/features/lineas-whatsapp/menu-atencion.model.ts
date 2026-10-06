@@ -21,19 +21,10 @@ export interface OpcionMenu {
   uid?: string;
 }
 
-export interface Promocion {
-  clave?: string;
-  /** Solo de la pantalla. No viaja. */
-  uid?: string;
-  titulo: string;
-  descripcion?: string;
-}
-
 export interface MenuAtencion {
   activo: boolean;
   saludo: string;
   opciones: OpcionMenu[];
-  promociones: Promocion[];
 }
 
 /** `GET /menu-atencion/:lineaId`. */
@@ -49,7 +40,7 @@ export interface MenuEditable {
 }
 
 /** Los límites de Meta que aplica el servidor, para avisar mientras se escribe. */
-export const LIMITES = { opciones: 10, promociones: 10, titulo: 24, tituloBoton: 20, descripcion: 72, texto: 1024 } as const;
+export const LIMITES = { opciones: 10, titulo: 24, tituloBoton: 20, descripcion: 72, texto: 1024 } as const;
 
 export interface DefinicionTipo {
   readonly nombre: string;
@@ -111,9 +102,9 @@ export const TIPOS: Readonly<Record<TipoOpcion, DefinicionTipo>> = {
   PROMOCIONES: {
     nombre: 'Promociones',
     icono: 'percent',
-    efecto: 'Muestra las promociones cargadas abajo. La que elija pasa a la asesora.',
+    efecto: 'Muestra las promociones publicadas para WhatsApp en Promociones. La que elija recibe su tarjeta, con «Pagar ahora» si la línea tiene QR.',
     unica: true,
-    respuesta: { etiqueta: 'Texto de la lista', obligatoria: true, ayuda: 'Acompaña la lista de promociones. Las promociones se cargan abajo, sin precios inventados.' },
+    respuesta: { etiqueta: 'Texto de la lista', obligatoria: true, ayuda: 'Acompaña la lista. Las promociones salen del módulo Promociones (las mismas de la landing); sin ninguna publicada, la opción no se muestra.' },
     tituloSugerido: 'Ver promociones',
   },
 };
@@ -128,13 +119,12 @@ export function editable(menu: MenuAtencion): MenuAtencion {
   return {
     ...menu,
     opciones: menu.opciones.map(o => ({ ...o, uid: crypto.randomUUID() })),
-    promociones: menu.promociones.map(p => ({ ...p, uid: crypto.randomUUID() })),
   };
 }
 
 /** Un menú nuevo: solo lo que no es contenido. El saludo y los textos los escribe la clínica. */
 export function menuInicial(): MenuAtencion {
-  return { activo: false, saludo: '', opciones: [{ tipo: 'PERSONA', titulo: TIPOS.PERSONA.tituloSugerido }], promociones: [] };
+  return { activo: false, saludo: '', opciones: [{ tipo: 'PERSONA', titulo: TIPOS.PERSONA.tituloSugerido }] };
 }
 
 /** Los tipos que todavía se pueden agregar. */
@@ -155,11 +145,6 @@ export function paraGuardar(menu: MenuAtencion): MenuAtencion {
       ...(limpio(o.descripcion) ? { descripcion: limpio(o.descripcion) } : {}),
       ...(limpio(o.respuesta) ? { respuesta: limpio(o.respuesta) } : {}),
       ...(o.clave ? { clave: o.clave } : {}),
-    })),
-    promociones: menu.promociones.map(p => ({
-      titulo: p.titulo.trim(),
-      ...(limpio(p.descripcion) ? { descripcion: limpio(p.descripcion) } : {}),
-      ...(p.clave ? { clave: p.clave } : {}),
     })),
   };
 }

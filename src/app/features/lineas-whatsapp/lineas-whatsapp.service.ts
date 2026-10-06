@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { ApiService } from '../../core/api/api.service';
 import { ActualizarLinea, AvisoLinea } from './linea-whatsapp.model';
 import { MenuAtencion, MenuEditable } from './menu-atencion.model';
+import { CobroEditable, GuardarCobro } from './cobro-linea.model';
 @Injectable({ providedIn: 'root' })
 export class LineasWhatsappService {
   private readonly api = inject(ApiService);
@@ -22,6 +23,19 @@ export class LineasWhatsappService {
   /** Reemplaza el menú entero. Un 400 trae en `message` la lista de lo que falta. */
   guardarMenu(lineaId: string, menu: MenuAtencion) {
     return this.api.put<MenuEditable>(`/menu-atencion/${lineaId}`, menu);
+  }
+  /** El QR de cobro de una línea (solo SUPER_ADMIN). */
+  cobroRequest(lineaId: string) {
+    return this.api.request(`/cobros/${lineaId}`);
+  }
+  guardarCobro(lineaId: string, datos: GuardarCobro) {
+    return this.api.put<CobroEditable>(`/cobros/${lineaId}`, datos);
+  }
+  /** La imagen del QR; reemplazarla crea otra. */
+  subirQr(lineaId: string, archivo: File) {
+    const datos = new FormData();
+    datos.append('archivo', archivo);
+    return this.api.put<CobroEditable>(`/cobros/${lineaId}/qr`, datos);
   }
   /** Idempotente: repetir la misma orden deja lo mismo. */
   fijarAviso(lineaId: string, suena: boolean) {

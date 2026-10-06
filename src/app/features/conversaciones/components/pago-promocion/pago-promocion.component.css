@@ -1,0 +1,97 @@
+/*
+ * Misma banda que el bloque de atención: una línea bajo la cabecera del chat que
+ * nunca se va de pantalla. Color solo cuando hay algo que hacer (un comprobante
+ * por verificar), con el filo primario de lo prioritario.
+ */
+.crm-pago {
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-workspace);
+}
+
+.crm-pago--verificar {
+  background: var(--color-bg-light);
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+.crm-pago-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  padding: 8px 16px;
+}
+
+.crm-pago-icono {
+  color: var(--color-primary);
+}
+
+.crm-pago-titulo {
+  flex: 1 1 12rem;
+  min-width: 0;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crm-pago-promo {
+  color: var(--color-text-muted);
+}
+
+.crm-pago-acciones {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.crm-pago-detalle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 0 16px 8px 38px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.crm-pago-comprobante {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--color-primary);
+  border-radius: 12px;
+}
+
+.crm-pago-comprobante:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.crm-pago-miniatura {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+}
+
+.crm-pago-pedido {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 0 16px 10px 38px;
+}
+
+.crm-pago-origen {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-workspace);
+}

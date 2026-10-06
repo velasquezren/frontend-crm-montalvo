@@ -22,7 +22,6 @@ import {
   menuInicial,
   OpcionMenu,
   paraGuardar,
-  Promocion,
   TIPOS,
   tiposDisponibles,
   vistaPrevia,
@@ -76,13 +75,6 @@ export class MenuAtencionEditorComponent {
   protected readonly limites = LIMITES;
   protected readonly disponibles = computed(() => tiposDisponibles(this.borrador()));
   protected readonly vista = computed(() => vistaPrevia(this.borrador()));
-  protected readonly ofrecePromociones = computed(() => this.borrador().opciones.some(o => o.tipo === 'PROMOCIONES'));
-  /**
-   * La sección se ve con la opción, y también si quedan promociones sin ella:
-   * viajan al guardar y el servidor las valida, así que tienen que poder verse y
-   * corregirse (o quitarse).
-   */
-  protected readonly conPromociones = computed(() => this.ofrecePromociones() || this.borrador().promociones.length > 0);
   /** Errores que el servidor dejó en un menú guardado que ya no vale (p. ej. tras una regla nueva). */
   protected readonly erroresGuardados = computed(() => this.datos.value()?.errores ?? []);
   /** Lo editado difiere de lo guardado. Se compara lo que viajaría, no espacios sueltos. */
@@ -157,18 +149,6 @@ export class MenuAtencionEditorComponent {
     this.tipoNuevo.set('');
     /* Después de agregar, deshacer el quitar podría duplicar un tipo único o pasar de diez. */
     this.quitada.set(null);
-  }
-
-  protected cambiarPromocion(i: number, cambios: Partial<Promocion>): void {
-    this.borrador.update(m => ({ ...m, promociones: m.promociones.map((p, j) => (j === i ? { ...p, ...cambios } : p)) }));
-  }
-
-  protected agregarPromocion(): void {
-    this.borrador.update(m => (m.promociones.length >= LIMITES.promociones ? m : { ...m, promociones: [...m.promociones, { titulo: '', uid: crypto.randomUUID() }] }));
-  }
-
-  protected quitarPromocion(i: number): void {
-    this.borrador.update(m => ({ ...m, promociones: m.promociones.filter((_, j) => j !== i) }));
   }
 
   /** El aviso de un texto que ya no cabe, mientras se escribe. El servidor tiene la última palabra. */

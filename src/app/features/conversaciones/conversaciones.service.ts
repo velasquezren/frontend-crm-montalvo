@@ -1,5 +1,6 @@
 import { validarPaginaInbox, validarResumenInbox } from './validar-canal';
 import type { AccionAtencion, EstadoDeAtencion } from './atencion-humana';
+import type { AccionPago, PagoDelChat } from './pago-promocion';
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, QueryParams, ResourceRequest } from '../../core/api/api.service';
@@ -176,6 +177,15 @@ export class ConversacionesService {
   cambiarAtencion(conversacionId: string, accion: AccionAtencion): Promise<EstadoDeAtencion> {
     const ruta = accion === 'reanudar' ? 'automatizacion/reanudar' : `atencion/${accion}`;
     return this.api.post<EstadoDeAtencion>(`/conversaciones/${conversacionId}/${ruta}`, {});
+  }
+
+  /**
+   * Las acciones sobre el pago de una promoción. Las valida el servidor: confirmar
+   * registra una venta (rango de agente) y un 409 es «ya lo resolvió otra persona»
+   * o «el comprobante todavía se descarga».
+   */
+  accionPago(conversacionId: string, pagoId: string, accion: AccionPago, motivo?: string): Promise<PagoDelChat | null> {
+    return this.api.post<PagoDelChat | null>(`/conversaciones/${conversacionId}/pagos/${pagoId}/${accion}`, accion === 'pedir-otro' ? { motivo } : {});
   }
 
   /** Plantillas aprobadas de la WABA — para escribirle a un paciente fuera de la ventana de 24h. */

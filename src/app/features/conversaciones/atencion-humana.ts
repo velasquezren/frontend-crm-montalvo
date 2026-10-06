@@ -61,6 +61,7 @@ export const MOTIVO_ATENCION: Readonly<Record<MotivoAtencion, string>> = {
   EMERGENCIA: 'Indicó una emergencia',
   SOLICITUD_EXPLICITA: 'Pidió hablar con una persona',
   SOLICITUD_CITA: 'Solicitud de cita',
+  COMPROBANTE_PAGO: 'Comprobante por verificar',
   REVISION: 'Respuesta para revisar',
 };
 
@@ -69,6 +70,7 @@ export const ACCION_ATENCION: Readonly<Record<MotivoAtencion, string>> = {
   EMERGENCIA: 'Contactarla ya. Lo declaró ella: el CRM no evalúa si es una emergencia médica.',
   SOLICITUD_EXPLICITA: 'Contestarle: está esperando a una persona.',
   SOLICITUD_CITA: 'Revisar la solicitud y proponerle una cita. Todavía no hay nada reservado.',
+  COMPROBANTE_PAGO: 'Verificar el comprobante en el bloque «Pago» y confirmarlo o pedir otro.',
   REVISION: 'Revisar su respuesta: no se ejecutó ninguna acción automática.',
 };
 
@@ -77,6 +79,7 @@ export const MOTIVO_ATENCION_CORTO: Readonly<Record<MotivoAtencion, string>> = {
   EMERGENCIA: 'Emergencia',
   SOLICITUD_EXPLICITA: 'Pidió persona',
   SOLICITUD_CITA: 'Solicitud de cita',
+  COMPROBANTE_PAGO: 'Comprobante',
   REVISION: 'Revisar',
 };
 

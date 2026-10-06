@@ -43,19 +43,6 @@
   color: var(--color-critical);
 }
 
-.crm-menu-promo {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 8px;
-  align-items: end;
-}
-
-@media (min-width: 640px) {
-  .crm-menu-promo {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
-  }
-}
-
 .crm-menu-aviso {
   display: flex;
   align-items: flex-start;

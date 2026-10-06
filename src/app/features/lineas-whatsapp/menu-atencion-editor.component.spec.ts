@@ -23,7 +23,6 @@ const GUARDADO: MenuEditable = {
       { tipo: 'PERSONA', titulo: 'Hablar con una persona' },
       { tipo: 'EMERGENCIA', titulo: 'Es una emergencia', respuesta: 'Orientación aprobada.' },
     ],
-    promociones: [],
   },
   errores: [],
   actualizadoEn: '2026-10-05T12:00:00.000Z',
@@ -115,15 +114,13 @@ describe('MenuAtencionEditorComponent', () => {
     expect(borrador().opciones.at(-1)).toMatchObject({ tipo: 'RESPUESTA', titulo: 'Horarios' });
   });
 
-  it('las promociones solo aparecen con su opción, y empiezan vacías', async () => {
+  it('la opción de promociones explica que lee las publicadas en el CRM, sin lista propia', async () => {
     await montar();
-    expect(texto()).not.toContain('Promociones vigentes');
     componente['tipoNuevo'].set('PROMOCIONES');
     componente['agregar']();
     fixture.detectChanges();
-    expect(texto()).toContain('Promociones vigentes');
-    expect(texto()).toContain('El CRM no inventa promociones');
-    expect(borrador().promociones).toEqual([]);
+    expect(texto()).toContain('Muestra las promociones publicadas para WhatsApp en Promociones');
+    expect(texto()).not.toContain('Agregar promoción');
   });
 
   it('guardar manda el menú entero y limpio con PUT', async () => {
@@ -139,7 +136,6 @@ describe('MenuAtencionEditorComponent', () => {
         { tipo: 'PERSONA', titulo: 'Hablar con una persona' },
         { tipo: 'EMERGENCIA', titulo: 'Es una emergencia', respuesta: 'Orientación aprobada.' },
       ],
-      promociones: [],
     });
     peticion.flush({ ...GUARDADO, menu: { ...GUARDADO.menu!, saludo: 'Hola de nuevo' } });
     await listo;
@@ -154,7 +150,7 @@ describe('MenuAtencionEditorComponent', () => {
     const listo = componente['guardar']();
     await asentar();
     http.expectOne(r => r.method === 'PUT').flush(
-      { message: ['La opción de promociones necesita al menos una promoción cargada.', 'Opción 2: falta el texto que se le responde.'] },
+      { message: ['El menú siempre ofrece hablar con una persona.', 'Opción 2: falta el texto que se le responde.'] },
       { status: 400, statusText: 'Bad Request' },
     );
     await listo;
@@ -206,12 +202,6 @@ describe('MenuAtencionEditorComponent', () => {
     expect(a).not.toBe(b);
     componente['mover'](0, 1);
     expect(borrador().opciones.map(o => o.uid)).toEqual([b, a]);
-  });
-
-  it('promociones cargadas sin su opción siguen a la vista, para corregirlas o quitarlas', async () => {
-    await montar({ ...GUARDADO, menu: { ...GUARDADO.menu!, promociones: [{ clave: 'prom0001', titulo: 'Promo' }] } });
-    expect(texto()).toContain('Promociones vigentes');
-    expect(texto()).toContain('No se ofrecen');
   });
 
   it('la última edición dice quién y cuándo, con la hora de la clínica', async () => {

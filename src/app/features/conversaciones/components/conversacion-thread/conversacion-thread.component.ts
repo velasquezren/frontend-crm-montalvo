@@ -1,4 +1,5 @@
 import { AtencionHumanaComponent } from '../atencion-humana/atencion-humana.component';
+import { PagoPromocionComponent } from '../pago-promocion/pago-promocion.component';
 import { CajaImagenPipe } from '../../caja-imagen';
 import {
   ChangeDetectionStrategy,
@@ -43,6 +44,7 @@ import { InteraccionPreviewComponent } from '../interaccion-preview/interaccion-
   selector: 'app-conversacion-thread',
   imports: [
     AtencionHumanaComponent,
+    PagoPromocionComponent,
     InteraccionPreviewComponent,
     CajaImagenPipe,
     InicialesClientePipe,

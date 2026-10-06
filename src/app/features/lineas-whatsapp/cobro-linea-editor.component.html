@@ -1,0 +1,80 @@
+<app-drawer ancho="md" icono="wallet" titulo="Cobro por WhatsApp" [subtitulo]="nombre()" (cerrar)="cerrar.emit()">
+  @if (datos.isLoading() && !datos.hasValue()) {
+    <div class="flex-1 p-5 space-y-3">
+      <app-loading-skeleton height="2.75rem" />
+      <app-loading-skeleton shape="text" height="10rem" />
+    </div>
+  } @else if (datos.error()) {
+    <div class="flex-1 p-5">
+      <app-error-carga que="el cobro de esta línea" (reintentar)="datos.reload()" />
+    </div>
+  } @else if (datos.value(); as d) {
+    <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-5 space-y-5">
+      <div class="flex flex-wrap items-center gap-2">
+        <app-badge [variant]="estados[d.estado].variante">{{ estados[d.estado].texto }}</app-badge>
+      </div>
+
+      @if (error()) {
+        <div role="alert" class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
+          <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
+          <span>{{ error() }}</span>
+        </div>
+      }
+
+      <!-- El QR primero: sin él no hay nada que activar. -->
+      <section aria-labelledby="cobro-qr-titulo" class="space-y-3">
+        <h3 id="cobro-qr-titulo" class="text-sm font-semibold text-text-dark">QR de pago</h3>
+        @if (d.cobro?.imagenUrl; as url) {
+          <img [src]="url" alt="QR de pago de esta línea" width="180" height="180" class="rounded-2xl border border-border bg-background object-contain" />
+        } @else {
+          <p class="text-[11px] text-text-muted leading-relaxed">Todavía no hay QR. Sube la imagen que da el banco (JPG, PNG o WebP, de al menos 300 × 300).</p>
+        }
+        <label class="crm-subir-archivo" [class.crm-subir-archivo-ocupado]="subiendo()">
+          <app-icon [name]="subiendo() ? 'loader' : 'download'" [size]="14" />
+          <span>{{ d.cobro?.imagenUrl ? 'Cambiar QR' : 'Subir QR' }}</span>
+          <input type="file" class="sr-only" [accept]="tiposImagen" [disabled]="subiendo()" (change)="elegirQr($event)" />
+        </label>
+      </section>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <app-input label="Banco" placeholder="Ej.: Banco BCP…" [value]="borrador().banco" (valueChange)="cambiar({ banco: $event })" />
+        <app-input type="date" label="Vence el (opcional)" [value]="borrador().venceEl ?? ''" (valueChange)="cambiar({ venceEl: $event })" />
+      </div>
+      <app-input
+        label="A nombre de"
+        placeholder="Ej.: Clínica Montalvo SRL…"
+        [value]="borrador().titular"
+        (valueChange)="cambiar({ titular: $event })" />
+      <div class="space-y-1.5">
+        <app-input
+          label="Indicación para la paciente (opcional)"
+          [multiline]="true" [rows]="2"
+          placeholder="Ej.: Escribe tu nombre en la glosa…"
+          [value]="borrador().instrucciones ?? ''"
+          (valueChange)="cambiar({ instrucciones: $event })" />
+        <p class="text-[11px] text-text-muted leading-relaxed">
+          Ella recibe el QR con el monto de la promoción, el banco y a nombre de quién, y se le pide la foto del comprobante.
+          Una persona lo verifica en el chat antes de dar el pago por confirmado.
+        </p>
+      </div>
+
+      <div class="flex items-start justify-between gap-4 p-3.5 rounded-xl border border-border bg-bg-workspace">
+        <div class="min-w-0">
+          <p class="text-xs font-semibold text-text-dark">Ofrecer «Pagar ahora» en esta línea</p>
+          <p class="text-[11px] text-text-muted leading-relaxed mt-0.5">Apagado, las promociones se siguen mostrando, pero el pago se coordina en el chat.</p>
+        </div>
+        <app-switch class="mt-0.5" [value]="borrador().activo" (valueChange)="cambiar({ activo: $event })" ariaLabel="Ofrecer «Pagar ahora» en esta línea" />
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between gap-3 px-5 py-3 shrink-0 border-t border-border bg-bg-light">
+      <p class="text-[11px] text-text-muted min-w-0 truncate">
+        @if (sinGuardar()) { Cambios sin guardar } @else if (d.actualizadoPor; as quien) { Última edición: {{ quien.nombre }} } @else { Sin guardar todavía }
+      </p>
+      <div class="flex items-center gap-2 shrink-0">
+        <app-button variant="ghost" size="sm" (clicked)="cerrar.emit()">Cerrar</app-button>
+        <app-button size="sm" icon="check" [loading]="guardando()" (clicked)="guardar()">Guardar cobro</app-button>
+      </div>
+    </div>
+  }
+</app-drawer>

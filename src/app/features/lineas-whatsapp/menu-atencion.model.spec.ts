@@ -9,7 +9,6 @@ const base = (): MenuAtencion => ({
     { tipo: 'PERSONA', titulo: 'Hablar con persona' },
     { tipo: 'CITA', titulo: 'Pedir cita' },
   ],
-  promociones: [],
 });
 
 describe('modelo del menú de atención', () => {
@@ -19,7 +18,6 @@ describe('modelo del menú de atención', () => {
     expect(m.saludo).toBe('');
     expect(m.opciones.map(o => o.tipo)).toEqual(['PERSONA']);
     expect(m.opciones[0].respuesta).toBeUndefined();
-    expect(m.promociones).toEqual([]);
   });
 
   it('los tipos únicos no se ofrecen dos veces; la información sí', () => {
@@ -40,12 +38,10 @@ describe('modelo del menú de atención', () => {
     const m = base();
     m.saludo = '  Hola  ';
     m.opciones[0] = { tipo: 'PERSONA', titulo: ' Hablar ', descripcion: '   ', respuesta: ' Te escribimos ' };
-    m.promociones = [{ titulo: ' Promo ', descripcion: '' }];
     expect(paraGuardar(m)).toEqual({
       activo: true,
       saludo: 'Hola',
       opciones: [{ tipo: 'PERSONA', titulo: 'Hablar', respuesta: 'Te escribimos' }, { tipo: 'CITA', titulo: 'Pedir cita' }],
-      promociones: [{ titulo: 'Promo' }],
     });
   });
 

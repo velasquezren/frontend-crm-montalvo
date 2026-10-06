@@ -326,6 +326,18 @@ solicitud (backend: `crm-backend-module`, «Atención humana»). Aquí solo se p
   es negro: badge `critical` en la tarjeta y `.crm-atencion--critica` en el bloque, que se
   mantiene también en atención hasta resolverla. Nunca un rojo nuevo.
 
+### Pago de una promoción: `<app-pago-promocion>` bajo el bloque de atención (2026-10-06)
+
+Cuando la paciente toca «Pagar ahora» en la tarjeta de una promoción, el detalle del chat
+trae `pago` (estado, monto, promoción, comprobante) y el bloque lo pinta en una línea. Con un
+comprobante por verificar: el enlace al comprobante (del hilo cargado) y **«Confirmar pago»
+solo si `puedeGestionComercial`** (registra una venta; el servidor lo vuelve a exigir), «Pedir
+otro» con un motivo obligatorio (lo lee la paciente) y «Anular» con `window.confirm`. Las
+acciones van por `state.accionPago()`, igual que las de atención: pase lo que pase se relee el
+detalle, salvo sin red. Sin pago, si llegó por el código `PRM-…`, una línea lo dice. El QR de
+cada línea se configura en Líneas → «Cobro» (`cobro-linea-editor.component.ts`). Textos en
+`pago-promocion.ts`; nunca «pagado» antes de que una persona lo confirme.
+
 ### Menú de atención: se configura en Líneas, no en el inbox (2026-10-05)
 
 El menú con el que cada línea recibe a la paciente se edita en
@@ -333,7 +345,8 @@ El menú con el que cada línea recibe a la paciente se edita en
 cajón). Lo que la paciente toca llega al inbox como cualquier solicitud de arriba: no
 hay vista nueva. El editor manda el menú entero (`PUT /menu-atencion/:lineaId`) y, ante
 un 400, muestra **la lista de motivos del servidor**, uno por línea, sin perder lo
-escrito. `menu-atencion.model.ts` solo ayuda a quien configura (límites, catálogo,
+escrito. La opción «Promociones» no tiene lista propia: muestra las publicadas para WhatsApp
+en el módulo Promociones. `menu-atencion.model.ts` solo ayuda a quien configura (límites, catálogo,
 vista previa); la regla de botones-o-lista copia la del backend y, si divergen, manda el
 backend. Ningún texto para la paciente tiene valor por defecto. Diseño:
 `../backend-crm-montalvo/docs/menu-atencion.md`.
