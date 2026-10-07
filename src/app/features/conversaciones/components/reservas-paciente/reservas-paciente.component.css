@@ -1,0 +1,23 @@
+/* Mismo ritmo que las secciones de la ficha (`.client-details` y su título en
+   conversacion-sidebar.component.css): aquí son propias porque el CSS del panel
+   no llega a un componente hijo (encapsulación Emulated). */
+.reservas-paciente {
+  padding: 12px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+}
+
+.reservas-paciente-titulo {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+}
+
+.reservas-paciente-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}

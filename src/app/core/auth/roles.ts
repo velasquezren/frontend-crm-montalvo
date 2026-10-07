@@ -79,6 +79,21 @@ export function esRolOperativo(rol: RolUsuario | undefined): boolean {
   return rol !== undefined && ROLES_OPERATIVOS.includes(rol);
 }
 
+/**
+ * ¿Ve la agenda COMPLETA de la clínica (pantalla Reservas)? Espejo de
+ * `puedeVerAgendaClinica` del backend: quien gestiona las citas —recepción,
+ * asistencia y administración—. Una agente de ventas ve las reservas de una
+ * paciente solo desde su chat. Capacidad, no rango: recepción está por debajo
+ * de una agente y es quien confirma las citas.
+ */
+export function puedeVerAgendaClinica(rol: RolUsuario | undefined): boolean {
+  return cubreRol(rol, 'ADMIN') || esRolOperativo(rol);
+}
+
+/** Guard de `/reservas`: quien no gestiona citas vuelve a su bandeja. */
+export const exigeAgendaClinica: CanActivateFn = () =>
+  puedeVerAgendaClinica(inject(AuthService).user()?.rol) || inject(Router).createUrlTree(['/conversaciones']);
+
 /** Guard de `/resultados`: quien no entrega vuelve a su bandeja, no a una pantalla de error. */
 export const exigeEntregaResultados: CanActivateFn = () =>
   puedeEntregarResultados(inject(AuthService).user()?.rol) || inject(Router).createUrlTree(['/conversaciones']);

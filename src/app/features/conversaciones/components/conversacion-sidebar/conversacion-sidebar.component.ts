@@ -39,6 +39,7 @@ import { Venta } from '../../../ventas/venta.model';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
 import { ConversacionResumen, duenaDelChatLibre } from '../../conversacion.model';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
+import { ReservasPacienteComponent } from '../reservas-paciente/reservas-paciente.component';
 
 type ClienteChat = ConversacionResumen['cliente'];
 
@@ -63,6 +64,7 @@ type ClienteChat = ConversacionResumen['cliente'];
     FilterChipComponent,
     IconComponent,
     InputComponent,
+    ReservasPacienteComponent,
     SwitchComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

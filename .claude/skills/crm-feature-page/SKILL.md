@@ -539,6 +539,7 @@ podía entregar informes médicos. Por eso hay tres piezas que dicen lo mismo y 
 | ¿Alcanza este nivel? | `cubreRol(rol, 'AGENTE')` |
 | ¿Atiende líneas sin alcance comercial (recepción, asistente)? | `esRolOperativo(rol)` |
 | ¿Entrega resultados médicos? | `puedeEntregarResultados(rol)` |
+| ¿Ve la agenda completa de la clínica (Reservas)? | `puedeVerAgendaClinica(rol)` — recepción, asistencia y ADMIN+; guard `exigeAgendaClinica` |
 
 `rol === 'RECEPCION'` escrito en una vista es una tabla de permisos paralela: al añadir ASISTENTE
 había tres en este frontend y las tres lo dejaron fuera (no se podía crear la cuenta, el formulario

@@ -538,6 +538,7 @@ el mismo error que el backend ya había corregido en el push.
 La vista `conversaciones` se estructura en submódulos desacoplados gobernados por `ConversacionesStateService`:
 
 1. **`conversacion-sidebar`**: Ficha del paciente, notas médicas fijadas, edición rápida de datos y asignación.
+   - **`reservas-paciente`** (`<app-reservas-paciente>`): «Próximas reservas» de la paciente en la agenda de la clínica (ScriptCase), por su teléfono, con su propia petición (`GET /agenda/reservas/conversacion/:id`). Lo ve quien ve el chat, también ventas. Si la agenda no responde lo dice en una línea con reintento; nunca rompe la ficha.
 2. **`conversacion-lista`**: Bandeja lateral izquierda: alcance (línea, agente), pestañas de trabajo (Todas / Sin responder / Sin asignar / Mis chats), interruptor de cerradas, buscador y tarjetas de conversación.
 3. **`conversacion-thread`**: Hilo central de mensajes, separadores de fecha, burbujas, lightbox y reproducción de audio.
 4. **`conversacion-composer`**: Área de redacción, soporte de pegado (`Ctrl+V`), Drag & Drop, atajos (`/`), grabación de voz y selector de plantillas.

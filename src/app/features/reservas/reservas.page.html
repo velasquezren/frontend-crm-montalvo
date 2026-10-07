@@ -1,0 +1,199 @@
+<!-- ══════════════════════════════════════════════════════════════════════
+     Reservas — la agenda de la clínica (web y ScriptCase), solo lectura.
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="flex flex-col gap-5 w-full">
+  <app-page-header
+    title="Reservas"
+    subtitle="Las citas reservadas en la agenda de la clínica, desde la web y desde ScriptCase. Se confirman, cobran y anulan en la agenda." />
+
+  <div class="flex flex-col gap-3">
+    <div class="flex items-center gap-2 overflow-x-auto pb-1" role="group" aria-label="Periodo">
+      @for (p of periodos; track p.id) {
+        <app-filter-chip size="sm" [active]="periodo() === p.id" (clicked)="elegirPeriodo(p.id)">{{ p.etiqueta }}</app-filter-chip>
+      }
+    </div>
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0" role="group" aria-label="Filtrar reservas por estado">
+        <app-filter-chip size="sm" [active]="estado() === null" [count]="totalDelRango()" (clicked)="filtrar(null)">Todas</app-filter-chip>
+        @for (e of estadosFiltro; track e) {
+          <app-filter-chip size="sm" [active]="estado() === e" [count]="cuentaDe(e)" (clicked)="filtrar(e)">
+            {{ estadoDeReserva(e).etiqueta }}
+          </app-filter-chip>
+        }
+      </div>
+      <div class="w-full sm:w-72 shrink-0">
+        <app-input type="search" placeholder="Nombre, carnet, teléfono o número" ariaLabel="Buscar reservas" [(value)]="busqueda" />
+      </div>
+    </div>
+  </div>
+
+  @if (reservas.isLoading() && !hayReservas()) {
+    <div class="bg-white rounded-2xl p-6 shadow-subtle flex flex-col gap-4">
+      @for (n of [1, 2, 3, 4]; track n) {
+        <app-loading-skeleton height="52px" />
+      }
+    </div>
+  } @else if (reservas.error()) {
+    <app-error-carga que="las reservas de la agenda" (reintentar)="reservas.reload()" />
+  } @else if (hayReservas()) {
+    <app-table>
+      <thead>
+        <tr>
+          <th>Fecha y hora</th>
+          <th>Paciente</th>
+          <th>Médico</th>
+          <th>Estado</th>
+          <th class="text-right">Precio</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of reservas.value().datos; track r.id) {
+          <tr class="fila-clicable" (click)="abrir(r)">
+            <td class="whitespace-nowrap tabular-nums">
+              <span class="block text-sm font-semibold text-text-dark">{{ fechaDeReserva(r.fecha) }}</span>
+              <span class="block text-xs text-text-muted">{{ r.hora }}</span>
+            </td>
+            <td>
+              <div class="min-w-0">
+                <app-button variant="ghost" size="sm" [ariaLabel]="'Ver reserva de ' + (r.paciente || 'paciente sin nombre')" (clicked)="$event.stopPropagation(); abrir(r)">
+                  {{ r.paciente || 'Sin nombre' }}
+                </app-button>
+                <div class="crm-meta mt-0.5">
+                  <span class="crm-meta-clave">N.º {{ r.id }}</span>
+                  @if (r.telefono; as t) { <span class="crm-meta-clave">{{ t }}</span> }
+                  @if (r.ci; as ci) { <span>CI {{ ci }}</span> }
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="block text-sm text-text-dark">{{ r.medico || '—' }}</span>
+              @if (r.especialidad; as esp) { <span class="block text-xs text-text-muted">{{ esp }}</span> }
+            </td>
+            <td><app-badge [variant]="estadoDeReserva(r.estado).variante">{{ estadoDeReserva(r.estado).etiqueta }}</app-badge></td>
+            <td class="text-right tabular-nums">
+              @if (precioEnBs(r.precio); as precio) {
+                <span class="text-text-dark">{{ precio | moneda:'BOB' }}</span>
+              } @else {
+                <span class="text-text-muted">—</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </app-table>
+    <app-paginator
+      [pagina]="reservas.value().pagina"
+      [totalPaginas]="reservas.value().totalPaginas"
+      [total]="reservas.value().total"
+      [limite]="reservas.value().limite"
+      (cambiar)="pagina.set($event)" />
+  } @else if (filtrando()) {
+    <app-empty-state icon="search" title="Ninguna reserva con ese filtro" description="Prueba con otro estado, otro periodo o borra la búsqueda." />
+  } @else {
+    <app-empty-state icon="calendar-check" title="No hay reservas en este periodo" description="Cuando una paciente reserve en la web o la cargue recepción en ScriptCase, aparece aquí." />
+  }
+</div>
+
+<ng-template #fichaTpl>
+  @if (seleccionada(); as r) {
+    <app-drawer ancho="md" [titulo]="r.paciente || 'Sin nombre'" [subtitulo]="'Reserva N.º ' + r.id" icono="calendar-check" (cerrar)="cerrar()">
+      <div class="p-5 overflow-y-auto flex-1 flex flex-col gap-5">
+        <section class="flex flex-col gap-1.5">
+          <div class="flex items-center justify-between gap-3">
+            <span class="text-base font-semibold text-text-dark tabular-nums">{{ fechaDeReserva(r.fecha) }} · {{ r.hora }}</span>
+            <app-badge class="shrink-0" [variant]="estadoDeReserva(r.estado).variante">{{ estadoDeReserva(r.estado).etiqueta }}</app-badge>
+          </div>
+          <span class="text-sm text-text-dark">{{ r.medico || '—' }}</span>
+          @if (r.especialidad; as esp) { <span class="text-xs text-text-muted">{{ esp }}</span> }
+        </section>
+
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-sm">
+          <div>
+            <dt class="text-xs text-text-muted">Teléfono</dt>
+            <dd class="text-text-dark tabular-nums">{{ r.telefono || '—' }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs text-text-muted">Carnet</dt>
+            <dd class="text-text-dark tabular-nums">{{ r.ci || '—' }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs text-text-muted">Precio de la consulta</dt>
+            <dd class="text-text-dark tabular-nums">
+              @if (precioEnBs(r.precio); as precio) { {{ precio | moneda:'BOB' }} } @else { — }
+            </dd>
+          </div>
+          <div>
+            <dt class="text-xs text-text-muted">Registrada</dt>
+            <dd class="text-text-dark tabular-nums">
+              @if (r.registradaEl; as el) { {{ fechaDeReserva(el) }}{{ r.registradaA ? ' · ' + r.registradaA : '' }} } @else { — }
+            </dd>
+          </div>
+          @if (r.nit || r.razonSocial) {
+            <div class="sm:col-span-2">
+              <dt class="text-xs text-text-muted">Factura</dt>
+              <dd class="text-text-dark">{{ r.razonSocial || '—' }}{{ r.nit ? ' · NIT ' + r.nit : '' }}</dd>
+            </div>
+          }
+          @if (r.observaciones; as obs) {
+            <div class="sm:col-span-2">
+              <dt class="text-xs text-text-muted">Observaciones</dt>
+              <dd class="text-text-dark whitespace-pre-line">{{ obs }}</dd>
+            </div>
+          }
+        </dl>
+
+        @if (r.telefonoE164; as tel) {
+          <section class="flex flex-col gap-2">
+            <h3 class="text-xs font-semibold text-text-muted">Contactar</h3>
+            <div class="flex flex-wrap items-center gap-2">
+              <a
+                routerLink="/conversaciones"
+                [queryParams]="{ telefono: tel }"
+                class="crm-accion-enlace crm-accion-enlace-whatsapp"
+                [attr.aria-label]="'Ver conversación de ' + (r.paciente || 'la paciente') + ' en el CRM'"
+                title="Ver conversación en el CRM"
+                (click)="cerrar()">
+                <app-icon name="message-circle" [size]="15" />
+              </a>
+              <a
+                [href]="enlaceWhatsApp(tel)"
+                target="_blank"
+                rel="noopener"
+                class="crm-accion-enlace"
+                [attr.aria-label]="'Abrir WhatsApp con ' + (r.paciente || 'la paciente')"
+                title="Abrir en WhatsApp">
+                <app-icon name="external-link" [size]="15" />
+              </a>
+              <a
+                [href]="'tel:' + tel"
+                class="crm-accion-enlace"
+                [attr.aria-label]="'Llamar a ' + (r.paciente || 'la paciente')"
+                title="Llamar">
+                <app-icon name="phone" [size]="15" />
+              </a>
+            </div>
+          </section>
+        }
+
+        <section class="flex flex-col gap-2">
+          <h3 class="text-xs font-semibold text-text-muted">Comprobante de pago</h3>
+          @if (r.tieneComprobante) {
+            <div>
+              <app-button variant="secondary" size="sm" icon="file-text" [loading]="abriendoComprobante()" (clicked)="verComprobante(r)">
+                Ver comprobante
+              </app-button>
+            </div>
+            <p class="text-xs text-text-muted">Queda registrado quién lo abre. «Pago por verificar» significa que caja todavía no lo confirmó.</p>
+          } @else {
+            <p class="text-sm text-text-muted">La paciente todavía no subió un comprobante.</p>
+          }
+        </section>
+      </div>
+      <div class="px-5 py-3 border-t border-border shrink-0">
+        <p class="text-xs text-text-muted">Para confirmar, cobrar o anular esta reserva, usa la agenda de la clínica.</p>
+      </div>
+    </app-drawer>
+  }
+</ng-template>
+
+<app-image-viewer [imageUrl]="visorUrl()" [title]="visorTitulo()" (closed)="cerrarVisor()" />

@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { Router, Routes } from '@angular/router';
 
 import { authGuard } from './core/auth/auth.guard';
-import { exigeEntregaResultados, exigeRol } from './core/auth/roles';
+import { exigeAgendaClinica, exigeEntregaResultados, exigeRol } from './core/auth/roles';
 
 /**
  * Rutas del CRM
@@ -165,6 +165,14 @@ export const routes: Routes = [
         canActivate: [exigeRol('RECEPCION')],
         loadComponent: () =>
           import('./features/actividades/actividades.page').then(m => m.ActividadesPage),
+      },
+      {
+        /* Las reservas de la agenda de la clínica (solo lectura). Capacidad, no
+           rango: recepción y asistencia sí, una agente de ventas no. */
+        path: 'reservas',
+        canActivate: [exigeAgendaClinica],
+        loadComponent: () =>
+          import('./features/reservas/reservas.page').then(m => m.ReservasPage),
       },
       {
         /* Capacidad, no rango: con uno por rango quedaría fuera el asistente

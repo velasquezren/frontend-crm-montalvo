@@ -23,6 +23,7 @@ export type IconName =
   | 'chevron-down'
   | 'search'
   | 'calendar'
+  | 'calendar-check'
   | 'percent'
   | 'trending-up'
   | 'activity'
@@ -195,6 +196,13 @@ export type IconName =
           <path d="M16 2v4" />
           <rect width="18" height="18" x="3" y="4" rx="2" />
           <path d="M3 10h18" />
+        }
+        @case ('calendar-check') {
+          <path d="M8 2v4" />
+          <path d="M16 2v4" />
+          <rect width="18" height="18" x="3" y="4" rx="2" />
+          <path d="M3 10h18" />
+          <path d="m9 16 2 2 4-4" />
         }
         @case ('percent') {
           <line x1="19" x2="5" y1="5" y2="19" />

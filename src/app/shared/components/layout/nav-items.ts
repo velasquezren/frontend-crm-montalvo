@@ -37,6 +37,15 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       { path: '/campanas', label: 'Campañas', icon: 'send', rolMinimo: 'ADMIN' },
       { path: '/promociones', label: 'Promociones', icon: 'percent', rolMinimo: 'RECEPCION' },
       { path: '/actividades', label: 'Actividades', icon: 'calendar', rolMinimo: 'RECEPCION' },
+      /* Capacidad, no rango: recepción y asistencia gestionan las citas; una agente
+         de ventas ve las de su paciente desde el chat. Espejo: `puedeVerAgendaClinica`. */
+      {
+        path: '/reservas',
+        label: 'Reservas',
+        icon: 'calendar-check',
+        rolMinimo: 'ADMIN',
+        roles: ['RECEPCION', 'ASISTENTE'],
+      },
       {
         path: '/resultados',
         label: 'Entrega de Resultados',

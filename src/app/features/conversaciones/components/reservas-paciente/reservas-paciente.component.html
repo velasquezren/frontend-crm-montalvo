@@ -1,0 +1,26 @@
+<!-- Próximas reservas de la paciente en la agenda de la clínica (solo lectura). -->
+<section class="reservas-paciente" aria-label="Próximas reservas en la agenda">
+  <h3 class="reservas-paciente-titulo">Próximas reservas</h3>
+  @if (reservas.isLoading() && !reservas.hasValue()) {
+    <app-loading-skeleton height="2.25rem" />
+  } @else if (reservas.error()) {
+    <div class="flex items-center justify-between gap-2">
+      <p class="text-xs text-text-muted">No pudimos consultar la agenda.</p>
+      <app-button variant="ghost" size="xs" [circle]="true" icon="rotate-cw" ariaLabel="Volver a consultar la agenda" title="Reintentar" (clicked)="reservas.reload()" />
+    </div>
+  } @else if (reservas.value().length > 0) {
+    <ul class="flex flex-col gap-2">
+      @for (r of reservas.value(); track r.id) {
+        <li class="reservas-paciente-item">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-semibold text-text-dark tabular-nums truncate">{{ fechaDeReserva(r.fecha) }} · {{ r.hora }}</span>
+            <app-badge class="shrink-0" [variant]="estadoDeReserva(r.estado).variante">{{ estadoDeReserva(r.estado).etiqueta }}</app-badge>
+          </div>
+          <span class="block text-xs text-text-muted truncate">{{ r.medico || 'Sin médico' }}{{ r.especialidad ? ' · ' + r.especialidad : '' }}</span>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="text-xs text-text-muted">Sin reservas próximas en la agenda.</p>
+  }
+</section>

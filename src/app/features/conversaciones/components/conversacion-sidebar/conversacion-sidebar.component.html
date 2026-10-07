@@ -288,6 +288,9 @@
           </div>
         </div>
 
+        <!-- Citas en la agenda de la clínica, por su teléfono -->
+        <app-reservas-paciente [conversacionId]="chat.id" />
+
         <!-- Perfil extendido minimalista -->
         @if (empresaDe(chat.cliente) || edadDe(chat.cliente) || lugarNacimientoDe(chat.cliente) || ocupacionDe(chat.cliente)) {
           <div class="client-details">
