@@ -1,0 +1,85 @@
+/* La grilla de horario: una columna de horas y seis días, en casillas de 30 minutos.
+   A 390 px caben las siete columnas (3 rem + 6 × ~2.6 rem) sin desplazamiento horizontal. */
+.crm-grilla-horario {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.crm-grilla-fila {
+  display: grid;
+  grid-template-columns: 3rem repeat(6, minmax(0, 1fr));
+  gap: 3px;
+  align-items: center;
+}
+
+.crm-grilla-hora {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  text-align: right;
+  padding-right: 6px;
+}
+
+/* Los días quedan a la vista al bajar por las horas. */
+.crm-grilla-fila-cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--color-background);
+  padding-bottom: 2px;
+}
+
+.crm-grilla-cabecera {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.crm-grilla-dia {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  border-radius: 9999px;
+  padding: 2px 8px;
+  min-height: 28px;
+}
+
+button.crm-grilla-dia:hover:not(:disabled) {
+  background-color: var(--color-bg-light);
+}
+
+.crm-grilla-cuenta {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  min-height: 12px;
+}
+
+.crm-grilla-casilla {
+  display: block;
+  width: 100%;
+  height: 28px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-workspace);
+  transition: background-color 120ms, border-color 120ms;
+}
+
+.crm-grilla-casilla:hover:not(:disabled) {
+  border-color: var(--color-secondary);
+}
+
+.crm-grilla-casilla-activa {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.crm-grilla-casilla:disabled {
+  cursor: default;
+}
+
+.crm-grilla-casilla:focus-visible,
+.crm-grilla-dia:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 1px;
+}

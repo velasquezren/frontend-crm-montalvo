@@ -1,0 +1,100 @@
+<!-- ══════════════════════════════════════════════════════════════════════
+     Pestaña «Médicos» — los médicos de la agenda de la clínica.
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="flex flex-col gap-4">
+  <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0" role="group" aria-label="Filtrar por estado">
+      @for (f of filtrosEstado; track f.etiqueta) {
+        <app-filter-chip size="sm" [active]="estado() === f.valor" [count]="cuenta(f.valor)" (clicked)="filtrarEstado(f.valor)">{{ f.etiqueta }}</app-filter-chip>
+      }
+    </div>
+    <div class="flex flex-col sm:flex-row gap-2">
+      <app-select size="sm" icono="filter" ariaLabel="Filtrar por especialidad" [activo]="!!especialidad()" [value]="especialidad()" (valueChange)="filtrarEspecialidad($event)">
+        <option value="">Todas las especialidades</option>
+        @for (e of opcionesEspecialidad(); track e.nombre) {
+          <option [value]="e.nombre">{{ e.nombre }}</option>
+        }
+      </app-select>
+      <div class="w-full sm:w-64">
+        <app-input type="search" placeholder="Buscar por nombre o código" ariaLabel="Buscar médicos" [(value)]="busqueda" />
+      </div>
+    </div>
+  </div>
+
+  @if (medicos.isLoading() && !hayMedicos()) {
+    <div class="bg-white rounded-2xl p-6 shadow-subtle flex flex-col gap-4">
+      @for (n of [1, 2, 3, 4]; track n) {
+        <app-loading-skeleton height="56px" />
+      }
+    </div>
+  } @else if (medicos.error()) {
+    <app-error-carga que="los médicos de la agenda" (reintentar)="medicos.reload()" />
+  } @else if (hayMedicos()) {
+    <app-table>
+      <thead>
+        <tr>
+          <th>Médico</th>
+          <th>Especialidad</th>
+          <th>Reserva</th>
+          <th class="text-right">Consulta</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (m of medicos.value().datos; track m.id) {
+          <tr class="fila-clicable" (click)="abrir(m.id)">
+            <td>
+              <div class="flex items-center gap-3 min-w-0">
+                <app-avatar [initials]="iniciales(m.nombre)" [nombre]="m.nombre" size="sm" />
+                <div class="min-w-0">
+                  <app-button variant="ghost" size="sm" [ariaLabel]="'Ver ficha de ' + m.nombre" (clicked)="$event.stopPropagation(); abrir(m.id)">{{ nombreConTitulo(m) }}</app-button>
+                  @if (m.codigo) {
+                    <div class="crm-meta mt-0.5"><span class="crm-meta-clave">{{ m.codigo }}</span></div>
+                  }
+                </div>
+              </div>
+            </td>
+            <td class="text-xs text-text-dark">{{ m.especialidad ?? '—' }}</td>
+            <td class="text-xs text-text-dark">
+              @if (m.reservaEnLinea) {
+                En línea · {{ m.casillasActivas }} {{ m.casillasActivas === 1 ? 'turno' : 'turnos' }} por semana
+              } @else {
+                <span class="text-text-muted">A solicitud</span>
+              }
+            </td>
+            <td class="text-right tabular-nums">
+              @if (m.precio !== null && numero(m.precio) > 0) { {{ numero(m.precio) | moneda:'BOB' }} } @else { <span class="text-text-muted">—</span> }
+            </td>
+            <td>
+              <app-badge [variant]="m.estado === 'ACTIVO' ? 'success' : 'neutral'">{{ m.estado === 'ACTIVO' ? 'Activo' : 'Inactivo' }}</app-badge>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </app-table>
+    <app-paginator
+      [pagina]="medicos.value().pagina"
+      [totalPaginas]="medicos.value().totalPaginas"
+      [total]="medicos.value().total"
+      [limite]="medicos.value().limite"
+      (cambiar)="pagina.set($event)" />
+  } @else if (filtrando()) {
+    <app-empty-state icon="search" title="Ningún médico con ese filtro" description="Prueba con otra especialidad o borra la búsqueda." />
+  } @else {
+    <app-empty-state icon="user" title="No hay médicos en este estado" description="Los médicos son los de la agenda de la clínica.">
+      @if (puedeEditar()) {
+        <app-button icon="plus" (clicked)="abrirNuevo()">Nuevo médico</app-button>
+      }
+    </app-empty-state>
+  }
+</div>
+
+<ng-template #fichaTpl>
+  @if (seleccionadoId(); as id) {
+    <app-agenda-medico-ficha [id]="id" [especialidades]="opcionesEspecialidad()" [bancos]="opcionesBanco()" (cambio)="alCambiar()" (cerrar)="cerrar()" />
+  }
+</ng-template>
+
+<ng-template #nuevoTpl>
+  <app-agenda-nuevo-medico [especialidades]="opcionesEspecialidad()" [bancos]="opcionesBanco()" (creado)="alCrear($event)" (cerrar)="cerrar()" />
+</ng-template>

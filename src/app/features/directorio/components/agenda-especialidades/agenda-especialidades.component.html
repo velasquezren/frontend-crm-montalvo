@@ -1,0 +1,63 @@
+<!-- ══════════════════════════════════════════════════════════════════════
+     Pestaña «Especialidades» — las escritas en los médicos de la agenda.
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="flex flex-col gap-4">
+  <p class="text-xs text-text-muted">
+    Cada especialidad es el texto que tiene escrito cada médico; así las agrupa la web.
+    @if (puedeEditar()) { Si hay dos casi iguales, renombra una con el nombre de la otra y quedan unificadas. }
+  </p>
+
+  @if (especialidades.isLoading() && !especialidades.hasValue()) {
+    <div class="bg-white rounded-2xl p-6 shadow-subtle flex flex-col gap-4">
+      @for (n of [1, 2, 3, 4]; track n) {
+        <app-loading-skeleton height="44px" />
+      }
+    </div>
+  } @else if (especialidades.error()) {
+    <app-error-carga que="las especialidades" (reintentar)="especialidades.reload()" />
+  } @else if (especialidades.value().datos.length > 0) {
+    <app-table [dense]="true">
+      <thead>
+        <tr>
+          <th class="text-left">Especialidad</th>
+          <th class="text-right">Médicos</th>
+          <th class="text-right">Activos</th>
+          @if (puedeEditar()) { <th><span class="sr-only">Acciones</span></th> }
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of especialidades.value().datos; track e.nombre) {
+          <tr>
+            @if (editando() === e.nombre) {
+              <td colspan="3">
+                <form class="flex flex-col gap-1.5" (submit)="$event.preventDefault(); guardar()">
+                  <app-input [ariaLabel]="'Nuevo nombre de ' + e.nombre" [disabled]="guardando()" [(value)]="nuevoNombre" />
+                  @if (unificaCon(); as otra) {
+                    <p class="text-xs text-text-dark">Se unificará con «{{ otra.nombre }}» ({{ otra.medicos }} {{ otra.medicos === 1 ? 'médico' : 'médicos' }}).</p>
+                  }
+                </form>
+              </td>
+              <td class="text-right whitespace-nowrap">
+                <app-button variant="ghost" size="sm" [disabled]="guardando()" (clicked)="cancelar()">Cancelar</app-button>
+                <app-button size="sm" [loading]="guardando()" [disabled]="!nuevoNombre().trim() || nuevoNombre().trim() === e.nombre" (clicked)="guardar()">
+                  {{ unificaCon() ? 'Unificar' : 'Renombrar' }}
+                </app-button>
+              </td>
+            } @else {
+              <td class="text-left text-text-dark">{{ e.nombre }}</td>
+              <td class="text-right">{{ e.medicos }}</td>
+              <td class="text-right">{{ e.activos }}</td>
+              @if (puedeEditar()) {
+                <td class="text-right">
+                  <app-button variant="ghost" size="xs" [circle]="true" icon="edit" [ariaLabel]="'Renombrar ' + e.nombre" [disabled]="editando() !== null" (clicked)="editar(e)" />
+                </td>
+              }
+            }
+          </tr>
+        }
+      </tbody>
+    </app-table>
+  } @else {
+    <app-empty-state icon="briefcase" title="Ningún médico tiene especialidad" description="La especialidad se escribe en la ficha de cada médico." />
+  }
+</div>

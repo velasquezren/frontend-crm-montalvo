@@ -1,0 +1,114 @@
+<app-drawer ancho="xl" [titulo]="ficha() ? nombreConTitulo(ficha()!.medico) : 'Médico de la agenda'" icono="user" (cerrar)="cerrar.emit()">
+  <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-6">
+    @if (detalle.isLoading() && !ficha()) {
+      <app-loading-skeleton height="96px" />
+      <app-loading-skeleton height="320px" />
+    } @else if (detalle.error() && !ficha()) {
+      <app-error-carga que="la ficha del médico" (reintentar)="detalle.reload()" />
+    } @else if (ficha(); as f) {
+      @if (conflicto()) {
+        <p role="alert" class="text-xs text-text-dark bg-critical-bg rounded-xl px-3 py-2">
+          Otra persona cambió este médico en la agenda mientras lo editabas.
+          <button type="button" class="crm-enlace" (click)="recargar()">Ver lo último y descartar lo mío</button>
+        </p>
+      }
+
+      <!-- ── Cabecera: quién es y cómo se reserva ───────────────────── -->
+      <section class="flex items-start gap-4">
+        <app-avatar [initials]="iniciales(f.medico.nombre)" [nombre]="f.medico.nombre" size="lg" />
+        <div class="flex flex-col gap-1.5 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <app-badge [variant]="f.medico.estado === 'ACTIVO' ? 'success' : 'neutral'">{{ f.medico.estado === 'ACTIVO' ? 'Activo' : 'Inactivo' }}</app-badge>
+            <app-badge [variant]="f.medico.reservaEnLinea ? 'info' : 'neutral'">{{ f.medico.reservaEnLinea ? 'Reserva en línea' : 'A solicitud' }}</app-badge>
+          </div>
+          <div class="crm-meta">
+            @if (f.medico.codigo; as codigo) {
+              <span>Código FileMaker</span><span class="crm-meta-clave">{{ codigo }}</span>
+            } @else {
+              <span>Sin código de FileMaker</span>
+            }
+            <span>N.º {{ f.medico.id }} en la agenda</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Datos ─────────────────────────────────────────────────── -->
+      <section class="flex flex-col gap-4" aria-labelledby="agenda-ficha-datos">
+        <h3 id="agenda-ficha-datos" class="text-xs font-bold text-text-dark uppercase tracking-wider">Datos</h3>
+        <app-agenda-medico-datos
+          [(formulario)]="formulario"
+          [especialidades]="especialidades()"
+          [bancos]="bancos()"
+          [disabled]="!puedeEditar() || ocupado() !== null" />
+        @if (puedeEditar() && hayCambiosDatos()) {
+          @if (errorDatos(); as error) {
+            <p role="alert" class="text-xs text-text-dark">{{ error }}</p>
+          }
+          <div class="flex justify-end gap-2">
+            <app-button variant="ghost" size="sm" [disabled]="ocupado() !== null" (clicked)="deshacerDatos()">Deshacer</app-button>
+            <app-button size="sm" icon="check" [disabled]="!!errorDatos() || ocupado() !== null" [loading]="ocupado() === 'datos'" (clicked)="guardarDatos()">Guardar datos</app-button>
+          </div>
+        }
+      </section>
+
+      <!-- ── Horario: casillas de 30 minutos ───────────────────────── -->
+      <section class="flex flex-col gap-3" aria-labelledby="agenda-ficha-horario">
+        <div class="flex flex-col gap-1">
+          <h3 id="agenda-ficha-horario" class="text-xs font-bold text-text-dark uppercase tracking-wider">Horario de atención</h3>
+          <p class="text-xs text-text-muted">
+            Cada casilla es un turno de 30 minutos que la agenda ofrece para reservar.
+            @if (puedeEditar()) { Toca una casilla para encenderla o apagarla, o el día para marcarlo entero. }
+          </p>
+          <p class="text-xs text-text-dark">{{ resumen() || 'Sin horario: la web lo ofrece «a solicitud».' }}</p>
+        </div>
+
+        @if (puedeEditar() && sinCodigo()) {
+          <p class="text-xs text-text-dark bg-bg-light rounded-xl px-3 py-2">
+            Este médico no tiene código de FileMaker: se pueden apagar casillas, pero no encender horas nuevas.
+          </p>
+        }
+
+        <div class="crm-grilla-horario" role="group" [attr.aria-label]="'Horario de ' + f.medico.nombre">
+          <div class="crm-grilla-fila crm-grilla-fila-cabecera">
+            <span class="crm-grilla-hora"><span class="sr-only">Hora</span></span>
+            @for (dia of f.grilla.dias; track dia) {
+              <span class="crm-grilla-cabecera">
+                @if (puedeEditar()) {
+                  <button type="button" class="crm-grilla-dia" [disabled]="ocupado() !== null" [attr.aria-label]="'Marcar o desmarcar ' + nombreDia(dia) + ' entero'" (click)="alternarDia(dia)">
+                    {{ diaCorto(dia) }}
+                  </button>
+                } @else {
+                  <span class="crm-grilla-dia">{{ diaCorto(dia) }}</span>
+                }
+                <span class="crm-grilla-cuenta tabular-nums">{{ casillasDelDia(dia) || '' }}</span>
+              </span>
+            }
+          </div>
+          @for (hora of f.grilla.horas; track hora) {
+            <div class="crm-grilla-fila">
+              <span class="crm-grilla-hora tabular-nums" aria-hidden="true">{{ hora }}</span>
+              @for (dia of f.grilla.dias; track dia) {
+                <button
+                    type="button"
+                    class="crm-grilla-casilla"
+                    [class.crm-grilla-casilla-activa]="encendidas().has(clave(dia, hora))"
+                    [attr.aria-pressed]="encendidas().has(clave(dia, hora))"
+                    [attr.aria-label]="nombreDia(dia) + ' ' + hora"
+                    [disabled]="!puedeEditar() || ocupado() !== null"
+                    (click)="alternar(dia, hora)"></button>
+              }
+            </div>
+          }
+        </div>
+
+        @if (puedeEditar() && hayCambiosHorario()) {
+          <p class="text-xs text-text-muted">Apagar una casilla no anula las citas ya agendadas en esa hora: revísalas en Reservas.</p>
+          <div class="flex justify-end gap-2">
+            <app-button variant="ghost" size="sm" [disabled]="ocupado() !== null" (clicked)="deshacerHorario()">Deshacer</app-button>
+            <app-button size="sm" icon="calendar-check" [disabled]="ocupado() !== null" [loading]="ocupado() === 'horario'" (clicked)="guardarHorario()">Guardar horario</app-button>
+          </div>
+        }
+      </section>
+    }
+  </div>
+</app-drawer>

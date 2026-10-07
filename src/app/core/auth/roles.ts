@@ -90,6 +90,18 @@ export function puedeVerAgendaClinica(rol: RolUsuario | undefined): boolean {
   return cubreRol(rol, 'ADMIN') || esRolOperativo(rol);
 }
 
+/** Espejo de `ROLES_ADMINISTRAN_AGENDA` del backend. */
+const ROLES_ADMINISTRAN_AGENDA: readonly RolUsuario[] = ['RECEPCION'];
+
+/**
+ * ¿Edita médicos, horarios y especialidades de la agenda (Directorio médico)?
+ * Espejo de `puedeEditarAgendaClinica` del backend: administración y
+ * recepción. Asistencia los ve pero no los edita. Capacidad, no rango.
+ */
+export function puedeEditarAgendaClinica(rol: RolUsuario | undefined): boolean {
+  return cubreRol(rol, 'ADMIN') || (rol !== undefined && ROLES_ADMINISTRAN_AGENDA.includes(rol));
+}
+
 /** Guard de `/reservas`: quien no gestiona citas vuelve a su bandeja. */
 export const exigeAgendaClinica: CanActivateFn = () =>
   puedeVerAgendaClinica(inject(AuthService).user()?.rol) || inject(Router).createUrlTree(['/conversaciones']);

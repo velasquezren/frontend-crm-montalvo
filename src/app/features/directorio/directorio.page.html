@@ -1,32 +1,36 @@
 <!-- ══════════════════════════════════════════════════════════════════════
-     Directorio médico — quién atiende, de qué y cuándo.
+     Directorio médico — los médicos de la agenda, su horario y su ficha web.
      ══════════════════════════════════════════════════════════════════════ -->
 <div class="flex flex-col gap-5 w-full">
   <header class="flex flex-col gap-3.5">
     <app-page-header
       title="Directorio médico"
-      subtitle="Médicos, especialidades y horario de atención. Lo publicado aparece en la landing; las citas siguen en la agenda de la clínica.">
-      @if (puedeEditar() && tabActiva() === 'medicos') {
-        <app-button icon="plus" (clicked)="abrirNueva()">Nueva ficha</app-button>
+      subtitle="Los médicos de la agenda de la clínica, su especialidad y su horario: lo que se guarda aquí es lo que reserva la web y lo que lee FileMaker.">
+      @if (tabActiva() === 'medicos' && editaAgenda()) {
+        <app-button icon="plus" (clicked)="nuevoMedico()">Nuevo médico</app-button>
+      } @else if (tabActiva() === 'web' && editaWeb()) {
+        <app-button icon="plus" (clicked)="abrirNuevaFicha()">Nueva ficha web</app-button>
       }
     </app-page-header>
 
-    <nav class="crm-segmento crm-segmento-pestanas" role="tablist" aria-label="Secciones del Directorio médico">
-      @for (t of tabs; track t.id) {
-        <button
-          type="button"
-          role="tab"
-          [attr.aria-selected]="tabActiva() === t.id"
-          [attr.aria-controls]="'panel-' + t.id"
-          [id]="'tab-' + t.id"
-          (click)="cambiarTab(t.id)"
-          class="crm-segmento-opcion"
-          [class.crm-segmento-opcion-activo]="tabActiva() === t.id">
-          <app-icon [name]="t.icon" [size]="14" />
-          <span>{{ t.label }}</span>
-        </button>
-      }
-    </nav>
+    @if (tabs.length > 1) {
+      <nav class="crm-segmento crm-segmento-pestanas" role="tablist" aria-label="Secciones del Directorio médico">
+        @for (t of tabs; track t.id) {
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="tabActiva() === t.id"
+            [attr.aria-controls]="'panel-' + t.id"
+            [id]="'tab-' + t.id"
+            (click)="cambiarTab(t.id)"
+            class="crm-segmento-opcion"
+            [class.crm-segmento-opcion-activo]="tabActiva() === t.id">
+            <app-icon [name]="t.icon" [size]="14" />
+            <span>{{ t.label }}</span>
+          </button>
+        }
+      </nav>
+    }
   </header>
 
   <main class="crm-pestanas-cuerpo">
@@ -38,7 +42,7 @@
         [class.crm-pestana-panel-oculta]="tabActiva() !== 'medicos'"
         [attr.inert]="tabActiva() === 'medicos' ? null : ''"
         role="tabpanel">
-        <app-medicos-lista (nueva)="abrirNueva()" />
+        <app-agenda-medicos-lista />
       </div>
     }
 
@@ -50,12 +54,32 @@
         [class.crm-pestana-panel-oculta]="tabActiva() !== 'especialidades'"
         [attr.inert]="tabActiva() === 'especialidades' ? null : ''"
         role="tabpanel">
-        <app-especialidades-lista />
+        <app-agenda-especialidades (cambio)="especialidadesCambiaron()" />
+      </div>
+    }
+
+    @if (estaMontada('web')) {
+      <div
+        id="panel-web"
+        aria-labelledby="tab-web"
+        class="crm-pestana-panel flex flex-col gap-8"
+        [class.crm-pestana-panel-oculta]="tabActiva() !== 'web'"
+        [attr.inert]="tabActiva() === 'web' ? null : ''"
+        role="tabpanel">
+        <p class="text-xs text-text-muted">
+          Fichas de presentación para la landing (foto, biografía, especialidades de la web). Todavía no están unidas a los
+          médicos de la agenda: las citas y los horarios que reserva la web son los de «Médicos».
+        </p>
+        <app-medicos-lista (nueva)="abrirNuevaFicha()" />
+        <section class="flex flex-col gap-3" aria-labelledby="web-especialidades">
+          <h2 id="web-especialidades" class="text-sm font-bold text-text-dark">Especialidades de la web</h2>
+          <app-especialidades-lista />
+        </section>
       </div>
     }
   </main>
 </div>
 
 <ng-template #nuevaTpl>
-  <app-nueva-ficha (creada)="alCrear($event)" (cerrar)="cerrarNueva()" />
+  <app-nueva-ficha (creada)="alCrearFicha($event)" (cerrar)="cerrarNuevaFicha()" />
 </ng-template>
