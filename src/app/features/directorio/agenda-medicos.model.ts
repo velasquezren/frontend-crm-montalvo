@@ -80,7 +80,7 @@ export interface RequisitoWeb {
 export function requisitosWeb(f: FichaMedicoAgenda): RequisitoWeb[] {
   const p = f.presentacion;
   return [
-    { id: 'especialidad', etiqueta: 'Una especialidad de la web', cumple: !!p && p.especialidades.length > 0, obligatorio: true },
+    { id: 'especialidad', etiqueta: 'Al menos una especialidad', cumple: !!p && p.especialidades.length > 0, obligatorio: true },
     { id: 'foto', etiqueta: 'Foto de buena calidad', cumple: !!p?.fotoUrl, obligatorio: false },
     { id: 'resumen', etiqueta: 'Resumen de una línea', cumple: !!p?.resumen.trim(), obligatorio: false },
     { id: 'horario', etiqueta: 'Horario cargado en la agenda', cumple: f.medico.casillasActivas > 0, obligatorio: false },
@@ -91,11 +91,11 @@ export interface EspecialidadAgenda {
   nombre: string;
   medicos: number;
   activos: number;
-  /** Su página en la web, o null si todavía no tiene. */
+  /** Su entrada en la landing, o null si no se muestra en la web. */
   pagina: PaginaEspecialidad | null;
 }
 
-/** La página de una especialidad en la landing (`/especialidades/<slug>`). */
+/** Una especialidad en la landing: sección en «Especialidades» y grupo en «Staff médico» (`#<slug>`). */
 export interface PaginaEspecialidad {
   id: string;
   nombre: string;

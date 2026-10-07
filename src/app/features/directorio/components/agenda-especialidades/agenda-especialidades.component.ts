@@ -29,8 +29,8 @@ type Filtro = 'todas' | 'conMedicos' | 'sinPagina';
 /**
  * La pestaña «Especialidades»: las escritas en los médicos de la agenda (texto
  * libre, por eso hay casi-duplicados como «Pediatra» y «Pediatria»), cada una
- * con su página en la web. Renombrar con el nombre de otra las unifica, y la
- * página acompaña al nombre. Una sola lista: la web no tiene especialidades
+ * con su entrada en la landing (sección «Especialidades» y grupo de «Staff
+ * médico»). Renombrar con el nombre de otra las unifica, y la entrada acompaña. Una sola lista: la web no tiene especialidades
  * que la agenda no conozca.
  */
 @Component({
@@ -117,7 +117,7 @@ export class AgendaEspecialidadesComponent {
   protected crearPagina(e: EspecialidadAgenda): Promise<void> {
     return this.trabajar(async () => {
       await this.servicio.crearPaginas([e.nombre]);
-      return `Página de «${e.nombre}» creada. Escríbele una descripción.`;
+      return `«${e.nombre}» ya se muestra en la web. Escríbele una descripción.`;
     });
   }
 
@@ -127,7 +127,7 @@ export class AgendaEspecialidadesComponent {
     if (nombres.length === 0) return Promise.resolve();
     return this.trabajar(async () => {
       const r = await this.servicio.crearPaginas(nombres);
-      return `${r.creadas} ${r.creadas === 1 ? 'página creada' : 'páginas creadas'}.`;
+      return `${r.creadas} ${r.creadas === 1 ? 'especialidad se muestra' : 'especialidades se muestran'} ahora en la web.`;
     });
   }
 
@@ -165,7 +165,7 @@ export class AgendaEspecialidadesComponent {
     await this.trabajar(async () => {
       await this.servicio.actualizarPagina(pagina.id, { descripcion: this.descripcion().trim(), orden: Number(this.orden().trim()), activa: this.activa() });
       this.cerrarPagina();
-      return 'Página guardada.';
+      return 'Guardado.';
     });
   }
 

@@ -46,10 +46,10 @@ describe('pestaña Especialidades: las de la agenda, cada una con su página web
 
   it('muestra cuáles tienen página y crea de una vez las que faltan (solo con médicos activos)', async () => {
     await montar('RECEPCION');
-    expect(texto()).toContain('Visible');
+    expect(texto()).toContain('Se muestra');
     expect(texto()).toContain('2 médicos publicados');
     expect(texto()).not.toContain('Oncologo'); // sin médicos activos: fuera del filtro por defecto
-    boton('Crear las 2 páginas que faltan')!.click();
+    boton('Mostrar las 2 que faltan en la web')!.click();
     await asentar();
     const pedido = http.expectOne(r => r.url.endsWith('/agenda/medicos/especialidades/paginas'));
     expect(pedido.request.body).toEqual({ nombres: ['Pediatria', 'Cardiologia'] });
@@ -60,8 +60,8 @@ describe('pestaña Especialidades: las de la agenda, cada una con su página web
 
   it('asistencia ve las páginas sin poder crearlas ni renombrar', async () => {
     await montar('ASISTENTE');
-    expect(boton('páginas que faltan')).toBeUndefined();
-    expect(boton('Crear página')).toBeUndefined();
+    expect(boton('que faltan en la web')).toBeUndefined();
+    expect(boton('Mostrar en la web')).toBeUndefined();
     expect((fixture.nativeElement as HTMLElement).querySelector('button[aria-label^="Renombrar"]')).toBeNull();
   });
 });

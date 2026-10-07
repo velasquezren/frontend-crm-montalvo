@@ -31,7 +31,7 @@
           <div class="min-w-0">
             <h3 id="web-publicacion" class="text-sm font-semibold text-text-dark">{{ p.publicado ? 'Visible en la web' : 'Todavía no se muestra' }}</h3>
             <p class="text-xs text-text-muted mt-0.5">
-              @if (p.publicado) { Aparece en la página de sus especialidades. }
+              @if (p.publicado) { Aparece en «Staff médico» de la landing, dentro de su especialidad. }
               @else { Complétala y publícala cuando esté lista. }
             </p>
           </div>
@@ -83,11 +83,11 @@
       </div>
 
       <div class="flex flex-col gap-2">
-        <span class="text-sm font-medium text-text-dark">Especialidades en la web</span>
+        <span class="text-sm font-medium text-text-dark">En qué especialidades aparece</span>
         @if (especialidadesWeb.error()) {
           <p class="text-xs text-text-muted">No se pudieron cargar. <button type="button" class="crm-enlace" (click)="especialidadesWeb.reload()">Reintentar</button></p>
         } @else if (opcionesEspecialidad().length === 0 && !especialidadesWeb.isLoading()) {
-          <p class="text-xs text-text-muted">Todavía no hay páginas de especialidad en la web. Se crean en la pestaña «Especialidades», con un clic.</p>
+          <p class="text-xs text-text-muted">Ninguna especialidad se muestra todavía en la web. Se activan en la pestaña «Especialidades», con un clic.</p>
         } @else if (editable()) {
           <div class="flex flex-wrap gap-2" role="group" aria-label="Especialidades en la web">
             @for (e of opcionesEspecialidad(); track e.id) {
@@ -146,7 +146,7 @@
       <div class="flex flex-col gap-1 max-w-sm">
         <h3 class="text-base font-semibold text-text-dark">Todavía no tiene ficha web</h3>
         <p class="text-xs text-text-muted">
-          Con ella aparece en la página de su especialidad, con foto y biografía, y la reserva en línea muestra su foto.
+          Con ella aparece en «Staff médico» de la landing, con foto y biografía, y la reserva en línea muestra su foto.
           El horario y el precio se toman de la agenda, siempre al día.
         </p>
       </div>
