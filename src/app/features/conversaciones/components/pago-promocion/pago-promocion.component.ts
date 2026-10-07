@@ -55,12 +55,14 @@ export class PagoPromocionComponent {
   });
 
   protected confirmar(): void {
+    if (!this.puedeConfirmar()) return;
     const p = this.pago();
     if (p) void this.state.accionPago(p.id, 'confirmar');
   }
 
   protected async enviarPedido(event: Event): Promise<void> {
     event.preventDefault();
+    if (!this.puedeConfirmar()) return;
     const p = this.pago();
     const motivo = this.motivo().trim();
     if (!p) return;
@@ -77,6 +79,7 @@ export class PagoPromocionComponent {
 
   /** Anular cierra sin venta y no se deshace: se pregunta antes. */
   protected anular(): void {
+    if (!this.puedeConfirmar()) return;
     const p = this.pago();
     if (p && window.confirm(`¿Anular el pago de «${p.promocion.titulo}»? No registra venta y no se le avisa a la paciente.`)) {
       void this.state.accionPago(p.id, 'anular');

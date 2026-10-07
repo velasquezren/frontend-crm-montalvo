@@ -12,6 +12,12 @@
     <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain">
       <div class="crm-menu-rejilla p-5">
         <div class="min-w-0 space-y-5">
+          <p class="crm-menu-aviso">
+            <app-icon [name]="datos.value()?.linea?.comercial ? 'shopping-bag' : 'message-circle'" [size]="14" class="shrink-0 text-primary" />
+            <span>{{ datos.value()?.linea?.comercial
+              ? 'Línea de Ventas: atención, promociones y cobros. Hablar con una persona siempre está disponible.'
+              : 'Línea de Atención: orientación y atención humana. Las promociones y sus cobros se gestionan desde Ventas. El menú es opcional.' }}</span>
+          </p>
           <!-- Vacío: la línea todavía no tiene menú. No se carga uno de ejemplo:
                el saludo y los textos los escribe la clínica. -->
           @if (!datos.value()?.menu) {
@@ -23,7 +29,7 @@
           @if (datos.value()?.enviosHabilitados === false) {
             <p class="crm-menu-aviso" role="status">
               <app-icon name="alert-circle" [size]="14" class="shrink-0" />
-              <span>Los envíos interactivos están apagados en el servidor: aunque el menú esté encendido, no sale hasta activarlos.</span>
+              <span>Los envíos interactivos están apagados en el servidor para esta línea: puedes preparar el menú, pero todavía no se envía.</span>
             </p>
           }
           @if (erroresGuardados().length) {
@@ -74,7 +80,7 @@
                   </div>
                   <p class="text-[11px] text-text-muted leading-relaxed">{{ tipos[o.tipo].efecto }}</p>
 
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div class="grid grid-cols-1 gap-3">
                     <app-input
                       label="Texto del botón"
                       [value]="o.titulo"

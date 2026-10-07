@@ -128,9 +128,9 @@ export function menuInicial(): MenuAtencion {
 }
 
 /** Los tipos que todavía se pueden agregar. */
-export function tiposDisponibles(menu: MenuAtencion): TipoOpcion[] {
+export function tiposDisponibles(menu: MenuAtencion, comercial = false): TipoOpcion[] {
   if (menu.opciones.length >= LIMITES.opciones) return [];
-  return ORDEN_TIPOS.filter(t => !TIPOS[t].unica || !menu.opciones.some(o => o.tipo === t));
+  return ORDEN_TIPOS.filter(t => (comercial || t !== 'PROMOCIONES') && (!TIPOS[t].unica || !menu.opciones.some(o => o.tipo === t)));
 }
 
 /** Copia del menú sin campos vacíos: lo que viaja al servidor. */

@@ -18,7 +18,7 @@
             [disabled]="!!state.cambiandoPago()"
             (clicked)="confirmar()">Completar registro</app-button>
         }
-        @if (p.estado === 'COMPROBANTE_ENVIADO') {
+        @if (p.estado === 'COMPROBANTE_ENVIADO' && puedeConfirmar()) {
           @if (puedeConfirmar()) {
             <app-button
               size="sm" icon="check-circle"
@@ -32,7 +32,7 @@
             [ariaLabel]="'Pedir otro comprobante'"
             (clicked)="pidiendoOtro.set(true)"><span class="hidden sm:inline">Pedir otro</span></app-button>
         }
-        @if (p.estado === 'PENDIENTE' || p.estado === 'COMPROBANTE_ENVIADO') {
+        @if (puedeConfirmar() && (p.estado === 'PENDIENTE' || p.estado === 'COMPROBANTE_ENVIADO')) {
           <app-button
             variant="ghost" size="sm" icon="x"
             ariaLabel="Anular el pago"
@@ -62,7 +62,7 @@
         } @else {
           <span class="text-text-muted">El comprobante está más arriba en el chat.</span>
         }
-        <span class="text-text-muted"> · Revisa monto, fecha y a nombre de quién, y confírmalo o pide otro.</span>
+        <span class="text-text-muted">{{ puedeConfirmar() ? ' · Revisa monto, fecha y a nombre de quién, y confírmalo o pide otro.' : ' · Ventas o administración verifican este pago.' }}</span>
       </div>
     } @else if (p.estado === 'PENDIENTE') {
       <p class="crm-pago-detalle text-text-muted">
@@ -83,7 +83,7 @@
       </p>
     }
 
-    @if (pidiendoOtro() && p.estado === 'COMPROBANTE_ENVIADO') {
+    @if (puedeConfirmar() && pidiendoOtro() && p.estado === 'COMPROBANTE_ENVIADO') {
       <form class="crm-pago-pedido" (submit)="enviarPedido($event)" aria-label="Pedir otro comprobante">
         <app-input
           class="flex-1"

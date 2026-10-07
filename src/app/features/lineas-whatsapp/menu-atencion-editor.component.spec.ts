@@ -76,6 +76,25 @@ describe('MenuAtencionEditorComponent', () => {
     expect(texto()).toContain('Última edición: René');
   });
 
+  it('Recepción no permite agregar promociones, ni restaurarlas mediante deshacer', async () => {
+    await montar();
+    componente['tipoNuevo'].set('PROMOCIONES');
+    componente['agregar']();
+    expect(borrador().opciones.some(o => o.tipo === 'PROMOCIONES')).toBe(false);
+    componente['quitada'].set({ opcion: { tipo: 'PROMOCIONES', titulo: 'Promos' }, indice: 0 });
+    componente['deshacerQuitar']();
+    expect(borrador().opciones.some(o => o.tipo === 'PROMOCIONES')).toBe(false);
+    expect(texto()).toContain('Las promociones y sus cobros se gestionan desde Ventas');
+  });
+
+  it('Ventas permite preparar promociones sin activar automáticamente el menú', async () => {
+    await montar({ ...GUARDADO, linea: { nombre: 'Ventas', comercial: true }, menu: null });
+    componente['tipoNuevo'].set('PROMOCIONES');
+    componente['agregar']();
+    expect(borrador().opciones.some(o => o.tipo === 'PROMOCIONES')).toBe(true);
+    expect(borrador().activo).toBe(false);
+  });
+
   it('sin menú todavía, empieza con la salida a una persona y sin textos inventados', async () => {
     await montar({ ...GUARDADO, menu: null, actualizadoPor: null });
     expect(texto()).toContain('Esta línea todavía no tiene menú');
@@ -115,7 +134,7 @@ describe('MenuAtencionEditorComponent', () => {
   });
 
   it('la opción de promociones explica que lee las publicadas en el CRM, sin lista propia', async () => {
-    await montar();
+    await montar({ ...GUARDADO, linea: { nombre: 'Ventas', comercial: true } });
     componente['tipoNuevo'].set('PROMOCIONES');
     componente['agregar']();
     fixture.detectChanges();

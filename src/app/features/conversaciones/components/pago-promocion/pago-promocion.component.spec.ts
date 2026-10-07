@@ -48,11 +48,13 @@ describe('bloque de pago de una promoción en el chat', () => {
     expect(accionPago).toHaveBeenCalledWith('pago-1', 'confirmar');
   });
 
-  it('quien no registra ventas no ve «Confirmar pago»; sí puede pedir otro', async () => {
+  it('Recepción consulta el pago sin poder confirmarlo, pedir otro ni anularlo', async () => {
     comercial.set(false);
     const { el } = await montar(BASE);
     expect(boton(el, 'Confirmar pago')).toBeUndefined();
-    expect(boton(el, 'Pedir otro')).toBeDefined();
+    expect(boton(el, 'Pedir otro')).toBeUndefined();
+    expect(boton(el, 'Anular el pago')).toBeUndefined();
+    expect(el.textContent).toContain('Ventas o administración verifican este pago');
   });
 
   it('pedir otro exige un motivo, que es lo que leerá la paciente', async () => {

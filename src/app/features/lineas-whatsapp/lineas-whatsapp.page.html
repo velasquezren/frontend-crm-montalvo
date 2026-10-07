@@ -86,13 +86,15 @@
             </app-badge>
           </td>
           <td class="text-right" (click)="$event.stopPropagation()">
-            <span class="inline-flex items-center gap-2">
+            <span class="inline-flex flex-wrap justify-end items-center gap-2">
               <app-button variant="secondary" size="sm" icon="menu" [ariaLabel]="'Menú de atención de ' + linea.nombre" (clicked)="editarMenu(linea, menuAtencion)">
                 Menú
               </app-button>
-              <app-button variant="secondary" size="sm" icon="wallet" [ariaLabel]="'Cobro por WhatsApp de ' + linea.nombre" (clicked)="editarCobro(linea, cobroLinea)">
-                Cobro
-              </app-button>
+              @if (linea.comercial) {
+                <app-button variant="secondary" size="sm" icon="wallet" [ariaLabel]="'Cobro de promociones de ' + linea.nombre" (clicked)="editarCobro(linea, cobroLinea)">
+                  Cobro
+                </app-button>
+              }
               <app-button variant="secondary" size="sm" icon="edit" (clicked)="editar(linea, formulario)">
                 Configurar
               </app-button>

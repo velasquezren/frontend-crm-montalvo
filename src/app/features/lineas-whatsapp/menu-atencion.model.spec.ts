@@ -29,6 +29,12 @@ describe('modelo del menú de atención', () => {
     expect(tiposDisponibles(conInfo)).toContain('RESPUESTA');
   });
 
+  it('Atención no ofrece promociones; Ventas sí, sin perder la salida humana', () => {
+    expect(tiposDisponibles(base(), false)).not.toContain('PROMOCIONES');
+    expect(tiposDisponibles(base(), true)).toContain('PROMOCIONES');
+    expect(tiposDisponibles(base(), false)).toContain('UBICACION');
+  });
+
   it('con diez opciones ya no se puede agregar otra', () => {
     const lleno = { ...base(), opciones: Array.from({ length: 10 }, (_, i) => ({ tipo: 'RESPUESTA' as const, titulo: `Info ${i}` })) };
     expect(tiposDisponibles(lleno)).toEqual([]);

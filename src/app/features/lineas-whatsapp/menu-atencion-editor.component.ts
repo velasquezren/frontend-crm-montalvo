@@ -73,7 +73,7 @@ export class MenuAtencionEditorComponent {
 
   protected readonly tipos = TIPOS;
   protected readonly limites = LIMITES;
-  protected readonly disponibles = computed(() => tiposDisponibles(this.borrador()));
+  protected readonly disponibles = computed(() => tiposDisponibles(this.borrador(), this.datos.value()?.linea.comercial === true));
   protected readonly vista = computed(() => vistaPrevia(this.borrador()));
   /** Errores que el servidor dejó en un menú guardado que ya no vale (p. ej. tras una regla nueva). */
   protected readonly erroresGuardados = computed(() => this.datos.value()?.errores ?? []);
@@ -130,7 +130,7 @@ export class MenuAtencionEditorComponent {
     const q = this.quitada();
     if (!q) return;
     /* Las mismas reglas que agregar: un tipo único no vuelve si ya hay otro, ni pasa de diez. */
-    if (!tiposDisponibles(this.borrador()).includes(q.opcion.tipo)) {
+    if (!this.disponibles().includes(q.opcion.tipo)) {
       this.quitada.set(null);
       return;
     }
@@ -165,7 +165,9 @@ export class MenuAtencionEditorComponent {
          tal cual. Recargar dejaba «Cambios sin guardar» un viaje de ida y vuelta más. */
       this.datos.set(await this.service.guardarMenu(this.lineaId(), paraGuardar(this.borrador())));
       this.quitada.set(null);
-      this.toast.success(this.borrador().activo ? 'Menú guardado y encendido.' : 'Menú guardado. Está apagado.');
+      this.toast.success(!this.borrador().activo ? 'Menú guardado. Está apagado.'
+        : this.datos.value()?.enviosHabilitados ? 'Menú guardado y encendido.'
+        : 'Menú guardado. Los envíos siguen desactivados en esta línea.');
     } catch (error) {
       this.errores.set(erroresDe(error));
     } finally {

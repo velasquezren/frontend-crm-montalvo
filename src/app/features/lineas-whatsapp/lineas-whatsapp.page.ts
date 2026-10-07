@@ -125,6 +125,7 @@ export class LineasWhatsappPage {
     return !this.editorSinGuardar() || window.confirm('Hay cambios sin guardar. ¿Cerrar y descartarlos?');
   }
   protected editarCobro(linea: LineaWhatsapp, template: TemplateRef<unknown>): void {
+    if (!linea.comercial) return;
     this.cobroDe.set(linea);
     this.editorSinGuardar.set(false);
     this.overlay?.dispose();
