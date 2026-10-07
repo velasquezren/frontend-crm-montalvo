@@ -1,6 +1,9 @@
 import { httpResource } from '@angular/common/http';
 import { OverlayRef } from '@angular/cdk/overlay';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, TemplateRef, viewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, TemplateRef, untracked, viewChild, ViewContainerRef } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
+import { map } from 'rxjs';
 
 import { paginaVacia, RespuestaPaginada } from '../../../../core/api/pagination.model';
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -65,6 +68,8 @@ export class AgendaMedicosListaComponent {
   private readonly dialog = inject(DialogService);
   private readonly vcr = inject(ViewContainerRef);
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly fichaTpl = viewChild.required<TemplateRef<unknown>>('fichaTpl');
   private readonly nuevoTpl = viewChild.required<TemplateRef<unknown>>('nuevoTpl');
   private cajon?: OverlayRef;
@@ -106,7 +111,21 @@ export class AgendaMedicosListaComponent {
   /** Un médico recién creado abre en «Horario»: es lo siguiente que hay que cargarle. */
   protected readonly pestanaInicial = signal<PestanaFicha>('datos');
 
+  /** `?medico=<id>` (desde Reservas): abre la ficha de ese médico. */
+  private readonly medicoEnRuta = toSignal(this.route.queryParamMap.pipe(map(p => p.get('medico'))), {
+    initialValue: this.route.snapshot.queryParamMap.get('medico'),
+  });
+
   constructor() {
+    effect(() => {
+      const id = Number(this.medicoEnRuta());
+      if (!Number.isSafeInteger(id) || id < 1) return;
+      untracked(() => {
+        void this.router.navigate([], { relativeTo: this.route, queryParams: { medico: null }, queryParamsHandling: 'merge', replaceUrl: true });
+        this.abrir(id, 'horario');
+      });
+    });
+
     effect(onCleanup => {
       const termino = this.busqueda();
       const temporizador = setTimeout(() => {

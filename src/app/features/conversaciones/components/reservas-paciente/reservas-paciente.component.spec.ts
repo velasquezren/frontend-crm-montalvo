@@ -1,4 +1,5 @@
 import '@angular/compiler';
+import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -15,7 +16,7 @@ describe('próximas reservas en la ficha del chat', () => {
     fixture.detectChanges();
   }
   async function montar(id = 'chat-1') {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(ReservasPacienteComponent);
     fixture.componentRef.setInput('conversacionId', id);
@@ -26,13 +27,14 @@ describe('próximas reservas en la ficha del chat', () => {
 
   it('las de esta paciente, con fecha, médico y estado', async () => {
     await montar();
-    const r: Partial<ReservaAgenda> = { id: 7, fecha: '2026-10-13', hora: '09:30', medico: 'Dra. Sintética', especialidad: 'Ginecología', estado: 'PENDIENTE' };
+    const r: Partial<ReservaAgenda> = { id: 7, fecha: '2026-10-13', hora: '09:30', medicoId: 3, medico: 'Dra. Sintética', especialidad: 'Ginecología', estado: 'PENDIENTE' };
     http.expectOne(p => p.url.endsWith('/agenda/reservas/conversacion/chat-1')).flush([r]);
     await asentar();
     const texto = (fixture.nativeElement as HTMLElement).textContent!;
     expect(texto).toContain('mar 13 oct · 09:30');
     expect(texto).toContain('Dra. Sintética · Ginecología');
     expect(texto).toContain('Pendiente de pago');
+    expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/directorio?medico=3"]')).not.toBeNull();
   });
 
   it('sin reservas lo dice; si la agenda no responde, lo dice también y no rompe el chat', async () => {

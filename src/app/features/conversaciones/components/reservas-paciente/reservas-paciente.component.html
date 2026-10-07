@@ -16,7 +16,13 @@
             <span class="text-xs font-semibold text-text-dark tabular-nums truncate">{{ fechaDeReserva(r.fecha) }} · {{ r.hora }}</span>
             <app-badge class="shrink-0" [variant]="estadoDeReserva(r.estado).variante">{{ estadoDeReserva(r.estado).etiqueta }}</app-badge>
           </div>
-          <span class="block text-xs text-text-muted truncate">{{ r.medico || 'Sin médico' }}{{ r.especialidad ? ' · ' + r.especialidad : '' }}</span>
+          <span class="block text-xs text-text-muted truncate">
+            @if (r.medicoId !== null) {
+              <a class="crm-enlace" routerLink="/directorio" [queryParams]="{ medico: r.medicoId }" [attr.aria-label]="'Ver horario de ' + (r.medico || 'el médico')">{{ r.medico || 'Médico' }}</a>
+            } @else {
+              {{ r.medico || 'Sin médico' }}
+            }{{ r.especialidad ? ' · ' + r.especialidad : '' }}
+          </span>
         </li>
       }
     </ul>

@@ -1,5 +1,6 @@
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, output, signal, viewChild } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { esConflicto, mensajeDeError } from '../../../../core/api/http-error';
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -59,6 +60,7 @@ const PESTANAS: readonly { readonly id: PestanaFicha; readonly etiqueta: string;
     ErrorCargaComponent,
     IconComponent,
     LoadingSkeletonComponent,
+    RouterLink,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agenda-medico-ficha.component.html',

@@ -107,7 +107,7 @@
       </div>
       @if (puedeEditar() && hayCambiosHorario()) {
         <div class="shrink-0 border-t border-border bg-white px-5 py-3 flex flex-wrap items-center justify-between gap-2">
-          <span class="text-xs text-text-muted" role="status">Apagar una casilla no anula citas ya agendadas: revísalas en Reservas.</span>
+          <span class="text-xs text-text-muted" role="status">Apagar una casilla no anula citas ya agendadas: revísalas en <a class="crm-enlace" routerLink="/reservas" (click)="cerrar.emit()">Reservas</a>.</span>
           <div class="flex gap-2">
             <app-button variant="ghost" size="sm" [disabled]="ocupado() !== null" (clicked)="deshacerHorario()">Deshacer</app-button>
             <app-button size="sm" icon="calendar-check" [disabled]="ocupado() !== null" [loading]="ocupado() === 'horario'" (clicked)="guardarHorario()">Guardar horario</app-button>

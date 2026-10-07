@@ -4,7 +4,9 @@
 <div class="flex flex-col gap-5 w-full">
   <app-page-header
     title="Reservas"
-    subtitle="Las citas reservadas en la agenda de la clínica, desde la web y desde ScriptCase. Se confirman, cobran y anulan en la agenda." />
+    subtitle="Las citas reservadas en la agenda de la clínica, desde la web y desde ScriptCase. Se confirman, cobran y anulan en la agenda.">
+    <app-button variant="secondary" size="sm" icon="rotate-cw" [loading]="reservas.isLoading() && hayReservas()" (clicked)="actualizar()">Actualizar</app-button>
+  </app-page-header>
 
   <div class="flex flex-col gap-3">
     <div class="flex items-center gap-2 overflow-x-auto pb-1" role="group" aria-label="Periodo">
@@ -103,7 +105,16 @@
             <span class="text-base font-semibold text-text-dark tabular-nums">{{ fechaDeReserva(r.fecha) }} · {{ r.hora }}</span>
             <app-badge class="shrink-0" [variant]="estadoDeReserva(r.estado).variante">{{ estadoDeReserva(r.estado).etiqueta }}</app-badge>
           </div>
-          <span class="text-sm text-text-dark">{{ r.medico || '—' }}</span>
+          @if (r.medicoId !== null) {
+            <a
+              class="crm-enlace self-start text-sm"
+              routerLink="/directorio"
+              [queryParams]="{ medico: r.medicoId }"
+              [attr.aria-label]="'Ver ficha y horario de ' + (r.medico || 'el médico')"
+              (click)="cerrar()">{{ r.medico || 'Médico' }}</a>
+          } @else {
+            <span class="text-sm text-text-dark">{{ r.medico || '—' }}</span>
+          }
           @if (r.especialidad; as esp) { <span class="text-xs text-text-muted">{{ esp }}</span> }
         </section>
 

@@ -3,6 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -32,7 +33,7 @@ describe('ficha de un médico de la agenda', () => {
   }
   async function montar(rol: RolUsuario) {
     TestBed.configureTestingModule({ providers: [
-      provideHttpClient(), provideHttpClientTesting(),
+      provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
       { provide: ToastService, useValue: toast },
       { provide: AuthService, useValue: { user: signal({ rol }), isAdmin: signal(false) } },
     ] });

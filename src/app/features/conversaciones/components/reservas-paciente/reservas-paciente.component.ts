@@ -1,5 +1,7 @@
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
+
 
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
@@ -15,7 +17,7 @@ import { ReservasService } from '../../../reservas/reservas.service';
  */
 @Component({
   selector: 'app-reservas-paciente',
-  imports: [BadgeComponent, ButtonComponent, LoadingSkeletonComponent],
+  imports: [BadgeComponent, ButtonComponent, LoadingSkeletonComponent, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './reservas-paciente.component.html',
   styleUrl: './reservas-paciente.component.css',

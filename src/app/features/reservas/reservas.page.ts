@@ -129,8 +129,31 @@ export class ReservasPage {
       }, 300);
       onCleanup(() => clearTimeout(temporizador));
     });
-    /* El comprobante abierto vive en un objectURL: se libera al salir de la página. */
-    inject(DestroyRef).onDestroy(() => this.liberarVisor());
+    /*
+     * La agenda vive en MySQL y no avisa de lo nuevo por el socket del CRM: una
+     * reserva hecha en la web aparecería recién al salir y volver. Se refresca
+     * cada 2 minutos, solo con la pestaña a la vista, y al volver a ella si pasó
+     * más de un minuto. Recargar no parpadea: la tabla se queda mientras llega.
+     */
+    let ultimaCarga = Date.now();
+    const refrescar = () => {
+      if (document.visibilityState !== 'visible' || Date.now() - ultimaCarga < 60_000) return;
+      ultimaCarga = Date.now();
+      this.reservas.reload();
+    };
+    const intervalo = setInterval(refrescar, 120_000);
+    document.addEventListener('visibilitychange', refrescar);
+    const destroyRef = inject(DestroyRef);
+    destroyRef.onDestroy(() => {
+      clearInterval(intervalo);
+      document.removeEventListener('visibilitychange', refrescar);
+      /* El comprobante abierto vive en un objectURL: se libera al salir de la página. */
+      this.liberarVisor();
+    });
+  }
+
+  protected actualizar(): void {
+    this.reservas.reload();
   }
 
   protected elegirPeriodo(periodo: PeriodoReservas): void {
