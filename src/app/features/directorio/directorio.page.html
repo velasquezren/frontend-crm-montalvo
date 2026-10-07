@@ -46,21 +46,11 @@
       <div
         id="panel-especialidades"
         aria-labelledby="tab-especialidades"
-        class="crm-pestana-panel flex flex-col gap-10"
+        class="crm-pestana-panel"
         [class.crm-pestana-panel-oculta]="tabActiva() !== 'especialidades'"
         [attr.inert]="tabActiva() === 'especialidades' ? null : ''"
         role="tabpanel">
-        <section class="flex flex-col gap-3" aria-labelledby="esp-agenda">
-          <h2 id="esp-agenda" class="text-sm font-bold text-text-dark">En la agenda</h2>
-          <app-agenda-especialidades (cambio)="especialidadesCambiaron()" />
-        </section>
-        <section class="flex flex-col gap-3" aria-labelledby="esp-web">
-          <div class="flex flex-col gap-1">
-            <h2 id="esp-web" class="text-sm font-bold text-text-dark">Páginas de especialidad en la web</h2>
-            <p class="text-xs text-text-muted">Cada una es una página de la landing con su descripción; en la ficha web de cada médico se elige en cuáles aparece.</p>
-          </div>
-          <app-especialidades-lista />
-        </section>
+        <app-agenda-especialidades (cambio)="especialidadesCambiaron()" />
       </div>
     }
   </main>

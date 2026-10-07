@@ -1,10 +1,23 @@
 <!-- ══════════════════════════════════════════════════════════════════════
-     Pestaña «Especialidades» — las escritas en los médicos de la agenda.
+     Pestaña «Especialidades» — las de la agenda, cada una con su página web.
      ══════════════════════════════════════════════════════════════════════ -->
 <div class="flex flex-col gap-4">
+  <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0" role="group" aria-label="Qué especialidades mostrar">
+      <app-filter-chip size="sm" [active]="filtro() === 'conMedicos'" [count]="cuenta().conMedicos" (clicked)="filtro.set('conMedicos')">Con médicos activos</app-filter-chip>
+      <app-filter-chip size="sm" [active]="filtro() === 'sinPagina'" [count]="cuenta().sinPagina" (clicked)="filtro.set('sinPagina')">Sin página web</app-filter-chip>
+      <app-filter-chip size="sm" [active]="filtro() === 'todas'" [count]="cuenta().todas" (clicked)="filtro.set('todas')">Todas</app-filter-chip>
+    </div>
+    @if (puedeEditar() && cuenta().sinPagina > 0) {
+      <app-button size="sm" icon="plus" [loading]="ocupado() && !editando() && !editandoPagina()" [disabled]="ocupado()" (clicked)="crearFaltantes()">
+        Crear las {{ cuenta().sinPagina }} páginas que faltan
+      </app-button>
+    }
+  </div>
+
   <p class="text-xs text-text-muted">
-    Cada especialidad es el texto que tiene escrito cada médico; así las agrupa la web.
-    @if (puedeEditar()) { Si hay dos casi iguales, renombra una con el nombre de la otra y quedan unificadas. }
+    Son las especialidades escritas en los médicos de la agenda, y cada una puede tener su página en la web.
+    @if (puedeEditar()) { Si hay dos casi iguales («Pediatra» y «Pediatria»), renombra una con el nombre de la otra antes de crear su página: quedan unificadas. }
   </p>
 
   @if (especialidades.isLoading() && !especialidades.hasValue()) {
@@ -15,41 +28,63 @@
     </div>
   } @else if (especialidades.error()) {
     <app-error-carga que="las especialidades" (reintentar)="especialidades.reload()" />
-  } @else if (especialidades.value().datos.length > 0) {
+  } @else if (visibles().length > 0) {
     <app-table [dense]="true">
       <thead>
         <tr>
           <th class="text-left">Especialidad</th>
           <th class="text-right">Médicos</th>
-          <th class="text-right">Activos</th>
+          <th class="text-left">Página web</th>
           @if (puedeEditar()) { <th><span class="sr-only">Acciones</span></th> }
         </tr>
       </thead>
       <tbody>
-        @for (e of especialidades.value().datos; track e.nombre) {
+        @for (e of visibles(); track e.nombre) {
           <tr>
             @if (editando() === e.nombre) {
               <td colspan="3">
-                <form class="flex flex-col gap-1.5" (submit)="$event.preventDefault(); guardar()">
-                  <app-input [ariaLabel]="'Nuevo nombre de ' + e.nombre" [disabled]="guardando()" [(value)]="nuevoNombre" />
+                <form class="flex flex-col gap-1.5" (submit)="$event.preventDefault(); renombrar()">
+                  <app-input [ariaLabel]="'Nuevo nombre de ' + e.nombre" [disabled]="ocupado()" [(value)]="nuevoNombre" />
                   @if (unificaCon(); as otra) {
                     <p class="text-xs text-text-dark">Se unificará con «{{ otra.nombre }}» ({{ otra.medicos }} {{ otra.medicos === 1 ? 'médico' : 'médicos' }}).</p>
+                  } @else if (e.pagina) {
+                    <p class="text-xs text-text-muted">Su página web cambia de nombre con ella; su dirección no.</p>
                   }
                 </form>
               </td>
               <td class="text-right whitespace-nowrap">
-                <app-button variant="ghost" size="sm" [disabled]="guardando()" (clicked)="cancelar()">Cancelar</app-button>
-                <app-button size="sm" [loading]="guardando()" [disabled]="!nuevoNombre().trim() || nuevoNombre().trim() === e.nombre" (clicked)="guardar()">
+                <app-button variant="ghost" size="sm" [disabled]="ocupado()" (clicked)="cancelar()">Cancelar</app-button>
+                <app-button size="sm" [loading]="ocupado()" [disabled]="!nuevoNombre().trim() || nuevoNombre().trim() === e.nombre" (clicked)="renombrar()">
                   {{ unificaCon() ? 'Unificar' : 'Renombrar' }}
                 </app-button>
               </td>
             } @else {
-              <td class="text-left text-text-dark">{{ e.nombre }}</td>
-              <td class="text-right">{{ e.medicos }}</td>
-              <td class="text-right">{{ e.activos }}</td>
+              <td class="text-left">
+                <span class="text-sm text-text-dark">{{ e.nombre }}</span>
+              </td>
+              <td class="text-right">
+                {{ e.activos }}@if (e.medicos > e.activos) { <span class="text-text-muted"> / {{ e.medicos }}</span> }
+              </td>
+              <td class="text-left">
+                @if (e.pagina; as p) {
+                  <div class="flex items-center gap-2 min-w-0">
+                    <app-badge class="shrink-0" [variant]="p.activa ? 'success' : 'neutral'">{{ p.activa ? 'Visible' : 'Oculta' }}</app-badge>
+                    <span class="text-xs text-text-muted truncate max-w-56">
+                      {{ p.publicados }} {{ p.publicados === 1 ? 'médico publicado' : 'médicos publicados' }}{{ p.descripcion ? '' : ' · sin descripción' }}
+                    </span>
+                  </div>
+                } @else {
+                  <span class="text-xs text-text-muted">Sin página</span>
+                }
+              </td>
               @if (puedeEditar()) {
-                <td class="text-right">
-                  <app-button variant="ghost" size="xs" [circle]="true" icon="edit" [ariaLabel]="'Renombrar ' + e.nombre" [disabled]="editando() !== null" (clicked)="editar(e)" />
+                <td class="text-right whitespace-nowrap">
+                  @if (e.pagina) {
+                    <app-button variant="ghost" size="sm" icon="file-text" [disabled]="ocupado() || editando() !== null" (clicked)="abrirPagina(e)">Página</app-button>
+                  } @else {
+                    <app-button variant="secondary" size="sm" icon="plus" [disabled]="ocupado() || editando() !== null" (clicked)="crearPagina(e)">Crear página</app-button>
+                  }
+                  <app-button variant="ghost" size="xs" [circle]="true" icon="edit" [ariaLabel]="'Renombrar ' + e.nombre" [disabled]="ocupado() || editando() !== null" (clicked)="editar(e)" />
                 </td>
               }
             }
@@ -57,7 +92,36 @@
         }
       </tbody>
     </app-table>
+  } @else if (filtro() === 'sinPagina') {
+    <app-empty-state icon="check-circle" title="Todas tienen su página" description="Cada especialidad con médicos activos ya tiene su página en la web." />
   } @else {
     <app-empty-state icon="briefcase" title="Ningún médico tiene especialidad" description="La especialidad se escribe en la ficha de cada médico." />
   }
 </div>
+
+<ng-template #paginaTpl>
+  @if (editandoPagina(); as e) {
+    <app-drawer ancho="sm" alto="contenido" [titulo]="e.nombre" subtitulo="Su página en la web" icono="file-text" (cerrar)="cerrarPagina()">
+      <form class="flex-1 min-h-0 flex flex-col" (submit)="$event.preventDefault(); guardarPagina()">
+        <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
+          <app-input label="Descripción (la ve la paciente)" placeholder="Qué trata, a quién atiende, qué estudios se hacen." [multiline]="true" [rows]="4" [disabled]="ocupado()" [(value)]="descripcion" />
+          <app-input label="Orden en la web (0 va primero)" type="number" [disabled]="ocupado()" [(value)]="orden" />
+          <div class="flex items-center justify-between gap-3 rounded-xl border border-border px-3.5 py-2.5">
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-text-dark">Visible en la web</p>
+              <p class="text-xs text-text-muted">Oculta, no se muestra ni se ofrece en las fichas.</p>
+            </div>
+            <app-switch ariaLabel="Visible en la web" [disabled]="ocupado()" [(value)]="activa" />
+          </div>
+          @if (e.pagina; as p) {
+            <p class="text-[11px] text-text-muted">Dirección en la web: <span class="crm-meta-clave">/especialidades/{{ p.slug }}</span>. No cambia aunque cambie el nombre.</p>
+          }
+        </div>
+        <div class="flex items-center justify-between gap-3 px-5 py-3 shrink-0 border-t border-border bg-white">
+          <span class="text-xs text-text-dark min-w-0" role="status">{{ faltaPagina() ?? '' }}</span>
+          <app-button type="submit" size="sm" icon="check" [disabled]="!!faltaPagina() || ocupado()" [loading]="ocupado()">Guardar</app-button>
+        </div>
+      </form>
+    </app-drawer>
+  }
+</ng-template>

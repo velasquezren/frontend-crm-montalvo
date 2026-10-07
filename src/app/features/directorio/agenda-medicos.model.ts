@@ -91,6 +91,21 @@ export interface EspecialidadAgenda {
   nombre: string;
   medicos: number;
   activos: number;
+  /** Su página en la web, o null si todavía no tiene. */
+  pagina: PaginaEspecialidad | null;
+}
+
+/** La página de una especialidad en la landing (`/especialidades/<slug>`). */
+export interface PaginaEspecialidad {
+  id: string;
+  nombre: string;
+  slug: string;
+  descripcion: string;
+  /** Inactiva: no se muestra ni se ofrece en la web. */
+  activa: boolean;
+  orden: number;
+  /** Médicos con ficha web publicada en ella. */
+  publicados: number;
 }
 
 export interface BancoAgenda {

@@ -82,6 +82,16 @@ export class AgendaMedicosService {
     return this.api.delete<FichaMedicoAgenda>(`/agenda/medicos/${id}/presentacion/foto`);
   }
 
+  /** Crea la página web de las especialidades que todavía no tienen. */
+  crearPaginas(nombres: string[]): Promise<{ creadas: number }> {
+    return this.api.post<{ creadas: number }>('/agenda/medicos/especialidades/paginas', { nombres });
+  }
+
+  /** Descripción, orden y si se muestra. El nombre lo pone la agenda. */
+  actualizarPagina(id: string, datos: { descripcion: string; orden: number; activa: boolean }): Promise<unknown> {
+    return this.api.patch(`/agenda/medicos/especialidades/paginas/${id}`, datos);
+  }
+
   /** Renombra (o unifica, si `nueva` ya existe) una especialidad en todos sus médicos. */
   renombrarEspecialidad(actual: string, nueva: string): Promise<{ medicos: number }> {
     return this.api.post<{ medicos: number }>('/agenda/medicos/especialidades/renombrar', { actual, nueva });

@@ -10,7 +10,6 @@ import { IconComponent, IconName } from '../../shared/components/icon/icon.compo
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { AgendaEspecialidadesComponent } from './components/agenda-especialidades/agenda-especialidades.component';
 import { AgendaMedicosListaComponent } from './components/agenda-medicos-lista/agenda-medicos-lista.component';
-import { EspecialidadesListaComponent } from './components/especialidades-lista/especialidades-lista.component';
 
 export type TabDirectorio = 'medicos' | 'especialidades';
 
@@ -34,7 +33,7 @@ export function tabDirectorioDe(valor: string | null | undefined): TabDirectorio
  */
 @Component({
   selector: 'app-directorio-page',
-  imports: [AgendaEspecialidadesComponent, AgendaMedicosListaComponent, ButtonComponent, EspecialidadesListaComponent, IconComponent, PageHeaderComponent],
+  imports: [AgendaEspecialidadesComponent, AgendaMedicosListaComponent, ButtonComponent, IconComponent, PageHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './directorio.page.html',
 })
