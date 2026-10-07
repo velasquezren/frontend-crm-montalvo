@@ -240,7 +240,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <app-kpi-card label="Pacientes que llegaron" [valor]="p.resultados.leads" icon="users" tono="primary" [compacto]="true" pie="Por sus anuncios" />
             <app-kpi-card label="Ventas ganadas" [valor]="p.resultados.ventasGanadas" icon="shopping-bag" tono="secondary" [compacto]="true" pie="De esas pacientes" />
-            <app-kpi-card label="Vendido" [valor]="p.resultados.montoVendido | moneda" icon="dollar-sign" tono="primary" [destacado]="true" [compacto]="true" pie="Atribución por anuncio" />
+            <app-kpi-card label="Vendido" [valor]="p.resultados.montoVendido | moneda:'BOB'" icon="dollar-sign" tono="primary" [destacado]="true" [compacto]="true" pie="Atribución por anuncio" />
           </div>
         }
       </section>

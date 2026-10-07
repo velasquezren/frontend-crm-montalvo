@@ -43,6 +43,8 @@ describe('bloque de pago de una promoción en el chat', () => {
     const { el } = await montar(BASE);
     expect(el.textContent).toContain('Control prenatal');
     expect(el.textContent).toContain('Comprobante por verificar');
+    /* El monto ya está en Bs: el pipe no debe tratarlo como dólares (Bs 1.948,80). */
+    expect(el.textContent).toContain('Bs 280,00');
     expect(el.querySelector('a[href="https://r2.invalid/c.jpg"]')).not.toBeNull();
     boton(el, 'Confirmar pago')!.click();
     expect(accionPago).toHaveBeenCalledWith('pago-1', 'confirmar');

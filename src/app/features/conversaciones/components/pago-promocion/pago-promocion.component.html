@@ -6,7 +6,7 @@
     <div class="crm-pago-barra">
       <app-icon name="wallet" [size]="14" class="crm-pago-icono shrink-0" />
       <p class="crm-pago-titulo">
-        <span class="font-semibold text-text-dark tabular-nums">{{ p.monto | moneda }}</span>
+        <span class="font-semibold text-text-dark tabular-nums">{{ p.monto | moneda:'BOB' }}</span>
         <span class="crm-pago-promo" [title]="p.promocion.titulo + ' · ' + p.promocion.codigo"> · {{ p.promocion.titulo }}</span>
       </p>
       <app-badge [variant]="p.registroPendiente ? 'info' : variantes[p.estado]">{{ p.registroPendiente ? 'Registro pendiente' : estados[p.estado] }}</app-badge>

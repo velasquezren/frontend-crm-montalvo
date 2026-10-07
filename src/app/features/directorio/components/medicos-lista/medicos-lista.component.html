@@ -63,7 +63,7 @@
             </td>
             <td class="text-xs text-text-dark max-w-72">{{ f.resumenHorario }}</td>
             <td class="text-right tabular-nums">
-              @if (f.precioConsulta !== null) { {{ f.precioConsulta | moneda }} } @else { <span class="text-text-muted">—</span> }
+              @if (f.precioConsulta !== null) { {{ f.precioConsulta | moneda:'BOB' }} } @else { <span class="text-text-muted">—</span> }
             </td>
             <td>
               <app-badge [variant]="f.publicado ? 'success' : 'neutral'">{{ f.publicado ? 'Publicado' : 'Oculto' }}</app-badge>

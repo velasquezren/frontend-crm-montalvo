@@ -66,12 +66,12 @@
             </td>
             <td class="text-right tabular-nums">
               @if (p.precioPromocional !== null) {
-                <span class="block font-semibold text-text-dark">{{ p.precioPromocional | moneda }}</span>
+                <span class="block font-semibold text-text-dark">{{ p.precioPromocional | moneda:'BOB' }}</span>
                 @if (p.precioRegular !== null) {
-                  <span class="block text-[11px] text-text-muted line-through">{{ p.precioRegular | moneda }}</span>
+                  <span class="block text-[11px] text-text-muted line-through">{{ p.precioRegular | moneda:'BOB' }}</span>
                 }
               } @else if (p.precioRegular !== null) {
-                <span class="text-text-dark">{{ p.precioRegular | moneda }}</span>
+                <span class="text-text-dark">{{ p.precioRegular | moneda:'BOB' }}</span>
               } @else if (p.etiquetaOferta) {
                 <span class="text-xs text-text-dark">{{ p.etiquetaOferta }}</span>
               } @else {
