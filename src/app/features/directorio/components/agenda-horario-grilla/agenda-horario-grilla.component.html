@@ -1,0 +1,58 @@
+<div class="flex flex-col gap-3">
+  @if (editable()) {
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="w-40">
+        <app-select size="sm" ariaLabel="Día que se copia" [disabled]="!activo()" [value]="diaOrigen()" (valueChange)="elegirOrigen($event)">
+          @for (dia of dias(); track dia) {
+            <option [value]="dia">Copiar {{ nombreDia(dia).toLowerCase() }}</option>
+          }
+        </app-select>
+      </div>
+      <app-button size="sm" variant="secondary" icon="copy" [disabled]="!activo()" (clicked)="copiarALaSemana()">a lunes–viernes</app-button>
+      <app-button size="sm" variant="ghost" icon="x" [disabled]="!activo() || encendidas().size === 0" (clicked)="vaciar()">Vaciar</app-button>
+    </div>
+  }
+
+  <div class="crm-grilla-horario" role="group" [attr.aria-label]="'Horario de ' + nombre()" [class.crm-grilla-editable]="activo()">
+    <div class="crm-grilla-fila crm-grilla-fila-cabecera">
+      <span class="crm-grilla-hora"><span class="sr-only">Hora</span></span>
+      @for (dia of dias(); track dia) {
+        <span class="crm-grilla-cabecera">
+          @if (editable()) {
+            <button type="button" class="crm-grilla-dia" [disabled]="!activo()" [attr.aria-label]="'Marcar o desmarcar ' + nombreDia(dia) + ' entero'" (click)="alternarDia(dia)">
+              {{ diaCorto(dia) }}
+            </button>
+          } @else {
+            <span class="crm-grilla-dia">{{ diaCorto(dia) }}</span>
+          }
+          <span class="crm-grilla-cuenta tabular-nums">{{ cuentaDelDia(dia) ? (cuentaDelDia(dia) / 2) + ' h' : '' }}</span>
+        </span>
+      }
+    </div>
+    @for (hora of horas(); track hora) {
+      <div class="crm-grilla-fila" [class.crm-grilla-fila-hora-entera]="hora.endsWith(':00')">
+        <span class="crm-grilla-hora tabular-nums" aria-hidden="true">{{ hora.endsWith(':00') ? hora : '' }}</span>
+        @for (dia of dias(); track dia) {
+          <button
+            type="button"
+            class="crm-grilla-casilla"
+            [class.crm-grilla-casilla-activa]="encendidas().has(clave(dia, hora))"
+            [attr.aria-pressed]="encendidas().has(clave(dia, hora))"
+            [attr.aria-label]="nombreDia(dia) + ' ' + hora"
+            [disabled]="!activo()"
+            (pointerdown)="empezarPintura($event, dia, hora)"
+            (pointerenter)="seguirPintura(dia, hora)"
+            (click)="alternar(dia, hora)"></button>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-text-muted">
+    <span class="flex items-center gap-3">
+      <span class="flex items-center gap-1.5"><span class="crm-grilla-muestra crm-grilla-casilla-activa" aria-hidden="true"></span>Atiende</span>
+      <span class="flex items-center gap-1.5"><span class="crm-grilla-muestra" aria-hidden="true"></span>No atiende</span>
+    </span>
+    <span class="tabular-nums text-text-dark font-medium" role="status">{{ horasSemana() }} h por semana</span>
+  </div>
+</div>

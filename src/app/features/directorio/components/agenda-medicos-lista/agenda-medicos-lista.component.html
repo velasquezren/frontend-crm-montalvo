@@ -37,6 +37,7 @@
           <th>Especialidad</th>
           <th>Reserva</th>
           <th class="text-right">Consulta</th>
+          <th>Web</th>
           <th>Estado</th>
         </tr>
       </thead>
@@ -45,7 +46,7 @@
           <tr class="fila-clicable" (click)="abrir(m.id)">
             <td>
               <div class="flex items-center gap-3 min-w-0">
-                <app-avatar [initials]="iniciales(m.nombre)" [nombre]="m.nombre" size="sm" />
+                <app-avatar [initials]="iniciales(m.nombre)" [imageUrl]="m.web?.fotoUrl" [nombre]="m.nombre" size="sm" />
                 <div class="min-w-0">
                   <app-button variant="ghost" size="sm" [ariaLabel]="'Ver ficha de ' + m.nombre" (clicked)="$event.stopPropagation(); abrir(m.id)">{{ nombreConTitulo(m) }}</app-button>
                   @if (m.codigo) {
@@ -64,6 +65,13 @@
             </td>
             <td class="text-right tabular-nums">
               @if (m.precio !== null && numero(m.precio) > 0) { {{ numero(m.precio) | moneda:'BOB' }} } @else { <span class="text-text-muted">—</span> }
+            </td>
+            <td>
+              @if (m.web; as web) {
+                <app-badge [variant]="web.publicado ? 'success' : 'neutral'">{{ web.publicado ? 'Publicada' : 'Oculta' }}</app-badge>
+              } @else {
+                <span class="text-xs text-text-muted">Sin ficha</span>
+              }
             </td>
             <td>
               <app-badge [variant]="m.estado === 'ACTIVO' ? 'success' : 'neutral'">{{ m.estado === 'ACTIVO' ? 'Activo' : 'Inactivo' }}</app-badge>
@@ -91,7 +99,7 @@
 
 <ng-template #fichaTpl>
   @if (seleccionadoId(); as id) {
-    <app-agenda-medico-ficha [id]="id" [especialidades]="opcionesEspecialidad()" [bancos]="opcionesBanco()" (cambio)="alCambiar()" (cerrar)="cerrar()" />
+    <app-agenda-medico-ficha [id]="id" [pestanaInicial]="pestanaInicial()" [especialidades]="opcionesEspecialidad()" [bancos]="opcionesBanco()" (cambio)="alCambiar()" (cerrar)="cerrar()" />
   }
 </ng-template>
 

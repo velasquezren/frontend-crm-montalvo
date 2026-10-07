@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, output, signal, viewChild } from '@angular/core';
 
 import { esConflicto, mensajeDeError } from '../../../../core/api/http-error';
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -11,57 +11,77 @@ import { BadgeComponent } from '../../../../shared/components/badge/badge.compon
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { DrawerComponent } from '../../../../shared/components/drawer/drawer.component';
 import { ErrorCargaComponent } from '../../../../shared/components/error-carga/error-carga.component';
+import { IconComponent, IconName } from '../../../../shared/components/icon/icon.component';
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import {
   BancoAgenda,
   casillasEncendidas,
-  claveCasilla,
   datosDeFormulario,
-  DiaAgenda,
-  diaCortoAgenda,
   EspecialidadAgenda,
   FichaMedicoAgenda,
   formularioDe,
   FormularioMedicoAgenda,
   nombreConTitulo,
-  nombreDiaAgenda,
   resumenDeCasillas,
 } from '../../agenda-medicos.model';
 import { AgendaMedicosService } from '../../agenda-medicos.service';
+import { AgendaHorarioGrillaComponent } from '../agenda-horario-grilla/agenda-horario-grilla.component';
 import { AgendaMedicoDatosComponent } from '../agenda-medico-datos/agenda-medico-datos.component';
+import { AgendaPresentacionWebComponent } from '../agenda-presentacion-web/agenda-presentacion-web.component';
 
 type Tarea = 'datos' | 'horario';
+export type PestanaFicha = 'datos' | 'horario' | 'web';
+
+const PESTANAS: readonly { readonly id: PestanaFicha; readonly etiqueta: string; readonly icono: IconName }[] = [
+  { id: 'datos', etiqueta: 'Datos', icono: 'user' },
+  { id: 'horario', etiqueta: 'Horario', icono: 'calendar' },
+  { id: 'web', etiqueta: 'Web', icono: 'external-link' },
+];
 
 /**
- * La ficha de un médico de la agenda: sus datos y la grilla de horario (casillas
- * de 30 minutos, de lunes a sábado). Cada parte se guarda aparte con la versión
- * que se leyó: si otra persona guardó antes —en el CRM o en ScriptCase—, 409.
- * Sin permiso de edición se ve igual, sin controles.
+ * La ficha de un médico de la agenda, en tres pestañas: sus datos, la grilla de
+ * horario (casillas de 30 minutos) y su ficha web (foto, biografía,
+ * publicación). Cada parte se guarda aparte con la versión que se leyó: si otra
+ * persona guardó antes —en el CRM o en ScriptCase—, 409 y se ofrece lo último.
+ * Las tres quedan montadas: cambiar de pestaña no pierde lo que se escribió, y
+ * un punto en la pestaña avisa de lo que falta guardar.
  */
 @Component({
   selector: 'app-agenda-medico-ficha',
-  imports: [AgendaMedicoDatosComponent, AvatarComponent, BadgeComponent, ButtonComponent, DrawerComponent, ErrorCargaComponent, LoadingSkeletonComponent],
+  imports: [
+    AgendaHorarioGrillaComponent,
+    AgendaMedicoDatosComponent,
+    AgendaPresentacionWebComponent,
+    AvatarComponent,
+    BadgeComponent,
+    ButtonComponent,
+    DrawerComponent,
+    ErrorCargaComponent,
+    IconComponent,
+    LoadingSkeletonComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agenda-medico-ficha.component.html',
-  styleUrl: './agenda-medico-ficha.component.css',
 })
 export class AgendaMedicoFichaComponent {
   private readonly servicio = inject(AgendaMedicosService);
   private readonly toast = inject(ToastService);
   private readonly auth = inject(AuthService);
+  private readonly web = viewChild(AgendaPresentacionWebComponent);
 
   readonly id = input.required<number>();
   readonly especialidades = input<readonly EspecialidadAgenda[]>([]);
   readonly bancos = input<readonly BancoAgenda[]>([]);
+  /** La pestaña con que abre: un médico recién creado abre en «Horario». */
+  readonly pestanaInicial = input<PestanaFicha>('datos');
   readonly cambio = output<void>();
   readonly cerrar = output<void>();
 
+  protected readonly pestanas = PESTANAS;
+  protected readonly pestana = linkedSignal(() => this.pestanaInicial());
   protected readonly puedeEditar = computed(() => puedeEditarAgendaClinica(this.auth.user()?.rol));
   protected readonly iniciales = generarIniciales;
   protected readonly nombreConTitulo = nombreConTitulo;
-  protected readonly diaCorto = diaCortoAgenda;
-  protected readonly nombreDia = nombreDiaAgenda;
-  protected readonly clave = claveCasilla;
 
   protected readonly detalle = httpResource<FichaMedicoAgenda>(() => this.servicio.fichaRequest(this.id()));
   /** La última ficha conocida: la del servidor, o la que devolvió el último guardado. */
@@ -104,36 +124,11 @@ export class AgendaMedicoFichaComponent {
   });
   protected readonly sinCodigo = computed(() => !this.ficha()?.medico.codigo);
 
-  protected alternar(dia: DiaAgenda, hora: string): void {
-    if (!this.puedeEditar() || this.ocupado()) return;
-    const c = claveCasilla(dia, hora);
-    this.encendidas.update(actual => {
-      const nuevo = new Set(actual);
-      if (nuevo.has(c)) nuevo.delete(c);
-      else nuevo.add(c);
-      return nuevo;
-    });
-  }
-
-  /** Enciende el día entero si tenía alguna apagada; si estaba todo encendido, lo apaga. */
-  protected alternarDia(dia: DiaAgenda): void {
-    const f = this.ficha();
-    if (!f || !this.puedeEditar() || this.ocupado()) return;
-    const claves = f.grilla.horas.map(h => claveCasilla(dia, h));
-    this.encendidas.update(actual => {
-      const nuevo = new Set(actual);
-      const todas = claves.every(c => nuevo.has(c));
-      for (const c of claves) {
-        if (todas) nuevo.delete(c);
-        else nuevo.add(c);
-      }
-      return nuevo;
-    });
-  }
-
-  protected casillasDelDia(dia: DiaAgenda): number {
-    const f = this.ficha();
-    return f ? f.grilla.horas.filter(h => this.encendidas().has(claveCasilla(dia, h))).length : 0;
+  /** El punto de «sin guardar» de cada pestaña. */
+  protected pendiente(p: PestanaFicha): boolean {
+    if (p === 'datos') return this.hayCambiosDatos();
+    if (p === 'horario') return this.hayCambiosHorario();
+    return this.web()?.hayCambios() ?? false;
   }
 
   protected deshacerHorario(): void {
@@ -165,16 +160,10 @@ export class AgendaMedicoFichaComponent {
 
   private async guardar(tarea: Tarea, accion: () => Promise<FichaMedicoAgenda>, exito: string): Promise<void> {
     this.ocupado.set(tarea);
-    /* La ficha nueva reinicia los dos borradores: lo que no se estaba guardando se conserva. */
-    const formularioPendiente = this.hayCambiosDatos() ? this.formulario() : null;
-    const horarioPendiente = this.hayCambiosHorario() ? this.encendidas() : null;
     try {
-      this.guardada.set(await accion());
-      if (tarea === 'horario' && formularioPendiente) this.formulario.set(formularioPendiente);
-      if (tarea === 'datos' && horarioPendiente) this.encendidas.set(horarioPendiente);
+      this.aplicar(await accion());
       this.conflicto.set(false);
       this.toast.success(exito, 'Listo');
-      this.cambio.emit();
     } catch (err) {
       if (esConflicto(err)) this.conflicto.set(true);
       this.toast.error(mensajeDeError(err, 'No se pudo guardar en la agenda.'), 'Error');
@@ -183,10 +172,30 @@ export class AgendaMedicoFichaComponent {
     }
   }
 
+  /**
+   * Una ficha nueva del servidor reinicia los borradores de datos y horario: lo
+   * que no se estaba guardando se conserva. La ficha web se cuida sola.
+   */
+  protected aplicar(ficha: FichaMedicoAgenda): void {
+    const formularioPendiente = this.hayCambiosDatos() ? this.formulario() : null;
+    const horarioPendiente = this.hayCambiosHorario() ? this.encendidas() : null;
+    const antes = this.ficha();
+    this.guardada.set(ficha);
+    if (formularioPendiente && JSON.stringify(formularioDe(antes?.medico ?? null)) === JSON.stringify(formularioDe(ficha.medico))) {
+      this.formulario.set(formularioPendiente);
+    }
+    if (horarioPendiente && antes && JSON.stringify([...casillasEncendidas(antes)].sort()) === JSON.stringify([...casillasEncendidas(ficha)].sort())) {
+      this.encendidas.set(horarioPendiente);
+    }
+    this.cambio.emit();
+  }
+
   /** Trae lo último de la agenda y descarta lo que no se guardó. */
   protected recargar(): void {
     this.guardada.set(null);
     this.conflicto.set(false);
+    this.web()?.descartar();
     this.detalle.reload();
   }
+
 }

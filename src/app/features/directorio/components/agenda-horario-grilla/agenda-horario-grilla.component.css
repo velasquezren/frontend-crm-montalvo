@@ -1,0 +1,123 @@
+/* La grilla de horario: una columna de horas y seis días, en casillas de 30 minutos.
+   A 390 px el cajón deja 350 px: 2.75 rem de horas + 6 × ~46 px de casilla, sin
+   desplazamiento horizontal. Las horas en punto llevan etiqueta y un poco más de
+   aire encima: se lee como una agenda en papel, no como una tabla de 28 filas. */
+.crm-grilla-horario {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  user-select: none;
+}
+
+.crm-grilla-fila {
+  display: grid;
+  grid-template-columns: 2.75rem repeat(6, minmax(0, 1fr));
+  gap: 4px;
+  align-items: center;
+}
+
+.crm-grilla-fila-hora-entera:not(:nth-child(2)) {
+  margin-top: 4px;
+}
+
+/* Los días quedan a la vista al bajar por las horas. */
+.crm-grilla-fila-cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--color-background);
+  padding: 2px 0 4px;
+}
+
+.crm-grilla-hora {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  text-align: right;
+  padding-right: 6px;
+}
+
+.crm-grilla-cabecera {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.crm-grilla-dia {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  border-radius: 9999px;
+  padding: 2px 10px;
+  min-height: 28px;
+  transition: background-color 150ms;
+}
+
+button.crm-grilla-dia:hover:not(:disabled) {
+  background-color: var(--color-bg-light);
+}
+
+.crm-grilla-cuenta {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  min-height: 13px;
+}
+
+.crm-grilla-casilla,
+.crm-grilla-muestra {
+  display: block;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-workspace);
+}
+
+.crm-grilla-casilla {
+  width: 100%;
+  height: 26px;
+  transition: background-color 120ms, border-color 120ms, transform 120ms;
+}
+
+.crm-grilla-muestra {
+  width: 18px;
+  height: 12px;
+}
+
+.crm-grilla-editable .crm-grilla-casilla {
+  cursor: pointer;
+}
+
+.crm-grilla-editable .crm-grilla-casilla:hover {
+  border-color: var(--color-secondary);
+}
+
+.crm-grilla-editable .crm-grilla-casilla:active {
+  transform: scale(0.94);
+}
+
+.crm-grilla-casilla-activa {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.crm-grilla-editable .crm-grilla-casilla-activa:hover {
+  background-color: color-mix(in srgb, var(--color-primary) 85%, white);
+}
+
+.crm-grilla-casilla:disabled {
+  cursor: default;
+}
+
+.crm-grilla-casilla:focus-visible,
+.crm-grilla-dia:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crm-grilla-casilla {
+    transition: none;
+  }
+  .crm-grilla-editable .crm-grilla-casilla:active {
+    transform: none;
+  }
+}

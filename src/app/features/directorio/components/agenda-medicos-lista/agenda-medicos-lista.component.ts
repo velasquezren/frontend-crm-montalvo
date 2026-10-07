@@ -19,12 +19,12 @@ import { PaginatorComponent } from '../../../../shared/components/paginator/pagi
 import { SelectComponent } from '../../../../shared/components/select/select.component';
 import { TableComponent } from '../../../../shared/components/table/table.component';
 import { MonedaPipe } from '../../../../shared/pipes/moneda.pipe';
-import { BancoAgenda, EspecialidadAgenda, EstadoMedicoAgenda, FichaMedicoAgenda, MedicoAgenda, nombreConTitulo } from '../../agenda-medicos.model';
+import { BancoAgenda, EspecialidadAgenda, EstadoMedicoAgenda, FichaMedicoAgenda, MedicoAgendaConWeb, nombreConTitulo } from '../../agenda-medicos.model';
 import { AgendaMedicosService } from '../../agenda-medicos.service';
-import { AgendaMedicoFichaComponent } from '../agenda-medico-ficha/agenda-medico-ficha.component';
+import { AgendaMedicoFichaComponent, PestanaFicha } from '../agenda-medico-ficha/agenda-medico-ficha.component';
 import { AgendaNuevoMedicoComponent } from '../agenda-nuevo-medico/agenda-nuevo-medico.component';
 
-interface ListaMedicosAgenda extends RespuestaPaginada<MedicoAgenda> {
+interface ListaMedicosAgenda extends RespuestaPaginada<MedicoAgendaConWeb> {
   porEstado: Record<string, number>;
 }
 
@@ -83,7 +83,7 @@ export class AgendaMedicosListaComponent {
 
   protected readonly medicos = httpResource<ListaMedicosAgenda>(
     () => this.servicio.listarRequest({ buscar: this.busquedaAplicada(), especialidad: this.especialidad(), estado: this.estado(), pagina: this.pagina() }),
-    { defaultValue: { ...paginaVacia<MedicoAgenda>(), porEstado: {} } },
+    { defaultValue: { ...paginaVacia<MedicoAgendaConWeb>(), porEstado: {} } },
   );
   protected readonly especialidades = httpResource<RespuestaPaginada<EspecialidadAgenda>>(() => this.servicio.especialidadesRequest(), {
     defaultValue: paginaVacia<EspecialidadAgenda>(),
@@ -103,6 +103,8 @@ export class AgendaMedicosListaComponent {
   }
 
   protected readonly seleccionadoId = signal<number | null>(null);
+  /** Un médico recién creado abre en «Horario»: es lo siguiente que hay que cargarle. */
+  protected readonly pestanaInicial = signal<PestanaFicha>('datos');
 
   constructor() {
     effect(onCleanup => {
@@ -125,7 +127,8 @@ export class AgendaMedicosListaComponent {
     this.pagina.set(1);
   }
 
-  protected abrir(id: number): void {
+  protected abrir(id: number, pestana: PestanaFicha = 'datos'): void {
+    this.pestanaInicial.set(pestana);
     this.seleccionadoId.set(id);
     this.cajon?.dispose();
     this.cajon = this.dialog.abrirCajon(this.fichaTpl(), this.vcr, {
@@ -146,7 +149,7 @@ export class AgendaMedicosListaComponent {
   /** Recién creado: su ficha, para cargarle el horario. */
   protected alCrear(f: FichaMedicoAgenda): void {
     this.alCambiar();
-    this.abrir(f.medico.id);
+    this.abrir(f.medico.id, 'horario');
   }
 
   protected alCambiar(): void {

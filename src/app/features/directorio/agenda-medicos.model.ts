@@ -1,3 +1,5 @@
+import { FichaMedico } from './directorio.model';
+
 /**
  * Los médicos de la AGENDA de la clínica (ScriptCase), tal como los devuelve
  * `/agenda/medicos` del backend. Es la lista que da los cupos, que FileMaker lee
@@ -38,6 +40,18 @@ export interface MedicoAgenda {
   fotoVersion: string | null;
 }
 
+/** Su ficha web en el listado: foto (URL firmada: se muestra, no se guarda) y si está publicada. */
+export interface WebDeMedico {
+  perfilId: string;
+  publicado: boolean;
+  fotoUrl: string | null;
+}
+
+/** Una fila del listado: el médico de la agenda y su ficha web, si tiene. */
+export interface MedicoAgendaConWeb extends MedicoAgenda {
+  web: WebDeMedico | null;
+}
+
 export interface CasillaAgenda {
   id: number;
   dia: string;
@@ -51,6 +65,26 @@ export interface FichaMedicoAgenda {
   grilla: { dias: DiaAgenda[]; horas: string[] };
   /** Se devuelve al guardar: si otra persona guardó antes, el backend responde 409. */
   version: string;
+  /** La ficha web (foto, biografía, publicación), o null si todavía no tiene. */
+  presentacion: FichaMedico | null;
+}
+
+/** Lo que falta para que una ficha web se vea bien publicada. Solo la especialidad es obligatoria. */
+export interface RequisitoWeb {
+  readonly id: 'especialidad' | 'foto' | 'resumen' | 'horario';
+  readonly etiqueta: string;
+  readonly cumple: boolean;
+  readonly obligatorio: boolean;
+}
+
+export function requisitosWeb(f: FichaMedicoAgenda): RequisitoWeb[] {
+  const p = f.presentacion;
+  return [
+    { id: 'especialidad', etiqueta: 'Una especialidad de la web', cumple: !!p && p.especialidades.length > 0, obligatorio: true },
+    { id: 'foto', etiqueta: 'Foto de buena calidad', cumple: !!p?.fotoUrl, obligatorio: false },
+    { id: 'resumen', etiqueta: 'Resumen de una línea', cumple: !!p?.resumen.trim(), obligatorio: false },
+    { id: 'horario', etiqueta: 'Horario cargado en la agenda', cumple: f.medico.casillasActivas > 0, obligatorio: false },
+  ];
 }
 
 export interface EspecialidadAgenda {

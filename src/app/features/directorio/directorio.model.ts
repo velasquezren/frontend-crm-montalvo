@@ -62,6 +62,8 @@ export interface FichaMedico {
   readonly publicado: boolean;
   readonly orden: number;
   readonly version: number;
+  /** El médico de la agenda que esta ficha presenta en la web; su precio y horario salen de allí. */
+  readonly agendaMedicoId?: number | null;
   readonly medico: { readonly id: string; readonly codigo: string; readonly nombre: string } | null;
   readonly especialidades: readonly EspecialidadCorta[];
   readonly horario: readonly BloqueHorario[];

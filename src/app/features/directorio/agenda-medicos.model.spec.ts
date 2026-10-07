@@ -47,10 +47,9 @@ describe('permisos y pestañas del Directorio', () => {
     expect(puedeEditarAgendaClinica(undefined)).toBe(false);
   });
 
-  it('quien no ve la agenda cae en las fichas web, aunque pida otra pestaña', () => {
-    expect(tabDirectorioDe(null, true)).toBe('medicos');
-    expect(tabDirectorioDe('especialidades', true)).toBe('especialidades');
-    expect(tabDirectorioDe('medicos', false)).toBe('web');
-    expect(tabDirectorioDe(null, false)).toBe('web');
+  it('la pestaña sale de la URL; una desconocida (la vieja «web») abre Médicos', () => {
+    expect(tabDirectorioDe(null)).toBe('medicos');
+    expect(tabDirectorioDe('especialidades')).toBe('especialidades');
+    expect(tabDirectorioDe('web')).toBe('medicos');
   });
 });
