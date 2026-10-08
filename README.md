@@ -48,7 +48,8 @@ configura por sí solo una compuerta en Vercel.
 | Necesitas | Está en |
 | --- | --- |
 | Dónde va el trabajo y qué sigue | [`backend-crm-montalvo/docs/ESTADO_ACTUAL.md`](../backend-crm-montalvo/docs/ESTADO_ACTUAL.md) — **léelo primero** |
-| Reglas que debe conocer un agente antes de tocar código | [`CLAUDE.md`](CLAUDE.md) y `.claude/skills/` |
+| Guía común para asistentes de IA | [`AI_GUIDE.md`](AI_GUIDE.md) y [`AGENTS.md`](AGENTS.md) |
+| Reglas operativas completas y skills | [`CLAUDE.md`](CLAUDE.md), `.claude/skills/` y `.agents/skills/` |
 | Principios de arquitectura y diseño | [`CRM_MANIFESTO.md`](CRM_MANIFESTO.md) |
 | Cómo se usa el CRM, por rol | [`docs/MANUAL_USUARIO.md`](docs/MANUAL_USUARIO.md) |
 | Configurar WhatsApp y Lead Ads en Meta | [`META_INTEGRATION_GUIDE.md`](META_INTEGRATION_GUIDE.md) |

@@ -482,17 +482,19 @@ La skill de Angular (`/.agents/skills/angular-developer/`) contiene referencias 
 
 ### Para Sesiones de Desarrollo con IA
 
-Al iniciar cualquier sesión de desarrollo con IA (Antigravity, Gemini CLI,
-Copilot, Cursor, Claude Code, o cualquier asistente agéntico), el **primer
-comando obligatorio** debe ser:
+Este protocolo aplica a Claude Code, Codex, Gemini, Copilot, Cursor, Antigravity
+y cualquier asistente que pueda leer el repositorio. Al comenzar, lee
+`AI_GUIDE.md` y `AGENTS.md` de cada repo que vayas a modificar; continúa con su
+`CLAUDE.md`, este manifesto y los documentos de estado que esos puntos de entrada
+indican. Consulta las skills pertinentes de `.claude/skills/` y
+`.agents/skills/` aunque tu herramienta no las cargue automáticamente: son
+archivos Markdown con reglas verificadas del proyecto.
 
-> *"Lee `CRM_MANIFESTO.md` en la raíz del repo. Si tu herramienta soporta
-> `.claude/skills/`, cargalos también antes de tocar código — ahí está el
-> detalle verificado. Configura tus directivas de comportamiento en base a los
-> principios de este documento y, para código concreto, en base a los skills.
-> No alteres los principios arquitectónicos durante toda la vida del
-> desarrollo — sí corregí este documento si encontrás que quedó
-> desactualizado en un hecho concreto, dejando registro de qué cambió."*
+Si tu asistente no descubre estos archivos por sí solo, configura `AI_GUIDE.md`
+como contexto del proyecto o pídele explícitamente que lea `AGENTS.md` antes de
+editar. No alteres los principios arquitectónicos durante el desarrollo; corrige
+este manifesto si un hecho concreto queda desactualizado y deja registro de qué
+cambió.
 
 ### Validación de Cumplimiento
 
