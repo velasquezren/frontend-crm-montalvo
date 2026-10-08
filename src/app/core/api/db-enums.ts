@@ -28,6 +28,13 @@ export type DireccionMensaje = 'ENTRANTE' | 'SALIENTE';
 
 export type EstadoPagoPromocion = 'PENDIENTE' | 'COMPROBANTE_ENVIADO' | 'CONFIRMADO' | 'ANULADO';
 
+export type EstadoReservaChat =
+  | 'SIN_PAGO'
+  | 'ESPERANDO_COMPROBANTE'
+  | 'COMPROBANTE_RECIBIDO'
+  | 'PAGO_REGISTRADO'
+  | 'REVISION';
+
 export type MotivoAtencion =
   | 'EMERGENCIA'
   | 'SOLICITUD_EXPLICITA'

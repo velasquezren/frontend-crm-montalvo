@@ -51,4 +51,17 @@ describe('próximas reservas en la ficha del chat', () => {
     expect(texto).toContain('No pudimos consultar la agenda');
     expect(texto).not.toContain('Sin reservas próximas');
   });
+  it('distingue comprobante registrado de pago confirmado y muestra revisión manual', async () => {
+    await montar();
+    http.expectOne(p=>p.url.endsWith('/conversacion/chat-1')).flush([
+      {id:1,fecha:'2026-10-13',hora:'09:30',medicoId:null,estado:'PAGADO',pagoChat:{estado:'PAGO_REGISTRADO',detalle:null}},
+      {id:2,fecha:'2026-10-13',hora:'10:30',medicoId:null,estado:'PENDIENTE',pagoChat:{estado:'REVISION',detalle:'Revisa la agenda antes de cargarlo a mano.'}},
+    ]);
+    await asentar();
+    const texto=(fixture.nativeElement as HTMLElement).textContent!;
+    expect(texto).toContain('Caja debe verificar el pago');
+    expect(texto).toContain('Revisión manual');
+    expect(texto).not.toContain('Pago confirmado');
+  });
+
 });

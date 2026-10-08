@@ -2,6 +2,7 @@ import '@angular/compiler';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { MenuAtencionEditorComponent } from './menu-atencion-editor.component';
@@ -28,6 +29,7 @@ const GUARDADO: MenuEditable = {
   actualizadoEn: '2026-10-05T12:00:00.000Z',
   actualizadoPor: { id: 'u1', nombre: 'René' },
   enviosHabilitados: true,
+  formularioCita: null,
 };
 
 describe('MenuAtencionEditorComponent', () => {
@@ -60,7 +62,7 @@ describe('MenuAtencionEditorComponent', () => {
 
   beforeEach(() => {
     TestBed.resetTestingModule();
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
     http = TestBed.inject(HttpTestingController);
   });
 
@@ -140,6 +142,25 @@ describe('MenuAtencionEditorComponent', () => {
     fixture.detectChanges();
     expect(texto()).toContain('Muestra las promociones publicadas para WhatsApp en Promociones');
     expect(texto()).not.toContain('Agregar promoción');
+  });
+
+  it('«Cita» dice qué hace EN ESTA LÍNEA: con el formulario de reserva, de dónde salen médicos y horas', async () => {
+    await montar({ ...GUARDADO, formularioCita: 'RESERVA' });
+    componente['tipoNuevo'].set('CITA');
+    componente['agregar']();
+    fixture.detectChanges();
+    expect(texto()).toContain('salen en vivo de la agenda del VPS');
+    expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/directorio"]')?.textContent).toContain('Ver médicos y horarios');
+    expect(texto()).not.toContain('No reserva nada');
+  });
+
+  it('«Cita» sin formulario de reserva lo dice: solo pasa a «Atención»', async () => {
+    await montar(GUARDADO);
+    componente['tipoNuevo'].set('CITA');
+    componente['agregar']();
+    fixture.detectChanges();
+    expect(texto()).toContain('No reserva nada');
+    expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/directorio"]')).toBeNull();
   });
 
   it('guardar manda el menú entero y limpio con PUT', async () => {

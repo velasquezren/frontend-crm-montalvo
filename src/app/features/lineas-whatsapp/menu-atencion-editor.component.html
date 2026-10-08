@@ -78,7 +78,16 @@
                       }
                     </span>
                   </div>
-                  <p class="text-[11px] text-text-muted leading-relaxed">{{ tipos[o.tipo].efecto }}</p>
+                  @if (o.tipo === 'CITA') {
+                    <p class="text-[11px] text-text-muted leading-relaxed">
+                      {{ efectoCita() }}
+                      @if (formularioCita() === 'RESERVA') {
+                        <a class="crm-enlace" routerLink="/directorio">Ver médicos y horarios</a>
+                      }
+                    </p>
+                  } @else {
+                    <p class="text-[11px] text-text-muted leading-relaxed">{{ tipos[o.tipo].efecto }}</p>
+                  }
 
                   <div class="grid grid-cols-1 gap-3">
                     <app-input

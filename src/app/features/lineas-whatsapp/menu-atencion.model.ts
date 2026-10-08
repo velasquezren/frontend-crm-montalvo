@@ -35,8 +35,25 @@ export interface MenuEditable {
   readonly errores: readonly string[];
   readonly actualizadoEn: string | null;
   readonly actualizadoPor: { readonly id: string; readonly nombre: string } | null;
-  /** Apagado en el servidor (`WHATSAPP_INTERACCIONES`): ningún menú sale. */
+  /** Esta línea no tiene las interacciones encendidas en el servidor: su menú no sale. */
   readonly enviosHabilitados: boolean;
+  /** Qué abre «Cita» en esta línea: el formulario de reserva, el de solicitud o ninguno. */
+  readonly formularioCita: FormularioCita | null;
+}
+
+export type FormularioCita = 'RESERVA' | 'SOLICITUD';
+
+/**
+ * Lo que hace «Cita» EN ESTA LÍNEA: depende de qué formulario tiene publicado su
+ * cuenta de WhatsApp. El de reserva no tiene contenido propio en el menú: lo arma
+ * la agenda (Directorio médico) en cada pantalla.
+ */
+export function efectoDeCita(formulario: FormularioCita | null): string {
+  if (formulario === 'RESERVA') {
+    return 'Abre el formulario de reserva. Especialidades, médicos, días y horas salen en vivo de la agenda del VPS y se gestionan desde el Directorio médico; la reserva entra como «Por confirmar» y pasa a «Atención».';
+  }
+  if (formulario === 'SOLICITUD') return 'Abre el formulario de solicitud (para qué y cuándo) y pasa a «Atención» como solicitud de cita. No reserva nada.';
+  return 'Pasa a «Atención» como solicitud de cita. No reserva nada.';
 }
 
 /** Los límites de Meta que aplica el servidor, para avisar mientras se escribe. */

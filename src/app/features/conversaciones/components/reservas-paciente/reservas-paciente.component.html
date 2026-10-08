@@ -23,6 +23,13 @@
               {{ r.medico || 'Sin médico' }}
             }{{ r.especialidad ? ' · ' + r.especialidad : '' }}
           </span>
+          @if (r.pagoChat?.estado === 'COMPROBANTE_RECIBIDO') {
+            <p class="text-xs text-text-muted" role="status">Comprobante recibido en el chat; pendiente de registrar en la agenda.</p>
+          } @else if (r.pagoChat?.estado === 'REVISION') {
+            <p class="text-xs text-text-dark" role="status">Revisión manual: {{ r.pagoChat?.detalle }}</p>
+          } @else if (r.pagoChat?.estado === 'PAGO_REGISTRADO') {
+            <p class="text-xs text-text-muted">Comprobante registrado en la agenda. Caja debe verificar el pago.</p>
+          }
         </li>
       }
     </ul>

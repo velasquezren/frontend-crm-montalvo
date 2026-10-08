@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, HostListener, inject, input, linkedSignal, output, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { HttpErrorResponse, httpResource } from '@angular/common/http';
 
 import { mensajeDeError } from '../../core/api/http-error';
@@ -16,6 +17,7 @@ import { InteraccionPreviewComponent } from '../conversaciones/components/intera
 import { LineasWhatsappService } from './lineas-whatsapp.service';
 import {
   editable,
+  efectoDeCita,
   LIMITES,
   MenuAtencion,
   MenuEditable,
@@ -38,6 +40,7 @@ import {
   selector: 'app-menu-atencion-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    RouterLink,
     ButtonComponent,
     DrawerComponent,
     ErrorCargaComponent,
@@ -72,6 +75,9 @@ export class MenuAtencionEditorComponent {
   protected readonly quitada = signal<{ opcion: OpcionMenu; indice: number } | null>(null);
 
   protected readonly tipos = TIPOS;
+  /** Qué hace «Cita» en esta línea (reserva, solicitud o solo «Atención»). */
+  protected readonly formularioCita = computed(() => this.datos.value()?.formularioCita ?? null);
+  protected readonly efectoCita = computed(() => efectoDeCita(this.formularioCita()));
   protected readonly limites = LIMITES;
   protected readonly disponibles = computed(() => tiposDisponibles(this.borrador(), this.datos.value()?.linea.comercial === true));
   protected readonly vista = computed(() => vistaPrevia(this.borrador()));

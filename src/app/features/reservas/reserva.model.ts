@@ -1,3 +1,4 @@
+import { EstadoReservaChat } from '../../core/api/db-enums';
 import { Temporal } from 'temporal-polyfill';
 
 import { RespuestaPaginada } from '../../core/api/pagination.model';
@@ -38,6 +39,7 @@ export interface ReservaAgenda {
   tieneComprobante: boolean;
   registradaEl: string | null;
   registradaA: string | null;
+  pagoChat?: { estado: EstadoReservaChat; detalle: string | null };
 }
 
 export interface PaginaReservas extends RespuestaPaginada<ReservaAgenda> {
