@@ -128,7 +128,7 @@ export class ActividadFormularioComponent {
   protected readonly seleccionInicial = computed<SeleccionPaciente | null>(() => {
     const ctx = this.contexto();
     if (ctx.modo === 'EDITAR') {
-      return { cliente: ctx.actividad.cliente, leadId: ctx.actividad.lead?.id ?? null };
+      return ctx.actividad.cliente ? { cliente: ctx.actividad.cliente, leadId: ctx.actividad.lead?.id ?? null } : null;
     }
     return ctx.cliente ? { cliente: ctx.cliente, leadId: ctx.leadId ?? null } : null;
   });
@@ -197,7 +197,7 @@ export class ActividadFormularioComponent {
 
     const seleccion = this.seleccion();
     if (!seleccion) return null;
-    if (seleccion.cliente.id !== original.cliente.id) return null;
+    if (seleccion.cliente.id !== original.cliente?.id) return null;
     if ((seleccion.leadId ?? null) !== (original.lead?.id ?? null)) return null;
 
     return hora;

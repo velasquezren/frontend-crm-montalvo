@@ -394,7 +394,7 @@ describe('F10 · rango visible del calendario de Actividades', () => {
          original: es todo lo que la página le cuenta. */
       const contexto = pagina['contextoFormulario']();
       expect(contexto?.modo).toBe('CREAR');
-      expect(contexto?.modo === 'CREAR' && contexto.cliente?.id).toBe(PENDIENTE.cliente.id);
+      expect(contexto?.modo === 'CREAR' && contexto.cliente?.id).toBe(PENDIENTE.cliente!.id);
     });
 
     it('Caso B · cuando el formulario avisa de que guardó, se completa la original', async () => {

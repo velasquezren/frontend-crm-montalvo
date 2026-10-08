@@ -20,15 +20,15 @@ type ContactoVisible = { nombre: string; telefono: string };
  */
 @Pipe({ name: 'nombreCliente' })
 export class NombreClientePipe implements PipeTransform {
-  transform(cliente: ContactoVisible): string {
-    return nombreParaMostrar(cliente);
+  transform(cliente: ContactoVisible | null): string {
+    return cliente ? nombreParaMostrar(cliente) : 'Sin ficha vinculada';
   }
 }
 
 /** Iniciales del avatar, coherentes con lo que muestra `nombreCliente`. */
 @Pipe({ name: 'inicialesCliente' })
 export class InicialesClientePipe implements PipeTransform {
-  transform(cliente: ContactoVisible): string {
-    return inicialesCliente(cliente);
+  transform(cliente: ContactoVisible | null): string {
+    return cliente ? inicialesCliente(cliente) : '?';
   }
 }

@@ -6,7 +6,9 @@
     aria-label="Recordatorios y notificaciones"
     class="relative w-9 h-9 rounded-full flex items-center justify-center text-text-muted hover:text-primary hover:bg-bg-light transition-all duration-200 cursor-pointer">
     <app-icon name="bell" [size]="18" />
-    @if (totalUrgentes() > 0) {
+    @if (resumen.error()) {
+      <span class="crm-bell-badge" aria-label="No se pudo consultar los recordatorios">!</span>
+    } @else if (totalUrgentes() > 0) {
       <span
         class="crm-bell-badge"
         [class.crm-bell-badge--critica]="hayVencidas()"
@@ -26,7 +28,7 @@
     <div
       class="fixed left-3 right-3 top-16 sm:top-full sm:left-auto sm:right-0 sm:absolute sm:mt-2 sm:w-80 max-w-sm mx-auto sm:mx-0 bg-background rounded-2xl border border-border shadow-lifted overflow-hidden animate-fade-scale z-50">
       <div class="flex items-center justify-between px-4 py-3 border-b border-border bg-white">
-        <h3 class="text-sm font-bold text-text-dark">Recordatorios</h3>
+        <h3 class="text-sm font-bold text-text-dark">Reservas y recordatorios</h3>
         <app-button variant="ghost" size="sm" (clicked)="irAActividades()">Ver todas</app-button>
       </div>
 
@@ -39,7 +41,7 @@
           <ul class="divide-y divide-border">
             @for (actividad of items.value().datos; track actividad.id) {
               <li class="flex items-center gap-2 px-3 py-2.5 hover:bg-bg-light transition-colors">
-                <button type="button" (click)="irAActividades()" class="flex items-center gap-2.5 min-w-0 flex-1 text-left cursor-pointer">
+                <button type="button" (click)="abrirActividad(actividad)" class="flex items-center gap-2.5 min-w-0 flex-1 text-left cursor-pointer">
                   <div
                     class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
                     [class.bg-critical-bg]="esVencida(actividad)"
@@ -51,14 +53,16 @@
                   <div class="min-w-0 flex-1">
                     <p class="text-xs font-semibold text-text-dark truncate">{{ actividad.titulo }}</p>
                     <p class="text-[11px] text-text-muted truncate">
-                      {{ actividad.cliente | nombreCliente }} ·
+                      {{ actividad.reservaPaciente || (actividad.cliente | nombreCliente) }} ·
                       <span [class.text-critical]="esVencida(actividad)" [class.font-semibold]="esVencida(actividad)">
                         {{ actividad.fechaProgramada | date: 'HH:mm' }}
                       </span>
                     </p>
                   </div>
                 </button>
-                <app-button variant="ghost" size="xs" [circle]="true" icon="check" title="Marcar como completada" ariaLabel="Marcar como completada" class="shrink-0" (clicked)="completar(actividad)" />
+                @if (!actividad.reservaAgenda) {
+                  <app-button variant="ghost" size="xs" [circle]="true" icon="check" title="Marcar como completada" ariaLabel="Marcar como completada" class="shrink-0" (clicked)="completar(actividad)" />
+                }
               </li>
             }
           </ul>

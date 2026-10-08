@@ -1,6 +1,10 @@
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output, inject, computed } from '@angular/core';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { puedeVerAgendaClinica } from '../../../../core/auth/roles';
+import { estadoDeReserva } from '../../../reservas/reserva.model';
+import { fechaCivilClinica } from '../../zona-clinica';
 
 import { generarIniciales } from '../../../../core/auth/user.model';
 import { ORIGEN_LABEL } from '../../../leads/lead.model';
@@ -67,6 +71,10 @@ interface ClienteDeLaActividad {
   templateUrl: './actividad-detalle-drawer.component.html',
 })
 export class ActividadDetalleDrawerComponent {
+  private readonly auth = inject(AuthService);
+  protected readonly puedeVerAgenda = computed(() => { const rol = this.auth.user()?.rol; return !!rol && puedeVerAgendaClinica(rol); });
+  protected readonly estadoDeReserva = estadoDeReserva;
+  protected readonly fechaReserva = computed(() => { const f = this.actividad().reservaFecha; return f ? fechaCivilClinica(new Date(f)) : undefined; });
   readonly actividad = input.required<Actividad>();
 
   /** Solo ADMIN+ ve de quién es la actividad. Regla actual, sin tocar. */
@@ -92,8 +100,8 @@ export class ActividadDetalleDrawerComponent {
   protected readonly formatoFechaRelativa = formatoFechaRelativa;
   protected readonly origenLabel = ORIGEN_LABEL;
 
-  protected sinNombre(cliente: { nombre: string; telefono: string }): boolean {
-    return esNombreProvisional(cliente.nombre);
+  protected sinNombre(cliente: { nombre: string; telefono: string } | null): boolean {
+    return !cliente || esNombreProvisional(cliente.nombre);
   }
 
   /* La etapa llegaba en crudo ("CONVERTIDO") dentro de una cápsula teñida de

@@ -12,7 +12,8 @@ import {
   viewChild,
   ViewContainerRef,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 import { mensajeDeError } from '../../core/api/http-error';
 import { paginaVacia } from '../../core/api/pagination.model';
@@ -76,6 +77,10 @@ import { ReservasService } from './reservas.service';
   templateUrl: './reservas.page.html',
 })
 export class ReservasPage {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly parametros = toSignal(this.route.queryParamMap);
+  protected readonly fechaEnlace = signal<string | null>(null);
   private readonly servicio = inject(ReservasService);
   private readonly dialog = inject(DialogService);
   private readonly vcr = inject(ViewContainerRef);
@@ -98,7 +103,8 @@ export class ReservasPage {
 
   protected readonly reservas = httpResource<PaginaReservas>(
     () => {
-      const { desde, hasta } = rangoDePeriodo(this.periodo());
+      const fecha = this.fechaEnlace();
+      const { desde, hasta } = fecha ? { desde: fecha, hasta: fecha } : rangoDePeriodo(this.periodo());
       return this.servicio.listarRequest({ desde, hasta, estado: this.estado(), buscar: this.busquedaAplicada(), pagina: this.pagina() });
     },
     { defaultValue: { ...paginaVacia<ReservaAgenda>(), porEstado: {}, desde: '', hasta: '' } },
@@ -120,6 +126,24 @@ export class ReservasPage {
   protected readonly visorTitulo = signal('Comprobante');
 
   constructor() {
+    effect(() => {
+      const p = this.parametros();
+      const id = p?.get('reserva'), fecha = p?.get('fecha');
+      if (!id || !/^\d{1,10}$/.test(id) || !fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return;
+      this.fechaEnlace.set(fecha);
+      this.busqueda.set(id);
+      this.busquedaAplicada.set(id);
+      this.estado.set(null);
+      this.pagina.set(1);
+    });
+    effect(() => {
+      const id = this.parametros()?.get('reserva');
+      if (!id || !this.reservas.hasValue() || this.reservas.isLoading()) return;
+      const reserva = this.reservas.value().datos.find(r => String(r.id) === id);
+      if (!reserva) return;
+      this.abrir(reserva);
+      void this.router.navigate([], { relativeTo: this.route, queryParams: { reserva: null, fecha: null }, queryParamsHandling: 'merge', replaceUrl: true });
+    });
     /* Debounce de 300 ms; onCleanup cancela el timer al teclear de nuevo o al destruir. */
     effect(onCleanup => {
       const termino = this.busqueda();
@@ -157,6 +181,11 @@ export class ReservasPage {
   }
 
   protected elegirPeriodo(periodo: PeriodoReservas): void {
+    if (this.fechaEnlace()) {
+      this.busqueda.set('');
+      this.busquedaAplicada.set('');
+    }
+    this.fechaEnlace.set(null);
     this.periodo.set(periodo);
     this.pagina.set(1);
   }

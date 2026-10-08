@@ -11,9 +11,12 @@
   <div class="flex flex-col gap-3">
     <div class="flex items-center gap-2 overflow-x-auto pb-1" role="group" aria-label="Periodo">
       @for (p of periodos; track p.id) {
-        <app-filter-chip size="sm" [active]="periodo() === p.id" (clicked)="elegirPeriodo(p.id)">{{ p.etiqueta }}</app-filter-chip>
+        <app-filter-chip size="sm" [active]="!fechaEnlace() && periodo() === p.id" (clicked)="elegirPeriodo(p.id)">{{ p.etiqueta }}</app-filter-chip>
       }
     </div>
+    @if (fechaEnlace(); as fecha) {
+      <p class="text-sm text-text-muted">Reserva consultada para {{ fechaDeReserva(fecha) }}. Elige un periodo para volver al listado.</p>
+    }
     <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
       <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0" role="group" aria-label="Filtrar reservas por estado">
         <app-filter-chip size="sm" [active]="estado() === null" [count]="totalDelRango()" (clicked)="filtrar(null)">Todas</app-filter-chip>

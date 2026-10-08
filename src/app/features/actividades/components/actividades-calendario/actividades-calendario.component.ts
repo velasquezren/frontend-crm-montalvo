@@ -109,7 +109,7 @@ function aEventoCalendario(a: Actividad): CalendarEventExternal {
     // Duración real, no un bloque fijo — una llamada de 15 min no debe verse
     // igual de alta que una reunión de una hora en las vistas de semana/día.
     end: inicio.add({ minutes: Math.max(a.duracionMinutos, 5) }),
-    description: a.cliente.nombre,
+    description: a.reservaPaciente ?? a.cliente?.nombre ?? 'Reserva de agenda',
     calendarId: calendarioDe(a),
   };
 }

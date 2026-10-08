@@ -61,7 +61,7 @@ export interface PaginaReservas extends RespuestaPaginada<ReservaAgenda> {
 export const ESTADO_RESERVA: Readonly<Record<EstadoReserva, { etiqueta: string; variante: BadgeVariant }>> = {
   PENDIENTE: { etiqueta: 'Por confirmar', variante: 'neutral' },
   PAGADO: { etiqueta: 'Pago por verificar', variante: 'info' },
-  ATENDIDO: { etiqueta: 'Confirmada', variante: 'success' },
+  ATENDIDO: { etiqueta: 'Gestionada', variante: 'success' },
 };
 
 export const ESTADOS_FILTRO: readonly EstadoReserva[] = ['PENDIENTE', 'PAGADO', 'ATENDIDO'];

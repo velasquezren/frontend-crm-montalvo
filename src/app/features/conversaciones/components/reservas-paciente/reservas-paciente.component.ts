@@ -1,5 +1,6 @@
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, effect, untracked } from '@angular/core';
+import { RealtimeService } from '../../../../core/realtime/realtime.service';
 import { RouterLink } from '@angular/router';
 
 
@@ -24,6 +25,7 @@ import { ReservasService } from '../../../reservas/reservas.service';
 })
 export class ReservasPacienteComponent {
   private readonly servicio = inject(ReservasService);
+  private readonly realtime = inject(RealtimeService);
 
   readonly conversacionId = input.required<string>();
 
@@ -34,4 +36,11 @@ export class ReservasPacienteComponent {
     () => this.servicio.deConversacionRequest(this.conversacionId()),
     { defaultValue: [] },
   );
+
+  constructor() {
+    effect(() => {
+      const cambio = this.realtime.actividad();
+      if (cambio?.conversacionId === this.conversacionId()) untracked(() => this.reservas.reload());
+    });
+  }
 }

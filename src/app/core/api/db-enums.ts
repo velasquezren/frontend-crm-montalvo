@@ -33,7 +33,8 @@ export type EstadoReservaChat =
   | 'ESPERANDO_COMPROBANTE'
   | 'COMPROBANTE_RECIBIDO'
   | 'PAGO_REGISTRADO'
-  | 'REVISION';
+  | 'REVISION'
+  | 'GESTIONADA';
 
 export type MotivoAtencion =
   | 'EMERGENCIA'

@@ -83,6 +83,7 @@ export class ActividadesService {
    * Solo sube si la petición salió bien: un fallo no invalida nada.
    */
   readonly cambios = this.mutaciones.asReadonly();
+  refrescar(): void { this.mutaciones.update(n => n + 1); }
 
   private async tras<T>(operacion: Promise<T>): Promise<T> {
     const resultado = await operacion;

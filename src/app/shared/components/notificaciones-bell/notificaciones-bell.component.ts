@@ -26,15 +26,14 @@ import {
   TIPO_ACTIVIDAD_LABEL,
 } from '../../../features/actividades/actividad.model';
 import { ActividadesService } from '../../../features/actividades/actividades.service';
+import { inicioDelDiaClinica, sumarDiasClinica } from '../../../features/actividades/zona-clinica';
 import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
 import { NombreClientePipe } from '../../pipes/nombre-cliente.pipe';
 
 /** `HH:mm` del final del día de hoy, en ISO — "vencidas + hoy" en una sola consulta. */
-function finDeHoyIso(): string {
-  const fin = new Date();
-  fin.setHours(23, 59, 59, 999);
-  return fin.toISOString();
+export function finDeHoyIso(ahora = new Date()): string {
+  return new Date(sumarDiasClinica(inicioDelDiaClinica(ahora), 1).getTime() - 1).toISOString();
 }
 
 /**
@@ -82,8 +81,8 @@ export class NotificacionesBellComponent {
     { defaultValue: { vencidas: 0, hoy: 0, proximaSemana: 0 } },
   );
 
-  protected readonly totalUrgentes = computed(() => this.resumen.value().vencidas + this.resumen.value().hoy);
-  protected readonly hayVencidas = computed(() => this.resumen.value().vencidas > 0);
+  protected readonly totalUrgentes = computed(() => this.resumen.hasValue() ? this.resumen.value().vencidas + this.resumen.value().hoy : 0);
+  protected readonly hayVencidas = computed(() => this.resumen.hasValue() && this.resumen.value().vencidas > 0);
 
   /**
    * Lista del panel: solo se pide mientras está abierto — nadie la mira
@@ -106,8 +105,27 @@ export class NotificacionesBellComponent {
 
     // Respaldo de 60s, igual criterio que el inbox de Conversaciones: el
     // socket es la vía principal, esto es solo la red por si se cae.
-    const intervalo = setInterval(() => this.resumen.reload(), 60_000);
+    const intervalo = setInterval(() => {
+      if (document.visibilityState === 'visible') this.actividadesService.refrescar();
+    }, 60_000);
     inject(DestroyRef).onDestroy(() => clearInterval(intervalo));
+
+    let refresco: ReturnType<typeof setTimeout> | undefined;
+    inject(DestroyRef).onDestroy(() => clearTimeout(refresco));
+    effect(() => {
+      const cambio = this.realtimeService.cambioActividad();
+      if (!cambio) return;
+      untracked(() => {
+        clearTimeout(refresco);
+        refresco = setTimeout(() => this.actividadesService.refrescar(), 150);
+        if (cambio.avisar) {
+          const generacion = this.authService.generacionSesion();
+          void this.actividadesService.obtener(cambio.actividadId).then(a => {
+            if (generacion === this.authService.generacionSesion() && a.estado === 'PENDIENTE') this.notificarEnPantalla(a);
+          }).catch(() => undefined);
+        }
+      });
+    });
 
     /* Cualquier mutación de actividades —de esta campana, de la página o de
        «Actividad Rápida» en el chat— recarga el badge. Antes cada sitio
@@ -137,25 +155,26 @@ export class NotificacionesBellComponent {
       // el recordatorio no es de quien está mirando (ver la nota del gateway).
       if (aviso.agenteId !== this.authService.user()?.id) return;
 
-      this.resumen.reload();
-      if (this.abierto()) this.items.reload();
-
-      void this.actividadesService
-        .obtener(aviso.actividadId)
-        .then(actividad => this.notificarEnPantalla(actividad))
-        .catch(() => undefined); // ya cambió de estado entre el aviso y el fetch — no hay nada que mostrar
+      untracked(() => {
+        this.actividadesService.refrescar();
+        const generacion = this.authService.generacionSesion();
+        void this.actividadesService
+          .obtener(aviso.actividadId)
+          .then(actividad => { if (generacion === this.authService.generacionSesion() && actividad.estado === 'PENDIENTE') this.notificarEnPantalla(actividad); })
+          .catch(() => undefined); // ya cambió de estado entre el aviso y el fetch — no hay nada que mostrar
+      });
     });
   }
 
   private notificarEnPantalla(actividad: Actividad): void {
-    const sujeto = actividad.cliente?.nombre ?? actividad.lead?.origen ?? 'General';
+    const sujeto = actividad.reservaPaciente ?? actividad.cliente?.nombre ?? actividad.lead?.origen ?? 'General';
     this.toast.show(
       `${actividad.titulo} — ${sujeto}`,
       'info',
-      'Recordatorio',
+      actividad.reservaAgenda ? 'Reserva por gestionar' : 'Recordatorio',
       10_000,
-      'Completar',
-      () => void this.completar(actividad),
+      actividad.reservaAgenda ? 'Ver reserva' : 'Completar',
+      () => actividad.reservaAgenda ? this.abrirActividad(actividad) : void this.completar(actividad),
     );
   }
 
@@ -177,6 +196,11 @@ export class NotificacionesBellComponent {
   protected irAActividades(): void {
     this.cerrar();
     void this.router.navigate(['/actividades']);
+  }
+
+  protected abrirActividad(actividad: Actividad): void {
+    this.cerrar();
+    void this.router.navigate(['/actividades'], { queryParams: { actividad: actividad.id } });
   }
 
   protected async completar(actividad: Actividad): Promise<void> {

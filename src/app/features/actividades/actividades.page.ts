@@ -13,7 +13,8 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 import { OverlayRef } from '@angular/cdk/overlay';
 
@@ -146,8 +147,24 @@ export class ActividadesPage {
   private activeDrawerRef?: OverlayRef;
   private activeOverlayRef?: OverlayRef;
   private queryParamsProcesados = false;
+  private readonly router = inject(Router);
+  private readonly parametros = toSignal(this.route.queryParamMap);
 
   constructor() {
+    effect(onCleanup => {
+      const id = this.parametros()?.get('actividad');
+      const tpl = this.drawerDetalleTemplate();
+      if (!id || !tpl) return;
+      let vigente = true;
+      onCleanup(() => { vigente = false; });
+      untracked(() => {
+        void this.actividadesService.obtener(id).then(a => {
+          if (!vigente) return;
+          this.abrirDetalle(a, tpl);
+          void this.router.navigate([], { relativeTo: this.route, queryParams: { actividad: null }, queryParamsHandling: 'merge', replaceUrl: true });
+        }).catch(error => { if (vigente) this.toast.error(mensajeDeError(error, 'No se pudo abrir la actividad.')); });
+      });
+    });
     effect((onCleanup: EffectCleanupRegisterFn) => {
       const texto = this.busqueda().trim();
       const timer = setTimeout(() => {
@@ -198,6 +215,12 @@ export class ActividadesPage {
         this.actividades.reload();
         this.actividadesCalendario.reload();
         this.resumen.reload();
+        const abierta = this.actividadDetalle();
+        if (abierta?.reservaAgenda) {
+          void this.actividadesService.obtener(abierta.id).then(a => {
+            if (this.actividadDetalle()?.id === a.id) this.actividadDetalle.set(a);
+          }).catch(() => { if (this.actividadDetalle()?.id === abierta.id) this.cerrarDetalle(); });
+        }
       });
     });
   }
@@ -467,6 +490,7 @@ export class ActividadesPage {
    * copiar título, tipo o notas sería inventar una regla comercial.
    */
   protected completarYAgendarSiguiente(actividad: Actividad): void {
+    if (actividad.reservaAgenda || !actividad.cliente) return;
     this.cerrarDetalle();
     this.abrirCreacion(actividad.cliente, actividad.lead?.id ?? null);
     this.actividadOrigen.set(actividad);
@@ -639,4 +663,3 @@ export class ActividadesPage {
   }
 
 }
-

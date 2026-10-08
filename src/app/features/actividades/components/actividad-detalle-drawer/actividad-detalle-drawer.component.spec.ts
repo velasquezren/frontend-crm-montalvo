@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Actividad } from '../../actividad.model';
+import { AuthService } from '../../../../core/auth/auth.service';
 import { ActividadDetalleDrawerComponent } from './actividad-detalle-drawer.component';
 
 /**
@@ -118,6 +119,29 @@ describe('A4.2 · ActividadDetalleDrawerComponent', () => {
     expect(texto).not.toContain('Agendar nuevo seguimiento');
   });
 
+  it('reserva sin ficha: muestra el origen y abre la fecha de La Paz, sin acciones manuales', () => {
+    TestBed.overrideProvider(AuthService, { useValue: { user: () => ({ rol: 'RECEPCION' }) } });
+    montar(actividad({ cliente: null, agente: null, reservaAgenda: 42,
+      reservaPaciente: 'Paciente sintética', reservaMedico: 'Dra. Sintética',
+      reservaFecha: '2026-10-14T01:00:00Z', reservaEstado: 'PAGADO' }));
+    expect(html()).toContain('Paciente sintética');
+    expect(html()).toContain('Pago por verificar');
+    const enlace = (fixture.nativeElement as HTMLElement).querySelector('a')!;
+    expect(enlace.getAttribute('href')).toBe('/reservas?reserva=42&fecha=2026-10-13');
+    for (const accion of ['Solo completar', 'Editar detalles', 'Cancelar actividad', 'Eliminar actividad', 'Posponer']) {
+      expect(html()).not.toContain(accion);
+    }
+  });
+
+  it('agente comercial: abre su chat sin ofrecer acceso a la agenda clínica', () => {
+    TestBed.overrideProvider(AuthService, { useValue: { user: () => ({ rol: 'AGENTE' }) } });
+    montar(actividad({ reservaAgenda: 42, conversacionId: 'chat-sintetico', reservaEstado: 'ATENDIDO' }));
+    expect(html()).toContain('Gestionada');
+    expect(html()).not.toContain('Abrir reserva #');
+    expect((fixture.nativeElement as HTMLElement).querySelector('a')?.getAttribute('href'))
+      .toBe('/conversaciones?id=chat-sintetico');
+  });
+
   /**
    * A5.3 · la etiqueta de repetición.
    *
@@ -198,7 +222,7 @@ describe('A4.2 · ActividadDetalleDrawerComponent', () => {
     const act = actividad({ estado: 'COMPLETADA' });
     montar(act);
 
-    componente.agendarSeguimiento.emit(act.cliente);
+    componente.agendarSeguimiento.emit(act.cliente!);
 
     expect(soloDe('agendarSeguimiento')).toEqual([CLIENTE]);
   });
