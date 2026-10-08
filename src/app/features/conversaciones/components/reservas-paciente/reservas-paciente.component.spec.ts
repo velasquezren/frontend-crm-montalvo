@@ -33,7 +33,7 @@ describe('próximas reservas en la ficha del chat', () => {
     const texto = (fixture.nativeElement as HTMLElement).textContent!;
     expect(texto).toContain('mar 13 oct · 09:30');
     expect(texto).toContain('Dra. Sintética · Ginecología');
-    expect(texto).toContain('Pendiente de pago');
+    expect(texto).toContain('Por confirmar');
     expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/directorio?medico=3"]')).not.toBeNull();
   });
 

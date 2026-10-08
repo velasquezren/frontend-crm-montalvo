@@ -2,6 +2,7 @@ import '@angular/compiler';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { paginaVacia } from '../../../../core/api/pagination.model';
@@ -43,7 +44,7 @@ describe('ficha de una promoción', () => {
   beforeEach(() => {
     toast.success.mockReset();
     toast.error.mockReset();
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(), { provide: ToastService, useValue: toast }] });
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), { provide: ToastService, useValue: toast }] });
     http = TestBed.inject(HttpTestingController);
   });
   afterEach(() => { fixture?.destroy(); http.verify(); });

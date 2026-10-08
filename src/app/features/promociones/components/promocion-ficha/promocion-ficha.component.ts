@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { esConflicto, mensajeDeError } from '../../../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../../../core/api/pagination.model';
@@ -56,6 +57,7 @@ const ANUNCIO_ID = /^[0-9_]{3,64}$/;
     KpiCardComponent,
     LoadingSkeletonComponent,
     MonedaPipe,
+    RouterLink,
     SelectComponent,
     SwitchComponent,
   ],

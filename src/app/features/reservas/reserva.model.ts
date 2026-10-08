@@ -49,13 +49,17 @@ export interface PaginaReservas extends RespuestaPaginada<ReservaAgenda> {
 }
 
 /**
- * Lo que cada estado significa para quien lo lee. PAGADO no es «pagada»: la
- * paciente subió un comprobante y caja todavía tiene que verificarlo.
+ * Lo que cada estado significa para quien lo lee, comprobado en el binlog de la
+ * agenda (4/6–7/10/2026):
+ * - PENDIENTE: recién reservada; recepción todavía no la gestionó.
+ * - PAGADO no es «pagada»: la paciente subió un comprobante y caja tiene que verificarlo.
+ * - ATENDIDO no es «la paciente fue atendida»: recepción ya la pasó a la agenda de
+ *   FileMaker. 17 de 23 veces se marcó ANTES de la hora de la cita.
  */
 export const ESTADO_RESERVA: Readonly<Record<EstadoReserva, { etiqueta: string; variante: BadgeVariant }>> = {
-  PENDIENTE: { etiqueta: 'Pendiente de pago', variante: 'neutral' },
+  PENDIENTE: { etiqueta: 'Por confirmar', variante: 'neutral' },
   PAGADO: { etiqueta: 'Pago por verificar', variante: 'info' },
-  ATENDIDO: { etiqueta: 'Atendida', variante: 'success' },
+  ATENDIDO: { etiqueta: 'Confirmada', variante: 'success' },
 };
 
 export const ESTADOS_FILTRO: readonly EstadoReserva[] = ['PENDIENTE', 'PAGADO', 'ATENDIDO'];

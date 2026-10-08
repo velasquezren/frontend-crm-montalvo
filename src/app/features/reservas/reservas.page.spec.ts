@@ -66,7 +66,7 @@ describe('pantalla Reservas', () => {
     await montar();
     http.expectOne(r => r.url.endsWith('/agenda/reservas')).flush(pagina([reserva], { PAGADO: 1 }));
     await asentar();
-    const chip = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(b => b.textContent?.includes('Pendiente de pago'))!;
+    const chip = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(b => b.textContent?.includes('Por confirmar'))!;
     chip.click();
     await asentar();
     const pedido = http.expectOne(r => r.url.endsWith('/agenda/reservas'));
