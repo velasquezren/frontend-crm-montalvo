@@ -532,6 +532,22 @@ el mismo error que el backend ya había corregido en el push.
 - La **nota fijada** la editan solo quienes pueden editar la ficha
   (`puedeGestionComercial`): guardarla es un `PATCH /clientes`, que a recepción
   y al asistente les responde 403. La siguen viendo.
+- **Lo que depende del paso del tiempo lee `state.ahora()`, nunca `Date.now()`.**
+  Un `computed` sobre `Date.now()` no se recalcula jamás: con el chat abierto
+  mientras se cumplían las 24 h, `fueraDeVentana24h` seguía en `false`, la agente
+  escribía y el envío rebotaba (corregido 2026-10-09). `ahora` avanza cada minuto
+  con el latido de `conversaciones.page.ts` y al volver a la pestaña; la ventana
+  de 24 h, la de 72 h, los «14 min» de la bandeja y la espera de «Atención» lo
+  leen. Lo que solo cambia por día (los separadores «Hoy»/«Ayer» del hilo,
+  `etiquetaDeDia`) cuelga de `hoy`, que deriva de `ahora` pero cambia una vez al día.
+- **«Reenviar» un mensaje «No enviado»** (`POST /:id/mensajes/:mensajeId/reenviar`,
+  backend `reenvio-manual.ts`): para cuando Meta lo rechazó por algo que la clínica
+  ya resolvió —la cuenta impaga (131042), la red—. Es la MISMA fila, que pasa a
+  «Sin confirmar» y recibe el tick por el socket. No se ofrece en plantillas,
+  automáticos, ofertas interactivas, fuera de las 24 h, ni con los rechazos que
+  reenviar no arregla (131050, 130497, 131026): `sePuedeReenviar` es espejo de
+  `motivoParaNoReenviar`, y manda el backend. La reclamación exige el
+  `intentosEnvio` leído: así ni dos toques ni el barrido de reintentos lo mandan dos veces.
 
 ## 4. Despiece Modular de Componentes
 

@@ -26,6 +26,7 @@ import {
   ResultadoFormulario,
 } from './components/actividad-formulario/actividad-formulario.component';
 import { mismoRango, RangoCalendario } from './rango-calendario';
+import { diaClinicaVivo } from '../../core/fechas/dia-clinica';
 import { inicioDelDiaClinica, sumarDiasClinica } from '../../core/fechas/zona-clinica';
 import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales } from '../../core/auth/user.model';
@@ -229,8 +230,14 @@ export class ActividadesPage {
     { defaultValue: [] },
   );
 
+  /** El día de la clínica: «Hoy» y «Vencidas» se vuelven a cortar solos a medianoche. */
+  private readonly diaClinica = diaClinicaVivo();
+
   /** Ventana de filtros derivada del chip rápido — mismo criterio que `ActividadesService.resumen`. */
   private readonly filtroFechas = computed<Pick<FiltroActividades, 'estado' | 'desde' | 'hasta'>>(() => {
+    /* Depender del día: con la pantalla abierta pasada la medianoche, «Hoy»
+       seguía pidiendo las del día anterior hasta tocar otro filtro. */
+    this.diaClinica();
     /* Los mismos tres cortes que calcula `resumen` en el backend, en la zona de
        la clínica. Antes se partía el día en la medianoche del NAVEGADOR y allá
        en la del proceso del VPS: la tarjeta «Hoy» y la lista que sale al

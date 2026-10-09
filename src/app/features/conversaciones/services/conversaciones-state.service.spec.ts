@@ -10,7 +10,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { ToastService } from '../../../core/toast/toast.service';
 import { ConversacionDetalle, MensajeApi, PaginaInbox } from '../conversacion.model';
 import { ErrorCanalWhatsapp } from '../validar-canal';
-import { ConversacionesStateService } from './conversaciones-state.service';
+import { ConversacionesStateService, etiquetaDeDia } from './conversaciones-state.service';
 
 const FECHA = '2026-09-09T15:00:00.000Z';
 const MENSAJE: MensajeApi = {
@@ -419,5 +419,54 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     expect(error).toHaveBeenCalledWith('Conversación chat-1 no encontrada');
     expect(state.cambiandoEstado()).toBe(false);
   });
-});
 
+  /* Un `computed` sobre la hora del sistema no se recalcula solo: un chat abierto
+     mientras se cumplían las 24 h seguía ofreciendo texto libre y el envío rebotaba. */
+  it('la ventana de 24 h se cierra con el paso del tiempo, sin recargar el chat', async () => {
+    const entrante: MensajeApi = { id: 'entrante-1', direccion: 'ENTRANTE', contenido: 'Hola', createdAt: new Date(Date.now() - 23.9 * 3_600_000).toISOString() };
+    await recargarDetalle({ ...structuredClone(CHAT), mensajes: [entrante] });
+    expect(state.fueraDeVentana24h()).toBe(false);
+
+    state.ahora.set(Date.now() + 10 * 60_000);
+    expect(state.fueraDeVentana24h()).toBe(true);
+  });
+
+  it('el hilo separa los días como WhatsApp: «Hoy», «Ayer» y la fecha', () => {
+    const hoy = new Date(2026, 9, 9, 10, 0);
+    expect(etiquetaDeDia(new Date(2026, 9, 9, 0, 5), hoy)).toBe('Hoy');
+    expect(etiquetaDeDia(new Date(2026, 9, 8, 23, 59), hoy)).toBe('Ayer');
+    expect(etiquetaDeDia(new Date(2026, 9, 7, 12, 0), hoy)).toBe('7 de octubre de 2026');
+  });
+
+  it('reenviar un mensaje rechazado: lo pide al servidor y queda «sin confirmar» en su sitio', async () => {
+    const rechazado: MensajeApi = { ...MENSAJE, estadoEnvio: 'FALLIDO', codigoErrorEnvio: 131042 };
+    await recargarDetalle({ ...structuredClone(CHAT), mensajes: [rechazado] });
+
+    const reenvio = state.reenviar(rechazado);
+    expect(state.reenviando()).toBe(rechazado.id);
+    const post = http.expectOne(req => req.url === `${API_URL}/conversaciones/chat-1/mensajes/${rechazado.id}/reenviar`);
+    expect(post.request.method).toBe('POST');
+    post.flush({ id: rechazado.id, estadoEnvio: 'INCIERTO' });
+    await reenvio;
+
+    expect(state.reenviando()).toBeNull();
+    expect(state.detalleActual()?.mensajes).toEqual([{ ...rechazado, estadoEnvio: 'INCIERTO', codigoErrorEnvio: null }]);
+    http.expectNone(req => req.url === `${API_URL}/conversaciones/chat-1`);
+  });
+
+  it('si el servidor ya no deja reenviar, lo dice y vuelve a leer el hilo', async () => {
+    const error = vi.spyOn(TestBed.inject(ToastService), 'error');
+    const rechazado: MensajeApi = { ...MENSAJE, estadoEnvio: 'FALLIDO', codigoErrorEnvio: 131042 };
+    await recargarDetalle({ ...structuredClone(CHAT), mensajes: [rechazado] });
+
+    const reenvio = state.reenviar(rechazado);
+    http.expectOne(req => req.url.endsWith('/reenviar'))
+      .flush({ message: 'Ese mensaje ya se está reenviando.' }, { status: 409, statusText: 'Conflict' });
+    await reenvio;
+    TestBed.tick();
+
+    expect(error).toHaveBeenCalledWith('Ese mensaje ya se está reenviando.');
+    responder('/conversaciones/chat-1', structuredClone(CHAT));
+    await app.whenStable();
+  });
+});

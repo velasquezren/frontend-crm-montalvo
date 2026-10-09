@@ -95,6 +95,18 @@ export class ConversacionesStateService {
   readonly isAdmin = this.authService.isAdmin;
   readonly currentUserId = computed(() => this.authService.user()?.id ?? '');
 
+  /**
+   * La hora, al minuto. Lo que depende del paso del tiempo —la ventana de 24 h,
+   * «hace 14 min» en la bandeja, «Hoy» en el hilo— la lee aquí y no de
+   * `Date.now()`: un `computed` sobre `Date.now()` no se vuelve a calcular nunca,
+   * así que un chat abierto mientras se cumplían las 24 h seguía ofreciendo
+   * escribir texto libre y el mensaje rebotaba. Lo adelanta el latido de la
+   * página (`conversaciones.page.ts`).
+   */
+  readonly ahora = signal(Date.now());
+  /** El día del dispositivo: cambia una vez al día, no en cada minuto. */
+  private readonly hoy = computed(() => new Date(this.ahora()).toDateString());
+
   /* ── Selección & Navegación ────────────────────────────────────── */
   readonly seleccionadaId = signal<string | null>(null);
   /** Referencia distinta por selección o sesión: descarta respuestas tardías. */
@@ -413,7 +425,7 @@ export class ConversacionesStateService {
   readonly ventana72hMetaActiva = computed(() => {
     const fechaCampana = this.fechaCampanaMeta();
     if (!fechaCampana) return false;
-    const horasDesdeCampana = (Date.now() - fechaCampana.getTime()) / (1000 * 60 * 60);
+    const horasDesdeCampana = (this.ahora() - fechaCampana.getTime()) / (1000 * 60 * 60);
     return horasDesdeCampana >= 0 && horasDesdeCampana < 72;
   });
 
@@ -431,7 +443,7 @@ export class ConversacionesStateService {
     const ultimoEntrante = [...chat.mensajes].reverse().find(m => m.direccion === 'ENTRANTE');
     if (!ultimoEntrante) return true;
 
-    const haceHoras = (Date.now() - new Date(ultimoEntrante.createdAt).getTime()) / (1000 * 60 * 60);
+    const haceHoras = (this.ahora() - new Date(ultimoEntrante.createdAt).getTime()) / (1000 * 60 * 60);
     return haceHoras >= 24;
   });
 
@@ -499,13 +511,10 @@ export class ConversacionesStateService {
 
     const result: ItemHilo[] = [];
     let ultimaFecha = '';
+    const hoy = new Date(this.hoy());
 
     for (const msg of chat.mensajes) {
-      const fechaMsg = new Date(msg.createdAt).toLocaleDateString('es-ES', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      });
+      const fechaMsg = etiquetaDeDia(new Date(msg.createdAt), hoy);
 
       if (fechaMsg !== ultimaFecha) {
         ultimaFecha = fechaMsg;
@@ -596,6 +605,38 @@ export class ConversacionesStateService {
   }
 
   /* ── Métodos de Acción ─────────────────────────────────────────── */
+
+  /** El mensaje que se está reenviando, para el `loading` de su botón. */
+  readonly reenviando = signal<string | null>(null);
+
+  /**
+   * «Reenviar» un mensaje que Meta rechazó (la cuenta impaga, la red…), una vez
+   * resuelta la causa. Es la misma fila: queda «sin confirmar» y el tick llega
+   * por el socket en cuanto Meta contesta. Si el servidor dice que ya no se
+   * puede (otra persona lo reenvió, se cerró la ventana) se vuelve a leer el
+   * hilo para ver la verdad, salvo sin red.
+   */
+  async reenviar(mensaje: MensajeApi): Promise<void> {
+    const id = this.seleccionadaId();
+    if (!id || this.reenviando()) return;
+    const contexto = this.contextoChat();
+    this.reenviando.set(mensaje.id);
+    try {
+      const { estadoEnvio } = await this.conversacionesService.reenviarMensaje(id, mensaje.id);
+      const chat = this.detalleActual();
+      if (contexto !== this.contextoChat() || chat?.id !== id) return;
+      this.detalle.set({
+        ...chat,
+        mensajes: chat.mensajes.map(m => m.id === mensaje.id ? { ...m, estadoEnvio, codigoErrorEnvio: null } : m),
+      });
+    } catch (err) {
+      this.toastService.error(mensajeDeError(err, 'No se pudo reenviar el mensaje.'));
+      const sinRespuesta = err instanceof HttpErrorResponse && err.status === 0;
+      if (!sinRespuesta && contexto === this.contextoChat()) this.detalle.reload();
+    } finally {
+      this.reenviando.set(null);
+    }
+  }
 
   /**
    * Trae la siguiente página y la añade al final de la lista.
@@ -1140,6 +1181,21 @@ export class ConversacionesStateService {
       contadores: contadoresTrasResponder(pagina.contadores, actual),
     });
   }
+}
+
+const FORMATO_DIA: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+
+/**
+ * El separador del hilo, como WhatsApp: «Hoy», «Ayer» o la fecha. Usa el día del
+ * dispositivo, igual que la hora de cada burbuja (marca técnica: ver
+ * `crm-design-system`, «Fechas»).
+ */
+export function etiquetaDeDia(fecha: Date, hoy: Date): string {
+  const dia = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const diferencia = Math.round((dia(hoy) - dia(fecha)) / 86_400_000);
+  if (diferencia === 0) return 'Hoy';
+  if (diferencia === 1) return 'Ayer';
+  return fecha.toLocaleDateString('es-ES', FORMATO_DIA);
 }
 
 /**

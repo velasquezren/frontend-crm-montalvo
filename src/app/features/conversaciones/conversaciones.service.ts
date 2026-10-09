@@ -153,6 +153,14 @@ export class ConversacionesService {
     });
   }
 
+  /**
+   * Reenvía un mensaje que Meta rechazó, una vez resuelta la causa. Es la misma
+   * fila: vuelve como «sin confirmar» y el tick llega por el socket.
+   */
+  reenviarMensaje(conversacionId: string, mensajeId: string): Promise<Pick<MensajeApi, 'id' | 'estadoEnvio'>> {
+    return this.api.post(`/conversaciones/${conversacionId}/mensajes/${mensajeId}/reenviar`, {});
+  }
+
   /** Asignar/reasignar agente — solo ADMIN (bloqueado también en el backend). */
   asignarAgente(conversacionId: string, agenteId: string | null): Promise<ConversacionDetalle> {
     return this.api.patch<ConversacionDetalle>(`/conversaciones/${conversacionId}/agente`, {

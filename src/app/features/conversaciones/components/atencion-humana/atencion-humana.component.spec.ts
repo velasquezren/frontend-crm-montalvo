@@ -38,6 +38,7 @@ describe('bloque de atención humana del chat', () => {
     TestBed.configureTestingModule({
       providers: [{ provide: ConversacionesStateService, useValue: {
         cambiarAtencion, cambiandoAtencion: signal<AccionAtencion | null>(null), currentUserId: yo, isAdmin: admin,
+        ahora: signal(Date.now()),
       } }],
     });
   });

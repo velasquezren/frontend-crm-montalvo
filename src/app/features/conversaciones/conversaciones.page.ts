@@ -304,6 +304,9 @@ export class ConversacionesPage implements AfterViewInit {
    */
   private startPolling(): void {
     const intervalo = setInterval(() => {
+      /* El reloj avanza aunque no se pregunte nada al servidor: la ventana de
+         24 h y los «hace 14 min» dependen del tiempo, no de la red. */
+      this.state.ahora.set(Date.now());
       this.ticksDesdeUltimoRefresco++;
       if (!debeRefrescar(this.ticksDesdeUltimoRefresco, this.realtimeService.conectado(), document.hidden)) {
         return;
@@ -317,6 +320,7 @@ export class ConversacionesPage implements AfterViewInit {
        al día: se refresca una vez y se reinicia la cuenta. */
     const alVolverAlFrente = () => {
       if (document.hidden) return;
+      this.state.ahora.set(Date.now());
       this.ticksDesdeUltimoRefresco = 0;
       this.refrescar();
       /* Lo que llegó al chat abierto con la pestaña oculta se marca leído

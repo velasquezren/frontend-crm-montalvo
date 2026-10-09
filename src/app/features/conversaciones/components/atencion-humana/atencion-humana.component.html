@@ -12,7 +12,7 @@
       <p class="crm-atencion-titulo" role="status">
         @if (a.estado === 'ESPERANDO') {
           <span class="font-semibold text-text-dark">{{ motivos[a.motivo] }}</span>
-          <span class="crm-atencion-espera"> · espera {{ tiempoDeEspera(a.solicitadaEn) }}</span>
+          <span class="crm-atencion-espera"> · espera {{ tiempoDeEspera(a.solicitadaEn, state.ahora()) }}</span>
         } @else if (a.tomadaPor; as quien) {
           <span class="font-semibold text-text-dark">En atención por {{ primerNombre(quien.nombre) }}</span>
           <span class="crm-atencion-espera"> · {{ motivos[a.motivo] }}</span>

@@ -384,6 +384,37 @@
   box-shadow: 0 0 0 2px var(--color-primary);
 }
 
+/* «Reintentar», «Descartar», «Reenviar» junto a la hora. Eran texto de 10px con
+   ~15px de alto: por debajo del objetivo táctil de 24px (crm-ui-desde-codigo §4)
+   y difíciles de acertar con el dedo en el móvil. Siguen viéndose como enlace. */
+.envio-accion {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-decoration: underline;
+  color: inherit;
+  cursor: pointer;
+}
+
+.envio-accion-secundaria {
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.envio-accion:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.envio-accion:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+  border-radius: 12px;
+}
+
 /* ── Fotos: caja fija desde el primer render ────────────────────────
    El tamaño lo pone `cajaImagen` en línea; aquí solo el aspecto. El fondo
    es el hueco que se ve mientras llega la foto, sin que nada se mueva. */

@@ -239,8 +239,8 @@
                   <app-badge
                     [variant]="varianteDeAtencion(atencion.prioridad)"
                     [icon]="iconoDeAtencion(atencion.prioridad)"
-                    [title]="motivoCorto[atencion.motivo] + ': espera desde hace ' + tiempoDeEspera(atencion.solicitadaEn)">
-                    {{ motivoCorto[atencion.motivo] }} · {{ tiempoDeEspera(atencion.solicitadaEn) }}
+                    [title]="motivoCorto[atencion.motivo] + ': espera desde hace ' + tiempoDeEspera(atencion.solicitadaEn, state.ahora())">
+                    {{ motivoCorto[atencion.motivo] }} · {{ tiempoDeEspera(atencion.solicitadaEn, state.ahora()) }}
                   </app-badge>
                 } @else if (atencion.tomadaPor; as quien) {
                   <!-- Una emergencia sigue marcada mientras se atiende, como el bloque del chat. -->

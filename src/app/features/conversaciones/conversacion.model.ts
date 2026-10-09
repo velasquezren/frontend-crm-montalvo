@@ -57,8 +57,10 @@ export interface MensajeApi {
    * ambiguo no pueda duplicar el mensaje. Solo existe en globos optimistas.
    */
   readonly clientMessageId?: string;
-  /** true = lo mandó el sistema (acuse fuera de horario), no una persona. */
+  /** true = lo mandó el CRM (menú, acuses, fuera de horario), no una persona. */
   readonly automatico?: boolean;
+  /** Categoría de Meta si el mensaje es una plantilla; `null` en un texto normal. */
+  readonly plantillaCategoria?: string | null;
   readonly tipo?: TipoMensaje;
   /** Clave interna del archivo en R2 (e.g. `wa/<convId>/<msgId>`); la usa el proxy de descarga. */
   readonly mediaKey?: string | null;

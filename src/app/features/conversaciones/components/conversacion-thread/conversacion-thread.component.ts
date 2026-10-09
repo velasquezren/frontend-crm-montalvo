@@ -23,6 +23,7 @@ import { IconComponent } from '../../../../shared/components/icon/icon.component
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { ImageViewerComponent } from '../../../../shared/components/image-viewer/image-viewer.component';
 import { WhatsAppMarkdownPipe } from '../../../../shared/pipes/whatsapp-markdown.pipe';
+import { sePuedeReenviar } from '../../reenvio-mensaje';
 import { ToastService } from '../../../../core/toast/toast.service';
 import { generarIniciales } from '../../../../core/auth/user.model';
 import { envioSeReintentaSinRiesgo } from '../../clasificar-error-envio';
@@ -65,6 +66,7 @@ import { InteraccionPreviewComponent } from '../interaccion-preview/interaccion-
 })
 export class ConversacionThreadComponent {
   protected readonly errorWhatsapp = explicacionErrorWhatsapp;
+  protected readonly sePuedeReenviar = sePuedeReenviar;
   protected readonly state = inject(ConversacionesStateService);
   private readonly conversacionesService = inject(ConversacionesService);
   private readonly toast = inject(ToastService);

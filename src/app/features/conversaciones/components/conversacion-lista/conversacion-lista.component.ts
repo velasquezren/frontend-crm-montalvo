@@ -181,11 +181,13 @@ export class ConversacionListaComponent {
   }
 
   /* ── Helpers de tiempo de espera ───────────────────────────────── */
+  /* Leen `state.ahora()`, el reloj por minuto: así la plantilla se vuelve a
+     pintar sola y «14 min» no se queda congelado hasta el próximo refresco. */
   protected tiempoEsperando(c: ConversacionResumen): string | null {
     const desde = esperandoDesde(c);
     if (!desde) return null;
 
-    const minutos = Math.floor((Date.now() - desde.getTime()) / 60000);
+    const minutos = Math.floor((this.state.ahora() - desde.getTime()) / 60000);
     if (minutos < 60) return `${Math.max(minutos, 1)} min`;
     const horas = Math.floor(minutos / 60);
     if (horas < 24) return `${horas} h`;
@@ -194,12 +196,11 @@ export class ConversacionListaComponent {
 
   protected esperaLarga(c: ConversacionResumen): boolean {
     const desde = esperandoDesde(c);
-    return !!desde && Date.now() - desde.getTime() > 24 * 60 * 60 * 1000;
+    return !!desde && this.state.ahora() - desde.getTime() > 24 * 60 * 60 * 1000;
   }
 
   protected tiempoRelativo(fecha: string): string {
-    const ahora = Date.now();
-    const diff = ahora - new Date(fecha).getTime();
+    const diff = this.state.ahora() - new Date(fecha).getTime();
     const minutos = Math.floor(diff / 60000);
 
     if (minutos < 1) return 'Ahora';
