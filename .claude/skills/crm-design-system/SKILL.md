@@ -458,6 +458,14 @@ promoción— eso es un día que depende de dónde esté sentada quien mira.
 Las dos primeras salen de `core/fechas/`, que es el gemelo de `common/fechas/`
 del backend y la única fuente de la zona.
 
+**Y el idioma es `es-BO`**, puesto en `app.config.ts` (`LOCALE_ID` +
+`registerLocaleData`). Sin eso Angular usa `en-US` y los quince formatos con mes
+de texto salían en INGLÉS —«9 Oct 2026», «14 Aug 2026»— en una clínica
+boliviana, mientras los helpers de TS lo escribían en español: el mismo mes de
+dos maneras según la pantalla. El dinero ya iba en `es-BO` explícito, así que las
+fechas eran lo único que faltaba. Lo fijan dos pruebas con agosto y enero, que
+son los meses que delatan el idioma.
+
 ### Las dos cicatrices
 
 **1. El desfase tecleado.** `DatePipe` no acepta nombres IANA, solo desfases, así
@@ -500,6 +508,12 @@ desde los componentes de la cadena y no mira la zona del proceso.
   mismo teléfono dos veces y `generarIniciales` sobre eso da `W+`. Los pipes son
   **puros** a propósito — estas expresiones viven en tablas de 25 filas y en el
   inbox, donde un método del componente se reevaluaría en cada ciclo.
+- `shared/models/meses.ts` → `nombreMes` / `nombreMesCorto` (ejes de gráficos, columnas
+  estrechas) · **`nombreMesCortoMinuscula`** y **`nombreDiaCorto`** (una fecha escrita en
+  línea: «13 oct 2026», «mar 13 oct»). **Ningún archivo escribe su propio array de meses.**
+  El de minúscula estaba copiado en cuatro —uno dentro de `shared/models/` mismo— y ya daban
+  tres respuestas al mismo mes inválido: `undefined`, `'—'` y `M13`. Es la cicatriz de
+  `nombreMes` regenerada por faltar la variante en minúscula.
 - `shared/models/estados.model.ts` → etiquetas y variantes de badge de Lead/Venta/Comisión.
 - `shared/models/cliente-categoria.model.ts` → Gold/Silver/Bronze/Prospecto.
 - `core/api/db-enums.ts` → enums espejo de Prisma, **generados** por `tools/generar-db-enums.mjs`.

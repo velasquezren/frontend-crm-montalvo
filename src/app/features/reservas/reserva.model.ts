@@ -4,6 +4,7 @@ import { Temporal } from 'temporal-polyfill';
 import { RespuestaPaginada } from '../../core/api/pagination.model';
 import { BadgeVariant } from '../../shared/components/badge/badge.component';
 import { ZONA_CLINICA } from '../../core/fechas/zona-clinica';
+import { nombreDiaCorto, nombreMesCortoMinuscula } from '../../shared/models/meses';
 
 /*
  * Las reservas de la agenda de la clínica (ScriptCase), tal como las devuelve
@@ -98,14 +99,11 @@ export function rangoDePeriodo(periodo: PeriodoReservas, ahora = new Date()): { 
   }
 }
 
-const DIAS = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
-const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-
 /** «2026-10-13» → «mar 13 oct»: el día de la semana es lo primero que pregunta quien llama. */
 export function fechaDeReserva(fecha: string): string {
   try {
     const d = Temporal.PlainDate.from(fecha);
-    return `${DIAS[d.dayOfWeek - 1]} ${d.day} ${MESES[d.month - 1]}`;
+    return `${nombreDiaCorto(d.dayOfWeek)} ${d.day} ${nombreMesCortoMinuscula(d.month)}`;
   } catch {
     return fecha || '—';
   }

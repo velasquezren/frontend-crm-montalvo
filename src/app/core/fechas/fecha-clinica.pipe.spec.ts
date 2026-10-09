@@ -3,6 +3,8 @@
    `input.component.spec.ts` y `dialog.service.spec.ts`. */
 import '@angular/compiler';
 
+import { registerLocaleData } from '@angular/common';
+import localeEsBo from '@angular/common/locales/es-BO';
 import { Injector, LOCALE_ID, runInInjectionContext } from '@angular/core';
 import { describe, expect, it } from 'vitest';
 
@@ -27,6 +29,37 @@ function conLocale<T>(construir: () => T): T {
 }
 
 const montarCivil = (): FechaCivilPipe => conLocale(() => new FechaCivilPipe());
+
+/*
+ * El idioma de las fechas, que es el de la app: `es-BO`.
+ *
+ * Hasta el 2026-10-09 nadie proveía `LOCALE_ID`, así que Angular usaba `en-US`
+ * y los quince formatos con mes de texto salían en inglés —«9 Oct 2026»— en una
+ * clínica boliviana, conviviendo con los helpers de TS que sí lo hacían en
+ * español. Lo que se fija aquí es el idioma, no el formato: por eso se compara
+ * con el mes escrito, que es lo que se perdió.
+ */
+describe('el idioma de las fechas es el de la clínica', () => {
+  registerLocaleData(localeEsBo);
+  const conEsBo = <T,>(construir: () => T): T => {
+    const injector = Injector.create({ providers: [{ provide: LOCALE_ID, useValue: 'es-BO' }] });
+    return runInInjectionContext(injector, construir);
+  };
+
+  it('un instante de operación escribe el mes en español', () => {
+    const pipe = conEsBo(() => new FechaClinicaPipe());
+    /* Agosto y enero son los que delatan el idioma: «Aug» y «Jan» no se
+       confunden con nada. */
+    expect(pipe.transform('2026-08-14T16:00:00.000Z', 'd MMM y')).toBe('14 ago 2026');
+    expect(pipe.transform('2026-01-20T16:00:00.000Z', 'd MMM y')).toBe('20 ene 2026');
+  });
+
+  it('un día de calendario también', () => {
+    const pipe = conEsBo(() => new FechaCivilPipe());
+    expect(pipe.transform('2026-08-14')).toBe('14 ago 2026');
+    expect(pipe.transform('2026-12-01')).toBe('1 dic 2026');
+  });
+});
 
 describe('FechaClinicaPipe', () => {
   /* Inyector mínimo en vez de TestBed: el pipe solo necesita `LOCALE_ID`, y

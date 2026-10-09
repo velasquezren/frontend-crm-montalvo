@@ -5,6 +5,8 @@
  * (crm-feature-page): si cada dominio validara su imagen a su manera, una foto
  * pasaría en una pantalla y no en la otra.
  */
+import { nombreMesCortoMinuscula } from './meses';
+
 
 /** Los tipos que el backend acepta (`validarImagenPublica`): se leen de los bytes allá; aquí se avisa antes. */
 export const TIPOS_IMAGEN_PUBLICA = 'image/jpeg,image/png,image/webp';
@@ -18,13 +20,15 @@ export function problemaDeImagen(archivo: Pick<File, 'size' | 'type'>): string |
   return null;
 }
 
-const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-
 /** «2026-10-13» (un día de La Paz, sin hora) → «13 oct 2026». `null` → «sin fecha de fin». */
 export function fechaCorta(fecha: string | null): string {
   if (!fecha) return 'sin fecha de fin';
-  const [anio, mes, dia] = fecha.split('-').map(Number);
-  return `${dia} ${MESES[mes - 1]} ${anio}`;
+  /* Se valida la forma antes de descomponerla: con una cadena que no fuera
+     «YYYY-MM-DD» esto imprimía «undefined undefined NaN» en pantalla. */
+  const partes = /^(\d{4})-(\d{2})-(\d{2})$/.exec(fecha);
+  if (!partes) return fecha;
+  const [, anio, mes, dia] = partes;
+  return `${Number(dia)} ${nombreMesCortoMinuscula(Number(mes))} ${anio}`;
 }
 
 /** Un precio tecleado («480», «480,50», «») → número, `null` si está vacío, `undefined` si no es un precio. */

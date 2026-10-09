@@ -43,3 +43,37 @@ export function nombreMes(mes: number): string {
 export function nombreMesCorto(mes: number): string {
   return MESES_CORTOS[mes - 1] ?? `M${mes}`;
 }
+
+/**
+ * Igual que `nombreMesCorto`, en minúscula — para una fecha escrita en línea
+ * («13 oct 2026», «mar 13 oct»), que es como la pinta `es-BO`.
+ *
+ * Existe para que no haya un SEGUNDO array. El de abajo estaba copiado en
+ * cuatro archivos —uno dentro de este mismo `shared/models/`— y las copias ya
+ * daban tres respuestas distintas a un mes fuera de rango:
+ *
+ * | Copia | Con un mes inválido |
+ * |---|---|
+ * | `catalogo.ts` (`MESES[mes - 1]`) | **`undefined`** → «13 undefined 2026» |
+ * | `servicios-medico-drawer` (`?? '—'`) | `'—'` |
+ * | este archivo | `M13` |
+ *
+ * Es la misma cicatriz de `nombreMes`, regenerada: se consolidó una vez en
+ * mayúscula y volvió a crecer en minúscula porque faltaba esta función. Un mes
+ * fuera de rango es un dato roto y se dice; `undefined` miente en voz alta y
+ * `'—'` miente callando.
+ */
+export function nombreMesCortoMinuscula(mes: number): string {
+  return nombreMesCorto(mes).toLowerCase();
+}
+
+/**
+ * Los días de la semana en minúscula, empezando en LUNES (`1`), como
+ * `Temporal.PlainDate.dayOfWeek` y como se lee un calendario aquí.
+ */
+const DIAS_CORTOS = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'] as const;
+
+/** Nombre corto de un día 1-7 (lunes a domingo). */
+export function nombreDiaCorto(dia: number): string {
+  return DIAS_CORTOS[dia - 1] ?? `D${dia}`;
+}

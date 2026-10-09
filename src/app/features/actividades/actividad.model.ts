@@ -1,6 +1,7 @@
 import { EstadoActividad, FrecuenciaRepeticion, TipoActividad } from '../../core/api/db-enums';
 import { BadgeVariant } from '../../shared/components/badge/badge.component';
 import { IconName } from '../../shared/components/icon/icon.component';
+import { nombreMesCortoMinuscula } from '../../shared/models/meses';
 
 export type { EstadoActividad, TipoActividad };
 
@@ -168,8 +169,8 @@ export function formatoFechaRelativa(fechaIso: string): { texto: string; urgente
   }
 
   const dia = fecha.getDate();
-  const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-  return { texto: `${dia} ${meses[fecha.getMonth()]} · ${horaStr}`, urgente: false };
+  /* `getMonth()` es 0-11; el helper espera 1-12. */
+  return { texto: `${dia} ${nombreMesCortoMinuscula(fecha.getMonth() + 1)} · ${horaStr}`, urgente: false };
 }
 
 /**

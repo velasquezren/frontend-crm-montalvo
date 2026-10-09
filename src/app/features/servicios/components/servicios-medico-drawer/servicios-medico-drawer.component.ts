@@ -12,11 +12,7 @@ import { MonedaPipe } from '../../../../shared/pipes/moneda.pipe';
 import { PerfilMedico } from '../../servicios.model';
 import { KpiItem } from '../servicios-kpis/servicios-kpis.component';
 import { FechaClinicaPipe } from '../../../../core/fechas/fecha-clinica.pipe';
-
-const MESES = [
-  'ene', 'feb', 'mar', 'abr', 'may', 'jun',
-  'jul', 'ago', 'sep', 'oct', 'nov', 'dic',
-];
+import { nombreMesCortoMinuscula } from '../../../../shared/models/meses';
 
 /**
  * Perfil de un médico — espejo del cajón del historial del paciente.
@@ -97,7 +93,7 @@ export class ServiciosMedicoDrawerComponent {
     const filas = this.perfil().porMes;
     const techo = Math.max(...filas.map(f => f.total), 1);
     return filas.map(f => ({
-      etiqueta: `${MESES[f.mes - 1] ?? '—'} ${String(f.anio).slice(2)}`,
+      etiqueta: `${nombreMesCortoMinuscula(f.mes)} ${String(f.anio).slice(2)}`,
       total: f.total,
       ingreso: f.ingreso,
       porcentaje: Math.round((f.total / techo) * 100),

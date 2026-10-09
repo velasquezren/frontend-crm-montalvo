@@ -25,3 +25,17 @@ describe('funciones del catálogo', () => {
     expect(fechaCorta(null)).toBe('sin fecha de fin');
   });
 });
+
+/* `fechaCorta` descomponía la cadena sin comprobarla: con cualquier cosa que no
+   fuera «YYYY-MM-DD» imprimía «undefined undefined NaN» en pantalla. */
+describe('fechaCorta ante una fecha que no tiene la forma esperada', () => {
+  it('devuelve la cadena tal cual en vez de inventar un texto roto', () => {
+    for (const malo of ['13/10/2026', '2026-10', 'ayer', '2026-10-01T00:00:00Z']) {
+      expect(fechaCorta(malo)).toBe(malo);
+    }
+  });
+
+  it('un mes imposible no sale como `undefined`', () => {
+    expect(fechaCorta('2026-13-01')).toBe('1 m13 2026');
+  });
+});
