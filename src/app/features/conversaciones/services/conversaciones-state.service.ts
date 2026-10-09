@@ -59,7 +59,8 @@ const LOTE_HISTORIAL = 50;
  * ms es lo que tarda en notarse una pausa al escribir, así que buscar sigue
  * sintiéndose inmediato sin mandar una petición por tecla.
  */
-const RETARDO_BUSQUEDA_MS = 300;
+/** Exportado para que las pruebas esperen el retardo real, no un 300 copiado. */
+export const RETARDO_BUSQUEDA_MS = 300;
 
 /** Lo que se muestra mientras el inbox no ha contestado (o si falla). */
 const PAGINA_VACIA: PaginaInbox = {
@@ -150,6 +151,19 @@ export class ConversacionesStateService {
     this.filtroTab.set(tab);
     this.alcance.set('EQUIPO');
     this.soloGold.set(false);
+    /* La búsqueda TAMBIÉN es un filtro, y el que más recorta. Se quedaba
+       puesta: el servicio es `providedIn: 'root'`, así que lo que la agente
+       tecleó sobrevive a salir de la bandeja. Al volver desde el dashboard
+       —«N pacientes Gold esperan respuesta»— se limpiaban línea, pestaña y
+       alcance pero seguía filtrando por el texto viejo, y la lista no mostraba
+       los chats que ese número había contado. Es justo lo que esta función
+       existe para evitar.
+       Se apagan las dos señales: solo `busqueda` dejaría el filtro del
+       servidor puesto hasta que venciera el retardo, o sea una petición con el
+       texto anterior. Quien quiera buscar algo concreto lo fija DESPUÉS de
+       llamar aquí. */
+    this.busqueda.set('');
+    this.busquedaDebounced.set('');
   }
 
   /**

@@ -10,7 +10,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { ToastService } from '../../../core/toast/toast.service';
 import { ConversacionDetalle, MensajeApi, PaginaInbox } from '../conversacion.model';
 import { ErrorCanalWhatsapp } from '../validar-canal';
-import { ConversacionesStateService, etiquetaDeDia } from './conversaciones-state.service';
+import { ConversacionesStateService, etiquetaDeDia, RETARDO_BUSQUEDA_MS } from './conversaciones-state.service';
 
 const FECHA = '2026-09-09T15:00:00.000Z';
 const MENSAJE: MensajeApi = {
@@ -314,6 +314,34 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     const sinGold = http.expectOne(req => req.url === `${API_URL}/conversaciones`);
     expect(sinGold.request.params.has('categoria')).toBe(false);
     sinGold.flush(structuredClone(PAGINA));
+    await app.whenStable();
+  });
+
+  /* El caso que lo motivó: la agente buscó «maria», se fue a otra pantalla y
+     volvió por el enlace del dashboard. El servicio es `providedIn: 'root'`,
+     así que su texto sobrevivió; si `restablecerFiltros` no lo limpia, la
+     pestaña que el número prometía llega filtrada por «maria» y no muestra los
+     chats que ese número contó. */
+  it('restablecer los filtros suelta también la búsqueda, y de inmediato', async () => {
+    state.busqueda.set('maria');
+    /* El retardo del buscador tiene que haber vencido: lo que se comprueba es
+       que un término YA en vuelo al servidor se suelta, no solo el texto de la
+       caja. */
+    await new Promise(listo => setTimeout(listo, RETARDO_BUSQUEDA_MS + 50));
+    TestBed.tick();
+    const buscando = http.expectOne(req => req.url === `${API_URL}/conversaciones`);
+    expect(buscando.request.params.get('busqueda')).toBe('maria');
+    buscando.flush(structuredClone(PAGINA));
+    await app.whenStable();
+
+    state.restablecerFiltros('SIN_RESPONDER');
+    TestBed.tick();
+
+    const limpio = http.expectOne(req => req.url === `${API_URL}/conversaciones`);
+    expect(limpio.request.params.has('busqueda')).toBe(false);
+    expect(limpio.request.params.get('tab')).toBe('SIN_RESPONDER');
+    expect(state.busqueda()).toBe('');
+    limpio.flush(structuredClone(PAGINA));
     await app.whenStable();
   });
 

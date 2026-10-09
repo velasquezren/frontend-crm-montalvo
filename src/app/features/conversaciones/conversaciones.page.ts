@@ -186,8 +186,10 @@ export class ConversacionesPage implements AfterViewInit {
     effect(() => {
       const q = this.busquedaEnRuta();
       if (!q) return;
-      this.state.busqueda.set(q);
+      /* Primero el reset y DESPUÉS el término: `restablecerFiltros` limpia la
+         búsqueda, así que al revés se borraría el texto que trae el enlace. */
       this.state.restablecerFiltros();
+      this.state.busqueda.set(q);
     });
 
     effect(() => {
