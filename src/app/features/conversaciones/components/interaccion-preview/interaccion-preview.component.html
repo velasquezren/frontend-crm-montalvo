@@ -1,0 +1,123 @@
+@if (habilitada()) {
+  <!-- En el chat se pinta dentro de la burbuja, sin caja propia. Suelta (vista previa
+       del menú) lleva el fondo del chat y su propia burbuja. -->
+  <section class="ia" [class.ia-previa]="!historial()"
+           [attr.aria-label]="historial() ? 'Mensaje interactivo de WhatsApp' : 'Vista previa del mensaje'">
+    @if (!historial()) {
+      <p class="ia-previa-titulo">{{ titulo() ?? 'Demostración local · sin envío' }}</p>
+    }
+    <div [class.ia-previa-burbuja]="!historial()">
+      @if (cargando()) {
+        <p class="ia-nota" role="status">Preparando vista previa…</p>
+      } @else if (interaccion(); as vista) {
+        @if (respuesta(); as r) {
+          <!-- La respuesta de la paciente cita el mensaje al que responde, como WhatsApp. -->
+          <div class="ia-cita">
+            <app-icon [name]="r.icono" [size]="12" class="shrink-0" />
+            <span class="ia-cita-texto">{{ r.texto }}</span>
+            @if (enlazable()) {
+              <app-button variant="ghost" size="xs" ariaLabel="Ir al mensaje al que responde" (clicked)="irAlOriginal()">
+                Ver mensaje
+              </app-button>
+            }
+          </div>
+        }
+
+        @switch (vista.tipo) {
+          @case ('seleccion') {
+            <p class="ia-eleccion">{{ vista.cuerpo }}</p>
+          }
+          @case ('respuesta_flow') {
+            @if (vista.datos?.length) {
+              <dl class="ia-datos">
+                @for (dato of vista.datos; track $index) {
+                  <dt>{{ dato.etiqueta }}</dt>
+                  <dd>{{ dato.valor }}</dd>
+                }
+              </dl>
+            }
+            <p class="ia-nota">{{ vista.cuerpo }}</p>
+          }
+          @case ('error') {
+            <!-- Con estado lo explica el aviso de abajo; sin él es una oferta cuyo
+                 detalle ya caducó (la lápida de la retención). -->
+            @if (!vista.estado) {
+              <p class="ia-nota">{{ vista.cuerpo }}</p>
+            }
+          }
+          @default {
+            <div class="ia-oferta">
+              @if (vista.imagen && !imagenRota()) {
+                <img class="ia-imagen" [src]="vista.imagen" alt="Banner de la promoción" loading="lazy" decoding="async"
+                     (error)="imagenRota.set(true)" />
+              }
+              @if (vista.cabecera) {
+                <p class="ia-cabecera">{{ vista.cabecera }}</p>
+              }
+              <p class="ia-cuerpo" [innerHTML]="vista.cuerpo | whatsappMarkdown"></p>
+              @if (vista.pie) {
+                <p class="ia-pie">{{ vista.pie }}</p>
+              }
+
+              @switch (vista.tipo) {
+                @case ('botones') {
+                  <ul class="ia-acciones" aria-label="Botones del mensaje">
+                    @for (opcion of vista.opciones; track opcion.id) {
+                      <li class="ia-accion">
+                        <app-icon name="corner-up-left" [size]="14" class="shrink-0" />
+                        <span class="ia-accion-texto">{{ opcion.titulo }}</span>
+                      </li>
+                    }
+                  </ul>
+                }
+                @case ('lista') {
+                  <!-- Como en WhatsApp, las opciones viven detrás del botón; aquí se
+                       despliegan sin salir del chat. -->
+                  <details class="ia-lista">
+                    <summary class="ia-accion">
+                      <app-icon name="menu" [size]="14" class="shrink-0" />
+                      <!-- &ngsp;: Angular quita el espacio entre etiquetas y el lector de
+                           pantalla leería «Ver opciones6 opciones». -->
+                      <span class="ia-accion-texto">{{ vista.boton || 'Ver opciones' }}</span>&ngsp;
+                      @let cantidad = vista.opciones?.length ?? 0;
+                      <span class="ia-cuenta">{{ cantidad }} {{ cantidad === 1 ? 'opción' : 'opciones' }}</span>
+                      <app-icon name="chevron-down" [size]="14" class="ia-lista-chevron shrink-0" />
+                    </summary>
+                    <ul class="ia-opciones" aria-label="Opciones de la lista">
+                      @for (opcion of vista.opciones; track opcion.id) {
+                        <li>
+                          <span class="ia-opcion-titulo">{{ opcion.titulo }}</span>
+                          @if (opcion.descripcion) {
+                            <span class="ia-opcion-descripcion">{{ opcion.descripcion }}</span>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  </details>
+                }
+                @case ('flow') {
+                  <div class="ia-acciones">
+                    <span class="ia-accion">
+                      <app-icon name="file-text" [size]="14" class="shrink-0" />
+                      <span class="ia-accion-texto">{{ vista.cta || 'Abrir formulario' }}</span>&ngsp;
+                      <span class="ia-cuenta">formulario</span>
+                    </span>
+                  </div>
+                }
+              }
+            </div>
+          }
+        }
+
+        @if (aviso(); as texto) {
+          <p class="ia-aviso" role="status">
+            <app-icon name="alert-circle" [size]="14" class="shrink-0" />
+            <span>{{ texto }}</span>
+          </p>
+        }
+      } @else {
+        <p class="ia-nota">No hay una interacción seleccionada.</p>
+      }
+    </div>
+  </section>
+}

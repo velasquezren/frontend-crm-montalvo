@@ -310,7 +310,7 @@
                [class.bubble-out]="item.mensaje.direccion === 'SALIENTE'"
                [class.bubble-in]="item.mensaje.direccion === 'ENTRANTE'"
                [class.bubble-match]="state.coincidenciasChat().includes(item.mensaje.id)"
-               [class.bubble-match-active]="state.coincidenciasChat()[state.indiceCoincidencia()] === item.mensaje.id">
+               [class.bubble-match-active]="state.coincidenciasChat()[state.indiceCoincidencia()] === item.mensaje.id || mensajeReferido() === item.mensaje.id">
 
             <!-- Media (foto / video / audio / documento) -->
             @switch (item.mensaje.tipo) {
@@ -399,14 +399,14 @@
                  viejas que se pegaban en el texto ya habían caducado, así que se
                  veían rotas. La media real viaja por `mediaKey` (arriba). -->
             @if (item.mensaje.interaccion; as interaccion) {
-              <app-interaccion-preview [habilitada]="true" [historial]="true" [interaccion]="interaccion" />
+              <app-interaccion-preview [habilitada]="true" [historial]="true" [interaccion]="interaccion" (irAMensaje)="irAMensajeReferido($event)" />
             } @else if (item.mensaje.contenido) {
               <p class="bubble-text" [innerHTML]="item.mensaje.contenido | whatsappMarkdown"></p>
             }
 
             <span class="bubble-time">
               @if (item.mensaje.automatico) {
-                <span class="marca-automatico" title="Enviado por el sistema fuera de horario">
+                <span class="marca-automatico" title="Lo envió el CRM solo (menú, respuesta automática o fuera de horario), no una persona">
                   <app-icon name="clock" [size]="10" />
                   automático
                 </span>

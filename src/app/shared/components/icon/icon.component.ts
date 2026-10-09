@@ -39,6 +39,7 @@ export type IconName =
   | 'check-check'
   | 'shield'
   | 'menu'
+  | 'corner-up-left'
   | 'mail'
   | 'briefcase'
   | 'edit'
@@ -270,6 +271,10 @@ export type IconName =
           <line x1="4" x2="20" y1="12" y2="12" />
           <line x1="4" x2="20" y1="6" y2="6" />
           <line x1="4" x2="20" y1="18" y2="18" />
+        }
+        @case ('corner-up-left') {
+          <polyline points="9 14 4 9 9 4" />
+          <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
         }
         @case ('mail') {
           <rect x="2" y="4" width="20" height="16" rx="2" />

@@ -1,0 +1,243 @@
+/* Un mensaje interactivo como lo ve la paciente en WhatsApp: texto, pie y, debajo,
+   los botones separados por una línea fina de borde a borde de la burbuja.
+
+   `--ia-relleno` es el padding horizontal de la burbuja que lo contiene: en el chat,
+   el de `.bubble` (conversacion-thread.component.css, 12px); en la vista previa, el
+   de `.ia-previa-burbuja`. Con él los botones llegan al borde sin desbordar. */
+:host {
+  display: block;
+  --ia-relleno: 12px;
+}
+
+.ia {
+  min-width: 0;
+}
+
+/* ── Vista previa suelta (editor del menú): el fondo del chat y una burbuja ── */
+.ia-previa {
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--color-bg-light);
+}
+
+.ia-previa-titulo {
+  margin: 0 0 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.ia-previa-burbuja {
+  max-width: 320px;
+  padding: 8px var(--ia-relleno);
+  border-radius: 12px;
+  background: var(--color-background);
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  box-shadow: var(--shadow-subtle);
+  font-size: 13.5px;
+  line-height: 1.48;
+  color: var(--color-text-dark);
+}
+
+/* ── La oferta: lo que mandamos ───────────────────────────────────────────── */
+.ia-oferta {
+  /* Con un texto corto («Hola») la burbuja no se encoge hasta dejar los botones en
+     dos líneas. 216px caben en la burbuja más angosta: 75% de 358px menos su padding. */
+  min-width: 13.5rem;
+}
+
+.ia-imagen {
+  display: block;
+  width: 100%;
+  /* El banner de las promociones es cuadrado: la caja se reserva antes de que llegue
+     la imagen y el hilo no salta. */
+  aspect-ratio: 1;
+  max-height: 220px;
+  object-fit: cover;
+  margin-bottom: 6px;
+  border-radius: 12px;
+  background: var(--color-bg-workspace);
+}
+
+.ia-cabecera {
+  margin: 0 0 2px;
+  font-weight: 700;
+}
+
+.ia-cuerpo {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-weight: 450;
+  letter-spacing: -0.01em;
+}
+
+.ia-pie {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+}
+
+.ia-acciones,
+.ia-lista {
+  margin: 8px calc(-1 * var(--ia-relleno)) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ia-accion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px var(--ia-relleno);
+  border-top: 1px solid color-mix(in srgb, var(--color-primary) 14%, transparent);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.ia-accion-texto {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.ia-cuenta {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+/* La lista: el botón de WhatsApp despliega sus opciones en el mismo chat. */
+.ia-lista > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.ia-lista > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ia-lista > summary:hover {
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+}
+
+.ia-lista > summary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.ia-lista-chevron {
+  transition: transform 0.15s ease;
+}
+
+.ia-lista[open] .ia-lista-chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ia-lista-chevron {
+    transition: none;
+  }
+}
+
+.ia-opciones {
+  margin: 0;
+  padding: 2px var(--ia-relleno) 4px;
+  list-style: none;
+}
+
+.ia-opciones > li {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  overflow-wrap: anywhere;
+}
+
+.ia-opciones > li:first-child {
+  border-top: 0;
+}
+
+.ia-opcion-titulo {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
+.ia-opcion-descripcion {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* ── La respuesta: lo que tocó o llenó la paciente ────────────────────────── */
+.ia-cita {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  margin-bottom: 4px;
+  padding: 2px 4px 2px 8px;
+  border-left: 3px solid var(--color-secondary);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-secondary) 10%, transparent);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.ia-cita-texto {
+  flex: 1;
+  min-width: 0;
+}
+
+.ia-eleccion {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.ia-datos {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 2px 10px;
+  margin: 2px 0 4px;
+  font-size: 12.5px;
+}
+
+.ia-datos dt {
+  color: var(--color-text-muted);
+}
+
+.ia-datos dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  overflow-wrap: anywhere;
+}
+
+.ia-nota {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* Algo que la agente tiene que revisar. Sin ámbar ni rojo: el estado crítico del
+   sistema es negro sobre su fondo (crm-design-system, «Estados semánticos»). */
+.ia-aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 6px 0 0;
+  padding: 6px 8px;
+  border-radius: 12px;
+  background: var(--color-critical-bg);
+  font-size: 12px;
+  color: var(--color-critical);
+}

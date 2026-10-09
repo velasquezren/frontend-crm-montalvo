@@ -177,5 +177,14 @@ export function vistaPrevia(borrador: MenuAtencion): InteraccionVista {
   const opciones = menu.opciones.map((o, i) => ({ id: `${o.tipo}-${i}`, titulo: o.titulo || TIPOS[o.tipo].nombre, ...(o.descripcion ? { descripcion: o.descripcion } : {}) }));
   const botones = menu.opciones.length <= 3
     && menu.opciones.every(o => !o.descripcion && o.titulo.length <= LIMITES.tituloBoton && !/[*_~`]|\p{Extended_Pictographic}/u.test(o.titulo));
-  return { tipo: botones ? 'botones' : 'lista', cuerpo: menu.saludo || 'Escribe el saludo…', opciones };
+  return {
+    tipo: botones ? 'botones' : 'lista',
+    cuerpo: menu.saludo || 'Escribe el saludo…',
+    pie: PIE_DEL_MENU,
+    ...(botones ? {} : { boton: 'Ver opciones' }),
+    opciones,
+  };
 }
+
+/** El pie que el backend pone a todo menú (`PIE_DEL_MENU` en menu-atencion.ts). */
+export const PIE_DEL_MENU = 'Escribe «menú» para volver a ver estas opciones';

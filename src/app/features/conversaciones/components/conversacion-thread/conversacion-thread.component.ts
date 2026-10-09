@@ -308,16 +308,36 @@ export class ConversacionThreadComponent {
     this.terminoSaltado = termino;
 
     const id = this.state.coincidenciasChat()[this.state.indiceCoincidencia()];
-    if (!id) return;
+    if (id) await this.saltarAMensaje(id, 'Ese mensaje es muy antiguo para mostrarlo aquí. Afina la búsqueda.');
+  }
+
+  /** El mensaje al que se acaba de saltar desde una respuesta: se marca un momento para ubicarlo. */
+  protected readonly mensajeReferido = signal<string | null>(null);
+
+  /** «Ver mensaje» en una respuesta de la paciente: lleva al menú o al mensaje que tocó. */
+  protected async irAMensajeReferido(id: string): Promise<void> {
+    if (!(await this.saltarAMensaje(id, 'Ese mensaje es muy antiguo para mostrarlo aquí.'))) return;
+    this.mensajeReferido.set(id);
+    setTimeout(() => {
+      if (this.mensajeReferido() === id) this.mensajeReferido.set(null);
+    }, 1600);
+  }
+
+  /**
+   * Centra un mensaje del hilo, cargando historial hasta encontrarlo. Lo comparten
+   * la búsqueda y las respuestas que citan su mensaje.
+   */
+  private async saltarAMensaje(id: string, siNoEsta: string): Promise<boolean> {
     /* Que cargar historial no dispare el «bajar al fondo» del hilo. */
     this.pegadoAlFondo.set(false);
     if (!(await this.state.asegurarMensajeCargado(id))) {
-      this.toast.info('Ese mensaje es muy antiguo para mostrarlo aquí. Afina la búsqueda.');
-      return;
+      this.toast.info(siNoEsta);
+      return false;
     }
     requestAnimationFrame(() =>
       document.querySelector(`[data-mensaje-id="${id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
     );
+    return true;
   }
 
   /* ── Lightbox & Audio ─────────────────────────────────────────── */

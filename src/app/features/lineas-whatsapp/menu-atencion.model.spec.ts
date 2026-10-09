@@ -62,4 +62,12 @@ describe('modelo del menú de atención', () => {
     const cuatro = { ...base(), opciones: [...base().opciones, { tipo: 'UBICACION' as const, titulo: 'Ubicación' }, { tipo: 'RESPUESTA' as const, titulo: 'Horarios' }] };
     expect(vistaPrevia(cuatro).tipo).toBe('lista');
   });
+
+  it('la vista previa lleva el pie del menú, y el botón de la lista solo si es lista', () => {
+    expect(vistaPrevia(base())).toMatchObject({ pie: 'Escribe «menú» para volver a ver estas opciones' });
+    expect(vistaPrevia(base()).boton).toBeUndefined();
+    const conDescripcion = base();
+    conDescripcion.opciones[1].descripcion = 'Te escribimos para acordar';
+    expect(vistaPrevia(conDescripcion).boton).toBe('Ver opciones');
+  });
 });
