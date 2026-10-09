@@ -104,9 +104,6 @@ export class ActividadesService {
   }
 
   /** Lista de agentes activos para filtros de ADMIN. */
-  agentesRequest(): ResourceRequest {
-    return this.api.request('/conversaciones/meta/agentes');
-  }
 
   /** Detalle puntual — lo usa la campana de notificaciones al recibir un aviso por socket. */
   obtener(id: string): Promise<Actividad> {

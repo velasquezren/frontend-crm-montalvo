@@ -38,7 +38,7 @@ import { Cliente, PaginaClientes, paginaClientesVacia } from './cliente.model';
 import { esNombreProvisional } from '../../shared/models/nombre-cliente';
 import { ClientesService, OrdenCliente } from './clientes.service';
 import { ConversacionesService } from '../conversaciones/conversaciones.service';
-import { AgenteResumen } from '../conversaciones/conversacion.model';
+import { AgenteResumen } from '../../shared/models/agente';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { DrawerComponent } from '../../shared/components/drawer/drawer.component';
 import { OverlayRef } from '@angular/cdk/overlay';

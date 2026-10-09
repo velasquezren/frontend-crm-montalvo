@@ -75,9 +75,6 @@ export class VentasService {
   }
 
   /** Lista de agentes para filtro (ADMIN / SUPER_ADMIN). */
-  agentesRequest(): ResourceRequest {
-    return this.api.request('/conversaciones/meta/agentes');
-  }
 
   /**
    * Servicios y médicos que la clínica ya facturó, para autocompletar el modal.

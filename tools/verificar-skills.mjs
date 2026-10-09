@@ -1067,6 +1067,61 @@ function verificarEspejosDeRol() {
   }
 }
 
+// ── Un endpoint tiene UN dueño ───────────────────────────────────────────────
+// La regla del skill es «una página nunca construye URLs: eso vive en el
+// servicio del dominio». Lo que no decía es qué pasa cuando DOS servicios
+// declaran la misma URL, y ahí el daño es peor que una copia: cada dueño
+// declara también el TIPO de la respuesta, y los tipos divergen sin que nada
+// avise.
+//
+// Caso real (2026-10-09): `/conversaciones/meta/agentes` estaba en tres
+// servicios y tenía CUATRO contratos en el frontend —`AgenteResumen`,
+// `AgenteResumenVenta`, un tipo anónimo de dos campos y el del inbox—. Uno
+// mentía: declaraba un `email` que el `select` del backend nunca manda. Nadie
+// lo leía, así que no se veía; un campo fantasma no da error, da `undefined`.
+//
+// Congelado: `/planilla-comisiones/periodos`, en tres servicios. Finanzas y
+// Comisiones están CERRADAS por decisión del propietario (vienen de FileMaker y
+// le funcionan a administración), así que esa deuda no se toca. Solo puede bajar.
+const ENDPOINT_SIN_DUENO_UNICO_CONGELADO = {
+  '/planilla-comisiones/periodos': 3,
+};
+
+function verificarDuenoDeEndpoint() {
+  const porRuta = new Map();
+  for (const archivo of ARCHIVOS) {
+    if (!archivo.endsWith('.service.ts') || archivo.includes('.spec.')) continue;
+    if (!archivo.includes(`${sep}src${sep}app${sep}`)) continue;
+    const texto = readFileSync(archivo, 'utf8');
+    const nombre = archivo.split(sep).pop();
+    for (const m of texto.matchAll(/api\.(?:request|get|post|patch|put|delete)<?[^(]*\(\s*[`']([^`'$]+)[`']/g)) {
+      if (!m[1].startsWith('/')) continue;
+      if (!porRuta.has(m[1])) porRuta.set(m[1], new Set());
+      porRuta.get(m[1]).add(nombre);
+    }
+  }
+
+  for (const [ruta, duenos] of porRuta) {
+    const tolerado = ENDPOINT_SIN_DUENO_UNICO_CONGELADO[ruta] ?? 1;
+    if (duenos.size <= tolerado) {
+      if (ruta in ENDPOINT_SIN_DUENO_UNICO_CONGELADO && duenos.size < tolerado) {
+        señala(
+          'crm-feature-page',
+          `\`${ruta}\` bajó a ${duenos.size} servicio(s) (toleraba ${tolerado}). ` +
+            'Baja la cifra en `ENDPOINT_SIN_DUENO_UNICO_CONGELADO`.',
+        );
+      }
+      continue;
+    }
+    señala(
+      'crm-feature-page',
+      `\`${ruta}\` lo declaran ${duenos.size} servicios (${[...duenos].sort().join(', ')}). ` +
+        'Un endpoint tiene un dueño: el resto lo pide inyectando ese servicio. ' +
+        'Dos dueños son dos contratos, y los contratos divergen en silencio.',
+    );
+  }
+}
+
 verificarCodigo();
 verificarEfectosConRecurso();
 verificarLecturaAntesDelError();
@@ -1079,6 +1134,7 @@ verificarRendimiento();
 verificarServiceWorkerUnico();
 verificarZonaClinica();
 verificarEspejosDeRol();
+verificarDuenoDeEndpoint();
 
 if (problemas.length === 0) {
   console.log('✓ Los skills coinciden con el código.');

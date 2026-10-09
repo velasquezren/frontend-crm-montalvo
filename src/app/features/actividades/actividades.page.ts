@@ -67,6 +67,8 @@ import { ActividadesService, FiltroActividades } from './actividades.service';
 import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { FechaClinicaPipe } from '../../core/fechas/fecha-clinica.pipe';
 import { valorOVacio } from '../../core/api/valor-o-vacio';
+import { AgenteResumen } from '../../shared/models/agente';
+import { ConversacionesService } from '../conversaciones/conversaciones.service';
 
 type FiltroRapido = 'PENDIENTES' | 'VENCIDAS' | 'HOY' | 'PROXIMA_SEMANA' | 'COMPLETADAS' | 'TODAS';
 type Vista = 'LISTA' | 'CALENDARIO';
@@ -108,6 +110,8 @@ const TIPOS: readonly TipoActividad[] = ['LLAMADA', 'REUNION', 'TAREA', 'RECORDA
 })
 export class ActividadesPage {
   private readonly actividadesService = inject(ActividadesService);
+  /* El listado de agentes lo sirve el módulo de conversaciones, que es su dueño. */
+  private readonly conversacionesService = inject(ConversacionesService);
   private readonly authService = inject(AuthService);
   private readonly toast = inject(ToastService);
   private readonly dialogService = inject(DialogService);
@@ -226,8 +230,8 @@ export class ActividadesPage {
   }
 
   /** Agentes comerciales activos para selector de filtrado (solo ADMIN). */
-  protected readonly agentes = httpResource<Array<{ id: string; nombre: string }>>(
-    () => (this.esAdmin() ? this.actividadesService.agentesRequest() : undefined),
+  protected readonly agentes = httpResource<readonly AgenteResumen[]>(
+    () => (this.esAdmin() ? this.conversacionesService.agentesRequest() : undefined),
     { defaultValue: [] },
   );
   /** `agentes` sin lanzar si la carga falló: lo que se pinta fuera de su rama de contenido (ver `valorOVacio`). */

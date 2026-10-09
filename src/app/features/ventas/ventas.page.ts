@@ -51,7 +51,6 @@ import {
 import { MonedaService } from '../../core/moneda/moneda.service';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import {
-  AgenteResumenVenta,
   MetodoPagoVenta,
   PresetPeriodo,
   RESUMEN_VACIO,
@@ -63,6 +62,8 @@ import { FormularioVentaComponent, METODOS_PAGO, PacienteVenta } from './formula
 import { esNombreProvisional } from '../../shared/models/nombre-cliente';
 import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { valorOVacio } from '../../core/api/valor-o-vacio';
+import { AgenteResumen } from '../../shared/models/agente';
+import { ConversacionesService } from '../conversaciones/conversaciones.service';
 
 type FiltroVenta = EstadoVenta | 'TODAS';
 
@@ -182,6 +183,9 @@ export class VentasPage {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly ventasService = inject(VentasService);
+  /* El listado de agentes lo sirve el módulo de conversaciones, que es su
+     dueño; antes esta clase reconstruía su URL por su cuenta. */
+  private readonly conversacionesService = inject(ConversacionesService);
   private readonly leadsService = inject(LeadsService);
   private readonly authService = inject(AuthService);
   private readonly toastService = inject(ToastService);
@@ -269,8 +273,8 @@ export class VentasPage {
   protected readonly ventasVista = valorOVacio(this.ventas, paginaVacia<Venta>());
 
   /* Lista de agentes para el dropdown de filtro (disponible para ADMIN+) */
-  protected readonly agentes = httpResource<readonly AgenteResumenVenta[]>(
-    () => (this.esAdmin() ? this.ventasService.agentesRequest() : undefined),
+  protected readonly agentes = httpResource<readonly AgenteResumen[]>(
+    () => (this.esAdmin() ? this.conversacionesService.agentesRequest() : undefined),
     { defaultValue: [] },
   );
   /** `agentes` sin lanzar si la carga falló: lo que se pinta fuera de su rama de contenido (ver `valorOVacio`). */

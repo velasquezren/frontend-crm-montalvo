@@ -1,6 +1,5 @@
 import { LineaWhatsapp } from '../lineas-whatsapp/linea-whatsapp.model';
 import type { InteraccionVista } from './components/interaccion-preview/interaccion-preview.component';
-import { Rol } from '../../core/api/db-enums';
 import { DatosExtra } from '../../core/api/datos-extra';
 import { ZONA_CLINICA } from '../../core/fechas/zona-clinica';
 import type { AtencionFila, ContextoAtencion } from './atencion-humana';
@@ -11,6 +10,11 @@ import { EstadoMensaje, TipoMensaje } from '../../core/api/db-enums';
 export type { TipoMensaje };
 
 import { CategoriaCliente } from '../../shared/models/cliente-categoria.model';
+
+/* El contrato del listado de agentes vive en `shared/models/`: lo piden cuatro
+   pantallas y ninguna es su dueña. Se reexporta para no obligar a cada
+   consumidor del inbox a cambiar su import. */
+export type { AgenteResumen } from '../../shared/models/agente';
 
 /**
  * Ticks estilo WhatsApp — solo tiene sentido en mensajes SALIENTE.
@@ -167,12 +171,7 @@ export interface EstadoConversacion {
 }
 
 /** Agente para dropdown de asignación (GET /conversaciones/meta/agentes). */
-export interface AgenteResumen {
-  readonly id: string;
-  readonly nombre: string;
-  readonly rol: Rol;
-  readonly lineasWhatsapp: readonly { lineaId: string }[];
-}
+
 
 /** Plantilla de WhatsApp aprobada (GET /conversaciones/meta/plantillas). */
 export interface PlantillaResumen {
