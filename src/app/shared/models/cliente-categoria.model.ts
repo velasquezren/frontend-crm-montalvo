@@ -1,7 +1,7 @@
 import { BadgeVariant } from '../components/badge/badge.component';
 import { IconName } from '../components/icon/icon.component';
 import { CategoriaCliente } from '../../core/api/db-enums';
-import { ZONA_CLINICA } from '../../features/actividades/zona-clinica';
+import { ZONA_CLINICA } from '../../core/fechas/zona-clinica';
 
 export type { CategoriaCliente };
 

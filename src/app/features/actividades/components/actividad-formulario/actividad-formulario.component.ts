@@ -30,7 +30,7 @@ import {
   TipoActividad,
 } from '../../actividad.model';
 import { ActividadesService } from '../../actividades.service';
-import { horaClinica, mismoDiaClinica } from '../../zona-clinica';
+import { horaClinica, mismoDiaClinica } from '../../../../core/fechas/zona-clinica';
 import {
   ClienteMinimo,
   SeleccionPaciente,

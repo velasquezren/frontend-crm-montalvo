@@ -24,7 +24,7 @@ import { Temporal } from 'temporal-polyfill';
 
 import { Actividad, esActividadVencida } from '../../actividad.model';
 import { RangoCalendario, rangoCalendarioDe } from '../../rango-calendario';
-import { ZONA_CLINICA } from '../../zona-clinica';
+import { ZONA_CLINICA } from '../../../../core/fechas/zona-clinica';
 
 /** La cuadrícula, los filtros y los indicadores comparten el día de la clínica. */
 const ZONA = ZONA_CLINICA;

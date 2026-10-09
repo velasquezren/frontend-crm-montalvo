@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, Component, input, output, inject, computed } f
 import { AuthService } from '../../../../core/auth/auth.service';
 import { puedeVerAgendaClinica } from '../../../../core/auth/roles';
 import { estadoDeReserva } from '../../../reservas/reserva.model';
-import { fechaCivilClinica } from '../../zona-clinica';
+import { fechaCivilClinica } from '../../../../core/fechas/zona-clinica';
 
 import { generarIniciales } from '../../../../core/auth/user.model';
 import { ORIGEN_LABEL } from '../../../leads/lead.model';

@@ -3,7 +3,7 @@ import { Temporal } from 'temporal-polyfill';
 
 import { RespuestaPaginada } from '../../core/api/pagination.model';
 import { BadgeVariant } from '../../shared/components/badge/badge.component';
-import { ZONA_CLINICA } from '../actividades/zona-clinica';
+import { ZONA_CLINICA } from '../../core/fechas/zona-clinica';
 
 /*
  * Las reservas de la agenda de la clínica (ScriptCase), tal como las devuelve

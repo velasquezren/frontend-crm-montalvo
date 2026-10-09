@@ -3,7 +3,7 @@ import { Temporal } from 'temporal-polyfill';
 import { BadgeVariant } from '../../shared/components/badge/badge.component';
 import { CategoriaCliente } from '../../shared/models/cliente-categoria.model';
 import { esNombreProvisional } from '../../shared/models/nombre-cliente';
-import { ZONA_CLINICA } from '../actividades/zona-clinica';
+import { ZONA_CLINICA } from '../../core/fechas/zona-clinica';
 
 /**
  * Campañas: una plantilla de Marketing a una audiencia congelada. Espejo de

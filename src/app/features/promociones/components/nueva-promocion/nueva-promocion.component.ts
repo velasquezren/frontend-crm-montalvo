@@ -6,7 +6,7 @@ import { ButtonComponent } from '../../../../shared/components/button/button.com
 import { DrawerComponent } from '../../../../shared/components/drawer/drawer.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { InputComponent } from '../../../../shared/components/input/input.component';
-import { fechaCivilClinica } from '../../../actividades/zona-clinica';
+import { fechaCivilClinica } from '../../../../core/fechas/zona-clinica';
 import { PromocionDetalle } from '../../promocion.model';
 import { PromocionesService } from '../../promociones.service';
 

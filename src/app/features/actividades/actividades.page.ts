@@ -27,7 +27,7 @@ import {
   ResultadoFormulario,
 } from './components/actividad-formulario/actividad-formulario.component';
 import { mismoRango, RangoCalendario } from './rango-calendario';
-import { inicioDelDiaClinica, sumarDiasClinica } from './zona-clinica';
+import { inicioDelDiaClinica, sumarDiasClinica } from '../../core/fechas/zona-clinica';
 import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales } from '../../core/auth/user.model';
 import { mensajeDeError } from '../../core/api/http-error';

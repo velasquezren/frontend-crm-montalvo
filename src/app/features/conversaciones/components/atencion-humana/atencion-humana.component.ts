@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSign
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
-import { ZONA_CLINICA } from '../../../actividades/zona-clinica';
+import { ZONA_CLINICA } from '../../../../core/fechas/zona-clinica';
 import {
   ACCION_ATENCION,
   ContextoAtencion,

@@ -12,7 +12,7 @@ import { InputComponent } from '../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { SelectComponent } from '../../shared/components/select/select.component';
 import { SwitchComponent } from '../../shared/components/switch/switch.component';
-import { ZONA_CLINICA } from '../actividades/zona-clinica';
+import { ZONA_CLINICA } from '../../core/fechas/zona-clinica';
 import { InteraccionPreviewComponent } from '../conversaciones/components/interaccion-preview/interaccion-preview.component';
 import { LineasWhatsappService } from './lineas-whatsapp.service';
 import {

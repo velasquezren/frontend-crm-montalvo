@@ -26,7 +26,7 @@ import {
   TIPO_ACTIVIDAD_LABEL,
 } from '../../../features/actividades/actividad.model';
 import { ActividadesService } from '../../../features/actividades/actividades.service';
-import { inicioDelDiaClinica, sumarDiasClinica } from '../../../features/actividades/zona-clinica';
+import { inicioDelDiaClinica, sumarDiasClinica } from '../../../core/fechas/zona-clinica';
 import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
 import { NombreClientePipe } from '../../pipes/nombre-cliente.pipe';

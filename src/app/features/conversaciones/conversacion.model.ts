@@ -2,7 +2,7 @@ import { LineaWhatsapp } from '../lineas-whatsapp/linea-whatsapp.model';
 import type { InteraccionVista } from './components/interaccion-preview/interaccion-preview.component';
 import { Rol } from '../../core/api/db-enums';
 import { DatosExtra } from '../../core/api/datos-extra';
-import { ZONA_CLINICA } from '../actividades/zona-clinica';
+import { ZONA_CLINICA } from '../../core/fechas/zona-clinica';
 import type { AtencionFila, ContextoAtencion } from './atencion-humana';
 import type { PagoDelChat, PromocionDelChat } from './pago-promocion';
 

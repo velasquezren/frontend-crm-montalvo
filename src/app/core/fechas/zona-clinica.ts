@@ -14,6 +14,13 @@ import { Temporal } from 'temporal-polyfill';
  * dos fijan los MISMOS instantes exactos. Si algún día la clínica se muda, se
  * cambian los dos o las pruebas del otro lado caen.
  *
+ * Vive en `core/fechas/` para que el espejo sea literal (`common/fechas/` allá).
+ * Estuvo en `features/actividades/` hasta el 2026-10-08, y eso lo convertía en
+ * una dependencia de *actividades*: cinco features ajenas —conversaciones,
+ * reservas, campañas, promociones, líneas— importaban de ahí la zona de la
+ * clínica, y `shared/` acabó dependiendo de una feature para saber dónde
+ * empieza el día. La zona horaria no es de ningún módulo; es del CRM.
+ *
  * Antes esto se calculaba con `new Date(anio, mes, dia)`, o sea la medianoche
  * del navegador. Con la agente en Bolivia y el servidor en Estados Unidos, el
  * KPI y su propio filtro partían el día en momentos distintos.
