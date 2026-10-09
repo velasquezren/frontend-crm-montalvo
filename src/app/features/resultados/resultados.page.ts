@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, linkedSignal, signal, TemplateRef, untracked, viewChild, ViewContainerRef } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { OverlayRef } from '@angular/cdk/overlay';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -55,7 +54,6 @@ import { FechaCivilPipe } from '../../core/fechas/fecha-civil.pipe';
   selector: 'app-resultados-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    DatePipe,
     BadgeComponent,
     ButtonComponent,
     EmptyStateComponent,

@@ -27,6 +27,7 @@
               }
             ],
             "styles": [
+              "src/fuentes-poppins.css",
               "src/styles.css"
             ]
           },

@@ -279,6 +279,47 @@ Córrelo tres veces y quédate con la mediana. Si sospechas de una consulta conc
 Si estás en el punto 5 sin haber comprobado los cuatro anteriores, estás
 optimizando lo que es fácil de tocar, no lo que es lento.
 
+## La tipografía es propia, y eso también arregla el build (2026-10-09)
+
+Poppins se sirve desde `public/fuentes/` con `src/fuentes-poppins.css`. **No se
+vuelve a Google Fonts**, y hay dos números detrás.
+
+**1. El inlineado solo resolvía la mitad.** `optimization.fonts.inline` mete el
+CSS de Google en el `index.html`, lo que ahorra un viaje… al CSS. Los `.woff2`
+seguían bajando de `fonts.gstatic.com`: **16 referencias a ese host** en el
+HTML desplegado, o sea un handshake TLS a un dominio ajeno —los ~385 ms de la
+tabla de arriba— antes de que se vea una letra. Autoalojada, cero conexiones a
+terceros.
+
+**2. Rompía la única compuerta del repo.** El inliner tiene que alcanzar
+fonts.googleapis.com *al compilar*. Desde Bolivia esa petición tarda ~3 s
+(medido con `curl`: HTTP 200 en 2,9 s) y agota su espera, así que `npm run
+build` dejó de completarse — de forma determinista, dos intentos seguidos.
+Un build que depende de la latencia a un tercero no es una compuerta.
+Comprobado después: **el build completa sin salida a internet**.
+
+| | Antes | Después |
+|---|---|---|
+| `index.html` | 19,9 kB | **16,6 kB** |
+| `@font-face` en el HTML | 15 (5 **devanagari**) | 10 |
+| Referencias a `fonts.gstatic.com` | 16 | **0** |
+| Build sin internet | falla | **completa** |
+| Initial total | 410,91 / 109,15 kB | 414,14 / 109,41 kB |
+
+El Initial total sube 3,2 kB brutos (0,26 kB transferidos): son los 10
+`@font-face` locales, que antes vivían en el HTML. Los 84 kB de `.woff2` son
+estáticos versionados y los cachea el service worker: el grupo `assets` de
+`ngsw-config.json` ya cubre `woff2`, y los diez salen en el manifiesto generado.
+
+Se cayeron los cinco `@font-face` de **devanagari** que Google manda siempre:
+aquí se escribe en español.
+
+> Y una regla que salió de esto: **los comentarios de `index.html` se
+> despliegan**, los de un `.css` o un `.ts` no (el minificador los quita). Ese
+> archivo tenía 1,8 kB de prosa viajando en cada carga; la explicación larga vive
+> ahora en `fuentes-poppins.css` y en el HTML queda un puntero. Si hace falta
+> documentar algo de `index.html`, se documenta donde no pese.
+
 ## Decisiones ya tomadas: no las deshagas
 
 Las tres están medidas y documentadas en el código. Si vas a cambiarlas, trae un
