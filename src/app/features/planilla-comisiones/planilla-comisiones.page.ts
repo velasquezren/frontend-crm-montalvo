@@ -73,6 +73,7 @@ import {
   VentaImportada,
 } from './planilla.model';
 import { DesgloseComisionesComponent } from './components/desglose-comisiones.component';
+import { FechaClinicaPipe } from '../../core/fechas/fecha-clinica.pipe';
 
 type Pestana = 'IMPORTAR' | 'CLASIFICACION' | 'PLANES' | 'REPORTES' | 'CONFIGURACION';
 
@@ -129,8 +130,7 @@ interface DocumentoDescargable {
     PaginatorComponent,
     SelectComponent,
     SelectorPeriodoEmptyComponent,
-    TableComponent,
-  ],
+    TableComponent, FechaClinicaPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './planilla-comisiones.page.html',
   styleUrl: './planilla-comisiones.page.css',

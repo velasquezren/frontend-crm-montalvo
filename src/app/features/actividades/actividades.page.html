@@ -263,7 +263,7 @@
                        nueva: se cuelga de la línea que ya lleva fecha y
                        duración, con su mismo peso. -->
                   <span class="text-[11px] text-text-muted">
-                    {{ actividad.fechaProgramada | date: 'd MMM, HH:mm' }} · {{ formatearDuracion(actividad.duracionMinutos) }}@if (etiquetaRepeticion(actividad); as repeticion) { · {{ repeticion }}}
+                    {{ actividad.fechaProgramada | fechaClinica: 'd MMM, HH:mm' }} · {{ formatearDuracion(actividad.duracionMinutos) }}@if (etiquetaRepeticion(actividad); as repeticion) { · {{ repeticion }}}
                   </span>
                 </div>
               </td>
@@ -410,7 +410,7 @@
           <!-- Pie Móvil: Horario exacto + Botones de Gestión Rápida -->
           <div class="flex items-center justify-between pt-2 border-t border-border/50 text-xs" (click)="$event.stopPropagation()">
             <span class="text-[11px] text-text-muted">
-              {{ actividad.fechaProgramada | date: 'd MMM, HH:mm' }} · {{ formatearDuracion(actividad.duracionMinutos) }}@if (etiquetaRepeticion(actividad); as repeticion) { · {{ repeticion }}}
+              {{ actividad.fechaProgramada | fechaClinica: 'd MMM, HH:mm' }} · {{ formatearDuracion(actividad.duracionMinutos) }}@if (etiquetaRepeticion(actividad); as repeticion) { · {{ repeticion }}}
             </span>
 
             <div class="flex items-center gap-1">

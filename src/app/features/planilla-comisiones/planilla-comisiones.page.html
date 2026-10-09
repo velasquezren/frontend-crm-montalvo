@@ -655,7 +655,7 @@
             @for (v of ventas.value().datos; track v.id) {
               <tr [class.fila-excluida]="!v.comisionable">
                 <td class="text-left text-xs whitespace-nowrap text-text-muted">
-                  {{ v.fecha ? (v.fecha | date: 'dd/MM/yyyy') : '—' }}
+                  {{ v.fecha ? (v.fecha | fechaClinica: 'dd/MM/yyyy') : '—' }}
                 </td>
                 <td class="text-left">
                   <span class="font-semibold text-sm text-text-dark block">{{ v.detalle }}</span>

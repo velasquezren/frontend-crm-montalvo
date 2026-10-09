@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
 import { DrawerComponent } from '../../../../shared/components/drawer/drawer.component';
@@ -10,19 +9,18 @@ import { TimelineComponent } from '../../../../shared/components/timeline/timeli
 import { MonedaPipe } from '../../../../shared/pipes/moneda.pipe';
 import { KpiItem } from '../servicios-kpis/servicios-kpis.component';
 import { HistorialPaciente } from '../../servicios.model';
+import { FechaClinicaPipe } from '../../../../core/fechas/fecha-clinica.pipe';
 
 @Component({
   selector: 'app-servicios-historial-drawer',
   imports: [
-    DatePipe,
     MonedaPipe,
     DrawerComponent,
     EmptyStateComponent,
     IconComponent,
     KpiCardComponent,
     LoadingSkeletonComponent,
-    TimelineComponent,
-  ],
+    TimelineComponent, FechaClinicaPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './servicios-historial-drawer.component.html',
   styleUrl: './servicios-historial-drawer.component.css',

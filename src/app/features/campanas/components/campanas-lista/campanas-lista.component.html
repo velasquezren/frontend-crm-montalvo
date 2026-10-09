@@ -33,7 +33,7 @@
             <div class="crm-meta mt-0.5">
               <span>{{ c.plantilla }}</span>
               <span>{{ c.linea.nombre }}</span>
-              <span>{{ c.createdAt | date: 'd MMM y' : '-0400' }}</span>
+              <span>{{ c.createdAt | fechaClinica }}</span>
             </div>
           </td>
           <td><app-badge [variant]="estadoCampana[c.estado].variante">{{ estadoCampana[c.estado].etiqueta }}</app-badge></td>
@@ -89,7 +89,7 @@
             <span>{{ c.plantilla }}</span>
             <span>{{ c.linea.nombre }}</span>
             <span>Lanzada por {{ c.creadaPor.nombre }}</span>
-            <span>{{ c.estado === 'PROGRAMADA' ? 'Empieza' : 'Desde' }} el {{ c.programadaPara | date: "d MMM y, HH:mm" : '-0400' }} (La Paz)</span>
+            <span>{{ c.estado === 'PROGRAMADA' ? 'Empieza' : 'Desde' }} el {{ c.programadaPara | fechaClinica: 'd MMM y, HH:mm' }} (La Paz)</span>
           </div>
           @if (c.estado === 'ENVIANDO' || c.estado === 'PROGRAMADA') {
             <div class="flex items-center gap-2" role="progressbar" [attr.aria-valuenow]="avance(m)" aria-valuemin="0" aria-valuemax="100" aria-label="Avance de la campaña">

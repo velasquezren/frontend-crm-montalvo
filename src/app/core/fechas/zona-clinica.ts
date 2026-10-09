@@ -92,3 +92,32 @@ export function horaClinica(instante: Date): string {
 export function fechaCivilClinica(instante: Date): string {
   return Temporal.Instant.fromEpochMilliseconds(instante.getTime()).toZonedDateTimeISO(ZONA_CLINICA).toPlainDate().toString();
 }
+
+/**
+ * El desfase de la clínica en ese instante, como «-0400»: el formato que pide
+ * el parámetro `timezone` de `DatePipe` de Angular.
+ *
+ * Existe porque **`DatePipe` no acepta nombres IANA**, solo desfases. Por eso
+ * seis plantillas acabaron con `'-0400'` escrito a mano: no había manera de
+ * pasarles `ZONA_CLINICA`. Esto la hay, y sin segunda fuente de verdad — el
+ * desfase se deriva de la zona, no se teclea.
+ *
+ * Se calcula POR INSTANTE y no como constante a propósito. Bolivia no usa
+ * horario de verano, así que hoy siempre devuelve «-0400»; el día que eso
+ * cambie —o que la clínica se mude a una zona que sí lo use— esta función ya
+ * da el desfase correcto de cada fecha, mientras que un literal habría que
+ * buscarlo en seis plantillas.
+ *
+ * **No sirve para un valor date-only** («2026-01-02», o un `@db.Date` que
+ * llega como «2026-01-02T00:00:00.000Z»): ese instante es medianoche UTC, y
+ * verlo desde La Paz es el día ANTERIOR a las 20:00. Un date-only de negocio
+ * se muestra con `'UTC'`, que es lo que ya hace la fecha de estudio en
+ * Resultados. Ver `FechaClinicaPipe`.
+ */
+export function offsetClinica(instante: Date | string | number): string {
+  const ms = instante instanceof Date ? instante.getTime() : new Date(instante).getTime();
+  if (!Number.isFinite(ms)) return '+0000';
+  return Temporal.Instant.fromEpochMilliseconds(ms)
+    .toZonedDateTimeISO(ZONA_CLINICA)
+    .offset.replace(':', '');
+}

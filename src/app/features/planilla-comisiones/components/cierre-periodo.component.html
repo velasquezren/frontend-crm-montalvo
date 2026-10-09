@@ -72,7 +72,7 @@
               <app-icon name="check-circle" [size]="14" class="text-primary shrink-0 mt-0.5" />
               <div>
                 <span class="text-xs font-bold text-text-dark">{{ a.nombre }}</span>
-                <span class="text-[11px] text-text-muted ml-1.5">· {{ a.fecha | date: 'd MMM, HH:mm' }}</span>
+                <span class="text-[11px] text-text-muted ml-1.5">· {{ a.fecha | fechaClinica: 'd MMM, HH:mm' }}</span>
                 @if (a.comentario) {
                   <p class="text-xs text-text-muted/90 italic mt-0.5">"{{ a.comentario }}"</p>
                 }
@@ -123,12 +123,12 @@
 @if (rev.estado === 'CERRADO' || rev.estado === 'PAGADO') {
   <p class="text-xs text-text-muted mt-2">
     @if (rev.cerradoEn) {
-      Cerrado el {{ rev.cerradoEn | date: 'd MMM y, HH:mm' }}.
+      Cerrado el {{ rev.cerradoEn | fechaClinica: 'd MMM y, HH:mm' }}.
     } @else {
       Cerrado antes de que se registrara quién lo hizo.
     }
     @if (rev.pagadoEn) {
-      · Pagado el {{ rev.pagadoEn | date: 'd MMM y, HH:mm' }}.
+      · Pagado el {{ rev.pagadoEn | fechaClinica: 'd MMM y, HH:mm' }}.
     }
   </p>
 }

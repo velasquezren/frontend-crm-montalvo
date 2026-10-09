@@ -94,8 +94,8 @@
         Línea de tiempo
         @if (!cargando()) {
           <span class="text-xs font-medium text-text-muted">
-            — del {{ historial().resumen.primeraVisita | date: 'dd/MM/yy' }} al
-            {{ historial().resumen.ultimaVisita | date: 'dd/MM/yy' }}
+            — del {{ historial().resumen.primeraVisita | fechaClinica: 'dd/MM/yy' }} al
+            {{ historial().resumen.ultimaVisita | fechaClinica: 'dd/MM/yy' }}
           </span>
         }
       </h3>
@@ -129,7 +129,7 @@
           <app-timeline>
             @for (s of grupo.servicios; track s.id) {
               <article class="crm-timeline-evento">
-                <span class="crm-timeline-fecha">{{ s.fecha ? (s.fecha | date: 'dd MMM') : '—' }}</span>
+                <span class="crm-timeline-fecha">{{ s.fecha ? (s.fecha | fechaClinica: 'dd MMM') : '—' }}</span>
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-semibold text-text-dark">{{ s.detalle }}</p>
                   <p class="text-xs text-text-muted mt-0.5">

@@ -17,7 +17,7 @@
         <div class="crm-meta">
           <span class="crm-meta-clave">{{ p.codigo }}</span>
           @if (p.creadaPor; as autor) { <span>Redactó {{ autor.nombre }}</span> }
-          @if (p.publicadaEn) { <span>Publicada el {{ p.publicadaEn | date: 'd MMM y' : '-0400' }}</span> }
+          @if (p.publicadaEn) { <span>Publicada el {{ p.publicadaEn | fechaClinica }}</span> }
           @if (p.revisadaPor; as rev) { <span>Revisó {{ rev.nombre }}</span> }
         </div>
 

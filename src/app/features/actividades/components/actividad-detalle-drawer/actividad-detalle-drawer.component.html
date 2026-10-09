@@ -26,7 +26,7 @@
         <div class="space-y-3">
           <p class="text-sm font-semibold text-text-dark">{{ actividad().reservaPaciente || 'Reserva #' + reserva }}</p>
           <p class="text-sm text-text-muted">{{ actividad().reservaMedico }}</p>
-          <p class="text-sm tabular-nums">Cita solicitada: {{ actividad().reservaFecha | date: 'd MMM yyyy, HH:mm' : '-0400' }}</p>
+          <p class="text-sm tabular-nums">Cita solicitada: {{ actividad().reservaFecha | fechaClinica: 'd MMM yyyy, HH:mm' }}</p>
           <app-badge [variant]="estadoDeReserva(actividad().reservaEstado || '').variante">{{ estadoDeReserva(actividad().reservaEstado || '').etiqueta }}</app-badge>
           <p class="text-xs text-text-muted">Esta tarea sigue el estado de la agenda. El comprobante requiere revisión de Caja; «Gestionada» indica que recepción procesó la reserva, sin certificar atención médica ni pago.</p>
           @if (puedeVerAgenda()) {
@@ -35,7 +35,7 @@
           @if (actividad().conversacionId) {
             <a class="crm-enlace block" routerLink="/conversaciones" [queryParams]="{ id: actividad().conversacionId }" (click)="cerrado.emit()">Abrir chat de la reserva</a>
           }
-          <p class="text-xs text-text-muted">Última consulta: {{ actividad().reservaRevisadaEn | date: 'd MMM, HH:mm' : '-0400' }}. La tarea se actualiza automáticamente; no cambia citas desde Actividades.</p>
+          <p class="text-xs text-text-muted">Última consulta: {{ actividad().reservaRevisadaEn | fechaClinica: 'd MMM, HH:mm' }}. La tarea se actualiza automáticamente; no cambia citas desde Actividades.</p>
         </div>
       } @else {
       <!-- 1. Tarjeta 360° de la Paciente -->
@@ -93,7 +93,7 @@
               {{ r.texto }}
             </span>
             <span class="text-[10px] text-text-muted block mt-0.5">
-              {{ actividad().fechaProgramada | date: 'd MMM yyyy, HH:mm' }}
+              {{ actividad().fechaProgramada | fechaClinica: 'd MMM yyyy, HH:mm' }}
             </span>
           </div>
 
@@ -185,7 +185,7 @@
         } @else if (actividad().estado === 'COMPLETADA') {
           <div class="p-3 rounded-xl bg-primary/10 border border-primary/20 text-xs text-primary font-medium flex items-center gap-2">
             <app-icon name="check-circle" [size]="16" />
-            <span>Actividad completada{{ actividad().completadaEn ? ' el ' + (actividad().completadaEn | date: 'd MMM, HH:mm') : '' }}.</span>
+            <span>Actividad completada{{ actividad().completadaEn ? ' el ' + (actividad().completadaEn | fechaClinica: 'd MMM, HH:mm') : '' }}.</span>
           </div>
 
           <app-button

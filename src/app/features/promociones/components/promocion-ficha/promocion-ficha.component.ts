@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -34,6 +33,7 @@ import {
   VIGENCIA,
 } from '../../promocion.model';
 import { PromocionesService } from '../../promociones.service';
+import { FechaClinicaPipe } from '../../../../core/fechas/fecha-clinica.pipe';
 
 /** El id de un anuncio de Meta: dígitos (a veces con `_`). Espejo de `ANUNCIO_ID` del backend. */
 const ANUNCIO_ID = /^[0-9_]{3,64}$/;
@@ -49,7 +49,6 @@ const ANUNCIO_ID = /^[0-9_]{3,64}$/;
   imports: [
     BadgeComponent,
     ButtonComponent,
-    DatePipe,
     DrawerComponent,
     ErrorCargaComponent,
     IconComponent,
@@ -59,8 +58,7 @@ const ANUNCIO_ID = /^[0-9_]{3,64}$/;
     MonedaPipe,
     RouterLink,
     SelectComponent,
-    SwitchComponent,
-  ],
+    SwitchComponent, FechaClinicaPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './promocion-ficha.component.html',
   styleUrl: './promocion-ficha.component.css',

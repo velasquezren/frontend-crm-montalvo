@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { OverlayRef } from '@angular/cdk/overlay';
 import {
   ChangeDetectionStrategy,
@@ -20,6 +19,7 @@ import { DialogService } from '../../../shared/components/dialog/dialog.service'
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { InputComponent } from '../../../shared/components/input/input.component';
 import { PlanillaComisionesService } from '../planilla-comisiones.service';
+import { FechaClinicaPipe } from '../../../core/fechas/fecha-clinica.pipe';
 import {
   ESTADO_PERIODO_AYUDA,
   ESTADO_PERIODO_BADGE,
@@ -49,7 +49,7 @@ import {
  */
 @Component({
   selector: 'app-cierre-periodo',
-  imports: [DatePipe, BadgeComponent, ButtonComponent, IconComponent, InputComponent],
+  imports: [BadgeComponent, ButtonComponent, IconComponent, InputComponent, FechaClinicaPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './cierre-periodo.component.html',
   styleUrl: './cierre-periodo.component.css',

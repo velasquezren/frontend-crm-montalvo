@@ -40,6 +40,8 @@ import {
   sePuedeRenovar,
 } from './resultado.model';
 import { ResultadosService } from './resultados.service';
+import { FechaClinicaPipe } from '../../core/fechas/fecha-clinica.pipe';
+import { FechaCivilPipe } from '../../core/fechas/fecha-civil.pipe';
 
 /**
  * Entrega de resultados: la cola de informes publicados en el portal, con el
@@ -66,8 +68,7 @@ import { ResultadosService } from './resultados.service';
     PageHeaderComponent,
     PaginatorComponent,
     RouterLink,
-    TableComponent,
-  ],
+    TableComponent, FechaClinicaPipe, FechaCivilPipe],
   templateUrl: './resultados.page.html',
 })
 export class ResultadosPage {

@@ -55,7 +55,7 @@
                     <p class="text-[11px] text-text-muted truncate">
                       {{ actividad.reservaPaciente || (actividad.cliente | nombreCliente) }} ·
                       <span [class.text-critical]="esVencida(actividad)" [class.font-semibold]="esVencida(actividad)">
-                        {{ actividad.fechaProgramada | date: 'HH:mm' }}
+                        {{ actividad.fechaProgramada | fechaClinica: 'HH:mm' }}
                       </span>
                     </p>
                   </div>

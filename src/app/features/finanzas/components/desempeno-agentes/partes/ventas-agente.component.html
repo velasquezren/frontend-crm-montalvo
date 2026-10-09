@@ -81,7 +81,7 @@
         @for (venta of filtradas(); track venta.id) {
           <tr [class.fila-excluida]="!venta.comisionable">
             <td class="text-left text-xs whitespace-nowrap text-text-muted">
-              {{ venta.fecha ? (venta.fecha | date: 'dd/MM/yyyy') : '—' }}
+              {{ venta.fecha ? (venta.fecha | fechaClinica: 'dd/MM/yyyy') : '—' }}
             </td>
             <td class="text-left text-xs font-mono text-text-muted whitespace-nowrap">
               {{ codigo(venta) }}

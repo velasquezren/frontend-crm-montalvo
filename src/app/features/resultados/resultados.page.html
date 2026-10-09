@@ -104,11 +104,11 @@
               {{ abriendo() === fila.informeId ? 'Abriendo…' : 'Ver el informe' }}
             </button>
           </td>
-          <td class="text-left">{{ fila.fechaEstudio | date: 'd MMM y' : 'UTC' }}</td>
+          <td class="text-left">{{ fila.fechaEstudio | fechaCivil }}</td>
           <td class="text-left">
             @let estado = estadoEntrega(fila);
             <app-badge [variant]="estado.variant" [icon]="estado.icon">
-              {{ estado.texto }}@if (fila.abiertoEn) { · {{ fila.abiertoEn | date: 'd MMM, HH:mm' }}} @else if (fila.aviso) { · {{ fila.aviso.enviadoEn | date: 'd MMM, HH:mm' }}}
+              {{ estado.texto }}@if (fila.abiertoEn) { · {{ fila.abiertoEn | fechaClinica: 'd MMM, HH:mm' }}} @else if (fila.aviso) { · {{ fila.aviso.enviadoEn | fechaClinica: 'd MMM, HH:mm' }}}
             </app-badge>
           </td>
           <td class="text-right">

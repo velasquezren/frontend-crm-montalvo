@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { OverlayRef } from '@angular/cdk/overlay';
 import {
@@ -50,6 +49,7 @@ import {
   porcentaje,
 } from '../../campana.model';
 import { CampanasService } from '../../campanas.service';
+import { FechaClinicaPipe } from '../../../../core/fechas/fecha-clinica.pipe';
 
 /**
  * Cada cuánto se refresca una campaña que está saliendo. El respaldo de todo
@@ -73,7 +73,6 @@ const FILTROS_DESTINATARIO: readonly (EstadoDestinatario | null)[] = [null, 'PEN
   imports: [
     BadgeComponent,
     ButtonComponent,
-    DatePipe,
     DrawerComponent,
     EmptyStateComponent,
     ErrorCargaComponent,
@@ -83,8 +82,7 @@ const FILTROS_DESTINATARIO: readonly (EstadoDestinatario | null)[] = [null, 'PEN
     MonedaPipe,
     NombreClientePipe,
     PaginatorComponent,
-    TableComponent,
-  ],
+    TableComponent, FechaClinicaPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './campanas-lista.component.html',
   styleUrl: './campanas-lista.component.css',

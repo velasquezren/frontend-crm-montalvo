@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -30,6 +29,7 @@ import { inicioDelDiaClinica, sumarDiasClinica } from '../../../core/fechas/zona
 import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
 import { NombreClientePipe } from '../../pipes/nombre-cliente.pipe';
+import { FechaClinicaPipe } from '../../../core/fechas/fecha-clinica.pipe';
 
 /** `HH:mm` del final del día de hoy, en ISO — "vencidas + hoy" en una sola consulta. */
 export function finDeHoyIso(ahora = new Date()): string {
@@ -50,7 +50,7 @@ export function finDeHoyIso(ahora = new Date()): string {
 @Component({
   selector: 'app-notificaciones-bell',
   imports: [
-    NombreClientePipe,ButtonComponent, DatePipe, IconComponent],
+    NombreClientePipe,ButtonComponent, IconComponent, FechaClinicaPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '(document:click)': 'onDocumentClick($event)' },
   templateUrl: './notificaciones-bell.component.html',

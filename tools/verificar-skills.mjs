@@ -20,7 +20,7 @@
  */
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, resolve, join, relative } from 'node:path';
+import { dirname, resolve, join, relative, sep } from 'node:path';
 
 const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SKILLS = resolve(RAIZ, '.claude', 'skills');
@@ -831,6 +831,75 @@ for (const nombre of readdirSync(SKILLS)) {
 }
 
 /* Globales, no por skill: miran el código, no la documentación. */
+// ── La zona de la clínica: una sola fuente, y nadie la teclea ────────────────
+// Una fecha de OPERACIÓN —cita, reserva, actividad, pago, campaña programada,
+// vigencia— se muestra en `America/La_Paz`, no en la zona del dispositivo. La
+// zona vive en `core/fechas/zona-clinica.ts` y se usa por los pipes
+// `fechaClinica` (instantes) y `fechaCivil` (días de calendario).
+//
+// Esto comprueba las tres formas en que eso se deshace sin que nada avise:
+//
+//  1. **Escribir el desfase a mano.** `DatePipe` no acepta nombres IANA, solo
+//     desfases, así que seis plantillas acabaron con `'-0400'` tecleado. Cada
+//     literal es una copia de la zona que nadie va a actualizar.
+//  2. **Importar los helpers desde `features/`.** Estuvieron en
+//     `features/actividades/` y cinco features ajenas importaban de ahí la zona
+//     de la clínica; `shared/` acabó dependiendo de una feature para saber
+//     dónde empieza el día.
+//  3. **Que `shared/` o `core/` dependan de `features/`** para esta lógica, que
+//     es el caso anterior visto desde la capa equivocada.
+//
+// Verificado el 2026-10-08 con la suite corriendo bajo seis `TZ` distintas: el
+// camino correcto da el mismo día en todas y los atajos no.
+function verificarZonaClinica() {
+  const CASA = ['core/fechas/'];
+  const enCasa = rel => CASA.some(c => rel.includes(c));
+
+  for (const ruta of ARCHIVOS) {
+    if (!/\.(ts|html)$/.test(ruta) || !ruta.includes(`${sep}src${sep}app${sep}`)) continue;
+    const rel = relative(RAIZ, ruta).split(sep).join('/');
+    if (rel.includes('.spec.')) continue;
+    const texto = readFileSync(ruta, 'utf8');
+
+    // 1. Desfase escrito a mano.
+    if (!enCasa(rel)) {
+      const lineas = texto.split('\n');
+      lineas.forEach((linea, i) => {
+        if (/^\s*(\*|\/\/|<!--)/.test(linea)) return; // comentario
+        if (!/['"]-04:?00['"]/.test(linea)) return;
+        señala(
+          'crm-design-system',
+          `${rel}:${i + 1}: desfase \`-0400\` escrito a mano. La zona de la clínica ` +
+            'se usa con el pipe `fechaClinica` (instantes) o `fechaCivil` (días de ' +
+            'calendario), de `core/fechas/`; el desfase lo deriva `offsetClinica()`.',
+        );
+      });
+    }
+
+    // 2. Los helpers de fecha importados de cualquier sitio que no sea su casa.
+    //    Se compara la ruta RESUELTA, no el texto: el caso que de verdad pasó
+    //    era `'../actividades/zona-clinica'`, que no lleva «features/» escrito
+    //    en ninguna parte y un `includes` no vería.
+    for (const m of texto.matchAll(/from '(\.[^']*(?:zona-clinica|fecha-clinica|fecha-civil))'/g)) {
+      const resuelta = relative(RAIZ, resolve(dirname(ruta), m[1])).split(sep).join('/');
+      if (resuelta.startsWith('src/app/core/fechas/')) continue;
+      señala(
+        'crm-design-system',
+        `${rel}: importa \`${m[1]}\` (${resuelta}) — los helpers de fecha viven en ` +
+          '`core/fechas/`, no en una feature. La zona de la clínica no es de ningún módulo.',
+      );
+    }
+
+    if ((rel.startsWith('src/app/shared/') || rel.startsWith('src/app/core/'))
+        && /from '[^']*features\/[^']*(?:fecha|zona|hora)[^']*'/.test(texto)) {
+      señala(
+        'crm-design-system',
+        `${rel}: \`${rel.split('/')[2]}/\` no puede depender de \`features/\` para la lógica de fechas.`,
+      );
+    }
+  }
+}
+
 verificarCodigo();
 verificarCajonUnico();
 verificarNombreCliente();
@@ -839,6 +908,7 @@ verificarRadiosEnPlantillas();
 verificarCssEncapsulado();
 verificarRendimiento();
 verificarServiceWorkerUnico();
+verificarZonaClinica();
 
 if (problemas.length === 0) {
   console.log('✓ Los skills coinciden con el código.');

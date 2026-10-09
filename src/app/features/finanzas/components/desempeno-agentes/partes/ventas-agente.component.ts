@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
 
 import { BadgeComponent } from '../../../../../shared/components/badge/badge.component';
@@ -8,6 +7,7 @@ import { InputComponent } from '../../../../../shared/components/input/input.com
 import { LoadingSkeletonComponent } from '../../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { TableComponent } from '../../../../../shared/components/table/table.component';
 import { MonedaPipe } from '../../../../../shared/pipes/moneda.pipe';
+import { FechaClinicaPipe } from '../../../../../core/fechas/fecha-clinica.pipe';
 import {
   CLASIF_LABEL,
   ClasifComision,
@@ -42,15 +42,13 @@ type Canal = 'TODOS' | 'EMPRESA' | 'PROPIO';
 @Component({
   selector: 'app-ventas-agente',
   imports: [
-    DatePipe,
     MonedaPipe,
     BadgeComponent,
     EmptyStateComponent,
     FilterChipComponent,
     InputComponent,
     LoadingSkeletonComponent,
-    TableComponent,
-  ],
+    TableComponent, FechaClinicaPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './ventas-agente.component.html',
   styleUrl: './ventas-agente.component.css',

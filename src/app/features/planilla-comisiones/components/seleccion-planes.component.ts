@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
@@ -9,6 +8,7 @@ import { InfoHintComponent } from '../../../shared/components/info-hint/info-hin
 import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { MonedaPipe } from '../../../shared/pipes/moneda.pipe';
 import { GrupoPlanes, VentaImportada } from '../planilla.model';
+import { FechaClinicaPipe } from '../../../core/fechas/fecha-clinica.pipe';
 
 /**
  * Componente para auditar y decidir qué planes y paquetes comisionan en el mes.
@@ -25,15 +25,13 @@ import { GrupoPlanes, VentaImportada } from '../planilla.model';
 @Component({
   selector: 'app-seleccion-planes',
   imports: [
-    DatePipe,
     MonedaPipe,
     BadgeComponent,
     EmptyStateComponent,
     ErrorCargaComponent,
     IconComponent,
     InfoHintComponent,
-    LoadingSkeletonComponent,
-  ],
+    LoadingSkeletonComponent, FechaClinicaPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './seleccion-planes.component.html',
   styleUrl: './seleccion-planes.component.css',

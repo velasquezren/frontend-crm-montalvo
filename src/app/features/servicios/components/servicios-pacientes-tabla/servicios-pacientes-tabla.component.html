@@ -70,7 +70,7 @@
             </td>
             <td class="text-right font-semibold text-primary tabular-nums">{{ p.gastado | moneda }}</td>
             <td class="text-left text-xs text-text-muted">
-              {{ p.ultimaVisita ? (p.ultimaVisita | date: 'dd/MM/yyyy') : '—' }}
+              {{ p.ultimaVisita ? (p.ultimaVisita | fechaClinica: 'dd/MM/yyyy') : '—' }}
             </td>
             <td class="text-right">
               <app-button

@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -65,6 +64,7 @@ import {
 } from './actividad.model';
 import { ActividadesService, FiltroActividades } from './actividades.service';
 import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
+import { FechaClinicaPipe } from '../../core/fechas/fecha-clinica.pipe';
 
 type FiltroRapido = 'PENDIENTES' | 'VENCIDAS' | 'HOY' | 'PROXIMA_SEMANA' | 'COMPLETADAS' | 'TODAS';
 type Vista = 'LISTA' | 'CALENDARIO';
@@ -91,7 +91,6 @@ const TIPOS: readonly TipoActividad[] = ['LLAMADA', 'REUNION', 'TAREA', 'RECORDA
     ActividadDetalleDrawerComponent,
     RouterLink,
     ActividadFormularioComponent,
-    DatePipe,
     EmptyStateComponent,
     ErrorCargaComponent,
     FilterChipComponent,
@@ -102,8 +101,7 @@ const TIPOS: readonly TipoActividad[] = ['LLAMADA', 'REUNION', 'TAREA', 'RECORDA
     PageHeaderComponent,
     PaginatorComponent,
     SelectComponent,
-    TableComponent,
-  ],
+    TableComponent, FechaClinicaPipe],
   templateUrl: './actividades.page.html',
 })
 export class ActividadesPage {

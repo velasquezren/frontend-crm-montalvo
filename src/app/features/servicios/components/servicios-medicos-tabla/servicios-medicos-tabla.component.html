@@ -70,7 +70,7 @@
             </td>
             <td class="text-right font-semibold text-primary tabular-nums">{{ m.ingreso | moneda }}</td>
             <td class="text-left text-xs text-text-muted">
-              {{ m.ultimaAtencion ? (m.ultimaAtencion | date: 'dd/MM/yyyy') : '—' }}
+              {{ m.ultimaAtencion ? (m.ultimaAtencion | fechaClinica: 'dd/MM/yyyy') : '—' }}
             </td>
           </tr>
         }

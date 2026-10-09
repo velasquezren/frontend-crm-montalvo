@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
@@ -15,6 +14,7 @@ import { SelectComponent } from '../../../../shared/components/select/select.com
 import { TableComponent } from '../../../../shared/components/table/table.component';
 import { AnuncioSinPromocion, PromocionResumen } from '../../promocion.model';
 import { PromocionesService } from '../../promociones.service';
+import { FechaClinicaPipe } from '../../../../core/fechas/fecha-clinica.pipe';
 
 /**
  * «Anuncios de Meta»: los anuncios que ya trajeron pacientes por WhatsApp y
@@ -26,7 +26,6 @@ import { PromocionesService } from '../../promociones.service';
 @Component({
   selector: 'app-anuncios-meta',
   imports: [
-    DatePipe,
     EmptyStateComponent,
     ErrorCargaComponent,
     IconComponent,
@@ -34,8 +33,7 @@ import { PromocionesService } from '../../promociones.service';
     LoadingSkeletonComponent,
     PaginatorComponent,
     SelectComponent,
-    TableComponent,
-  ],
+    TableComponent, FechaClinicaPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './anuncios-meta.component.html',
   styleUrl: './anuncios-meta.component.css',

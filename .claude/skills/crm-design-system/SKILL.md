@@ -443,6 +443,50 @@ es la clave que el schema declara como puente (`Usuario.codigo` ES el
 de otra persona. Las fotos llegan por `/planilla-comisiones/vendedoras`, que el
 interceptor cachea 60 s: se descargan una vez por sesión.
 
+## Fechas: una operación de la clínica se muestra en hora de la clínica
+
+`{{ x | date: '…' }}` usa la zona del **dispositivo**. Para una fecha de
+operación —cita, reserva, actividad, pago, campaña programada, vigencia de
+promoción— eso es un día que depende de dónde esté sentada quien mira.
+
+| Qué es el valor | Cómo se muestra |
+|---|---|
+| Un **instante** de la operación (`fechaProgramada`, `reservaFecha`, `pagadoEn`, `fecha` de una venta) | `\| fechaClinica: 'dd/MM/yyyy'` |
+| Un **día de calendario** sin hora (`'2026-09-20'`, un `@db.Date`) | `\| fechaCivil` |
+| Una marca **técnica** (`createdAt`, `updatedAt`, `calculadoEn`) | `\| date: '…'` — se queda en la zona del dispositivo a propósito |
+
+Las dos primeras salen de `core/fechas/`, que es el gemelo de `common/fechas/`
+del backend y la única fuente de la zona.
+
+### Las dos cicatrices
+
+**1. El desfase tecleado.** `DatePipe` no acepta nombres IANA, solo desfases, así
+que no había forma de pasarle `ZONA_CLINICA` y seis plantillas acabaron con
+`'-0400'` a mano. Ahora lo deriva `offsetClinica()` de la zona. Las fechas de
+venta del Excel están guardadas a medianoche de La Paz (04:00 UTC): desde
+Bolivia se leían bien por coincidencia, y desde Lima o Bogotá —UTC-5— caían a
+las 23:00 del día **anterior**.
+
+**2. `'UTC'` no salva un date-only.** Parece que sí y en Bolivia funciona, pero
+`DatePipe` parsea `'2026-09-20'` como medianoche **local** y solo después aplica
+la zona pedida. Medido con la suite bajo seis `TZ`:
+
+```
+TZ=America/La_Paz → 20 sep     TZ=Europe/Madrid → 19 sep
+TZ=America/Lima   → 20 sep     TZ=Asia/Tokyo    → 19 sep
+```
+
+La fecha de estudio de Resultados acertaba porque sus usuarios están al oeste de
+UTC, no porque el código lo garantizara. `fechaCivil` construye medianoche UTC
+desde los componentes de la cadena y no mira la zona del proceso.
+
+> `check:skills` rechaza un `'-0400'` escrito a mano y cualquier import de estos
+> helpers que no venga de `core/fechas/` —comparando la ruta **resuelta**, porque
+> el caso real era `'../actividades/zona-clinica'`, que no lleva «features»
+> escrito—. Las pruebas de `core/fechas/` se corren bajo varias `TZ`: una sola
+> zona no distingue un pipe correcto de uno que se ejecuta en la máquina
+> afortunada.
+
 ## Helpers compartidos
 
 - `moneda.pipe.ts` → `{{ monto | moneda }}` o `formatearBs(n)`. **Moneda del sistema: Bs (es-BO).**

@@ -1,4 +1,4 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 import { RespuestaPaginada } from '../../../../core/api/pagination.model';
@@ -16,11 +16,11 @@ import { PaginatorComponent } from '../../../../shared/components/paginator/pagi
 import { TableComponent } from '../../../../shared/components/table/table.component';
 import { MonedaPipe } from '../../../../shared/pipes/moneda.pipe';
 import { MedicoConServicios } from '../../servicios.model';
+import { FechaClinicaPipe } from '../../../../core/fechas/fecha-clinica.pipe';
 
 @Component({
   selector: 'app-servicios-medicos-tabla',
   imports: [
-    DatePipe,
     ErrorCargaComponent,
     DecimalPipe,
     MonedaPipe,
@@ -30,8 +30,7 @@ import { MedicoConServicios } from '../../servicios.model';
     ThOrdenableComponent,
     LoadingSkeletonComponent,
     PaginatorComponent,
-    TableComponent,
-  ],
+    TableComponent, FechaClinicaPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './servicios-medicos-tabla.component.html',
   styleUrl: './servicios-medicos-tabla.component.css',

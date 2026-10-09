@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ChangeDetectionStrategy, Component, input, output, inject, computed } from '@angular/core';
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -18,6 +17,7 @@ import { ButtonComponent } from '../../../../shared/components/button/button.com
 import { DrawerComponent } from '../../../../shared/components/drawer/drawer.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
+import { FechaClinicaPipe } from '../../../../core/fechas/fecha-clinica.pipe';
 import {
   Actividad,
   ESTADO_ACTIVIDAD_LABEL,
@@ -61,13 +61,11 @@ interface ClienteDeLaActividad {
     AvatarComponent,
     BadgeComponent,
     ButtonComponent,
-    DatePipe,
     DrawerComponent,
     IconComponent,
     InicialesClientePipe,
     NombreClientePipe,
-    RouterLink,
-  ],
+    RouterLink, FechaClinicaPipe],
   templateUrl: './actividad-detalle-drawer.component.html',
 })
 export class ActividadDetalleDrawerComponent {

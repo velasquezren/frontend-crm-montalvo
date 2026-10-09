@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, output, signal, TemplateRef, viewChild, ViewContainerRef } from '@angular/core';
 import { OverlayRef } from '@angular/cdk/overlay';
@@ -41,6 +40,7 @@ import {
 } from '../../audiencia.model';
 import { Campana, MAX_DESTINATARIOS_CAMPANA } from '../../campana.model';
 import { CampanasService } from '../../campanas.service';
+import { FechaClinicaPipe } from '../../../../core/fechas/fecha-clinica.pipe';
 
 /** De más a menos valor: el orden en que se eligen. */
 const CATEGORIAS: readonly CategoriaCliente[] = ['GOLD', 'SILVER', 'BRONZE', 'PROSPECTO'];
@@ -60,7 +60,6 @@ const CATEGORIAS: readonly CategoriaCliente[] = ['GOLD', 'SILVER', 'BRONZE', 'PR
   imports: [
     BadgeComponent,
     ButtonComponent,
-    DatePipe,
     EmptyStateComponent,
     ErrorCargaComponent,
     FilterChipComponent,
@@ -76,8 +75,7 @@ const CATEGORIAS: readonly CategoriaCliente[] = ['GOLD', 'SILVER', 'BRONZE', 'PR
     RouterLink,
     SelectComponent,
     SwitchComponent,
-    TableComponent,
-  ],
+    TableComponent, FechaClinicaPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './campana-audiencia.component.html',
 })

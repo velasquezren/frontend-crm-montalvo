@@ -158,7 +158,7 @@
             </td>
             <td class="text-right tabular-nums font-semibold text-text-dark">{{ p.gastoRecienteUsd | moneda }}</td>
             <td class="text-xs text-text-muted whitespace-nowrap">
-              {{ p.ultimaCompra ? (p.ultimaCompra | date: 'd MMM y') : '—' }}
+              {{ p.ultimaCompra ? (p.ultimaCompra | fechaClinica) : '—' }}
             </td>
             <td>
               <!-- Las dos señales de que lee: que alguna vez escribió y que leyó

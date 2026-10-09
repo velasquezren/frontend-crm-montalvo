@@ -1,4 +1,4 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 
 import { MonedaService } from '../../../../core/moneda/moneda.service';
@@ -11,6 +11,7 @@ import { TimelineComponent } from '../../../../shared/components/timeline/timeli
 import { MonedaPipe } from '../../../../shared/pipes/moneda.pipe';
 import { PerfilMedico } from '../../servicios.model';
 import { KpiItem } from '../servicios-kpis/servicios-kpis.component';
+import { FechaClinicaPipe } from '../../../../core/fechas/fecha-clinica.pipe';
 
 const MESES = [
   'ene', 'feb', 'mar', 'abr', 'may', 'jun',
@@ -27,7 +28,6 @@ const MESES = [
 @Component({
   selector: 'app-servicios-medico-drawer',
   imports: [
-    DatePipe,
     DecimalPipe,
     MonedaPipe,
     DrawerComponent,
@@ -35,8 +35,7 @@ const MESES = [
     IconComponent,
     KpiCardComponent,
     LoadingSkeletonComponent,
-    TimelineComponent,
-  ],
+    TimelineComponent, FechaClinicaPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './servicios-medico-drawer.component.html',
   styleUrl: './servicios-medico-drawer.component.css',

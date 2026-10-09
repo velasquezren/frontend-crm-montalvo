@@ -52,7 +52,7 @@
               </div>
             </td>
             <td class="text-right tabular-nums">{{ a.leads }}</td>
-            <td class="text-xs text-text-muted">{{ a.ultimoEn | date: 'd MMM y' : '-0400' }}</td>
+            <td class="text-xs text-text-muted">{{ a.ultimoEn | fechaClinica }}</td>
             <td class="min-w-56">
               @if (destinos().length > 0) {
                 <app-select size="sm" [ariaLabel]="'Promoción del anuncio ' + a.anuncioId" [value]="''" [disabled]="enlazando() === a.anuncioId" (valueChange)="enlazar(a.anuncioId, $event)">

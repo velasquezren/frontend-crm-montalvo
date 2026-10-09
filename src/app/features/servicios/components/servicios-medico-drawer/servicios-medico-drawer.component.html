@@ -25,8 +25,8 @@
 
     <p class="text-xs text-text-muted mb-5">
       <app-icon name="calendar" [size]="12" />
-      Atendiendo desde el {{ perfil().resumen.primeraAtencion | date: 'dd/MM/yy' }}
-      · última atención el {{ perfil().resumen.ultimaAtencion | date: 'dd/MM/yy' }}
+      Atendiendo desde el {{ perfil().resumen.primeraAtencion | fechaClinica: 'dd/MM/yy' }}
+      · última atención el {{ perfil().resumen.ultimaAtencion | fechaClinica: 'dd/MM/yy' }}
     </p>
 
     <!-- Evolución por mes -->
