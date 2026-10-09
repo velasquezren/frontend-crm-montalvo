@@ -521,6 +521,27 @@ La jerarquía es `RECEPCION` y `ASISTENTE` (0) < `AGENTE` (1) < `ADMIN` (2) < `S
 tócalo en los dos lados**, y regenera `core/api/db-enums.ts` con `npm run sync:tipos` (el build
 lo verifica).
 
+#### El espejo lo comprueba el build (2026-10-09)
+
+«Tócalo en los dos lados» es una instrucción que se olvida, así que `check:skills`
+contrasta los dos archivos y falla si no dicen lo mismo:
+
+```
+RANGO_ROL · ROLES_OPERATIVOS · ROLES_ENTREGA_RESULTADOS · ROLES_ADMINISTRAN_AGENDA
+```
+
+**Añadir** un rol ya estaba cubierto por los tipos: `RolUsuario` sale del
+`db-enums.ts` generado y `RANGO_ROL` es un `Record` exhaustivo, así que falta un
+rango y el build cae solo. Lo que no estaba cubierto es cambiar la
+**pertenencia** a una lista —que asistencia pase a administrar la agenda, por
+ejemplo—: ahí los dos archivos compilan, los dos pasan sus pruebas, y se
+contradicen. El síntoma no es una excepción: es un botón que devuelve 403, o
+algo escondido que el usuario sí podía hacer.
+
+El validador imprime las dos listas cuando difieren, y **el backend manda**: si
+el aviso aparece, el que se corrige es este repo, salvo que el cambio se hubiera
+hecho aquí a propósito.
+
 #### Cuando el rango NO alcanza: `NavItem.roles`
 
 `ASISTENTE` comparte rango con recepción y está **por debajo** de un agente de ventas, pero es

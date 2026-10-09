@@ -1001,6 +1001,72 @@ function verificarLecturaAntesDelError() {
   }
 }
 
+// ── Los espejos de rol dicen lo mismo en los dos repos ──────────────────────
+// `core/auth/roles.ts` (aquí) y `common/auth/roles.ts` (backend) son gemelos
+// declarados: sus comentarios dicen «Espejo: …» y las dos vistas dependen de
+// que respondan igual. El backend es la autoridad; este repo solo decide qué
+// ENSEÑA. Cuando divergen no hay error: aparece un botón que devuelve 403, o se
+// esconde algo que el usuario sí podía hacer.
+//
+// AÑADIR un rol ya está cubierto por los tipos: `RolUsuario` sale del
+// `db-enums.ts` generado y `RANGO_ROL` es un `Record` exhaustivo, así que el
+// build falla solo. Lo que NO estaba cubierto es cambiar la PERTENENCIA a una
+// lista —que asistencia pase a administrar la agenda, por ejemplo—: ahí los dos
+// archivos compilan, los dos pasan sus pruebas, y se contradicen.
+const LISTAS_DE_ROL = ['ROLES_OPERATIVOS', 'ROLES_ENTREGA_RESULTADOS', 'ROLES_ADMINISTRAN_AGENDA'];
+
+/** Los roles de `const NOMBRE … = [ … ]`, venga como `Rol.X` o como `'X'`. */
+function listaDeRoles(texto, nombre) {
+  const m = new RegExp(`${nombre}[^=]*=\\s*\\[([^\\]]*)\\]`).exec(texto);
+  if (!m) return null;
+  return [...m[1].matchAll(/(?:Rol\.)?'?([A-Z][A-Z_]+)'?/g)].map(x => x[1]).sort();
+}
+
+/** El rango de cada rol en `RANGO_ROL`, sin los comentarios de por medio. */
+function rangosDeRol(texto) {
+  const m = /RANGO_ROL[^=]*=\s*\{([\s\S]*?)\n\}/.exec(texto);
+  if (!m) return null;
+  const sinComentarios = m[1].replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*/g, '');
+  return [...sinComentarios.matchAll(/(?:\[Rol\.)?'?([A-Z][A-Z_]+)'?\]?\s*:\s*(\d+)/g)]
+    .map(x => `${x[1]}=${x[2]}`).sort();
+}
+
+function verificarEspejosDeRol() {
+  const aqui = resolve(RAIZ, 'src', 'app', 'core', 'auth', 'roles.ts');
+  const alla = resolve(HERMANO, 'src', 'common', 'auth', 'roles.ts');
+  if (!existsSync(alla) || !existsSync(aqui)) return; // sin el repo hermano no se contrasta
+
+  const nuestro = readFileSync(aqui, 'utf8');
+  const suyo = readFileSync(alla, 'utf8');
+
+  const nuestrosRangos = rangosDeRol(nuestro);
+  const susRangos = rangosDeRol(suyo);
+  if (!nuestrosRangos || !susRangos) {
+    señala('crm-feature-page', 'no se pudo leer `RANGO_ROL` de uno de los dos repos: revisa el formato.');
+  } else if (nuestrosRangos.join(' ') !== susRangos.join(' ')) {
+    señala(
+      'crm-feature-page',
+      `\`RANGO_ROL\` no coincide con el backend.\n      aquí:     ${nuestrosRangos.join(', ')}` +
+        `\n      backend:  ${susRangos.join(', ')}`,
+    );
+  }
+
+  for (const nombre of LISTAS_DE_ROL) {
+    const nuestra = listaDeRoles(nuestro, nombre);
+    const suya = listaDeRoles(suyo, nombre);
+    if (nuestra === null || suya === null) {
+      señala('crm-feature-page', `\`${nombre}\` falta en ${nuestra === null ? 'este repo' : 'el backend'}.`);
+      continue;
+    }
+    if (nuestra.join(',') === suya.join(',')) continue;
+    señala(
+      'crm-feature-page',
+      `\`${nombre}\` no coincide con el backend —y el backend manda—.\n` +
+        `      aquí:     [${nuestra.join(', ')}]\n      backend:  [${suya.join(', ')}]`,
+    );
+  }
+}
+
 verificarCodigo();
 verificarEfectosConRecurso();
 verificarLecturaAntesDelError();
@@ -1012,6 +1078,7 @@ verificarCssEncapsulado();
 verificarRendimiento();
 verificarServiceWorkerUnico();
 verificarZonaClinica();
+verificarEspejosDeRol();
 
 if (problemas.length === 0) {
   console.log('✓ Los skills coinciden con el código.');
