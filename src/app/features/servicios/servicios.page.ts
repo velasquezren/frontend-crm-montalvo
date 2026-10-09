@@ -58,6 +58,7 @@ import {
   MedicoConServicios,
   PacienteConServicios,
 } from './servicios.model';
+import { valorOVacio } from '../../core/api/valor-o-vacio';
 
 export type Pestana = 'DASHBOARD' | 'PACIENTES' | 'MEDICOS';
 
@@ -216,6 +217,8 @@ export class ServiciosPage {
     () => this.service.periodosRequest(),
     { defaultValue: paginaVacia<PeriodoComision>() },
   );
+  /** `periodos` sin lanzar si la carga falló: lo que se pinta fuera de su rama de contenido (ver `valorOVacio`). */
+  protected readonly periodosVista = valorOVacio(this.periodos, paginaVacia<PeriodoComision>());
 
   protected readonly dashboard = httpResource<DashboardServicios | null>(
     () =>
@@ -225,6 +228,8 @@ export class ServiciosPage {
       }),
     { defaultValue: null },
   );
+  /** `dashboard` sin lanzar si la carga falló: lo que se pinta fuera de su rama de contenido (ver `valorOVacio`). */
+  protected readonly dashboardVista = valorOVacio(this.dashboard, null);
 
   protected readonly demografia = httpResource<Demografia | null>(
     () => this.service.demografiaRequest(),
@@ -253,6 +258,8 @@ export class ServiciosPage {
         : undefined,
     { defaultValue: paginaVacia<PacienteConServicios>() },
   );
+  /** `pacientes` sin lanzar si la carga falló: lo que se pinta fuera de su rama de contenido (ver `valorOVacio`). */
+  protected readonly pacientesVista = valorOVacio(this.pacientes, paginaVacia<PacienteConServicios>());
 
   protected readonly medicos = httpResource<RespuestaPaginada<MedicoConServicios>>(
     () =>
@@ -266,6 +273,8 @@ export class ServiciosPage {
         : undefined,
     { defaultValue: paginaVacia<MedicoConServicios>() },
   );
+  /** `medicos` sin lanzar si la carga falló: lo que se pinta fuera de su rama de contenido (ver `valorOVacio`). */
+  protected readonly medicosVista = valorOVacio(this.medicos, paginaVacia<MedicoConServicios>());
 
   /* ── Derivados para los gráficos ────────────────────────────────────── */
 
@@ -274,10 +283,10 @@ export class ServiciosPage {
   }
 
   protected readonly serieModulos = computed(() =>
-    this.serie(this.dashboard.value()?.porModulo ?? []),
+    this.serie(this.dashboardVista()?.porModulo ?? []),
   );
   protected readonly serieClasif = computed(() =>
-    this.serie(this.dashboard.value()?.porClasif ?? []),
+    this.serie(this.dashboardVista()?.porClasif ?? []),
   );
   protected readonly serieSexo = computed(() => this.serie(this.demografia.value()?.porSexo ?? []));
   protected readonly serieEdad = computed(() =>
@@ -290,7 +299,7 @@ export class ServiciosPage {
   );
 
   protected readonly serieTopServicios = computed<ChartItem[]>(() =>
-    (this.dashboard.value()?.topServicios ?? []).map(s => ({
+    (this.dashboardVista()?.topServicios ?? []).map(s => ({
       label: s.etiqueta,
       value: s.total,
       sublabel: `${s.ingreso.toLocaleString('es-BO', { maximumFractionDigits: 0 })}`,
@@ -298,7 +307,7 @@ export class ServiciosPage {
   );
 
   protected readonly serieMeses = computed<ChartItem[]>(() =>
-    (this.dashboard.value()?.porMes ?? []).map(m => ({
+    (this.dashboardVista()?.porMes ?? []).map(m => ({
       label: `${this.nombreMes(m.mes).slice(0, 3)} ${m.anio}`,
       value: m.total,
     })),
@@ -315,7 +324,7 @@ export class ServiciosPage {
    * "1.287 servicios" cobra sentido junto a "en 3 meses cargados".
    */
   protected readonly resumen = computed(() => {
-    const d = this.dashboard.value();
+    const d = this.dashboardVista();
     if (!d) return [];
 
     const meses = d.porMes.length;
@@ -430,19 +439,19 @@ export class ServiciosPage {
 
   /** Peso de cada médico sobre el total, para la columna de porcentaje. */
   protected readonly pctDelTotal = computed(() => {
-    const d = this.dashboard.value();
+    const d = this.dashboardVista();
     const total = d?.totales.servicios ?? 0;
     return (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
   });
 
   /** Módulos que existen en los datos, para los filtros. */
   protected readonly modulosDisponibles = computed(() =>
-    (this.dashboard.value()?.porModulo ?? []).map(m => ({ etiqueta: m.etiqueta, total: m.total })),
+    (this.dashboardVista()?.porModulo ?? []).map(m => ({ etiqueta: m.etiqueta, total: m.total })),
   );
 
   /** Qué parte de los servicios llega a enlazar con una ficha del CRM. */
   protected readonly pctCobertura = computed(() => {
-    const c = this.dashboard.value()?.cobertura;
+    const c = this.dashboardVista()?.cobertura;
     if (!c || c.servicios === 0) return 0;
     return Math.round((c.conFicha / c.servicios) * 100);
   });
@@ -450,12 +459,12 @@ export class ServiciosPage {
   /* ── Acciones ───────────────────────────────────────────────────────── */
 
   protected readonly periodoActual = computed(() =>
-    this.periodos.value().datos.find(p => p.id === this.periodoId()) ?? null,
+    this.periodosVista().datos.find(p => p.id === this.periodoId()) ?? null,
   );
 
   /** Desglose por módulo como sub-tarjetas, con su peso sobre el total. */
   protected readonly desgloseModulos = computed(() => {
-    const d = this.dashboard.value();
+    const d = this.dashboardVista();
     if (!d) return [];
     const total = d.totales.servicios || 1;
     return d.porModulo.map(m => ({
@@ -505,7 +514,7 @@ export class ServiciosPage {
   protected async abrirHistorial(pac: string | null): Promise<void> {
     if (!pac) return;
 
-    const fila = this.pacientes.value().datos.find(p => p.pac === pac);
+    const fila = this.pacientesVista().datos.find(p => p.pac === pac);
     this.historial.set(this.historialProvisional(pac, fila));
     this.cargandoHistorial.set(true);
     this.overlayHistorial = this.abrirCajon(this.plantillaHistorial(), this.overlayHistorial, () =>
@@ -597,7 +606,7 @@ export class ServiciosPage {
   protected async abrirMedico(codigo: string | null): Promise<void> {
     if (!codigo) return;
 
-    const fila = this.medicos.value().datos.find(m => m.codigo === codigo);
+    const fila = this.medicosVista().datos.find(m => m.codigo === codigo);
     this.perfilMedico.set(this.perfilProvisional(codigo, fila));
     this.cargandoMedico.set(true);
     this.overlayMedico = this.abrirCajon(this.plantillaMedico(), this.overlayMedico, () =>

@@ -316,7 +316,10 @@ export class ResultadosPage {
     effect(() => {
       const aviso = this.realtime.actividad();
       if (!aviso) return;
-      const visible = untracked(() => this.entregas.value().datos.some(fila => fila.conversacionId === aviso.conversacionId));
+      /* Con la cola en error `value()` lanza: sin cola a la vista no hay fila
+         que refrescar (y el botón de reintento ya está en pantalla). */
+      const visible = untracked(() => this.entregas.hasValue()
+        && this.entregas.value().datos.some(fila => fila.conversacionId === aviso.conversacionId));
       if (!visible) return;
       clearTimeout(this.recargaPendiente);
       this.recargaPendiente = setTimeout(() => this.entregas.reload(), 800);
@@ -337,6 +340,15 @@ export class ResultadosPage {
     effect(() => {
       const informeId = this.ofrecerEnvioDe();
       if (!informeId || this.entregas.isLoading()) return;
+      /* La ficha quedó creada pero la cola no volvió: no se ofrece un envío a
+         ciegas, se dice qué pasó y se suelta el pedido (antes quedaba trabado). */
+      if (this.entregas.status() === 'error') {
+        untracked(() => {
+          this.ofrecerEnvioDe.set(null);
+          this.toast.info('No se pudo volver a leer la cola. Pulsa «Actualizar» y envíalo desde su fila.', 'Ficha lista, sin enviar');
+        });
+        return;
+      }
       const fila = this.entregas.value().datos.find(f => f.informeId === informeId);
       untracked(() => {
         this.ofrecerEnvioDe.set(null);

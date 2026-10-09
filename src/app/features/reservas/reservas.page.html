@@ -38,64 +38,73 @@
         <app-loading-skeleton height="52px" />
       }
     </div>
-  } @else if (reservas.error()) {
+  } @else if (reservas.error() && !vista()) {
     <app-error-carga que="las reservas de la agenda" (reintentar)="reservas.reload()" />
-  } @else if (hayReservas()) {
-    <app-table>
-      <thead>
-        <tr>
-          <th>Fecha y hora</th>
-          <th>Paciente</th>
-          <th>Médico</th>
-          <th>Estado</th>
-          <th class="text-right">Precio</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (r of reservas.value().datos; track r.id) {
-          <tr class="fila-clicable" (click)="abrir(r)">
-            <td class="whitespace-nowrap tabular-nums">
-              <span class="block text-sm font-semibold text-text-dark">{{ fechaDeReserva(r.fecha) }}</span>
-              <span class="block text-xs text-text-muted">{{ r.hora }}</span>
-            </td>
-            <td>
-              <div class="min-w-0">
-                <app-button variant="ghost" size="sm" [ariaLabel]="'Ver reserva de ' + (r.paciente || 'paciente sin nombre')" (clicked)="$event.stopPropagation(); abrir(r)">
-                  {{ r.paciente || 'Sin nombre' }}
-                </app-button>
-                <div class="crm-meta mt-0.5">
-                  <span class="crm-meta-clave">N.º {{ r.id }}</span>
-                  @if (r.telefono; as t) { <span class="crm-meta-clave">{{ t }}</span> }
-                  @if (r.ci; as ci) { <span>CI {{ ci }}</span> }
-                </div>
-              </div>
-            </td>
-            <td>
-              <span class="block text-sm text-text-dark">{{ r.medico || '—' }}</span>
-              @if (r.especialidad; as esp) { <span class="block text-xs text-text-muted">{{ esp }}</span> }
-            </td>
-            <td><app-badge [variant]="estadoDeReserva(r.estado).variante">{{ estadoDeReserva(r.estado).etiqueta }}</app-badge></td>
-            <td class="text-right tabular-nums">
-              @if (precioEnBs(r.precio); as precio) {
-                <span class="text-text-dark">{{ precio | moneda:'BOB' }}</span>
-              } @else {
-                <span class="text-text-muted">—</span>
-              }
-            </td>
+  } @else if (vista(); as v) {
+    @if (desactualizada()) {
+      <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-text-muted" role="status">
+        <app-icon name="alert-circle" [size]="14" class="shrink-0" />
+        <span>No se pudo actualizar la agenda; ves lo último que llegó.</span>
+        <button type="button" class="crm-enlace" (click)="reservas.reload()">Reintentar</button>
+      </p>
+    }
+    @if (hayReservas()) {
+      <app-table>
+        <thead>
+          <tr>
+            <th>Fecha y hora</th>
+            <th>Paciente</th>
+            <th>Médico</th>
+            <th>Estado</th>
+            <th class="text-right">Precio</th>
           </tr>
-        }
-      </tbody>
-    </app-table>
-    <app-paginator
-      [pagina]="reservas.value().pagina"
-      [totalPaginas]="reservas.value().totalPaginas"
-      [total]="reservas.value().total"
-      [limite]="reservas.value().limite"
-      (cambiar)="pagina.set($event)" />
-  } @else if (filtrando()) {
-    <app-empty-state icon="search" title="Ninguna reserva con ese filtro" description="Prueba con otro estado, otro periodo o borra la búsqueda." />
-  } @else {
-    <app-empty-state icon="calendar-check" title="No hay reservas en este periodo" description="Cuando una paciente reserve en la web o la cargue recepción en ScriptCase, aparece aquí." />
+        </thead>
+        <tbody>
+          @for (r of v.datos; track r.id) {
+            <tr class="fila-clicable" (click)="abrir(r)">
+              <td class="whitespace-nowrap tabular-nums">
+                <span class="block text-sm font-semibold text-text-dark">{{ fechaDeReserva(r.fecha) }}</span>
+                <span class="block text-xs text-text-muted">{{ r.hora }}</span>
+              </td>
+              <td>
+                <div class="min-w-0">
+                  <app-button variant="ghost" size="sm" [ariaLabel]="'Ver reserva de ' + (r.paciente || 'paciente sin nombre')" (clicked)="$event.stopPropagation(); abrir(r)">
+                    {{ r.paciente || 'Sin nombre' }}
+                  </app-button>
+                  <div class="crm-meta mt-0.5">
+                    <span class="crm-meta-clave">N.º {{ r.id }}</span>
+                    @if (r.telefono; as t) { <span class="crm-meta-clave">{{ t }}</span> }
+                    @if (r.ci; as ci) { <span>CI {{ ci }}</span> }
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="block text-sm text-text-dark">{{ r.medico || '—' }}</span>
+                @if (r.especialidad; as esp) { <span class="block text-xs text-text-muted">{{ esp }}</span> }
+              </td>
+              <td><app-badge [variant]="estadoDeReserva(r.estado).variante">{{ estadoDeReserva(r.estado).etiqueta }}</app-badge></td>
+              <td class="text-right tabular-nums">
+                @if (precioEnBs(r.precio); as precio) {
+                  <span class="text-text-dark">{{ precio | moneda:'BOB' }}</span>
+                } @else {
+                  <span class="text-text-muted">—</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
+      <app-paginator
+        [pagina]="v.pagina"
+        [totalPaginas]="v.totalPaginas"
+        [total]="v.total"
+        [limite]="v.limite"
+        (cambiar)="pagina.set($event)" />
+    } @else if (filtrando()) {
+      <app-empty-state icon="search" title="Ninguna reserva con ese filtro" description="Prueba con otro estado, otro periodo o borra la búsqueda." />
+    } @else {
+      <app-empty-state icon="calendar-check" title="No hay reservas en este periodo" description="Cuando una paciente reserve en la web o la cargue recepción en ScriptCase, aparece aquí." />
+    }
   }
 </div>
 

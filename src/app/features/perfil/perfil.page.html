@@ -31,7 +31,7 @@
       [class.hover:bg-bg-light]="tabActiva() !== 'memoria'">
       <app-icon name="database" [size]="16" />
       <span>Mi Memoria Personal</span>
-      @if (cuotaMemoria.value(); as cuota) {
+      @if (cuotaMemoriaVista(); as cuota) {
         <!-- La variante depende del fondo REAL de la pestaña, no de cuál es:
              `-inverso` es blanco al 20 %, que sobre el primario relleno de la
              pestaña activa se ve y sobre el fondo claro de la inactiva no. El
@@ -155,7 +155,7 @@
     <div class="space-y-6">
 
       <!-- Storage Banner Card -->
-      @if (cuotaMemoria.value(); as cuota) {
+      @if (cuotaMemoriaVista(); as cuota) {
         <div class="bg-gradient-to-r from-primary/5 via-bg-light to-white rounded-2xl border border-border/80 p-6 shadow-subtle space-y-4">
           <div class="flex items-center justify-between flex-wrap gap-4">
             <div class="flex items-center gap-3.5">

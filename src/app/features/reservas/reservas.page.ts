@@ -9,6 +9,7 @@ import {
   inject,
   signal,
   TemplateRef,
+  untracked,
   viewChild,
   ViewContainerRef,
 } from '@angular/core';
@@ -16,6 +17,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 import { mensajeDeError } from '../../core/api/http-error';
+import { diaClinicaVivo } from '../../core/fechas/dia-clinica';
 import { paginaVacia } from '../../core/api/pagination.model';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -101,22 +103,53 @@ export class ReservasPage {
   private readonly busquedaAplicada = signal('');
   protected readonly pagina = signal(1);
 
+  /**
+   * El día de la clínica. «Hoy» y «Próximos 7 días» dependen de él: con la
+   * pantalla abierta pasada la medianoche, el refresco de cada 2 minutos seguía
+   * pidiendo el rango de AYER, porque `reload()` repite la misma petición.
+   */
+  private readonly diaClinica = diaClinicaVivo();
+
+  /** Lo que se le pide a la agenda; también la clave de la última respuesta buena. */
+  private readonly filtro = computed(() => {
+    this.diaClinica();
+    const fecha = this.fechaEnlace();
+    const { desde, hasta } = fecha ? { desde: fecha, hasta: fecha } : rangoDePeriodo(this.periodo());
+    return { desde, hasta, estado: this.estado(), buscar: this.busquedaAplicada(), pagina: this.pagina() };
+  }, { equal: (a, b) => JSON.stringify(a) === JSON.stringify(b) });
+
   protected readonly reservas = httpResource<PaginaReservas>(
-    () => {
-      const fecha = this.fechaEnlace();
-      const { desde, hasta } = fecha ? { desde: fecha, hasta: fecha } : rangoDePeriodo(this.periodo());
-      return this.servicio.listarRequest({ desde, hasta, estado: this.estado(), buscar: this.busquedaAplicada(), pagina: this.pagina() });
-    },
+    () => this.servicio.listarRequest(this.filtro()),
     { defaultValue: { ...paginaVacia<ReservaAgenda>(), porEstado: {}, desde: '', hasta: '' } },
   );
-  protected readonly hayReservas = computed(() => this.reservas.hasValue() && this.reservas.value().datos.length > 0);
+
+  /**
+   * La última respuesta buena, con el filtro que la pidió. La agenda vive en otro
+   * servidor (MySQL de ScriptCase) y se refresca sola cada 2 minutos: si UNA de
+   * esas vueltas fallaba, la tabla que recepción estaba leyendo se cambiaba por
+   * el error. Ahora se queda, con un aviso de que no está al día.
+   */
+  private readonly ultimaBuena = signal<{ filtro: string; pagina: PaginaReservas } | null>(null);
+
+  /** Lo que se pinta: lo recién llegado o, si falló, lo último bueno de ESTE mismo filtro. */
+  protected readonly vista = computed<PaginaReservas | null>(() => {
+    if (this.reservas.error()) {
+      const ultima = this.ultimaBuena();
+      return ultima?.filtro === JSON.stringify(this.filtro()) ? ultima.pagina : null;
+    }
+    return this.reservas.hasValue() ? this.reservas.value() : null;
+  });
+  /** Hay tabla, pero la última actualización falló. */
+  protected readonly desactualizada = computed(() => !!this.reservas.error() && this.vista() !== null);
+
+  protected readonly hayReservas = computed(() => (this.vista()?.datos.length ?? 0) > 0);
   protected readonly filtrando = computed(() => this.estado() !== null || this.busquedaAplicada() !== '');
   /** Todas las del rango, para el chip «Todas»: la suma de la cuenta por estado. */
   protected readonly totalDelRango = computed(() =>
-    this.reservas.hasValue() ? Object.values(this.reservas.value().porEstado).reduce((a, b) => a + b, 0) : 0,
+    Object.values(this.vista()?.porEstado ?? {}).reduce((a, b) => a + b, 0),
   );
   protected cuentaDe(estado: EstadoReserva): number {
-    return this.reservas.hasValue() ? (this.reservas.value().porEstado[estado] ?? 0) : 0;
+    return this.vista()?.porEstado[estado] ?? 0;
   }
 
   protected readonly seleccionada = signal<ReservaAgenda | null>(null);
@@ -126,6 +159,11 @@ export class ReservasPage {
   protected readonly visorTitulo = signal('Comprobante');
 
   constructor() {
+    effect(() => {
+      if (this.reservas.status() !== 'resolved') return;
+      const pagina = this.reservas.value();
+      untracked(() => this.ultimaBuena.set({ filtro: JSON.stringify(this.filtro()), pagina }));
+    });
     effect(() => {
       const p = this.parametros();
       const id = p?.get('reserva'), fecha = p?.get('fecha');
@@ -224,7 +262,7 @@ export class ReservasPage {
       const { blob } = await this.servicio.comprobante(reserva.id);
       const url = URL.createObjectURL(blob);
       if (blob.type === 'application/pdf') {
-        window.open(url, '_blank', 'noopener');
+        this.abrirPdf(url);
         /* La pestaña nueva ya tiene su copia; se libera cuando haya terminado de leerla. */
         setTimeout(() => URL.revokeObjectURL(url), 60_000);
         return;
@@ -237,6 +275,22 @@ export class ReservasPage {
     } finally {
       this.abriendoComprobante.set(false);
     }
+  }
+
+  /**
+   * El PDF en otra pestaña. Se abre DESPUÉS de descargarlo, y Safari (el iPhone
+   * de recepción) bloquea una pestaña que no nace del toque mismo: antes no
+   * pasaba nada y no se decía nada. Si el navegador la bloquea, el aviso trae un
+   * botón «Abrir», que sí es un toque.
+   */
+  private abrirPdf(url: string): void {
+    const abrir = () => {
+      const pestana = window.open(url, '_blank');
+      if (pestana) pestana.opener = null;
+      return pestana;
+    };
+    if (abrir()) return;
+    this.toast.show('El navegador no dejó abrir la pestaña del comprobante.', 'info', 'Comprobante', 10_000, 'Abrir', () => void abrir());
   }
 
   protected cerrarVisor(): void {

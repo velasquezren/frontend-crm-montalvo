@@ -62,6 +62,7 @@ import { FiltroVentas, VentasService } from './ventas.service';
 import { FormularioVentaComponent, METODOS_PAGO, PacienteVenta } from './formulario-venta/formulario-venta.component';
 import { esNombreProvisional } from '../../shared/models/nombre-cliente';
 import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
+import { valorOVacio } from '../../core/api/valor-o-vacio';
 
 type FiltroVenta = EstadoVenta | 'TODAS';
 
@@ -264,15 +265,19 @@ export class VentasPage {
     () => this.ventasService.listarRequest({ ...this.filtroActual(), pagina: this.pagina(), limite: 25 }),
     { defaultValue: paginaVacia<Venta>() },
   );
+  /** `ventas` sin lanzar si la carga falló: lo que se pinta fuera de su rama de contenido (ver `valorOVacio`). */
+  protected readonly ventasVista = valorOVacio(this.ventas, paginaVacia<Venta>());
 
   /* Lista de agentes para el dropdown de filtro (disponible para ADMIN+) */
   protected readonly agentes = httpResource<readonly AgenteResumenVenta[]>(
     () => (this.esAdmin() ? this.ventasService.agentesRequest() : undefined),
     { defaultValue: [] },
   );
+  /** `agentes` sin lanzar si la carga falló: lo que se pinta fuera de su rama de contenido (ver `valorOVacio`). */
+  protected readonly agentesVista = valorOVacio(this.agentes, []);
 
   /* ── Ventas del Servidor (Garantiza Paginación Real y Exacta) ─── */
-  protected readonly ventasFiltradas = computed(() => this.ventas.value().datos);
+  protected readonly ventasFiltradas = computed(() => this.ventasVista().datos);
 
   /* Etiquetas amigables para filtros activos */
   protected readonly etiquetaEstadoActivo = computed(() => {
@@ -296,7 +301,7 @@ export class VentasPage {
   });
 
   protected readonly nombreAgenteActivo = computed(() => {
-    const ag = this.agentes.value().find(item => item.id === this.agenteSeleccionadoId());
+    const ag = this.agentesVista().find(item => item.id === this.agenteSeleccionadoId());
     return ag ? ag.nombre : this.agenteSeleccionadoId();
   });
 
@@ -418,10 +423,12 @@ export class VentasPage {
     () => this.ventasService.resumenRequest(this.filtroActual()),
     { defaultValue: RESUMEN_VACIO },
   );
+  /** `resumen` sin lanzar si la carga falló: las tarjetas y los gráficos van fuera de una rama de error (ver `valorOVacio`). */
+  protected readonly resumenVista = valorOVacio(this.resumen, RESUMEN_VACIO);
 
   protected readonly resumenKpis = computed(() => {
     const sinDato = !!this.resumen.error();
-    const grupos = this.resumen.value().porEstado;
+    const grupos = this.resumenVista().porEstado;
     const de = (estado: EstadoVenta) => grupos.find(g => g.clave === estado) ?? { cantidad: 0, monto: 0 };
     const ganadas = de('GANADA');
     const enProceso = de('EN_PROCESO');
@@ -442,8 +449,7 @@ export class VentasPage {
   });
 
   protected readonly chartMetodosPago = computed<ChartItem[]>(() =>
-    this.resumen
-      .value()
+    this.resumenVista()
       .porMetodo.filter(g => g.clave !== null && g.cantidad > 0)
       .map(g => ({
         id: g.clave!,
@@ -455,8 +461,7 @@ export class VentasPage {
   );
 
   protected readonly chartModulos = computed<ChartItem[]>(() =>
-    this.resumen
-      .value()
+    this.resumenVista()
       .porModulo.filter(g => g.cantidad > 0)
       .map(g => ({
         id: g.clave ?? SIN_MODULO,

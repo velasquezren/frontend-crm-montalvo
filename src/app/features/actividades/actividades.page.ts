@@ -66,6 +66,7 @@ import {
 import { ActividadesService, FiltroActividades } from './actividades.service';
 import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { FechaClinicaPipe } from '../../core/fechas/fecha-clinica.pipe';
+import { valorOVacio } from '../../core/api/valor-o-vacio';
 
 type FiltroRapido = 'PENDIENTES' | 'VENCIDAS' | 'HOY' | 'PROXIMA_SEMANA' | 'COMPLETADAS' | 'TODAS';
 type Vista = 'LISTA' | 'CALENDARIO';
@@ -229,6 +230,8 @@ export class ActividadesPage {
     () => (this.esAdmin() ? this.actividadesService.agentesRequest() : undefined),
     { defaultValue: [] },
   );
+  /** `agentes` sin lanzar si la carga falló: lo que se pinta fuera de su rama de contenido (ver `valorOVacio`). */
+  protected readonly agentesVista = valorOVacio(this.agentes, []);
 
   /** El día de la clínica: «Hoy» y «Vencidas» se vuelven a cortar solos a medianoche. */
   private readonly diaClinica = diaClinicaVivo();
@@ -270,6 +273,8 @@ export class ActividadesPage {
       ),
     { defaultValue: { vencidas: 0, hoy: 0, proximaSemana: 0, completadas: 0 } },
   );
+  /** `resumen` sin lanzar si la carga falló: lo que se pinta fuera de su rama de contenido (ver `valorOVacio`). */
+  protected readonly resumenVista = valorOVacio(this.resumen, { vencidas: 0, hoy: 0, proximaSemana: 0, completadas: 0 });
 
   protected readonly actividades = httpResource<RespuestaPaginada<Actividad>>(
     () => {

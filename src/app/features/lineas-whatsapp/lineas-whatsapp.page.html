@@ -8,7 +8,7 @@
 <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-5">
   <app-kpi-card
     label="Líneas registradas"
-    [valor]="lineas.value().total"
+    [valor]="lineasVista().total"
     icon="message-circle"
     tono="neutral"
     pie="Catálogo completo" />
@@ -28,11 +28,11 @@
     pie="Falta darlas de alta en Meta" />
 </div>
 
-@if (lineas.isLoading() && lineas.value().datos.length === 0) {
+@if (lineas.isLoading() && lineasVista().datos.length === 0) {
   <app-loading-skeleton shape="text" height="16rem" />
 } @else if (lineas.error()) {
   <app-error-carga que="las líneas de WhatsApp" (reintentar)="lineas.reload()" />
-} @else if (lineas.value().datos.length) {
+} @else if (lineasVista().datos.length) {
   <app-table>
     <thead>
       <tr>
@@ -44,7 +44,7 @@
       </tr>
     </thead>
     <tbody>
-      @for (linea of lineas.value().datos; track linea.id) {
+      @for (linea of lineasVista().datos; track linea.id) {
         <tr
           class="cursor-pointer hover:bg-bg-workspace/60 transition-colors"
           (click)="editar(linea, formulario)">
@@ -107,10 +107,10 @@
 
   <div class="mt-4">
     <app-paginator
-      [pagina]="lineas.value().pagina"
-      [totalPaginas]="lineas.value().totalPaginas"
-      [total]="lineas.value().total"
-      [limite]="lineas.value().limite"
+      [pagina]="lineasVista().pagina"
+      [totalPaginas]="lineasVista().totalPaginas"
+      [total]="lineasVista().total"
+      [limite]="lineasVista().limite"
       (cambiar)="pagina.set($event)" />
   </div>
 } @else {

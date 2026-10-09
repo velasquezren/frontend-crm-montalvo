@@ -33,9 +33,11 @@
   </div>
 </div>
 
-@if (entregas.value().truncado) {
+@if (entregas.hasValue() && entregas.value().truncado) {
   <!-- Nunca pasa a esta escala (el enlace dura 30 días), pero si pasa se dice:
-       una pestaña cortada en silencio se lee como «no hay más». -->
+       una pestaña cortada en silencio se lee como «no hay más».
+       `hasValue()` primero: con el portal caído `value()` LANZA y se llevaba la
+       pantalla entera, incluido el «Reintentar» de abajo. -->
   <p class="mb-4 rounded-xl bg-bg-light px-3 py-2.5 text-sm text-text-dark" role="status">
     Hay más informes vigentes sin abrir de los que la cola puede mostrar a la vez. Usa la búsqueda para encontrar uno concreto.
   </p>

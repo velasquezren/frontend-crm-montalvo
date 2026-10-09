@@ -32,6 +32,7 @@ import { MemoriaAgenteService } from '../memoria-agente/memoria-agente.service';
 import { ActivatedRoute } from '@angular/router';
 import { ImageViewerComponent } from '../../shared/components/image-viewer/image-viewer.component';
 import { AvisosLineasComponent } from '../lineas-whatsapp/avisos-lineas.component';
+import { valorOVacio } from '../../core/api/valor-o-vacio';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -89,6 +90,8 @@ export class PerfilPage {
   protected readonly cuotaMemoria = httpResource<CuotaMemoria>(
     () => this.memoriaService.cuotaRequest(),
   );
+  /** `cuotaMemoria` sin lanzar si la carga falló: lo que se pinta fuera de su rama de contenido (ver `valorOVacio`). */
+  protected readonly cuotaMemoriaVista = valorOVacio(this.cuotaMemoria, undefined);
 
   private readonly recursosMemoriaRecurso = httpResource<RespuestaPaginada<RecursoMemoria>>(
     () =>
@@ -100,7 +103,8 @@ export class PerfilPage {
   );
 
   /** Proyección: la vista solo necesita la lista, no la envoltura de paginación. */
-  protected readonly recursosMemoria = computed(() => this.recursosMemoriaRecurso.value().datos);
+  /** Sin lanzar si la carga falló: la grilla no tiene rama de error propia, la avisa `recursosMemoriaError`. */
+  protected readonly recursosMemoria = computed(() => this.recursosMemoriaRecurso.hasValue() ? this.recursosMemoriaRecurso.value().datos : []);
 
   /* El recurso es privado, así que la plantilla necesita estos dos para poder
      distinguir "no tienes recursos" de "no se pudieron traer". */

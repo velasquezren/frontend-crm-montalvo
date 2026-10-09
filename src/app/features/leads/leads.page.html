@@ -56,18 +56,18 @@
         <app-icon name="inbox" [size]="15" class="shrink-0 mt-px" />
         <p>
           Estás viendo el <span class="font-medium text-text-dark">archivo histórico</span>
-          importado desde FileMaker ({{ resumen.value().historicoImportado.toLocaleString('es-BO') }} pacientes).
+          importado desde FileMaker ({{ resumenVista().historicoImportado.toLocaleString('es-BO') }} pacientes).
           No son prospectos activos: para buscarlos uno a uno usa
           <span class="font-medium text-text-dark">Clientes</span>.
         </p>
       </div>
-    } @else if (resumen.value().historicoImportado > 0) {
+    } @else if (resumenVista().historicoImportado > 0) {
       <div class="flex items-start gap-2.5 mt-1 px-4 py-3 rounded-xl bg-bg-light text-xs text-text-muted">
         <app-icon name="check-circle" [size]="15" class="shrink-0 mt-px text-primary" />
         <p>
           Pipeline de <span class="font-medium text-text-dark">captación activa</span>:
-          {{ resumen.value().totalPipeline }} lead{{ resumen.value().totalPipeline === 1 ? '' : 's' }}.
-          Los {{ resumen.value().historicoImportado.toLocaleString('es-BO') }} pacientes históricos
+          {{ resumenVista().totalPipeline }} lead{{ resumenVista().totalPipeline === 1 ? '' : 's' }}.
+          Los {{ resumenVista().historicoImportado.toLocaleString('es-BO') }} pacientes históricos
           quedan fuera para no saturar el tablero.
         </p>
       </div>
@@ -84,7 +84,7 @@
         </div>
       }
     </div>
-  } @else if (leads.error() && leads.value().datos.length === 0) {
+  } @else if (leads.error()) {
     <app-error-carga que="los prospectos" (reintentar)="leads.reload()" />
   } @else {
 
@@ -100,7 +100,7 @@
               Nuevos
             </span>
             <span class="contador-estado contador-estado-info">
-              {{ resumen.value().porEstado.NUEVO }}
+              {{ resumenVista().porEstado.NUEVO }}
             </span>
           </div>
           <div
@@ -136,7 +136,7 @@
               Contactados
             </span>
             <span class="contador-estado contador-estado-neutral">
-              {{ resumen.value().porEstado.CONTACTADO }}
+              {{ resumenVista().porEstado.CONTACTADO }}
             </span>
           </div>
           <div
@@ -172,7 +172,7 @@
               Convertidos
             </span>
             <span class="contador-estado contador-estado-success">
-              {{ resumen.value().porEstado.CONVERTIDO }}
+              {{ resumenVista().porEstado.CONVERTIDO }}
             </span>
           </div>
           <div
@@ -208,7 +208,7 @@
               Perdidos
             </span>
             <span class="contador-estado contador-estado-critical">
-              {{ resumen.value().porEstado.PERDIDO }}
+              {{ resumenVista().porEstado.PERDIDO }}
             </span>
           </div>
           <div

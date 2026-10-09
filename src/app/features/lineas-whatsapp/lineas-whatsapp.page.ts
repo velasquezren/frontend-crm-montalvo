@@ -30,6 +30,7 @@ import { LineaWhatsapp } from './linea-whatsapp.model';
 import { LineasWhatsappService } from './lineas-whatsapp.service';
 import { MenuAtencionEditorComponent } from './menu-atencion-editor.component';
 import { CobroLineaEditorComponent } from './cobro-linea-editor.component';
+import { valorOVacio } from '../../core/api/valor-o-vacio';
 
 @Component({
   selector: 'app-lineas-whatsapp-page',
@@ -64,13 +65,15 @@ export class LineasWhatsappPage {
     () => this.service.listarRequest(this.pagina()),
     { defaultValue: paginaVacia<LineaWhatsapp>() },
   );
+  /** `lineas` sin lanzar si la carga falló: lo que se pinta fuera de su rama de contenido (ver `valorOVacio`). */
+  protected readonly lineasVista = valorOVacio(this.lineas, paginaVacia<LineaWhatsapp>());
   /** Las dos cifras del resumen salen de la página ya cargada: cero peticiones
    *  nuevas (ver `crm-rendimiento`, «lo que mueve la aguja es no pedir»). */
   protected readonly totalConectadas = computed(
-    () => this.lineas.value().datos.filter(l => l.conectada).length,
+    () => this.lineasVista().datos.filter(l => l.conectada).length,
   );
   protected readonly totalPendientes = computed(
-    () => this.lineas.value().datos.length - this.totalConectadas(),
+    () => this.lineasVista().datos.length - this.totalConectadas(),
   );
 
   protected readonly seleccionada = signal<LineaWhatsapp | null>(null);

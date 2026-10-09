@@ -67,7 +67,7 @@
             <app-icon name="file-text" [size]="14" />
             <span>Listado</span>
             <span class="crm-contador" [class.crm-contador-activo]="vistaActiva() === 'tabla'">
-              {{ ventas.value().total }}
+              {{ ventasVista().total }}
             </span>
           </button>
           <button
@@ -167,7 +167,7 @@
               (valueChange)="cambiarAgente($event)"
               ariaLabel="Filtrar por agente comercial">
               <option value="TODOS">Todos los agentes</option>
-              @for (ag of agentes.value(); track ag.id) {
+              @for (ag of agentesVista(); track ag.id) {
                 <option [value]="ag.id">{{ ag.nombre }}</option>
               }
             </app-select>
@@ -338,13 +338,13 @@
   <!-- ── Modo Listado: Tabla Operativa de Ventas ──────────────────── -->
   @if (vistaActiva() === 'tabla') {
     @defer (on viewport) {
-      @if (ventas.isLoading() && ventas.value().datos.length === 0) {
+      @if (ventas.isLoading() && ventasVista().datos.length === 0) {
         <div class="bg-white rounded-2xl shadow-subtle p-6 flex flex-col gap-4">
           @for (fila of [1, 2, 3, 4, 5]; track fila) {
             <app-loading-skeleton shape="text" height="2.5rem" />
           }
         </div>
-      } @else if (ventas.error() && ventas.value().datos.length === 0) {
+      } @else if (ventas.error() && ventasVista().datos.length === 0) {
         <app-error-carga que="las ventas" (reintentar)="ventas.reload()" />
       } @else if (ventasFiltradas().length > 0) {
         <div class="w-full min-w-0 max-w-full overflow-hidden">
@@ -454,10 +454,10 @@
         </div>
 
         <app-paginator
-          [pagina]="ventas.value().pagina"
-          [totalPaginas]="ventas.value().totalPaginas"
-          [total]="ventas.value().total"
-          [limite]="ventas.value().limite"
+          [pagina]="ventasVista().pagina"
+          [totalPaginas]="ventasVista().totalPaginas"
+          [total]="ventasVista().total"
+          [limite]="ventasVista().limite"
           (cambiar)="pagina.set($event)" />
       } @else {
         <div class="bg-white rounded-2xl shadow-subtle p-6">

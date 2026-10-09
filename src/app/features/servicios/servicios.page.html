@@ -19,7 +19,7 @@
           [value]="periodoId() || ''"
           (valueChange)="seleccionarPeriodo($event)">
           <option value="">Todo el historial</option>
-          @for (p of periodos.value().datos; track p.id) {
+          @for (p of periodosVista().datos; track p.id) {
             <option [value]="p.id">{{ nombreMes(p.mes) }} {{ p.anio }}</option>
           }
         </app-select>
@@ -33,7 +33,7 @@
         {{ estadoLabel[p.estado] }}
       </app-badge>
       <span class="pill-meta">{{ p.filasTotales }} filas · TC {{ p.tipoCambio }}</span>
-    } @else if (dashboard.value(); as d) {
+    } @else if (dashboardVista(); as d) {
       <span class="pill-meta">
         {{ d.porMes.length }} {{ d.porMes.length === 1 ? 'mes cargado' : 'meses cargados' }}
       </span>
@@ -70,15 +70,15 @@
       [hidden]="pestana() !== 'DASHBOARD'"
       class="servicios-tab-panel"
       role="tabpanel">
-  @if (dashboard.isLoading() && !dashboard.value()) {
+  @if (dashboard.isLoading() && !dashboardVista()) {
     <div class="grid-kpis-modern">
       @for (n of [1, 2, 3, 4, 5]; track n) {
         <app-loading-skeleton height="100px" />
       }
     </div>
-  } @else if (dashboard.error() && !dashboard.value()) {
+  } @else if (dashboard.error() && !dashboardVista()) {
     <app-error-carga que="el resumen" titulo="No se pudo cargar el resumen" (reintentar)="dashboard.reload()" />
-  } @else if (dashboard.value(); as d) {
+  } @else if (dashboardVista(); as d) {
     @if (d.totales.servicios === 0) {
       <app-empty-state
         icon="inbox"
@@ -308,7 +308,7 @@
       class="servicios-tab-panel"
       role="tabpanel">
       <app-servicios-pacientes-tabla
-        [pacientes]="pacientes.value()"
+        [pacientes]="pacientesVista()"
         [isLoading]="pacientes.isLoading()"
         [error]="pacientes.error()"
         (reintentar)="pacientes.reload()"
@@ -331,7 +331,7 @@
       class="servicios-tab-panel"
       role="tabpanel">
       <app-servicios-medicos-tabla
-        [medicos]="medicos.value()"
+        [medicos]="medicosVista()"
         [isLoading]="medicos.isLoading()"
         [error]="medicos.error()"
         (reintentar)="medicos.reload()"

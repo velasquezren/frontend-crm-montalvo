@@ -22,6 +22,7 @@ import { ConversacionesService } from '../../conversaciones.service';
 import { faltaParaEnviar } from '../../plantillas';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
 import { EnvioPlantillaComponent } from '../envio-plantilla/envio-plantilla.component';
+import { valorOVacio } from '../../../../core/api/valor-o-vacio';
 
 /** A quién se le escribe: una ficha de la base o un número tecleado. */
 type Destino =
@@ -111,6 +112,8 @@ export class NuevoChatComponent {
     },
     { defaultValue: [] },
   );
+  /** `plantillas` sin lanzar si la carga falló: lo que se pinta fuera de su rama de contenido (ver `valorOVacio`). */
+  protected readonly plantillasVista = valorOVacio(this.plantillas, []);
 
   /** Lo primero que falta, dicho en una línea encima del botón. */
   protected readonly falta = computed(() => {

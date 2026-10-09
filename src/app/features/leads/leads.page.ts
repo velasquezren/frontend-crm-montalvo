@@ -51,6 +51,7 @@ import { AVISO_TELEFONO_INVALIDO, telefonoParaEscribir } from '../../shared/mode
 import { FiltroLeads, LeadsService, ResumenLeads } from './leads.service';
 import { RouterLink } from '@angular/router';
 import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
+import { valorOVacio } from '../../core/api/valor-o-vacio';
 
 type FiltroOrigen = OrigenLeadApi | 'TODOS';
 
@@ -210,6 +211,8 @@ export class LeadsPage {
       },
     },
   );
+  /** `resumen` sin lanzar si la carga falló: lo que se pinta fuera de su rama de contenido (ver `valorOVacio`). */
+  protected readonly resumenVista = valorOVacio(this.resumen, { porEstado: { NUEVO: 0, CONTACTADO: 0, CONVERTIDO: 0, PERDIDO: 0 }, totalPipeline: 0, historicoImportado: 0 });
 
   /**
    * Kanban: se cargan hasta 100 tarjetas para arrastrar. Si una columna tiene
@@ -225,9 +228,11 @@ export class LeadsPage {
     },
     { defaultValue: paginaVacia<Lead>() },
   );
+  /** `leads` sin lanzar si la carga falló (ver `valorOVacio`). */
+  protected readonly leadsVista = valorOVacio(this.leads, paginaVacia<Lead>());
 
   /* ── Copia local reactiva auto-sincronizada con linkedSignal (Angular 19/21) ─────────── */
-  protected readonly leadsLocales = linkedSignal<readonly Lead[]>(() => this.leads.value().datos);
+  protected readonly leadsLocales = linkedSignal<readonly Lead[]>(() => this.leadsVista().datos);
 
   /* ── Columnas del Kanban derivadas síncronamente con computed() ────── */
   protected readonly nuevos = computed(() => this.leadsLocales().filter((l: Lead) => l.estado === 'NUEVO'));
@@ -237,7 +242,7 @@ export class LeadsPage {
 
   /** Cuántas tarjetas hay sin cargar en cada columna (total real − cargadas). */
   protected ocultasEn(estado: EstadoLead, cargadas: number): number {
-    return Math.max(0, this.resumen.value().porEstado[estado] - cargadas);
+    return Math.max(0, this.resumenVista().porEstado[estado] - cargadas);
   }
 
   constructor() {

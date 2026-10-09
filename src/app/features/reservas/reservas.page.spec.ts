@@ -22,14 +22,16 @@ const pagina = (datos: ReservaAgenda[], porEstado: Record<string, number> = {}):
 describe('pantalla Reservas', () => {
   let fixture: ComponentFixture<ReservasPage>;
   let http: HttpTestingController;
+  let toast: { error: ReturnType<typeof vi.fn>; success: ReturnType<typeof vi.fn>; show: ReturnType<typeof vi.fn> };
   async function asentar() {
     for (let i = 0; i < 4; i++) { await Promise.resolve(); TestBed.tick(); }
     fixture.detectChanges();
   }
   async function montar() {
+    toast = { error: vi.fn(), success: vi.fn(), show: vi.fn() };
     TestBed.configureTestingModule({ providers: [
       provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
-      { provide: ToastService, useValue: { error: vi.fn(), success: vi.fn() } },
+      { provide: ToastService, useValue: toast },
     ] });
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(ReservasPage);
@@ -75,5 +77,66 @@ describe('pantalla Reservas', () => {
     pedido.flush(pagina([]));
     await asentar();
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Ninguna reserva con ese filtro');
+  });
+
+  /* Se refresca sola cada 2 minutos contra el MySQL de ScriptCase: una vuelta
+     fallida no puede cambiarle a recepción la tabla que está leyendo por un error. */
+  it('si una actualización falla, la tabla se queda con un aviso; si vuelve, el aviso se va', async () => {
+    await montar();
+    http.expectOne(r => r.url.endsWith('/agenda/reservas')).flush(pagina([reserva], { PAGADO: 1 }));
+    await asentar();
+
+    const boton = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(b => b.textContent?.includes('Actualizar'))!;
+    boton.click();
+    await asentar();
+    http.expectOne(r => r.url.endsWith('/agenda/reservas')).flush({ codigo: 'AGENDA_NO_DISPONIBLE' }, { status: 503, statusText: 'Unavailable' });
+    await asentar();
+    let texto = (fixture.nativeElement as HTMLElement).textContent!;
+    expect(texto).toContain('María Sintética');
+    expect(texto).toContain('No se pudo actualizar la agenda');
+
+    const reintentar = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(b => b.textContent?.trim() === 'Reintentar')!;
+    reintentar.click();
+    await asentar();
+    http.expectOne(r => r.url.endsWith('/agenda/reservas')).flush(pagina([reserva], { PAGADO: 1 }));
+    await asentar();
+    texto = (fixture.nativeElement as HTMLElement).textContent!;
+    expect(texto).not.toContain('No se pudo actualizar la agenda');
+  });
+
+  it('un filtro nuevo que falla no muestra la tabla del filtro anterior', async () => {
+    await montar();
+    http.expectOne(r => r.url.endsWith('/agenda/reservas')).flush(pagina([reserva], { PAGADO: 1 }));
+    await asentar();
+    const chip = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(b => b.textContent?.includes('Hoy'))!;
+    chip.click();
+    await asentar();
+    http.expectOne(r => r.url.endsWith('/agenda/reservas')).flush({}, { status: 503, statusText: 'Unavailable' });
+    await asentar();
+    const texto = (fixture.nativeElement as HTMLElement).textContent!;
+    expect(texto).not.toContain('María Sintética');
+    expect(texto).toContain('Reintentar');
+  });
+
+  it('si el navegador bloquea la pestaña del PDF, el aviso trae «Abrir», que sí la abre', async () => {
+    await montar();
+    http.expectOne(r => r.url.endsWith('/agenda/reservas')).flush(pagina([reserva], { PAGADO: 1 }));
+    await asentar();
+    const abrir = vi.spyOn(window, 'open').mockReturnValueOnce(null).mockReturnValueOnce({ opener: window } as unknown as Window);
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:comprobante');
+
+    const pagina_ = fixture.componentInstance as unknown as { verComprobante(r: ReservaAgenda): Promise<void> };
+    const vista = pagina_.verComprobante(reserva);
+    http.expectOne(r => r.url.endsWith('/agenda/reservas/42/comprobante')).flush(new Blob(['%PDF'], { type: 'application/pdf' }));
+    await vista;
+
+    expect(abrir).toHaveBeenCalledTimes(1);
+    expect(toast.show).toHaveBeenCalledTimes(1);
+    const [, , , , accion, alPulsar] = toast.show.mock.calls[0] as [string, string, string, number, string, () => void];
+    expect(accion).toBe('Abrir');
+    alPulsar();
+    expect(abrir).toHaveBeenCalledTimes(2);
+    expect(abrir.mock.calls[1]).toEqual(['blob:comprobante', '_blank']);
+    abrir.mockRestore();
   });
 });

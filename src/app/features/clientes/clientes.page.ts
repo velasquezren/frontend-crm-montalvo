@@ -47,6 +47,7 @@ import { AVISO_TELEFONO_INVALIDO, telefonoParaEscribir } from '../../shared/mode
 import { Router, RouterLink } from '@angular/router';
 import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { SelectComponent } from '../../shared/components/select/select.component';
+import { valorOVacio } from '../../core/api/valor-o-vacio';
 
 type FiltroCategoria = CategoriaCliente | 'TODOS';
 type PestanaModal = 'EXPEDIENTE' | 'CONTACTO' | 'NOTAS';
@@ -168,17 +169,19 @@ export class ClientesPage {
     },
     { defaultValue: paginaClientesVacia() },
   );
+  /** `clientes` sin lanzar si la carga falló: lo que se pinta fuera de su rama de contenido (ver `valorOVacio`). */
+  protected readonly clientesVista = valorOVacio(this.clientes, paginaClientesVacia());
 
   /* ── Métricas y KPIs Superiores ────────────────────────────────── */
   /* Como los otros tres: todas las visibles, no lo que deja el filtro. El
      total filtrado ya lo dice el paginador. */
   protected readonly totalPacientes = computed(() =>
-    Object.values(this.clientes.value().resumen.porCategoria).reduce((suma, n) => suma + n, 0),
+    Object.values(this.clientesVista().resumen.porCategoria).reduce((suma, n) => suma + n, 0),
   );
   /* Del servidor, sobre todo lo visible: ver `ResumenClientes`. */
-  protected readonly totalGold = computed(() => this.clientes.value().resumen.porCategoria.GOLD);
-  protected readonly totalProspectos = computed(() => this.clientes.value().resumen.porCategoria.PROSPECTO);
-  protected readonly totalSinAsignar = computed(() => this.clientes.value().resumen.sinAsignar);
+  protected readonly totalGold = computed(() => this.clientesVista().resumen.porCategoria.GOLD);
+  protected readonly totalProspectos = computed(() => this.clientesVista().resumen.porCategoria.PROSPECTO);
+  protected readonly totalSinAsignar = computed(() => this.clientesVista().resumen.sinAsignar);
 
   /**
    * Cambiar el orden vuelve a la primera página: seguir en la 7 tras reordenar

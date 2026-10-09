@@ -900,7 +900,110 @@ function verificarZonaClinica() {
   }
 }
 
+// ── Un effect no lee un recurso sin preguntar antes si cargó ─────────────────
+// Desde Angular 20, `value()` de un recurso en error LANZA (`ResourceValueError`).
+// En una plantilla no pasa nada: la rama de error va primero (las cuatro ramas).
+// Un `effect` no tiene esa rama: corre solo, y si la carga falló revienta en cada
+// vuelta. Pasó en Resultados (2026-10-09): con el portal caído, CADA mensaje de
+// WhatsApp que llegaba al CRM disparaba el efecto de tiempo real y lanzaba; y el
+// efecto que ofrece enviar el informe tras crear la ficha se quedaba trabado.
+// Se exige que el mismo `effect` pregunte `hasValue()`, `status()` o `error()`.
+function verificarEfectosConRecurso() {
+  for (const ruta of ARCHIVOS) {
+    if (!ruta.endsWith('.ts') || ruta.includes('.spec.') || !ruta.includes(`${sep}src${sep}app${sep}`)) continue;
+    const texto = readFileSync(ruta, 'utf8');
+    const recursos = [...texto.matchAll(/(\w+)\s*=\s*(?:httpResource|resource|rxResource)\s*[<(]/g)].map(m => m[1]);
+    if (recursos.length === 0) continue;
+    const rel = relative(RAIZ, ruta).split(sep).join('/');
+    for (const m of texto.matchAll(/\beffect\(/g)) {
+      let i = m.index + m[0].length;
+      let profundidad = 1;
+      while (profundidad > 0 && i < texto.length) {
+        if (texto[i] === '(') profundidad++;
+        else if (texto[i] === ')') profundidad--;
+        i++;
+      }
+      const cuerpo = texto.slice(m.index, i);
+      const linea = texto.slice(0, m.index).split('\n').length;
+      for (const nombre of recursos) {
+        if (!cuerpo.includes(`this.${nombre}.value()`)) continue;
+        if (new RegExp(`this\\.${nombre}\\.(?:hasValue|status|error)\\(\\)`).test(cuerpo)) continue;
+        señala(
+          'crm-feature-page',
+          `${rel}:${linea}: un \`effect\` lee \`${nombre}.value()\` sin preguntar antes \`hasValue()\`/\`status()\`. ` +
+            'Con la carga en error, `value()` LANZA y el efecto revienta en cada vuelta.',
+        );
+      }
+    }
+  }
+}
+
+// ── Una plantilla no lee un recurso antes de su rama de error ────────────────
+// Misma causa que la anterior, en la plantilla: un chip con su contador, una
+// tarjeta de KPI o un selector ARRIBA de la tabla leían `x.value()` antes del
+// `@else if (x.error())`. Con la carga en error la plantilla lanzaba y la
+// pantalla se rompía justo en vez de mostrar «Reintentar» (2026-10-09: Clientes,
+// Ventas, Leads, Actividades, Líneas, Servicios, Perfil, Nuevo chat, Resultados).
+// Lo que se pinta fuera de la rama de contenido lee `valorOVacio()`
+// (core/api/valor-o-vacio.ts). Se acepta en la misma línea un `x.hasValue()` o
+// un `x.isLoading() &&`, que nunca llegan a leer un recurso en error.
+//
+// Finanzas y Comisiones están cerradas por decisión del propietario: su deuda se
+// congela aquí y SOLO PUEDE BAJAR (arreglar obliga a bajar la cifra).
+const LECTURA_ANTES_DEL_ERROR_CONGELADA = {
+  'src/app/features/finanzas/components/desempeno-agentes/desempeno-agentes.component.html': 2,
+  'src/app/features/finanzas/components/tipo-cambio/tipo-cambio-admin.component.html': 1,
+  'src/app/features/planilla-comisiones/resumen-anual.page.html': 1,
+  'src/app/features/planilla-comisiones/planilla-comisiones.page.html': 7,
+  'src/app/features/analitica/analitica.page.html': 3,
+};
+
+function verificarLecturaAntesDelError() {
+  const vistos = new Set();
+  for (const ruta of ARCHIVOS) {
+    if (!ruta.endsWith('.html') || !ruta.includes(`${sep}src${sep}app${sep}`)) continue;
+    const ts = ruta.replace(/\.html$/, '.ts');
+    if (!existsSync(ts)) continue;
+    const codigo = readFileSync(ts, 'utf8');
+    const recursos = [...codigo.matchAll(/(\w+)\s*=\s*(?:httpResource|resource|rxResource)\s*[<(]/g)].map(m => m[1]);
+    if (recursos.length === 0) continue;
+    const html = readFileSync(ruta, 'utf8');
+    const rel = relative(RAIZ, ruta).split(sep).join('/');
+    const hallazgos = [];
+    for (const nombre of recursos) {
+      const rama = html.indexOf(`${nombre}.error()`);
+      for (const m of html.matchAll(new RegExp(`(?<![\\w.])${nombre}\\.value\\(\\)`, 'g'))) {
+        const inicio = html.lastIndexOf('\n', m.index) + 1;
+        const fin = html.indexOf('\n', m.index);
+        const linea = html.slice(inicio, fin === -1 ? undefined : fin);
+        /* `x.error() && x.value()` lanza SIEMPRE que entra (pasó en Leads). */
+        if (new RegExp(`${nombre}\\.error\\(\\)\\s*&&[^\\n]*${nombre}\\.value\\(\\)`).test(linea)) {
+          hallazgos.push(`${rel}:${html.slice(0, m.index).split('\n').length}: \`${nombre}.error() && ${nombre}.value()\``);
+          continue;
+        }
+        if (rama !== -1 && m.index > rama) continue;
+        if (linea.includes(`${nombre}.hasValue()`) || new RegExp(`${nombre}\\.isLoading\\(\\)\\s*&&`).test(linea)) continue;
+        hallazgos.push(`${rel}:${html.slice(0, m.index).split('\n').length}: \`${nombre}.value()\``);
+      }
+    }
+    const tolerado = LECTURA_ANTES_DEL_ERROR_CONGELADA[rel] ?? 0;
+    if (rel in LECTURA_ANTES_DEL_ERROR_CONGELADA) vistos.add(rel);
+    if (hallazgos.length > tolerado) {
+      for (const h of hallazgos) {
+        señala('crm-feature-page', `${h} se lee antes de la rama de error: con la carga en error LANZA y rompe la pantalla. Usa \`valorOVacio()\` (core/api).`);
+      }
+    } else if (hallazgos.length < tolerado) {
+      señala('crm-feature-page', `${rel}: la deuda congelada bajó a ${hallazgos.length} (era ${tolerado}). Baja la cifra en LECTURA_ANTES_DEL_ERROR_CONGELADA.`);
+    }
+  }
+  for (const rel of Object.keys(LECTURA_ANTES_DEL_ERROR_CONGELADA)) {
+    if (!vistos.has(rel)) señala('crm-feature-page', `${rel}: entrada de LECTURA_ANTES_DEL_ERROR_CONGELADA sin archivo. Quítala.`);
+  }
+}
+
 verificarCodigo();
+verificarEfectosConRecurso();
+verificarLecturaAntesDelError();
 verificarCajonUnico();
 verificarNombreCliente();
 verificarPildoras();

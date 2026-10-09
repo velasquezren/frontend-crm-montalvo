@@ -129,7 +129,7 @@
           <h3 class="paso__titulo">Primer mensaje</h3>
           @if (lineaElegida(); as linea) {
             <app-envio-plantilla
-              [plantillas]="plantillas.value()"
+              [plantillas]="plantillasVista()"
               [cargando]="plantillas.isLoading()"
               [error]="!!plantillas.error()"
               [linea]="linea.nombre"

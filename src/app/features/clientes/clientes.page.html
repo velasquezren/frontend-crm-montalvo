@@ -60,7 +60,7 @@
     @for (cat of filtros; track cat) {
       <app-filter-chip
         [active]="filtro() === cat"
-        [count]="cat === 'TODOS' ? totalPacientes() : clientes.value().resumen.porCategoria[cat]"
+        [count]="cat === 'TODOS' ? totalPacientes() : clientesVista().resumen.porCategoria[cat]"
         (clicked)="cambiarFiltro(cat)">
         {{ cat === 'TODOS' ? 'Todos' : categoriaLabel[cat] }}
       </app-filter-chip>
@@ -70,7 +70,7 @@
 
 <!-- ── Tabla Principal / Skeleton / State Vacio ──────────────────────── -->
 <div class="w-full">
-  @if (clientes.isLoading() && clientes.value().datos.length === 0) {
+  @if (clientes.isLoading() && clientesVista().datos.length === 0) {
     <div class="bg-white rounded-2xl p-6 shadow-subtle flex flex-col gap-4">
       <app-loading-skeleton height="48px" />
       <app-loading-skeleton height="48px" />
@@ -78,9 +78,9 @@
       <app-loading-skeleton height="48px" />
       <app-loading-skeleton height="48px" />
     </div>
-  } @else if (clientes.error() && clientes.value().datos.length === 0) {
+  } @else if (clientes.error() && clientesVista().datos.length === 0) {
     <app-error-carga que="los clientes" (reintentar)="clientes.reload()" />
-  } @else if (clientes.value().datos.length > 0) {
+  } @else if (clientesVista().datos.length > 0) {
     <app-table>
       <thead>
         <tr>
@@ -100,7 +100,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (cliente of clientes.value().datos; track cliente.id) {
+        @for (cliente of clientesVista().datos; track cliente.id) {
           <tr class="cursor-pointer hover:bg-bg-light/40 transition-colors" (click)="abrirEdicion(cliente, modalFicha)" title="Haga clic para ver/editar ficha">
             <td>
               <div class="flex items-center gap-3">
@@ -186,10 +186,10 @@
     </app-table>
 
     <app-paginator
-      [pagina]="clientes.value().pagina"
-      [totalPaginas]="clientes.value().totalPaginas"
-      [total]="clientes.value().total"
-      [limite]="clientes.value().limite"
+      [pagina]="clientesVista().pagina"
+      [totalPaginas]="clientesVista().totalPaginas"
+      [total]="clientesVista().total"
+      [limite]="clientesVista().limite"
       (cambiar)="pagina.set($event)" />
   } @else {
     <div class="bg-white rounded-2xl shadow-subtle">

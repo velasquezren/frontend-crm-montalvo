@@ -1,9 +1,9 @@
 <app-page-header title="Actividades" subtitle="Organiza tus llamadas, reuniones, tareas y recordatorios de pacientes.">
   <div class="flex items-center gap-2">
-    @if (resumen.value().vencidas > 0) {
+    @if (resumenVista().vencidas > 0) {
       <span class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-critical-bg text-text-critical border border-border">
         <app-icon name="alert-circle" [size]="13" />
-        {{ resumen.value().vencidas }} vencida{{ resumen.value().vencidas > 1 ? 's' : '' }}
+        {{ resumenVista().vencidas }} vencida{{ resumenVista().vencidas > 1 ? 's' : '' }}
       </span>
     }
     <app-button icon="plus" (clicked)="abrirCreacion()">Nueva actividad</app-button>
@@ -21,7 +21,7 @@
     (click)="cambiarFiltroRapido('HOY')">
     <app-kpi-card
       label="Para Hoy"
-      [valor]="resumen.value().hoy"
+      [valor]="resumenVista().hoy"
       icon="clock"
       tono="primary"
       [destacado]="filtroRapido() === 'HOY'"
@@ -37,7 +37,7 @@
     (click)="cambiarFiltroRapido('VENCIDAS')">
     <app-kpi-card
       label="Vencidas"
-      [valor]="resumen.value().vencidas"
+      [valor]="resumenVista().vencidas"
       icon="alert-circle"
       tono="critical"
       [destacado]="filtroRapido() === 'VENCIDAS'"
@@ -53,7 +53,7 @@
     (click)="cambiarFiltroRapido('PROXIMA_SEMANA')">
     <app-kpi-card
       label="Próximos 7 Días"
-      [valor]="resumen.value().proximaSemana"
+      [valor]="resumenVista().proximaSemana"
       icon="calendar"
       tono="secondary"
       [destacado]="filtroRapido() === 'PROXIMA_SEMANA'"
@@ -69,7 +69,7 @@
     (click)="cambiarFiltroRapido('COMPLETADAS')">
     <app-kpi-card
       label="Completadas"
-      [valor]="resumen.value().completadas ?? 0"
+      [valor]="resumenVista().completadas ?? 0"
       icon="check-circle"
       tono="neutral"
       [destacado]="filtroRapido() === 'COMPLETADAS'"
@@ -132,16 +132,16 @@
       <app-filter-chip size="sm" [active]="filtroRapido() === 'PENDIENTES'" (clicked)="cambiarFiltroRapido('PENDIENTES')">
         Pendientes
       </app-filter-chip>
-      <app-filter-chip size="sm" [active]="filtroRapido() === 'HOY'" [count]="resumen.value().hoy" (clicked)="cambiarFiltroRapido('HOY')">
+      <app-filter-chip size="sm" [active]="filtroRapido() === 'HOY'" [count]="resumenVista().hoy" (clicked)="cambiarFiltroRapido('HOY')">
         Hoy
       </app-filter-chip>
-      <app-filter-chip size="sm" [active]="filtroRapido() === 'VENCIDAS'" [count]="resumen.value().vencidas" (clicked)="cambiarFiltroRapido('VENCIDAS')">
+      <app-filter-chip size="sm" [active]="filtroRapido() === 'VENCIDAS'" [count]="resumenVista().vencidas" (clicked)="cambiarFiltroRapido('VENCIDAS')">
         Vencidas
       </app-filter-chip>
-      <app-filter-chip size="sm" [active]="filtroRapido() === 'PROXIMA_SEMANA'" [count]="resumen.value().proximaSemana" (clicked)="cambiarFiltroRapido('PROXIMA_SEMANA')">
+      <app-filter-chip size="sm" [active]="filtroRapido() === 'PROXIMA_SEMANA'" [count]="resumenVista().proximaSemana" (clicked)="cambiarFiltroRapido('PROXIMA_SEMANA')">
         Próximos 7 días
       </app-filter-chip>
-      <app-filter-chip size="sm" [active]="filtroRapido() === 'COMPLETADAS'" [count]="resumen.value().completadas ?? 0" (clicked)="cambiarFiltroRapido('COMPLETADAS')">
+      <app-filter-chip size="sm" [active]="filtroRapido() === 'COMPLETADAS'" [count]="resumenVista().completadas ?? 0" (clicked)="cambiarFiltroRapido('COMPLETADAS')">
         Completadas
       </app-filter-chip>
       <app-filter-chip size="sm" [active]="filtroRapido() === 'TODAS'" (clicked)="cambiarFiltroRapido('TODAS')">
@@ -166,7 +166,7 @@
         </app-select>
       </div>
 
-      @if (esAdmin() && agentes.value().length > 0) {
+      @if (esAdmin() && agentesVista().length > 0) {
         <div class="flex-1 sm:flex-initial sm:w-44">
           <app-select
             size="sm"
@@ -176,7 +176,7 @@
             (valueChange)="onCambiarAgente($event)"
             ariaLabel="Filtrar por agente comercial">
             <option value="TODOS">Todos los agentes</option>
-            @for (ag of agentes.value(); track ag.id) {
+            @for (ag of agentesVista(); track ag.id) {
               <option [value]="ag.id">{{ ag.nombre }}</option>
             }
           </app-select>
