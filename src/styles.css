@@ -890,6 +890,23 @@ tr:hover .celda-sticky {
   background: var(--color-bg-light);
 }
 
+/*
+ * El foco de un envoltorio que contiene el control de verdad.
+ *
+ * Un `<input type="file">` se esconde para poder pintar su propio botón, y ahí
+ * hay una trampa: con `hidden` (`display: none`) el input deja de ser
+ * ENFOCABLE, así que el selector de archivos no se alcanza con el teclado —el
+ * `<label>` tampoco entra en el orden de tabulación—. Se esconde con
+ * `sr-only`, que lo mantiene enfocable, y el foco se pinta aquí porque el
+ * input no se ve.
+ *
+ * Mismo outline que `:focus-visible` global: no se inventa otro.
+ */
+.crm-foco-dentro:focus-within {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .crm-subir-archivo:focus-within {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;

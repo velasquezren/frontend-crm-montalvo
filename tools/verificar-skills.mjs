@@ -1122,6 +1122,81 @@ function verificarDuenoDeEndpoint() {
   }
 }
 
+// ── Todo control sin texto visible tiene nombre accesible ───────────────────
+// Regla de `crm-ui-desde-codigo` §4: un `<app-button>` solo-ícono sin texto
+// proyectado y un `<app-input>`/`<app-select>` sin `label` son MUDOS para un
+// lector de pantalla. `title` no cuenta: es un tooltip de ratón, no llega en
+// táctil y como nombre accesible es el último recurso del algoritmo.
+// `placeholder` tampoco: desaparece al escribir.
+//
+// Barrido del 2026-10-10: 6 botones solo-ícono (dos sin `title` siquiera, o sea
+// anunciados solo como «botón») y 37 campos con nada más que su `placeholder`.
+// Veintiuno de esos 37 SÍ tenían etiqueta visible al lado —`<label class="edit-label">`—
+// pero sin asociar: el lector leía el placeholder y pulsar la etiqueta no
+// enfocaba el campo.
+//
+// Congelados los de Finanzas y Comisiones, cerradas por decisión del
+// propietario. Solo puede bajar.
+const SIN_NOMBRE_ACCESIBLE_CONGELADO = {
+  'src/app/features/planilla-comisiones/planilla-comisiones.page.html': 1,
+  'src/app/features/finanzas/components/tipo-cambio/tipo-cambio-admin.component.html': 2,
+  'src/app/features/finanzas/components/desempeno-agentes/partes/ventas-agente.component.html': 1,
+};
+
+function verificarNombreAccesible() {
+  const vistos = new Set();
+  for (const ruta of ARCHIVOS) {
+    if (!ruta.endsWith('.html') || !ruta.includes(`${sep}src${sep}app${sep}`)) continue;
+    const rel = relative(RAIZ, ruta).split(sep).join('/');
+    const texto = readFileSync(ruta, 'utf8');
+    const hallazgos = [];
+
+    /* `<app-button>` con ícono que no proyecta texto: `… />` o `…></app-button>`. */
+    for (const m of texto.matchAll(/<app-button\b((?:[^<>]|\n)*?)(\/>|>\s*<\/app-button>)/g)) {
+      if (!/\bicon\b/.test(m[1]) || /ariaLabel/.test(m[1])) continue;
+      hallazgos.push({ linea: texto.slice(0, m.index).split('\n').length, que: '<app-button> solo-ícono' });
+    }
+
+    for (const tag of ['app-input', 'app-select']) {
+      for (const m of texto.matchAll(new RegExp(`<${tag}\\b((?:[^<>]|\\n)*?)/?>`, 'g'))) {
+        /* `/i` a propósito: cubre `label`, `[label]` y `ariaLabel` de una vez.
+           Con `/label/` sin la bandera, `ariaLabel` NO coincide —la L es
+           mayúscula— y la regla marcaba justo lo que ya tenía nombre. */
+        if (/label/i.test(m[1])) continue;
+        hallazgos.push({ linea: texto.slice(0, m.index).split('\n').length, que: `<${tag}> sin label` });
+      }
+    }
+
+    const tolerado = SIN_NOMBRE_ACCESIBLE_CONGELADO[rel] ?? 0;
+    if (rel in SIN_NOMBRE_ACCESIBLE_CONGELADO) vistos.add(rel);
+    if (hallazgos.length < tolerado) {
+      /* La deuda solo puede BAJAR, y al bajar hay que anotarlo: una cifra con
+         holgura deja entrar una regresión sin que nada se queje. */
+      señala(
+        'crm-ui-desde-codigo',
+        `\`${rel}\` bajó a ${hallazgos.length} control(es) sin nombre (toleraba ${tolerado}). ` +
+          'Baja la cifra en `SIN_NOMBRE_ACCESIBLE_CONGELADO`.',
+      );
+      continue;
+    }
+    if (hallazgos.length === tolerado) continue;
+
+    for (const h of hallazgos) {
+      señala(
+        'crm-ui-desde-codigo',
+        `${rel}:${h.linea}: ${h.que} sin nombre accesible. Añade \`ariaLabel\` ` +
+          '— `title` es un tooltip de ratón y `placeholder` desaparece al escribir.',
+      );
+    }
+  }
+
+  for (const rel of Object.keys(SIN_NOMBRE_ACCESIBLE_CONGELADO)) {
+    if (!vistos.has(rel)) {
+      señala('crm-ui-desde-codigo', `\`${rel}\` ya no existe: quítalo de \`SIN_NOMBRE_ACCESIBLE_CONGELADO\`.`);
+    }
+  }
+}
+
 verificarCodigo();
 verificarEfectosConRecurso();
 verificarLecturaAntesDelError();
@@ -1135,6 +1210,7 @@ verificarServiceWorkerUnico();
 verificarZonaClinica();
 verificarEspejosDeRol();
 verificarDuenoDeEndpoint();
+verificarNombreAccesible();
 
 if (problemas.length === 0) {
   console.log('✓ Los skills coinciden con el código.');

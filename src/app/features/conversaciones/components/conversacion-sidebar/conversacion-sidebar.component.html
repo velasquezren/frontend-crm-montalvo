@@ -45,16 +45,19 @@
             <div class="space-y-3">
               <div>
                 <label class="edit-label edit-label-required">Nombre Completo</label>
-                <app-input placeholder="Nombre completo" [(value)]="state.editNombre" />
+                <app-input placeholder="Nombre completo" [(value)]="state.editNombre" 
+  ariaLabel="Nombre Completo" />
               </div>
               <div class="grid grid-cols-2 gap-2">
                 <div>
                   <label class="edit-label">Código PAC (FileMaker)</label>
-                  <app-input placeholder="Ej. PAC-1897" [(value)]="state.editPac" />
+                  <app-input placeholder="Ej. PAC-1897" [(value)]="state.editPac" 
+  ariaLabel="Código PAC (FileMaker)" />
                 </div>
                 <div>
                   <label class="edit-label">Cédula Identidad (CI)</label>
-                  <app-input placeholder="Ej. 6849201" [(value)]="state.editCi" />
+                  <app-input placeholder="Ej. 6849201" [(value)]="state.editCi" 
+  ariaLabel="Cédula Identidad (CI)" />
                 </div>
               </div>
               <!-- Se guarda al elegir, no con «Guardar»: ver `CategoriaPacienteComponent`. -->
@@ -68,7 +71,8 @@
               </div>
               <div>
                 <label class="edit-label">Correo Electrónico</label>
-                <app-input type="email" placeholder="correo@ejemplo.com" [(value)]="state.editEmail" />
+                <app-input type="email" placeholder="correo@ejemplo.com" [(value)]="state.editEmail" 
+  ariaLabel="Correo Electrónico" />
               </div>
             </div>
           </div>
@@ -83,16 +87,19 @@
               <div class="grid grid-cols-2 gap-2">
                 <div>
                   <label class="edit-label">Fecha de Nac.</label>
-                  <app-input type="date" [(value)]="state.editFechaNacimiento" />
+                  <app-input type="date" [(value)]="state.editFechaNacimiento" 
+  ariaLabel="Fecha de Nac." />
                 </div>
                 <div>
                   <label class="edit-label">Lugar de Nac.</label>
-                  <app-input placeholder="Ej. Santa Cruz" [(value)]="state.editLugarNacimiento" />
+                  <app-input placeholder="Ej. Santa Cruz" [(value)]="state.editLugarNacimiento" 
+  ariaLabel="Lugar de Nac." />
                 </div>
               </div>
               <div>
                 <label class="edit-label">Empresa / Ocupación</label>
-                <app-input placeholder="Empresa o profesión" [(value)]="state.editEmpresa" />
+                <app-input placeholder="Empresa o profesión" [(value)]="state.editEmpresa" 
+  ariaLabel="Empresa / Ocupación" />
               </div>
             </div>
           </div>
@@ -115,7 +122,8 @@
               </div>
               <div>
                 <label class="edit-label">Tags (separadas por comas)</label>
-                <app-input placeholder="ej. cirugía, vip, preferente" [(value)]="state.editTags" />
+                <app-input placeholder="ej. cirugía, vip, preferente" [(value)]="state.editTags" 
+  ariaLabel="Tags (separadas por comas)" />
               </div>
               <!-- Normalmente la baja la registra ella al tocar «No me interesa».
                    Esto es para cuando lo dice de palabra, en un sentido o en el
@@ -528,17 +536,20 @@
 
           <div class="space-y-1.5">
             <label [for]="tituloInput.id" class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Título *</label>
-            <app-input #tituloInput placeholder="Ej. Llamar para confirmar cita" [(value)]="tituloActividad" />
+            <app-input #tituloInput placeholder="Ej. Llamar para confirmar cita" [(value)]="tituloActividad" 
+  ariaLabel="Título" />
           </div>
 
           <div class="space-y-1.5">
             <label [for]="fechaInput.id" class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Fecha y hora *</label>
-            <app-input #fechaInput type="datetime-local" [(value)]="fechaActividad" />
+            <app-input #fechaInput type="datetime-local" [(value)]="fechaActividad" 
+  ariaLabel="Fecha y hora" />
           </div>
 
           <div class="space-y-1.5">
             <label [for]="notasInput.id" class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Notas (opcional)</label>
-            <app-input #notasInput [multiline]="true" [rows]="3" placeholder="Detalles para recordar…" [(value)]="notasActividad" />
+            <app-input #notasInput [multiline]="true" [rows]="3" placeholder="Detalles para recordar…" [(value)]="notasActividad" 
+  ariaLabel="Notas (opcional)" />
           </div>
         </div>
 

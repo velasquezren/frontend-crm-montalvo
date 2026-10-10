@@ -48,7 +48,8 @@
       <div class="space-y-2">
         <div class="space-y-1.5">
           <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Título *</label>
-          <app-input placeholder="Ej. Llamar para confirmar cita o cotización" [(value)]="formTitulo" />
+          <app-input placeholder="Ej. Llamar para confirmar cita o cotización" [(value)]="formTitulo" 
+  ariaLabel="Título" />
         </div>
 
         <div class="space-y-1.5">
@@ -61,7 +62,7 @@
               <app-button variant="secondary" size="xs" (clicked)="aplicarPresetFecha('EN_2_DIAS')">En 2 días</app-button>
             </div>
           </div>
-          <app-input type="datetime-local" [(value)]="formFecha" />
+          <app-input type="datetime-local" ariaLabel="Fecha y hora de la actividad" [(value)]="formFecha" />
         </div>
       </div>
 
@@ -129,7 +130,8 @@
 
       <div class="space-y-1.5">
         <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Notas (opcional)</label>
-        <app-input [multiline]="true" [rows]="3" placeholder="Detalles para recordar al retomar el contacto…" [(value)]="formNotas" />
+        <app-input [multiline]="true" [rows]="3" placeholder="Detalles para recordar al retomar el contacto…" [(value)]="formNotas" 
+  ariaLabel="Notas (opcional)" />
       </div>
 
     </div>

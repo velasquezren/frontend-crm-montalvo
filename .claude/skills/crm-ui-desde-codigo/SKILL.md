@@ -76,12 +76,30 @@ si algo cabe **antes** de escribirlo, no después de verlo roto.
 - **Objetivo táctil ≥ 24×24 px** (WCAG 2.2 AA). Un botón solo-ícono de 14 px con `padding: 4px`
   mide 22 px: **no cumple**. Iguala el alto al de sus vecinos (`min-height: 32px`). Pasó con el
   «Contexto» del bloque de atención (30×22 en el móvil).
+- **Todo control sin texto tiene nombre**, y desde el 2026-10-10 **lo comprueba el
+  build** (`verificarNombreAccesible`): un `<app-button>` con `icon` que no proyecta texto,
+  y un `<app-input>`/`<app-select>` sin `label`, exigen `ariaLabel`. **`title` no cuenta**
+  —es un tooltip de ratón, no llega en táctil y como nombre accesible es el último recurso
+  del algoritmo— y **`placeholder` tampoco**, que desaparece al escribir. El barrido de
+  estreno encontró 6 botones solo-ícono (dos sin `title` siquiera: anunciados solo como
+  «botón») y 37 campos con nada más que su placeholder. **Veintiuno de esos 37 sí tenían
+  etiqueta visible al lado** —`<label class="edit-label">Nombre Completo</label>`— pero sin
+  asociar: el lector leía el placeholder y pulsar la etiqueta no enfocaba el campo. Lo de
+  Finanzas y Comisiones queda congelado (cerradas por decisión del propietario) y solo baja.
 - **Todo control sin texto tiene nombre**: `ariaLabel` en `<app-button>`, `<app-select>` y
   `<app-input>` sin `label`. Un buscador sin label es mudo para un lector de pantalla.
 - **Lo que se anuncia va en una región viva**: los avisos (`<app-toast-container>`) son
   `aria-live="polite"`; un estado que cambia en la página, `role="status"`.
 - **Un `<input type="file">` va en `sr-only`, nunca `hidden`**: con `display:none` no se alcanza
-  con el teclado. Envuélvelo en `<label class="crm-subir-archivo">`, que pinta el foco.
+  con el teclado —y un `<label>` tampoco entra en el orden de tabulación, así que envolverlo no
+  salva nada—. El foco se pinta en el envoltorio con **`.crm-foco-dentro`** (o
+  `.crm-subir-archivo`, que ya lo trae), porque el input no se ve.
+  **Barrido del 2026-10-10**: de diez selectores de archivo, tres lo hacían bien y siete usaban
+  `hidden`. **Tres estaban de verdad fuera del alcance del teclado** —adjuntar en el chat, el
+  comprobante de una venta y la subida a Mi Memoria— porque su `<label>` era el único
+  disparador. Los otros cuatro tenían además un botón que hacía `.click()` sobre el input, así
+  que se alcanzaban por ahí; el de la foto de perfil era uno de esos. El de Comisiones queda
+  como está.
 - **Contraste de texto ≥ 4,5:1**. El verde `info` (#39ADA3) sobre su fondo claro da ~2,4:1: sirve
   como acento o ícono, no para texto que hay que leer. `text-muted` (#6B7280) sobre blanco sí
   cumple.

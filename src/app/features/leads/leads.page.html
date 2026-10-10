@@ -8,7 +8,8 @@
         <app-input
           type="search"
           placeholder="Buscar paciente, teléfono o campaña…"
-          [(value)]="busqueda" />
+          [(value)]="busqueda" 
+          ariaLabel="Buscar paciente, teléfono o campaña" />
       </div>
       <div class="crm-segmento" role="group" aria-label="Modo de visualización">
         <button
@@ -378,6 +379,7 @@
           </span>
           <app-input
             placeholder="Ej. Parto Humanizado, Ecografía 5D, etc."
+            ariaLabel="Interés o especialidad consultada"
             [(value)]="nuevoLeadInteres" />
 
           <!-- Chips de sugerencias rápidas -->

@@ -54,11 +54,13 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
         <div class="space-y-1">
           <label class="block text-[10px] font-semibold text-text-muted uppercase">Nombre completo *</label>
-          <app-input placeholder="Ej. Mariana López" [(value)]="nuevoClienteNombre" />
+          <app-input placeholder="Ej. Mariana López" [(value)]="nuevoClienteNombre" 
+  ariaLabel="Nombre completo" />
         </div>
         <div class="space-y-1">
           <label class="block text-[10px] font-semibold text-text-muted uppercase">Celular / Teléfono *</label>
-          <app-input placeholder="Ej. 71234567 o +591…" [(value)]="nuevoClienteTelefono" />
+          <app-input placeholder="Ej. 71234567 o +591…" [(value)]="nuevoClienteTelefono" 
+  ariaLabel="Celular / Teléfono" />
         </div>
       </div>
 
@@ -79,7 +81,8 @@
       <p class="text-xs text-text-muted">Busca pacientes que hayan escrito a tus líneas de WhatsApp.</p>
     }
     <!-- Buscador de cliente existente -->
-    <app-input type="search" placeholder="Buscar por nombre, teléfono o PAC…" [(value)]="busquedaCliente" />
+    <app-input type="search" placeholder="Buscar por nombre, teléfono o PAC…" [(value)]="busquedaCliente" 
+  ariaLabel="Buscar por nombre, teléfono o PAC" />
     @if (busquedaCliente().trim().length >= 2) {
       @if (clientesEncontrados().length > 0) {
         <div class="border border-border rounded-xl divide-y divide-border max-h-48 overflow-y-auto shadow-subtle bg-background mt-1">

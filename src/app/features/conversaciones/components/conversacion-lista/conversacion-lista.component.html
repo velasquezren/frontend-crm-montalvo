@@ -138,7 +138,8 @@
        esperan respuesta». -->
   <div class="sidebar-search flex items-center gap-2">
     <div class="flex-1 min-w-0">
-      <app-input type="search" placeholder="Buscar por nombre, teléfono o PAC…" [(value)]="state.busqueda" />
+      <app-input type="search" placeholder="Buscar por nombre, teléfono o PAC…" [(value)]="state.busqueda" 
+  ariaLabel="Buscar por nombre, teléfono o PAC" />
     </div>
     <app-filter-chip
       class="shrink-0"

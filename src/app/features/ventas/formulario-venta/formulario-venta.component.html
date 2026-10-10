@@ -30,7 +30,8 @@
               <app-button variant="ghost" size="sm" (clicked)="cambiarPaciente()">Cambiar</app-button>
             </div>
           } @else {
-            <app-input type="search" placeholder="Buscar por nombre, teléfono, CI o PAC…" [(value)]="busqueda" />
+            <app-input type="search" placeholder="Buscar por nombre, teléfono, CI o PAC…" [(value)]="busqueda" 
+  ariaLabel="Buscar por nombre, teléfono, CI o PAC" />
             @if (busqueda().trim().length >= 2) {
               @if (resultados.isLoading()) {
                 <p class="text-xs text-text-muted py-1">Buscando…</p>
@@ -84,7 +85,10 @@
           <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Procedimiento / servicio *</label>
           @if (modulo(); as mod) { <app-badge variant="info">Módulo {{ mod }}</app-badge> }
         </div>
-        <app-input placeholder="Ej. Consulta externa, Hemograma, Plan Parto Gold…" [(value)]="producto" />
+        <app-input
+          placeholder="Ej. Consulta externa, Hemograma, Plan Parto Gold…"
+          ariaLabel="Procedimiento o servicio"
+          [(value)]="producto" />
         @if (servicios().length > 0) {
           <div class="flex flex-wrap gap-1.5 pt-1">
             @for (s of servicios(); track s.nombre) {
@@ -140,10 +144,10 @@
             <app-button variant="ghost" size="sm" [circle]="true" icon="trash" ariaLabel="Quitar el comprobante" (clicked)="comprobanteSubido.set(null)" />
           </div>
         } @else {
-          <label class="flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-border bg-bg-workspace hover:bg-bg-light hover:border-primary/40 text-xs text-text-muted cursor-pointer transition-colors">
+          <label class="flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-border bg-bg-workspace hover:bg-bg-light hover:border-primary/40 text-xs text-text-muted cursor-pointer transition-colors crm-foco-dentro">
             <app-icon name="image" [size]="14" class="text-primary" />
             <span>{{ subiendoComprobante() ? 'Subiendo comprobante…' : 'Adjuntar foto o PDF del comprobante' }}</span>
-            <input type="file" accept="image/*,application/pdf" class="hidden" [disabled]="subiendoComprobante()" (change)="adjuntar($event)" />
+            <input type="file" accept="image/*,application/pdf" class="sr-only" [disabled]="subiendoComprobante()" (change)="adjuntar($event)" />
           </label>
         }
       </div>

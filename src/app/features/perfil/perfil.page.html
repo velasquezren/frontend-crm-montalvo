@@ -53,7 +53,11 @@
       <div class="bg-white rounded-2xl border border-border p-6 flex flex-col items-center text-center space-y-4 shadow-subtle">
         <h3 class="text-xs font-bold text-text-muted uppercase tracking-wider">Foto de Perfil</h3>
 
-        <div class="relative group cursor-pointer" (click)="triggerFileInput()">
+        <!-- `<label>` y no un `<div (click)>`: era la única forma de cambiar la
+             foto y ni el div ni el input oculto eran enfocables, así que con
+             teclado no se podía. El label dispara el input por sí mismo, sin
+             `.click()` a mano. -->
+        <label class="relative group cursor-pointer inline-block rounded-full crm-foco-dentro">
           <app-avatar
             [initials]="iniciales()"
             [imageUrl]="previewFoto()"
@@ -62,14 +66,15 @@
           <div class="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
             <app-icon name="image" class="text-white" [size]="22" />
           </div>
-        </div>
 
-        <input
-          #fileInput
-          type="file"
-          class="hidden"
-          accept="image/*"
-          (change)="onFileSelected($event)" />
+          <input
+            #fileInput
+            type="file"
+            class="sr-only"
+            accept="image/*"
+            aria-label="Cambiar foto de perfil"
+            (change)="onFileSelected($event)" />
+        </label>
 
         <div class="space-y-1">
           <p class="text-xs text-text-muted">Formatos: JPG, PNG o WEBP.</p>
@@ -212,7 +217,7 @@
               </div>
               <span class="text-xs font-extrabold text-primary block mt-3">Haz clic para seleccionar archivo</span>
               <span class="text-[10px] text-text-muted block mt-1">Soporta JPG, PNG, WEBP o PDF (máx 5 MB)</span>
-              <input type="file" (change)="subirArchivoMemoria($event)" accept="image/*,application/pdf" class="hidden" />
+              <input type="file" (change)="subirArchivoMemoria($event)" accept="image/*,application/pdf" class="sr-only" />
             </label>
           </div>
 
@@ -231,12 +236,14 @@
             <div class="space-y-3.5">
               <div>
                 <label class="block text-[11px] font-extrabold text-text-dark mb-1">Título del Recurso *</label>
-                <app-input placeholder="ej. Promo Ortodoncia Implante" [(value)]="tituloNuevoMemoria" />
+                <app-input placeholder="ej. Promo Ortodoncia Implante" [(value)]="tituloNuevoMemoria" 
+  ariaLabel="Título del Recurso" />
               </div>
 
               <div>
                 <label class="block text-[11px] font-extrabold text-text-dark mb-1">Atajo /comando (opcional)</label>
-                <app-input placeholder="ej. /ortodoncia" [(value)]="atajoNuevoMemoria" />
+                <app-input placeholder="ej. /ortodoncia" [(value)]="atajoNuevoMemoria" 
+  ariaLabel="Atajo /comando (opcional)" />
               </div>
 
               <div>
@@ -301,7 +308,8 @@
               </button>
             </div>
 
-            <app-input type="search" placeholder="Buscar en mi memoria..." [(value)]="busquedaMemoria" class="w-full sm:max-w-xs sm:flex-1" />
+            <app-input type="search" placeholder="Buscar en mi memoria..." [(value)]="busquedaMemoria" class="w-full sm:max-w-xs sm:flex-1" 
+  ariaLabel="Buscar en mi memoria" />
           </div>
 
           <!-- Grid de Tarjetas de Recursos -->

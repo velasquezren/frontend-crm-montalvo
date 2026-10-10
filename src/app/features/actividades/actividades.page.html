@@ -85,7 +85,8 @@
       <app-input
         placeholder="Buscar por paciente, teléfono, PAC, título o notas…"
         icon="search"
-        [(value)]="busqueda" />
+        [(value)]="busqueda" 
+        ariaLabel="Buscar por paciente, teléfono, PAC, título o notas" />
     </div>
 
     <div class="flex items-center justify-between sm:justify-end gap-2 sm:gap-2.5 w-full sm:w-auto">
@@ -287,6 +288,7 @@
                       [circle]="true"
                       icon="check"
                       title="Marcar completada"
+                           ariaLabel="Marcar completada"
                       (clicked)="cambiarEstado(actividad, 'COMPLETADA')" />
                     <app-button
                       variant="ghost"
@@ -294,6 +296,7 @@
                       [circle]="true"
                       icon="clock"
                       title="Posponer 24 horas"
+                           ariaLabel="Posponer 24 horas"
                       (clicked)="reprogramarRapido(actividad, 24)" />
                   }
                   <!-- El "ojo" se fue: la fila entera ya abre el detalle, así que
@@ -311,6 +314,7 @@
                     size="sm"
                     [circle]="true"
                     icon="edit"
+                    ariaLabel="Editar actividad"
                     title="Editar"
                     (clicked)="abrirEdicion(actividad)" />
                   <app-button
@@ -318,6 +322,7 @@
                     size="sm"
                     [circle]="true"
                     icon="trash"
+                    ariaLabel="Eliminar actividad"
                     title="Eliminar"
                     (clicked)="eliminar(actividad)" />
                   }

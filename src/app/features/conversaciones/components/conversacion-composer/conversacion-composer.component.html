@@ -91,7 +91,8 @@
       </div>
 
       <!-- Buscador en popover -->
-      <app-input type="search" placeholder="Buscar nota, precio o banner..." [(value)]="busquedaMemoria" />
+      <app-input type="search" placeholder="Buscar nota, precio o banner..." [(value)]="busquedaMemoria" 
+  ariaLabel="Buscar nota, precio o banner" />
 
       <!-- Lista de recursos en popover -->
       <div class="max-h-60 overflow-y-auto space-y-1.5">
@@ -177,9 +178,11 @@
     <!-- Formulario de Envío -->
     <form (submit)="enviar($event)" class="chat-input-bar">
       <!-- Botón Adjuntar Archivo o Imagen -->
-      <label class="p-2.5 rounded-full text-text-muted hover:text-primary hover:bg-bg-light cursor-pointer transition-colors shrink-0 flex items-center justify-center border border-border/80" title="Adjuntar archivo o imagen">
+      <label class="p-2.5 rounded-full text-text-muted hover:text-primary hover:bg-bg-light cursor-pointer transition-colors shrink-0 flex items-center justify-center border border-border/80 crm-foco-dentro" title="Adjuntar archivo o imagen">
         <app-icon name="image" [size]="18" />
-        <input type="file" (change)="adjuntarMediaChat($event)" accept="image/*,application/pdf" class="hidden" />
+        <!-- `sr-only`, no `hidden`: con `display:none` el input no es enfocable
+             y adjuntar quedaba fuera del alcance del teclado. -->
+        <input type="file" (change)="adjuntarMediaChat($event)" accept="image/*,application/pdf" class="sr-only" aria-label="Adjuntar archivo o imagen" />
       </label>
 
       <!-- Botón Mi Memoria Personal (Biblioteca Privada) -->
