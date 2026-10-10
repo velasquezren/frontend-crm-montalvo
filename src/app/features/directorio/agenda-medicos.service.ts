@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
-import { DatosMedicoAgenda, EstadoMedicoAgenda, FichaMedicoAgenda } from './agenda-medicos.model';
+import { AccesoWhatsappMedico, DatosMedicoAgenda, EstadoMedicoAgenda, FichaMedicoAgenda } from './agenda-medicos.model';
 
 /** Lo que se edita de la ficha web. Nombre de la agenda, precio y horario los pone la agenda. */
 export interface CambiosPresentacion {
@@ -95,5 +95,20 @@ export class AgendaMedicosService {
   /** Renombra (o unifica, si `nueva` ya existe) una especialidad en todos sus médicos. */
   renombrarEspecialidad(actual: string, nueva: string): Promise<{ medicos: number }> {
     return this.api.post<{ medicos: number }>('/agenda/medicos/especialidades/renombrar', { actual, nueva });
+  }
+
+  /* ── El número de WhatsApp del médico para su agenda en el asistente (solo administración) ── */
+
+  accesoWhatsappRequest(id: number): ResourceRequest {
+    return this.api.request(`/agenda/medicos/${id}/whatsapp`);
+  }
+
+  /** Asocia (o cambia) el número. El backend lo normaliza y rechaza el que ya es de otro médico (409). */
+  autorizarWhatsapp(id: number, telefono: string): Promise<AccesoWhatsappMedico> {
+    return this.api.put<AccesoWhatsappMedico>(`/agenda/medicos/${id}/whatsapp`, { telefono });
+  }
+
+  quitarWhatsapp(id: number): Promise<{ ok: true }> {
+    return this.api.delete<{ ok: true }>(`/agenda/medicos/${id}/whatsapp`);
   }
 }

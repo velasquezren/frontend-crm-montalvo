@@ -207,3 +207,21 @@ export function resumenDeCasillas(dias: readonly DiaAgenda[], horas: readonly st
     .filter((x): x is string => x !== null)
     .join(' · ');
 }
+
+/**
+ * El número de WhatsApp con el que un médico consulta su agenda por el asistente
+ * (`GET /agenda/medicos/:id/whatsapp`). Solo lo ve administración; `acceso` es
+ * `null` mientras ningún número esté autorizado.
+ */
+export interface AccesoWhatsappMedico {
+  readonly agendaMedicoId: number;
+  /** E.164. */
+  readonly telefono: string;
+  readonly nombreMedico: string;
+  readonly autorizadoPor: string | null;
+  readonly autorizadoEn: string;
+}
+
+export interface RespuestaAccesoWhatsapp {
+  readonly acceso: AccesoWhatsappMedico | null;
+}

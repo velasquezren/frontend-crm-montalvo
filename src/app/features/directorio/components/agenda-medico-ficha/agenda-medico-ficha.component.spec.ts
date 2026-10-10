@@ -107,6 +107,25 @@ describe('ficha de un médico de la agenda', () => {
     expect(casilla('Sábado 09:00').getAttribute('aria-pressed')).toBe('false');
   });
 
+  it('la pestaña «WhatsApp» (el número con el que consulta su agenda) es solo de administración y no pide nada hasta abrirla', async () => {
+    await montar('RECEPCION');
+    expect((fixture.nativeElement as HTMLElement).querySelector('#ficha-tab-whatsapp')).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelector('#ficha-panel-whatsapp')).toBeNull();
+    fixture.destroy();
+    TestBed.resetTestingModule();
+
+    await montar('ADMIN');
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelector('#ficha-tab-whatsapp')).not.toBeNull();
+    /* Montada pero sin visitar: ni panel ni petición del teléfono (http.verify() del afterEach lo exige). */
+    expect(raiz.querySelector('#ficha-panel-whatsapp')).toBeNull();
+    raiz.querySelector<HTMLButtonElement>('#ficha-tab-whatsapp')!.click();
+    await asentar();
+    http.expectOne(r => r.url.endsWith('/agenda/medicos/7/whatsapp')).flush({ acceso: null });
+    await asentar();
+    expect(raiz.textContent).toContain('Sin número autorizado');
+  });
+
   it('crear la ficha web la pide al médico y abre su presentación', async () => {
     await montar('RECEPCION');
     boton('Crear ficha web')!.click();

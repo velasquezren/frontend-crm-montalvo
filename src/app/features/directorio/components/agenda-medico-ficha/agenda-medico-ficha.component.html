@@ -23,7 +23,7 @@
   </div>
 
   <nav subcabecera class="crm-segmento crm-segmento-pestanas mt-4" role="tablist" aria-label="Partes de la ficha">
-    @for (p of pestanas; track p.id) {
+    @for (p of pestanas(); track p.id) {
       <button
         type="button"
         role="tab"
@@ -32,7 +32,7 @@
         [attr.aria-selected]="pestana() === p.id"
         [attr.aria-controls]="'ficha-panel-' + p.id"
         [class.crm-segmento-opcion-activo]="pestana() === p.id"
-        (click)="pestana.set(p.id)">
+        (click)="elegirPestana(p.id)">
         <app-icon [name]="p.icono" [size]="14" />
         <span>{{ p.etiqueta }}</span>
         @if (pendiente(p.id)) {
@@ -120,5 +120,12 @@
     <div id="ficha-panel-web" role="tabpanel" aria-labelledby="ficha-tab-web" class="flex-1 min-h-0 flex flex-col" [hidden]="pestana() !== 'web'">
       <app-agenda-presentacion-web [ficha]="f" [editable]="puedeEditar()" (actualizada)="aplicar($event)" (conflicto)="conflicto.set(true)" />
     </div>
+
+    <!-- ── WhatsApp: el número con el que consulta su agenda (solo administración) ── -->
+    @if (montarWhatsapp()) {
+      <div id="ficha-panel-whatsapp" role="tabpanel" aria-labelledby="ficha-tab-whatsapp" class="flex-1 min-h-0 flex flex-col" [hidden]="pestana() !== 'whatsapp'">
+        <app-agenda-medico-whatsapp [id]="f.medico.id" [nombre]="nombreConTitulo(f.medico)" [activo]="f.medico.estado === 'ACTIVO'" />
+      </div>
+    }
   }
 </app-drawer>
