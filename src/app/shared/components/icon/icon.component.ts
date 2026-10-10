@@ -40,6 +40,9 @@ export type IconName =
   | 'shield'
   | 'menu'
   | 'corner-up-left'
+  | 'sparkles'
+  | 'bot'
+  | 'alert-triangle'
   | 'mail'
   | 'briefcase'
   | 'edit'
@@ -275,6 +278,26 @@ export type IconName =
         @case ('corner-up-left') {
           <polyline points="9 14 4 9 9 4" />
           <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
+        }
+        @case ('sparkles') {
+          <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+          <path d="M20 3v4" />
+          <path d="M22 5h-4" />
+          <path d="M4 17v2" />
+          <path d="M5 18H3" />
+        }
+        @case ('bot') {
+          <path d="M12 8V4H8" />
+          <rect width="16" height="12" x="4" y="8" rx="2" />
+          <path d="M2 14h2" />
+          <path d="M20 14h2" />
+          <path d="M15 13v2" />
+          <path d="M9 13v2" />
+        }
+        @case ('alert-triangle') {
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+          <path d="M12 9v4" />
+          <path d="M12 17h.01" />
         }
         @case ('mail') {
           <rect x="2" y="4" width="20" height="16" rx="2" />

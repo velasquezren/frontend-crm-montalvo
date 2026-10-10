@@ -38,8 +38,10 @@ export type EstadoReservaChat =
 
 export type MotivoAtencion =
   | 'EMERGENCIA'
+  | 'POSIBLE_URGENCIA'
   | 'SOLICITUD_EXPLICITA'
   | 'SOLICITUD_CITA'
+  | 'DERIVADA_ASISTENTE'
   | 'COMPROBANTE_PAGO'
   | 'REVISION';
 
@@ -99,3 +101,9 @@ export type EstadoDestinatario = 'PENDIENTE' | 'ENVIANDO' | 'ENVIADO' | 'OMITIDO
 export type EstadoPromocion = 'BORRADOR' | 'EN_REVISION' | 'PUBLICADA' | 'PAUSADA' | 'ARCHIVADA';
 
 export type FormatoBanner = 'CUADRADO' | 'VERTICAL' | 'HISTORIA' | 'HORIZONTAL';
+
+export type ModoAsistente = 'APAGADO' | 'SUGERIR' | 'RESPONDER';
+
+export type EstadoSugerencia = 'PENDIENTE' | 'USADA' | 'DESCARTADA' | 'SUPERADA';
+
+export type ResultadoTurnoAsistente = 'SUGIRIO' | 'RESPONDIO' | 'DERIVO' | 'OMITIDO' | 'FALLO';

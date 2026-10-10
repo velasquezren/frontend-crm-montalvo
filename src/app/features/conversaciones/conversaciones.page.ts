@@ -26,6 +26,7 @@ import { ConversacionesStateService } from './services/conversaciones-state.serv
 import { ConversacionListaComponent } from './components/conversacion-lista/conversacion-lista.component';
 import { ConversacionThreadComponent } from './components/conversacion-thread/conversacion-thread.component';
 import { ConversacionComposerComponent } from './components/conversacion-composer/conversacion-composer.component';
+import { SugerenciaAsistenteComponent } from './components/sugerencia-asistente/sugerencia-asistente.component';
 import { ConversacionSidebarComponent } from './components/conversacion-sidebar/conversacion-sidebar.component';
 
 /**
@@ -67,6 +68,7 @@ export function debeRefrescar(ticks: number, conectado: boolean, oculto: boolean
     ConversacionListaComponent,
     ConversacionThreadComponent,
     ConversacionComposerComponent,
+    SugerenciaAsistenteComponent,
     ConversacionSidebarComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

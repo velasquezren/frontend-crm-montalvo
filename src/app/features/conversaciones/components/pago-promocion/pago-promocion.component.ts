@@ -6,6 +6,7 @@ import { IconComponent } from '../../../../shared/components/icon/icon.component
 import { InputComponent } from '../../../../shared/components/input/input.component';
 import { MonedaPipe } from '../../../../shared/pipes/moneda.pipe';
 import { primerNombre } from '../../atencion-humana';
+import { ICONO_VERIFICACION, RESULTADO_LECTURA } from '../../asistente-chat';
 import { ESTADO_PAGO, PagoDelChat, PromocionDelChat, VARIANTE_PAGO } from '../../pago-promocion';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
 
@@ -39,6 +40,8 @@ export class PagoPromocionComponent {
   protected readonly estados = ESTADO_PAGO;
   protected readonly variantes = VARIANTE_PAGO;
   protected readonly primerNombre = primerNombre;
+  protected readonly resultadosLectura = RESULTADO_LECTURA;
+  protected readonly iconosVerificacion = ICONO_VERIFICACION;
 
   /** Confirmar registra una venta: la agente o un admin (el servidor lo vuelve a exigir). */
   protected readonly puedeConfirmar = this.state.puedeGestionComercial;

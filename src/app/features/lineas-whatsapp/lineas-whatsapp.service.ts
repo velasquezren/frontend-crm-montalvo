@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { ApiService } from '../../core/api/api.service';
+import { AsistenteEditable, GuardarAsistente, ResultadoPrueba } from './asistente-linea.model';
 import { ActualizarLinea, AvisoLinea } from './linea-whatsapp.model';
 import { MenuAtencion, MenuEditable } from './menu-atencion.model';
 import { CobroEditable, GuardarCobro } from './cobro-linea.model';
@@ -25,6 +26,17 @@ export class LineasWhatsappService {
     return this.api.put<MenuEditable>(`/menu-atencion/${lineaId}`, menu);
   }
   /** El QR de cobro de una línea (solo SUPER_ADMIN). */
+  /** El asistente de IA de la línea (SUPER_ADMIN). */
+  asistenteRequest(lineaId: string) {
+    return this.api.request(`/asistente/lineas/${lineaId}`);
+  }
+  guardarAsistente(lineaId: string, datos: GuardarAsistente) {
+    return this.api.put<AsistenteEditable>(`/asistente/lineas/${lineaId}`, datos);
+  }
+  /** Prueba de punta a punta contra Google, con datos sintéticos. */
+  probarAsistente() {
+    return this.api.post<ResultadoPrueba>('/asistente/probar', {});
+  }
   cobroRequest(lineaId: string) {
     return this.api.request(`/cobros/${lineaId}`);
   }

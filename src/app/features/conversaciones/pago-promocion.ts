@@ -1,4 +1,5 @@
 import { EstadoPagoPromocion } from '../../core/api/db-enums';
+import type { LecturaComprobante } from './asistente-chat';
 
 /*
  * El pago de una promoción dentro del chat (backend: docs/pagos-promocion.md).
@@ -24,6 +25,8 @@ export interface PagoDelChat {
   readonly cerradoPor: { readonly id: string; readonly nombre: string } | null;
   readonly cerradoEn: string | null;
   readonly createdAt: string;
+  /** Lo que el asistente leyó en el comprobante actual. Ayuda a verificar; no confirma nada. */
+  readonly lectura?: LecturaComprobante | null;
 }
 
 /** La promoción por la que llegó con su código `PRM-…` (solo la línea comercial). */

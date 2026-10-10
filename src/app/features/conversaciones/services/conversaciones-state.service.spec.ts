@@ -482,6 +482,24 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     http.expectNone(req => req.url === `${API_URL}/conversaciones/chat-1`);
   });
 
+  /* La sugerencia del asistente es un borrador: va a la caja, no sale sola, y no pisa lo escrito. */
+  it('usar la sugerencia la lleva a la caja debajo de lo escrito, la retira y lo avisa al servidor', async () => {
+    const sugerencia = { id: 's1', texto: 'El control está a Bs 280.', acciones: [], aviso: null, createdAt: '2026-10-10T15:00:00Z' };
+    await recargarDetalle({ ...structuredClone(CHAT), sugerencia });
+    state.mensajeNuevo.set('Hola Ana ');
+
+    const uso = state.usarSugerencia();
+    expect(state.mensajeNuevo()).toBe('Hola Ana\n\nEl control está a Bs 280.');
+    expect(state.sugerencia()).toBeNull();
+    const post = http.expectOne(req => req.url === `${API_URL}/conversaciones/chat-1/asistente/sugerencias/s1/usar`);
+    expect(post.request.method).toBe('POST');
+    post.flush({ ok: true });
+    await uso;
+    expect(state.procesandoSugerencia()).toBeNull();
+    /* Usarla NO envía nada: ningún POST de mensaje. */
+    http.expectNone(req => req.url.endsWith('/mensajes'));
+  });
+
   it('si el servidor ya no deja reenviar, lo dice y vuelve a leer el hilo', async () => {
     const error = vi.spyOn(TestBed.inject(ToastService), 'error');
     const rechazado: MensajeApi = { ...MENSAJE, estadoEnvio: 'FALLIDO', codigoErrorEnvio: 131042 };

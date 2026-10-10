@@ -59,8 +59,10 @@ export interface EstadoDeAtencion {
 /** El motivo, dicho como lo diría recepción. */
 export const MOTIVO_ATENCION: Readonly<Record<MotivoAtencion, string>> = {
   EMERGENCIA: 'Indicó una emergencia',
+  POSIBLE_URGENCIA: 'Posible urgencia (detectada por el asistente)',
   SOLICITUD_EXPLICITA: 'Pidió hablar con una persona',
   SOLICITUD_CITA: 'Solicitud de cita',
+  DERIVADA_ASISTENTE: 'El asistente la pasó a una persona',
   COMPROBANTE_PAGO: 'Comprobante por verificar',
   REVISION: 'Respuesta para revisar',
 };
@@ -68,8 +70,10 @@ export const MOTIVO_ATENCION: Readonly<Record<MotivoAtencion, string>> = {
 /** Qué hacer ahora. Una sola frase, sin prometer nada que el sistema no hizo. */
 export const ACCION_ATENCION: Readonly<Record<MotivoAtencion, string>> = {
   EMERGENCIA: 'Contactarla ya. Lo declaró ella: el CRM no evalúa si es una emergencia médica.',
+  POSIBLE_URGENCIA: 'Leer su mensaje ya: el asistente cree que puede ser urgente y no le contestó nada médico.',
   SOLICITUD_EXPLICITA: 'Contestarle: está esperando a una persona.',
   SOLICITUD_CITA: 'Revisar la solicitud y proponerle una cita. Todavía no hay nada reservado.',
+  DERIVADA_ASISTENTE: 'Contestarle: es una consulta que el asistente no debe responder (médica, una queja o algo dudoso).',
   COMPROBANTE_PAGO: 'Verificar el comprobante en el bloque «Pago» y confirmarlo o pedir otro.',
   REVISION: 'Revisar su respuesta: no se ejecutó ninguna acción automática.',
 };
@@ -77,8 +81,10 @@ export const ACCION_ATENCION: Readonly<Record<MotivoAtencion, string>> = {
 /** El motivo, corto, para la tarjeta del inbox (que no tiene sitio para la frase entera). */
 export const MOTIVO_ATENCION_CORTO: Readonly<Record<MotivoAtencion, string>> = {
   EMERGENCIA: 'Emergencia',
+  POSIBLE_URGENCIA: 'Posible urgencia',
   SOLICITUD_EXPLICITA: 'Pidió persona',
   SOLICITUD_CITA: 'Solicitud de cita',
+  DERIVADA_ASISTENTE: 'Derivada',
   COMPROBANTE_PAGO: 'Comprobante',
   REVISION: 'Revisar',
 };

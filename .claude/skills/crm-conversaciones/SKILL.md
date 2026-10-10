@@ -338,6 +338,24 @@ detalle, salvo sin red. Sin pago, si llegó por el código `PRM-…`, una línea
 cada línea se configura en Líneas → «Cobro» (`cobro-linea-editor.component.ts`). Textos en
 `pago-promocion.ts`; nunca «pagado» antes de que una persona lo confirme.
 
+### Asistente de IA en el chat (2026-10-10)
+
+Backend: `../backend-crm-montalvo/docs/asistente-ia.md`. Aquí solo se pinta:
+
+- **`<app-sugerencia-asistente>`** encima del compositor (modo SUGERIR): el borrador, su
+  aviso («Consulta médica: …») y sus acciones. **«Usar y revisar» lo lleva a la caja y NO
+  lo envía** (`state.usarSugerencia`, debajo de lo ya escrito, nunca lo pisa): la agente
+  lo manda como suyo. Las acciones (tarjeta de promoción, horario) salen al pulsarlas por
+  `state.enviarAccionSugerida`. Sin texto y con aviso, el asistente no redactó nada a
+  propósito: no se ofrece «Usar».
+- **El hilo rotula `asistente`** con el ícono `bot`, en lugar de «automático».
+- **`pago.lectura`** en `<app-pago-promocion>`: «Coincide con lo esperado» / «Hay algo que
+  revisar», cada verificación con forma propia (`ICONO_VERIFICACION`) y la nota de compararla
+  con la imagen. Nunca dice «pagado»: coincide no es confirmado.
+- Se configura en Líneas → «Asistente» (`asistente-linea-editor.component.ts`, SUPER_ADMIN):
+  «Responder solo» no se guarda sin el criterio de la clínica (`motivoParaNoGuardar`, espejo
+  del backend). Textos en `asistente-chat.ts` y `asistente-linea.model.ts`.
+
 ### Menú de atención: se configura en Líneas, no en el inbox (2026-10-05)
 
 El menú con el que cada línea recibe a la paciente se edita en

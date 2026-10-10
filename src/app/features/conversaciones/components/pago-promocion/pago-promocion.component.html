@@ -64,6 +64,25 @@
         }
         <span class="text-text-muted">{{ puedeConfirmar() ? ' · Revisa monto, fecha y a nombre de quién, y confírmalo o pide otro.' : ' · Ventas o administración verifican este pago.' }}</span>
       </div>
+      <!-- Lo que leyó el asistente: ayuda a mirar la imagen, no la reemplaza. -->
+      @if (p.lectura; as l) {
+        <div class="crm-pago-lectura" role="group" aria-label="Lectura automática del comprobante">
+          <p class="crm-pago-lectura-titulo">
+            <app-icon name="sparkles" [size]="12" class="crm-pago-icono shrink-0" />
+            <span>Lectura automática:</span>
+            <app-badge [variant]="resultadosLectura[l.resultado].variante">{{ resultadosLectura[l.resultado].texto }}</app-badge>
+          </p>
+          <ul class="crm-pago-lectura-lista">
+            @for (v of l.verificaciones; track v.campo) {
+              <li class="crm-pago-verificacion" [class.crm-pago-verificacion--alerta]="v.estado === 'ALERTA'" [class.crm-pago-verificacion--ok]="v.estado === 'OK'">
+                <app-icon [name]="iconosVerificacion[v.estado]" [size]="12" class="shrink-0 mt-0.5" />
+                <span>{{ v.texto }}</span>
+              </li>
+            }
+          </ul>
+          <p class="crm-pago-lectura-nota">La leyó una máquina: compárala con la imagen antes de confirmar.</p>
+        </div>
+      }
     } @else if (p.estado === 'PENDIENTE') {
       <p class="crm-pago-detalle text-text-muted">
         @if (p.motivoRechazo) {

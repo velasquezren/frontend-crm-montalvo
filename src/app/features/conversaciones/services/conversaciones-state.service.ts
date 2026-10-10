@@ -1,3 +1,4 @@
+import type { ResolucionSugerencia } from '../asistente-chat';
 import { AccionPago, avisoDeAccionPago } from '../pago-promocion';
 import { ErrorCanalWhatsapp, validarDetalle, validarPaginaInbox } from '../validar-canal';
 import { LineasWhatsappService } from '../../lineas-whatsapp/lineas-whatsapp.service';
@@ -976,6 +977,69 @@ export class ConversacionesStateService {
       }
     }
     return ok;
+  }
+
+  /* ── La sugerencia del asistente (modo SUGERIR) ─────────────────────── */
+
+  /** La sugerencia del chat abierto, si el asistente preparó una. */
+  readonly sugerencia = computed(() => this.detalleActual()?.sugerencia ?? null);
+  /** Qué se está haciendo con ella: «usar», «descartar» o el índice de la acción en curso. */
+  readonly procesandoSugerencia = signal<ResolucionSugerencia | number | null>(null);
+
+  /**
+   * Lleva el texto a la caja de la agente —NO lo envía: lo revisa y lo manda
+   * ella, como suyo—. Si ya había escrito algo, va debajo; nunca lo pisa.
+   */
+  async usarSugerencia(): Promise<void> {
+    const s = this.sugerencia();
+    if (!s || this.procesandoSugerencia() !== null) return;
+    if (s.texto) {
+      const actual = this.mensajeNuevo().trimEnd();
+      this.mensajeNuevo.set(actual ? `${actual}\n\n${s.texto}` : s.texto);
+    }
+    await this.resolverSugerencia('usar');
+  }
+
+  descartarSugerencia(): Promise<void> {
+    return this.resolverSugerencia('descartar');
+  }
+
+  /**
+   * Se quita de la vista en el acto (es un borrador, no un dato) y se avisa al
+   * servidor. Si el aviso falla, no pasa nada grave: la sugerencia vuelve en la
+   * próxima lectura y se puede descartar de nuevo.
+   */
+  private async resolverSugerencia(resolucion: ResolucionSugerencia, id = this.seleccionadaId()): Promise<void> {
+    const s = this.sugerencia();
+    const chat = this.detalleActual();
+    if (!id || !s || !chat) return;
+    this.procesandoSugerencia.set(resolucion);
+    this.detalle.set({ ...chat, sugerencia: null });
+    try {
+      await this.conversacionesService.resolverSugerencia(id, s.id, resolucion);
+    } catch (err) {
+      if (resolucion === 'descartar') this.toastService.error(mensajeDeError(err, 'No se pudo descartar la sugerencia.'));
+    } finally {
+      this.procesandoSugerencia.set(null);
+    }
+  }
+
+  /** La agente aprueba una acción: sale la tarjeta o el horario. Después se relee el chat. */
+  async enviarAccionSugerida(indice: number, id = this.seleccionadaId()): Promise<void> {
+    const s = this.sugerencia();
+    if (!id || !s || this.procesandoSugerencia() !== null) return;
+    this.procesandoSugerencia.set(indice);
+    let sinRespuesta = false;
+    try {
+      await this.conversacionesService.enviarAccionSugerida(id, s.id, indice);
+      this.toastService.success(s.acciones[indice]?.tipo === 'HORARIO' ? 'Horario enviado.' : 'Tarjeta enviada.');
+    } catch (err) {
+      sinRespuesta = err instanceof HttpErrorResponse && err.status === 0;
+      this.toastService.error(mensajeDeError(err, 'No se pudo enviar.'));
+    } finally {
+      this.procesandoSugerencia.set(null);
+      if (!sinRespuesta && this.seleccionadaId() === id) this.detalle.reload();
+    }
   }
 
   async guardarNotaFijada(): Promise<void> {

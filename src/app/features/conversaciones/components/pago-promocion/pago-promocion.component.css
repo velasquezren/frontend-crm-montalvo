@@ -95,3 +95,50 @@
   border-bottom: 1px solid var(--color-border);
   background: var(--color-bg-workspace);
 }
+
+/* La lectura automática del comprobante: debajo de «Ver comprobante», en
+   pequeño y con forma por estado (la alerta no se distingue solo por color). */
+.crm-pago-lectura {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 16px 8px 38px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.crm-pago-lectura-titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-dark);
+  font-weight: 600;
+}
+
+.crm-pago-lectura-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.crm-pago-verificacion {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--color-text-muted);
+}
+
+.crm-pago-verificacion--ok {
+  color: var(--color-text-dark);
+}
+
+.crm-pago-verificacion--alerta {
+  color: var(--color-text-critical);
+  font-weight: 600;
+}
+
+.crm-pago-lectura-nota {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}

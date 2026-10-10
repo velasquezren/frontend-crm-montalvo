@@ -120,4 +120,21 @@ describe('bloque de pago de una promoción en el chat', () => {
     const { el } = await montar(null, { id: 'p1', titulo: 'Control prenatal', codigo: 'PRM-7K3QX' });
     expect(el.textContent).toContain('Llegó por la promoción «Control prenatal» (PRM-7K3QX)');
   });
+
+  it('muestra lo que leyó el asistente, con la alerta en palabras y la nota de que lo verifique una persona', async () => {
+    const { el } = await montar({
+      ...BASE,
+      lectura: {
+        mensajeId: 'm-comprobante', leidoEn: '2026-10-10T15:00:00Z', resultado: 'REVISAR',
+        verificaciones: [
+          { campo: 'MONTO', estado: 'ALERTA', texto: 'Dice Bs 250,00; se esperaba Bs 280,00.' },
+          { campo: 'REFERENCIA', estado: 'OK', texto: 'Operación 778899 · BNB.' },
+        ],
+      },
+    });
+    expect(el.textContent).toContain('Hay algo que revisar');
+    expect(el.textContent).toContain('se esperaba Bs 280,00');
+    expect(el.textContent).toContain('compárala con la imagen');
+    expect(el.querySelector('.crm-pago-verificacion--alerta')?.textContent).toContain('Bs 250,00');
+  });
 });

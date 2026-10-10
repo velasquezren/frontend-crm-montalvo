@@ -1,0 +1,84 @@
+/*
+ * Un borrador, no un mensaje: banda clara sobre la caja de texto, con el filo
+ * secundario (lo que propone el sistema) y no el primario (lo que hay que hacer).
+ */
+.crm-sugerencia {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 16px 10px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-light);
+  box-shadow: inset 3px 0 0 var(--color-secondary);
+}
+
+.crm-sugerencia-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.crm-sugerencia-icono {
+  color: var(--color-secondary);
+}
+
+.crm-sugerencia-titulo {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
+.crm-sugerencia-aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text-dark);
+}
+
+.crm-sugerencia-texto {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-dark);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Cuatro líneas y un «Ver completa»: el hilo sigue a la vista en el teléfono. */
+.crm-sugerencia-texto--recortado {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.crm-sugerencia-mas {
+  align-self: flex-start;
+  min-height: 24px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.crm-sugerencia-mas:hover {
+  text-decoration: underline;
+}
+
+.crm-sugerencia-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Un título de promoción largo no estira el botón fuera de la pantalla. */
+.crm-sugerencia-accion {
+  display: inline-block;
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}

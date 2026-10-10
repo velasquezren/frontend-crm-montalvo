@@ -1,6 +1,7 @@
 import { validarPaginaInbox, validarResumenInbox } from './validar-canal';
 import type { AccionAtencion, EstadoDeAtencion } from './atencion-humana';
 import type { AccionPago, PagoDelChat } from './pago-promocion';
+import type { ResolucionSugerencia } from './asistente-chat';
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, QueryParams, ResourceRequest } from '../../core/api/api.service';
@@ -159,6 +160,16 @@ export class ConversacionesService {
    */
   reenviarMensaje(conversacionId: string, mensajeId: string): Promise<Pick<MensajeApi, 'id' | 'estadoEnvio'>> {
     return this.api.post(`/conversaciones/${conversacionId}/mensajes/${mensajeId}/reenviar`, {});
+  }
+
+  /** La sugerencia del asistente: la agente la usó (la llevó a su caja) o la descartó. */
+  resolverSugerencia(conversacionId: string, sugerenciaId: string, resolucion: ResolucionSugerencia): Promise<{ ok: true }> {
+    return this.api.post(`/conversaciones/${conversacionId}/asistente/sugerencias/${sugerenciaId}/${resolucion === 'usar' ? 'usar' : 'descartar'}`, {});
+  }
+
+  /** Envía una acción de la sugerencia (la tarjeta de una promoción, el horario de un médico). */
+  enviarAccionSugerida(conversacionId: string, sugerenciaId: string, indice: number): Promise<{ enviado: boolean }> {
+    return this.api.post(`/conversaciones/${conversacionId}/asistente/sugerencias/${sugerenciaId}/acciones/${indice}`, {});
   }
 
   /** Asignar/reasignar agente — solo ADMIN (bloqueado también en el backend). */

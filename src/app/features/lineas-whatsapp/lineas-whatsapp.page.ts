@@ -29,6 +29,7 @@ import { SwitchComponent } from '../../shared/components/switch/switch.component
 import { LineaWhatsapp } from './linea-whatsapp.model';
 import { LineasWhatsappService } from './lineas-whatsapp.service';
 import { MenuAtencionEditorComponent } from './menu-atencion-editor.component';
+import { AsistenteLineaEditorComponent } from './asistente-linea-editor.component';
 import { CobroLineaEditorComponent } from './cobro-linea-editor.component';
 import { valorOVacio } from '../../core/api/valor-o-vacio';
 
@@ -51,6 +52,7 @@ import { valorOVacio } from '../../core/api/valor-o-vacio';
     SwitchComponent,
     MenuAtencionEditorComponent,
     CobroLineaEditorComponent,
+    AsistenteLineaEditorComponent,
   ],
   templateUrl: './lineas-whatsapp.page.html',
 })
@@ -81,6 +83,8 @@ export class LineasWhatsappPage {
   protected readonly menuDe = signal<LineaWhatsapp | null>(null);
   /** La línea cuyo QR de cobro se edita, en su propio cajón. */
   protected readonly cobroDe = signal<LineaWhatsapp | null>(null);
+  /** El asistente de IA de la línea, en su propio cajón como el menú y el cobro. */
+  protected readonly asistenteDe = signal<LineaWhatsapp | null>(null);
   /** El editor abierto (menú o cobro) avisa si hay cambios sin guardar; cerrar con ellos pide confirmación. */
   protected readonly editorSinGuardar = signal(false);
   protected readonly nombre = signal('');
@@ -139,6 +143,25 @@ export class LineasWhatsappPage {
       },
       puedeCerrar: () => this.descartarEditor(),
     });
+  }
+  protected editarAsistente(linea: LineaWhatsapp, template: TemplateRef<unknown>): void {
+    this.asistenteDe.set(linea);
+    this.editorSinGuardar.set(false);
+    this.overlay?.dispose();
+    this.overlay = this.dialog.abrirCajon(template, this.vcr, {
+      onClose: () => {
+        this.asistenteDe.set(null);
+        this.editorSinGuardar.set(false);
+      },
+      puedeCerrar: () => this.descartarEditor(),
+    });
+  }
+  protected cerrarAsistente(): void {
+    if (!this.descartarEditor()) return;
+    this.overlay?.dispose();
+    this.overlay = undefined;
+    this.asistenteDe.set(null);
+    this.editorSinGuardar.set(false);
   }
   protected cerrarCobro(): void {
     if (!this.descartarEditor()) return;

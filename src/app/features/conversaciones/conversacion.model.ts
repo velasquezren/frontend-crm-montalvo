@@ -4,6 +4,7 @@ import { DatosExtra } from '../../core/api/datos-extra';
 import { ZONA_CLINICA } from '../../core/fechas/zona-clinica';
 import type { AtencionFila, ContextoAtencion } from './atencion-humana';
 import type { PagoDelChat, PromocionDelChat } from './pago-promocion';
+import type { SugerenciaDelChat } from './asistente-chat';
 
 import { EstadoMensaje, TipoMensaje } from '../../core/api/db-enums';
 
@@ -63,6 +64,8 @@ export interface MensajeApi {
   readonly clientMessageId?: string;
   /** true = lo mandó el CRM (menú, acuses, fuera de horario), no una persona. */
   readonly automatico?: boolean;
+  /** true = lo escribió (o lo mandó) el asistente de IA. Siempre con `automatico`. */
+  readonly asistente?: boolean;
   /** Categoría de Meta si el mensaje es una plantilla; `null` en un texto normal. */
   readonly plantillaCategoria?: string | null;
   readonly tipo?: TipoMensaje;
@@ -150,6 +153,8 @@ export interface ConversacionDetalle extends Omit<ConversacionResumen, 'mensajes
   readonly pago?: PagoDelChat | null;
   /** La promoción por la que llegó con su código (solo la línea comercial). */
   readonly promocion?: PromocionDelChat | null;
+  /** Lo que el asistente le preparó a la agente (modo SUGERIR), si hay. */
+  readonly sugerencia?: SugerenciaDelChat | null;
 }
 
 /**

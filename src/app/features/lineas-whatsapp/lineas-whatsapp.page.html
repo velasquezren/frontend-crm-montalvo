@@ -95,6 +95,9 @@
                   Cobro
                 </app-button>
               }
+              <app-button variant="secondary" size="sm" icon="sparkles" [ariaLabel]="'Asistente de IA de ' + linea.nombre" (clicked)="editarAsistente(linea, asistenteLinea)">
+                Asistente
+              </app-button>
               <app-button variant="secondary" size="sm" icon="edit" (clicked)="editar(linea, formulario)">
                 Configurar
               </app-button>
@@ -198,5 +201,16 @@
       [nombre]="linea.nombre"
       (cambiosSinGuardar)="editorSinGuardar.set($event)"
       (cerrar)="cerrarCobro()" />
+  }
+</ng-template>
+
+<!-- El asistente de IA de la línea: su propio cajón, como el menú y el cobro. -->
+<ng-template #asistenteLinea>
+  @if (asistenteDe(); as linea) {
+    <app-asistente-linea-editor
+      [lineaId]="linea.id"
+      [nombre]="linea.nombre"
+      (cambiosSinGuardar)="editorSinGuardar.set($event)"
+      (cerrar)="cerrarAsistente()" />
   }
 </ng-template>

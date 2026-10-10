@@ -1,0 +1,137 @@
+<app-drawer ancho="md" icono="sparkles" titulo="Asistente de IA" [subtitulo]="nombre()" (cerrar)="cerrar.emit()">
+  @if (datos.isLoading() && !datos.hasValue()) {
+    <div class="flex-1 p-5 space-y-3">
+      <app-loading-skeleton height="5rem" />
+      <app-loading-skeleton shape="text" height="10rem" />
+    </div>
+  } @else if (datos.error()) {
+    <div class="flex-1 p-5">
+      <app-error-carga que="el asistente de esta línea" (reintentar)="datos.reload()" />
+    </div>
+  } @else if (datos.hasValue()) {
+    @let d = datos.value();
+    <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-5 space-y-5">
+      @if (falta(); as f) {
+        <div role="status" class="px-3.5 py-2.5 rounded-xl bg-bg-workspace text-xs text-text-dark flex items-start gap-2 border border-border">
+          <app-icon name="clock" [size]="14" class="text-text-muted shrink-0 mt-0.5" />
+          <span>
+            <span class="font-semibold">Todavía no conectado a Google.</span> {{ f }}
+            Puedes dejarlo configurado: empieza a funcionar cuando el servidor esté conectado.
+          </span>
+        </div>
+      } @else {
+        <p class="text-[11px] text-text-muted flex items-center gap-1.5">
+          <app-icon name="check-circle" [size]="12" class="text-primary shrink-0" />
+          Conectado a Gemini ({{ d.proveedor.modelo }}).
+        </p>
+      }
+
+      <section aria-labelledby="asistente-prueba" class="space-y-2">
+        <div class="flex items-center justify-between gap-3">
+          <h3 id="asistente-prueba" class="text-xs font-semibold text-text-dark">Conexión con Google</h3>
+          <app-button variant="secondary" size="sm" icon="activity" [loading]="probando()" (clicked)="probar()">Probar conexión</app-button>
+        </div>
+        @if (prueba(); as r) {
+          <ul class="space-y-1" aria-live="polite">
+            @for (p of r.pasos; track p.paso) {
+              <li class="flex items-start gap-2 text-[11px] leading-relaxed" [class.text-text-dark]="p.ok" [class.text-critical]="!p.ok">
+                <app-icon [name]="p.ok ? 'check-circle' : 'x-circle'" [size]="13" class="shrink-0 mt-0.5" [class.text-primary]="p.ok" />
+                <span><span class="font-semibold">{{ nombresPaso[p.paso] }}:</span> {{ p.detalle }}@if (p.ms) { <span class="text-text-muted tabular-nums"> · {{ p.ms }} ms</span> }</span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="text-[11px] text-text-muted leading-relaxed">Prueba el filtro, una respuesta con herramienta y la lectura de un comprobante, con datos de ejemplo. No toca a ninguna paciente.</p>
+        }
+      </section>
+
+      @if (error()) {
+        <div role="alert" class="px-3.5 py-2.5 rounded-xl bg-critical-bg text-xs text-text-dark font-medium flex items-center gap-2 border border-border">
+          <app-icon name="alert-circle" [size]="14" class="text-critical shrink-0" />
+          <span>{{ error() }}</span>
+        </div>
+      }
+
+      <fieldset class="space-y-2">
+        <legend class="text-sm font-semibold text-text-dark mb-2">Cómo participa</legend>
+        @for (m of modos; track m.modo) {
+          <label
+            class="crm-foco-dentro flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-colors"
+            [class.border-primary]="borrador().modo === m.modo"
+            [class.bg-bg-light]="borrador().modo === m.modo"
+            [class.border-border]="borrador().modo !== m.modo">
+            <input type="radio" name="modo-asistente" class="sr-only" [value]="m.modo" [checked]="borrador().modo === m.modo" (change)="elegirModo(m.modo)" />
+            <span class="mt-0.5 size-4 rounded-full border-2 shrink-0 grid place-items-center"
+              [class.border-primary]="borrador().modo === m.modo" [class.border-border]="borrador().modo !== m.modo" aria-hidden="true">
+              @if (borrador().modo === m.modo) { <span class="size-2 rounded-full bg-primary"></span> }
+            </span>
+            <span class="min-w-0">
+              <span class="block text-xs font-semibold text-text-dark">{{ m.titulo }}</span>
+              <span class="block text-[11px] text-text-muted leading-relaxed mt-0.5">{{ m.texto }}</span>
+            </span>
+          </label>
+        }
+      </fieldset>
+
+      <section class="space-y-1.5">
+        <app-input
+          label="Lo que la clínica quiere que sepa"
+          [multiline]="true" [rows]="6"
+          placeholder="Ej.: La consulta de ginecología incluye ecografía. Las promociones no se combinan. Atendemos de lunes a sábado…"
+          [value]="borrador().conocimiento"
+          (valueChange)="cambiar({ conocimiento: $event })" />
+        <p class="text-[11px] text-text-muted leading-relaxed flex justify-between gap-3">
+          <span>Precios, médicos, horarios y promociones los lee solo del CRM: aquí va lo que no está en ningún lado.</span>
+          <span class="tabular-nums shrink-0" [class.text-critical]="borrador().conocimiento.length > limites.conocimiento">{{ borrador().conocimiento.length }}/{{ limites.conocimiento }}</span>
+        </p>
+      </section>
+
+      <section class="space-y-1.5">
+        <app-input
+          label="Lo que SIEMPRE pasa a una persona"
+          [multiline]="true" [rows]="4"
+          placeholder="Ej.: Embarazo con molestias, sangrados, dolor, medicamentos, resultados de análisis, cuidados después de un procedimiento, reclamos…"
+          [value]="borrador().criterioDerivacion"
+          (valueChange)="cambiar({ criterioDerivacion: $event })"
+          [error]="borrador().modo === 'RESPONDER' ? (motivo() ?? undefined) : undefined" />
+        <p class="text-[11px] text-text-muted leading-relaxed flex justify-between gap-3">
+          <span>Lo aprueba la clínica. Lo médico y las posibles urgencias ya pasan a una persona; esto agrega lo propio de la clínica. Obligatorio para «Responder solo».</span>
+          <span class="tabular-nums shrink-0" [class.text-critical]="borrador().criterioDerivacion.length > limites.criterioDerivacion">{{ borrador().criterioDerivacion.length }}/{{ limites.criterioDerivacion }}</span>
+        </p>
+      </section>
+
+      @if (d.linea.comercial) {
+        <div class="flex items-start justify-between gap-4 p-3.5 rounded-xl border border-border bg-bg-workspace">
+          <div class="min-w-0">
+            <p class="text-xs font-semibold text-text-dark">Leer los comprobantes de pago</p>
+            <p class="text-[11px] text-text-muted leading-relaxed mt-0.5">
+              Lee monto, fecha, operación y a nombre de quién, y avisa si algo no coincide. Confirmar el pago sigue siendo de una persona.
+            </p>
+          </div>
+          <app-switch class="mt-0.5" [value]="borrador().leerComprobantes" (valueChange)="cambiar({ leerComprobantes: $event })" ariaLabel="Leer los comprobantes de pago" />
+        </div>
+      }
+
+      @if (actividad().length) {
+        <section aria-labelledby="asistente-actividad" class="space-y-2">
+          <h3 id="asistente-actividad" class="text-xs font-semibold text-text-dark">Últimos {{ d.actividad.dias }} días</h3>
+          <div class="flex flex-wrap gap-1.5">
+            @for (a of actividad(); track a.resultado) {
+              <app-badge [variant]="a.resultado === 'FALLO' ? 'critical' : a.resultado === 'OMITIDO' ? 'neutral' : 'info'">{{ resultados[a.resultado] }} · {{ a.cantidad }}</app-badge>
+            }
+          </div>
+        </section>
+      }
+    </div>
+
+    <div class="flex items-center justify-between gap-3 px-5 py-3 shrink-0 border-t border-border bg-bg-light">
+      <p class="text-[11px] text-text-muted min-w-0 truncate">
+        @if (sinGuardar()) { Cambios sin guardar } @else if (d.configuracion.actualizadoPor; as quien) { Última edición: {{ quien.nombre }} } @else { Sin guardar todavía }
+      </p>
+      <div class="flex items-center gap-2 shrink-0">
+        <app-button variant="ghost" size="sm" (clicked)="cerrar.emit()">Cerrar</app-button>
+        <app-button size="sm" icon="check" [loading]="guardando()" [disabled]="!!motivo()" (clicked)="guardar()">Guardar</app-button>
+      </div>
+    </div>
+  }
+</app-drawer>

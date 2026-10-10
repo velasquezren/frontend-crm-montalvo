@@ -1,0 +1,45 @@
+@if (state.sugerencia(); as s) {
+  <section class="crm-sugerencia shrink-0" aria-label="Sugerencia del asistente" aria-live="polite">
+    <header class="crm-sugerencia-cabecera">
+      <app-icon name="sparkles" [size]="14" class="crm-sugerencia-icono shrink-0" />
+      <p class="crm-sugerencia-titulo">Sugerencia del asistente</p>
+      <app-button
+        variant="ghost" size="sm" icon="x"
+        ariaLabel="Descartar la sugerencia"
+        [disabled]="state.procesandoSugerencia() !== null"
+        (clicked)="state.descartarSugerencia()" />
+    </header>
+
+    @if (s.aviso) {
+      <p class="crm-sugerencia-aviso" role="note">
+        <app-icon name="alert-triangle" [size]="13" class="shrink-0 mt-px" />
+        <span>{{ s.aviso }}</span>
+      </p>
+    }
+
+    @if (s.texto) {
+      <p class="crm-sugerencia-texto" [class.crm-sugerencia-texto--recortado]="!entera()">{{ s.texto }}</p>
+      @if (s.texto.length > 220 && !entera()) {
+        <button type="button" class="crm-sugerencia-mas" (click)="entera.set(true)">Ver completa</button>
+      }
+    }
+
+    <div class="crm-sugerencia-acciones">
+      @if (s.texto) {
+        <app-button size="sm" icon="edit" [disabled]="state.procesandoSugerencia() !== null" (clicked)="state.usarSugerencia()">
+          Usar y revisar
+        </app-button>
+      }
+      @for (a of s.acciones; track $index) {
+        <app-button
+          variant="secondary" size="sm" [icon]="a.tipo === 'HORARIO' ? 'calendar' : 'percent'"
+          [loading]="state.procesandoSugerencia() === $index"
+          [disabled]="state.procesandoSugerencia() !== null"
+          [ariaLabel]="etiqueta(a)"
+          (clicked)="state.enviarAccionSugerida($index)">
+          <span class="crm-sugerencia-accion">{{ etiqueta(a) }}</span>
+        </app-button>
+      }
+    </div>
+  </section>
+}
