@@ -500,6 +500,19 @@ journalctl -u crm_backend.service --since '5 min ago' --no-pager \
 
 Con la página quieta, ese contador tiene que quedarse quieto.
 
+## El respaldo por temporizador es UNA regla (2026-10-12)
+
+`core/realtime/respaldo.ts` (`debeRefrescar`): pestaña oculta → nunca; socket sano → cada 5
+latidos de 60 s; socket caído → cada latido. La usan el inbox y la campana de actividades. La
+campana preguntaba cada minuto pasara lo que pasara, y como `ActividadesService.refrescar()`
+recarga todo lo que pinta actividades, `/actividades/resumen` llegó a ser el endpoint más pedido
+del CRM (9.023 en tres días). **Una vista que se queda abierta todo el día y pregunta por
+temporizador usa esta regla**, no un `setInterval` propio.
+
+Cómo se midió: el log de `LoggingInterceptor` en el servidor (`journalctl -u crm_backend`),
+agrupando por ruta con p50/p95/máx. Es la medición de referencia del backend: hazla antes de
+optimizar.
+
 ## Un tablero: lo de arriba no espera a lo de abajo (2026-10-12)
 
 El Dashboard pide **dos** endpoints: `/kpis/resumen` (lo que pide acción y las cuatro tarjetas,

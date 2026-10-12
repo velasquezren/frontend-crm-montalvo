@@ -13,6 +13,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 
 import { RealtimeService } from '../../core/realtime/realtime.service';
+import { debeRefrescar, INTERVALO_RESPALDO_MS } from '../../core/realtime/respaldo';
 import { ModoInmersivoService } from '../../core/ui/modo-inmersivo.service';
 import { NotificacionNativaService } from '../../core/notification/notificacion-nativa.service';
 import { ConversacionesService } from './conversaciones.service';
@@ -39,27 +40,7 @@ import { ConversacionSidebarComponent } from './components/conversacion-sidebar/
  * - Modo inmersivo en dispositivos móviles
  * - Notificaciones nativas y badges PWA
  */
-/** Latido del respaldo. Un minuto es lo que el navegador respeta de fondo. */
-const INTERVALO_RESPALDO_MS = 60_000;
-
-/** Con el socket sano solo se pregunta cada 5 latidos, por si quedó zombi. */
-const TICKS_CON_SOCKET = 5;
-
-/**
- * Si este latido del respaldo debe preguntar al servidor.
- *
- * Se saca del componente para poder fijarla con pruebas: es la regla que decide
- * cuánta red gasta la vista más usada del CRM, y de la que salían 219 de 437
- * peticiones que no traían nada nuevo.
- *
- * - Pestaña oculta: nunca. Nadie está mirando, y al volver se refresca una vez.
- * - Socket conectado: uno de cada `TICKS_CON_SOCKET`, solo por si quedó zombi.
- * - Socket caído: cada latido, que es justo cuando el respaldo hace falta.
- */
-export function debeRefrescar(ticks: number, conectado: boolean, oculto: boolean): boolean {
-  if (oculto) return false;
-  return ticks >= (conectado ? TICKS_CON_SOCKET : 1);
-}
+/* El respaldo por temporizador (`debeRefrescar`) vive en `core/realtime/respaldo.ts`: lo comparte la campana. */
 
 @Component({
   selector: 'app-conversaciones',

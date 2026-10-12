@@ -1,6 +1,6 @@
 import '@angular/compiler';
 import { describe, expect, it } from 'vitest';
-import { debeRefrescar } from './conversaciones.page';
+import { debeRefrescar } from '../../core/realtime/respaldo';
 
 /* Esta regla decide cuánta red gasta la vista más usada del CRM. Antes se
    preguntaba cada 60 s pasara lo que pasara: de 437 peticiones a

@@ -15,6 +15,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { paginaVacia, RespuestaPaginada } from '../../../core/api/pagination.model';
 import { RealtimeService } from '../../../core/realtime/realtime.service';
+import { debeRefrescar, INTERVALO_RESPALDO_MS } from '../../../core/realtime/respaldo';
 import { ToastService } from '../../../core/toast/toast.service';
 import {
   Actividad,
@@ -103,12 +104,29 @@ export class NotificacionesBellComponent {
     // ya está pensado para múltiples suscriptores (refCount).
     this.realtimeService.conectar(inject(DestroyRef));
 
-    // Respaldo de 60s, igual criterio que el inbox de Conversaciones: el
-    // socket es la vía principal, esto es solo la red por si se cae.
+    // Respaldo con la MISMA regla que el inbox (`debeRefrescar`): el socket es la
+    // vía principal. Antes preguntaba cada 60 s pasara lo que pasara, y como
+    // `refrescar()` recarga todo lo que pinta actividades, `/actividades/resumen`
+    // era el endpoint más pedido del CRM (9.023 en tres días). Con el socket
+    // sano, cada 5 min basta: cubre lo que cambia con el reloj (una actividad
+    // que vence); al volver a la pestaña se refresca una vez.
+    let ticks = 0;
     const intervalo = setInterval(() => {
-      if (document.visibilityState === 'visible') this.actividadesService.refrescar();
-    }, 60_000);
-    inject(DestroyRef).onDestroy(() => clearInterval(intervalo));
+      ticks++;
+      if (!debeRefrescar(ticks, this.realtimeService.conectado(), document.hidden)) return;
+      ticks = 0;
+      this.actividadesService.refrescar();
+    }, INTERVALO_RESPALDO_MS);
+    const alVolver = () => {
+      if (document.hidden) return;
+      ticks = 0;
+      this.actividadesService.refrescar();
+    };
+    document.addEventListener('visibilitychange', alVolver);
+    inject(DestroyRef).onDestroy(() => {
+      clearInterval(intervalo);
+      document.removeEventListener('visibilitychange', alVolver);
+    });
 
     let refresco: ReturnType<typeof setTimeout> | undefined;
     inject(DestroyRef).onDestroy(() => clearTimeout(refresco));
