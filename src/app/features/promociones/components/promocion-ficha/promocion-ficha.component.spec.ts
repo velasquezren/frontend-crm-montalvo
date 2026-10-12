@@ -12,7 +12,7 @@ import { PromocionFichaComponent } from './promocion-ficha.component';
 
 const base: PromocionDetalle = {
   id: 'p1', codigo: 'PRM-7K3QX', slug: 'control-7k3qx', titulo: 'Control prenatal', resumen: 'Tres controles',
-  descripcion: '', condiciones: 'Incluye tres controles.', etiquetaOferta: null, precioRegular: 600, precioPromocional: 480,
+  descripcion: '', condiciones: 'Incluye tres controles.', etiquetaOferta: null, precioRegular: 600, precioPromocional: 480, servicios: [],
   vigenteDesde: '2026-10-01', vigenteHasta: '2026-10-31', vigencia: 'VIGENTE', estado: 'BORRADOR', destacada: false,
   enLanding: true, enWhatsapp: true, especialidad: null, medicos: [], imagenes: [], anuncios: [], creadaPor: null,
   revisadaPor: null, publicadaEn: null, motivoDevolucion: null, version: 4, createdAt: '', updatedAt: '',
@@ -94,5 +94,33 @@ describe('ficha de una promoción', () => {
     expect(fixture.nativeElement.querySelectorAll('input:disabled').length).toBeGreaterThan(3);
     expect(boton('Guardar')).toBeUndefined();
     expect(fixture.nativeElement.textContent).toContain('solo la edita un administrador');
+  });
+
+  it('servicios: agregar uno muestra su caja, el precio general se oculta y guardar manda la lista entera', async () => {
+    await abrir({ ...base, precioRegular: null, precioPromocional: null, servicios: [{ id: 's1', nombre: 'Ecografía Mamaria', precioRegular: 446, precioPromocional: 268 }] });
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelectorAll('.ficha-servicio')).toHaveLength(1);
+    expect(raiz.textContent).toContain('−40 %');
+    expect(raiz.textContent).not.toContain('Precio promocional (Bs)');
+    boton('Agregar servicio')!.click();
+    await asentar();
+    fixture.detectChanges();
+    expect(raiz.querySelectorAll('.ficha-servicio')).toHaveLength(2);
+    const nueva = fixture.componentInstance['borrador']()!.servicios[1].clave;
+    fixture.componentInstance['editarServicio'](nueva, 'nombre', 'Cultivo Vaginal');
+    fixture.componentInstance['editarServicio'](nueva, 'precioRegular', '170');
+    fixture.componentInstance['editarServicio'](nueva, 'precioPromocional', '120');
+    await asentar();
+    const guardado = fixture.componentInstance['guardar']();
+    const pedido = http.expectOne(r => r.method === 'PATCH' && r.url.endsWith('/promociones/p1'));
+    expect(pedido.request.body).toEqual({
+      version: 4,
+      servicios: [
+        { id: 's1', nombre: 'Ecografía Mamaria', precioRegular: 446, precioPromocional: 268 },
+        { nombre: 'Cultivo Vaginal', precioRegular: 170, precioPromocional: 120 },
+      ],
+    });
+    pedido.flush({ ...base, version: 5 });
+    await guardado;
   });
 });

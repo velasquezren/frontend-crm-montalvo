@@ -65,7 +65,11 @@
               <span class="block text-[11px] text-text-muted">{{ rangoVigencia(p.vigenteDesde, p.vigenteHasta) }}</span>
             </td>
             <td class="text-right tabular-nums">
-              @if (p.precioPromocional !== null) {
+              @if (p.servicios > 0 && p.desde !== null) {
+                <!-- Con servicios: cuántos y desde cuánto («Octubre Rosa»: 5, desde Bs 120). -->
+                <span class="block font-semibold text-text-dark">desde {{ p.desde | moneda:'BOB' }}</span>
+                <span class="block text-[11px] text-text-muted">{{ p.servicios }} {{ p.servicios === 1 ? 'servicio' : 'servicios' }}</span>
+              } @else if (p.precioPromocional !== null) {
                 <span class="block font-semibold text-text-dark">{{ p.precioPromocional | moneda:'BOB' }}</span>
                 @if (p.precioRegular !== null) {
                   <span class="block text-[11px] text-text-muted line-through">{{ p.precioRegular | moneda:'BOB' }}</span>

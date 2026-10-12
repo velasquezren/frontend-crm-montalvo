@@ -7,7 +7,8 @@
       <app-icon name="wallet" [size]="14" class="crm-pago-icono shrink-0" />
       <p class="crm-pago-titulo">
         <span class="font-semibold text-text-dark tabular-nums">{{ p.monto | moneda:'BOB' }}</span>
-        <span class="crm-pago-promo" [title]="p.promocion.titulo + ' · ' + p.promocion.codigo"> · {{ p.promocion.titulo }}</span>
+        <!-- Con servicios, el concepto dice cuál pagó («Octubre Rosa · Ecografía Mamaria»): es lo que se verifica. -->
+        <span class="crm-pago-promo" [title]="(p.concepto ?? p.promocion.titulo) + ' · ' + p.promocion.codigo"> · {{ p.concepto ?? p.promocion.titulo }}</span>
       </p>
       <app-badge [variant]="p.registroPendiente ? 'info' : variantes[p.estado]">{{ p.registroPendiente ? 'Registro pendiente' : estados[p.estado] }}</app-badge>
 

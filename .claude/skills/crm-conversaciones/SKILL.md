@@ -338,6 +338,11 @@ detalle, salvo sin red. Sin pago, si llegó por el código `PRM-…`, una línea
 cada línea se configura en Líneas → «Cobro» (`cobro-linea-editor.component.ts`). Textos en
 `pago-promocion.ts`; nunca «pagado» antes de que una persona lo confirme.
 
+**Promoción con servicios (2026-10-12):** si el pago es de un servicio, `pago.concepto` dice
+cuál («Octubre Rosa · Ecografía Mamaria») y el bloque lo muestra en vez del título: es lo que
+quien verifica compara con el monto del comprobante. Los servicios se editan en la ficha de la
+promoción («Servicios incluidos», `serviciosDeFilas` en `promocion.model.ts`).
+
 ### Asistente de IA en el chat (2026-10-10)
 
 Backend: `../backend-crm-montalvo/docs/asistente-ia.md`. Aquí solo se pinta:

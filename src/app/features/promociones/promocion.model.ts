@@ -13,6 +13,25 @@ export type { EstadoPromocion, FormatoBanner };
 export type Vigencia = 'PROXIMA' | 'VIGENTE' | 'VENCIDA';
 export type AccionPromocion = 'enviar' | 'devolver' | 'publicar' | 'pausar' | 'archivar';
 
+/** Un servicio de la promoción con su precio («Ecografía Mamaria: Bs 268, antes Bs 446»). */
+export interface ServicioPromocion {
+  readonly id: string;
+  readonly nombre: string;
+  readonly precioRegular: number | null;
+  readonly precioPromocional: number;
+}
+
+/** Lo que viaja al guardar: con `id` se edita ese servicio; sin él, se crea. */
+export interface ServicioEditado {
+  readonly id?: string;
+  readonly nombre: string;
+  readonly precioRegular: number | null;
+  readonly precioPromocional: number;
+}
+
+/** Hasta 10: lo que cabe en la lista de WhatsApp para elegir cuál pagar. */
+export const SERVICIOS_POR_PROMOCION = 10;
+
 export interface PromocionResumen {
   readonly id: string;
   readonly codigo: string;
@@ -25,6 +44,9 @@ export interface PromocionResumen {
   readonly etiquetaOferta: string | null;
   readonly precioRegular: number | null;
   readonly precioPromocional: number | null;
+  /** Cuántos servicios trae (0 = una promoción de un solo precio) y el más barato. */
+  readonly servicios: number;
+  readonly desde: number | null;
   readonly destacada: boolean;
   readonly enLanding: boolean;
   readonly enWhatsapp: boolean;
@@ -50,7 +72,9 @@ export interface BannerPromocion {
   readonly urlPublica: string | null;
 }
 
-export interface PromocionDetalle extends Omit<PromocionResumen, 'bannerUrl' | 'anuncios' | 'creadaPor' | 'especialidad'> {
+export interface PromocionDetalle extends Omit<PromocionResumen, 'bannerUrl' | 'anuncios' | 'creadaPor' | 'especialidad' | 'servicios' | 'desde'> {
+  /** Sus servicios con su precio, en orden. Vacío = una promoción de un solo precio. */
+  readonly servicios: readonly ServicioPromocion[];
   readonly slug: string;
   readonly descripcion: string;
   readonly condiciones: string;
@@ -89,6 +113,7 @@ export interface CambiosPromocion {
   enWhatsapp?: boolean;
   especialidadId?: string | null;
   medicoIds?: string[];
+  servicios?: ServicioEditado[];
 }
 
 export interface AnuncioSinPromocion {
@@ -144,6 +169,15 @@ export function rangoVigencia(desde: string, hasta: string | null): string {
 
 
 /** Lo que el formulario de la ficha edita, como texto (así se teclea). */
+/** Una fila del editor de servicios: los precios como se escriben. `clave` solo identifica la fila en pantalla. */
+export interface FilaServicio {
+  readonly clave: string;
+  readonly id?: string;
+  readonly nombre: string;
+  readonly precioRegular: string;
+  readonly precioPromocional: string;
+}
+
 export interface BorradorPromocion {
   titulo: string;
   resumen: string;
@@ -158,6 +192,7 @@ export interface BorradorPromocion {
   enLanding: boolean;
   enWhatsapp: boolean;
   especialidadId: string;
+  servicios: FilaServicio[];
 }
 
 export function borradorDe(p: PromocionDetalle): BorradorPromocion {
@@ -175,7 +210,36 @@ export function borradorDe(p: PromocionDetalle): BorradorPromocion {
     enLanding: p.enLanding,
     enWhatsapp: p.enWhatsapp,
     especialidadId: p.especialidad?.id ?? '',
+    servicios: p.servicios.map(s => ({
+      clave: s.id, id: s.id, nombre: s.nombre,
+      precioRegular: s.precioRegular === null ? '' : String(s.precioRegular), precioPromocional: String(s.precioPromocional),
+    })),
   };
+}
+
+/**
+ * Las filas del editor como viajan al servidor, o el motivo por el que todavía
+ * no se pueden guardar. Las mismas reglas que el servidor (`problemasDeServicios`),
+ * dichas antes de guardar.
+ */
+export function serviciosDeFilas(filas: readonly FilaServicio[]): { servicios: ServicioEditado[] } | { error: string } {
+  if (filas.length > SERVICIOS_POR_PROMOCION) return { error: `Una promoción lleva como mucho ${SERVICIOS_POR_PROMOCION} servicios.` };
+  const servicios: ServicioEditado[] = [];
+  const vistos = new Set<string>();
+  for (const f of filas) {
+    const nombre = f.nombre.trim();
+    if (nombre.length < 2) return { error: 'Cada servicio necesita su nombre.' };
+    const clave = nombre.toLocaleLowerCase('es');
+    if (vistos.has(clave)) return { error: `«${nombre}» está dos veces.` };
+    vistos.add(clave);
+    const regular = precioDeTexto(f.precioRegular);
+    const promocional = precioDeTexto(f.precioPromocional);
+    if (regular === undefined || promocional === undefined) return { error: `En «${nombre}», escribe los precios solo con números, por ejemplo 268 o 268,50.` };
+    if (promocional === null || promocional <= 0) return { error: `«${nombre}» necesita su precio de promoción.` };
+    if (regular !== null && promocional >= regular) return { error: `En «${nombre}», el precio de promoción tiene que ser menor que el de siempre.` };
+    servicios.push({ ...(f.id ? { id: f.id } : {}), nombre, precioRegular: regular, precioPromocional: promocional });
+  }
+  return { servicios };
 }
 
 /**
@@ -190,6 +254,11 @@ export function cambiosDe(p: PromocionDetalle, b: BorradorPromocion): { cambios:
   if (regular === undefined || promocional === undefined) return { error: 'Escribe los precios solo con números, por ejemplo 480 o 480,50.' };
   if (regular !== null && promocional !== null && promocional >= regular) return { error: 'El precio promocional tiene que ser menor que el regular.' };
   if (!b.titulo.trim() || !b.resumen.trim()) return { error: 'El título y el resumen no pueden quedar vacíos.' };
+  const servicios = serviciosDeFilas(b.servicios);
+  if ('error' in servicios) return servicios;
+  if (servicios.servicios.length && (regular !== null || promocional !== null)) {
+    return { error: 'Con servicios, el precio va en cada servicio: deja vacíos los precios de la promoción.' };
+  }
   if (!b.vigenteDesde) return { error: 'Falta el día en que empieza.' };
   if (b.vigenteHasta && b.vigenteHasta < b.vigenteDesde) return { error: 'La vigencia termina antes de empezar.' };
 
@@ -207,5 +276,9 @@ export function cambiosDe(p: PromocionDetalle, b: BorradorPromocion): { cambios:
   if (b.enLanding !== p.enLanding) cambios.enLanding = b.enLanding;
   if (b.enWhatsapp !== p.enWhatsapp) cambios.enWhatsapp = b.enWhatsapp;
   if ((b.especialidadId || null) !== (p.especialidad?.id ?? null)) cambios.especialidadId = b.especialidadId || null;
+  const antes = p.servicios.map(({ id, nombre, precioRegular, precioPromocional }) => ({ id, nombre, precioRegular, precioPromocional }));
+  if (JSON.stringify(antes) !== JSON.stringify(servicios.servicios.map(s => ({ id: s.id, nombre: s.nombre, precioRegular: s.precioRegular, precioPromocional: s.precioPromocional })))) {
+    cambios.servicios = servicios.servicios;
+  }
   return { cambios };
 }

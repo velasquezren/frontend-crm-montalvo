@@ -93,9 +93,49 @@
         <app-input label="Resumen de una línea" [disabled]="!p.puedeEditar" [value]="b.resumen" (valueChange)="editar('resumen', $event)" />
         <app-input label="Descripción" [multiline]="true" [rows]="4" [disabled]="!p.puedeEditar" [value]="b.descripcion" (valueChange)="editar('descripcion', $event)" />
 
+        <!-- Servicios: una promoción como «Octubre Rosa» trae varios, cada uno con su
+             precio. La paciente paga UNO por pago; la IA los cotiza con estos precios. -->
+        <div class="flex flex-col gap-2" role="group" aria-labelledby="ficha-servicios">
+          <div class="flex items-baseline justify-between gap-2">
+            <span id="ficha-servicios" class="text-sm font-medium text-text-dark">Servicios incluidos</span>
+            <span class="text-[11px] text-text-muted">{{ b.servicios.length }} de {{ maximoServicios }}</span>
+          </div>
+          <p class="text-xs text-text-muted -mt-1">
+            @if (b.servicios.length) {
+              Cada uno con su precio. Por WhatsApp, la paciente elige cuál pagar y recibe el QR con ese monto.
+            } @else {
+              Si la promoción tiene varios servicios con distinto precio, agrégalos aquí. Si es un solo precio, usa los campos de abajo.
+            }
+          </p>
+          @for (f of b.servicios; track f.clave; let i = $index, primero = $first, ultimo = $last) {
+            <div class="ficha-servicio">
+              <app-input [label]="'Servicio ' + (i + 1)" placeholder="Ecografía Mamaria" [disabled]="!p.puedeEditar" [value]="f.nombre" (valueChange)="editarServicio(f.clave, 'nombre', $event)" />
+              <div class="grid grid-cols-2 gap-2">
+                <app-input label="De siempre (Bs)" type="number" placeholder="446" [disabled]="!p.puedeEditar" [value]="f.precioRegular" (valueChange)="editarServicio(f.clave, 'precioRegular', $event)" />
+                <app-input label="Promoción (Bs)" type="number" placeholder="268" [disabled]="!p.puedeEditar" [value]="f.precioPromocional" (valueChange)="editarServicio(f.clave, 'precioPromocional', $event)" />
+              </div>
+              <div class="flex items-center justify-between gap-2">
+                @if (descuento(f); as d) { <app-badge variant="success">{{ d }}</app-badge> } @else { <span></span> }
+                @if (p.puedeEditar) {
+                  <div class="flex items-center gap-1">
+                    <app-button variant="ghost" size="xs" [circle]="true" icon="chevron-up" [disabled]="primero" [ariaLabel]="'Subir ' + (f.nombre || 'el servicio')" (clicked)="moverServicio(f.clave, -1)" />
+                    <app-button variant="ghost" size="xs" [circle]="true" icon="chevron-down" [disabled]="ultimo" [ariaLabel]="'Bajar ' + (f.nombre || 'el servicio')" (clicked)="moverServicio(f.clave, 1)" />
+                    <app-button variant="ghost" size="xs" [circle]="true" icon="trash" [ariaLabel]="'Quitar ' + (f.nombre || 'el servicio')" (clicked)="quitarServicio(f.clave)" />
+                  </div>
+                }
+              </div>
+            </div>
+          }
+          @if (p.puedeEditar && b.servicios.length < maximoServicios) {
+            <app-button variant="secondary" size="sm" icon="plus" class="self-start" (clicked)="agregarServicio()">Agregar servicio</app-button>
+          }
+        </div>
+
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <app-input label="Precio regular (Bs)" type="number" placeholder="600" [disabled]="!p.puedeEditar" [value]="b.precioRegular" (valueChange)="editar('precioRegular', $event)" />
-          <app-input label="Precio promocional (Bs)" type="number" placeholder="480" [disabled]="!p.puedeEditar" [value]="b.precioPromocional" (valueChange)="editar('precioPromocional', $event)" />
+          @if (!b.servicios.length) {
+            <app-input label="Precio regular (Bs)" type="number" placeholder="600" [disabled]="!p.puedeEditar" [value]="b.precioRegular" (valueChange)="editar('precioRegular', $event)" />
+            <app-input label="Precio promocional (Bs)" type="number" placeholder="480" [disabled]="!p.puedeEditar" [value]="b.precioPromocional" (valueChange)="editar('precioPromocional', $event)" />
+          }
           <app-input label="Sello de la oferta" placeholder="-20 %, 2x1" [disabled]="!p.puedeEditar" [value]="b.etiquetaOferta" (valueChange)="editar('etiquetaOferta', $event)" />
         </div>
         <app-input

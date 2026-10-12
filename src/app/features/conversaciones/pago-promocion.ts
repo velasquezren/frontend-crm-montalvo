@@ -13,6 +13,8 @@ export interface PagoDelChat {
   readonly estado: EstadoPagoPromocion;
   readonly monto: number;
   readonly promocion: { readonly id: string; readonly titulo: string; readonly codigo: string };
+  /** Qué se cobra («Octubre Rosa · Ecografía Mamaria»): el servicio elegido. `null` en pagos de un solo precio o anteriores. */
+  readonly concepto?: string | null;
   /** El mensaje (foto o PDF) que mandó como comprobante. */
   readonly comprobanteMensajeId: string | null;
   /** Por qué se le pidió otro comprobante, si se le pidió. */

@@ -26,8 +26,10 @@ import {
   borradorDe,
   cambiosDe,
   ESTADO_PROMOCION,
+  FilaServicio,
   FORMATOS,
   FormatoBanner,
+  SERVICIOS_POR_PROMOCION,
   PromocionDetalle,
   rangoVigencia,
   VIGENCIA,
@@ -154,6 +156,45 @@ export class PromocionFichaComponent {
 
   protected editar<K extends keyof BorradorPromocion>(campo: K, valor: BorradorPromocion[K]): void {
     this.borrador.update(b => (b ? { ...b, [campo]: valor } : b));
+  }
+
+  /* ── Servicios de la promoción ── */
+  protected readonly maximoServicios = SERVICIOS_POR_PROMOCION;
+  private filasNuevas = 0;
+
+  private serviciosCambian(cambio: (filas: FilaServicio[]) => FilaServicio[]): void {
+    this.borrador.update(b => (b ? { ...b, servicios: cambio(b.servicios) } : b));
+  }
+
+  protected agregarServicio(): void {
+    this.serviciosCambian(filas => [...filas, { clave: `nueva-${++this.filasNuevas}`, nombre: '', precioRegular: '', precioPromocional: '' }]);
+  }
+
+  protected editarServicio(clave: string, campo: 'nombre' | 'precioRegular' | 'precioPromocional', valor: string): void {
+    this.serviciosCambian(filas => filas.map(f => (f.clave === clave ? { ...f, [campo]: valor } : f)));
+  }
+
+  protected quitarServicio(clave: string): void {
+    this.serviciosCambian(filas => filas.filter(f => f.clave !== clave));
+  }
+
+  protected moverServicio(clave: string, paso: -1 | 1): void {
+    this.serviciosCambian(filas => {
+      const i = filas.findIndex(f => f.clave === clave);
+      const j = i + paso;
+      if (i < 0 || j < 0 || j >= filas.length) return filas;
+      const copia = [...filas];
+      [copia[i], copia[j]] = [copia[j], copia[i]];
+      return copia;
+    });
+  }
+
+  /** «−40 %» si los dos precios se leen bien; si no, nada. */
+  protected descuento(f: FilaServicio): string | null {
+    const regular = Number(f.precioRegular.replace(',', '.'));
+    const promo = Number(f.precioPromocional.replace(',', '.'));
+    if (!(regular > 0) || !(promo > 0) || promo >= regular) return null;
+    return `−${Math.round((1 - promo / regular) * 100)} %`;
   }
 
   protected agregarMedico(id: string): void {
