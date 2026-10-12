@@ -15,6 +15,8 @@ import {
   viewChild,
 } from '@angular/core';
 
+import { ActivatedRoute, Router } from '@angular/router';
+
 import { mensajeDeError } from '../../core/api/http-error';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
@@ -59,6 +61,11 @@ import {
   PacienteConServicios,
 } from './servicios.model';
 import { valorOVacio } from '../../core/api/valor-o-vacio';
+import { MedicoPorCodigo } from '../directorio/agenda-medicos.model';
+import { AgendaMedicosService } from '../directorio/agenda-medicos.service';
+
+/** El código de FileMaker como lo compara el backend: sin espacios ni mayúsculas. */
+const claveDeCodigo = (codigo: string) => codigo.trim().toUpperCase();
 
 export type Pestana = 'DASHBOARD' | 'PACIENTES' | 'MEDICOS';
 
@@ -129,6 +136,9 @@ const TABS_SERVICIOS: readonly TabServicioConfig[] = [
 })
 export class ServiciosPage {
   private readonly service = inject(ServiciosService);
+  private readonly agendaMedicos = inject(AgendaMedicosService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   protected readonly monedaService = inject(MonedaService);
 
@@ -190,7 +200,33 @@ export class ServiciosPage {
   private overlayHistorial: OverlayRef | null = null;
   private overlayMedico: OverlayRef | null = null;
 
+  /** `?medico=<código>` (desde la ficha del Directorio): abre su perfil apenas el cajón puede montarse. */
+  private readonly medicoPedido = signal<string | null>(this.route.snapshot.queryParamMap.get('medico'));
+
   constructor() {
+    effect(() => {
+      const codigo = this.medicoPedido();
+      if (!codigo || !this.plantillaMedico()) return;
+      this.medicoPedido.set(null);
+      this.setPestana('MEDICOS');
+      void this.abrirMedico(codigo);
+      /* Se quita de la URL: recargar no debe volver a abrir el cajón. */
+      void this.router.navigate([], { relativeTo: this.route, queryParams: { medico: null }, queryParamsHandling: 'merge', replaceUrl: true });
+    });
+
+    /* Lo que ya se sabe de cada cara se queda: pasar de página o abrir un
+       cajón no vuelve a las iniciales mientras llega el siguiente pedido. */
+    effect(() => {
+      if (!this.caras.hasValue()) return;
+      const nuevas = this.caras.value().datos;
+      if (nuevas.length === 0) return;
+      this.carasConocidas.update(actual => {
+        const siguiente = new Map(actual);
+        for (const m of nuevas) siguiente.set(claveDeCodigo(m.codigo), m);
+        return siguiente;
+      });
+    });
+
     effect((onCleanup: EffectCleanupRegisterFn) => {
       const texto = this.busquedaPacientes();
       const id = setTimeout(() => {
@@ -275,6 +311,39 @@ export class ServiciosPage {
   );
   /** `medicos` sin lanzar si la carga falló: lo que se pinta fuera de su rama de contenido (ver `valorOVacio`). */
   protected readonly medicosVista = valorOVacio(this.medicos, paginaVacia<MedicoConServicios>());
+
+  /* ── La cara de cada médico (foto y ficha del Directorio) ─────────────── */
+
+  /**
+   * Los códigos de FileMaker que hay a la vista: el ranking del resumen, la
+   * página de la tabla y el cajón abierto. Ordenados y sin repetir, para que
+   * abrir un médico que ya está en la tabla no dispare otro pedido.
+   */
+  private readonly codigosAVer = computed(() => {
+    const codigos = new Set<string>();
+    for (const m of this.dashboardVista()?.porMedico ?? []) if (m.codigo) codigos.add(m.codigo.trim());
+    if (this.estaMontada()('MEDICOS')) for (const m of this.medicosVista().datos) if (m.codigo) codigos.add(m.codigo.trim());
+    const abierto = this.perfilMedico()?.codigo;
+    if (abierto) codigos.add(abierto.trim());
+    return [...codigos].sort();
+  });
+
+  /**
+   * La foto y la ficha del Directorio de esos médicos. Es decorado: si falla,
+   * la pantalla sigue con las iniciales y sin aviso (los datos de servicios no
+   * dependen de esto).
+   */
+  private readonly caras = httpResource<{ datos: MedicoPorCodigo[] }>(
+    () => this.agendaMedicos.porCodigosRequest(this.codigosAVer()),
+    { defaultValue: { datos: [] } },
+  );
+  private readonly carasConocidas = signal<ReadonlyMap<string, MedicoPorCodigo>>(new Map());
+
+  /** El médico de la agenda que corresponde a un código del historial, o null. */
+  protected readonly caraDe = computed(() => {
+    const conocidas = this.carasConocidas();
+    return (codigo: string | null | undefined): MedicoPorCodigo | null => (codigo ? conocidas.get(claveDeCodigo(codigo)) ?? null : null);
+  });
 
   /* ── Derivados para los gráficos ────────────────────────────────────── */
 

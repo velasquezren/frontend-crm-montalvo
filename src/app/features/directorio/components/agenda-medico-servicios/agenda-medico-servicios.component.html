@@ -1,0 +1,66 @@
+<div class="flex-1 overflow-y-auto p-5 flex flex-col gap-5">
+  @if (recurso.isLoading()) {
+    <app-loading-skeleton height="96px" />
+    <app-loading-skeleton height="160px" />
+  } @else if (sinServicios()) {
+    <app-empty-state
+      icon="activity"
+      title="Sin servicios cargados"
+      [description]="'El historial de servicios no tiene atenciones con el código ' + codigo() + '. Se llena con el Excel mensual de FileMaker.'" />
+  } @else if (recurso.error()) {
+    <app-error-carga que="los servicios del médico" (reintentar)="recurso.reload()" />
+  } @else if (perfil(); as p) {
+    <section aria-labelledby="servicios-resumen" class="flex flex-col gap-3">
+      <h3 id="servicios-resumen" class="sr-only">Resumen</h3>
+      <dl class="grid grid-cols-2 gap-3">
+        <div class="rounded-2xl border border-border px-4 py-3">
+          <dt class="text-xs text-text-muted">Servicios</dt>
+          <dd class="text-base font-semibold break-words text-text-dark tabular-nums">{{ p.resumen.servicios | number }}</dd>
+        </div>
+        <div class="rounded-2xl border border-border px-4 py-3">
+          <dt class="text-xs text-text-muted">Pacientes distintos</dt>
+          <dd class="text-base font-semibold break-words text-text-dark tabular-nums">{{ p.resumen.pacientes | number }}</dd>
+        </div>
+        <div class="rounded-2xl border border-border px-4 py-3">
+          <dt class="text-xs text-text-muted">Facturado</dt>
+          <dd class="text-base font-semibold break-words text-primary tabular-nums">{{ p.resumen.ingreso | moneda }}</dd>
+        </div>
+        <div class="rounded-2xl border border-border px-4 py-3">
+          <dt class="text-xs text-text-muted">Última atención</dt>
+          <dd class="text-base font-semibold break-words text-text-dark tabular-nums">{{ p.resumen.ultimaAtencion ? (p.resumen.ultimaAtencion | fechaClinica: 'dd/MM/yyyy') : '—' }}</dd>
+        </div>
+      </dl>
+      @if (p.resumen.primeraAtencion) {
+        <p class="text-xs text-text-muted">
+          Con atenciones cargadas desde el {{ p.resumen.primeraAtencion | fechaClinica: 'dd/MM/yyyy' }}.
+        </p>
+      }
+    </section>
+
+    <section aria-labelledby="servicios-frecuentes" class="flex flex-col gap-2">
+      <h3 id="servicios-frecuentes" class="text-sm font-semibold text-text-dark">Lo que más hace</h3>
+      @if (frecuentes().length > 0) {
+        <ul class="flex flex-col divide-y divide-border rounded-2xl border border-border">
+          @for (s of frecuentes(); track s.etiqueta) {
+            <li class="flex items-center gap-3 px-4 py-2.5">
+              <span class="w-10 shrink-0 text-xs font-semibold text-text-muted tabular-nums">{{ s.total | number }}×</span>
+              <span class="flex-1 min-w-0 text-sm text-text-dark truncate" [title]="s.etiqueta">{{ s.etiqueta }}</span>
+              <span class="shrink-0 text-xs text-text-muted tabular-nums">{{ s.ingreso | moneda }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="text-xs text-text-muted">Sin detalle de servicios.</p>
+      }
+    </section>
+
+    <a
+      class="crm-enlace self-start text-sm inline-flex items-center gap-1.5"
+      routerLink="/servicios"
+      [queryParams]="{ medico: codigo() }"
+      (click)="salir.emit()">
+      <app-icon name="bar-chart" [size]="14" />
+      Ver su historial completo: pacientes, meses y módulos
+    </a>
+  }
+</div>

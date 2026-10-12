@@ -46,7 +46,7 @@
           <tr class="fila-clicable" (click)="abrir(m.id)">
             <td>
               <div class="flex items-center gap-3 min-w-0">
-                <app-avatar [initials]="iniciales(m.nombre)" [imageUrl]="m.web?.fotoUrl" [nombre]="m.nombre" size="sm" />
+                <app-avatar [initials]="iniciales(m.nombre)" [imageUrl]="m.fotoUrl" [nombre]="m.nombre" size="sm" />
                 <div class="min-w-0">
                   <app-button variant="ghost" size="sm" [ariaLabel]="'Ver ficha de ' + m.nombre" (clicked)="$event.stopPropagation(); abrir(m.id)">{{ nombreConTitulo(m) }}</app-button>
                   @if (m.codigo) {

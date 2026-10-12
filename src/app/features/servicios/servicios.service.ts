@@ -49,6 +49,11 @@ export class ServiciosService {
     return this.api.get<HistorialPaciente>(`/servicios/pacientes/${encodeURIComponent(pac)}`);
   }
 
+  /** El mismo perfil, como recurso: la pestaña «Servicios» de la ficha del Directorio. */
+  perfilMedicoRequest(codigo: string): ResourceRequest {
+    return this.api.request(`/servicios/medicos/${encodeURIComponent(codigo)}`);
+  }
+
   /** Perfil del médico. Igual que el historial: se pide al abrirlo, no en el listado. */
   perfilMedico(codigo: string): Promise<PerfilMedico> {
     return this.api.get<PerfilMedico>(`/servicios/medicos/${encodeURIComponent(codigo)}`);

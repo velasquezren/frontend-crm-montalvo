@@ -40,6 +40,31 @@ export interface MedicoAgenda {
   fotoVersion: string | null;
 }
 
+/** De dónde sale la foto que el CRM muestra de un médico. */
+export type OrigenFotoMedico = 'WEB' | 'AGENDA';
+
+/**
+ * La foto de un médico como la ve la clínica: la de su ficha web y, si no
+ * tiene, la de la agenda (ScriptCase), que es la que ya publica la landing.
+ * La de la agenda solo llega de médicos activos. Se muestra con `urlDeLaApi`.
+ */
+export interface FotoDeMedico {
+  fotoUrl: string | null;
+  fotoOrigen: OrigenFotoMedico | null;
+}
+
+/**
+ * Un médico de la agenda nombrado por su código de FileMaker (el `medicoPk`
+ * del historial de servicios): su cara y el id de su ficha del Directorio.
+ */
+export interface MedicoPorCodigo extends FotoDeMedico {
+  codigo: string;
+  id: number;
+  nombre: string;
+  especialidad: string | null;
+  activo: boolean;
+}
+
 /** Su ficha web en el listado: foto (URL firmada: se muestra, no se guarda) y si está publicada. */
 export interface WebDeMedico {
   perfilId: string;
@@ -48,7 +73,7 @@ export interface WebDeMedico {
 }
 
 /** Una fila del listado: el médico de la agenda y su ficha web, si tiene. */
-export interface MedicoAgendaConWeb extends MedicoAgenda {
+export interface MedicoAgendaConWeb extends MedicoAgenda, FotoDeMedico {
   web: WebDeMedico | null;
 }
 
@@ -59,7 +84,7 @@ export interface CasillaAgenda {
   activa: boolean;
 }
 
-export interface FichaMedicoAgenda {
+export interface FichaMedicoAgenda extends FotoDeMedico {
   medico: MedicoAgenda;
   casillas: CasillaAgenda[];
   grilla: { dias: DiaAgenda[]; horas: string[] };

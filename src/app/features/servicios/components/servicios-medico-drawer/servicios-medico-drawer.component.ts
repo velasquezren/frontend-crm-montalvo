@@ -1,7 +1,10 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
+import { generarIniciales } from '../../../../core/auth/user.model';
 import { MonedaService } from '../../../../core/moneda/moneda.service';
+import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { DrawerComponent } from '../../../../shared/components/drawer/drawer.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
@@ -9,6 +12,7 @@ import { KpiCardComponent } from '../../../../shared/components/kpi-card/kpi-car
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { TimelineComponent } from '../../../../shared/components/timeline/timeline.component';
 import { MonedaPipe } from '../../../../shared/pipes/moneda.pipe';
+import { MedicoPorCodigo } from '../../../directorio/agenda-medicos.model';
 import { PerfilMedico } from '../../servicios.model';
 import { KpiItem } from '../servicios-kpis/servicios-kpis.component';
 import { FechaClinicaPipe } from '../../../../core/fechas/fecha-clinica.pipe';
@@ -26,7 +30,9 @@ import { nombreMesCortoMinuscula } from '../../../../shared/models/meses';
   imports: [
     DecimalPipe,
     MonedaPipe,
+    AvatarComponent,
     DrawerComponent,
+    RouterLink,
     EmptyStateComponent,
     IconComponent,
     KpiCardComponent,
@@ -40,6 +46,14 @@ export class ServiciosMedicoDrawerComponent {
   private readonly monedaService = inject(MonedaService);
 
   readonly perfil = input.required<PerfilMedico>();
+  /** El médico de la agenda con ese código (foto y ficha del Directorio), o null si la agenda no lo tiene. */
+  readonly cara = input<MedicoPorCodigo | null>(null);
+
+  /** Sin el «Dr.»/«Dra.» del Excel: si no, el avatar diría «D». */
+  protected readonly iniciales = computed(() => {
+    const limpio = this.perfil().nombre.replace(/^Dra?\.\s*/i, '').trim();
+    return limpio ? generarIniciales(limpio) : 'Dr';
+  });
 
   /**
    * Igual que en el cajón del historial: se abre con lo que la tabla ya sabe y

@@ -2,7 +2,7 @@
   <!-- ── Cabecera: foto, nombre y cómo está hoy ─────────────────────── -->
   <div cabecera class="flex items-center gap-3 min-w-0">
     @if (ficha(); as f) {
-      <app-avatar [initials]="iniciales(f.medico.nombre)" [imageUrl]="f.presentacion?.fotoUrl" [nombre]="f.medico.nombre" size="lg" />
+      <app-avatar [initials]="iniciales(f.medico.nombre)" [imageUrl]="f.fotoUrl" [nombre]="f.medico.nombre" size="lg" />
       <div class="min-w-0 flex flex-col gap-1">
         <h2 class="text-base font-semibold text-text-dark tracking-tight leading-snug truncate">{{ nombreConTitulo(f.medico) }}</h2>
         <div class="crm-meta">
@@ -120,6 +120,13 @@
     <div id="ficha-panel-web" role="tabpanel" aria-labelledby="ficha-tab-web" class="flex-1 min-h-0 flex flex-col" [hidden]="pestana() !== 'web'">
       <app-agenda-presentacion-web [ficha]="f" [editable]="puedeEditar()" (actualizada)="aplicar($event)" (conflicto)="conflicto.set(true)" />
     </div>
+
+    <!-- ── Servicios: lo que hizo según el historial de FileMaker (solo administración) ── -->
+    @if (montarServicios() && f.medico.codigo; as codigo) {
+      <div id="ficha-panel-servicios" role="tabpanel" aria-labelledby="ficha-tab-servicios" class="flex-1 min-h-0 flex flex-col" [hidden]="pestana() !== 'servicios'">
+        <app-agenda-medico-servicios [codigo]="codigo" (salir)="cerrar.emit()" />
+      </div>
+    }
 
     <!-- ── WhatsApp: el número con el que consulta su agenda (solo administración) ── -->
     @if (montarWhatsapp()) {

@@ -15,6 +15,7 @@ import { LoadingSkeletonComponent } from '../../../../shared/components/loading-
 import { PaginatorComponent } from '../../../../shared/components/paginator/paginator.component';
 import { TableComponent } from '../../../../shared/components/table/table.component';
 import { MonedaPipe } from '../../../../shared/pipes/moneda.pipe';
+import { MedicoPorCodigo } from '../../../directorio/agenda-medicos.model';
 import { MedicoConServicios } from '../../servicios.model';
 import { FechaClinicaPipe } from '../../../../core/fechas/fecha-clinica.pipe';
 
@@ -51,6 +52,8 @@ export class ServiciosMedicosTablaComponent {
   readonly orden = input<string | undefined>(undefined);
   readonly direccion = input<DireccionOrden>('asc');
   readonly ordenar = output<{ orden: string; direccion: DireccionOrden }>();
+  /** Su médico de la agenda (foto) por código; sin él, iniciales. Lo resuelve la página. */
+  readonly caraDe = input<(codigo: string | null) => MedicoPorCodigo | null>(() => null);
   /** Abre el perfil del médico. Emite el código, no el nombre: es la clave. */
   readonly abrirMedico = output<string>();
 

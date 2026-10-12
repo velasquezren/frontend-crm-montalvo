@@ -21,7 +21,16 @@ const ficha = (version = 'aaaaaaaaaaaaaaaa', activas = ['09:00']): FichaMedicoAg
   grilla: { dias: ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'], horas: ['09:00', '09:30'] },
   version,
   presentacion: null,
+  fotoUrl: null,
+  fotoOrigen: null,
 });
+
+/** La ficha web recién creada, sin foto. */
+const presentacionSinFoto = {
+  id: 'p1', nombrePublico: 'Dra. Ana Sintética', slug: 'dra-ana', resumen: '', biografia: '', matricula: null, precioConsulta: 400,
+  publicado: false, orden: 0, version: 1, agendaMedicoId: 7, medico: null, especialidades: [], horario: [], resumenHorario: 'Lunes 9:00–9:30',
+  ausencias: [], fotoUrl: null,
+};
 
 describe('ficha de un médico de la agenda', () => {
   let fixture: ComponentFixture<AgendaMedicoFichaComponent>;
@@ -31,7 +40,7 @@ describe('ficha de un médico de la agenda', () => {
     for (let i = 0; i < 4; i++) { await Promise.resolve(); TestBed.tick(); }
     fixture.detectChanges();
   }
-  async function montar(rol: RolUsuario) {
+  async function montar(rol: RolUsuario, leida: FichaMedicoAgenda = ficha()) {
     TestBed.configureTestingModule({ providers: [
       provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
       { provide: ToastService, useValue: toast },
@@ -42,7 +51,7 @@ describe('ficha de un médico de la agenda', () => {
     fixture.componentRef.setInput('id', 7);
     fixture.detectChanges();
     await asentar();
-    http.expectOne(r => r.url.endsWith('/agenda/medicos/7')).flush(ficha());
+    http.expectOne(r => r.url.endsWith('/agenda/medicos/7')).flush(leida);
     await asentar();
   }
   const casilla = (etiqueta: string) =>
@@ -132,11 +141,7 @@ describe('ficha de un médico de la agenda', () => {
     await asentar();
     const pedido = http.expectOne(r => r.url.endsWith('/agenda/medicos/7/presentacion'));
     expect(pedido.request.method).toBe('POST');
-    pedido.flush({ ...ficha('cccccccccccccccc'), presentacion: {
-      id: 'p1', nombrePublico: 'Dra. Ana Sintética', slug: 'dra-ana', resumen: '', biografia: '', matricula: null, precioConsulta: 400,
-      publicado: false, orden: 0, version: 1, agendaMedicoId: 7, medico: null, especialidades: [], horario: [], resumenHorario: 'Lunes 9:00–9:30',
-      ausencias: [], fotoUrl: null,
-    } });
+    pedido.flush({ ...ficha('cccccccccccccccc'), presentacion: presentacionSinFoto });
     await asentar();
     http.expectOne(r => r.url.endsWith('/directorio/especialidades')).flush({ datos: [], total: 0, pagina: 1, limite: 100, totalPaginas: 1 });
     await asentar();
@@ -154,5 +159,68 @@ describe('ficha de un médico de la agenda', () => {
     expect(boton('a lunes–viernes')).toBeUndefined();
     expect(boton('Crear ficha web')).toBeUndefined();
     expect((fixture.nativeElement as HTMLElement).querySelector('input:not([disabled])')).toBeNull();
+  });
+
+  it('la cabecera muestra la foto de la agenda (la de la landing), completada con la base de la API', async () => {
+    await montar('ASISTENTE', { ...ficha(), fotoUrl: '/publico/agenda/fotos/7/a1b2c3d4e5f60718', fotoOrigen: 'AGENDA' });
+    const foto = (fixture.nativeElement as HTMLElement).querySelector<HTMLImageElement>('img[alt="Foto de Ana Sintética"]');
+    expect(foto?.getAttribute('src')).toMatch(/^https?:\/\/[^/]+\/publico\/agenda\/fotos\/7\/a1b2c3d4e5f60718$/);
+    expect(foto?.getAttribute('loading')).toBe('lazy');
+  });
+
+  it('una ficha web sin foto ofrece usar la de la agenda, y la pide al médico', async () => {
+    await montar('RECEPCION', { ...ficha(), presentacion: presentacionSinFoto, fotoUrl: '/publico/agenda/fotos/7/a1b2c3d4e5f60718', fotoOrigen: 'AGENDA' });
+    http.expectOne(r => r.url.endsWith('/directorio/especialidades')).flush({ datos: [], total: 0, pagina: 1, limite: 100, totalPaginas: 1 });
+    await asentar();
+    boton('Usar la de la agenda')!.click();
+    await asentar();
+    const pedido = http.expectOne(r => r.url.endsWith('/agenda/medicos/7/presentacion/foto/desde-agenda'));
+    expect(pedido.request.method).toBe('POST');
+    pedido.flush({ ...ficha(), presentacion: { ...presentacionSinFoto, fotoUrl: 'https://r2.example/foto.jpg' }, fotoUrl: 'https://r2.example/foto.jpg', fotoOrigen: 'WEB' });
+    await asentar();
+    /* La ficha web nueva vuelve a pedir sus especialidades, como tras cualquier guardado. */
+    http.match(r => r.url.endsWith('/directorio/especialidades')).forEach(r => r.flush({ datos: [], total: 0, pagina: 1, limite: 100, totalPaginas: 1 }));
+    await asentar();
+    expect(toast.success).toHaveBeenCalled();
+    expect(boton('Usar la de la agenda')).toBeUndefined();
+  });
+
+  it('la pestaña «Servicios» es de administración, pide su historial por el código al abrirla y enlaza al completo', async () => {
+    await montar('RECEPCION');
+    expect((fixture.nativeElement as HTMLElement).querySelector('#ficha-tab-servicios')).toBeNull();
+    fixture.destroy();
+    TestBed.resetTestingModule();
+
+    await montar('ADMIN');
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelector('#ficha-panel-servicios')).toBeNull();
+    raiz.querySelector<HTMLButtonElement>('#ficha-tab-servicios')!.click();
+    await asentar();
+    http.expectOne(r => r.url.endsWith('/servicios/medicos/GIN-04')).flush({
+      codigo: 'GIN-04', nombre: 'Dra. Ana Sintética',
+      resumen: { servicios: 42, pacientes: 30, ingreso: 1200, ticketPromedio: 28.5, primeraAtencion: '2026-01-05', ultimaAtencion: '2026-09-30' },
+      porModulo: [], porMes: [], topPacientes: [],
+      topServicios: [{ etiqueta: 'Consulta ginecológica', total: 25, ingreso: 700 }],
+    });
+    await asentar();
+    expect(raiz.textContent).toContain('Consulta ginecológica');
+    expect(raiz.querySelector('a[href^="/servicios?medico=GIN-04"]')).not.toBeNull();
+  });
+
+  it('un médico sin servicios cargados no es un error', async () => {
+    await montar('ADMIN');
+    const raiz = fixture.nativeElement as HTMLElement;
+    raiz.querySelector<HTMLButtonElement>('#ficha-tab-servicios')!.click();
+    await asentar();
+    http.expectOne(r => r.url.endsWith('/servicios/medicos/GIN-04')).flush({ message: 'No hay servicios' }, { status: 404, statusText: 'Not Found' });
+    await asentar();
+    expect(raiz.textContent).toContain('Sin servicios cargados');
+    expect(raiz.textContent).not.toContain('Reintentar');
+  });
+
+  it('sin código de FileMaker no hay pestaña «Servicios»', async () => {
+    const sinCodigo = ficha();
+    await montar('ADMIN', { ...sinCodigo, medico: { ...sinCodigo.medico, codigo: null } });
+    expect((fixture.nativeElement as HTMLElement).querySelector('#ficha-tab-servicios')).toBeNull();
   });
 });

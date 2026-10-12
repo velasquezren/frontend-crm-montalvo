@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+
+import { urlDeLaApi } from '../../../core/api/api.constants';
 
 export type AvatarSize = 'sm' | 'md' | 'lg';
 export type AvatarVariant = 'light' | 'solid';
@@ -6,17 +8,25 @@ export type AvatarVariant = 'light' | 'solid';
 /**
  * Átomo Avatar — círculo de iniciales, usado en topbar y futuras listas
  * de conversaciones/clientes. Ref: CRM_MANIFESTO.md §3.1 (bg-light + text-primary).
+ *
+ * Con foto: se carga perezosa (una lista de 25 médicos no baja 25 fotos que
+ * no se ven) y, si no carga, quedan las iniciales en vez del ícono roto. Una
+ * URL relativa de la API (`/publico/…`) se completa con su base.
  */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-avatar',
   template: `
-    @if (imageUrl()) {
+    @if (src(); as url) {
       <img
-        [src]="imageUrl()"
+        [src]="url"
         [class]="imgClasses()"
         [alt]="nombre() ? 'Foto de ' + nombre() : 'Foto de perfil'"
-        decoding="async" />
+        [attr.width]="pixeles()"
+        [attr.height]="pixeles()"
+        loading="lazy"
+        decoding="async"
+        (error)="fallo.set(url)" />
     } @else {
       <div [class]="classes()">
         <span class="font-semibold leading-none">{{ initials() }}</span>
@@ -37,6 +47,16 @@ export class AvatarComponent {
    * servían: se leen letra a letra.
    */
   readonly nombre = input<string | null | undefined>(undefined);
+
+  /** La URL que no cargó: con otra (otro médico en la misma fila), se vuelve a intentar. */
+  protected readonly fallo = signal<string | null>(null);
+
+  protected readonly src = computed(() => {
+    const url = urlDeLaApi(this.imageUrl());
+    return url && url !== this.fallo() ? url : null;
+  });
+
+  protected readonly pixeles = computed(() => ({ sm: 32, md: 40, lg: 56 })[this.size()]);
 
   protected readonly imgClasses = computed(() => {
     const sizes: Record<AvatarSize, string> = {

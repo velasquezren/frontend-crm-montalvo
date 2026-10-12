@@ -6,6 +6,8 @@
         <div class="w-36 h-36 rounded-2xl overflow-hidden bg-bg-light border border-border flex items-center justify-center">
           @if (p.fotoUrl) {
             <img [src]="p.fotoUrl" [alt]="'Foto de ' + p.nombrePublico" class="w-full h-full object-cover" />
+          } @else if (fotoDeAgenda(); as url) {
+            <img [src]="url" [alt]="'Foto de ' + p.nombrePublico + ' en la agenda'" class="w-full h-full object-cover" />
           } @else {
             <span class="text-3xl font-semibold text-primary" aria-hidden="true">{{ iniciales(p.nombrePublico) }}</span>
           }
@@ -22,7 +24,13 @@
               <app-button variant="ghost" size="sm" [disabled]="!!ocupado()" (clicked)="quitarFoto()">Quitar</app-button>
             }
           </div>
+          @if (fotoDeAgenda()) {
+            <app-button variant="secondary" size="sm" icon="check" [disabled]="!!ocupado()" [loading]="ocupado() === 'foto'" (clicked)="usarFotoDeAgenda()">Usar la de la agenda</app-button>
+          }
           <p class="text-[11px] text-text-muted text-center">JPG, PNG o WebP · mín. 400×400 px</p>
+        }
+        @if (fotoDeAgenda()) {
+          <p class="text-[11px] text-text-muted text-center">Es la foto de la agenda: la reserva web ya la muestra, «Staff médico» todavía no.</p>
         }
       </div>
 

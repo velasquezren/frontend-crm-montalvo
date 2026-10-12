@@ -28,25 +28,32 @@ import {
 import { AgendaMedicosService } from '../../agenda-medicos.service';
 import { AgendaHorarioGrillaComponent } from '../agenda-horario-grilla/agenda-horario-grilla.component';
 import { AgendaMedicoDatosComponent } from '../agenda-medico-datos/agenda-medico-datos.component';
+import { AgendaMedicoServiciosComponent } from '../agenda-medico-servicios/agenda-medico-servicios.component';
 import { AgendaMedicoWhatsappComponent } from '../agenda-medico-whatsapp/agenda-medico-whatsapp.component';
 import { AgendaPresentacionWebComponent } from '../agenda-presentacion-web/agenda-presentacion-web.component';
 
 type Tarea = 'datos' | 'horario';
-export type PestanaFicha = 'datos' | 'horario' | 'web' | 'whatsapp';
+export type PestanaFicha = 'datos' | 'horario' | 'web' | 'servicios' | 'whatsapp';
 
 const PESTANAS: readonly { readonly id: PestanaFicha; readonly etiqueta: string; readonly icono: IconName }[] = [
   { id: 'datos', etiqueta: 'Datos', icono: 'user' },
   { id: 'horario', etiqueta: 'Horario', icono: 'calendar' },
   { id: 'web', etiqueta: 'Web', icono: 'external-link' },
 ];
+/**
+ * Solo para administración, como el Historial de servicios del que sale: lo
+ * que el médico hizo según el Excel de FileMaker, unido por su código.
+ */
+const PESTANA_SERVICIOS = { id: 'servicios', etiqueta: 'Servicios', icono: 'activity' } as const satisfies { id: PestanaFicha; etiqueta: string; icono: IconName };
 /** Solo para administración: el número de WhatsApp es un dato privado y abre los pacientes del día. */
 const PESTANA_WHATSAPP = { id: 'whatsapp', etiqueta: 'WhatsApp', icono: 'phone' } as const satisfies { id: PestanaFicha; etiqueta: string; icono: IconName };
 
 /**
  * La ficha de un médico de la agenda, en tres pestañas —sus datos, la grilla de
  * horario (casillas de 30 minutos) y su ficha web (foto, biografía,
- * publicación)— y una cuarta para administración: el número de WhatsApp con el que
- * el médico consulta su agenda por el asistente. Cada parte se guarda aparte con la versión que se leyó: si otra
+ * publicación)— y dos más para administración: sus servicios (el historial de
+ * FileMaker, por su código) y el número de WhatsApp con el que el médico
+ * consulta su agenda por el asistente. Cada parte se guarda aparte con la versión que se leyó: si otra
  * persona guardó antes —en el CRM o en ScriptCase—, 409 y se ofrece lo último.
  * Las tres quedan montadas: cambiar de pestaña no pierde lo que se escribió, y
  * un punto en la pestaña avisa de lo que falta guardar.
@@ -56,6 +63,7 @@ const PESTANA_WHATSAPP = { id: 'whatsapp', etiqueta: 'WhatsApp', icono: 'phone' 
   imports: [
     AgendaHorarioGrillaComponent,
     AgendaMedicoDatosComponent,
+    AgendaMedicoServiciosComponent,
     AgendaMedicoWhatsappComponent,
     AgendaPresentacionWebComponent,
     AvatarComponent,
@@ -85,13 +93,18 @@ export class AgendaMedicoFichaComponent {
   readonly cerrar = output<void>();
 
   protected readonly esAdmin = computed(() => cubreRol(this.auth.user()?.rol, 'ADMIN'));
-  protected readonly pestanas = computed<readonly { readonly id: PestanaFicha; readonly etiqueta: string; readonly icono: IconName }[]>(
-    () => (this.esAdmin() ? [...PESTANAS, PESTANA_WHATSAPP] : PESTANAS),
-  );
+  protected readonly pestanas = computed<readonly { readonly id: PestanaFicha; readonly etiqueta: string; readonly icono: IconName }[]>(() => {
+    if (!this.esAdmin()) return PESTANAS;
+    /* Sin código de FileMaker no hay con qué buscarlo en el historial. */
+    return this.ficha()?.medico.codigo ? [...PESTANAS, PESTANA_SERVICIOS, PESTANA_WHATSAPP] : [...PESTANAS, PESTANA_WHATSAPP];
+  });
   protected readonly pestana = linkedSignal(() => this.pestanaInicial());
   /** «WhatsApp» se monta al visitarla (y se queda): abrir una ficha no pide el teléfono si nadie lo mira. */
   private readonly whatsappVisitado = signal(false);
   protected readonly montarWhatsapp = computed(() => this.esAdmin() && (this.whatsappVisitado() || this.pestana() === 'whatsapp'));
+  /** «Servicios», igual: se pide al visitarla. */
+  private readonly serviciosVisitado = signal(false);
+  protected readonly montarServicios = computed(() => this.esAdmin() && (this.serviciosVisitado() || this.pestana() === 'servicios'));
   protected readonly puedeEditar = computed(() => puedeEditarAgendaClinica(this.auth.user()?.rol));
   protected readonly iniciales = generarIniciales;
   protected readonly nombreConTitulo = nombreConTitulo;
@@ -139,6 +152,7 @@ export class AgendaMedicoFichaComponent {
 
   protected elegirPestana(id: PestanaFicha): void {
     if (id === 'whatsapp') this.whatsappVisitado.set(true);
+    if (id === 'servicios') this.serviciosVisitado.set(true);
     this.pestana.set(id);
   }
 
@@ -146,7 +160,7 @@ export class AgendaMedicoFichaComponent {
   protected pendiente(p: PestanaFicha): boolean {
     if (p === 'datos') return this.hayCambiosDatos();
     if (p === 'horario') return this.hayCambiosHorario();
-    if (p === 'whatsapp') return false;
+    if (p === 'whatsapp' || p === 'servicios') return false;
     return this.web()?.hayCambios() ?? false;
   }
 

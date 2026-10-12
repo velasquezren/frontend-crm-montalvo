@@ -205,6 +205,7 @@
                     <app-avatar
                       size="sm"
                       [initials]="iniciales(m.etiqueta || m.codigo)"
+                      [imageUrl]="caraDe()(m.codigo)?.fotoUrl"
                       [nombre]="m.etiqueta" />
                     <span class="truncate font-semibold text-text-dark">{{ m.etiqueta }}</span>
                   </div>
@@ -342,7 +343,8 @@
         [orden]="ordenMedicos()"
         [direccion]="direccionMedicos()"
         (ordenar)="ordenarMedicos($event)"
-        (abrirMedico)="abrirMedico($event)" />
+        (abrirMedico)="abrirMedico($event)"
+        [caraDe]="caraDe()" />
     </div>
   }
 </main>
@@ -367,6 +369,7 @@
   @if (perfilMedico(); as m) {
     <app-servicios-medico-drawer
       [perfil]="m"
+      [cara]="caraDe()(m.codigo)"
       [cargando]="cargandoMedico()"
       (cerrar)="cerrarMedico()"
       (verPaciente)="verPacienteDelMedico($event)" />

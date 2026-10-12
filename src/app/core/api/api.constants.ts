@@ -21,3 +21,13 @@ function resolverApiUrl(): string {
 }
 
 export const API_URL = resolverApiUrl();
+
+/**
+ * Una URL que devuelve la API para mostrarla (la foto de un médico): si viene
+ * relativa (`/publico/…`, un backend sin `CRM_URL_PUBLICA`), se completa con la
+ * base de la API; absoluta o vacía, tal cual.
+ */
+export function urlDeLaApi(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return url.startsWith('/') && !url.startsWith('//') ? `${API_URL}${url}` : url;
+}

@@ -1,6 +1,7 @@
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
 
+import { urlDeLaApi } from '../../../../core/api/api.constants';
 import { esConflicto, mensajeDeError } from '../../../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../../../core/api/pagination.model';
 import { generarIniciales } from '../../../../core/auth/user.model';
@@ -75,6 +76,14 @@ export class AgendaPresentacionWebComponent {
   protected readonly ocupado = signal<Tarea | null>(null);
 
   protected readonly presentacion = computed(() => this.ficha()?.presentacion ?? null);
+  /**
+   * La foto que el médico ya tiene en la agenda (ScriptCase), cuando su ficha
+   * web todavía no tiene una: se muestra y se ofrece pasarla con un toque.
+   */
+  protected readonly fotoDeAgenda = computed(() => {
+    const f = this.ficha();
+    return f && !f.presentacion?.fotoUrl && f.fotoOrigen === 'AGENDA' ? urlDeLaApi(f.fotoUrl) : null;
+  });
   protected readonly requisitos = computed(() => {
     const f = this.ficha();
     return f ? requisitosWeb(f) : [];
@@ -192,6 +201,10 @@ export class AgendaPresentacionWebComponent {
       return;
     }
     await this.trabajar('foto', () => this.servicio.subirFoto(this.medicoId(), archivo), 'Foto actualizada.');
+  }
+
+  protected usarFotoDeAgenda(): Promise<void> {
+    return this.trabajar('foto', () => this.servicio.usarFotoDeAgenda(this.medicoId()), 'Foto de la agenda puesta en su ficha web.');
   }
 
   protected quitarFoto(): Promise<void> {

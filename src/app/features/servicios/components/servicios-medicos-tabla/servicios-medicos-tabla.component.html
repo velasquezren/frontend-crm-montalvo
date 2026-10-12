@@ -57,6 +57,7 @@
                 <app-avatar
                   size="sm"
                   [initials]="iniciales(m.nombre || m.codigo)"
+                  [imageUrl]="caraDe()(m.codigo)?.fotoUrl"
                   [nombre]="m.nombre" />
                 <span class="truncate font-semibold text-text-dark">{{ m.nombre || '—' }}</span>
               </div>

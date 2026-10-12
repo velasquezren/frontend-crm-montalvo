@@ -1,9 +1,27 @@
 <!-- Ver la nota del cajón de historial: el marco entero lo pone <app-drawer>. -->
 <app-drawer
   ancho="ancho"
-  [titulo]="perfil().nombre"
-  [subtitulo]="perfil().codigo"
+  [etiqueta]="'Perfil de ' + perfil().nombre"
   (cerrar)="cerrar.emit()">
+
+  <!-- Cabecera con su cara: la foto es la de la agenda (la que publica la
+       landing) y el enlace lleva a su ficha del Directorio. -->
+  <div cabecera class="flex items-center gap-3 min-w-0">
+    <app-avatar [initials]="iniciales()" [imageUrl]="cara()?.fotoUrl" [nombre]="perfil().nombre" size="lg" />
+    <div class="min-w-0 flex flex-col gap-1">
+      <h2 class="text-base font-semibold text-text-dark tracking-tight leading-snug truncate">{{ perfil().nombre }}</h2>
+      <div class="crm-meta">
+        @if (cara()?.especialidad; as especialidad) { <span>{{ especialidad }}</span> }
+        <span class="crm-meta-clave">{{ perfil().codigo }}</span>
+      </div>
+      @if (cara(); as c) {
+        <a class="crm-enlace text-xs inline-flex items-center gap-1 self-start" routerLink="/directorio" [queryParams]="{ medico: c.id }" (click)="cerrar.emit()">
+          <app-icon name="user" [size]="12" />
+          Ver su ficha y horario en el Directorio
+        </a>
+      }
+    </div>
+  </div>
 
   <!-- Mismo reparto que la ficha del paciente: quién es y cómo trabaja a la
        izquierda, qué hizo y a quién a la derecha. Un scroll por columna. -->

@@ -41,6 +41,16 @@ export class AgendaMedicosService {
     return this.api.request('/agenda/medicos/especialidades', { limite: 100 });
   }
 
+  /**
+   * Los médicos de la agenda que nombra otra pantalla por su código de
+   * FileMaker (el historial de servicios), con su foto. Hasta 50 por pedido;
+   * los que la agenda no tiene no vienen.
+   */
+  porCodigosRequest(codigos: readonly string[]): ResourceRequest | undefined {
+    const unicos = [...new Set(codigos.map(c => c.trim()).filter(Boolean))].slice(0, 50);
+    return unicos.length ? this.api.request('/agenda/medicos/por-codigo', { codigos: unicos.join(',') }) : undefined;
+  }
+
   bancosRequest(): ResourceRequest {
     return this.api.request('/agenda/medicos/bancos');
   }
@@ -76,6 +86,11 @@ export class AgendaMedicosService {
     const datos = new FormData();
     datos.append('archivo', archivo);
     return this.api.post<FichaMedicoAgenda>(`/agenda/medicos/${id}/presentacion/foto`, datos);
+  }
+
+  /** La foto que el médico ya tiene en la agenda (ScriptCase) pasa a su ficha web. */
+  usarFotoDeAgenda(id: number): Promise<FichaMedicoAgenda> {
+    return this.api.post<FichaMedicoAgenda>(`/agenda/medicos/${id}/presentacion/foto/desde-agenda`);
   }
 
   quitarFoto(id: number): Promise<FichaMedicoAgenda> {
