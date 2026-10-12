@@ -249,6 +249,21 @@
   color: var(--color-text-muted);
 }
 
+.dash-serie-guia {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed var(--color-border);
+  pointer-events: none;
+}
+
+/* El tope de las barras está a 18 px del borde (el `padding-top` de `.dash-serie`). */
+.dash-serie-guia-max { top: 18px; }
+.dash-serie-guia-mitad { top: calc(18px + (100% - 18px) / 2); }
+
+.dash-serie-mitad { top: calc(18px + (100% - 18px) / 2 - 16px); }
+
 .dash-serie-col {
   flex: 1;
   height: 100%;

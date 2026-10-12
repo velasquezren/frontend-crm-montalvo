@@ -163,7 +163,7 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 | ThOrdenable | `th[appOrdenable]` | `appOrdenable` (columna, requerido), `orden`, `direccion`, `direccionInicial` · `(ordenar)` — cabecera ordenable; **ordena el servidor**, no el cliente |
 | Paginator | `<app-paginator>` | `pagina`, `totalPaginas`, `total` (requeridos), `limite` · `(cambiar)` |
 | BarChart | `<app-bar-chart>` | `items`, `mode` (BAR/COLUMN), `title`, `subtitle`, `height`, `formatType`, `origenMoneda` · `(segmentClick)` |
-| DonutChart | `<app-donut-chart>` | `items`, `title`, `subtitle`, `etiquetaTotal`, `formatType`, `origenMoneda` · `(segmentClick)` |
+| DonutChart | `<app-donut-chart>` | `items`, `title`, `subtitle`, `etiquetaTotal`, `formatType`, `origenMoneda` · `(segmentClick)` — un ítem sin color propio toma el de la rampa por índice (ver «Tonos de un gráfico») |
 | Sparkline | `<app-sparkline>` | `valores` (requerido; un valor nulo es un tramo sin dato y se salta en vez de pintarse en cero), `area` (rellena suave bajo el trazo, del mismo tono), `grosor` — línea de tendencia sin ejes para el pie de una tarjeta; el color lo pone la clase del contenedor, p. ej. text-primary. **Siempre con datos reales**: el dashboard tuvo trazos fijos escritos a mano que dibujaban la misma curva hubiera o no ventas |
 | InfoHint | `<app-info-hint>` | `titulo` (requerido), `size` + contenido proyectado — el "!" que explica una regla |
 | SelectorPeriodoEmpty | `<app-selector-periodo-empty>` | `periodos`, `cargando`, `titulo`, `descripcion`, `icono`, `puedeImportar` · `(periodoSeleccionado)`, `(importarClic)`, `(archivoSeleccionado)` |
@@ -216,6 +216,26 @@ Existe porque el Dashboard traía su propia dona en SVG a mano —duplicando
 la paleta (`#F1F5F9`) que ningún validador veía por estar en un atributo SVG
 del `.html`, no en una clase Tailwind ni en un `.css`. Si necesitas clic en una
 dona o en unas barras, usa `id`/`(segmentClick)` en vez de reescribir el SVG.
+
+## Tonos de un gráfico: `RAMPA_GRAFICOS`, nunca un hex (2026-10-12)
+
+`src/app/shared/components/charts/rampa-graficos.ts` tiene los ocho tonos de las porciones
+(`colorDeRampa(i)`) y el gris de «lo que falta» (`COLOR_NEUTRO_GRAFICO`, para «sin respuesta» u
+«otros»): todos son `var(--color-…)` o `color-mix()` sobre la paleta, ordenados para que dos
+vecinos no se confundan. Hasta esa fecha `<app-donut-chart>` pintaba con `primary` toda porción
+sin color, y las donas de Servicios y Ventas eran **un solo verde**: la proporción solo se leía en
+la leyenda.
+
+- **Un color con `var()` o `color-mix()` en SVG va por `[style.stroke]`/`[style.fill]`, no por
+  `[attr.stroke]`**: un atributo de presentación no garantiza resolver funciones de CSS.
+- Más de ocho porciones ya no se leen en una dona: agrupa el resto en «Otros» con el neutro.
+- Una escala de intensidad (un mapa de calor) se deriva igual:
+  `color-mix(in srgb, var(--color-primary) N%, var(--color-bg-light))`, y la celda vacía es
+  `--color-bg-workspace` (superficie, no gris de texto).
+- **Los radios del build valen también aquí** (12 px, 16 px, píldora, 50 % o 0). Un mapa de
+  calor con celdas de 3–5 px rompe `check:skills`: el del Dashboard es una **matriz de
+  puntos** (`border-radius: 50%`, `aspect-ratio: 1`, `max-width`), que además no se deforma al
+  cambiar el ancho de la tarjeta. Ejemplo vivo: `dash-analisis.component.css`.
 
 ## Íconos: catálogo cerrado, cero emojis
 

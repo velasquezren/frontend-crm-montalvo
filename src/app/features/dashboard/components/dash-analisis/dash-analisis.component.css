@@ -1,0 +1,155 @@
+:host { display: block; }
+
+.ana {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: opacity 0.2s ease;
+}
+
+@media (min-width: 640px) {
+  .ana { gap: 1.25rem; }
+}
+
+/* Otro periodo en camino: lo anterior se queda, atenuado (como el resto del Dashboard). */
+.ana-recargando { opacity: 0.55; }
+
+.ana-titulo { margin-bottom: 16px; }
+
+.ana-titulo-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.ana-titulo h2 {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.ana-titulo p {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* El dato que resume la tarjeta, como una cápsula suave. */
+.ana-pico {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: var(--color-bg-light);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ana-vacio {
+  padding: 32px 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.ana-cifra {
+  font-weight: 600;
+  color: var(--color-text-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Mapa de calor: 7 días × 12 bandas de dos horas ─────────────────── */
+.ana-mapa {
+  display: grid;
+  grid-template-columns: 2.25rem repeat(12, minmax(0, 1fr));
+  gap: 3px;
+  align-items: center;
+}
+
+.ana-mapa-hora {
+  font-size: 0.625rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  height: 14px;
+}
+
+.ana-mapa-dia {
+  line-height: 22px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+/* Una matriz de puntos: cada celda es un círculo del mismo tamaño y la
+   intensidad la da el color. Así no se deforma al cambiar el ancho de la
+   tarjeta (a 390 px cada columna mide ~20 px; en escritorio, ~45). */
+.ana-mapa-celda {
+  display: block;
+  width: 100%;
+  max-width: 22px;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  border-radius: 50%;
+  transition: transform 0.12s ease;
+}
+
+.ana-mapa-celda:hover { transform: scale(1.08); }
+
+.ana-mapa-leyenda {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+}
+
+.ana-mapa-muestra {
+  width: 12px;
+  margin: 0;
+}
+
+/* ── Barra repartida del asistente ──────────────────────────────────── */
+.ana-barra {
+  display: flex;
+  height: 12px;
+  border-radius: 9999px;
+  overflow: hidden;
+  background: var(--color-bg-light);
+  gap: 2px;
+}
+
+.ana-barra span { display: block; height: 100%; }
+
+.ana-leyenda {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 0.8125rem;
+  color: var(--color-text-dark);
+}
+
+.ana-leyenda li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ana-leyenda i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ana, .ana-mapa-celda { transition: none; }
+  .ana-mapa-celda:hover { transform: none; }
+}

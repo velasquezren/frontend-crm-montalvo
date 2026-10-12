@@ -1,0 +1,150 @@
+<div class="ana" [class.ana-recargando]="recargando()" [attr.aria-busy]="recargando()">
+
+  <!-- ── 1. Tres tortas: de dónde vienen, cuánto esperan y qué se vende ── -->
+  <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5" aria-label="Repartos del periodo">
+    <app-card>
+      <div class="ana-titulo">
+        <h2>Leads por canal</h2>
+        <p>Pulsa un canal para ver sus leads.</p>
+      </div>
+      <app-donut-chart etiquetaTotal="leads" formatType="number" [items]="porCanal()" (segmentClick)="irACanal($event)" />
+    </app-card>
+
+    <app-card>
+      <div class="ana-titulo">
+        <h2 class="flex items-center gap-1.5">
+          Primera respuesta
+          <app-info-hint titulo="Cómo se cuenta">
+            <p>Cuánto tardó una persona del equipo en escribirle a cada lead del periodo. El mensaje automático fuera de horario no cuenta.</p>
+          </app-info-hint>
+        </h2>
+        @if (primeraRespuesta(); as pr) {
+          <p>
+            @if (pr.enLaHora !== null) { {{ pr.enLaHora }} % respondidos en la primera hora }
+            @else { Sin leads en el periodo }
+          </p>
+        } @else {
+          <p>Cuánto esperó cada lead.</p>
+        }
+      </div>
+      @if (detalle.isLoading() && !datos()) {
+        <app-loading-skeleton shape="card" height="170px" />
+      } @else if (detalle.error() && !datos()) {
+        <app-error-carga que="la primera respuesta" (reintentar)="detalle.reload()" />
+      } @else if (primeraRespuesta(); as pr) {
+        <app-donut-chart etiquetaTotal="leads" formatType="number" [items]="pr.items" />
+      }
+    </app-card>
+
+    <app-card class="md:col-span-2 xl:col-span-1">
+      <div class="ana-titulo">
+        <h2>Ventas por servicio</h2>
+        <p>Lo más vendido en el CRM, en bolivianos.</p>
+      </div>
+      <app-donut-chart etiquetaTotal="vendido" formatType="currency" [items]="porServicio()" />
+    </app-card>
+  </section>
+
+  <!-- ── 2. Cuándo escriben + quién escribe ───────────────────────────── -->
+  <section class="grid grid-cols-1 xl:grid-cols-5 gap-4 sm:gap-5">
+    <app-card class="xl:col-span-3">
+      <div class="ana-titulo ana-titulo-fila">
+        <div>
+          <h2>Cuándo escriben</h2>
+          <p>Leads por día y hora de La Paz: para saber cuándo hace falta gente.</p>
+        </div>
+        @if (pico(); as p) {
+          <span class="ana-pico"><app-icon name="trending-up" [size]="12" />Más leads: {{ p }}</span>
+        }
+      </div>
+
+      @if (detalle.isLoading() && !datos()) {
+        <app-loading-skeleton shape="card" height="236px" />
+      } @else if (detalle.error() && !datos()) {
+        <app-error-carga que="el mapa de horas" (reintentar)="detalle.reload()" />
+      } @else if (mapa(); as m) {
+        @if (m.max > 0) {
+          <div class="ana-mapa" role="img" [attr.aria-label]="'Leads por día y hora. ' + (pico() ? 'Más leads: ' + pico() : '')">
+            <span></span>
+            @for (b of bandas; track b) {
+              <span class="ana-mapa-hora">@if (b % 2 === 0) { {{ etiquetaBanda(b) }} }</span>
+            }
+            @for (fila of m.celdas; track $index; let d = $index) {
+              <span class="ana-mapa-dia">{{ dias[d] }}</span>
+              @for (c of fila; track $index; let b = $index) {
+                <span class="ana-mapa-celda" [style.background]="fondo(c.intensidad)" [title]="tituloCelda(d, b, c.leads)"></span>
+              }
+            }
+          </div>
+          <div class="ana-mapa-leyenda" aria-hidden="true">
+            <span>Menos</span>
+            @for (i of [0, 0.25, 0.5, 0.75, 1]; track i) {
+              <span class="ana-mapa-celda ana-mapa-muestra" [style.background]="fondo(i)"></span>
+            }
+            <span>Más</span>
+            <span class="ml-auto">Horas en bandas de dos</span>
+          </div>
+        } @else {
+          <p class="ana-vacio">Sin leads en este periodo.</p>
+        }
+      }
+    </app-card>
+
+    <app-card class="xl:col-span-2">
+      <div class="ana-titulo">
+        <h2>Quién escribe</h2>
+        <p>Pacientes que escribieron en el periodo, por categoría.</p>
+      </div>
+      @if (detalle.isLoading() && !datos()) {
+        <app-loading-skeleton shape="card" height="170px" />
+      } @else if (detalle.error() && !datos()) {
+        <app-error-carga que="las categorías" (reintentar)="detalle.reload()" />
+      } @else {
+        <app-donut-chart etiquetaTotal="pacientes" formatType="number" [items]="porCategoria()" />
+      }
+    </app-card>
+  </section>
+
+  <!-- ── 3. Por línea + el asistente ─────────────────────────────────── -->
+  @if (porLinea().length > 1 || asistente()) {
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
+      @if (porLinea().length > 1) {
+        <app-card>
+          <div class="ana-titulo">
+            <h2>Chats por línea</h2>
+            <p>Conversaciones en las que la paciente escribió en el periodo.</p>
+          </div>
+          <app-bar-chart mode="BAR" formatType="number" [items]="porLinea()" />
+        </app-card>
+      }
+
+      @if (asistente(); as a) {
+        <app-card>
+          <div class="ana-titulo ana-titulo-fila">
+            <div>
+              <h2>Asistente de IA</h2>
+              <p>{{ a.total }} {{ a.total === 1 ? 'mensaje atendido' : 'mensajes atendidos' }} en el periodo.</p>
+            </div>
+            @if (a.resuelto !== null) {
+              <span class="ana-pico"><app-icon name="check-circle" [size]="12" />{{ a.resuelto }} % resuelto solo</span>
+            }
+          </div>
+          <div class="ana-barra" role="img" [attr.aria-label]="'Resultados del asistente: ' + a.total + ' en total'">
+            @for (f of a.filas; track f.clave) {
+              <span [style.width.%]="f.ancho" [style.background]="f.tono" [title]="f.etiqueta + ': ' + f.cantidad"></span>
+            }
+          </div>
+          <ul class="ana-leyenda">
+            @for (f of a.filas; track f.clave) {
+              <li>
+                <i [style.background]="f.tono"></i>
+                <span class="flex-1 min-w-0 truncate">{{ f.etiqueta }}</span>
+                <span class="ana-cifra">{{ f.cantidad }}</span>
+              </li>
+            }
+          </ul>
+        </app-card>
+      }
+    </section>
+  }
+</div>

@@ -18,6 +18,7 @@ import { SparklineComponent } from '../../shared/components/sparkline/sparkline.
 import { NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { ORIGEN_LABEL } from '../leads/lead.model';
 import { enlaceAlChat } from '../conversaciones/enlace-chat';
+import { DashAnalisisComponent } from './components/dash-analisis/dash-analisis.component';
 import { ActividadItem, formatearEspera, inicioReciente, KpiResumen, PeriodoKpi, porcentaje, variacion } from './kpis.model';
 import { KpisService } from './kpis.service';
 
@@ -65,6 +66,7 @@ interface Tarjeta {
     BadgeComponent,
     ButtonComponent,
     CardComponent,
+    DashAnalisisComponent,
     EmptyStateComponent,
     ErrorCargaComponent,
     IconComponent,
@@ -213,6 +215,7 @@ export class DashboardPage {
     return {
       barras,
       max,
+      mitad: Math.round(max / 2),
       ejes: r.serie.length ? [etiqueta(r.serie[0].fecha), mitad ? etiqueta(mitad.fecha) : '', etiqueta(r.serie[r.serie.length - 1].fecha)] : [],
       unidad: semanal ? 'por semana' : 'por día',
       hayDatos: r.serie.some(p => p.captados > 0),
@@ -257,10 +260,6 @@ export class DashboardPage {
       puesto: i + 1,
     }));
   });
-
-  protected readonly servicios = computed(() =>
-    (this.datos()?.topServicios ?? []).map(s => ({ ...s, monto: this.moneda.formatearBob(s.monto) })),
-  );
 
   protected readonly actividad = computed(() =>
     (this.datos()?.actividadReciente ?? []).map(a => ({

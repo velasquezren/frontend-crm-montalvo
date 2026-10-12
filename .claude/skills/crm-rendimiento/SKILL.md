@@ -500,6 +500,16 @@ journalctl -u crm_backend.service --since '5 min ago' --no-pager \
 
 Con la página quieta, ese contador tiene que quedarse quieto.
 
+## Un tablero: lo de arriba no espera a lo de abajo (2026-10-12)
+
+El Dashboard pide **dos** endpoints: `/kpis/resumen` (lo que pide acción y las cuatro tarjetas,
+caché de 15 s) y `/kpis/detalle` (tortas, mapa de horas, líneas, asistente; caché de 60 s). El
+segundo lo pide `<app-dash-analisis>`, montado con `@defer (on viewport; prefetch on idle)`: su
+JS (13,9 KB, 4,9 KB comprimido) y su consulta salen recién al llegar a esa zona, y el resumen
+no carga con cinco consultas que nadie está mirando todavía. Medido en el build del 12/10: chunk
+del Dashboard 29,5 KB (9,4 KB comprimido) + el del análisis aparte. Si añades un gráfico pesado
+al Dashboard, va en el análisis, no en el resumen.
+
 ## Rendimiento de mentira
 
 Cosas que parecen optimización y no lo son. Todas aparecieron ya en este repo:

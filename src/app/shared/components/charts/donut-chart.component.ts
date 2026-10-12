@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, output, si
 
 import { MonedaService } from '../../../core/moneda/moneda.service';
 import { ChartItem } from './bar-chart.component';
+import { colorDeRampa } from './rampa-graficos';
 
 /**
  * Gráfico de dona en SVG puro — para repartos donde importa la proporción
@@ -42,7 +43,7 @@ import { ChartItem } from './bar-chart.component';
                   class="donut-porcion"
                   [class.donut-porcion-atenuada]="resaltada() !== null && resaltada() !== p.clave"
                   cx="21" cy="21" r="15.915"
-                  [attr.stroke]="p.color"
+                  [style.stroke]="p.color"
                   [attr.stroke-dasharray]="p.arco + ' ' + (100 - p.arco)"
                   [attr.stroke-dashoffset]="p.offset"
                   [style.--retraso]="p.indice * 90 + 'ms'"
@@ -318,7 +319,8 @@ export class DonutChartComponent {
         sublabel: item.sublabel,
         /** Lo que se emite en `segmentClick`: la clave estable si viene, si no el label. */
         navegacion: item.id ?? item.label,
-        color: item.color ?? 'var(--color-primary)',
+        /* Sin color propio, el de la rampa: una dona de un solo verde no dice nada. */
+        color: item.color ?? colorDeRampa(indice),
         valor: item.value,
         pct: Math.round(arco * 10) / 10,
         arco,

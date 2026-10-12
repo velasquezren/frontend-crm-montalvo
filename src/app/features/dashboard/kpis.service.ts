@@ -15,4 +15,9 @@ export class KpisService {
   resumenRequest(periodo: PeriodoKpi): ResourceRequest {
     return this.api.request('/kpis/resumen', { periodo });
   }
+
+  /** El análisis de abajo del Dashboard; se pide al llegar a él. */
+  detalleRequest(periodo: PeriodoKpi): ResourceRequest {
+    return this.api.request('/kpis/detalle', { periodo });
+  }
 }

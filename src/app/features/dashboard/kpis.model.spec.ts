@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { esFiltroInbox } from '../conversaciones/conversacion.model';
-import { formatearEspera, inicioReciente, porcentaje, variacion } from './kpis.model';
+import { etiquetaDeBanda, formatearEspera, inicioReciente, mapaDeCalor, porcentaje, TRAMOS_RESPUESTA, variacion } from './kpis.model';
 
 /**
  * Lo que el dashboard le DICE a la agente sale de estas tres funciones. Se
@@ -57,5 +57,32 @@ describe('inicioReciente', () => {
 
   it('pasados los días, no dice nada', () => {
     expect(inicioReciente(desde, new Date('2026-10-04T04:00:00Z'), 3)).toBeNull();
+  });
+});
+
+describe('mapaDeCalor', () => {
+  it('junta las horas en bandas de dos, marca el pico y da la intensidad contra él', () => {
+    const m = mapaDeCalor([
+      { dia: 1, hora: 18, leads: 3 },
+      { dia: 1, hora: 19, leads: 2 }, // misma banda que las 18
+      { dia: 4, hora: 9, leads: 1 },
+    ]);
+    expect(m.celdas).toHaveLength(7);
+    expect(m.celdas[1]).toHaveLength(12);
+    expect(m.celdas[1][9]).toEqual({ leads: 5, intensidad: 1 });
+    expect(m.celdas[4][4]).toEqual({ leads: 1, intensidad: 0.2 });
+    expect(m.pico).toEqual({ dia: 1, banda: 9, leads: 5 });
+    expect(etiquetaDeBanda(9)).toBe('18 a 20 h');
+  });
+
+  it('sin leads no hay pico ni intensidades, y lo que llega fuera de rango no rompe', () => {
+    const m = mapaDeCalor([{ dia: 9, hora: 30, leads: 4 }]);
+    expect(m.max).toBe(0);
+    expect(m.pico).toBeNull();
+    expect(m.celdas.flat().every(c => c.intensidad === 0)).toBe(true);
+  });
+
+  it('los tramos de la primera respuesta van de lo mejor a lo peor, y «sin respuesta» al final', () => {
+    expect(TRAMOS_RESPUESTA.map(t => t.clave)).toEqual(['menos15', 'menosHora', 'menos4Horas', 'menosDia', 'masDia', 'sinRespuesta']);
   });
 });

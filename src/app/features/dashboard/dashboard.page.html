@@ -86,6 +86,17 @@
           <app-icon name="chevron-right" [size]="14" class="dash-ahora-flecha" />
         </a>
       }
+      <!-- Pidieron hablar con una persona y nadie la tomó: «Atención» del inbox. Solo si hay. -->
+      @if (r.ahora.esperanPersona) {
+        <a class="dash-ahora-item" routerLink="/conversaciones" [queryParams]="{ pestana: 'ATENCION' }">
+          <app-icon name="alert-circle" [size]="16" class="text-primary shrink-0" />
+          <span class="dash-ahora-numero">{{ r.ahora.esperanPersona }}</span>
+          <span class="text-sm text-text-muted">
+            {{ r.ahora.esperanPersona === 1 ? 'espera' : 'esperan' }} a una persona
+          </span>
+          <app-icon name="chevron-right" [size]="14" class="dash-ahora-flecha" />
+        </a>
+      }
       <a class="dash-ahora-item" routerLink="/leads">
         <app-icon name="user-plus" [size]="16" class="text-primary shrink-0" />
         <span class="dash-ahora-numero">{{ r.ahora.leadsHoy }}</span>
@@ -133,7 +144,11 @@
         @if (serie(); as s) {
           @if (s.hayDatos) {
             <div class="dash-serie" role="img" [attr.aria-label]="'Leads ' + s.unidad + ' del periodo'">
+              <!-- Guías al máximo y a la mitad: la altura de una barra se lee contra algo. -->
+              <span class="dash-serie-guia dash-serie-guia-max" aria-hidden="true"></span>
+              <span class="dash-serie-guia dash-serie-guia-mitad" aria-hidden="true"></span>
               <span class="dash-serie-max">{{ s.max }}</span>
+              @if (s.max > 1) { <span class="dash-serie-max dash-serie-mitad">{{ s.mitad }}</span> }
               @for (b of s.barras; track b.fecha) {
                 <div class="dash-serie-col" [title]="b.titulo">
                   <div class="dash-serie-barra" [style.height.%]="b.alto">
@@ -181,52 +196,62 @@
       </app-card>
     </section>
 
-    <!-- ── 4. Canales + equipo ──────────────────────────────────────────── -->
-    <section class="grid grid-cols-1 xl:grid-cols-5 gap-4 sm:gap-5">
-      <app-card class="xl:col-span-3">
-        <div class="dash-titulo">
-          <div>
-            <h2>Por canal</h2>
-            <p>Pulsa un canal para ver sus leads.</p>
-          </div>
-        </div>
-        @if (canales().length) {
-          <!-- Filas sobre la propia tarjeta, sin un <app-table> dentro: su marco
-               con borde y sombra, metido en otra tarjeta, era una caja dentro
-               de otra caja. -->
-          <div>
-            <div class="dash-canal dash-canal-cabecera" aria-hidden="true">
-              <span>Canal</span>
-              <span>Leads</span>
-              <span>Respondidos</span>
-              <span class="dash-canal-extra">1.ª respuesta</span>
-              <span class="dash-canal-extra">Con venta</span>
-            </div>
-            @for (c of canales(); track c.origen) {
-              <div
-                class="dash-canal fila-clicable"
-                role="link"
-                tabindex="0"
-                [attr.aria-label]="'Ver leads de ' + origenLabel[c.origen]"
-                (click)="irACanal(c.origen)"
-                (keydown.enter)="irACanal(c.origen)">
-                <div class="min-w-0">
-                  <span class="text-sm font-medium text-text-dark">{{ origenLabel[c.origen] }}</span>
-                  <div class="dash-pista dash-pista-fina mt-1.5"><div class="dash-relleno" [style.width.%]="c.ancho"></div></div>
-                </div>
-                <span class="dash-cifra text-sm">{{ c.captados }}</span>
-                <span class="text-sm text-text-dark">{{ pct(c.respondidos, c.captados) ?? '—' }} %</span>
-                <span class="dash-canal-extra text-sm text-text-muted">{{ espera(c.medianaRespuestaMinutos) }}</span>
-                <span class="dash-canal-extra text-sm text-text-muted">{{ c.convertidos }}</span>
-              </div>
-            }
-          </div>
-        } @else {
-          <app-empty-state icon="bar-chart" title="Sin leads por canal" description="Aún no entró ningún lead en este periodo." />
-        }
-      </app-card>
+    <!-- ── 4. El análisis: tortas, mapa de horas, líneas y asistente ─────
+         Bajo el pliegue y con su propia petición (`/kpis/detalle`): lo de
+         arriba no lo espera. El esqueleto mide lo que su primera fila. -->
+    @defer (on viewport; prefetch on idle) {
+      <app-dash-analisis [periodo]="periodo()" [resumen]="r" />
+    } @placeholder {
+      <app-loading-skeleton shape="card" height="360px" />
+    }
 
-      <app-card class="xl:col-span-2">
+    <!-- ── 5. Por canal, en detalle ─────────────────────────────────────── -->
+    <app-card>
+      <div class="dash-titulo">
+        <div>
+          <h2>Por canal, en detalle</h2>
+          <p>Respuesta y ventas de cada canal. Pulsa uno para ver sus leads.</p>
+        </div>
+      </div>
+      @if (canales().length) {
+        <!-- Filas sobre la propia tarjeta, sin un <app-table> dentro: su marco
+             con borde y sombra, metido en otra tarjeta, era una caja dentro
+             de otra caja. -->
+        <div>
+          <div class="dash-canal dash-canal-cabecera" aria-hidden="true">
+            <span>Canal</span>
+            <span>Leads</span>
+            <span>Respondidos</span>
+            <span class="dash-canal-extra">1.ª respuesta</span>
+            <span class="dash-canal-extra">Con venta</span>
+          </div>
+          @for (c of canales(); track c.origen) {
+            <div
+              class="dash-canal fila-clicable"
+              role="link"
+              tabindex="0"
+              [attr.aria-label]="'Ver leads de ' + origenLabel[c.origen]"
+              (click)="irACanal(c.origen)"
+              (keydown.enter)="irACanal(c.origen)">
+              <div class="min-w-0">
+                <span class="text-sm font-medium text-text-dark">{{ origenLabel[c.origen] }}</span>
+                <div class="dash-pista dash-pista-fina mt-1.5"><div class="dash-relleno" [style.width.%]="c.ancho"></div></div>
+              </div>
+              <span class="dash-cifra text-sm">{{ c.captados }}</span>
+              <span class="text-sm text-text-dark">{{ pct(c.respondidos, c.captados) ?? '—' }} %</span>
+              <span class="dash-canal-extra text-sm text-text-muted">{{ espera(c.medianaRespuestaMinutos) }}</span>
+              <span class="dash-canal-extra text-sm text-text-muted">{{ c.convertidos }}</span>
+            </div>
+          }
+        </div>
+      } @else {
+        <app-empty-state icon="bar-chart" title="Sin leads por canal" description="Aún no entró ningún lead en este periodo." />
+      }
+    </app-card>
+
+    <!-- ── 6. Equipo + últimos movimientos ─────────────────────────────── -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
+      <app-card>
         <div class="dash-titulo">
           <div>
             <h2>Equipo</h2>
@@ -251,34 +276,6 @@
           </ul>
         } @else {
           <app-empty-state icon="award" title="Sin ventas en el periodo" description="Las ventas que registre el equipo aparecerán aquí." />
-        }
-      </app-card>
-    </section>
-
-    <!-- ── 5. Más vendido + últimos movimientos ────────────────────────── -->
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-      <app-card>
-        <div class="dash-titulo">
-          <div>
-            <h2>Lo más vendido</h2>
-            <!-- Analítica tiene otro ranking, sacado del Excel de FileMaker.
-                 Este sale de las ventas del CRM; sin decirlo, parece un error. -->
-            <p>Según las ventas registradas en el CRM.</p>
-          </div>
-        </div>
-        @if (servicios().length) {
-          <ol class="dash-lista">
-            @for (s of servicios(); track s.producto; let i = $index) {
-              <li class="flex items-baseline gap-3">
-                <span class="dash-puesto">{{ i + 1 }}</span>
-                <span class="flex-1 min-w-0 text-sm text-text-dark truncate">{{ s.producto }}</span>
-                <span class="text-xs text-text-muted shrink-0">{{ s.cantidad }} ×</span>
-                <span class="dash-cifra text-sm shrink-0 w-24 text-right">{{ s.monto }}</span>
-              </li>
-            }
-          </ol>
-        } @else {
-          <app-empty-state icon="shopping-bag" title="Sin ventas en el periodo" description="Los servicios vendidos se agruparán aquí." />
         }
       </app-card>
 
