@@ -48,11 +48,57 @@
   border-bottom: 1px solid var(--color-border);
 }
 
+/* Filtros que se combinan con la pestaña («Sin responder», «Gold»): una fila
+   propia bajo las pestañas, para que el buscador conserve todo su ancho. */
+.filtros-combinables {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px 0;
+}
+
 /* ── Chat list ───────────────────────────────────────────────── */
 .sidebar-list {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+}
+
+/* Llegando otra vista: lo anterior queda a la vista, atenuado y sin tocarse.
+   Se ve que algo cambia sin que la lista se vacíe ni los números caigan a 0. */
+.lista-desactualizada .chat-item {
+  opacity: 0.55;
+  transition: opacity 120ms ease-out;
+}
+
+/* Barra fina de carga, pegada arriba aunque la lista esté desplazada. */
+.lista-cargando {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: 2px;
+  overflow: hidden;
+  background: var(--color-bg-light);
+}
+
+.lista-cargando::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: var(--color-primary);
+  animation: lista-cargando 900ms ease-in-out infinite;
+}
+
+@keyframes lista-cargando {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(250%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lista-cargando::after { animation: none; width: 100%; opacity: 0.5; }
+  .lista-desactualizada .chat-item { transition: none; }
 }
 
 .chat-item {

@@ -258,7 +258,7 @@ export class ConversacionesPage implements AfterViewInit {
     this.state.restablecerFiltros();
     try {
       const pagina = await this.conversacionesService.listarPagina(
-        { lineaId: null, tab: 'TODAS', busqueda: telefono, agenteId: null, soloMios: false, categoria: null },
+        { lineaId: null, tab: 'TODAS', busqueda: telefono, agenteId: null, soloMios: false, categoria: null, sinResponder: false },
         1,
       );
       const chat = resolverChatDePaciente(pagina.datos, telefono);

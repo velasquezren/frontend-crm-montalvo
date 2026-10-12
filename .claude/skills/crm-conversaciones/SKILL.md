@@ -371,6 +371,24 @@ backend. Ningún texto para la paciente tiene valor por defecto. Diseño:
 
 ### La barra del inbox: de lo más amplio a lo más fino (2026-09-30)
 
+> **12/10/2026: «Sin responder» dejó de ser pestaña y pasó a filtro que se COMBINA**
+> (`state.soloSinResponder`, `?sinResponder=true`, alcance en el backend como Gold):
+> «Mis chats» + «Sin responder» son las pendientes de la agente. Con él puesto, el
+> servidor cuenta todas las pestañas solo con lo que espera; su propio número es el de
+> la pestaña elegida (`sinResponderEnPestana`: `sinResponderSinAsignar`,
+> `sinResponderMisChats`, `sinResponderAtencion`). La pestaña `SIN_RESPONDER` sigue
+> existiendo para los enlaces viejos: `state.elegirPestana` la traduce a «Todas» + filtro.
+> Debajo de las pestañas va la fila de filtros combinables («Sin responder», «Gold»).
+>
+> **Cambiar de pestaña no vacía nada**: con `defaultValue`, `httpResource` deja
+> `hasValue()` en verdadero mientras carga y el valor en el vacío, así que se mira
+> `status() === 'loading'` (`cargandoVista`). Mientras tanto `paginaInbox` muestra la
+> vista ya vista (`vistasRecientes`, 10, por `claveDeVista`) o la anterior atenuada
+> (`listaDesactualizada`) con una barra fina arriba; los contadores no caen a 0 ni
+> «Atención» desaparece. Pasar el mouse, enfocar o tocar una pestaña la precarga
+> (`state.precargar`). Con otra vista en camino, el tiempo real y el envío optimista
+> **no escriben** el recurso: `inbox.set()` cancelaría la petición en curso.
+
 De arriba abajo: cabecera (título, «Cerradas», «Nuevo chat») → **alcance** (línea y, para
 el admin, a quién mira, lado a lado) → pestañas → buscador. Cada banda tiene contenido:
 antes había una franja casi vacía solo para «Ver cerradas», otra plegable «Por agente»

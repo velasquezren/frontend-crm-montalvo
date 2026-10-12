@@ -243,6 +243,35 @@ export interface ContadoresInbox {
   readonly esperandoHumano: number;
   /** Solicitudes que alguien está atendiendo. Con la anterior, la pestaña «Atención». */
   readonly enAtencion: number;
+  /**
+   * Cuántas de cada pestaña esperan respuesta: el número del filtro «Sin
+   * responder» según la pestaña (el de «Todas» es `sinResponder`). Opcionales:
+   * un backend anterior al 12/10/2026 no los manda, y entonces no se muestran.
+   */
+  readonly sinResponderSinAsignar?: number;
+  readonly sinResponderMisChats?: number;
+  readonly sinResponderAtencion?: number;
+}
+
+/**
+ * El número del filtro «Sin responder» en una pestaña: cuántas de ELLA esperan
+ * respuesta. `null` donde el filtro no aplica (el archivo) o si el servidor no
+ * lo mandó.
+ */
+export function sinResponderEnPestana(c: ContadoresInbox, tab: FiltroInbox): number | null {
+  switch (tab) {
+    case 'TODAS':
+    case 'SIN_RESPONDER':
+      return c.sinResponder;
+    case 'SIN_ASIGNAR':
+      return c.sinResponderSinAsignar ?? null;
+    case 'MIS_CHATS':
+      return c.sinResponderMisChats ?? null;
+    case 'ATENCION':
+      return c.sinResponderAtencion ?? null;
+    default:
+      return null;
+  }
 }
 
 /** Filtros de vista que viajan al servidor con cada petición del listado. */
@@ -254,6 +283,11 @@ export interface FiltrosInbox {
   readonly soloMios: boolean;
   /** «Gold»: solo las pacientes de esa categoría. Alcance, como la línea: acota también los contadores. */
   readonly categoria: CategoriaCliente | null;
+  /**
+   * «Sin responder» combinado con la pestaña (12/10/2026): «Mis chats» sin
+   * responder, «Sin asignar» sin responder… Alcance también: acota los contadores.
+   */
+  readonly sinResponder: boolean;
 }
 
 /**
@@ -351,12 +385,34 @@ export function estaSinResponder(c: ConversacionResumen): boolean {
 
 /**
  * Los contadores justo después de que una persona conteste `chat`, hasta que
- * llegue el refresco del servidor. Contestar la saca de «Sin responder» y, si
- * estaba cerrada, la reabre: vuelve a contar como abierta.
+ * llegue el refresco del servidor. Contestar la saca de «Sin responder» —y de
+ * su número en cada pestaña— y, si estaba cerrada, la reabre: vuelve a contar
+ * como abierta. Con el filtro «Sin responder» puesto, todas las pestañas
+ * cuentan solo lo que espera, así que también bajan la suya.
  */
-export function contadoresTrasResponder(c: ContadoresInbox, chat: ConversacionResumen): ContadoresInbox {
+export function contadoresTrasResponder(
+  c: ContadoresInbox, chat: ConversacionResumen, usuarioId = '', soloSinResponder = false,
+): ContadoresInbox {
   if (chat.cerradaEn) return { ...c, cerradas: Math.max(0, c.cerradas - 1), total: c.total + 1 };
-  return estaSinResponder(chat) ? { ...c, sinResponder: Math.max(0, c.sinResponder - 1) } : c;
+  if (!estaSinResponder(chat)) return c;
+  const menos = (n: number | undefined) => (n === undefined ? undefined : Math.max(0, n - 1));
+  const libre = !chat.agente;
+  const mio = !!usuarioId && chat.agente?.id === usuarioId;
+  const enAtencion = !!chat.atencion;
+  const r: ContadoresInbox = {
+    ...c,
+    sinResponder: Math.max(0, c.sinResponder - 1),
+    ...(libre && c.sinResponderSinAsignar !== undefined ? { sinResponderSinAsignar: menos(c.sinResponderSinAsignar) } : {}),
+    ...(mio && c.sinResponderMisChats !== undefined ? { sinResponderMisChats: menos(c.sinResponderMisChats) } : {}),
+    ...(enAtencion && c.sinResponderAtencion !== undefined ? { sinResponderAtencion: menos(c.sinResponderAtencion) } : {}),
+  };
+  if (!soloSinResponder) return r;
+  return {
+    ...r,
+    total: Math.max(0, c.total - 1),
+    ...(libre ? { sinAsignar: Math.max(0, c.sinAsignar - 1) } : {}),
+    ...(mio ? { misChats: Math.max(0, c.misChats - 1) } : {}),
+  };
 }
 
 /** Momento en que el paciente quedó esperando, o null si ya se le respondió. */

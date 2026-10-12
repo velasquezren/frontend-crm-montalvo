@@ -22,6 +22,7 @@ import {
   esperandoDesde,
   FiltroInbox,
   opcionDeAlcance,
+  sinResponderEnPestana,
 } from '../../conversacion.model';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 import { ConversacionPreviewComponent } from './conversacion-preview.component';
@@ -144,13 +145,23 @@ export class ConversacionListaComponent {
   }
 
   /* ── Pestañas y archivo ─────────────────────────────────────────── */
-  /** Las pestañas de trabajo, con el contador que les corresponde. */
+  /**
+   * Las pestañas de trabajo, con el contador que les corresponde. «Sin
+   * responder» ya no es una de ellas: es un filtro que se combina con todas
+   * (`state.soloSinResponder`), y con él puesto cada número cuenta solo lo que
+   * espera respuesta.
+   */
   private readonly pestanasDeTrabajo: readonly PestanaInbox[] = [
     { tab: 'TODAS', etiqueta: 'Todas', contador: c => c.total, ayuda: 'Todos los chats abiertos' },
-    { tab: 'SIN_RESPONDER', etiqueta: 'Sin responder', contador: c => c.sinResponder, ayuda: 'La paciente escribió y nadie le contestó todavía' },
     { tab: 'SIN_ASIGNAR', etiqueta: 'Sin asignar', contador: c => c.sinAsignar, ayuda: 'Abiertos sin agente responsable' },
     { tab: 'MIS_CHATS', etiqueta: 'Mis chats', contador: c => c.misChats, ayuda: 'Abiertos y asignados a ti' },
   ];
+
+  /**
+   * El número del filtro «Sin responder»: cuántas de la pestaña elegida
+   * esperan respuesta (en «Mis chats», las tuyas). `null` en el archivo.
+   */
+  protected readonly numeroSinResponder = computed(() => sinResponderEnPestana(this.state.stats(), this.state.filtroTab()));
 
   /**
    * «Atención» va primera y solo aparece cuando hay solicitudes (o si está
@@ -172,7 +183,28 @@ export class ConversacionListaComponent {
   protected readonly viendoCerradas = computed(() => this.state.filtroTab() === 'CERRADAS');
 
   protected elegirPestana(tab: FiltroInbox): void {
-    this.state.filtroTab.set(tab);
+    this.state.elegirPestana(tab);
+  }
+
+  /** Al pasar el mouse, enfocar o tocar una pestaña: que ya esté al elegirla. */
+  protected precargar(tab: FiltroInbox): void {
+    void this.state.precargar(tab);
+  }
+
+  protected alternarSinResponder(): void {
+    this.state.soloSinResponder.update(v => !v);
+  }
+
+  /** Flechas entre pestañas, como un grupo de pestañas de verdad. */
+  protected moverConTeclado(evento: KeyboardEvent, indice: number): void {
+    const pestanas = this.pestanas();
+    const destino = evento.key === 'ArrowRight' ? indice + 1 : evento.key === 'ArrowLeft' ? indice - 1 : null;
+    if (destino === null) return;
+    evento.preventDefault();
+    const p = pestanas[(destino + pestanas.length) % pestanas.length];
+    this.elegirPestana(p.tab);
+    const grupo = (evento.currentTarget as HTMLElement).parentElement;
+    grupo?.querySelector<HTMLButtonElement>(`[data-tab="${p.tab}"]`)?.focus();
   }
 
   /** El archivo se entra y se sale con el mismo botón; al salir, a «Todas». */

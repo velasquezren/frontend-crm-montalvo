@@ -339,9 +339,67 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
 
     const limpio = http.expectOne(req => req.url === `${API_URL}/conversaciones`);
     expect(limpio.request.params.has('busqueda')).toBe(false);
-    expect(limpio.request.params.get('tab')).toBe('SIN_RESPONDER');
+    /* «Sin responder» ya no es pestaña: el enlace viejo entra a «Todas» con el filtro puesto. */
+    expect(limpio.request.params.has('tab')).toBe(false);
+    expect(limpio.request.params.get('sinResponder')).toBe('true');
     expect(state.busqueda()).toBe('');
     limpio.flush(structuredClone(PAGINA));
+    await app.whenStable();
+  });
+
+  it('«Sin responder» se combina con la pestaña y viaja al servidor; en el archivo no aplica', async () => {
+    state.soloSinResponder.set(true);
+    state.elegirPestana('MIS_CHATS');
+    TestBed.tick();
+    const mios = http.expectOne(req => req.url === `${API_URL}/conversaciones`);
+    expect(mios.request.params.get('tab')).toBe('MIS_CHATS');
+    expect(mios.request.params.get('sinResponder')).toBe('true');
+    mios.flush(structuredClone(PAGINA));
+    await app.whenStable();
+
+    state.elegirPestana('CERRADAS');
+    TestBed.tick();
+    const archivo = http.expectOne(req => req.url === `${API_URL}/conversaciones`);
+    expect(archivo.request.params.has('sinResponder')).toBe(false);
+    archivo.flush(structuredClone(PAGINA));
+    await app.whenStable();
+  });
+
+  it('al cambiar de pestaña la lista y los números no se vacían: queda lo anterior atenuado hasta que llega lo nuevo', async () => {
+    const OTRA = { ...structuredClone(PAGINA), datos: [], total: 0 };
+    state.elegirPestana('SIN_ASIGNAR');
+    TestBed.tick();
+    expect(state.cargandoVista()).toBe(true);
+    expect(state.listaDesactualizada()).toBe(true);
+    expect(state.conversacionesFiltradas().map(c => c.id)).toEqual(['chat-1']);
+    expect(state.stats().misChats).toBe(1);
+    http.expectOne(req => req.url === `${API_URL}/conversaciones`).flush(OTRA);
+    await app.whenStable();
+    expect(state.cargandoVista()).toBe(false);
+    expect(state.conversacionesFiltradas()).toEqual([]);
+
+    /* Volver a una pestaña ya vista la pinta al instante (sin atenuar) mientras llega la fresca. */
+    state.elegirPestana('TODAS');
+    TestBed.tick();
+    expect(state.listaDesactualizada()).toBe(false);
+    expect(state.conversacionesFiltradas().map(c => c.id)).toEqual(['chat-1']);
+    http.expectOne(req => req.url === `${API_URL}/conversaciones`).flush(structuredClone(PAGINA));
+    await app.whenStable();
+  });
+
+  it('precargar una pestaña la deja lista para elegirla, una sola vez', async () => {
+    const precarga = state.precargar('MIS_CHATS');
+    const pedido = http.expectOne(req => req.url === `${API_URL}/conversaciones` && req.params.get('tab') === 'MIS_CHATS');
+    pedido.flush(structuredClone(PAGINA));
+    await precarga;
+    await state.precargar('MIS_CHATS');
+    http.expectNone(req => req.url === `${API_URL}/conversaciones` && req.params.get('pagina') === '1');
+
+    state.elegirPestana('MIS_CHATS');
+    TestBed.tick();
+    expect(state.listaDesactualizada()).toBe(false);
+    expect(state.conversacionesFiltradas().map(c => c.id)).toEqual(['chat-1']);
+    http.expectOne(req => req.url === `${API_URL}/conversaciones`).flush(structuredClone(PAGINA));
     await app.whenStable();
   });
 

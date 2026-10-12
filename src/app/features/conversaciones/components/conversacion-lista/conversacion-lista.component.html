@@ -107,19 +107,24 @@
     </p>
   }
 
-  <!-- Las cuatro pestañas de trabajo: solo abiertas. Una sola definición
-       (`pestanas` en el componente) en vez de cuatro botones copiados, para
+  <!-- Las pestañas de trabajo: solo abiertas. Una sola definición
+       (`pestanas` en el componente) en vez de botones copiados, para
        que añadir o renombrar una no deje las demás con otro estilo. Viendo
        las cerradas ninguna está marcada: lo marca el interruptor. -->
   <div class="sidebar-filters">
     <div class="tabs-inbox flex items-end justify-around pt-1.5" role="group" aria-label="Pestañas del inbox">
-      @for (p of pestanas(); track p.tab; let primera = $first) {
+      @for (p of pestanas(); track p.tab; let primera = $first, i = $index) {
         @if (!primera) {
           <div class="tab-divisor self-center w-px h-6 bg-border/50 shrink-0"></div>
         }
         <button
           type="button"
+          [attr.data-tab]="p.tab"
           (click)="elegirPestana(p.tab)"
+          (pointerenter)="precargar(p.tab)"
+          (focus)="precargar(p.tab)"
+          (touchstart)="precargar(p.tab)"
+          (keydown)="moverConTeclado($event, i)"
           [attr.aria-pressed]="state.filtroTab() === p.tab"
           [title]="p.ayuda"
           [class]="state.filtroTab() === p.tab ? 'text-primary font-bold border-primary' : 'text-text-muted hover:text-text-dark font-medium border-transparent'"
@@ -133,23 +138,37 @@
     </div>
   </div>
 
-  <!-- «Gold» junto al buscador: acota a las pacientes que más valen, en
-       todas las pestañas y sus contadores. Lo usa el Dashboard para «Gold
-       esperan respuesta». -->
-  <div class="sidebar-search flex items-center gap-2">
-    <div class="flex-1 min-w-0">
-      <app-input type="search" placeholder="Buscar por nombre, teléfono o PAC…" [(value)]="state.busqueda" 
-  ariaLabel="Buscar por nombre, teléfono o PAC" />
+  <!-- Filtros que se COMBINAN con la pestaña y entre sí: «Mis chats» + «Sin
+       responder» son tus pendientes; + «Gold», tus pendientes Gold. Los dos
+       acotan también los números de las pestañas (los cuenta el servidor).
+       El Dashboard los usa para «esperan respuesta» y «Gold esperan». -->
+  @if (!viendoCerradas()) {
+    <div class="filtros-combinables" role="group" aria-label="Filtros que se combinan con la pestaña">
+      <app-filter-chip
+        [transitions]="false"
+        title="Solo los chats donde la paciente escribió y nadie le contestó todavía. Se combina con la pestaña."
+        [active]="state.soloSinResponder()"
+        (clicked)="alternarSinResponder()">
+        <app-icon name="clock" [size]="12" />
+        Sin responder
+        @if (numeroSinResponder() !== null) {
+          <span class="crm-contador" [class.crm-contador-activo]="state.soloSinResponder()">{{ numeroSinResponder() }}</span>
+        }
+      </app-filter-chip>
+      <app-filter-chip
+        [transitions]="false"
+        title="Solo pacientes Gold: gastaron $3.500 o más en 12 meses, o las fijaron a mano"
+        [active]="state.soloGold()"
+        (clicked)="state.soloGold.set(!state.soloGold())">
+        <app-icon name="star" [size]="12" />
+        Gold
+      </app-filter-chip>
     </div>
-    <app-filter-chip
-      class="shrink-0"
-      [transitions]="false"
-      title="Solo pacientes Gold: gastaron $3.500 o más en 12 meses, o las fijaron a mano"
-      [active]="state.soloGold()"
-      (clicked)="state.soloGold.set(!state.soloGold())">
-      <app-icon name="star" [size]="12" />
-      Gold
-    </app-filter-chip>
+  }
+
+  <div class="sidebar-search">
+    <app-input type="search" placeholder="Buscar por nombre, teléfono o PAC…" [(value)]="state.busqueda"
+      ariaLabel="Buscar por nombre, teléfono o PAC" />
   </div>
 
   <!-- Dentro de «Atención», los dos números que la componen: cuántas esperan
@@ -161,8 +180,12 @@
     </p>
   }
 
-  <!-- Lista de conversaciones -->
-  <div class="sidebar-list">
+  <!-- Lista de conversaciones. Mientras llega otra vista se ve la anterior
+       atenuada, con una barra fina arriba: nunca una lista vacía con ceros. -->
+  <div class="sidebar-list" [class.lista-desactualizada]="state.listaDesactualizada()" [attr.aria-busy]="state.cargandoVista()">
+    @if (state.cargandoVista()) {
+      <div class="lista-cargando" role="progressbar" aria-label="Cargando la bandeja"></div>
+    }
     @if (state.inbox.isLoading() && state.conversacionesFiltradas().length === 0) {
       @for (n of [1, 2, 3, 4, 5, 6]; track n) {
         <div class="chat-item-skeleton">

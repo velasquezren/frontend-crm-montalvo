@@ -81,6 +81,12 @@ const PAGINA_VACIA: PaginaInbox = {
 /** Cuántos chats recientes se recuerdan para reabrirlos al instante. */
 const MAX_HILOS_RECIENTES = 12;
 
+/** Cuántas vistas del inbox (pestaña + filtros) se recuerdan para volver a ellas al instante. */
+const MAX_VISTAS_RECIENTES = 10;
+
+/** La identidad de una vista del inbox: los filtros que viajan al servidor. */
+export const claveDeVista = (f: FiltrosInbox): string => JSON.stringify(f);
+
 @Injectable({ providedIn: 'root' })
 export class ConversacionesStateService {
   private readonly conversacionesService = inject(ConversacionesService);
@@ -124,6 +130,12 @@ export class ConversacionesStateService {
   readonly alcance = signal<AlcanceInbox>('EQUIPO');
   /** «Gold»: solo las pacientes Gold. Para todos los roles: las que más valen no esperan. */
   readonly soloGold = signal(false);
+  /**
+   * «Sin responder» como filtro que se COMBINA con la pestaña (12/10/2026):
+   * «Mis chats» sin responder, «Sin asignar» sin responder, con Gold o con una
+   * agente. Antes era una pestaña más, y no se podía cruzar con ninguna.
+   */
+  readonly soloSinResponder = signal(false);
   readonly dropdownAgenteAbierto = signal(false);
 
   /**
@@ -138,8 +150,24 @@ export class ConversacionesStateService {
       busqueda: this.busquedaDebounced(),
       ...filtrosDeAlcance(this.isAdmin() ? this.alcance() : 'EQUIPO'),
       categoria: this.soloGold() ? 'GOLD' : null,
+      /* En el archivo no aplica: una cerrada nunca espera respuesta. */
+      sinResponder: this.soloSinResponder() && this.filtroTab() !== 'CERRADAS',
     };
   });
+
+  /**
+   * Cambia de pestaña. `SIN_RESPONDER` ya no es una pestaña sino el filtro que
+   * se combina: llega así de los enlaces viejos (Dashboard «esperan respuesta»)
+   * y se traduce a «Todas» con el filtro puesto.
+   */
+  elegirPestana(tab: FiltroInbox): void {
+    if (tab === 'SIN_RESPONDER') {
+      this.filtroTab.set('TODAS');
+      this.soloSinResponder.set(true);
+      return;
+    }
+    this.filtroTab.set(tab);
+  }
 
   /**
    * Vuelve a la bandeja sin filtros heredados: toda línea y todo el equipo.
@@ -149,7 +177,8 @@ export class ConversacionesStateService {
    */
   restablecerFiltros(tab: FiltroInbox = 'TODAS'): void {
     this.filtroLineaId.set(null);
-    this.filtroTab.set(tab);
+    this.soloSinResponder.set(false);
+    this.elegirPestana(tab);
     this.alcance.set('EQUIPO');
     this.soloGold.set(false);
     /* La búsqueda TAMBIÉN es un filtro, y el que más recorta. Se quedaba
@@ -227,8 +256,71 @@ export class ConversacionesStateService {
     { defaultValue: null, parse: validarDetalle },
   );
 
-  /** Un error remoto se representa en la vista, no se lee como un valor válido. */
-  readonly paginaInbox = computed(() => this.inbox.hasValue() ? this.inbox.value() : PAGINA_VACIA);
+  /**
+   * Las últimas vistas que respondió el servidor, por `claveDeVista`. Volver a
+   * una pestaña ya vista la pinta al instante mientras llega la fresca, que la
+   * reemplaza (unos 200 ms desde Bolivia). Antes, cada cambio de pestaña
+   * vaciaba la lista, ponía TODOS los contadores en 0 y hacía desaparecer
+   * «Atención» hasta que contestaba el servidor. Solo en memoria; se vacía al
+   * cambiar de sesión.
+   */
+  private readonly vistasRecientes = signal<ReadonlyMap<string, PaginaInbox>>(new Map());
+  /** Lo último que se vio, de cualquier vista: lo que queda atenuado mientras llega una nueva. */
+  private readonly ultimaVista = signal<PaginaInbox | null>(null);
+
+  /** Pidiendo otra vista (pestaña, filtro, búsqueda): el recurso no tiene todavía su respuesta. */
+  readonly cargandoVista = computed(() => this.inbox.status() === 'loading');
+
+  /**
+   * La página que se pinta. Un error se representa en la vista (vacío + aviso),
+   * no se lee como un valor válido. Mientras carga otra vista: la de esa vista
+   * si ya se vio, y si no lo último que se vio (atenuado, ver
+   * `listaDesactualizada`) en vez de una lista vacía con contadores en cero.
+   */
+  readonly paginaInbox = computed(() => {
+    if (this.cargandoVista()) {
+      return this.vistasRecientes().get(claveDeVista(this.filtros())) ?? this.ultimaVista() ?? PAGINA_VACIA;
+    }
+    return this.inbox.hasValue() ? this.inbox.value() : PAGINA_VACIA;
+  });
+
+  /** Lo que se ve es de OTRA vista mientras llega la pedida: la lista se atenúa y no se toca. */
+  readonly listaDesactualizada = computed(
+    () => this.cargandoVista() && !this.vistasRecientes().has(claveDeVista(this.filtros())) && this.ultimaVista() !== null,
+  );
+
+  /**
+   * Pide en segundo plano una pestaña con los filtros de ahora (al pasar el
+   * mouse o tocarla), para que al elegirla ya esté. Una por vez, y nunca una
+   * que ya se tenga.
+   */
+  private precargando: string | null = null;
+  async precargar(tab: FiltroInbox): Promise<void> {
+    if (!this.authService.user() || tab === this.filtroTab()) return;
+    const filtros: FiltrosInbox = { ...this.filtros(), tab, sinResponder: this.soloSinResponder() && tab !== 'CERRADAS' };
+    const clave = claveDeVista(filtros);
+    if (this.vistasRecientes().has(clave) || this.precargando) return;
+    this.precargando = clave;
+    const sesion = this.authService.generacionSesion();
+    try {
+      const pagina = await this.conversacionesService.listarPagina(filtros, 1);
+      if (sesion === this.authService.generacionSesion()) this.recordarVista(clave, pagina);
+    } catch {
+      /* Precargar es una ayuda: si falla, la pestaña se pide al elegirla. */
+    } finally {
+      this.precargando = null;
+    }
+  }
+
+  private recordarVista(clave: string, pagina: PaginaInbox): void {
+    this.vistasRecientes.update(actual => {
+      const siguiente = new Map(actual);
+      siguiente.delete(clave);
+      siguiente.set(clave, pagina);
+      while (siguiente.size > MAX_VISTAS_RECIENTES) siguiente.delete(siguiente.keys().next().value!);
+      return siguiente;
+    });
+  }
   /**
    * El detalle que pinta la vista: el real cuando ya llegó, y mientras tanto
    * uno provisional armado con la fila del listado.
@@ -591,6 +683,8 @@ export class ConversacionesStateService {
       if (generacion === generacionAnterior) return;
       generacionAnterior = generacion;
       this.hilosRecientes.set(new Map());
+      this.vistasRecientes.set(new Map());
+      this.ultimaVista.set(null);
       this.seleccionadaId.set(null);
       this.filtroLineaId.set(null);
       this.detalle.set(null);
@@ -608,6 +702,18 @@ export class ConversacionesStateService {
        * aquí. Era el otro extremo del bucle del 2026-09-17.
        */
       if (this.authService.user()) this.lineas.reload();
+    });
+    /* Cada vista que contesta el servidor (o que el envío optimista retoca) se
+       recuerda: es lo que se pinta al volver a ella y lo que queda atenuado
+       mientras llega otra. Solo con respuesta: en carga el valor es el vacío. */
+    effect(() => {
+      const estado = this.inbox.status();
+      if ((estado !== 'resolved' && estado !== 'local') || !this.inbox.hasValue()) return;
+      const pagina = this.inbox.value();
+      untracked(() => {
+        this.ultimaVista.set(pagina);
+        this.recordarVista(claveDeVista(this.filtros()), pagina);
+      });
     });
     /* Retardo del buscador. `onCleanup` cancela el temporizador anterior en
        cada tecla, que es lo que impide una petición por pulsación y también
@@ -722,6 +828,10 @@ export class ConversacionesStateService {
       this.inbox.reload();
       return conversacion;
     }
+
+    /* Llegando otra vista, no se toca la que se ve atenuada: la que llega ya
+       trae este cambio. Escribir aquí cancelaría esa petición. */
+    if (this.cargandoVista()) return conversacion;
 
     /* Fuera de las páginas siguientes en los dos casos: si vuelve, sube al
        tope; si no, es que ya no va. */
@@ -1221,6 +1331,8 @@ export class ConversacionesStateService {
       this.versionEnvioPropio.update(v => v + 1);
     }
 
+    /* Con otra vista en camino no se escribe la lista: cancelaría esa petición. */
+    if (this.cargandoVista()) return;
     const pagina = this.paginaInbox();
     const actual =
       pagina.datos.find(c => c.id === conversacionId) ??
@@ -1256,7 +1368,7 @@ export class ConversacionesStateService {
       datos: [actualizada, ...pagina.datos.filter(c => c.id !== conversacionId)],
       /* Si sale de "Sin responder", el badge tiene que bajar en el acto: es la
          cuenta que la agente mira para saber a quién le falta contestar. */
-      contadores: contadoresTrasResponder(pagina.contadores, actual),
+      contadores: contadoresTrasResponder(pagina.contadores, actual, this.currentUserId(), this.filtros().sinResponder),
     });
   }
 }
