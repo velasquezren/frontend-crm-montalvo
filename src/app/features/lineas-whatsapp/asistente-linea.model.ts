@@ -90,7 +90,7 @@ export function faltaEnElServidor(p: EstadoProveedorIA): string | null {
 /** `POST /asistente/probar`: la prueba de punta a punta con datos sintéticos. */
 export interface ResultadoPrueba {
   readonly ok: boolean;
-  readonly pasos: readonly { readonly paso: 'CONFIGURACION' | 'FILTRO' | 'CONVERSACION' | 'COMPROBANTE'; readonly ok: boolean; readonly detalle: string; readonly ms: number }[];
+  readonly pasos: readonly { readonly paso: 'CONFIGURACION' | 'FILTRO' | 'CONVERSACION' | 'COMPROBANTE' | 'AUDIO'; readonly ok: boolean; readonly detalle: string; readonly ms: number }[];
 }
 
 export const PASO_PRUEBA: Readonly<Record<ResultadoPrueba['pasos'][number]['paso'], string>> = {
@@ -98,4 +98,5 @@ export const PASO_PRUEBA: Readonly<Record<ResultadoPrueba['pasos'][number]['paso
   FILTRO: 'Filtro de entrada',
   CONVERSACION: 'Conversación con herramienta',
   COMPROBANTE: 'Lectura de comprobante',
+  AUDIO: 'Nota de voz',
 };

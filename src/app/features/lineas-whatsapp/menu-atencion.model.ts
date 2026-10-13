@@ -8,7 +8,7 @@ import type { InteraccionVista } from '../conversaciones/components/interaccion-
  * Lo de este archivo es ayuda para quien configura, nunca la autoridad.
  */
 
-export type TipoOpcion = 'PERSONA' | 'EMERGENCIA' | 'CITA' | 'RESPUESTA' | 'UBICACION' | 'PROMOCIONES';
+export type TipoOpcion = 'PERSONA' | 'EMERGENCIA' | 'CITA' | 'RESPUESTA' | 'UBICACION' | 'PROMOCIONES' | 'INFORMES';
 
 export interface OpcionMenu {
   tipo: TipoOpcion;
@@ -72,6 +72,12 @@ export interface DefinicionTipo {
 
 /** El catálogo, en el orden en que se ofrece al agregar. */
 export const TIPOS: Readonly<Record<TipoOpcion, DefinicionTipo>> = {
+  INFORMES: {
+    nombre: 'Mis informes', icono: 'file-text', unica: true,
+    efecto: 'Consulta los informes publicados del paciente en Resultados. Al elegir uno recibe el PDF; la IA no lee ni interpreta el documento. Requiere habilitación de autoconsulta en el servidor; una ficha sin vínculo seguro pasa a recepción.',
+    respuesta: { etiqueta: 'Nota interna de configuración (opcional)', obligatoria: false, ayuda: 'La lista y los avisos de privacidad los genera el sistema; este texto no se envía.' },
+    tituloSugerido: 'Mis informes',
+  },
   PERSONA: {
     nombre: 'Hablar con una persona',
     icono: 'user',
@@ -125,7 +131,7 @@ export const TIPOS: Readonly<Record<TipoOpcion, DefinicionTipo>> = {
     tituloSugerido: 'Ver promociones',
   },
 };
-export const ORDEN_TIPOS: readonly TipoOpcion[] = ['PERSONA', 'EMERGENCIA', 'CITA', 'RESPUESTA', 'UBICACION', 'PROMOCIONES'];
+export const ORDEN_TIPOS: readonly TipoOpcion[] = ['PERSONA', 'EMERGENCIA', 'CITA', 'INFORMES', 'RESPUESTA', 'UBICACION', 'PROMOCIONES'];
 
 /**
  * Copia editable con una identidad por fila (`uid`): sin ella, al reordenar o

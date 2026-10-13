@@ -3,6 +3,7 @@ import { etiquetaDeAccion, ICONO_VERIFICACION, RESULTADO_LECTURA } from './asist
 describe('asistente en el chat', () => {
   it('cada acción dice qué manda y de quién', () => {
     expect(etiquetaDeAccion({ tipo: 'PROMOCION', titulo: 'Control prenatal', promocionId: 'p' })).toBe('Enviar tarjeta: Control prenatal');
+    expect(etiquetaDeAccion({ tipo: 'INFORMES', titulo: 'Mis informes' })).toBe('Abrir lista de informes');
     expect(etiquetaDeAccion({ tipo: 'HORARIO', titulo: 'Dra. Rojas', medicoId: 7 })).toBe('Enviar horario: Dra. Rojas');
   });
 

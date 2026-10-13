@@ -1142,7 +1142,7 @@ export class ConversacionesStateService {
     let sinRespuesta = false;
     try {
       await this.conversacionesService.enviarAccionSugerida(id, s.id, indice);
-      this.toastService.success(s.acciones[indice]?.tipo === 'HORARIO' ? 'Horario enviado.' : 'Tarjeta enviada.');
+      this.toastService.success(s.acciones[indice]?.tipo === 'INFORMES' ? 'Consulta de informes abierta.' : s.acciones[indice]?.tipo === 'HORARIO' ? 'Horario enviado.' : 'Tarjeta enviada.');
     } catch (err) {
       sinRespuesta = err instanceof HttpErrorResponse && err.status === 0;
       this.toastService.error(mensajeDeError(err, 'No se pudo enviar.'));

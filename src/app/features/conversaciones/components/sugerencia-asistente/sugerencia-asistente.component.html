@@ -32,7 +32,7 @@
       }
       @for (a of s.acciones; track $index) {
         <app-button
-          variant="secondary" size="sm" [icon]="a.tipo === 'HORARIO' ? 'calendar' : 'percent'"
+          variant="secondary" size="sm" [icon]="a.tipo === 'INFORMES' ? 'file-text' : a.tipo === 'HORARIO' ? 'calendar' : 'percent'"
           [loading]="state.procesandoSugerencia() === $index"
           [disabled]="state.procesandoSugerencia() !== null"
           [ariaLabel]="etiqueta(a)"

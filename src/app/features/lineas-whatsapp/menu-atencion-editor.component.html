@@ -102,12 +102,14 @@
                       (valueChange)="cambiarOpcion(i, { descripcion: $event })"
                       [error]="excede(o.descripcion, limites.descripcion)" />
                   </div>
+                  @if (o.tipo !== 'INFORMES') {
                   <app-input
                     [label]="tipos[o.tipo].respuesta.etiqueta"
                     [multiline]="true" [rows]="o.tipo === 'EMERGENCIA' || o.tipo === 'RESPUESTA' ? 3 : 2"
                     [value]="o.respuesta ?? ''"
                     (valueChange)="cambiarOpcion(i, { respuesta: $event })"
                     [error]="excede(o.respuesta, limites.texto)" />
+                  }
                   <p class="text-[11px] text-text-muted leading-relaxed">{{ tipos[o.tipo].respuesta.ayuda }}</p>
                 </li>
               }

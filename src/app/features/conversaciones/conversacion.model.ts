@@ -123,6 +123,11 @@ export interface ConversacionResumen {
   readonly mensajes: readonly MensajeApi[];
   /** No leídos del paciente. El backend ya lo expone así; `_count` no viaja. */
   readonly noLeidosCount?: number;
+  /**
+   * «Dr. Juan Pérez» si quien escribe es un médico autorizado a consultar su agenda
+   * por el asistente (Directorio → médico → «WhatsApp»); `null` si es una paciente.
+   */
+  readonly medico?: string | null;
   readonly updatedAt: string;
   /**
    * Lo dice el servidor, no se deduce aquí: es la columna

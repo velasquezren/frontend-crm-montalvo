@@ -354,6 +354,11 @@ Backend: `../backend-crm-montalvo/docs/asistente-ia.md`. Aquí solo se pinta:
   `state.enviarAccionSugerida`. Sin texto y con aviso, el asistente no redactó nada a
   propósito: no se ofrece «Usar».
 - **El hilo rotula `asistente`** con el ícono `bot`, en lugar de «automático».
+- **«Médico»** (`chat.medico`, 13/10): si quien escribe es un médico autorizado a consultar su
+  agenda (Directorio → médico → «WhatsApp»), la fila de la bandeja y la cabecera del chat lo
+  rotulan, en lugar del sello Gold: no es una paciente ni una venta. Lo calcula el backend
+  (`medicos-en-chat.ts`); aquí solo se pinta. Su chat sale de «Sin responder» cuando el
+  asistente le sirvió lo que pidió, y no se pausa al derivarlo (backend).
 - **La nota de voz escuchada** (`mensaje.transcripcion`, 12/10): debajo del reproductor, en
   cursiva y con el ícono `bot`, lo que el asistente entendió. Solo existe en líneas con
   asistente y solo de las que se escucharon; es automática, así que se lee como ayuda, no

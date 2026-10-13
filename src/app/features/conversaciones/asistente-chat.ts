@@ -6,7 +6,7 @@
 
 /** Algo que el asistente propone mandar: la tarjeta de una promoción o la imagen de un horario. */
 export interface AccionSugerida {
-  readonly tipo: 'PROMOCION' | 'HORARIO';
+  readonly tipo: 'PROMOCION' | 'HORARIO' | 'INFORMES';
   readonly titulo: string;
   readonly promocionId?: string;
   readonly medicoId?: number;
@@ -28,7 +28,7 @@ export type ResolucionSugerencia = 'usar' | 'descartar';
 
 /** El botón de una acción, con lo que hace y a quién. */
 export function etiquetaDeAccion(a: AccionSugerida): string {
-  return a.tipo === 'PROMOCION' ? `Enviar tarjeta: ${a.titulo}` : `Enviar horario: ${a.titulo}`;
+  return a.tipo === 'INFORMES' ? 'Abrir lista de informes' : a.tipo === 'PROMOCION' ? `Enviar tarjeta: ${a.titulo}` : `Enviar horario: ${a.titulo}`;
 }
 
 /* ── La lectura del comprobante ──────────────────────────────────────── */

@@ -9,6 +9,9 @@
           <p class="font-semibold text-text-dark text-xs sm:text-sm leading-tight truncate">
             {{ chat.cliente | nombreCliente }}
           </p>
+          @if (chat.medico) {
+            <app-badge variant="info" icon="briefcase" class="shrink-0" [title]="'Médico de la clínica (' + chat.medico + '): el asistente le contesta su agenda. No es una paciente.'">Médico</app-badge>
+          }
           <!-- La línea va al lado del nombre, no debajo: debajo quedaba en teal
                y con su propio teléfono, así que competía con la identidad de la
                paciente y dejaba DOS números apilados. El teléfono de la línea
@@ -387,7 +390,15 @@
                 }
               }
               @case ('DOCUMENTO') {
-                @if (item.mensaje.mediaUrl) {
+                @if (item.mensaje.mediaKey?.startsWith('informe-chat/')) {
+                  <div class="flex items-start gap-2 p-2 rounded-lg bg-black/5 mb-1">
+                    <app-icon name="file-text" [size]="20" class="shrink-0 text-primary" />
+                    <div>
+                      <p class="text-xs font-medium">Informe seleccionado por el paciente</p>
+                      <p class="text-xs text-text-muted">Documento privado. Su revisión se realiza desde Resultados.</p>
+                    </div>
+                  </div>
+                } @else if (item.mensaje.mediaUrl) {
                   <a [href]="item.mensaje.mediaUrl" target="_blank" rel="noopener"
                     class="flex items-center gap-2 p-2 rounded-lg bg-black/5 hover:bg-black/10 transition-colors mb-1">
                     <app-icon name="file-text" [size]="20" class="shrink-0 text-primary" />

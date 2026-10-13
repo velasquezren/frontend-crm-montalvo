@@ -71,3 +71,11 @@ describe('modelo del menú de atención', () => {
     expect(vistaPrevia(conDescripcion).boton).toBe('Ver opciones');
   });
 });
+
+it('Mis informes es una entrada propia y no agrega promociones en recepción', () => {
+  const tipos = tiposDisponibles(base(), false);
+  expect(tipos).toContain('INFORMES');
+  expect(tipos).not.toContain('PROMOCIONES');
+  const m = base(); m.opciones.push({ tipo: 'INFORMES', titulo: 'Mis informes' });
+  expect(paraGuardar(m).opciones).toContainEqual({ tipo: 'INFORMES', titulo: 'Mis informes' });
+});

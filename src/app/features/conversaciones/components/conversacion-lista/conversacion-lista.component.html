@@ -229,7 +229,11 @@
                 <!-- El único sello de categoría en la bandeja: Gold, para que una
                      paciente que vale la pena se vea antes de abrir el chat.
                      Silver y Bronze viven en su ficha; aquí serían ruido. -->
-                @if (chat.cliente.categoria === 'GOLD') {
+                <!-- Un médico de la clínica no es una paciente ni una venta: se dice antes que nada,
+                     y entonces su categoría de paciente no aporta. -->
+                @if (chat.medico) {
+                  <app-badge variant="info" icon="briefcase" class="shrink-0" [title]="'Médico de la clínica (' + chat.medico + '): consulta su agenda con el asistente. No es una paciente.'">Médico</app-badge>
+                } @else if (chat.cliente.categoria === 'GOLD') {
                   <app-badge variant="gold" icon="star" class="shrink-0" title="Paciente Gold: gastó $3.500 o más en 12 meses, o la fijaron a mano">Gold</app-badge>
                 }
                 @if (chat.cliente.pac) {
