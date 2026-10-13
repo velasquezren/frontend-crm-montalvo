@@ -78,6 +78,11 @@ export interface MensajeApi {
   /** Ancho y alto con que se ve la foto; el hilo reserva su caja antes de que llegue. */
   readonly mediaAncho?: number | null;
   readonly mediaAlto?: number | null;
+  /**
+   * Lo que dice una nota de voz entrante, si el asistente de IA ya la escuchó
+   * (solo en líneas con asistente). Es una transcripción automática: puede tener errores.
+   */
+  readonly transcripcion?: string | null;
 }
 
 export interface ConversacionResumen {

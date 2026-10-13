@@ -378,6 +378,13 @@
                 } @else {
                   <div class="media-cargando"><app-icon name="volume-2" [size]="16" /> Descargando audio…</div>
                 }
+                <!-- Lo que el asistente entendió del audio: para leerlo sin escucharlo. Automático: puede equivocarse. -->
+                @if (item.mensaje.transcripcion; as transcripcion) {
+                  <p class="mt-1 flex items-start gap-1.5 text-xs text-text-muted">
+                    <app-icon name="bot" [size]="14" class="shrink-0 mt-px" />
+                    <span><span class="sr-only">Transcripción automática: </span><span class="italic">«{{ transcripcion }}»</span></span>
+                  </p>
+                }
               }
               @case ('DOCUMENTO') {
                 @if (item.mensaje.mediaUrl) {

@@ -354,6 +354,10 @@ Backend: `../backend-crm-montalvo/docs/asistente-ia.md`. Aquí solo se pinta:
   `state.enviarAccionSugerida`. Sin texto y con aviso, el asistente no redactó nada a
   propósito: no se ofrece «Usar».
 - **El hilo rotula `asistente`** con el ícono `bot`, en lugar de «automático».
+- **La nota de voz escuchada** (`mensaje.transcripcion`, 12/10): debajo del reproductor, en
+  cursiva y con el ícono `bot`, lo que el asistente entendió. Solo existe en líneas con
+  asistente y solo de las que se escucharon; es automática, así que se lee como ayuda, no
+  como cita textual. El backend la guarda una vez (`EscuchaAudiosService`).
 - **`pago.lectura`** en `<app-pago-promocion>`: «Coincide con lo esperado» / «Hay algo que
   revisar», cada verificación con forma propia (`ICONO_VERIFICACION`) y la nota de compararla
   con la imagen. Nunca dice «pagado»: coincide no es confirmado.
