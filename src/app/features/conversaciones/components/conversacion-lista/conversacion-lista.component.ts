@@ -44,7 +44,7 @@ const PESTANA_ATENCION: PestanaInbox = {
   tab: 'ATENCION',
   etiqueta: 'Atención',
   contador: c => c.esperandoHumano + c.enAtencion,
-  ayuda: 'Pidieron una persona o enviaron algo para revisar. Primero las que nadie tomó.',
+  ayuda: 'Solicitudes que requieren una persona, incluidas las derivadas por la IA. Primero las que nadie tomó.',
 };
 
 /**

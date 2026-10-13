@@ -58,6 +58,10 @@
       </div>
     </div>
 
+    <p class="px-4 pb-2 text-xs text-text-muted" role="status">
+      {{ a.explicacionAsistente || acciones[a.motivo] }}
+    </p>
+
     @if (abierto() && hayContexto()) {
       <dl id="atencion-contexto" class="crm-atencion-contexto animate-fade-scale">
         <div class="crm-atencion-fila">
@@ -80,7 +84,7 @@
           }
           <!-- Un Flow no repite su descripción: ya la dicen «Qué hacer» y «Estado». -->
           <div class="crm-atencion-fila">
-            <dt>{{ origen.tipo === 'respuesta_flow' ? 'Formulario' : 'Eligió' }}</dt>
+            <dt>{{ origen.tipo === 'respuesta_flow' ? 'Formulario' : origen.tipo === 'mensaje' || origen.tipo === 'audio' ? 'Mensaje que lo originó' : 'Respuesta recibida' }}</dt>
             <dd>
               @if (origen.tipo !== 'respuesta_flow') { {{ origen.cuerpo }} }
               <span class="crm-atencion-hora">{{ hora(origen.recibidoEn) }}@if (origen.versionFlow) { · versión {{ origen.versionFlow }}}</span>
@@ -95,7 +99,7 @@
           @if (origen.tipo === 'respuesta_flow') {
             <div class="crm-atencion-fila">
               <dt>Estado</dt>
-              <dd><app-badge variant="neutral">Solicitud pendiente · sin cita reservada</app-badge></dd>
+              <dd><app-badge variant="neutral">Solicitud recibida · revisar reserva</app-badge></dd>
             </div>
           }
         }
@@ -115,7 +119,7 @@
   <!-- Sin solicitud viva: queda constancia de que la automatización no escribe aquí. -->
   <div class="crm-atencion-pausa shrink-0" role="status">
     <app-icon name="user" [size]="13" class="shrink-0" />
-    <p class="flex-1 min-w-0">Respuestas automáticas en pausa en este chat desde que pidió una persona.</p>
+    <p class="flex-1 min-w-0">Respuestas automáticas en pausa. Reanúdalas cuando la atención esté resuelta.</p>
     <app-button
       variant="ghost" size="sm" icon="rotate-cw"
       [loading]="state.cambiandoAtencion() === 'reanudar'"

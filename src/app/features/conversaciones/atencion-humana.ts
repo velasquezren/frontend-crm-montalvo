@@ -33,6 +33,7 @@ export interface DatoDeFlow {
  * provisional (armada desde la fila del inbox), hasta que llega el detalle.
  */
 export interface ContextoAtencion extends AtencionFila {
+  readonly explicacionAsistente?: string | null;
   readonly origen?: {
     readonly tipo: string;
     readonly cuerpo: string;
@@ -72,8 +73,8 @@ export const ACCION_ATENCION: Readonly<Record<MotivoAtencion, string>> = {
   EMERGENCIA: 'Contactarla ya. Lo declaró ella: el CRM no evalúa si es una emergencia médica.',
   POSIBLE_URGENCIA: 'Leer su mensaje ya: el asistente cree que puede ser urgente y no le contestó nada médico.',
   SOLICITUD_EXPLICITA: 'Contestarle: está esperando a una persona.',
-  SOLICITUD_CITA: 'Revisar la solicitud y proponerle una cita. Todavía no hay nada reservado.',
-  DERIVADA_ASISTENTE: 'Contestarle: es una consulta que el asistente no debe responder (médica, una queja o algo dudoso).',
+  SOLICITUD_CITA: 'Revisar «Próximas reservas» y la solicitud antes de confirmar o crear otra cita.',
+  DERIVADA_ASISTENTE: 'Leer el contexto y continuar la consulta. La derivación no significa que quiera comprar o agendar.',
   COMPROBANTE_PAGO: 'Verificar el comprobante en el bloque «Pago» y confirmarlo o pedir otro.',
   REVISION: 'Revisar su respuesta: no se ejecutó ninguna acción automática.',
 };
@@ -84,7 +85,7 @@ export const MOTIVO_ATENCION_CORTO: Readonly<Record<MotivoAtencion, string>> = {
   POSIBLE_URGENCIA: 'Posible urgencia',
   SOLICITUD_EXPLICITA: 'Pidió persona',
   SOLICITUD_CITA: 'Solicitud de cita',
-  DERIVADA_ASISTENTE: 'Derivada',
+  DERIVADA_ASISTENTE: 'Requiere persona',
   COMPROBANTE_PAGO: 'Comprobante',
   REVISION: 'Revisar',
 };

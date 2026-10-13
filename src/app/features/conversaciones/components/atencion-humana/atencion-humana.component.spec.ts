@@ -106,7 +106,7 @@ describe('bloque de atención humana del chat', () => {
     expect(el.textContent).toContain('Solicitud de cita');
     expect(el.textContent).toContain('Ginecología');
     expect(el.textContent).toContain('Tarde');
-    expect(el.textContent).toContain('sin cita reservada');
+    expect(el.textContent).toContain('revisar reserva');
     expect(el.textContent?.toLowerCase()).not.toContain('confirmada');
     expect(el.textContent).not.toMatch(/nfm_reply|response_json/);
   });
@@ -141,6 +141,20 @@ describe('bloque de atención humana del chat', () => {
   it('sin solicitud ni pausa no ocupa sitio', async () => {
     const { el } = await montar(null);
     expect(el.textContent?.trim()).toBe('');
+  });
+
+  it('muestra la causa específica de la derivación sin abrir el contexto y conserva el mensaje que la originó', async () => {
+    const { f, el } = await montar({
+      ...ESPERANDO, motivo: 'DERIVADA_ASISTENTE', prioridad: 'NORMAL',
+      explicacionAsistente: 'Posible reclamo: revisar lo ocurrido antes de ofrecer servicios.',
+      origen: { tipo: 'mensaje', cuerpo: 'No quiero otra cita, necesito revisar mi reserva.', recibidoEn: HACE_8_MIN, datos: [], versionFlow: null, ofrecido: null },
+    });
+    expect(el.textContent).toContain('Posible reclamo');
+    expect(el.querySelector('.crm-atencion--critica')).toBeNull();
+    el.querySelector<HTMLButtonElement>('[aria-controls="atencion-contexto"]')!.click();
+    await f.whenStable();
+    expect(el.textContent).toContain('Mensaje que lo originó');
+    expect(el.textContent).toContain('No quiero otra cita');
   });
 });
 
