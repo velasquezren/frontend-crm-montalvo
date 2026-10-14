@@ -49,7 +49,7 @@ export interface GuardarAsistente {
   leerComprobantes: boolean;
 }
 
-/** Los tres modos, dichos para quien decide encenderlo. */
+/** Los modos, dichos para quien decide encenderlo. */
 export const MODOS_ASISTENTE: readonly { readonly modo: ModoAsistente; readonly titulo: string; readonly texto: string }[] = [
   { modo: 'APAGADO', titulo: 'Apagado', texto: 'La línea funciona como siempre.' },
   {
@@ -59,6 +59,10 @@ export const MODOS_ASISTENTE: readonly { readonly modo: ModoAsistente; readonly 
   {
     modo: 'RESPONDER', titulo: 'Responder solo',
     texto: 'Contesta lo comercial e informativo. Lo médico, las quejas y lo dudoso los pasa a una persona en «Atención».',
+  },
+  {
+    modo: 'SOLO_MEDICOS', titulo: 'Solo médicos',
+    texto: 'A las pacientes no les contesta: las atienden el menú y las personas. Los médicos con número autorizado siguen consultando su agenda.',
   },
 ];
 

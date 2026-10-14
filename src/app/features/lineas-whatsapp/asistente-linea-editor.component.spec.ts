@@ -47,7 +47,15 @@ describe('AsistenteLineaEditorComponent', () => {
     await montar(APAGADO);
     expect(texto()).toContain('Todavía no conectado a Google');
     expect(texto()).toContain('ASISTENTE_IA');
-    expect(fixture.nativeElement.querySelectorAll('input[type="radio"]')).toHaveLength(3);
+    expect(fixture.nativeElement.querySelectorAll('input[type="radio"]')).toHaveLength(4);
+  });
+
+  it('«Solo médicos» se guarda sin el criterio de derivación: a las pacientes no les contesta', async () => {
+    await montar({ ...APAGADO, proveedor: PROVEEDOR_LISTO });
+    componente['elegirModo']('SOLO_MEDICOS');
+    fixture.detectChanges();
+    expect(texto()).toContain('siguen consultando su agenda');
+    expect(boton('Guardar')?.disabled).toBe(false);
   });
 
   it('«Responder solo» sin el criterio de la clínica no se puede guardar, y dice por qué', async () => {

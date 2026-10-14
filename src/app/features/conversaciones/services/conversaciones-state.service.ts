@@ -29,6 +29,7 @@ const AVISO_ATENCION: Readonly<Record<AccionAtencion, string>> = {
   liberar: 'Vuelve a la espera, con su tiempo original.',
   resolver: 'Sale de «Atención». La automatización sigue en pausa en este chat.',
   reanudar: 'Las respuestas automáticas vuelven a funcionar en este chat.',
+  listo: 'Listo: sale de «Atención» y vuelven las respuestas automáticas.',
 };
 import { cambiosDeFicha, valoresDeFicha } from '../../clientes/ficha-paciente';
 import { ClientesService } from '../../clientes/clientes.service';

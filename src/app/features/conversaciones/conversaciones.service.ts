@@ -195,6 +195,7 @@ export class ConversacionesService {
    * antes» o «ya no está pendiente», no un fallo.
    */
   cambiarAtencion(conversacionId: string, accion: AccionAtencion): Promise<EstadoDeAtencion> {
+    if (accion === 'listo') return this.api.post<EstadoDeAtencion>(`/conversaciones/${conversacionId}/atencion/resolver`, { reanudar: true });
     const ruta = accion === 'reanudar' ? 'automatizacion/reanudar' : `atencion/${accion}`;
     return this.api.post<EstadoDeAtencion>(`/conversaciones/${conversacionId}/${ruta}`, {});
   }

@@ -8,65 +8,47 @@
     <div class="crm-atencion-barra">
       <app-icon [name]="iconoDeAtencion(a.prioridad)" [size]="14" class="crm-atencion-icono shrink-0" />
 
-      <!-- Lo que hay que saber de un vistazo: el motivo y cuánto lleva, o quién la atiende. -->
+      <!-- Una línea: por qué y cuánto lleva (o quién la atiende). Lo demás, en «Detalles». -->
       <p class="crm-atencion-titulo" role="status">
+        <span class="font-semibold text-text-dark">{{ motivos[a.motivo] }}</span>
         @if (a.estado === 'ESPERANDO') {
-          <span class="font-semibold text-text-dark">{{ motivos[a.motivo] }}</span>
           <span class="crm-atencion-espera"> · espera {{ tiempoDeEspera(a.solicitadaEn, state.ahora()) }}</span>
         } @else if (a.tomadaPor; as quien) {
-          <span class="font-semibold text-text-dark">En atención por {{ primerNombre(quien.nombre) }}</span>
-          <span class="crm-atencion-espera"> · {{ motivos[a.motivo] }}</span>
+          <span class="crm-atencion-espera"> · la atiende {{ primerNombre(quien.nombre) }}</span>
         }
       </p>
 
       <div class="crm-atencion-acciones">
-        @if (hayContexto()) {
-          <button
-            type="button"
-            class="crm-atencion-disclosure"
-            [attr.aria-expanded]="abierto()"
-            aria-controls="atencion-contexto"
-            aria-label="Contexto de la solicitud"
-            (click)="abierto.update(v => !v)">
-            <span class="hidden sm:inline">Contexto</span>
-            <app-icon [name]="abierto() ? 'chevron-up' : 'chevron-down'" [size]="14" />
-          </button>
-        }
-        @if (a.estado === 'ESPERANDO') {
-          <app-button
-            size="sm" icon="user"
-            [loading]="state.cambiandoAtencion() === 'tomar'"
-            [disabled]="!!state.cambiandoAtencion()"
-            (clicked)="state.cambiarAtencion('tomar')">Tomar atención</app-button>
-        }
-        @if (puedeLiberar()) {
-          <app-button
-            variant="ghost" size="sm" icon="rotate-cw"
-            ariaLabel="Liberar: vuelve a la espera para que la tome otra persona"
-            title="Liberar: vuelve a la espera, con su tiempo original"
-            [loading]="state.cambiandoAtencion() === 'liberar'"
-            [disabled]="!!state.cambiandoAtencion()"
-            (clicked)="state.cambiarAtencion('liberar')"><span class="hidden sm:inline">Liberar</span></app-button>
-        }
+        <button
+          type="button"
+          class="crm-atencion-disclosure"
+          [attr.aria-expanded]="abierto()"
+          aria-controls="atencion-contexto"
+          aria-label="Detalles de la solicitud"
+          (click)="abierto.update(v => !v)">
+          <span class="hidden sm:inline">Detalles</span>
+          <app-icon [name]="abierto() ? 'chevron-up' : 'chevron-down'" [size]="14" />
+        </button>
+        <!-- Contestarle ya la toma; «Listo» la cierra y devuelve las respuestas automáticas. -->
         <app-button
-          variant="secondary" size="sm" icon="check-circle"
-          ariaLabel="Resolver la solicitud de atención"
-          title="Resolver: sale de «Atención». El chat sigue abierto."
-          [loading]="state.cambiandoAtencion() === 'resolver'"
+          size="sm" icon="check-circle"
+          title="Ya la atendiste: sale de «Atención» y vuelven las respuestas automáticas"
+          [loading]="state.cambiandoAtencion() === 'listo'"
           [disabled]="!!state.cambiandoAtencion()"
-          (clicked)="state.cambiarAtencion('resolver')"><span class="hidden sm:inline">Resolver</span></app-button>
+          (clicked)="state.cambiarAtencion('listo')">Listo</app-button>
       </div>
     </div>
 
-    <p class="px-4 pb-2 text-xs text-text-muted" role="status">
-      {{ a.explicacionAsistente || acciones[a.motivo] }}
-    </p>
+    <!-- Una emergencia no espera a que alguien abra «Detalles». -->
+    @if (a.prioridad === 'CRITICA') {
+      <p class="px-4 pb-2 text-xs text-text-dark" role="status">{{ acciones[a.motivo] }}</p>
+    }
 
-    @if (abierto() && hayContexto()) {
+    @if (abierto()) {
       <dl id="atencion-contexto" class="crm-atencion-contexto animate-fade-scale">
         <div class="crm-atencion-fila">
           <dt>Qué hacer</dt>
-          <dd>{{ acciones[a.motivo] }}</dd>
+          <dd>{{ a.explicacionAsistente || acciones[a.motivo] }}</dd>
         </div>
         @if (a.origen; as origen) {
           @if (origen.ofrecido; as ofrecido) {
@@ -113,16 +95,37 @@
           </div>
         }
       </dl>
+      <!-- Lo de coordinarse entre varias: poco frecuente, fuera de la línea principal. -->
+      @if (a.estado === 'ESPERANDO' || puedeLiberar()) {
+        <div class="crm-atencion-secundarias">
+          @if (a.estado === 'ESPERANDO') {
+            <app-button
+              variant="ghost" size="sm" icon="user"
+              title="Avisa a las demás que la atiendes tú, antes de escribirle"
+              [loading]="state.cambiandoAtencion() === 'tomar'"
+              [disabled]="!!state.cambiandoAtencion()"
+              (clicked)="state.cambiarAtencion('tomar')">La atiendo yo</app-button>
+          }
+          @if (puedeLiberar()) {
+            <app-button
+              variant="ghost" size="sm" icon="rotate-cw"
+              ariaLabel="Liberar: vuelve a la espera para que la tome otra persona"
+              [loading]="state.cambiandoAtencion() === 'liberar'"
+              [disabled]="!!state.cambiandoAtencion()"
+              (clicked)="state.cambiarAtencion('liberar')">Que la atienda otra persona</app-button>
+          }
+        </div>
+      }
     }
   </section>
 } @else if (automatizacionPausadaEn()) {
   <!-- Sin solicitud viva: queda constancia de que la automatización no escribe aquí. -->
   <div class="crm-atencion-pausa shrink-0" role="status">
     <app-icon name="user" [size]="13" class="shrink-0" />
-    <p class="flex-1 min-w-0">Respuestas automáticas en pausa. Reanúdalas cuando la atención esté resuelta.</p>
+    <p class="flex-1 min-w-0">Respuestas automáticas en pausa en este chat.</p>
     <app-button
       variant="ghost" size="sm" icon="rotate-cw"
       [loading]="state.cambiandoAtencion() === 'reanudar'"
-      (clicked)="state.cambiarAtencion('reanudar')">Reanudar</app-button>
+      (clicked)="state.cambiarAtencion('reanudar')">Reactivar</app-button>
   </div>
 }

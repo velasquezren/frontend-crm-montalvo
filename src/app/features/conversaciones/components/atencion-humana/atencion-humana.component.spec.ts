@@ -52,20 +52,37 @@ describe('bloque de atención humana del chat', () => {
   }
   const botones = (el: HTMLElement) => [...el.querySelectorAll('button')].map(b => b.textContent?.trim() ?? '');
 
-  it('en espera: dice el motivo y cuánto lleva, y ofrece tomarla', async () => {
+  const abrir = async (f: { whenStable(): Promise<unknown> }, el: HTMLElement) => {
+    el.querySelector<HTMLButtonElement>('[aria-controls="atencion-contexto"]')!.click();
+    await f.whenStable();
+  };
+
+  it('en espera: una línea con el motivo, cuánto lleva y un solo botón, «Listo»', async () => {
     const { el } = await montar(ESPERANDO);
     expect(el.textContent).toContain('Pidió hablar con una persona');
     expect(el.textContent).toContain(`espera ${tiempoDeEspera(HACE_8_MIN)}`);
-    const tomar = [...el.querySelectorAll('button')].find(b => b.textContent?.includes('Tomar atención'))!;
-    tomar.click();
+    /* Plegado: solo «Detalles» y «Listo». Ni tomar, ni liberar, ni la frase de qué hacer. */
+    expect(botones(el)).toEqual(['Detalles', 'Listo']);
+    expect(el.textContent).not.toContain('Contestarle');
+    [...el.querySelectorAll('button')].find(b => b.textContent?.includes('Listo'))!.click();
+    expect(cambiarAtencion).toHaveBeenCalledWith('listo');
+  });
+
+  it('«La atiendo yo» está en «Detalles», para coordinarse antes de escribirle', async () => {
+    const { f, el } = await montar(ESPERANDO);
+    await abrir(f, el);
+    expect(el.textContent).toContain('Contestarle: está esperando a una persona.');
+    [...el.querySelectorAll('button')].find(b => b.textContent?.includes('La atiendo yo'))!.click();
     expect(cambiarAtencion).toHaveBeenCalledWith('tomar');
-    expect(botones(el).some(t => t.includes('Liberar'))).toBe(false);
+    expect(el.querySelector('[aria-label^="Liberar"]')).toBeNull();
   });
 
   it('una emergencia se distingue también por forma y sigue marcada mientras se atiende', async () => {
     const emergencia: ContextoAtencion = { ...ESPERANDO, motivo: 'EMERGENCIA', prioridad: 'CRITICA' };
     const { el } = await montar(emergencia);
     expect(el.textContent).toContain('Indicó una emergencia');
+    /* Lo que hay que hacer con una emergencia se ve sin abrir nada. */
+    expect(el.textContent).toContain('Contactarla ya');
     expect(el.querySelector('.crm-atencion--critica')).not.toBeNull();
     const atendida = await montar({ ...emergencia, estado: 'EN_ATENCION', tomadaEn: HACE_8_MIN, tomadaPor: { id: 'rec-1', nombre: 'Rosa' } });
     expect(atendida.el.querySelector('.crm-atencion--critica')).not.toBeNull();
@@ -74,14 +91,17 @@ describe('bloque de atención humana del chat', () => {
   });
 
   it('tomada por otra persona: lo dice, y no ofrece tomarla ni liberarla', async () => {
-    const { el } = await montar({ ...ESPERANDO, estado: 'EN_ATENCION', tomadaEn: HACE_8_MIN, tomadaPor: { id: 'rec-2', nombre: 'Ana Pérez' } });
-    expect(el.textContent).toContain('En atención por Ana');
-    expect(botones(el).some(t => t.includes('Tomar'))).toBe(false);
+    const { f, el } = await montar({ ...ESPERANDO, estado: 'EN_ATENCION', tomadaEn: HACE_8_MIN, tomadaPor: { id: 'rec-2', nombre: 'Ana Pérez' } });
+    expect(el.textContent).toContain('la atiende Ana');
+    await abrir(f, el);
+    expect(botones(el).some(t => t.includes('La atiendo yo'))).toBe(false);
     expect(el.querySelector('[aria-label^="Liberar"]')).toBeNull();
   });
 
-  it('tomada por mí: puedo liberarla', async () => {
-    const { el } = await montar({ ...ESPERANDO, estado: 'EN_ATENCION', tomadaEn: HACE_8_MIN, tomadaPor: { id: 'rec-1', nombre: 'Rosa' } });
+  it('tomada por mí: puedo liberarla desde «Detalles»', async () => {
+    const { f, el } = await montar({ ...ESPERANDO, estado: 'EN_ATENCION', tomadaEn: HACE_8_MIN, tomadaPor: { id: 'rec-1', nombre: 'Rosa' } });
+    expect(el.querySelector('[aria-label^="Liberar"]')).toBeNull();
+    await abrir(f, el);
     expect(el.querySelector('[aria-label^="Liberar"]')).not.toBeNull();
   });
 
@@ -134,7 +154,7 @@ describe('bloque de atención humana del chat', () => {
   it('sin solicitud pero con la automatización pausada, ofrece reanudarla', async () => {
     const { el } = await montar(null, HACE_8_MIN);
     expect(el.textContent).toContain('Respuestas automáticas en pausa');
-    [...el.querySelectorAll('button')].find(b => b.textContent?.includes('Reanudar'))!.click();
+    [...el.querySelectorAll('button')].find(b => b.textContent?.includes('Reactivar'))!.click();
     expect(cambiarAtencion).toHaveBeenCalledWith('reanudar');
   });
 
@@ -143,16 +163,16 @@ describe('bloque de atención humana del chat', () => {
     expect(el.textContent?.trim()).toBe('');
   });
 
-  it('muestra la causa específica de la derivación sin abrir el contexto y conserva el mensaje que la originó', async () => {
+  it('la causa específica de la derivación y el mensaje que la originó están en «Detalles»', async () => {
     const { f, el } = await montar({
       ...ESPERANDO, motivo: 'DERIVADA_ASISTENTE', prioridad: 'NORMAL',
       explicacionAsistente: 'Posible reclamo: revisar lo ocurrido antes de ofrecer servicios.',
       origen: { tipo: 'mensaje', cuerpo: 'No quiero otra cita, necesito revisar mi reserva.', recibidoEn: HACE_8_MIN, datos: [], versionFlow: null, ofrecido: null },
     });
-    expect(el.textContent).toContain('Posible reclamo');
+    expect(el.textContent).not.toContain('Posible reclamo');
     expect(el.querySelector('.crm-atencion--critica')).toBeNull();
-    el.querySelector<HTMLButtonElement>('[aria-controls="atencion-contexto"]')!.click();
-    await f.whenStable();
+    await abrir(f, el);
+    expect(el.textContent).toContain('Posible reclamo');
     expect(el.textContent).toContain('Mensaje que lo originó');
     expect(el.textContent).toContain('No quiero otra cita');
   });

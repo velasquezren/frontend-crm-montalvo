@@ -15,18 +15,19 @@ import {
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
 
 /**
- * El bloque de atención humana del chat: quién pidió una persona, desde
- * cuándo, por qué y qué hacer. Va bajo la cabecera, como la banda de la
- * campaña de origen, y ocupa una línea: el contexto (lo que se le ofreció, lo
- * que eligió, los datos del formulario, su último mensaje) se despliega a
- * pedido, sin pantalla aparte.
+ * El bloque de atención humana del chat: por qué y desde cuándo espera a una
+ * persona, en una línea con un solo botón, «Listo» (resuelve y devuelve las
+ * respuestas automáticas). Contestarle ya la toma, así que «Tomar» no hace
+ * falta en el día a día. El contexto (qué hacer, lo que se le ofreció, lo que
+ * eligió, su último mensaje) y la coordinación entre varias («La atiendo yo»,
+ * liberar) van en «Detalles», a pedido.
  *
  * No decide nada. El estado, el motivo y la prioridad vienen del servidor, y
  * las acciones las valida el servidor: si alguien tomó antes, el 409 vuelve a
  * leer la verdad y el bloque pasa a decir «En atención por …».
  *
  * Sin solicitud viva, pero con la automatización en pausa, queda una franja
- * mínima con «Reanudar»: es la única puerta para que vuelva a escribir.
+ * mínima con «Reactivar».
  */
 @Component({
   selector: 'app-atencion-humana',
@@ -56,12 +57,6 @@ export class AtencionHumanaComponent {
   protected readonly puedeLiberar = computed(() => {
     const a = this.atencion();
     return a?.estado === 'EN_ATENCION' && (a.tomadaPor?.id === this.state.currentUserId() || this.state.isAdmin());
-  });
-
-  /** ¿Hay algo que desplegar? Sin contexto (vista provisional) el botón no aparece. */
-  protected readonly hayContexto = computed(() => {
-    const a = this.atencion();
-    return !!a && (!!a.origen || !!a.ultimoMensaje);
   });
 
   /** Una fecha de calendario del Flow («2026-10-13») se lee como fecha; lo demás, tal cual. */

@@ -102,7 +102,7 @@ export type EstadoPromocion = 'BORRADOR' | 'EN_REVISION' | 'PUBLICADA' | 'PAUSAD
 
 export type FormatoBanner = 'CUADRADO' | 'VERTICAL' | 'HISTORIA' | 'HORIZONTAL';
 
-export type ModoAsistente = 'APAGADO' | 'SUGERIR' | 'RESPONDER';
+export type ModoAsistente = 'APAGADO' | 'SUGERIR' | 'RESPONDER' | 'SOLO_MEDICOS';
 
 export type EstadoSugerencia = 'PENDIENTE' | 'USADA' | 'DESCARTADA' | 'SUPERADA';
 

@@ -64,7 +64,7 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  /* Del alto de «Tomar atención» y «Resolver» (32 px): con solo el chevron en el móvil
+  /* Del alto de «Listo» (32 px): con solo el chevron en el móvil
      medía 30×22, por debajo del mínimo de WCAG 2.2 AA (24 px) para un objetivo táctil. */
   min-height: 32px;
   min-width: 32px;
@@ -128,6 +128,19 @@
   .crm-atencion-fila {
     grid-template-columns: 7rem minmax(0, 1fr);
     gap: 6px;
+  }
+}
+
+.crm-atencion-secundarias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 16px 8px 30px;
+}
+
+@media (max-width: 640px) {
+  .crm-atencion-secundarias {
+    padding-left: 8px;
   }
 }
 

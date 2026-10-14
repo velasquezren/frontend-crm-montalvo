@@ -45,8 +45,8 @@ export interface ContextoAtencion extends AtencionFila {
   readonly ultimoMensaje?: { readonly contenido: string; readonly createdAt: string } | null;
 }
 
-/** Las transiciones que ofrece el bloque de atención. */
-export type AccionAtencion = 'tomar' | 'liberar' | 'resolver' | 'reanudar';
+/** Las transiciones que ofrece el bloque de atención. `listo` = resolver y reanudar en un paso. */
+export type AccionAtencion = 'tomar' | 'liberar' | 'resolver' | 'reanudar' | 'listo';
 
 /** Lo que devuelven las transiciones (`POST …/atencion/tomar`, etc.). */
 export interface EstadoDeAtencion {
