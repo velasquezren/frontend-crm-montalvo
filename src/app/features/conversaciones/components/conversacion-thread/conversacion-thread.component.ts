@@ -31,6 +31,7 @@ import { explicacionErrorWhatsapp } from '../../error-whatsapp';
 import { ConversacionesService } from '../../conversaciones.service';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
 import { ConversacionResumen, describirCierre, MensajeApi } from '../../conversacion.model';
+import { firmaDeAutor } from '../../presentacion-chat';
 import { textoExtra } from '../../../../core/api/datos-extra';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 import { InteraccionPreviewComponent } from '../interaccion-preview/interaccion-preview.component';
@@ -73,6 +74,11 @@ export class ConversacionThreadComponent {
 
   protected readonly iniciales = generarIniciales;
   protected readonly describirCierre = describirCierre;
+
+  /** «Ana» sobre lo que escribió otra persona del equipo; lo propio no se firma. */
+  protected firma(mensaje: MensajeApi): string | null {
+    return firmaDeAutor(mensaje.autor, this.state.currentUserId());
+  }
 
   /**
    * Las URLs de imagen que manda Meta en el `referral` caducan. Una miniatura

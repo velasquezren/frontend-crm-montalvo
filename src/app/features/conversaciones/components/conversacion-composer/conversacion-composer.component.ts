@@ -55,6 +55,15 @@ function tipoBase(mime: string): string {
   return mime.split(';')[0].trim().toLowerCase();
 }
 
+/** Por qué no se puede adjuntar un archivo, o `null` si se puede. */
+export function motivoParaRechazarAdjunto(file: Pick<File, 'size' | 'type'>): string | null {
+  if (file.size > TAMANO_MAXIMO_ADJUNTO) return 'El archivo supera el límite de 5 MB.';
+  if (!TIPOS_ADJUNTO_ACEPTADOS.includes(tipoBase(file.type))) {
+    return 'Ese tipo de archivo no se puede enviar por el chat: solo fotos JPG, PNG o WEBP y documentos PDF.';
+  }
+  return null;
+}
+
 /**
  * Compositor de WhatsApp — Caja de texto con:
  * - Autoresize multilínea
@@ -194,7 +203,7 @@ export class ConversacionComposerComponent {
       this.state.contextoChat();
       this.adjuntoPendiente.set(null);
       this.subiendoArchivo.set(null);
-      this.state.mensajeNuevo.set('');
+      /* El texto no se vacía aquí: lo guarda y lo devuelve el servicio por chat (`borradores`). */
       this.mostrarPopoverMemoria.set(false);
       this.plantillaSeleccionada.set(null);
       this.variablesPlantilla.set([]);
@@ -235,19 +244,7 @@ export class ConversacionComposerComponent {
     const files = event.dataTransfer?.files;
     if (!files || files.length === 0) return;
 
-    const file = files[0];
-    if (file.size > TAMANO_MAXIMO_ADJUNTO) {
-      this.toast.warning('El archivo supera el límite de 5 MB.');
-      return;
-    }
-
-    const mime = tipoBase(file.type);
-    if (file.type && !TIPOS_ADJUNTO_ACEPTADOS.includes(mime)) {
-      this.toast.warning('Tipo de archivo no permitido en el chat.');
-      return;
-    }
-
-    await this.subirAdjunto(file);
+    await this.subirAdjunto(files[0]);
   }
 
   /* ── Mi Memoria Personal Popover ───────────────────────────────── */
@@ -306,6 +303,14 @@ export class ConversacionComposerComponent {
   }
 
   protected async subirAdjunto(file: File): Promise<void> {
+    /* Lo comprueban los tres caminos (arrastrar, elegir y pegar). Antes solo
+       arrastrar: elegir un HEIC del iPhone o un PDF de 12 MB lo subía igual y
+       el envío rebotaba después, con el archivo ya en Mi Memoria. */
+    const motivo = motivoParaRechazarAdjunto(file);
+    if (motivo) {
+      this.toast.warning(motivo);
+      return;
+    }
     const contexto = this.state.contextoChat();
     this.subiendoArchivo.set(file.name);
     try {
@@ -446,6 +451,7 @@ export class ConversacionComposerComponent {
         envioLocal: 'ENVIANDO',
         clientMessageId,
         automatico: false,
+        autor: this.state.autorPropio(),
         createdAt: new Date().toISOString(),
       };
 

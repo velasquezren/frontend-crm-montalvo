@@ -306,15 +306,27 @@
           <span class="date-separator-label">{{ item.fecha }}</span>
         </div>
       } @else {
+        <!-- `continua`: mismo lado, misma persona y poco después que el anterior.
+             Va pegado a él y sin repetir la firma, como en WhatsApp. -->
         <div class="bubble-row"
              [attr.data-mensaje-id]="item.mensaje.id"
+             [class.bubble-row-continua]="item.continua"
              [class.bubble-row-out]="item.mensaje.direccion === 'SALIENTE'"
              [class.bubble-row-in]="item.mensaje.direccion === 'ENTRANTE'">
           <div class="bubble"
+               [class.bubble-continua]="item.continua"
                [class.bubble-out]="item.mensaje.direccion === 'SALIENTE'"
                [class.bubble-in]="item.mensaje.direccion === 'ENTRANTE'"
                [class.bubble-match]="state.coincidenciasChat().includes(item.mensaje.id)"
                [class.bubble-match-active]="state.coincidenciasChat()[state.indiceCoincidencia()] === item.mensaje.id || mensajeReferido() === item.mensaje.id">
+
+            <!-- Quién del equipo lo escribió, si no fuiste tú: en una línea compartida
+                 contesta quien esté, y el hilo tiene que decir quién dijo qué. -->
+            @if (!item.continua) {
+              @if (firma(item.mensaje); as quien) {
+                <p class="bubble-autor" [title]="'Lo escribió ' + item.mensaje.autor?.nombre">{{ quien }}</p>
+              }
+            }
 
             <!-- Media (foto / video / audio / documento) -->
             @switch (item.mensaje.tipo) {

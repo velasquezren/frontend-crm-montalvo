@@ -62,6 +62,12 @@ export interface MensajeApi {
    * ambiguo no pueda duplicar el mensaje. Solo existe en globos optimistas.
    */
   readonly clientMessageId?: string;
+  /**
+   * Quién del equipo lo escribió. Solo en lo saliente de una persona; null en lo
+   * entrante, en lo automático y en lo anterior al 14/10/2026. En una línea
+   * compartida es lo que dice «esto lo contestó Ana».
+   */
+  readonly autor?: { readonly id: string; readonly nombre: string } | null;
   /** true = lo mandó el CRM (menú, acuses, fuera de horario), no una persona. */
   readonly automatico?: boolean;
   /** true = lo escribió (o lo mandó) el asistente de IA. Siempre con `automatico`. */
@@ -435,4 +441,5 @@ export function esperandoDesde(c: ConversacionResumen): Date | null {
 /** Elemento del hilo: mensaje real o separador de fecha. */
 export type ItemHilo =
   | { readonly tipo: 'separador-fecha'; readonly fecha: string }
-  | { readonly tipo: 'mensaje'; readonly mensaje: MensajeApi };
+  /** `continua`: sigue la tanda del anterior (mismo lado, misma persona, poco después) y se pinta pegado a él. */
+  | { readonly tipo: 'mensaje'; readonly mensaje: MensajeApi; readonly continua: boolean };

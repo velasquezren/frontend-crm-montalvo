@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, TemplateRef, untracked, viewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, signal, TemplateRef, untracked, viewChild, ViewContainerRef } from '@angular/core';
 import { OverlayRef } from '@angular/cdk/overlay';
 
 import { DialogService } from '../../../../shared/components/dialog/dialog.service';
@@ -27,6 +27,7 @@ import {
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 import { ConversacionPreviewComponent } from './conversacion-preview.component';
 import { iconoDeAtencion, MOTIVO_ATENCION_CORTO, quienAtiende, tiempoDeEspera, varianteDeAtencion } from '../../atencion-humana';
+import { horaDeFila } from '../../presentacion-chat';
 
 interface PestanaInbox {
   readonly tab: FiltroInbox;
@@ -75,6 +76,7 @@ const PESTANA_ATENCION: PestanaInbox = {
     NuevoChatComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(document:keydown)': 'atajoGlobal($event)' },
   templateUrl: './conversacion-lista.component.html',
   styleUrl: './conversacion-lista.component.css',
 })
@@ -184,6 +186,22 @@ export class ConversacionListaComponent {
 
   protected readonly viendoCerradas = computed(() => this.state.filtroTab() === 'CERRADAS');
 
+  /**
+   * Qué chats ve quien no es admin, en el subtítulo de la cabecera (y entero en
+   * su `title`). Recepción y asistencia comparten la atención de sus líneas: ven
+   * TODOS sus chats, no solo los suyos (ver `acceso-conversacion.ts`).
+   */
+  protected readonly alcanceCorto = computed(() => {
+    if (this.state.isAdmin()) return 'WhatsApp Business';
+    return this.state.puedeGestionComercial() ? 'Tus chats y los sin asignar' : 'Todos los chats de tus líneas';
+  });
+  protected readonly alcanceExplicado = computed(() => {
+    if (this.state.isAdmin()) return 'Ves los chats de todas las líneas y de todo el equipo.';
+    return this.state.puedeGestionComercial()
+      ? 'Ves tus chats y los que están sin asignar en tus líneas autorizadas.'
+      : 'Ves todos los chats de tus líneas: la atención es compartida.';
+  });
+
   protected elegirPestana(tab: FiltroInbox): void {
     this.state.elegirPestana(tab);
   }
@@ -233,21 +251,112 @@ export class ConversacionListaComponent {
     return !!desde && this.state.ahora() - desde.getTime() > 24 * 60 * 60 * 1000;
   }
 
-  protected tiempoRelativo(fecha: string): string {
-    const diff = this.state.ahora() - new Date(fecha).getTime();
-    const minutos = Math.floor(diff / 60000);
+  /** «miércoles, 14 de octubre, 10:42»: el `title` de la hora, para quien necesite el dato exacto. */
+  protected fechaCompleta(fecha: string): string {
+    return new Date(fecha).toLocaleString('es-BO', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', hour12: false });
+  }
 
-    if (minutos < 1) return 'Ahora';
-    if (minutos < 60) return `${minutos}m`;
-    const horas = Math.floor(minutos / 60);
-    if (horas < 24) return `${horas}h`;
-    const dias = Math.floor(horas / 24);
-    if (dias < 7) return `${dias}d`;
-    return new Date(fecha).toLocaleDateString('es-BO', { day: '2-digit', month: 'short' });
+  /** La hora de la fila, como la lista de WhatsApp (ver `horaDeFila`). */
+  protected horaDeFila(fecha: string): string {
+    return horaDeFila(new Date(fecha), new Date(this.state.ahora()));
   }
 
   protected seleccionar(id: string): void {
     this.state.seleccionar(id);
+  }
+
+  /* ── Teclado ───────────────────────────────────────────────────── */
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /**
+   * «/» lleva al buscador y Alt+↑/↓ pasa al chat anterior o siguiente, desde
+   * cualquier parte de la bandeja que no sea un campo de texto: ahí «/» abre
+   * las respuestas rápidas y Alt+flecha mueve el cursor por párrafos (macOS).
+   */
+  protected atajoGlobal(evento: KeyboardEvent): void {
+    if (evento.defaultPrevented || evento.isComposing || this.escribiendoEn(evento.target)) return;
+    if (evento.key === '/' && !evento.altKey && !evento.ctrlKey && !evento.metaKey) {
+      const buscador = this.host.nativeElement.querySelector<HTMLInputElement>('.sidebar-search input');
+      if (!buscador) return;
+      evento.preventDefault();
+      buscador.focus();
+      buscador.select();
+      return;
+    }
+    if (evento.altKey && (evento.key === 'ArrowDown' || evento.key === 'ArrowUp')) {
+      evento.preventDefault();
+      this.moverSeleccion(evento.key === 'ArrowDown' ? 1 : -1);
+    }
+  }
+
+  /** Flechas sobre la lista: de fila en fila, como en cualquier lista de correo. */
+  protected moverEnLista(evento: KeyboardEvent): void {
+    if (evento.key !== 'ArrowDown' && evento.key !== 'ArrowUp') return;
+    const filas = Array.from(this.host.nativeElement.querySelectorAll<HTMLButtonElement>('.chat-item'));
+    const actual = filas.indexOf(evento.target as HTMLButtonElement);
+    if (actual === -1) return;
+    evento.preventDefault();
+    filas[Math.min(Math.max(actual + (evento.key === 'ArrowDown' ? 1 : -1), 0), filas.length - 1)]?.focus();
+  }
+
+  /** Abre el chat de al lado del abierto (o el primero) y lo deja a la vista. */
+  private moverSeleccion(paso: 1 | -1): void {
+    const lista = this.state.conversacionesFiltradas();
+    if (!lista.length) return;
+    const actual = lista.findIndex(c => c.id === this.state.seleccionadaId());
+    const destino = actual === -1 ? 0 : actual + paso;
+    if (destino < 0 || destino >= lista.length) return;
+    const id = lista[destino].id;
+    this.seleccionar(id);
+    queueMicrotask(() =>
+      this.host.nativeElement.querySelector(`[data-chat="${id}"]`)?.scrollIntoView({ block: 'nearest' }),
+    );
+  }
+
+  private escribiendoEn(destino: EventTarget | null): boolean {
+    const el = destino as HTMLElement | null;
+    if (!el) return false;
+    return el.isContentEditable || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT';
+  }
+
+  /* ── Paginación al bajar ───────────────────────────────────────── */
+  /**
+   * Cerca del final de la lista se pide la página siguiente sola: el botón
+   * «Cargar más» queda como respaldo (y para el teclado), pero nadie tiene que
+   * buscarlo para seguir bajando.
+   */
+  protected alDesplazarLista(evento: Event): void {
+    const el = evento.target as HTMLElement;
+    if (el.scrollHeight - el.scrollTop - el.clientHeight > 240) return;
+    if (this.state.hayMasConversaciones() && !this.state.cargandoMas() && !this.state.cargandoVista()) {
+      void this.state.cargarMas();
+    }
+  }
+
+  /* ── Filtros puestos ───────────────────────────────────────────── */
+  /**
+   * Lo que acota la lista además de la pestaña, dicho en palabras. Es lo que
+   * explica un «Sin resultados»: casi siempre hay un filtro olvidado.
+   */
+  protected readonly filtrosPuestos = computed<readonly string[]>(() => {
+    const puestos: string[] = [];
+    const busqueda = this.state.busqueda().trim();
+    if (busqueda) puestos.push(`«${busqueda}»`);
+    if (this.state.soloSinResponder() && !this.viendoCerradas()) puestos.push('Sin responder');
+    if (this.state.soloGold()) puestos.push('Gold');
+    const lineaId = this.state.filtroLineaId();
+    if (lineaId) puestos.push(this.state.lineas.value().datos.find(l => l.id === lineaId)?.nombre ?? 'una línea');
+    if (this.state.isAdmin()) {
+      const alcance = this.state.alcance();
+      if (alcance === 'MIOS') puestos.push('Míos');
+      else if (typeof alcance !== 'string') puestos.push(this.state.agentesActuales().find(a => a.id === alcance.agenteId)?.nombre ?? 'una agente');
+    }
+    return puestos;
+  });
+
+  /** Quita todos los filtros y deja la pestaña en la que se estaba. */
+  protected quitarFiltros(): void {
+    this.state.restablecerFiltros(this.state.filtroTab());
   }
 
   protected recargarInbox(): void {

@@ -128,6 +128,31 @@
   background: var(--color-bg-light);
 }
 
+/* Nombre y hora: normales, y en negrita / color primario con mensajes sin leer
+   (como WhatsApp). Leído, el nombre ya no grita igual que uno que espera. */
+.chat-item__nombre {
+  font-weight: 500;
+}
+
+.chat-item__hora {
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+.chat-item-no-leido .chat-item__nombre {
+  font-weight: 700;
+}
+
+.chat-item-no-leido .chat-item__hora {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.chat-item:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
 .unassigned-dot {
   position: absolute;
   top: -2px;
@@ -147,11 +172,13 @@
   height: 18px;
   padding: 0 5px;
   border-radius: 9999px;
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  color: var(--color-primary);
+  /* Lleno, como el número de WhatsApp: es lo primero que tiene que verse al bajar por la lista. */
+  background: var(--color-primary);
+  color: var(--color-background);
   font-size: 10px;
   font-weight: 700;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .chat-item-skeleton {

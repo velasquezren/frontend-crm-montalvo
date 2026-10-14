@@ -13,8 +13,10 @@
         </div>
         <div class="min-w-0">
           <h1 class="text-base font-bold text-text-dark leading-tight">Inbox</h1>
-          <p class="text-[11px] text-text-muted leading-tight truncate">
-            {{ viendoCerradas() ? 'Cerradas · se reabren solas' : 'WhatsApp Business' }}
+          <!-- Lo que ve quien no es admin lo dice el subtítulo: antes era una banda
+               de dos líneas fija sobre las pestañas, en cada visita. -->
+          <p class="text-[11px] text-text-muted leading-tight truncate" [title]="alcanceExplicado()">
+            {{ viendoCerradas() ? 'Cerradas · se reabren solas' : alcanceCorto() }}
           </p>
         </div>
       </div>
@@ -97,16 +99,6 @@
     </div>
   }
 
-  @if (!state.isAdmin()) {
-    <!-- Recepción y asistente comparten la atención de sus líneas: ven TODOS
-         los chats de ellas, no solo los suyos (ver acceso-conversacion.ts). -->
-    <p class="px-4 py-2 text-[11px] leading-relaxed text-text-muted border-b border-border">
-      {{ state.puedeGestionComercial()
-        ? 'Ves tus chats y los que están sin asignar en tus líneas autorizadas.'
-        : 'Ves todos los chats de tus líneas: la atención es compartida.' }}
-    </p>
-  }
-
   <!-- Las pestañas de trabajo: solo abiertas. Una sola definición
        (`pestanas` en el componente) en vez de botones copiados, para
        que añadir o renombrar una no deje las demás con otro estilo. Viendo
@@ -167,8 +159,9 @@
   }
 
   <div class="sidebar-search">
-    <app-input type="search" placeholder="Buscar por nombre, teléfono o PAC…" [(value)]="state.busqueda"
-      ariaLabel="Buscar por nombre, teléfono o PAC" />
+    <app-input type="search" placeholder="Buscar nombre, teléfono o PAC  ( / )" [(value)]="state.busqueda"
+      ariaLabel="Buscar por nombre, teléfono o PAC. Atajo: tecla barra"
+      (keydown.escape)="state.busqueda.set('')" />
   </div>
 
   <!-- Dentro de «Por atender»: cuántas esperan y cuántas ya tienen a alguien, y
@@ -183,7 +176,8 @@
 
   <!-- Lista de conversaciones. Mientras llega otra vista se ve la anterior
        atenuada, con una barra fina arriba: nunca una lista vacía con ceros. -->
-  <div class="sidebar-list" [class.lista-desactualizada]="state.listaDesactualizada()" [attr.aria-busy]="state.cargandoVista()">
+  <div class="sidebar-list" [class.lista-desactualizada]="state.listaDesactualizada()" [attr.aria-busy]="state.cargandoVista()"
+    (scroll)="alDesplazarLista($event)" (keydown)="moverEnLista($event)">
     @if (state.cargandoVista()) {
       <div class="lista-cargando" role="progressbar" aria-label="Cargando la bandeja"></div>
     }
@@ -206,11 +200,16 @@
       </app-empty-state>
     } @else {
       @for (chat of state.conversacionesFiltradas(); track chat.id) {
+        <!-- Sin leer, como en WhatsApp: nombre, hora y mensaje en negrita. -->
+        @let sinLeer = (chat.noLeidosCount ?? 0) > 0;
         <button
           type="button"
+          [attr.data-chat]="chat.id"
           (click)="seleccionar(chat.id)"
           class="chat-item"
-          [class.chat-item-selected]="state.seleccionadaId() === chat.id">
+          [class.chat-item-no-leido]="sinLeer"
+          [class.chat-item-selected]="state.seleccionadaId() === chat.id"
+          [attr.aria-current]="state.seleccionadaId() === chat.id ? 'true' : null">
 
           <!-- Avatar con indicador de sin asignar -->
           <div class="relative">
@@ -224,7 +223,7 @@
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-1.5 min-w-0">
-                <p class="font-medium text-text-dark text-sm truncate leading-tight">
+                <p class="chat-item__nombre text-text-dark text-sm truncate leading-tight">
                   {{ chat.cliente | nombreCliente }}
                 </p>
                 <!-- El único sello de categoría en la bandeja: Gold, para que una
@@ -248,8 +247,8 @@
                   <app-badge variant="neutral" icon="check-circle" class="shrink-0">Cerrada</app-badge>
                 }
               </div>
-              <span class="text-[10px] text-text-muted shrink-0 leading-none">
-                {{ tiempoRelativo(chat.updatedAt) }}
+              <span class="chat-item__hora shrink-0 leading-none tabular-nums" [title]="fechaCompleta(chat.updatedAt)">
+                {{ horaDeFila(chat.updatedAt) }}
               </span>
             </div>
 
@@ -285,7 +284,7 @@
             <!-- Último mensaje + badge de agente -->
             <div class="flex items-center justify-between gap-2 mt-1">
               <div class="flex-1 min-w-0">
-                <app-conversacion-preview [mensaje]="chat.mensajes[0]" />
+                <app-conversacion-preview [mensaje]="chat.mensajes[0]" [borrador]="state.borradorDe(chat.id)" [destacado]="sinLeer" />
               </div>
 
               <!-- Tiempo esperando respuesta + conteo de NO LEÍDOS. -->
@@ -295,8 +294,8 @@
                     [variant]="esperaLarga(chat) ? 'critical' : 'info'"
                     icon="clock">{{ espera }}</app-badge>
                 }
-                @if ((chat.noLeidosCount ?? 0) > 0) {
-                  <span class="msg-count-badge">{{ chat.noLeidosCount }}</span>
+                @if (sinLeer) {
+                  <span class="msg-count-badge" [attr.aria-label]="chat.noLeidosCount + ' sin leer'">{{ chat.noLeidosCount }}</span>
                 }
               </div>
             </div>
@@ -324,9 +323,15 @@
         } @else if (viendoCerradas() && !state.busqueda().trim()) {
           <app-empty-state icon="check-circle" title="Ninguna cerrada"
             description="Cierra un chat resuelto desde su cabecera. Si la paciente vuelve a escribir, se reabre solo." />
+        } @else if (filtrosPuestos().length) {
+          <!-- Casi siempre es un filtro olvidado: se dice cuál y se quita con un toque. -->
+          <app-empty-state icon="search" title="Sin resultados"
+            [description]="'Filtrando por ' + filtrosPuestos().join(', ') + '.'">
+            <app-button variant="secondary" icon="x" (clicked)="quitarFiltros()">Quitar filtros</app-button>
+          </app-empty-state>
         } @else {
-          <app-empty-state icon="message-circle" title="Sin resultados"
-            description="No hay conversaciones que coincidan con tu filtro." />
+          <app-empty-state icon="message-circle" title="Sin conversaciones"
+            description="Cuando una paciente escriba a tus líneas, aparecerá aquí." />
         }
       }
 

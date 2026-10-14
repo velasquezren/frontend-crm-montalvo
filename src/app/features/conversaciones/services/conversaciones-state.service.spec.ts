@@ -94,7 +94,7 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
       await recargarDetalle({ ...CHAT, mensajes: [mensaje] });
       expect(state.detalle.value()?.mensajes).toEqual([mensaje]);
       expect(state.mensajesConFecha().filter(item => item.tipo === 'mensaje'))
-        .toEqual([{ tipo: 'mensaje', mensaje }]);
+        .toEqual([{ tipo: 'mensaje', mensaje, continua: false }]);
     },
   );
 
@@ -145,7 +145,7 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     const renovado = { ...disponible, mediaUrl: 'https://media.example/prueba?firma=2' };
     await recargarDetalle({ ...CHAT, mensajes: [renovado] });
     expect(state.mensajesConFecha().filter(item => item.tipo === 'mensaje'))
-      .toEqual([{ tipo: 'mensaje', mensaje: renovado }]);
+      .toEqual([{ tipo: 'mensaje', mensaje: renovado, continua: false }]);
   });
 
   it('actualiza nombre, ficha y nota fijada aunque no cambie la conversación', async () => {
@@ -438,6 +438,35 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     expect(error).toHaveBeenCalledTimes(1);
     http.expectNone(req => req.url === `${API_URL}/conversaciones/chat-1`);
     http.expectNone(req => req.url === `${API_URL}/conversaciones/chat-1/resumen`);
+  });
+
+  /* Cambiar de chat no borra lo escrito: vuelve al volver, y la bandeja lo enseña
+     como borrador solo mientras ese chat no está abierto. */
+  it('guarda el borrador de cada chat al salir y lo devuelve al entrar, sin pasarlo a otro', async () => {
+    state.mensajeNuevo.set('Le confirmo el horario de');
+    state.seleccionadaId.set('chat-2');
+    TestBed.tick();
+    expect(state.mensajeNuevo()).toBe('');
+    expect(state.borradorDe('chat-1')).toBe('Le confirmo el horario de');
+    expect(state.borradorDe('chat-2')).toBeNull();
+    http.expectOne(req => req.url === `${API_URL}/conversaciones/chat-2`).flush(null, { status: 404, statusText: 'Not Found' });
+
+    state.seleccionadaId.set('chat-1');
+    TestBed.tick();
+    expect(state.mensajeNuevo()).toBe('Le confirmo el horario de');
+    expect(state.borradorDe('chat-1')).toBeNull();
+
+    /* Enviado (la caja queda vacía), el borrador se olvida. */
+    state.mensajeNuevo.set('');
+    state.seleccionadaId.set(null);
+    TestBed.tick();
+    expect(state.borradores().size).toBe(0);
+    /* Lo que pidió el ir y venir entre chats (hilo, respuestas, plantillas) no es de esta prueba. */
+    await vi.waitFor(() => {
+      TestBed.tick();
+      for (const r of http.match(() => true)) r.flush(r.request.url.endsWith('/chat-1') ? structuredClone(CHAT) : []);
+      expect(http.match(() => true)).toEqual([]);
+    });
   });
 
   it('si se dejó el chat mientras viajaba la petición, la respuesta no recarga ningún hilo', async () => {

@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { API_URL } from '../../core/api/api.constants';
 import { AuthService } from '../../core/auth/auth.service';
-import { ConversacionComposerComponent } from './components/conversacion-composer/conversacion-composer.component';
+import { ConversacionComposerComponent, motivoParaRechazarAdjunto } from './components/conversacion-composer/conversacion-composer.component';
 import { ConversacionDetalle, ConversacionResumen, PaginaInbox, MensajeApi } from './conversacion.model';
 import { ConversacionesStateService } from './services/conversaciones-state.service';
 
@@ -230,5 +230,15 @@ describe('R2.2 · subida de adjuntos', () => {
     });
     await subida;
     expect(composer.adjuntoPendiente()?.mediaKey).toBe('memoria/agente-1/1-a.jpg');
+  });
+});
+
+describe('qué se puede adjuntar, por cualquier camino', () => {
+  it('rechaza lo que WhatsApp no manda como foto o documento, y lo de más de 5 MB', () => {
+    expect(motivoParaRechazarAdjunto({ type: 'image/jpeg', size: 1_000 })).toBeNull();
+    expect(motivoParaRechazarAdjunto({ type: 'application/pdf', size: 5 * 1024 * 1024 })).toBeNull();
+    expect(motivoParaRechazarAdjunto({ type: 'image/heic', size: 1_000 })).toMatch(/JPG, PNG o WEBP/);
+    expect(motivoParaRechazarAdjunto({ type: '', size: 1_000 })).toMatch(/no se puede enviar/);
+    expect(motivoParaRechazarAdjunto({ type: 'image/png', size: 5 * 1024 * 1024 + 1 })).toMatch(/5 MB/);
   });
 });

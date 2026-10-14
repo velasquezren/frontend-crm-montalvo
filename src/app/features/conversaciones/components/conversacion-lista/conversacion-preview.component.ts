@@ -14,8 +14,15 @@ import { sinFormato } from '../../vista-previa';
   imports: [IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    @if (mensaje(); as ultimo) {
+    @if (borrador(); as texto) {
+      <!-- Lo que quedó escrito sin enviar, como «Borrador:» de WhatsApp: manda sobre el último mensaje. -->
       <p class="text-xs text-text-muted truncate leading-snug flex items-center gap-1">
+        <span class="font-semibold text-primary shrink-0">Borrador:</span>
+        <span class="truncate">{{ texto }}</span>
+      </p>
+    } @else if (mensaje(); as ultimo) {
+      <p class="text-xs truncate leading-snug flex items-center gap-1"
+        [class.text-text-muted]="!destacado()" [class.text-text-dark]="destacado()" [class.font-medium]="destacado()">
         @if (ultimo.direccion === 'SALIENTE') {
           @switch (ultimo.estadoEnvio) {
             @case ('LEIDO') {
@@ -35,6 +42,10 @@ import { sinFormato } from '../../vista-previa';
             @default {
               <app-icon name="check" [size]="14" class="text-text-muted/70 shrink-0" title="Enviado" />
             }
+          }
+          <!-- Lo último lo contestó la IA: se ve sin abrir el chat. -->
+          @if (ultimo.asistente) {
+            <app-icon name="bot" [size]="13" class="text-primary shrink-0" title="Lo respondió el asistente de IA" />
           }
         }
         @switch (ultimo.tipo) {
@@ -89,4 +100,8 @@ export class ConversacionPreviewComponent {
   protected readonly errorWhatsapp = explicacionErrorWhatsapp;
   protected readonly texto = sinFormato;
   readonly mensaje = input<MensajeApi | undefined>(undefined);
+  /** Texto escrito y sin enviar en ese chat; si hay, se muestra en lugar del último mensaje. */
+  readonly borrador = input<string | null>(null);
+  /** Hay mensajes sin leer: el texto va en oscuro, como en WhatsApp. */
+  readonly destacado = input(false);
 }

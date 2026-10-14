@@ -182,7 +182,7 @@
         <app-icon name="image" [size]="18" />
         <!-- `sr-only`, no `hidden`: con `display:none` el input no es enfocable
              y adjuntar quedaba fuera del alcance del teclado. -->
-        <input type="file" (change)="adjuntarMediaChat($event)" accept="image/*,application/pdf" class="sr-only" aria-label="Adjuntar archivo o imagen" />
+        <input type="file" (change)="adjuntarMediaChat($event)" accept="image/jpeg,image/png,image/webp,application/pdf" class="sr-only" aria-label="Adjuntar archivo o imagen" />
       </label>
 
       <!-- Botón Mi Memoria Personal (Biblioteca Privada) -->
@@ -190,6 +190,8 @@
         type="button"
         (click)="togglePopoverMemoria()"
         class="p-2.5 rounded-full text-text-muted hover:text-primary hover:bg-bg-light cursor-pointer transition-colors shrink-0 flex items-center justify-center border border-border/80"
+        [attr.aria-expanded]="mostrarPopoverMemoria()"
+        aria-label="Insertar desde Mi Memoria"
         title="Insertar desde Mi Memoria Personal (Biblioteca Privada)">
         <app-icon name="database" [size]="18" />
       </button>
@@ -199,6 +201,7 @@
         type="button"
         (click)="abrirPlantillas()"
         class="p-2.5 rounded-full text-text-muted hover:text-primary hover:bg-bg-light cursor-pointer transition-colors shrink-0 flex items-center justify-center border border-border/80"
+        aria-label="Enviar plantilla de WhatsApp"
         title="Enviar plantilla oficial de WhatsApp">
         <app-icon name="file-text" [size]="18" />
       </button>
@@ -222,21 +225,24 @@
         type="submit"
         [disabled]="(!state.mensajeNuevo().trim() && !adjuntoPendiente()) || state.enviando() || !!subiendoArchivo()"
         class="chat-send-btn"
-        title="Enviar mensaje (Enter)">
+        aria-label="Enviar mensaje"
+        title="Enviar mensaje (Enter · Shift+Enter para otra línea)">
         <app-icon [name]="state.enviando() ? 'clock' : 'send'" [size]="16" />
       </button>
     </form>
   } @else {
     <!-- Bloqueo Ventana Meta (CSW de 24h desde el último mensaje del paciente) -->
-    <div class="window-expired-alert flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-bg-light border border-border">
-      <div class="flex items-center gap-2.5 min-w-0 flex-1">
-        <app-icon name="clock" [size]="18" class="text-primary shrink-0" />
+    <!-- El motivo se lee entero: con `truncate` quedaba cortado justo en lo que
+         había que hacer. En el teléfono el botón baja a su propia línea. -->
+    <div class="window-expired-alert flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-bg-light border border-border">
+      <div class="flex items-start gap-2.5 min-w-0 flex-1 basis-60">
+        <app-icon name="clock" [size]="18" class="text-primary shrink-0 mt-px" />
         <div class="min-w-0">
           <p class="text-xs font-bold text-text-dark leading-tight">
-            Ventana de atención inactiva ({{ state.horasVentanaMeta() }}h)
+            Pasaron más de {{ state.horasVentanaMeta() }} h desde su último mensaje
           </p>
-          <p class="text-[11px] text-text-muted leading-tight truncate">
-            Han pasado >24h desde el último mensaje del paciente. Para contactar debes enviar una Plantilla Oficial de WhatsApp{{ state.ventana72hMetaActiva() ? ' (sale gratis: el lead vino de un anuncio hace menos de 72h)' : '' }}.
+          <p class="text-[11px] text-text-muted leading-snug mt-0.5">
+            WhatsApp solo deja escribirle con una plantilla aprobada{{ state.ventana72hMetaActiva() ? ', y ahora sale gratis: llegó desde un anuncio hace menos de 72 h' : '' }}. Cuando conteste, vuelves a escribir libre.
           </p>
         </div>
       </div>

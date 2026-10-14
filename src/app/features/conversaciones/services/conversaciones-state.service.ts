@@ -50,6 +50,7 @@ import {
   ResumenInbox,
 } from '../conversacion.model';
 import { ConversacionesService } from '../conversaciones.service';
+import { continuaTanda } from '../presentacion-chat';
 
 const LOTE_HISTORIAL = 50;
 
@@ -437,6 +438,19 @@ export class ConversacionesStateService {
 
   /* ── Composer & Plantillas ──────────────────────────────────────── */
   readonly mensajeNuevo = signal('');
+  /**
+   * Lo que quedó escrito y sin enviar en cada chat, por id. Cambiar de chat ya
+   * no borra lo que se estaba escribiendo: se guarda aquí y vuelve al volver, y
+   * la bandeja lo enseña como «Borrador:», igual que WhatsApp. Solo en memoria
+   * —es texto clínico a medio escribir— y se vacía al cambiar de sesión: nunca
+   * pasa de un chat a otro ni de una agente a otra.
+   */
+  readonly borradores = signal<ReadonlyMap<string, string>>(new Map());
+  /** Quien usa la pantalla, como autor de lo que envía (el globo optimista lo firma así). */
+  readonly autorPropio = computed(() => {
+    const u = this.authService.user();
+    return u ? { id: u.id, nombre: u.nombre } : null;
+  });
   readonly enviando = signal(false);
   readonly asignando = signal(false);
   /** Cerrando o reabriendo el chat abierto: bloquea el botón contra el doble toque. */
@@ -621,21 +635,38 @@ export class ConversacionesStateService {
     let ultimaFecha = '';
     const hoy = new Date(this.hoy());
 
+    let anterior: MensajeApi | undefined;
     for (const msg of chat.mensajes) {
       const fechaMsg = etiquetaDeDia(new Date(msg.createdAt), hoy);
 
       if (fechaMsg !== ultimaFecha) {
         ultimaFecha = fechaMsg;
         result.push({ tipo: 'separador-fecha', fecha: fechaMsg });
+        /* Un día nuevo empieza tanda nueva. */
+        anterior = undefined;
       }
 
-      result.push({ tipo: 'mensaje', mensaje: msg });
+      result.push({ tipo: 'mensaje', mensaje: msg, continua: continuaTanda(anterior, msg) });
+      anterior = msg;
     }
 
     return result;
   });
 
   constructor() {
+    /* Borradores por chat (ver `borradores`): al salir de un chat se guarda lo
+       escrito y al entrar en otro vuelve el suyo. Va en el servicio y no en el
+       compositor para que no dependa del orden en que corren los efectos. */
+    let chatDelBorrador: string | null = null;
+    effect(() => {
+      const id = this.seleccionadaId();
+      untracked(() => {
+        if (id === chatDelBorrador) return;
+        if (chatDelBorrador) this.guardarBorrador(chatDelBorrador, this.mensajeNuevo());
+        chatDelBorrador = id;
+        this.mensajeNuevo.set(id ? (this.borradores().get(id) ?? '') : '');
+      });
+    });
     /* Debounce del buscador del hilo (ver `terminoBuscado`). */
     effect(onCleanup => {
       const termino = this.busquedaChat().trim().toLowerCase();
@@ -690,6 +721,7 @@ export class ConversacionesStateService {
       this.filtroLineaId.set(null);
       this.detalle.set(null);
       this.mensajeNuevo.set('');
+      this.borradores.set(new Map());
       this.paginasExtra.set([]);
 
       /*
@@ -893,11 +925,26 @@ export class ConversacionesStateService {
     });
   }
 
+  /** Guarda (o, vacío, olvida) lo escrito en un chat. */
+  private guardarBorrador(id: string, texto: string): void {
+    const actual = this.borradores();
+    if (!texto.trim() && !actual.has(id)) return;
+    const siguiente = new Map(actual);
+    if (texto.trim()) siguiente.set(id, texto);
+    else siguiente.delete(id);
+    this.borradores.set(siguiente);
+  }
+
+  /** El borrador de un chat que NO es el abierto (el abierto está en la caja). */
+  borradorDe(id: string): string | null {
+    return id === this.seleccionadaId() ? null : (this.borradores().get(id) ?? null);
+  }
+
   cambiarLinea(id: string): void {
     this.filtroLineaId.set(id || null);
+    /* Sin vaciar la caja: el efecto de borradores guarda lo escrito en su chat. */
     this.seleccionadaId.set(null);
     this.detalle.set(null);
-    this.mensajeNuevo.set('');
     this.deseleccionar();
   }
 
@@ -1325,7 +1372,8 @@ export class ConversacionesStateService {
                 ? { ...m, id: real.id, createdAt: real.createdAt, estadoEnvio: real.estadoEnvio, envioLocal: undefined }
                 : m,
             )
-          : [...chat.mensajes, real];
+          /* La respuesta del POST trae `autorId`, no el nombre: lo pone quien envió. */
+          : [...chat.mensajes, { ...real, autor: real.autor ?? this.autorPropio() }];
       /* Contestar la reabre: la misma regla que el backend (`REABRIR`). */
       const nuevoDetalle = { ...chat, mensajes, updatedAt: real.createdAt, cerradaEn: null, cerradaPor: null };
       this.detalle.set(nuevoDetalle);

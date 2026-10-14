@@ -599,6 +599,46 @@ el mismo error que el backend ya había corregido en el push.
   `motivoParaNoReenviar`, y manda el backend. La reclamación exige el
   `intentosEnvio` leído: así ni dos toques ni el barrido de reintentos lo mandan dos veces.
 
+### Bandeja e hilo como WhatsApp (14/10/2026)
+
+Funciones puras en `presentacion-chat.ts` (probadas en su `.spec`); la vista solo pinta:
+
+- **Quién escribió** (`Mensaje.autor`, backend `autorId`): lo guardan `crearMensajeSaliente`
+  (texto, adjunto, ubicación, interacción) y `registrarPlantilla`; lo traen el detalle y el
+  historial. El hilo firma con el primer nombre (`firmaDeAutor`) **solo lo de OTRA persona**,
+  arriba del primer globo de la tanda: en un chat de una sola agente no aparece nada, en
+  Recepción se ve quién dijo qué. Lo automático, el asistente y lo anterior al 14/10 no tienen
+  autor. El globo optimista lo firma `state.autorPropio()` y la reconciliación lo conserva
+  (la respuesta del POST trae `autorId`, no el nombre).
+- **Tandas** (`ItemHilo.continua`, `continuaTanda`): misma voz —paciente, una persona
+  concreta, asistente o CRM— y < 5 min ⇒ 2 px de separación y esquina compartida; un día
+  nuevo empieza tanda. El espaciado vive en `.bubble-row` (margen), no en el `gap` del hilo.
+- **La fecha del día queda fija arriba** al desplazarse (`.date-separator` es `sticky`, sin
+  eventos de puntero).
+- **Hora de la fila** (`horaDeFila`): «10:42» hoy, «Ayer», el día de la semana y luego
+  «30/09/26», por días de calendario. Era «3h» y repetía el reloj de espera de al lado.
+  El `title` da la fecha completa.
+- **Sin leer**: nombre y hora en negrita/primario, número lleno, último mensaje en oscuro
+  (`.chat-item-no-leido`, `[destacado]` del preview). Si lo último lo contestó la IA, el
+  preview lleva el ícono `bot`.
+- **Borradores por chat** (`state.borradores`, en memoria): un efecto del SERVICIO guarda lo
+  escrito al salir de un chat y lo devuelve al volver; la bandeja lo muestra como
+  «Borrador:» (`state.borradorDe`, nunca el del chat abierto). Se vacía al cambiar de sesión
+  y nunca pasa de un chat a otro. El compositor ya no vacía la caja al cambiar de chat, y
+  `cambiarLinea` tampoco: lo hace el efecto, sin depender del orden de los efectos.
+- **Teclado**: «/» fuera de un campo de texto lleva al buscador (Escape lo vacía); Alt+↑/↓
+  abre el chat anterior/siguiente; ↑/↓ con el foco en la lista va de fila en fila. Nada de
+  esto actúa dentro de un campo: ahí «/» son las respuestas rápidas y Alt+flecha mueve el
+  cursor (macOS).
+- **Paginación al bajar**: a 240 px del final se pide la página siguiente; «Cargar más» queda
+  de respaldo.
+- **«Sin resultados» dice qué filtra** (`filtrosPuestos`: búsqueda, Sin responder, Gold, línea,
+  alcance) y ofrece «Quitar filtros» (`restablecerFiltros` con la pestaña actual).
+- Quien no es admin lee su alcance en el subtítulo de la cabecera («Tus chats y los sin
+  asignar» / «Todos los chats de tus líneas»); era una banda fija de dos líneas.
+- **Adjuntos**: `motivoParaRechazarAdjunto` vale para arrastrar, elegir y pegar. Antes solo
+  arrastrar validaba, y elegir un HEIC o un PDF de 12 MB lo subía y rebotaba al enviar.
+
 ## 4. Despiece Modular de Componentes
 
 La vista `conversaciones` se estructura en submódulos desacoplados gobernados por `ConversacionesStateService`:
