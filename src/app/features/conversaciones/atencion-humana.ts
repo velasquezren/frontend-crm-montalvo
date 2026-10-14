@@ -32,8 +32,12 @@ export interface DatoDeFlow {
  * que existen. `origen` y `ultimoMensaje` faltan mientras se ve la cabecera
  * provisional (armada desde la fila del inbox), hasta que llega el detalle.
  */
+/** Por qué el asistente la pasó a una persona (backend: `razonDeDerivacion`). */
+export type RazonDerivacion = 'FALLO' | 'MEDICO' | 'URGENCIA' | 'QUEJA' | 'PERSONA' | 'DUDA';
+
 export interface ContextoAtencion extends AtencionFila {
   readonly explicacionAsistente?: string | null;
+  readonly razonAsistente?: RazonDerivacion | null;
   readonly origen?: {
     readonly tipo: string;
     readonly cuerpo: string;
@@ -57,38 +61,65 @@ export interface EstadoDeAtencion {
   readonly automatizacionPausadaEn: string | null;
 }
 
-/** El motivo, dicho como lo diría recepción. */
+/*
+ * Las palabras de la pantalla. Una regla: decir QUÉ PASÓ con la paciente y QUÉ
+ * HACER, como se lo diría una recepcionista a otra; nunca la jerga interna
+ * («atención humana», «derivada», «solicitud»).
+ */
+
+/** Qué pasó, en el título del bloque del chat. */
 export const MOTIVO_ATENCION: Readonly<Record<MotivoAtencion, string>> = {
-  EMERGENCIA: 'Indicó una emergencia',
-  POSIBLE_URGENCIA: 'Posible urgencia (detectada por el asistente)',
-  SOLICITUD_EXPLICITA: 'Pidió hablar con una persona',
-  SOLICITUD_CITA: 'Solicitud de cita',
-  DERIVADA_ASISTENTE: 'El asistente la pasó a una persona',
-  COMPROBANTE_PAGO: 'Comprobante por verificar',
-  REVISION: 'Respuesta para revisar',
+  EMERGENCIA: 'Dice que es una emergencia',
+  POSIBLE_URGENCIA: 'Podría ser urgente',
+  SOLICITUD_EXPLICITA: 'Quiere hablar con una persona',
+  SOLICITUD_CITA: 'Pidió una cita',
+  DERIVADA_ASISTENTE: 'La IA te pasó este chat',
+  COMPROBANTE_PAGO: 'Mandó un comprobante de pago',
+  REVISION: 'Hay una respuesta para revisar',
 };
 
 /** Qué hacer ahora. Una sola frase, sin prometer nada que el sistema no hizo. */
 export const ACCION_ATENCION: Readonly<Record<MotivoAtencion, string>> = {
-  EMERGENCIA: 'Contactarla ya. Lo declaró ella: el CRM no evalúa si es una emergencia médica.',
-  POSIBLE_URGENCIA: 'Leer su mensaje ya: el asistente cree que puede ser urgente y no le contestó nada médico.',
-  SOLICITUD_EXPLICITA: 'Contestarle: está esperando a una persona.',
-  SOLICITUD_CITA: 'Revisar «Próximas reservas» y la solicitud antes de confirmar o crear otra cita.',
-  DERIVADA_ASISTENTE: 'Leer el contexto y continuar la consulta. La derivación no significa que quiera comprar o agendar.',
-  COMPROBANTE_PAGO: 'Verificar el comprobante en el bloque «Pago» y confirmarlo o pedir otro.',
-  REVISION: 'Revisar su respuesta: no se ejecutó ninguna acción automática.',
+  EMERGENCIA: 'Escríbele o llámala ya. Lo dijo ella: el CRM no evalúa si es una emergencia médica.',
+  POSIBLE_URGENCIA: 'Lee su mensaje ya. La IA no le respondió nada médico.',
+  SOLICITUD_EXPLICITA: 'Escríbele: está esperando a alguien del equipo.',
+  SOLICITUD_CITA: 'Revisa «Próximas reservas» antes de confirmarle o crear otra cita.',
+  DERIVADA_ASISTENTE: 'Lee lo que preguntó y respóndele tú.',
+  COMPROBANTE_PAGO: 'Revisa el comprobante en el bloque «Pago» y confírmalo o pide otro.',
+  REVISION: 'Revisa lo que respondió: no se hizo nada automático.',
 };
+
+/** Cuando la pasó la IA, la causa concreta manda sobre el «la IA te pasó este chat» genérico. */
+export const RAZON_ASISTENTE: Readonly<Record<RazonDerivacion, { readonly titulo: string; readonly accion: string }>> = {
+  FALLO: { titulo: 'La IA no pudo responder', accion: 'Respóndele tú: la IA falló antes de terminar.' },
+  MEDICO: { titulo: 'Pregunta médica', accion: 'Que le responda alguien del equipo clínico. La IA no da indicaciones médicas.' },
+  URGENCIA: { titulo: 'Podría ser urgente', accion: 'Lee su mensaje ya. La IA no le respondió nada médico.' },
+  QUEJA: { titulo: 'Posible reclamo', accion: 'Revisa qué pasó antes de ofrecerle algo.' },
+  PERSONA: { titulo: 'Quiere hablar con una persona', accion: 'Escríbele: está esperando a alguien del equipo.' },
+  DUDA: { titulo: 'La IA no supo responder', accion: 'Lee lo que preguntó y respóndele tú.' },
+};
+
+/** El título y el qué hacer de una solicitud, con la causa de la IA si la hay. */
+export function textosDeAtencion(a: Pick<ContextoAtencion, 'motivo' | 'razonAsistente'>): { titulo: string; accion: string } {
+  const razon = a.razonAsistente ? RAZON_ASISTENTE[a.razonAsistente] : null;
+  return razon ?? { titulo: MOTIVO_ATENCION[a.motivo], accion: ACCION_ATENCION[a.motivo] };
+}
 
 /** El motivo, corto, para la tarjeta del inbox (que no tiene sitio para la frase entera). */
 export const MOTIVO_ATENCION_CORTO: Readonly<Record<MotivoAtencion, string>> = {
   EMERGENCIA: 'Emergencia',
   POSIBLE_URGENCIA: 'Posible urgencia',
-  SOLICITUD_EXPLICITA: 'Pidió persona',
-  SOLICITUD_CITA: 'Solicitud de cita',
-  DERIVADA_ASISTENTE: 'Requiere persona',
+  SOLICITUD_EXPLICITA: 'Quiere una persona',
+  SOLICITUD_CITA: 'Pide cita',
+  DERIVADA_ASISTENTE: 'La IA te la pasó',
   COMPROBANTE_PAGO: 'Comprobante',
   REVISION: 'Revisar',
 };
+
+/** Quién la atiende, en la tarjeta y en el chat: «La atiendes tú» o «Ana la atiende». */
+export function quienAtiende(tomadaPor: { readonly id: string; readonly nombre: string }, yo: string | null): string {
+  return tomadaPor.id === yo ? 'La atiendes tú' : `${primerNombre(tomadaPor.nombre)} la atiende`;
+}
 
 /**
  * Cuánto lleva esperando, en el formato del resto de la bandeja («12 min»,

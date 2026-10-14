@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: velasquezren/backend-crm-montalvo
-          ref: 0e5600a518d0b0977b13c501aa51867da42bad20
+          ref: 4301655d5125d49fc64399db0bfc1354f1ebff61
           path: backend-crm-montalvo
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7

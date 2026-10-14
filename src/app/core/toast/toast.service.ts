@@ -43,7 +43,7 @@ export class ToastService {
   }
 
   error(message: string, title?: string): void {
-    this.show(message, 'error', title ?? 'Atención');
+    this.show(message, 'error', title ?? 'Error');
   }
 
   info(message: string, title?: string): void {

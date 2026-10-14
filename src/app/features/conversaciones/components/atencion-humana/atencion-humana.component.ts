@@ -5,11 +5,10 @@ import { ButtonComponent } from '../../../../shared/components/button/button.com
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { ZONA_CLINICA } from '../../../../core/fechas/zona-clinica';
 import {
-  ACCION_ATENCION,
   ContextoAtencion,
   iconoDeAtencion,
-  MOTIVO_ATENCION,
-  primerNombre,
+  quienAtiende,
+  textosDeAtencion,
   tiempoDeEspera,
 } from '../../atencion-humana';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
@@ -47,9 +46,7 @@ export class AtencionHumanaComponent {
   /* El hilo reutiliza este componente entre chats: sin atarlo a la conversación,
      el desplegado de una paciente seguía abierto al pasar a la siguiente. */
   protected readonly abierto = linkedSignal({ source: this.conversacionId, computation: () => false });
-  protected readonly motivos = MOTIVO_ATENCION;
-  protected readonly acciones = ACCION_ATENCION;
-  protected readonly primerNombre = primerNombre;
+  protected readonly quienAtiende = quienAtiende;
   protected readonly tiempoDeEspera = tiempoDeEspera;
   protected readonly iconoDeAtencion = iconoDeAtencion;
 
@@ -58,6 +55,28 @@ export class AtencionHumanaComponent {
     const a = this.atencion();
     return a?.estado === 'EN_ATENCION' && (a.tomadaPor?.id === this.state.currentUserId() || this.state.isAdmin());
   });
+
+  /** Qué pasó y qué hacer, con la causa concreta si la pasó la IA. */
+  protected readonly textos = computed(() => {
+    const a = this.atencion();
+    return a ? textosDeAtencion(a) : { titulo: '', accion: '' };
+  });
+
+  /** ¿Hay algo detrás de «Ver más»? En la vista provisional (sin detalle) puede no haber nada. */
+  protected readonly hayMas = computed(() => {
+    const a = this.atencion();
+    return !!a && (!!a.origen || !!a.ultimoMensaje || a.estado === 'ESPERANDO' || this.puedeLiberar());
+  });
+
+  /** Cómo se llama lo que la originó, según de dónde vino. */
+  protected etiquetaOrigen(tipo: string): string {
+    switch (tipo) {
+      case 'respuesta_flow': return 'Formulario';
+      case 'audio': return 'Lo que dijo (nota de voz)';
+      case 'mensaje': return 'Lo que escribió';
+      default: return 'Lo que eligió';
+    }
+  }
 
   /** Una fecha de calendario del Flow («2026-10-13») se lee como fecha; lo demás, tal cual. */
   protected valorLegible(valor: string): string {

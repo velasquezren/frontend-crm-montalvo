@@ -25,11 +25,11 @@ import { AccionAtencion } from '../atencion-humana';
 
 /** Lo que dice el aviso tras cada transición de atención. */
 const AVISO_ATENCION: Readonly<Record<AccionAtencion, string>> = {
-  tomar: 'La estás atendiendo. Las demás lo ven en su bandeja.',
-  liberar: 'Vuelve a la espera, con su tiempo original.',
-  resolver: 'Sale de «Atención». La automatización sigue en pausa en este chat.',
-  reanudar: 'Las respuestas automáticas vuelven a funcionar en este chat.',
-  listo: 'Listo: sale de «Atención» y vuelven las respuestas automáticas.',
+  tomar: 'Las demás ven que la atiendes tú.',
+  liberar: 'Vuelve a «Por atender» para que la tome otra persona.',
+  resolver: 'Sale de «Por atender». Las respuestas automáticas siguen en pausa en este chat.',
+  reanudar: 'El menú y la IA vuelven a escribir en este chat.',
+  listo: 'Marcada como atendida. Sale de «Por atender».',
 };
 import { cambiosDeFicha, valoresDeFicha } from '../../clientes/ficha-paciente';
 import { ClientesService } from '../../clientes/clientes.service';

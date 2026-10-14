@@ -26,7 +26,7 @@ import {
 } from '../../conversacion.model';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 import { ConversacionPreviewComponent } from './conversacion-preview.component';
-import { iconoDeAtencion, MOTIVO_ATENCION_CORTO, primerNombre, tiempoDeEspera, varianteDeAtencion } from '../../atencion-humana';
+import { iconoDeAtencion, MOTIVO_ATENCION_CORTO, quienAtiende, tiempoDeEspera, varianteDeAtencion } from '../../atencion-humana';
 
 interface PestanaInbox {
   readonly tab: FiltroInbox;
@@ -42,9 +42,11 @@ interface PestanaInbox {
  */
 const PESTANA_ATENCION: PestanaInbox = {
   tab: 'ATENCION',
-  etiqueta: 'Atención',
+  /* «Atención» se confundía con el tipo de línea (Recepción) y con el título de los
+     avisos de error: el nombre dice lo que hay que hacer. */
+  etiqueta: 'Por atender',
   contador: c => c.esperandoHumano + c.enAtencion,
-  ayuda: 'Solicitudes que requieren una persona, incluidas las derivadas por la IA. Primero las que nadie tomó.',
+  ayuda: 'Pacientes que necesitan a alguien del equipo: lo pidieron, la IA les pasó el chat o hay algo que revisar. Primero las que esperan.',
 };
 
 /**
@@ -178,7 +180,7 @@ export class ConversacionListaComponent {
   protected readonly iconoDeAtencion = iconoDeAtencion;
   protected readonly varianteDeAtencion = varianteDeAtencion;
   protected readonly tiempoDeEspera = tiempoDeEspera;
-  protected readonly primerNombre = primerNombre;
+  protected readonly quienAtiende = quienAtiende;
 
   protected readonly viendoCerradas = computed(() => this.state.filtroTab() === 'CERRADAS');
 
