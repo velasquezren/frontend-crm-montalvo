@@ -7,6 +7,7 @@ import { provideRouter } from '@angular/router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AuthService } from '../../../../core/auth/auth.service';
+import { RealtimeService } from '../../../../core/realtime/realtime.service';
 import { RolUsuario } from '../../../../core/auth/user.model';
 import { ToastService } from '../../../../core/toast/toast.service';
 import { FichaMedicoAgenda } from '../../agenda-medicos.model';
@@ -36,6 +37,7 @@ describe('ficha de un médico de la agenda', () => {
   let fixture: ComponentFixture<AgendaMedicoFichaComponent>;
   let http: HttpTestingController;
   const toast = { error: vi.fn(), success: vi.fn() };
+  const realtime = { conectar: vi.fn(), cambioHorario: signal<{ medicoAgendaId: number; ts: number } | null>(null), reconectado: signal(0) };
   async function asentar() {
     for (let i = 0; i < 4; i++) { await Promise.resolve(); TestBed.tick(); }
     fixture.detectChanges();
@@ -45,6 +47,7 @@ describe('ficha de un médico de la agenda', () => {
       provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
       { provide: ToastService, useValue: toast },
       { provide: AuthService, useValue: { user: signal({ rol }), isAdmin: signal(false) } },
+      { provide: RealtimeService, useValue: realtime },
     ] });
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(AgendaMedicoFichaComponent);
@@ -58,7 +61,27 @@ describe('ficha de un médico de la agenda', () => {
     (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(`button[aria-label="${etiqueta}"]`)!;
   const boton = (texto: string) =>
     Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(b => b.textContent?.includes(texto));
-  afterEach(() => { fixture?.destroy(); http.verify(); vi.clearAllMocks(); });
+  afterEach(() => { fixture?.destroy(); http.verify(); vi.clearAllMocks(); realtime.cambioHorario.set(null); realtime.reconectado.set(0); });
+
+  it('con FileMaker muestra el origen y recepción no puede editar las casillas', async () => {
+    await montar('RECEPCION', { ...ficha(), sincronizacionHorario: { origen: 'FILEMAKER', pendiente: false, sincronizadoEn: '2026-10-15T12:00:00.000Z' } });
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Horario gestionado en FileMaker');
+    expect(casilla('Lunes 09:00').disabled).toBe(true);
+    casilla('Martes 09:30').click();
+    await asentar();
+    expect(boton('Guardar horario')).toBeUndefined();
+  });
+
+  it('un aviso de ese médico refresca su horario sin volverlo editable', async () => {
+    const origen = { origen: 'FILEMAKER' as const, pendiente: false, sincronizadoEn: '2026-10-15T12:00:00.000Z' };
+    await montar('ADMIN', { ...ficha(), sincronizacionHorario: origen });
+    realtime.cambioHorario.set({ medicoAgendaId: 7, ts: 1 });
+    await asentar();
+    http.expectOne(r => r.url.endsWith('/agenda/medicos/7')).flush({ ...ficha('bbbbbbbbbbbbbbbb', []), sincronizacionHorario: origen });
+    await asentar();
+    expect(casilla('Lunes 09:00').getAttribute('aria-pressed')).toBe('false');
+    expect(casilla('Lunes 09:00').disabled).toBe(true);
+  });
 
   it('pinta la grilla con lo encendido y guarda EXACTAMENTE las casillas marcadas, con la versión leída', async () => {
     await montar('RECEPCION');

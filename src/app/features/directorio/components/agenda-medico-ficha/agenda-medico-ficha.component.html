@@ -89,10 +89,29 @@
           <p class="text-sm font-medium text-text-dark">{{ resumen() || 'Sin horario: la web lo ofrece «a solicitud».' }}</p>
           <p class="text-xs text-text-muted">
             Cada casilla es un turno de 30 minutos que la web ofrece para reservar.
-            @if (puedeEditar()) { Con el mouse, arrastra para pintar varias; toca un día para marcarlo entero. }
+            @if (puedeEditarHorario()) { Con el mouse, arrastra para pintar varias; toca un día para marcarlo entero. }
           </p>
         </div>
-        @if (puedeEditar() && sinCodigo()) {
+        @if (f.sincronizacionHorario?.origen === 'FILEMAKER') {
+          <div class="text-sm text-text-dark bg-bg-light rounded-xl px-3 py-2" role="status">
+            <p class="font-medium">Horario gestionado en FileMaker</p>
+            @if (horarioDesactualizado()) {
+              <p class="text-xs text-text-muted">Llegó una actualización. Se mostrará al terminar los cambios pendientes de esta ficha.</p>
+            }
+            <p class="text-xs text-text-muted mt-1">
+              @if (f.sincronizacionHorario?.pendiente) {
+                @if (f.sincronizacionHorario?.sincronizadoEn) {
+                  Hay un cambio pendiente de sincronizar. Se muestran los cupos actuales de la agenda.
+                } @else {
+                  Falta confirmar la primera sincronización. Se muestran los cupos actuales de la agenda.
+                }
+              } @else {
+                Las consultas duran 30 minutos. Para cambiar este horario, edítelo en FileMaker.
+              }
+            </p>
+          </div>
+        }
+        @if (puedeEditarHorario() && sinCodigo()) {
           <p class="text-xs text-text-dark bg-bg-light rounded-xl px-3 py-2">
             Este médico no tiene código de FileMaker: se pueden apagar casillas, pero no encender horas nuevas.
           </p>
@@ -101,11 +120,11 @@
           [dias]="f.grilla.dias"
           [horas]="f.grilla.horas"
           [nombre]="f.medico.nombre"
-          [editable]="puedeEditar()"
+          [editable]="puedeEditarHorario()"
           [disabled]="ocupado() !== null"
           [(encendidas)]="encendidas" />
       </div>
-      @if (puedeEditar() && hayCambiosHorario()) {
+      @if (puedeEditarHorario() && hayCambiosHorario()) {
         <div class="shrink-0 border-t border-border bg-white px-5 py-3 flex flex-wrap items-center justify-between gap-2">
           <span class="text-xs text-text-muted" role="status">Apagar una casilla no anula citas ya agendadas: revísalas en <a class="crm-enlace" routerLink="/reservas" (click)="cerrar.emit()">Reservas</a>.</span>
           <div class="flex gap-2">

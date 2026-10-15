@@ -58,6 +58,7 @@ export class RealtimeService {
   /** Último recordatorio de Actividad recibido — lo consume `app-notificaciones-bell`. */
   readonly recordatorioActividad = signal<RecordatorioActividad | null>(null);
   readonly cambioActividad = signal<{ actividadId: string; avisar: boolean; ts: number } | null>(null);
+  readonly cambioHorario = signal<{ medicoAgendaId: number; ts: number } | null>(null);
 
   /** Contador de reconexiones (0 = todavía ninguna). Sube cada vez que el socket
    *  vuelve a conectar tras una caída — un wifi que parpadea, la laptop que se
@@ -112,6 +113,10 @@ export class RealtimeService {
     socket.on('actividad:cambio', (payload: { actividadId: string; avisar: boolean }) => {
       if (!this.sigueVigente(socket, generacion) || typeof payload.actividadId !== 'string') return;
       this.cambioActividad.set({ actividadId: payload.actividadId, avisar: payload.avisar === true, ts: Date.now() });
+    });
+    socket.on('agenda:horario', (payload: { medicoAgendaId: number }) => {
+      if (!this.sigueVigente(socket, generacion) || !Number.isSafeInteger(payload.medicoAgendaId) || payload.medicoAgendaId < 1) return;
+      this.cambioHorario.set({ medicoAgendaId: payload.medicoAgendaId, ts: Date.now() });
     });
     socket.on('actividad:recordatorio', (payload: { actividadId: string; agenteId: string }) => {
       if (!this.sigueVigente(socket, generacion)) return;
@@ -195,6 +200,7 @@ export class RealtimeService {
     this.actividad.set(null);
     this.recordatorioActividad.set(null);
     this.cambioActividad.set(null);
+    this.cambioHorario.set(null);
     this.reconectado.set(0);
   }
 

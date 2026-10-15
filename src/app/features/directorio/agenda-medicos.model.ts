@@ -92,6 +92,8 @@ export interface FichaMedicoAgenda extends FotoDeMedico {
   version: string;
   /** La ficha web (foto, biografía, publicación), o null si todavía no tiene. */
   presentacion: FichaMedico | null;
+  /** Opcional durante el despliegue gradual del backend. */
+  sincronizacionHorario?: { origen: 'CRM' | 'FILEMAKER'; pendiente: boolean; sincronizadoEn: string | null };
 }
 
 /** Lo que falta para que una ficha web se vea bien publicada. Solo la especialidad es obligatoria. */

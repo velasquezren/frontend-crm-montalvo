@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, input, linkedSignal, output, signal, untracked, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { esConflicto, mensajeDeError } from '../../../../core/api/http-error';
@@ -7,6 +7,7 @@ import { AuthService } from '../../../../core/auth/auth.service';
 import { cubreRol, puedeEditarAgendaClinica } from '../../../../core/auth/roles';
 import { generarIniciales } from '../../../../core/auth/user.model';
 import { ToastService } from '../../../../core/toast/toast.service';
+import { RealtimeService } from '../../../../core/realtime/realtime.service';
 import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
@@ -82,6 +83,7 @@ export class AgendaMedicoFichaComponent {
   private readonly servicio = inject(AgendaMedicosService);
   private readonly toast = inject(ToastService);
   private readonly auth = inject(AuthService);
+  private readonly realtime = inject(RealtimeService);
   private readonly web = viewChild(AgendaPresentacionWebComponent);
 
   readonly id = input.required<number>();
@@ -113,6 +115,7 @@ export class AgendaMedicoFichaComponent {
   /** La última ficha conocida: la del servidor, o la que devolvió el último guardado. */
   private readonly guardada = signal<FichaMedicoAgenda | null>(null);
   protected readonly ficha = computed(() => this.guardada() ?? (this.detalle.hasValue() ? this.detalle.value() : null));
+  protected readonly puedeEditarHorario = computed(() => this.puedeEditar() && this.ficha()?.sincronizacionHorario?.origen !== 'FILEMAKER');
 
   protected readonly ocupado = signal<Tarea | null>(null);
   protected readonly conflicto = signal(false);
@@ -149,6 +152,25 @@ export class AgendaMedicoFichaComponent {
     return f ? resumenDeCasillas(f.grilla.dias, f.grilla.horas, this.encendidas()) : '';
   });
   protected readonly sinCodigo = computed(() => !this.ficha()?.medico.codigo);
+  protected readonly horarioDesactualizado = signal(false);
+
+  constructor() {
+    this.realtime.conectar(inject(DestroyRef));
+    effect(() => {
+      const aviso = this.realtime.cambioHorario();
+      const reconexion = this.realtime.reconectado();
+      if (aviso?.medicoAgendaId === this.id() || reconexion > 0) this.horarioDesactualizado.set(true);
+    });
+    effect(() => {
+      if (!this.horarioDesactualizado() || this.ficha()?.sincronizacionHorario?.origen !== 'FILEMAKER' ||
+          this.hayCambiosDatos() || this.web()?.hayCambios() || this.ocupado()) return;
+      untracked(() => {
+        this.horarioDesactualizado.set(false);
+        this.guardada.set(null);
+        this.detalle.reload();
+      });
+    });
+  }
 
   protected elegirPestana(id: PestanaFicha): void {
     if (id === 'whatsapp') this.whatsappVisitado.set(true);
@@ -183,7 +205,7 @@ export class AgendaMedicoFichaComponent {
 
   protected async guardarHorario(): Promise<void> {
     const f = this.ficha();
-    if (!f) return;
+    if (!f || !this.puedeEditarHorario()) return;
     const activas = [...this.encendidas()].map(c => {
       const [dia, hora] = c.split(' ');
       return { dia, hora };
