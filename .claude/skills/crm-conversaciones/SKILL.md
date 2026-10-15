@@ -385,14 +385,12 @@ backend. Ningún texto para la paciente tiene valor por defecto. Diseño:
 
 ### La barra del inbox: de lo más amplio a lo más fino (2026-09-30)
 
-> **12/10/2026: «Sin responder» dejó de ser pestaña y pasó a filtro que se COMBINA**
-> (`state.soloSinResponder`, `?sinResponder=true`, alcance en el backend como Gold):
-> «Mis chats» + «Sin responder» son las pendientes de la agente. Con él puesto, el
-> servidor cuenta todas las pestañas solo con lo que espera; su propio número es el de
-> la pestaña elegida (`sinResponderEnPestana`: `sinResponderSinAsignar`,
-> `sinResponderMisChats`, `sinResponderAtencion`). La pestaña `SIN_RESPONDER` sigue
-> existiendo para los enlaces viejos: `state.elegirPestana` la traduce a «Todas» + filtro.
-> Debajo de las pestañas va la fila de filtros combinables («Sin responder», «Gold»).
+> **14/10/2026: retirados los botones «Sin responder» y «Gold» de la bandeja.**
+> Se conservan los filtros del servidor para los accesos del dashboard
+> (`state.soloSinResponder`, `state.soloGold`): `SIN_RESPONDER` se traduce a
+> «Todas» con pendientes. Al entrar filtrado se muestra el alcance bajo el
+> buscador con «Quitar filtros», también cuando hay resultados. No queda una
+> fila vacía ni controles para activar esos filtros en la bandeja.
 >
 > **Cambiar de pestaña no vacía nada**: con `defaultValue`, `httpResource` deja
 > `hasValue()` en verdadero mientras carga y el valor en el vacío, así que se mira
@@ -645,7 +643,7 @@ La vista `conversaciones` se estructura en submódulos desacoplados gobernados p
 
 1. **`conversacion-sidebar`**: Ficha del paciente, notas médicas fijadas, edición rápida de datos y asignación.
    - **`reservas-paciente`** (`<app-reservas-paciente>`): «Próximas reservas» de la paciente en la agenda de la clínica (ScriptCase), por su teléfono, con su propia petición (`GET /agenda/reservas/conversacion/:id`). Lo ve quien ve el chat, también ventas. Si la agenda no responde lo dice en una línea con reintento; nunca rompe la ficha.
-2. **`conversacion-lista`**: Bandeja lateral izquierda: alcance (línea, agente), pestañas de trabajo (Todas / Sin responder / Sin asignar / Mis chats), interruptor de cerradas, buscador y tarjetas de conversación.
+2. **`conversacion-lista`**: Bandeja lateral izquierda: alcance (línea, agente), pestañas de trabajo (Por atender / Todas / Sin asignar / Mis chats), interruptor de cerradas, buscador y tarjetas de conversación.
 3. **`conversacion-thread`**: Hilo central de mensajes, separadores de fecha, burbujas, lightbox y reproducción de audio.
 4. **`conversacion-composer`**: Área de redacción, soporte de pegado (`Ctrl+V`), Drag & Drop, atajos (`/`), grabación de voz y selector de plantillas.
    - **`gestion-respuestas`** (`<app-gestion-respuestas>`): el contenido del cajón «Mis respuestas rápidas» (crear, editar y borrar las respuestas personales). El compositor abre el cajón y pone el marco; el formulario nace vacío en cada apertura.

@@ -130,38 +130,17 @@
     </div>
   </div>
 
-  <!-- Filtros que se COMBINAN con la pestaña y entre sí: «Mis chats» + «Sin
-       responder» son tus pendientes; + «Gold», tus pendientes Gold. Los dos
-       acotan también los números de las pestañas (los cuenta el servidor).
-       El Dashboard los usa para «esperan respuesta» y «Gold esperan». -->
-  @if (!viendoCerradas()) {
-    <div class="filtros-combinables" role="group" aria-label="Filtros que se combinan con la pestaña">
-      <app-filter-chip
-        [transitions]="false"
-        title="Solo los chats donde la paciente escribió y nadie le contestó todavía. Se combina con la pestaña."
-        [active]="state.soloSinResponder()"
-        (clicked)="alternarSinResponder()">
-        <app-icon name="clock" [size]="12" />
-        Sin responder
-        @if (numeroSinResponder() !== null) {
-          <span class="crm-contador" [class.crm-contador-activo]="state.soloSinResponder()">{{ numeroSinResponder() }}</span>
-        }
-      </app-filter-chip>
-      <app-filter-chip
-        [transitions]="false"
-        title="Solo pacientes Gold: gastaron $3.500 o más en 12 meses, o las fijaron a mano"
-        [active]="state.soloGold()"
-        (clicked)="state.soloGold.set(!state.soloGold())">
-        <app-icon name="star" [size]="12" />
-        Gold
-      </app-filter-chip>
-    </div>
-  }
-
   <div class="sidebar-search">
     <app-input type="search" placeholder="Buscar nombre, teléfono o PAC  ( / )" [(value)]="state.busqueda"
       ariaLabel="Buscar por nombre, teléfono o PAC. Atajo: tecla barra"
       (keydown.escape)="state.busqueda.set('')" />
+    @if (state.soloGold() || (state.soloSinResponder() && !viendoCerradas())) {
+      <!-- Los accesos del dashboard conservan su alcance y siempre permiten quitarlo. -->
+      <div class="mt-2 flex flex-wrap items-center gap-2">
+        <p class="crm-meta min-w-0 flex-1" role="status">Filtrando por {{ filtrosPuestos().join(', ') }}.</p>
+        <app-button variant="secondary" size="xs" icon="x" (clicked)="quitarFiltros()">Quitar filtros</app-button>
+      </div>
+    }
   </div>
 
   <!-- Dentro de «Por atender»: cuántas esperan y cuántas ya tienen a alguien, y

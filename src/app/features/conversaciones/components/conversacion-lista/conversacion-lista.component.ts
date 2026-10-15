@@ -22,7 +22,6 @@ import {
   esperandoDesde,
   FiltroInbox,
   opcionDeAlcance,
-  sinResponderEnPestana,
 } from '../../conversacion.model';
 import { InicialesClientePipe, NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 import { ConversacionPreviewComponent } from './conversacion-preview.component';
@@ -162,12 +161,6 @@ export class ConversacionListaComponent {
   ];
 
   /**
-   * El número del filtro «Sin responder»: cuántas de la pestaña elegida
-   * esperan respuesta (en «Mis chats», las tuyas). `null` en el archivo.
-   */
-  protected readonly numeroSinResponder = computed(() => sinResponderEnPestana(this.state.stats(), this.state.filtroTab()));
-
-  /**
    * «Atención» va primera y solo aparece cuando hay solicitudes (o si está
    * elegida): mientras las interacciones de WhatsApp estén apagadas no nace
    * ninguna, y una pestaña siempre en cero solo sería ruido en la barra.
@@ -209,10 +202,6 @@ export class ConversacionListaComponent {
   /** Al pasar el mouse, enfocar o tocar una pestaña: que ya esté al elegirla. */
   protected precargar(tab: FiltroInbox): void {
     void this.state.precargar(tab);
-  }
-
-  protected alternarSinResponder(): void {
-    this.state.soloSinResponder.update(v => !v);
   }
 
   /** Flechas entre pestañas, como un grupo de pestañas de verdad. */

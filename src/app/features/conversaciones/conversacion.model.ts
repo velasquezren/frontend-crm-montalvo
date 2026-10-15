@@ -260,34 +260,12 @@ export interface ContadoresInbox {
   /** Solicitudes que alguien está atendiendo. Con la anterior, la pestaña «Atención». */
   readonly enAtencion: number;
   /**
-   * Cuántas de cada pestaña esperan respuesta: el número del filtro «Sin
-   * responder» según la pestaña (el de «Todas» es `sinResponder`). Opcionales:
-   * un backend anterior al 12/10/2026 no los manda, y entonces no se muestran.
+   * Conteos de pendientes por pestaña enviados por el servidor. Opcionales
+   * para mantener compatibilidad con respuestas anteriores al 12/10/2026.
    */
   readonly sinResponderSinAsignar?: number;
   readonly sinResponderMisChats?: number;
   readonly sinResponderAtencion?: number;
-}
-
-/**
- * El número del filtro «Sin responder» en una pestaña: cuántas de ELLA esperan
- * respuesta. `null` donde el filtro no aplica (el archivo) o si el servidor no
- * lo mandó.
- */
-export function sinResponderEnPestana(c: ContadoresInbox, tab: FiltroInbox): number | null {
-  switch (tab) {
-    case 'TODAS':
-    case 'SIN_RESPONDER':
-      return c.sinResponder;
-    case 'SIN_ASIGNAR':
-      return c.sinResponderSinAsignar ?? null;
-    case 'MIS_CHATS':
-      return c.sinResponderMisChats ?? null;
-    case 'ATENCION':
-      return c.sinResponderAtencion ?? null;
-    default:
-      return null;
-  }
 }
 
 /** Filtros de vista que viajan al servidor con cada petición del listado. */
