@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { API_URL } from '../../core/api/api.constants';
 import { AuthService } from '../../core/auth/auth.service';
-import { ConversacionComposerComponent, motivoParaRechazarAdjunto } from './components/conversacion-composer/conversacion-composer.component';
+import { ConversacionComposerComponent, esEnlaceInternoDelPortal, motivoParaRechazarAdjunto } from './components/conversacion-composer/conversacion-composer.component';
 import { ConversacionDetalle, ConversacionResumen, PaginaInbox, MensajeApi } from './conversacion.model';
 import { ConversacionesStateService } from './services/conversaciones-state.service';
 
@@ -234,11 +234,19 @@ describe('R2.2 · subida de adjuntos', () => {
 });
 
 describe('qué se puede adjuntar, por cualquier camino', () => {
-  it('rechaza lo que WhatsApp no manda como foto o documento, y lo de más de 5 MB', () => {
+  it('rechaza lo que WhatsApp no manda como foto o documento, la foto de más de 5 MB y el PDF de más de 15', () => {
     expect(motivoParaRechazarAdjunto({ type: 'image/jpeg', size: 1_000 })).toBeNull();
-    expect(motivoParaRechazarAdjunto({ type: 'application/pdf', size: 5 * 1024 * 1024 })).toBeNull();
+    expect(motivoParaRechazarAdjunto({ type: 'application/pdf', size: 15 * 1024 * 1024 })).toBeNull();
+    expect(motivoParaRechazarAdjunto({ type: 'application/pdf', size: 15 * 1024 * 1024 + 1 })).toMatch(/15 MB/);
     expect(motivoParaRechazarAdjunto({ type: 'image/heic', size: 1_000 })).toMatch(/JPG, PNG o WEBP/);
     expect(motivoParaRechazarAdjunto({ type: '', size: 1_000 })).toMatch(/no se puede enviar/);
     expect(motivoParaRechazarAdjunto({ type: 'image/png', size: 5 * 1024 * 1024 + 1 })).toMatch(/5 MB/);
+  });
+
+  /* El enlace que una agente mandó el 15/10 en vez del PDF. */
+  it('reconoce el enlace interno del portal, que a la paciente no le abre', () => {
+    expect(esEnlaceInternoDelPortal('https://resultados.107.175.132.15.nip.io/api/v1/portal/informe/pdf/original')).toBe(true);
+    expect(esEnlaceInternoDelPortal('https://resultados.107.175.132.15.nip.io/resultados/dc6f7334-13bd-436e-a0de-1c2d057b8b4d')).toBe(false);
+    expect(esEnlaceInternoDelPortal('Le envío su informe')).toBe(false);
   });
 });

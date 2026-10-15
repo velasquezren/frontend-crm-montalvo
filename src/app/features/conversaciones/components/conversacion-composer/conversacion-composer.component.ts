@@ -43,6 +43,8 @@ interface AdjuntoLocal {
 }
 
 const TAMANO_MAXIMO_ADJUNTO = 5 * 1024 * 1024;
+/** Los informes de ecografía pasan de 10 MB. Mismo tope que el backend (`BYTES_MAXIMOS_PDF`). */
+const TAMANO_MAXIMO_PDF = 15 * 1024 * 1024;
 const TIPOS_ADJUNTO_ACEPTADOS = [
   'image/jpeg',
   'image/jpg',
@@ -57,11 +59,24 @@ function tipoBase(mime: string): string {
 
 /** Por qué no se puede adjuntar un archivo, o `null` si se puede. */
 export function motivoParaRechazarAdjunto(file: Pick<File, 'size' | 'type'>): string | null {
-  if (file.size > TAMANO_MAXIMO_ADJUNTO) return 'El archivo supera el límite de 5 MB.';
-  if (!TIPOS_ADJUNTO_ACEPTADOS.includes(tipoBase(file.type))) {
+  const tipo = tipoBase(file.type);
+  if (!TIPOS_ADJUNTO_ACEPTADOS.includes(tipo)) {
     return 'Ese tipo de archivo no se puede enviar por el chat: solo fotos JPG, PNG o WEBP y documentos PDF.';
   }
+  if (tipo === 'application/pdf') return file.size > TAMANO_MAXIMO_PDF ? 'El PDF supera el límite de 15 MB.' : null;
+  if (file.size > TAMANO_MAXIMO_ADJUNTO) return 'La foto supera el límite de 5 MB.';
   return null;
+}
+
+/**
+ * Un enlace de la API del portal de resultados (`/api/v1/portal/...`).
+ *
+ * Solo abre con la sesión del portal de quien lo copió: a la paciente le
+ * contesta «Tu sesión terminó». Pasó el 15/10 con una ecografía: la paciente
+ * pidió el PDF, le llegó ese enlace y «no abre al descargarlo».
+ */
+export function esEnlaceInternoDelPortal(texto: string): boolean {
+  return /\/api\/v1\/portal\//i.test(texto);
 }
 
 /**
@@ -355,6 +370,11 @@ export class ConversacionComposerComponent {
     /* Con una subida en vuelo el adjunto todavía no tiene clave: enviar ahora
        mandaría el texto solo y el archivo llegaría a ninguna parte. */
     if (this.subiendoArchivo()) return;
+
+    if (esEnlaceInternoDelPortal(texto)) {
+      this.toast.warning('Ese enlace solo abre con tu sesión del portal: a la paciente no le va a abrir. Descarga el PDF y adjúntalo con el clip (hasta 15 MB).');
+      return;
+    }
 
     if (this.state.fueraDeVentana24h()) {
       const horas = this.state.horasVentanaMeta();
