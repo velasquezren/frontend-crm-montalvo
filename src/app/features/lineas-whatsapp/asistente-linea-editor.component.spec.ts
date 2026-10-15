@@ -93,6 +93,21 @@ describe('AsistenteLineaEditorComponent', () => {
     expect(texto()).toContain('Pasó a una persona · 3');
   });
 
+  it('dice cuánto tarda en contestar, en segundos, cuando el servidor lo manda', async () => {
+    await montar({ ...APAGADO, actividad: { dias: 7, porResultado: { RESPONDIO: 12 }, tokensEntrada: 1, tokensSalida: 1, latencia: { turnos: 12, medianaMs: 4380, p90Ms: 9100 } } });
+    expect(texto()).toContain('Tarda en contestar 4,4 s la mitad de las veces');
+    expect(texto()).toContain('menos de 9,1 s en 9 de cada 10');
+    await montar({ ...APAGADO, actividad: { dias: 7, porResultado: { RESPONDIO: 1 }, tokensEntrada: 1, tokensSalida: 1 } });
+    expect(texto()).not.toContain('Tarda en contestar');
+  });
+
+  it('conectado: dice con qué modelo responde, cuál entra si Google tarda y con cuál escucha las notas de voz', async () => {
+    await montar({ ...APAGADO, proveedor: { ...PROVEEDOR_LISTO, modelo: 'gemini-3.8-flash', modeloRespaldo: 'gemini-3.7-flash', modeloTranscripcion: 'gemini-3.5-flash' } });
+    expect(texto().replace(/\s+/g, ' ')).toContain('Conectado a Gemini: responde con gemini-3.8-flash, y si Google tarda, con gemini-3.7-flash. Escucha las notas de voz con gemini-3.5-flash.');
+    await montar({ ...APAGADO, proveedor: PROVEEDOR_LISTO });
+    expect(texto().replace(/\s+/g, ' ')).toContain('Conectado a Gemini: responde con gemini-3.5-flash.');
+  });
+
   it('si el servidor falla, ofrece reintentar en vez de un formulario vacío', async () => {
     await montar('error');
     expect(texto()).toContain('Reintentar');

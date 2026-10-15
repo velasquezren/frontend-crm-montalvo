@@ -19,7 +19,23 @@ export interface EstadoProveedorIA {
   readonly ubicacion: string;
   readonly modelo: string;
   readonly modeloClasificador: string;
+  /** Si el principal tarda, la copia va a este otro modelo (`null` = al mismo). Falta en un backend anterior al 14/10/2026. */
+  readonly modeloRespaldo?: string | null;
+  /** Con qué modelo escucha las notas de voz. */
+  readonly modeloTranscripcion?: string;
   readonly listo: boolean;
+}
+
+/** Cuánto tarda en contestar (mediana y p90, sin contar la espera a que termine de escribir). */
+export interface LatenciaAsistente {
+  readonly turnos: number;
+  readonly medianaMs: number;
+  readonly p90Ms: number;
+}
+
+/** «2,4 s»: un tiempo de respuesta como lo lee una persona. */
+export function enSegundos(ms: number): string {
+  return `${(ms / 1000).toLocaleString('es-BO', { maximumFractionDigits: 1 })} s`;
 }
 
 /** `GET /asistente/lineas/:lineaId`. */
@@ -39,6 +55,8 @@ export interface AsistenteEditable {
     readonly porResultado: Partial<Record<ResultadoTurnoAsistente, number>>;
     readonly tokensEntrada: number;
     readonly tokensSalida: number;
+    /** `null` sin turnos que hayan contestado; falta en un backend anterior al 14/10/2026. */
+    readonly latencia?: LatenciaAsistente | null;
   };
 }
 

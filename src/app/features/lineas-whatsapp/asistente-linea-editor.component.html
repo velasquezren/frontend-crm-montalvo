@@ -20,9 +20,11 @@
           </span>
         </div>
       } @else {
-        <p class="text-[11px] text-text-muted flex items-center gap-1.5">
-          <app-icon name="check-circle" [size]="12" class="text-primary shrink-0" />
-          Conectado a Gemini ({{ d.proveedor.modelo }}).
+        <p class="text-[11px] text-text-muted leading-relaxed flex items-start gap-1.5">
+          <app-icon name="check-circle" [size]="12" class="text-primary shrink-0 mt-0.5" />
+          <span class="min-w-0">
+            Conectado a Gemini: responde con {{ d.proveedor.modelo }}@if (d.proveedor.modeloRespaldo; as respaldo) {, y si Google tarda, con {{ respaldo }}}@if (d.proveedor.modeloTranscripcion; as oido) {. Escucha las notas de voz con {{ oido }}}.
+          </span>
         </p>
       }
 
@@ -120,6 +122,13 @@
               <app-badge [variant]="a.resultado === 'FALLO' ? 'critical' : a.resultado === 'OMITIDO' ? 'neutral' : 'info'">{{ resultados[a.resultado] }} · {{ a.cantidad }}</app-badge>
             }
           </div>
+          @if (d.actividad.latencia; as l) {
+            <p class="text-[11px] text-text-muted leading-relaxed">
+              Tarda en contestar <span class="font-semibold text-text-dark tabular-nums">{{ enSegundos(l.medianaMs) }}</span> la mitad de las veces,
+              y menos de <span class="font-semibold text-text-dark tabular-nums">{{ enSegundos(l.p90Ms) }}</span> en 9 de cada 10
+              (<span class="tabular-nums">{{ l.turnos }}</span> respuestas). Sin contar los segundos que espera a que termine de escribir.
+            </p>
+          }
         </section>
       }
     </div>

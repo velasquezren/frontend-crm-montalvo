@@ -13,7 +13,7 @@ import { InputComponent } from '../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { SwitchComponent } from '../../shared/components/switch/switch.component';
 import {
-  AsistenteEditable, faltaEnElServidor, GuardarAsistente, LIMITES_ASISTENTE, MODOS_ASISTENTE, motivoParaNoGuardar, PASO_PRUEBA, RESULTADO_TURNO, ResultadoPrueba,
+  AsistenteEditable, enSegundos, faltaEnElServidor, GuardarAsistente, LIMITES_ASISTENTE, MODOS_ASISTENTE, motivoParaNoGuardar, PASO_PRUEBA, RESULTADO_TURNO, ResultadoPrueba,
 } from './asistente-linea.model';
 import { LineasWhatsappService } from './lineas-whatsapp.service';
 
@@ -59,6 +59,7 @@ export class AsistenteLineaEditorComponent {
   protected readonly limites = LIMITES_ASISTENTE;
   protected readonly resultados = RESULTADO_TURNO;
   protected readonly nombresPaso = PASO_PRUEBA;
+  protected readonly enSegundos = enSegundos;
   /* Una prueba es de la línea que se mira: al cambiar de línea, vuelve a empezar vacía. */
   protected readonly prueba = linkedSignal<string, ResultadoPrueba | null>({ source: this.lineaId, computation: () => null });
   protected readonly probando = signal(false);
