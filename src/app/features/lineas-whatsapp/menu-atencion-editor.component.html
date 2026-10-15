@@ -53,7 +53,7 @@
           <app-input
             label="Saludo"
             [multiline]="true" [rows]="3"
-            placeholder="Ej.: Hola, gracias por escribir a la clínica. ¿En qué te ayudamos?…"
+            placeholder="Ej.: Hola, gracias por escribir a la clínica. ¿En qué le ayudamos?…"
             [value]="borrador().saludo"
             (valueChange)="cambiar({ saludo: $event })"
             [error]="excede(borrador().saludo, limites.texto)" />

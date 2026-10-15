@@ -193,4 +193,4 @@ export function vistaPrevia(borrador: MenuAtencion): InteraccionVista {
 }
 
 /** El pie que el backend pone a todo menú (`PIE_DEL_MENU` en menu-atencion.ts). */
-export const PIE_DEL_MENU = 'Escribe «menú» para volver a ver estas opciones';
+export const PIE_DEL_MENU = 'Escriba «menú» para volver a ver estas opciones';
