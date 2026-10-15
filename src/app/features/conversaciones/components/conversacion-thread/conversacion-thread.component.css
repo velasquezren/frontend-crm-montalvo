@@ -253,9 +253,20 @@
   background: linear-gradient(180deg, var(--color-bg-workspace) 0%, var(--color-background) 100%);
 }
 
-/* La fecha queda fija arriba mientras se recorre su día, como en WhatsApp: al
-   subir por el historial siempre se sabe de cuándo es lo que se lee. Cada
-   separador se queda pegado hasta que el siguiente lo tapa. */
+/* Cada fecha pertenece a su día, no al historial entero. El límite del bloque
+   desplaza la cabecera anterior antes de que llegue la siguiente: no se apilan
+   etiquetas de distintos anchos al abrir el chat o bajar hasta el final. */
+.message-day {
+  display: flow-root;
+  flex: 0 0 auto;
+  min-width: 0;
+  padding-top: 20px;
+}
+
+.message-day:first-of-type {
+  padding-top: 4px;
+}
+
 .date-separator {
   position: sticky;
   top: 0;
@@ -263,12 +274,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 20px 0 6px;
+  margin: 0 0 6px;
   pointer-events: none;
-}
-
-.date-separator:first-of-type {
-  margin-top: 4px;
 }
 
 .date-separator-label {

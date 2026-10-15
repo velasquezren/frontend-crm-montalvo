@@ -42,7 +42,7 @@ import {
   FiltroInbox,
   FiltrosInbox,
   filtrosDeAlcance,
-  ItemHilo,
+  DiaHilo,
   MensajeApi,
   PaginaInbox,
   PlantillaAgente,
@@ -627,30 +627,28 @@ export class ConversacionesStateService {
     return !!this.detalleActual()?.mensajes.some(m => m.id === mensajeId);
   }
 
-  readonly mensajesConFecha = computed<ItemHilo[]>(() => {
+  readonly mensajesPorDia = computed<DiaHilo[]>(() => {
     const chat = this.detalleActual();
     if (!chat) return [];
 
-    const result: ItemHilo[] = [];
-    let ultimaFecha = '';
+    const dias: DiaHilo[] = [];
     const hoy = new Date(this.hoy());
-
+    let grupo: DiaHilo | undefined;
     let anterior: MensajeApi | undefined;
-    for (const msg of chat.mensajes) {
-      const fechaMsg = etiquetaDeDia(new Date(msg.createdAt), hoy);
 
-      if (fechaMsg !== ultimaFecha) {
-        ultimaFecha = fechaMsg;
-        result.push({ tipo: 'separador-fecha', fecha: fechaMsg });
-        /* Un día nuevo empieza tanda nueva. */
+    for (const mensaje of chat.mensajes) {
+      const fecha = new Date(mensaje.createdAt);
+      const clave = fecha.toDateString();
+      if (!grupo || grupo.clave !== clave) {
+        grupo = { clave, fecha: etiquetaDeDia(fecha, hoy), mensajes: [] };
+        dias.push(grupo);
         anterior = undefined;
       }
-
-      result.push({ tipo: 'mensaje', mensaje: msg, continua: continuaTanda(anterior, msg) });
-      anterior = msg;
+      grupo.mensajes.push({ mensaje, continua: continuaTanda(anterior, mensaje) });
+      anterior = mensaje;
     }
 
-    return result;
+    return dias;
   });
 
   constructor() {

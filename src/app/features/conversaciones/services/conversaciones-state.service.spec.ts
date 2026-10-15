@@ -75,7 +75,7 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     responder('/conversaciones/meta/plantillas', []);
     await app.whenStable();
     // Leer los derivados antes de cambiar la respuesta: también deben invalidarse.
-    expect(state.mensajesConFecha().some(item => item.tipo === 'mensaje')).toBe(true);
+    expect(state.mensajesPorDia().some(dia => dia.mensajes.length > 0)).toBe(true);
     expect(state.conversacionesFiltradas()[0].cliente.nombre).toBe(CHAT.cliente.nombre);
   });
 
@@ -93,10 +93,61 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
       const mensaje = { ...MENSAJE, estadoEnvio };
       await recargarDetalle({ ...CHAT, mensajes: [mensaje] });
       expect(state.detalle.value()?.mensajes).toEqual([mensaje]);
-      expect(state.mensajesConFecha().filter(item => item.tipo === 'mensaje'))
-        .toEqual([{ tipo: 'mensaje', mensaje, continua: false }]);
+      expect(state.mensajesPorDia().flatMap(dia => dia.mensajes))
+        .toEqual([{ mensaje, continua: false }]);
     },
   );
+
+  it('cada día contiene su fecha y sus mensajes; una tanda no cruza medianoche', async () => {
+    state.ahora.set(new Date(2026, 9, 14, 12).getTime());
+    const mensajes = [
+      { ...MENSAJE, id: 'dia-12', createdAt: new Date(2026, 9, 12, 23, 59).toISOString() },
+      { ...MENSAJE, id: 'ayer-1', createdAt: new Date(2026, 9, 13, 0, 1).toISOString() },
+      { ...MENSAJE, id: 'ayer-2', createdAt: new Date(2026, 9, 13, 0, 2).toISOString() },
+      { ...MENSAJE, id: 'hoy', createdAt: new Date(2026, 9, 14, 10).toISOString() },
+    ];
+    await recargarDetalle({ ...CHAT, mensajes });
+
+    expect(state.mensajesPorDia().map(dia => ({
+      fecha: dia.fecha,
+      ids: dia.mensajes.map(item => item.mensaje.id),
+      tandas: dia.mensajes.map(item => item.continua),
+    }))).toEqual([
+      { fecha: '12 de octubre de 2026', ids: ['dia-12'], tandas: [false] },
+      { fecha: 'Ayer', ids: ['ayer-1', 'ayer-2'], tandas: [false, true] },
+      { fecha: 'Hoy', ids: ['hoy'], tandas: [false] },
+    ]);
+  });
+
+  it('anteponer historial del mismo día amplía el grupo sin duplicar la fecha ni cambiar su clave', async () => {
+    const ultimo = { ...MENSAJE, id: 'ultimo', createdAt: new Date(2026, 9, 13, 10).toISOString() };
+    await recargarDetalle({ ...CHAT, mensajes: [ultimo] });
+    const clave = state.mensajesPorDia()[0].clave;
+    const anterior = { ...MENSAJE, id: 'anterior', createdAt: new Date(2026, 9, 13, 9, 59).toISOString() };
+    const viejo = { ...MENSAJE, id: 'viejo', createdAt: new Date(2026, 9, 12, 10).toISOString() };
+    await recargarDetalle({ ...CHAT, mensajes: [viejo, anterior, ultimo] });
+
+    const dias = state.mensajesPorDia();
+    expect(dias).toHaveLength(2);
+    expect(dias[1].clave).toBe(clave);
+    expect(dias[1].mensajes.map(item => item.mensaje.id)).toEqual(['anterior', 'ultimo']);
+    expect(dias.flatMap(dia => dia.mensajes.map(item => item.mensaje.id)))
+      .toEqual(['viejo', 'anterior', 'ultimo']);
+  });
+
+  it('pasar de Hoy a Ayer conserva la clave del día y de los mensajes', async () => {
+    state.ahora.set(new Date(2026, 9, 14, 23, 59).getTime());
+    const mensaje = { ...MENSAJE, createdAt: new Date(2026, 9, 14, 12).toISOString() };
+    await recargarDetalle({ ...CHAT, mensajes: [mensaje] });
+    const antes = state.mensajesPorDia()[0];
+    expect(antes.fecha).toBe('Hoy');
+
+    state.ahora.set(new Date(2026, 9, 15, 0, 1).getTime());
+    const despues = state.mensajesPorDia()[0];
+    expect(despues.fecha).toBe('Ayer');
+    expect(despues.clave).toBe(antes.clave);
+    expect(despues.mensajes).toEqual(antes.mensajes);
+  });
 
   /* Buscar solo en lo cargado decía «0» para un mensaje de hace un mes que
      existía: un corte leído como dato. Ahora cuenta y lista el servidor. */
@@ -144,8 +195,8 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     expect(state.detalle.value()?.mensajes[0]).toEqual(disponible);
     const renovado = { ...disponible, mediaUrl: 'https://media.example/prueba?firma=2' };
     await recargarDetalle({ ...CHAT, mensajes: [renovado] });
-    expect(state.mensajesConFecha().filter(item => item.tipo === 'mensaje'))
-      .toEqual([{ tipo: 'mensaje', mensaje: renovado, continua: false }]);
+    expect(state.mensajesPorDia().flatMap(dia => dia.mensajes))
+      .toEqual([{ mensaje: renovado, continua: false }]);
   });
 
   it('actualiza nombre, ficha y nota fijada aunque no cambie la conversación', async () => {
@@ -272,7 +323,7 @@ describe('F07 · sincronización de conversaciones con igual fecha y cantidad', 
     await app.whenStable();
     expect(state.detalle.error()).toBeInstanceOf(ErrorCanalWhatsapp);
     expect(state.detalleActual()).toBeNull();
-    expect(state.mensajesConFecha()).toEqual([]);
+    expect(state.mensajesPorDia()).toEqual([]);
     expect(state.plantillasWhatsApp.value()).toEqual([]);
     expect(state.errorDetalle()).toContain('identificar la línea');
   });

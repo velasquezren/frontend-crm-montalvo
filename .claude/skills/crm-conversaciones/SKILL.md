@@ -608,11 +608,15 @@ Funciones puras en `presentacion-chat.ts` (probadas en su `.spec`); la vista sol
   Recepción se ve quién dijo qué. Lo automático, el asistente y lo anterior al 14/10 no tienen
   autor. El globo optimista lo firma `state.autorPropio()` y la reconciliación lo conserva
   (la respuesta del POST trae `autorId`, no el nombre).
-- **Tandas** (`ItemHilo.continua`, `continuaTanda`): misma voz —paciente, una persona
+- **Tandas** (`DiaHilo.mensajes[].continua`, `continuaTanda`): misma voz —paciente, una persona
   concreta, asistente o CRM— y < 5 min ⇒ 2 px de separación y esquina compartida; un día
   nuevo empieza tanda. El espaciado vive en `.bubble-row` (margen), no en el `gap` del hilo.
-- **La fecha del día queda fija arriba** al desplazarse (`.date-separator` es `sticky`, sin
-  eventos de puntero).
+- **La fecha queda fija solo dentro de su día**: `mensajesPorDia` agrupa los mensajes en
+  `DiaHilo`, cada uno con su `<section class="message-day">`. `.date-separator` es
+  `sticky` dentro de esa sección, sin eventos de puntero. No poner todas las fechas
+  como hermanas sticky del historial: se apilan al fondo y una etiqueta corta («Ayer»)
+  deja ver las anteriores a sus lados. La clave del grupo es el día local, no su etiqueta,
+  para conservar el DOM al pasar de «Hoy» a «Ayer» y al cargar historial anterior.
 - **Hora de la fila** (`horaDeFila`): «10:42» hoy, «Ayer», el día de la semana y luego
   «30/09/26», por días de calendario. Era «3h» y repetía el reloj de espera de al lado.
   El `title` da la fecha completa.

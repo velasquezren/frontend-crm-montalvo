@@ -300,242 +300,243 @@
       </div>
     }
 
-    @for (item of state.mensajesConFecha(); track (item.tipo === 'separador-fecha' ? item.fecha : item.mensaje.id)) {
-      @if (item.tipo === 'separador-fecha') {
+    @for (dia of state.mensajesPorDia(); track dia.clave) {
+      <section class="message-day" [attr.aria-label]="dia.fecha">
         <div class="date-separator">
-          <span class="date-separator-label">{{ item.fecha }}</span>
+          <span class="date-separator-label">{{ dia.fecha }}</span>
         </div>
-      } @else {
-        <!-- `continua`: mismo lado, misma persona y poco después que el anterior.
-             Va pegado a él y sin repetir la firma, como en WhatsApp. -->
-        <div class="bubble-row"
-             [attr.data-mensaje-id]="item.mensaje.id"
-             [class.bubble-row-continua]="item.continua"
-             [class.bubble-row-out]="item.mensaje.direccion === 'SALIENTE'"
-             [class.bubble-row-in]="item.mensaje.direccion === 'ENTRANTE'">
-          <div class="bubble"
-               [class.bubble-continua]="item.continua"
-               [class.bubble-out]="item.mensaje.direccion === 'SALIENTE'"
-               [class.bubble-in]="item.mensaje.direccion === 'ENTRANTE'"
-               [class.bubble-match]="state.coincidenciasChat().includes(item.mensaje.id)"
-               [class.bubble-match-active]="state.coincidenciasChat()[state.indiceCoincidencia()] === item.mensaje.id || mensajeReferido() === item.mensaje.id">
+        @for (item of dia.mensajes; track item.mensaje.id) {
+          <!-- `continua`: mismo lado, misma persona y poco después que el anterior.
+               Va pegado a él y sin repetir la firma, como en WhatsApp. -->
+          <div class="bubble-row"
+               [attr.data-mensaje-id]="item.mensaje.id"
+               [class.bubble-row-continua]="item.continua"
+               [class.bubble-row-out]="item.mensaje.direccion === 'SALIENTE'"
+               [class.bubble-row-in]="item.mensaje.direccion === 'ENTRANTE'">
+            <div class="bubble"
+                 [class.bubble-continua]="item.continua"
+                 [class.bubble-out]="item.mensaje.direccion === 'SALIENTE'"
+                 [class.bubble-in]="item.mensaje.direccion === 'ENTRANTE'"
+                 [class.bubble-match]="state.coincidenciasChat().includes(item.mensaje.id)"
+                 [class.bubble-match-active]="state.coincidenciasChat()[state.indiceCoincidencia()] === item.mensaje.id || mensajeReferido() === item.mensaje.id">
 
-            <!-- Quién del equipo lo escribió, si no fuiste tú: en una línea compartida
-                 contesta quien esté, y el hilo tiene que decir quién dijo qué. -->
-            @if (!item.continua) {
-              @if (firma(item.mensaje); as quien) {
-                <p class="bubble-autor" [title]="'Lo escribió ' + item.mensaje.autor?.nombre">{{ quien }}</p>
+              <!-- Quién del equipo lo escribió, si no fuiste tú: en una línea compartida
+                   contesta quien esté, y el hilo tiene que decir quién dijo qué. -->
+              @if (!item.continua) {
+                @if (firma(item.mensaje); as quien) {
+                  <p class="bubble-autor" [title]="'Lo escribió ' + item.mensaje.autor?.nombre">{{ quien }}</p>
+                }
               }
-            }
 
-            <!-- Media (foto / video / audio / documento) -->
-            @switch (item.mensaje.tipo) {
-              @case ('IMAGEN') {
-                @if (item.mensaje.mediaUrl) {
-                  <!-- La caja se reserva antes de que llegue la foto: el hilo no salta. -->
-                  @let caja = item.mensaje | cajaImagen;
-                  <button type="button" (click)="abrirLightbox(item.mensaje.mediaUrl)"
-                    class="media-foto" [style.width.px]="caja.ancho" [style.height.px]="caja.alto"
-                    aria-label="Ver la imagen completa">
-                    <img [src]="item.mensaje.mediaUrl" alt="Imagen enviada en la conversación"
-                      loading="lazy" decoding="async" [width]="caja.ancho" [height]="caja.alto"
-                      class="media-foto-img" [class.media-foto-img-recortada]="caja.recortar" />
-                  </button>
-                } @else {
-                  <!-- Aún se descarga de WhatsApp: el mismo hueco que ocupará la foto. -->
-                  @let caja = item.mensaje | cajaImagen;
-                  <div class="media-foto media-foto-pendiente" [style.width.px]="caja.ancho" [style.height.px]="caja.alto">
-                    <app-icon name="image" [size]="16" /> Descargando imagen…
-                  </div>
-                }
-              }
-              @case ('STICKER') {
-                @if (item.mensaje.mediaUrl) {
-                  <button type="button" (click)="abrirLightbox(item.mensaje.mediaUrl)" class="block mb-1 cursor-zoom-in text-left">
-                    <img [src]="item.mensaje.mediaUrl" alt="Sticker" loading="lazy" decoding="async" class="w-28 h-28 object-contain hover:opacity-90 transition-opacity" />
-                  </button>
-                } @else {
-                  <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando…</div>
-                }
-              }
-              @case ('VIDEO') {
-                @if (item.mensaje.mediaUrl) {
-                  <video [src]="item.mensaje.mediaUrl" controls preload="none" class="rounded-lg max-w-full max-h-72 mb-1"></video>
-                } @else {
-                  <div class="media-cargando"><app-icon name="video" [size]="16" /> Descargando video…</div>
-                }
-              }
-              @case ('AUDIO') {
-                @if (item.mensaje.mediaUrl) {
-                  <div class="audio-player-container">
-                    <audio #voiceAudio [src]="item.mensaje.mediaUrl" controls preload="none" class="max-w-full h-8 flex-1"></audio>
-                    <div class="speed-btn-group">
-                      <button
-                        type="button"
-                        (click)="cambiarVelocidadAudio(voiceAudio, 1)"
-                        [class.active-speed]="obtenerVelocidadAudio(voiceAudio) === 1"
-                        class="speed-btn"
-                        title="Velocidad normal (1x)">1x</button>
-                      <button
-                        type="button"
-                        (click)="cambiarVelocidadAudio(voiceAudio, 1.5)"
-                        [class.active-speed]="obtenerVelocidadAudio(voiceAudio) === 1.5"
-                        class="speed-btn"
-                        title="Velocidad 1.5x">1.5x</button>
-                      <button
-                        type="button"
-                        (click)="cambiarVelocidadAudio(voiceAudio, 2)"
-                        [class.active-speed]="obtenerVelocidadAudio(voiceAudio) === 2"
-                        class="speed-btn"
-                        title="Velocidad doble (2x)">2x</button>
+              <!-- Media (foto / video / audio / documento) -->
+              @switch (item.mensaje.tipo) {
+                @case ('IMAGEN') {
+                  @if (item.mensaje.mediaUrl) {
+                    <!-- La caja se reserva antes de que llegue la foto: el hilo no salta. -->
+                    @let caja = item.mensaje | cajaImagen;
+                    <button type="button" (click)="abrirLightbox(item.mensaje.mediaUrl)"
+                      class="media-foto" [style.width.px]="caja.ancho" [style.height.px]="caja.alto"
+                      aria-label="Ver la imagen completa">
+                      <img [src]="item.mensaje.mediaUrl" alt="Imagen enviada en la conversación"
+                        loading="lazy" decoding="async" [width]="caja.ancho" [height]="caja.alto"
+                        class="media-foto-img" [class.media-foto-img-recortada]="caja.recortar" />
+                    </button>
+                  } @else {
+                    <!-- Aún se descarga de WhatsApp: el mismo hueco que ocupará la foto. -->
+                    @let caja = item.mensaje | cajaImagen;
+                    <div class="media-foto media-foto-pendiente" [style.width.px]="caja.ancho" [style.height.px]="caja.alto">
+                      <app-icon name="image" [size]="16" /> Descargando imagen…
                     </div>
-                  </div>
-                } @else {
-                  <div class="media-cargando"><app-icon name="volume-2" [size]="16" /> Descargando audio…</div>
+                  }
                 }
-                <!-- Lo que el asistente entendió del audio: para leerlo sin escucharlo. Automático: puede equivocarse. -->
-                @if (item.mensaje.transcripcion; as transcripcion) {
-                  <p class="mt-1 flex items-start gap-1.5 text-xs text-text-muted">
-                    <app-icon name="bot" [size]="14" class="shrink-0 mt-px" />
-                    <span><span class="sr-only">Transcripción automática: </span><span class="italic">«{{ transcripcion }}»</span></span>
-                  </p>
+                @case ('STICKER') {
+                  @if (item.mensaje.mediaUrl) {
+                    <button type="button" (click)="abrirLightbox(item.mensaje.mediaUrl)" class="block mb-1 cursor-zoom-in text-left">
+                      <img [src]="item.mensaje.mediaUrl" alt="Sticker" loading="lazy" decoding="async" class="w-28 h-28 object-contain hover:opacity-90 transition-opacity" />
+                    </button>
+                  } @else {
+                    <div class="media-cargando"><app-icon name="image" [size]="16" /> Descargando…</div>
+                  }
                 }
-              }
-              @case ('DOCUMENTO') {
-                @if (item.mensaje.mediaKey?.startsWith('informe-chat/')) {
-                  <div class="flex items-start gap-2 p-2 rounded-lg bg-black/5 mb-1">
-                    <app-icon name="file-text" [size]="20" class="shrink-0 text-primary" />
-                    <div>
-                      <p class="text-xs font-medium">Informe seleccionado por el paciente</p>
-                      <p class="text-xs text-text-muted">Documento privado. Su revisión se realiza desde Resultados.</p>
+                @case ('VIDEO') {
+                  @if (item.mensaje.mediaUrl) {
+                    <video [src]="item.mensaje.mediaUrl" controls preload="none" class="rounded-lg max-w-full max-h-72 mb-1"></video>
+                  } @else {
+                    <div class="media-cargando"><app-icon name="video" [size]="16" /> Descargando video…</div>
+                  }
+                }
+                @case ('AUDIO') {
+                  @if (item.mensaje.mediaUrl) {
+                    <div class="audio-player-container">
+                      <audio #voiceAudio [src]="item.mensaje.mediaUrl" controls preload="none" class="max-w-full h-8 flex-1"></audio>
+                      <div class="speed-btn-group">
+                        <button
+                          type="button"
+                          (click)="cambiarVelocidadAudio(voiceAudio, 1)"
+                          [class.active-speed]="obtenerVelocidadAudio(voiceAudio) === 1"
+                          class="speed-btn"
+                          title="Velocidad normal (1x)">1x</button>
+                        <button
+                          type="button"
+                          (click)="cambiarVelocidadAudio(voiceAudio, 1.5)"
+                          [class.active-speed]="obtenerVelocidadAudio(voiceAudio) === 1.5"
+                          class="speed-btn"
+                          title="Velocidad 1.5x">1.5x</button>
+                        <button
+                          type="button"
+                          (click)="cambiarVelocidadAudio(voiceAudio, 2)"
+                          [class.active-speed]="obtenerVelocidadAudio(voiceAudio) === 2"
+                          class="speed-btn"
+                          title="Velocidad doble (2x)">2x</button>
+                      </div>
                     </div>
-                  </div>
-                } @else if (item.mensaje.mediaUrl) {
-                  <a [href]="item.mensaje.mediaUrl" target="_blank" rel="noopener"
-                    class="flex items-center gap-2 p-2 rounded-lg bg-black/5 hover:bg-black/10 transition-colors mb-1">
-                    <app-icon name="file-text" [size]="20" class="shrink-0 text-primary" />
-                    <span class="text-xs font-medium truncate">{{ item.mensaje.mediaNombre || 'Documento' }}</span>
-                  </a>
-                } @else {
-                  <div class="media-cargando"><app-icon name="file-text" [size]="16" /> Descargando documento…</div>
+                  } @else {
+                    <div class="media-cargando"><app-icon name="volume-2" [size]="16" /> Descargando audio…</div>
+                  }
+                  <!-- Lo que el asistente entendió del audio: para leerlo sin escucharlo. Automático: puede equivocarse. -->
+                  @if (item.mensaje.transcripcion; as transcripcion) {
+                    <p class="mt-1 flex items-start gap-1.5 text-xs text-text-muted">
+                      <app-icon name="bot" [size]="14" class="shrink-0 mt-px" />
+                      <span><span class="sr-only">Transcripción automática: </span><span class="italic">«{{ transcripcion }}»</span></span>
+                    </p>
+                  }
+                }
+                @case ('DOCUMENTO') {
+                  @if (item.mensaje.mediaKey?.startsWith('informe-chat/')) {
+                    <div class="flex items-start gap-2 p-2 rounded-lg bg-black/5 mb-1">
+                      <app-icon name="file-text" [size]="20" class="shrink-0 text-primary" />
+                      <div>
+                        <p class="text-xs font-medium">Informe seleccionado por el paciente</p>
+                        <p class="text-xs text-text-muted">Documento privado. Su revisión se realiza desde Resultados.</p>
+                      </div>
+                    </div>
+                  } @else if (item.mensaje.mediaUrl) {
+                    <a [href]="item.mensaje.mediaUrl" target="_blank" rel="noopener"
+                      class="flex items-center gap-2 p-2 rounded-lg bg-black/5 hover:bg-black/10 transition-colors mb-1">
+                      <app-icon name="file-text" [size]="20" class="shrink-0 text-primary" />
+                      <span class="text-xs font-medium truncate">{{ item.mensaje.mediaNombre || 'Documento' }}</span>
+                    </a>
+                  } @else {
+                    <div class="media-cargando"><app-icon name="file-text" [size]="16" /> Descargando documento…</div>
+                  }
                 }
               }
-            }
 
-            <!-- Texto / pie de foto / URL de media -->
-            <!-- El texto se pinta como texto, con sus enlaces clicables. Antes una
-                 URL terminada en .jpg/.pdf se incrustaba como imagen: con los
-                 mensajes del paciente eso cargaba en el navegador de la agente
-                 cualquier imagen de cualquier servidor, y las URLs firmadas
-                 viejas que se pegaban en el texto ya habían caducado, así que se
-                 veían rotas. La media real viaja por `mediaKey` (arriba). -->
-            @if (item.mensaje.interaccion; as interaccion) {
-              <app-interaccion-preview [habilitada]="true" [historial]="true" [interaccion]="interaccion" (irAMensaje)="irAMensajeReferido($event)" />
-            } @else if (item.mensaje.contenido) {
-              <p class="bubble-text" [innerHTML]="item.mensaje.contenido | whatsappMarkdown"></p>
-            }
-
-            <span class="bubble-time">
-              @if (item.mensaje.asistente) {
-                <span class="marca-automatico" title="Lo escribió el asistente de IA, no una persona">
-                  <app-icon name="bot" [size]="10" />
-                  asistente
-                </span>
-              } @else if (item.mensaje.automatico) {
-                <span class="marca-automatico" title="Lo envió el CRM solo (menú, respuesta automática o fuera de horario), no una persona">
-                  <app-icon name="clock" [size]="10" />
-                  automático
-                </span>
+              <!-- Texto / pie de foto / URL de media -->
+              <!-- El texto se pinta como texto, con sus enlaces clicables. Antes una
+                   URL terminada en .jpg/.pdf se incrustaba como imagen: con los
+                   mensajes del paciente eso cargaba en el navegador de la agente
+                   cualquier imagen de cualquier servidor, y las URLs firmadas
+                   viejas que se pegaban en el texto ya habían caducado, así que se
+                   veían rotas. La media real viaja por `mediaKey` (arriba). -->
+              @if (item.mensaje.interaccion; as interaccion) {
+                <app-interaccion-preview [habilitada]="true" [historial]="true" [interaccion]="interaccion" (irAMensaje)="irAMensajeReferido($event)" />
+              } @else if (item.mensaje.contenido) {
+                <p class="bubble-text" [innerHTML]="item.mensaje.contenido | whatsappMarkdown"></p>
               }
-              {{ item.mensaje.createdAt | date: 'HH:mm' }}
-              @if (item.mensaje.direccion === 'SALIENTE') {
-                @if (item.mensaje.envioLocal === 'ENVIANDO') {
-                  <span class="inline-flex items-center gap-0.5 ml-1 text-text-muted"
-                        title="Esperando confirmación de nuestro servidor. Todavía no ha salido hacia WhatsApp.">
-                    <app-icon name="clock" [size]="12" />
-                    <span class="text-[10px] font-semibold">Enviando</span>
+
+              <span class="bubble-time">
+                @if (item.mensaje.asistente) {
+                  <span class="marca-automatico" title="Lo escribió el asistente de IA, no una persona">
+                    <app-icon name="bot" [size]="10" />
+                    asistente
                   </span>
-                } @else if (item.mensaje.envioLocal === 'AMBIGUO') {
-                  <span class="inline-flex items-center gap-1 ml-1 text-text-muted"
-                        title="Se perdió la respuesta del servidor y el mensaje puede haber salido igualmente. Reintentar es seguro: lleva la misma clave de envío, así que el servidor devolverá el mensaje que ya existe en vez de mandar otro.">
-                    <app-icon name="alert-circle" [size]="12" />
-                    <span class="text-[10px] font-semibold">No se pudo confirmar</span>
-                    @if (item.mensaje.clientMessageId) {
-                      <button type="button" class="envio-accion"
-                              (click)="reintentarEnvio(item.mensaje)">Reintentar</button>
-                    }
-                    <button type="button" class="envio-accion envio-accion-secundaria"
-                            (click)="descartarEnvio(item.mensaje)">Descartar</button>
+                } @else if (item.mensaje.automatico) {
+                  <span class="marca-automatico" title="Lo envió el CRM solo (menú, respuesta automática o fuera de horario), no una persona">
+                    <app-icon name="clock" [size]="10" />
+                    automático
                   </span>
-                } @else if (item.mensaje.envioLocal === 'ERROR') {
-                  <span class="inline-flex items-center gap-1 ml-1 text-critical">
-                    <app-icon name="alert-circle" [size]="12" />
-                    <span class="text-[10px] font-semibold">No se envió</span>
-                    <!-- La condición es la MISMA que la de AMBIGUO y que la del
-                         handler: hay clave de envío. Antes aquí se miraba
-                         `!mediaKey` y en AMBIGUO no, así que un adjunto ambiguo
-                         enseñaba un botón que el handler ignoraba en silencio. -->
-                    @if (item.mensaje.clientMessageId) {
-                      <button type="button" class="envio-accion"
-                              (click)="reintentarEnvio(item.mensaje)">Reintentar</button>
-                    }
-                    <button type="button" class="envio-accion envio-accion-secundaria"
-                            (click)="descartarEnvio(item.mensaje)">Descartar</button>
-                  </span>
-                } @else {
-                @switch (item.mensaje.estadoEnvio) {
-                  @case ('LEIDO') {
-                    <app-icon name="check-check" [size]="12" class="inline-block ml-0.5 -mt-px text-secondary" title="Leído" />
-                  }
-                  @case ('ENTREGADO') {
-                    <app-icon name="check-check" [size]="12" class="inline-block ml-0.5 -mt-px" title="Entregado" />
-                  }
-                  @case ('FALLIDO') {
-                    <span
-                      class="inline-flex items-center gap-0.5 ml-1 text-critical"
-                      [title]="errorWhatsapp(item.mensaje.codigoErrorEnvio)">
-                      <app-icon name="alert-circle" [size]="12" />
-                      <span class="text-[10px] font-semibold">No enviado</span>
-                    </span>
-                    <!-- Resuelta la causa (la cuenta de Meta, la red), se reenvía la
-                         MISMA fila: la paciente lo recibe una vez. Fuera de las 24 h
-                         solo sirve una plantilla, así que ahí no se ofrece. -->
-                    @if (sePuedeReenviar(item.mensaje) && !state.fueraDeVentana24h()) {
-                      <button type="button" class="envio-accion"
-                              [disabled]="!!state.reenviando()"
-                              [attr.aria-busy]="state.reenviando() === item.mensaje.id"
-                              [title]="errorWhatsapp(item.mensaje.codigoErrorEnvio) + ' Si ya se resolvió, reenvíalo.'"
-                              (click)="state.reenviar(item.mensaje)">
-                        {{ state.reenviando() === item.mensaje.id ? 'Reenviando…' : 'Reenviar' }}
-                      </button>
-                    }
-                  }
-                  @case ('INCIERTO') {
-                    <span
-                      class="inline-flex items-center gap-0.5 ml-1 text-text-muted"
-                      title="No se pudo confirmar si llegó: se cortó la conexión con WhatsApp mientras se enviaba. NO lo reenvíes todavía — puede haberse entregado igual. Si salió, el tick se corrige solo en unos minutos.">
+                }
+                {{ item.mensaje.createdAt | date: 'HH:mm' }}
+                @if (item.mensaje.direccion === 'SALIENTE') {
+                  @if (item.mensaje.envioLocal === 'ENVIANDO') {
+                    <span class="inline-flex items-center gap-0.5 ml-1 text-text-muted"
+                          title="Esperando confirmación de nuestro servidor. Todavía no ha salido hacia WhatsApp.">
                       <app-icon name="clock" [size]="12" />
-                      <span class="text-[10px] font-semibold">Sin confirmar</span>
+                      <span class="text-[10px] font-semibold">Enviando</span>
                     </span>
+                  } @else if (item.mensaje.envioLocal === 'AMBIGUO') {
+                    <span class="inline-flex items-center gap-1 ml-1 text-text-muted"
+                          title="Se perdió la respuesta del servidor y el mensaje puede haber salido igualmente. Reintentar es seguro: lleva la misma clave de envío, así que el servidor devolverá el mensaje que ya existe en vez de mandar otro.">
+                      <app-icon name="alert-circle" [size]="12" />
+                      <span class="text-[10px] font-semibold">No se pudo confirmar</span>
+                      @if (item.mensaje.clientMessageId) {
+                        <button type="button" class="envio-accion"
+                                (click)="reintentarEnvio(item.mensaje)">Reintentar</button>
+                      }
+                      <button type="button" class="envio-accion envio-accion-secundaria"
+                              (click)="descartarEnvio(item.mensaje)">Descartar</button>
+                    </span>
+                  } @else if (item.mensaje.envioLocal === 'ERROR') {
+                    <span class="inline-flex items-center gap-1 ml-1 text-critical">
+                      <app-icon name="alert-circle" [size]="12" />
+                      <span class="text-[10px] font-semibold">No se envió</span>
+                      <!-- La condición es la MISMA que la de AMBIGUO y que la del
+                           handler: hay clave de envío. Antes aquí se miraba
+                           `!mediaKey` y en AMBIGUO no, así que un adjunto ambiguo
+                           enseñaba un botón que el handler ignoraba en silencio. -->
+                      @if (item.mensaje.clientMessageId) {
+                        <button type="button" class="envio-accion"
+                                (click)="reintentarEnvio(item.mensaje)">Reintentar</button>
+                      }
+                      <button type="button" class="envio-accion envio-accion-secundaria"
+                              (click)="descartarEnvio(item.mensaje)">Descartar</button>
+                    </span>
+                  } @else {
+                  @switch (item.mensaje.estadoEnvio) {
+                    @case ('LEIDO') {
+                      <app-icon name="check-check" [size]="12" class="inline-block ml-0.5 -mt-px text-secondary" title="Leído" />
+                    }
+                    @case ('ENTREGADO') {
+                      <app-icon name="check-check" [size]="12" class="inline-block ml-0.5 -mt-px" title="Entregado" />
+                    }
+                    @case ('FALLIDO') {
+                      <span
+                        class="inline-flex items-center gap-0.5 ml-1 text-critical"
+                        [title]="errorWhatsapp(item.mensaje.codigoErrorEnvio)">
+                        <app-icon name="alert-circle" [size]="12" />
+                        <span class="text-[10px] font-semibold">No enviado</span>
+                      </span>
+                      <!-- Resuelta la causa (la cuenta de Meta, la red), se reenvía la
+                           MISMA fila: la paciente lo recibe una vez. Fuera de las 24 h
+                           solo sirve una plantilla, así que ahí no se ofrece. -->
+                      @if (sePuedeReenviar(item.mensaje) && !state.fueraDeVentana24h()) {
+                        <button type="button" class="envio-accion"
+                                [disabled]="!!state.reenviando()"
+                                [attr.aria-busy]="state.reenviando() === item.mensaje.id"
+                                [title]="errorWhatsapp(item.mensaje.codigoErrorEnvio) + ' Si ya se resolvió, reenvíalo.'"
+                                (click)="state.reenviar(item.mensaje)">
+                          {{ state.reenviando() === item.mensaje.id ? 'Reenviando…' : 'Reenviar' }}
+                        </button>
+                      }
+                    }
+                    @case ('INCIERTO') {
+                      <span
+                        class="inline-flex items-center gap-0.5 ml-1 text-text-muted"
+                        title="No se pudo confirmar si llegó: se cortó la conexión con WhatsApp mientras se enviaba. NO lo reenvíes todavía — puede haberse entregado igual. Si salió, el tick se corrige solo en unos minutos.">
+                        <app-icon name="clock" [size]="12" />
+                        <span class="text-[10px] font-semibold">Sin confirmar</span>
+                      </span>
+                    }
+                    @default {
+                      <app-icon name="check" [size]="12" class="inline-block ml-0.5 -mt-px" title="Enviado" />
+                    }
                   }
-                  @default {
-                    <app-icon name="check" [size]="12" class="inline-block ml-0.5 -mt-px" title="Enviado" />
                   }
                 }
-                }
+              </span>
+              @if (item.mensaje.direccion === 'SALIENTE' && item.mensaje.estadoEnvio === 'FALLIDO') {
+                <div class="clear-both mt-2 pt-2 border-t border-critical/20 text-xs text-text-dark leading-relaxed" role="note">
+                  {{ errorWhatsapp(item.mensaje.codigoErrorEnvio) }}
+                  @if (item.mensaje.codigoErrorEnvio) {
+                    <span class="block mt-1 text-[10px] text-text-muted">Código de Meta: {{ item.mensaje.codigoErrorEnvio }}</span>
+                  }
+                </div>
               }
-            </span>
-            @if (item.mensaje.direccion === 'SALIENTE' && item.mensaje.estadoEnvio === 'FALLIDO') {
-              <div class="clear-both mt-2 pt-2 border-t border-critical/20 text-xs text-text-dark leading-relaxed" role="note">
-                {{ errorWhatsapp(item.mensaje.codigoErrorEnvio) }}
-                @if (item.mensaje.codigoErrorEnvio) {
-                  <span class="block mt-1 text-[10px] text-text-muted">Código de Meta: {{ item.mensaje.codigoErrorEnvio }}</span>
-                }
-              </div>
-            }
+            </div>
           </div>
-        </div>
-      }
+        }
+      </section>
     } @empty {
       @if (state.detalleEsProvisional() || state.detalle.isLoading()) {
         <div class="hilo-esqueleto">

@@ -416,8 +416,14 @@ export function esperandoDesde(c: ConversacionResumen): Date | null {
   return estaSinResponder(c) ? new Date(c.mensajes[0].createdAt) : null;
 }
 
-/** Elemento del hilo: mensaje real o separador de fecha. */
-export type ItemHilo =
-  | { readonly tipo: 'separador-fecha'; readonly fecha: string }
-  /** `continua`: sigue la tanda del anterior (mismo lado, misma persona, poco después) y se pinta pegado a él. */
-  | { readonly tipo: 'mensaje'; readonly mensaje: MensajeApi; readonly continua: boolean };
+/** Un día del hilo: limita su cabecera sticky a los mensajes de esa fecha. */
+export interface DiaHilo {
+  /** Día local estable: no cambia cuando «Hoy» pasa a «Ayer». */
+  readonly clave: string;
+  readonly fecha: string;
+  readonly mensajes: {
+    readonly mensaje: MensajeApi;
+    /** Sigue la tanda anterior, siempre dentro del mismo día. */
+    readonly continua: boolean;
+  }[];
+}

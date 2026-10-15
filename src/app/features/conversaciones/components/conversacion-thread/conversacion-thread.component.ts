@@ -101,7 +101,7 @@ export class ConversacionThreadComponent {
 
   /**
    * Si el usuario estaba pegado al fondo la última vez que scrolleó, ANTES
-   * de que `items` cambiara. Lo actualiza `onMessagesScroll()` en cada
+   * de que los mensajes cambiaran. Lo actualiza `onMessagesScroll()` en cada
    * evento real de scroll — nunca este `effect()`, que solo lo LEE (con
    * `untracked`, para no crear una dependencia y volver a correr en cada
    * scroll suelto).
@@ -110,7 +110,7 @@ export class ConversacionThreadComponent {
    * corrección de Chatwoot en su PR #10969 "Remove scroll to the bottom
    * when new message arrives"): el auto-scroll nunca pelea con quien ya
    * scrolleó hacia arriba a propósito. Antes de esto, este mismo `effect()`
-   * forzaba el fondo en CUALQUIER cambio de `items` — abrir un chat nuevo,
+   * forzaba el fondo en CUALQUIER cambio del hilo — abrir un chat nuevo,
    * que llegue un mensaje del paciente, o **cargar historial anterior**—,
    * así que scrollear arriba a leer una charla vieja se deshacía solo a los
    * pocos cientos de ms (el propio `setTimeout(forzarAbajo, 180)` de abajo),
@@ -159,7 +159,7 @@ export class ConversacionThreadComponent {
     effect(() => {
       const container = this.messagesContainer()?.nativeElement;
       const anchor = this.bottomAnchor()?.nativeElement;
-      const items = this.state.mensajesConFecha();
+      const dias = this.state.mensajesPorDia();
       const chat = this.state.detalleActual();
       const versionEnvio = this.state.versionEnvioPropio();
 
@@ -183,7 +183,7 @@ export class ConversacionThreadComponent {
       /* Cuántos mensajes nuevos quedaron DETRÁS del último que ya se había
          visto. Se mira el final del hilo y no el total: cargar historial
          anterior también hace crecer la lista, pero por arriba. */
-      const mensajes = items.flatMap(i => (i.tipo === 'separador-fecha' ? [] : [i.mensaje.id]));
+      const mensajes = dias.flatMap(dia => dia.mensajes.map(item => item.mensaje.id));
       const previo = this.ultimoMensajeId;
       this.ultimoMensajeId = mensajes.at(-1) ?? null;
       if (!esNuevoChat && previo && previo !== this.ultimoMensajeId && !untracked(this.pegadoAlFondo)) {
