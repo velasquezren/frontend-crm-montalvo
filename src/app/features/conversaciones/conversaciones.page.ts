@@ -265,7 +265,28 @@ export class ConversacionesPage implements AfterViewInit {
   }
 
   ngAfterViewInit(): void {
+    this.alVolverALaPagina();
     this.startPolling();
+  }
+
+  /**
+   * Volver a Conversaciones desde otra pantalla del CRM.
+   *
+   * El estado es `providedIn: 'root'` y sobrevive a la navegación, pero lo que
+   * lo mantiene al día —el socket, el reloj y el respaldo— vive en esta
+   * página: fuera de ella nada lo toca. Al volver se pintaba lo de la última
+   * visita tal cual: URLs firmadas ya caducadas (las imágenes no abrían),
+   * «Hoy» que en realidad era ayer, filas sin lo que llegó entretanto. Solo
+   * Ctrl+R lo arreglaba (16/10/2026). Ahora se refresca como al volver a la
+   * pestaña; lo viejo sigue a la vista mientras llega lo nuevo.
+   *
+   * En la primera visita no: los recursos se acaban de crear y ya están
+   * pidiendo, y recargarlos duplicaría cada petición.
+   */
+  private alVolverALaPagina(): void {
+    this.state.ahora.set(Date.now());
+    if (!this.state.inbox.hasValue() && !this.state.inbox.error()) return;
+    this.refrescar();
   }
 
   /**
