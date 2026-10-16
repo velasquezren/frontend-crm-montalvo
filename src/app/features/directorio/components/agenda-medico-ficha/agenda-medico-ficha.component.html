@@ -82,13 +82,13 @@
       }
     </div>
 
-    <!-- ── Horario: casillas de 30 minutos ───────────────────────────── -->
+    <!-- ── Horario: casillas según duración ───────────────────────────── -->
     <div id="ficha-panel-horario" role="tabpanel" aria-labelledby="ficha-tab-horario" class="flex-1 min-h-0 flex flex-col" [hidden]="pestana() !== 'horario'">
       <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
         <div class="rounded-2xl bg-bg-workspace border border-border px-4 py-3 flex flex-col gap-1">
           <p class="text-sm font-medium text-text-dark">{{ resumen() || 'Sin horario: la web lo ofrece «a solicitud».' }}</p>
           <p class="text-xs text-text-muted">
-            Cada casilla es un turno de 30 minutos que la web ofrece para reservar.
+            Cada casilla es un turno de {{ f.grilla.minutosConsulta ?? 30 }} minutos que la web ofrece para reservar.
             @if (puedeEditarHorario()) { Con el mouse, arrastra para pintar varias; toca un día para marcarlo entero. }
           </p>
         </div>
@@ -106,7 +106,7 @@
                   Falta confirmar la primera sincronización. Se muestran los cupos actuales de la agenda.
                 }
               } @else {
-                Las consultas duran 30 minutos. Para cambiar este horario, edítelo en FileMaker.
+                Las consultas duran {{ f.grilla.minutosConsulta ?? 30 }} minutos. Para cambiar este horario, edítelo en FileMaker.
               }
             </p>
           </div>

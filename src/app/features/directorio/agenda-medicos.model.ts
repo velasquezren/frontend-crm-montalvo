@@ -87,7 +87,7 @@ export interface CasillaAgenda {
 export interface FichaMedicoAgenda extends FotoDeMedico {
   medico: MedicoAgenda;
   casillas: CasillaAgenda[];
-  grilla: { dias: DiaAgenda[]; horas: string[] };
+  grilla: { dias: DiaAgenda[]; horas: string[]; minutosConsulta?: number };
   /** Se devuelve al guardar: si otra persona guardó antes, el backend responde 409. */
   version: string;
   /** La ficha web (foto, biografía, publicación), o null si todavía no tiene. */

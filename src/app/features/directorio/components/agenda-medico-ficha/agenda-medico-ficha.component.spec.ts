@@ -63,9 +63,10 @@ describe('ficha de un médico de la agenda', () => {
     Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(b => b.textContent?.includes(texto));
   afterEach(() => { fixture?.destroy(); http.verify(); vi.clearAllMocks(); realtime.cambioHorario.set(null); realtime.reconectado.set(0); });
 
-  it('con FileMaker muestra el origen y recepción no puede editar las casillas', async () => {
-    await montar('RECEPCION', { ...ficha(), sincronizacionHorario: { origen: 'FILEMAKER', pendiente: false, sincronizadoEn: '2026-10-15T12:00:00.000Z' } });
+  it.each([15, 30])('con FileMaker muestra consultas de %s min y recepción no puede editar las casillas', async minutosConsulta => {
+    await montar('RECEPCION', { ...ficha(), grilla: { ...ficha().grilla, minutosConsulta }, sincronizacionHorario: { origen: 'FILEMAKER', pendiente: false, sincronizadoEn: '2026-10-15T12:00:00.000Z' } });
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Horario gestionado en FileMaker');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(`Las consultas duran ${minutosConsulta} minutos.`);
     expect(casilla('Lunes 09:00').disabled).toBe(true);
     casilla('Martes 09:30').click();
     await asentar();
