@@ -1,5 +1,10 @@
 # Recepción y Ventas — cambios locales del 6 de octubre de 2026
 
+> Evidencia de UI del 6/10. Para el comportamiento posterior de reservas y
+> el contrato común consultar [agenda](../../backend-crm-montalvo/docs/agenda.md)
+> y [separación comercial](../../backend-crm-montalvo/docs/recepcion-y-ventas.md).
+
+
 En **Líneas WhatsApp**, Atención conserva configuración y menú opcional de
 servicio. **Cobro** aparece únicamente en líneas comerciales. El editor de
 Atención no permite agregar ni restaurar promociones con «Deshacer».
@@ -13,8 +18,8 @@ confirmar, pedir otro comprobante y anular quedan para agentes y administradores
 con acceso a la conversación. El servidor aplica las mismas restricciones.
 
 Se conservan atención humana, historial, tiempo real y los formularios de solicitud
-de cita ya autorizados. Ningún formulario confirma disponibilidad ni registra una
-cita en la agenda. No se activó un menú o Flow nuevo en un número real.
+de cita ya autorizados. Eso describe el formulario de solicitud de esta entrega; el Flow dinámico
+posterior sí consulta disponibilidad y registra reservas. No se activó un menú o Flow nuevo en un número real.
 
 La interfaz reutiliza los átomos y animaciones existentes. A 390 px el cajón deja
 350 px útiles: los campos se apilan, los avisos ajustan líneas y los controles
@@ -23,5 +28,5 @@ vista previa; los campos también se apilan para evitar columnas de unos 165 px.
 Validación mediante código y pruebas de componentes, sin navegador, según las
 instrucciones del repositorio.
 
-Cambios sin nuevas dependencias ni modificación del diseño global. Se requiere
-despliegue autorizado para que esta separación se aplique en producción.
+Cambios sin nuevas dependencias ni modificación del diseño global. Las activaciones posteriores están en el historial del backend;
+este informe no demuestra la configuración remota vigente.

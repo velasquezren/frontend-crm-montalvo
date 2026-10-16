@@ -7,6 +7,13 @@ description: Patrón obligatorio para construir o modificar una vista (página) 
 
 Arquitectura: `CRM_MANIFESTO.md` §1.2 y §4.4. Angular 21 con signals, sin NgModules, sin RxJS para estado de UI.
 
+## Consulta por tarea
+
+Leer Reglas de oro y la sección del cambio: datos → Servicio/Página;
+plantilla → cuatro estados; modal → DialogService; sesión → Autenticación;
+permisos → Roles y Rutas; actualización externa → Tiempo real. El detalle de
+chat, finanzas y diseño está en sus skills y solo se consulta si interviene.
+
 ## Reglas de oro
 
 - **Una página NUNCA inyecta `HttpClient` ni construye URLs.**

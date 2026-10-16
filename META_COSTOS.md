@@ -1,5 +1,12 @@
 # Costos de Meta — WhatsApp y Lead Ads (Bolivia, +591)
 
+> **Estimaciones históricas, no tarifario vigente ni factura del CRM.** Las
+> cifras de septiembre de 2026 y el tipo de cambio de ejemplo no se revalidaron
+> en la auditoría documental. Antes de presupuestar, contrastar el tarifario
+> oficial, mercado, categoría y consumo efectivo. La infraestructura real se
+> consulta en el backend; las partidas genéricas de abajo no describen sus pagos.
+
+
 Estructura de costos oficiales de Meta (WhatsApp Business Platform y Lead Ads) en
 **Bolivianos (BOB)** y **Dólares (USD)** para operar el CRM a escala en Bolivia.
 

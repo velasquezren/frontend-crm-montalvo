@@ -13,6 +13,13 @@ Tokens reales: `src/styles.css` (bloque `@theme` de Tailwind v4). Racional de ma
 > reglas envejecen bien, las tablas de datos no. Por eso `npm run check:skills` las
 > compara con el código y falla si mienten (ver *Mantenimiento* al final).
 
+## Consulta por tarea
+
+Consultar Regla de oro y después la sección que modifica la tarea: tokens
+→ Paleta/Geometría/Tipografía; control nuevo → Inventario de átomos antes de
+crearlo; interacción → Animación; fechas → helper de zona clínica. No leer
+todo el inventario para cambiar un texto o un contrato de API.
+
 ## Regla de oro
 
 **No escribas a mano un `<button>`, `<input>`, `<table>` ni un badge.** Existe un átomo para

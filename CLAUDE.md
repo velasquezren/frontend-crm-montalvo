@@ -1,137 +1,62 @@
 # CRM Clínica Montalvo — frontend
 
-Interfaz del CRM de una clínica estética en Bolivia. Angular 21 con signals,
-Tailwind v4, PWA. Desplegado en Vercel.
+Angular, signals, OnPush, Tailwind y PWA; backend NestJS en el repo hermano.
+Esta es la entrada operativa común para Claude Code y los demás agentes.
 
-La usan agentes de venta reales durante su jornada, muchas veces desde el móvil y
-con una conexión mediocre. **No hay staging**: lo que se despliega es lo que ve la
-clínica.
+## Orientación y fuentes
 
-## Dónde está todo
+1. Comprueba `git status` y el historial; haz `git fetch` en los repos implicados
+   antes de editar. Conserva trabajo local ajeno; no sincronices con reset.
+2. Lee el [estado breve](../backend-crm-montalvo/docs/ESTADO_ACTUAL.md) y usa el [índice por tarea](../backend-crm-montalvo/docs/README.md) para elegir
+   la sección necesaria. No cargues todas las auditorías ni todas las skills.
+3. Busca primero la implementación y sus tests (`rg` y `git log --all -- <ruta>`).
+   Un «pendiente» histórico no demuestra que falte la funcionalidad.
 
-Dos repositorios hermanos bajo el mismo directorio padre:
+La petición actual fija el alcance. El contrato ejecutable (código, schema,
+migraciones y tests) describe lo implementado; el [manifiesto](CRM_MANIFESTO.md) fija
+los principios de arquitectura y marca. Las guías y skills explican decisiones.
+Si discrepan, contrasta la evidencia: no cambies comportamiento solo para hacer
+coincidir una frase, ni declares correcto un bug porque compila.
+`check:skills` valida comprobaciones concretas, no toda la prosa ni producción.
 
-```
-CRM/
-├── backend-crm-montalvo/    ← NestJS + Prisma; la autoridad de permisos y datos
-└── frontend-crm-montalvo/   ← estás aquí
-```
+## Límites operativos
 
-`CRM_MANIFESTO.md` (en este repo) es la referencia de arquitectura y marca.
+- No hay staging; producción atiende pacientes reales. No desplegar, reiniciar,
+  migrar, enviar mensajes ni cambiar Meta/VPS sin una petición que lo autorice.
+  Un push a `main` del frontend publica en Vercel; el del backend no despliega.
+- No copiar secretos, `.env` ni datos reales de pacientes a documentación,
+  prompts, ejemplos o logs. El alias SSH local `montalvo-vps` no identifica por
+  sí solo el servidor del CRM: distinguir CRM/Resultados de agenda ScriptCase.
+- No usar navegador en este proyecto; comprobar UI desde código y declarar el
+  límite. Para API, pruebas locales o `curl` contra desarrollo.
+- Actualizar la guía propietaria cuando cambie un contrato. El historial no es
+  una lista de órdenes; no crear un archivo de seguimiento por sesión.
 
-## Antes de escribir código
+## Reglas de implementación
 
-**Primero lee [`../backend-crm-montalvo/docs/PANORAMA.md`](../backend-crm-montalvo/docs/PANORAMA.md)** —el mapa de qué hay hoy— **y después [`../backend-crm-montalvo/docs/ESTADO_ACTUAL.md`](../backend-crm-montalvo/docs/ESTADO_ACTUAL.md)**
-y haz `git fetch` en los dos repos. Dice qué fase de la auditoría está cerrada,
-qué sigue y qué no hay que deshacer. Vive en el backend porque cubre los dos
-repos. Se trabaja desde dos máquinas: es normal encontrarse commits que no se
-hicieron aquí.
+- El backend es la autoridad de permisos y datos. Una página no inyecta
+  `HttpClient` ni construye URLs: consume su servicio de dominio.
+- `OnPush`, signals y control flow nativo; cuatro estados en vistas remotas
+  (carga, error, vacío, contenido). Sin `any`, `console.log` ni colores ajenos.
+- Antes de cambiar una vista/datos, consultar la sección necesaria de
+  [crm-feature-page](.claude/skills/crm-feature-page/SKILL.md).
+  HTML/CSS/controles: [crm-design-system](.claude/skills/crm-design-system/SKILL.md)
+  y validación con [crm-ui-desde-codigo](.claude/skills/crm-ui-desde-codigo/SKILL.md).
+  Chat, finanzas, leads o rendimiento tienen su propia skill: elegir en el índice.
+- `db-enums.ts` se genera desde el schema del backend (`npm run sync:tipos`).
+  `core/build/app-build.ts` también es generado e ignorado. Usar scripts npm,
+  no `ng build`/`ng test` directos en un checkout limpio.
 
-Dos skills, y casi cualquier cambio necesita los dos:
+## Comprobación
 
-- **`crm-feature-page`** — antes de tocar una vista, añadir una llamada HTTP, abrir
-  un modal u ocultar algo por rol.
-- **`crm-design-system`** — antes de escribir HTML o CSS, elegir un color o crear
-  cualquier control.
-- **`crm-ui-desde-codigo`** — antes de dar por terminada una vista: cómo «verla» leyendo
-  el código (anchos reales, qué se trunca a 390 px, foco, objetivos táctiles). Es la
-  validación visual de este proyecto, porque aquí no se usa navegador.
+Instalación y comandos: [README](README.md). Para código, `npm run build` es
+la compuerta oficial, más tests pertinentes (`npm test -- --watch=false`) y
+`check:tests` al cambiar pruebas. Para documentación, comprobar referencias,
+`check:skills` y `git diff --check`; un build no valida comportamiento visual.
 
-Documentan **cicatrices**, no teoría. Si una regla parece excesiva, probablemente
-estás a punto de reintroducir el bug que la motivó.
+## Skills de terceros
 
-**Skill de terceros: `web-design-guidelines`** (de
-[vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills), copiado tal
-cual). Revisa una vista contra las Web Interface Guidelines de Vercel: accesibilidad,
-foco, formularios, contenido, móvil. **Si contradice a este repo, manda este repo**:
-el sistema de diseño (`crm-design-system`) decide colores, radios y sombras, y los
-textos van en español con mayúscula solo al inicio, no en «Title Case». No se usa
-`frontend-design` de Anthropic a propósito: pide paletas y tipografías «distintivas»,
-y aquí la paleta es cerrada y la hace cumplir el build.
-
-## Comandos
-
-```bash
-npm start              # ng serve
-npm run build          # check:tipos + check:skills + ng build — la compuerta real
-npm run sync:tipos     # regenera db-enums.ts desde el schema.prisma del backend
-```
-
-**No uses el navegador en este proyecto.** La verificación es `npm run build`.
-
-## Invariantes
-
-- **`npm run build` es la verdad.** Encadena dos validadores que comparan los skills
-  con el código y fallan si mienten. Si te contradicen, el equivocado es el skill:
-  corrígelo en el mismo commit.
-- **Ningún `any`, ningún `console.log`, ningún hexadecimal fuera de la paleta.**
-  El build rechaza las utilidades de color, sombra y radio que se salgan del sistema.
-- **`OnPush` en todo componente**, sin excepción. Es seguro solo porque todo el
-  estado es `signal()` / `computed()` / `input()`.
-- **Una página nunca inyecta `HttpClient` ni construye una URL.** Eso vive en el
-  servicio del dominio.
-- **Las cuatro ramas —carga, error, vacío, contenido— son obligatorias** en toda
-  vista con datos remotos, y el build lo comprueba. Sin la de error, un backend
-  caído dice "no hay clientes", que es una mentira, no un hueco.
-- **El backend es la autoridad de permisos.** Ocultar algo aquí no lo protege.
-
-## Autenticación
-
-`token.interceptor.ts` adjunta el JWT a cada petición y, ante un 401 ajeno a
-login/refresh/logout, intenta un refresco silencioso (`AuthService.refrescarToken()`,
-contra la cookie `HttpOnly` de 30 días que emite el backend) y reintenta la
-petición original una vez. Solo desloguea si ese refresco responde 401 o si la
-petición reintentada con el token nuevo **vuelve** a dar 401 — sin ese freno,
-una sesión realmente inválida entraba en bucle. Los fallos de red/5xx conservan
-la sesión; las respuestas de un login anterior se descartan por generación.
-Detalle completo en
-`crm-feature-page`.
-
-## Rendimiento: el cuello de botella es la RED
-
-Medido contra producción desde Bolivia: la consulta tarda 6-27 ms y el viaje de ida
-y vuelta ~190 ms. **El 97% del tiempo de una navegación es red.**
-
-Por eso lo que se nota es *no hacer la petición* — cachear referencia, derivar en
-memoria, no bloquear el arranque — y casi nunca micro-optimizar CSS o SQL.
-
-Carga el skill **`crm-rendimiento`** antes de cualquier trabajo de optimización.
-Regla corta: **un cambio de rendimiento sin medición antes y después no se commitea.**
-
-## Trampas conocidas
-
-- **`db-enums.ts` es generado**, no se edita a mano. Sale del `schema.prisma` del
-  repo hermano. Si el backend añade un valor a un enum, aquí hay que correr
-  `npm run sync:tipos` o el build falla.
-- **`core/build/app-build.ts` también es generado, y además está en `.gitignore`.**
-  Lleva el SHA del commit que se compila —de `VERCEL_GIT_COMMIT_SHA`, `GITHUB_SHA`
-  o `git`— para poder abrir DevTools en la PC de una agente, mirar
-  `window.crmBuild` y responder qué build corre sin deducirlo del bug que tiene.
-  No se commitea porque cambiaría en cada compilación y el árbol nunca estaría
-  limpio; lo regeneran `npm run build`, `npm test` y `npm run watch`.
-  **Por eso los comandos oficiales son los de npm.** `ng build` o `ng test` a
-  secas, sin pasar por su script, fallan con un import inexistente en un
-  checkout limpio — y eso es correcto, no un bug que haya que tapar.
-- **Moneda del sistema: Bs (es-BO)**, siempre vía el pipe `moneda`. Nunca a mano.
-  (Las comisiones se calculan en dólares dentro del backend; aquí llegan ya en Bs.)
-- **Un `%` puede ser puntos porcentuales o fracción, y confundirlos ya rompió tres
-  veces.** `pctEmpresa`/`pctPropio`/`PCT_TIPO_C_RA` nacen en puntos (`4.5` =
-  4,5%); `FACTOR_BONO_JEFATURA`/`FACTOR_BONO_TRIMESTRAL` son fracción (`0.002` =
-  0,2%) y sí llevan `×100` al mostrarse. Ver `crm-finanzas` antes de tocar
-  cualquier `%` de comisiones.
-- **Una URL firmada NUNCA se guarda: se guarda la clave.** `mediaUrl` viene
-  firmada y caduca (1 h), así que meterla en un campo que se persiste —el texto de
-  un mensaje, una nota— deja la imagen rota para siempre, mostrando su texto
-  alternativo ("Imagen adjunta"). Lo que se guarda es `mediaKey`, y el servidor
-  firma de nuevo en cada lectura.
-  **Ya entró dos veces por puertas distintas**: primero al adjuntar (agosto) y
-  después al insertar un recurso de Mi Memoria en el chat, que pegaba
-  `recurso.mediaUrl` en el cuerpo del mensaje. Si añades un tercer camino que
-  mande archivos, adjunta por `mediaKey` — nunca pegues la URL.
-- **Al partir una plantilla en subcomponentes, el CSS no viaja solo.** La
-  encapsulación `Emulated` deja la vista sin estilos, y ni `ng build` ni los tipos
-  se quejan. Esto **ya lo detecta `check:skills`**: si un HTML usa una clase cuyo
-  CSS quedó en otro componente, el build falla y dice dónde vive la regla. Era el
-  único fallo que había que revisar a ojo; dejó de serlo antes de partir
-  Conversaciones. Lo que el validador **no** ve son las clases construidas al
-  vuelo (`'chat-item--' + estado()`): esas siguen siendo cosa tuya.
+La referencia Angular está en `.agents/skills/angular-developer/` (ruta relativa
+al repo, no `/.agents/`). Consultar solo la API necesaria. `web-design-guidelines`
+es apoyo opcional; la marca y los patrones del CRM prevalecen. No añadir librerías
+de diseño ni cambiar la paleta por recomendación genérica de un proveedor.

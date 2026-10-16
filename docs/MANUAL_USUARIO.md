@@ -1,6 +1,6 @@
 # 📘 Manual Operativo y Guía de Uso — CRM Clínica Montalvo
 
-Bienvenido al manual operativo oficial del **CRM de Clínica Montalvo**. Este documento detalla la filosofía de uso, las capacidades y restricciones por rol (**Administrador** vs **Agente**), los casos de uso principales y la normativa sobre la atención a pacientes.
+Bienvenido al manual operativo oficial del **CRM de Clínica Montalvo**. Este documento detalla la filosofía de uso, las capacidades y restricciones por rol (incluidos Recepción y Asistente), los casos de uso principales y la normativa sobre la atención a pacientes.
 
 ---
 
@@ -29,7 +29,8 @@ El CRM de Clínica Montalvo es una plataforma web centralizada diseñada para:
 - La clínica utiliza la **WhatsApp Cloud API (Meta)** vinculada al número oficial de la Clínica Montalvo.
 - **Todos los agentes operan desde la App Web del CRM** en sus computadoras o tablets.
 - Varios agentes pueden responder simultáneamente al mismo número oficial sin interferir entre sí.
-- Cada mensaje queda registrado con hora, fecha y nombre del agente que respondió.
+- Los mensajes guardan fecha y hora. Los nuevos envíos humanos registran su
+  autor; los automáticos y el historial anterior a esa función pueden no tenerlo.
 
 ---
 
@@ -74,7 +75,7 @@ minuto mientras la pestaña está visible.
 ### Promociones
 
 **Promociones** reúne lo que la clínica ofrece por tiempo limitado. Todos pueden
-consultarlas (recepción las ofrece al paciente). Una **agente** las redacta y un
+consultarlas. Las ofertas y pagos por chat se envían desde líneas comerciales. Una **agente** las redacta y un
 **administrador** las publica:
 
 1. «Nueva promoción»: título, resumen y vigencia. Nace como **borrador**; nadie la ve.
@@ -100,8 +101,10 @@ cada uno, el CRM sabe de cuál vino cada paciente y la promoción cuenta sus ven
 
 **Directorio médico** tiene los médicos (con su foto, especialidades, precio de
 consulta y horario de atención) y las especialidades. Todos lo consultan; lo edita
-administración. Lo **publicado** aparece en la landing. El horario es
-**informativo**: las citas se siguen agendando en el sistema de la clínica. Las
+Recepción y administración para los datos de agenda, según sus permisos. Lo
+**publicado** aparece en la landing. Los médicos enlazados usan la agenda real
+para precio y disponibilidad; con horarios FileMaker activos, el horario semanal
+se edita en FileMaker. Las
 ausencias (vacaciones, congresos) avisan en la landing que el médico no atiende
 esos días. Al crear una ficha conviene enlazarla con el médico de la planilla (su
 código de FileMaker): así es la misma persona en ventas, comisiones y directorio.
@@ -114,7 +117,9 @@ código de FileMaker): así es la misma persona en ventas, comisiones y director
 1. El paciente envía un mensaje al número de WhatsApp de Clínica Montalvo.
 2. El sistema lo registra automáticamente e ingresa el chat en la pestaña **"Sin asignar"**.
 3. **El Agente** o **Admin** ve el indicador (punto verde teal) de chat nuevo sin atender.
-4. Al abrir el chat y responder, el sistema asigna la conversación o el **Admin** la asigna manualmente.
+4. En Ventas, responder puede reclamar el chat según permisos; Recepción
+   mantiene atención compartida y no lo asigna por el hecho de contestar. Un
+   administrador puede cambiar su responsable.
 5. El chat pasa a la pestaña **"Mis chats"** del agente asignado.
 
 ### 📝 Caso 2: Registro de un paciente presencial en recepción
@@ -126,7 +131,9 @@ código de FileMaker): así es la misma persona en ventas, comisiones y director
 ### 💳 Caso 3: Registro de una venta y cálculo de comisión
 1. Tras realizarse la atención o tratamiento, el agente va a **"Ventas"** → **"Registrar Venta"**.
 2. Selecciona al paciente, el tratamiento/servicio y el monto cobrado.
-3. Al guardar, la venta impacta en los reportes diarios y el sistema calcula automáticamente el porcentaje de comisión para el agente en el módulo **Comisiones**.
+3. Al guardar, la venta impacta en los reportes comerciales. La liquidación de
+   comisiones usa el Excel importado de FileMaker y su motor en **Finanzas**;
+   registrar una venta CRM no importa ni calcula automáticamente esa planilla.
 
 ### 🔄 Caso 4: Reasignación de chat por cambio de turno (Solo Admin)
 1. El Administrador ingresa a **WhatsApp Inbox**.
@@ -227,10 +234,12 @@ cancelan o se mueven una por una.
 4. El agente define la fecha, tipo y notas, y guarda. La actividad queda inmediatamente vinculada al historial del paciente y visible en el calendario general.
 
 ### 🔔 Caso 7: Recordatorios en vivo desde la Campana del Topbar
-1. En la barra superior, la campana (`🔔`) muestra un contador dinámico en rojo con las actividades vencidas o pendientes para el día de hoy.
+1. La campana de la barra superior muestra el contador de actividades
+   pendientes según la consulta del CRM, con los colores de marca.
 2. Al hacer clic en la campana, se despliega el panel de **Notificaciones & Recordatorios**.
 3. El agente puede revisar las tareas prioritarias y marcarlas como completadas directamente con un solo clic sin necesidad de desplazarse a otra pantalla.
-4. Cuando se cumple la hora de un recordatorio, el backend emite una alerta instantánea en vivo por WebSocket que actualiza la campana al segundo.
+4. El backend revisa recordatorios periódicamente (barrido cada cinco minutos)
+   y avisa por WebSocket/push. No se garantiza entrega al segundo exacto.
 
 ---
 

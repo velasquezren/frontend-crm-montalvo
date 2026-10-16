@@ -19,7 +19,7 @@ npm ci          # no `npm install`: reconstruye exactamente el lockfile
 npm start       # ng serve en http://localhost:4200
 ```
 
-Espera al backend en `http://localhost:3001`. Para levantarlo, ver [instalación local del backend](../backend-crm-montalvo/CLAUDE.md#instalación-y-arranque-local-linux--macos).
+Espera al backend en `http://localhost:3001`. Para levantarlo, ver [instalación local del backend](../backend-crm-montalvo/README.md#instalación-y-arranque-local-linux--macos).
 
 ## Verificar
 
@@ -29,7 +29,8 @@ npm run check:tests        # también comprueba tipos de los archivos de pruebas
 npm test -- --watch=false  # Vitest, ejecución finita
 ```
 
-`npm run build` es lo que decide si un cambio está bien, y encadena tres cosas:
+`npm run build` verifica reglas y compilación; no certifica por sí solo UX,
+contratos de negocio ni despliegue. Genera el sello de versión y encadena:
 
 - **`check:tipos`** compara los enums de TypeScript contra `schema.prisma` del
   backend. La fuente de verdad es el backend; si divergen, falla. Se
@@ -45,19 +46,16 @@ configura por sí solo una compuerta en Vercel.
 
 ## Dónde está lo demás
 
-| Necesitas | Está en |
-| --- | --- |
-| Dónde va el trabajo y qué sigue | [`backend-crm-montalvo/docs/ESTADO_ACTUAL.md`](../backend-crm-montalvo/docs/ESTADO_ACTUAL.md) — **léelo primero** |
-| Guía común para asistentes de IA | [`AI_GUIDE.md`](AI_GUIDE.md) y [`AGENTS.md`](AGENTS.md) |
-| Reglas operativas completas y skills | [`CLAUDE.md`](CLAUDE.md), `.claude/skills/` y `.agents/skills/` |
-| Principios de arquitectura y diseño | [`CRM_MANIFESTO.md`](CRM_MANIFESTO.md) |
-| Cómo se usa el CRM, por rol | [`docs/MANUAL_USUARIO.md`](docs/MANUAL_USUARIO.md) |
-| Configurar WhatsApp y Lead Ads en Meta | [`META_INTEGRATION_GUIDE.md`](META_INTEGRATION_GUIDE.md) |
-| Qué cuesta cada mensaje | [`META_COSTOS.md`](META_COSTOS.md) |
+- [CLAUDE.md](CLAUDE.md): instrucciones comunes de trabajo para todos los agentes.
+- [Índice por responsabilidad](../backend-crm-montalvo/docs/README.md): guía y código
+  del dominio, pruebas y antecedentes sin cargar todo el backend.
+- [Estado breve](../backend-crm-montalvo/docs/ESTADO_ACTUAL.md): trabajo existente,
+  pendientes verificados y límites de despliegue.
+- [CRM_MANIFESTO.md](CRM_MANIFESTO.md): principios de arquitectura y marca.
+- [Manual de uso](docs/MANUAL_USUARIO.md): recorridos para el equipo de la clínica.
+- [Integración Meta](META_INTEGRATION_GUIDE.md) y [costos](META_COSTOS.md): operación
+  y estimaciones fechadas, no pruebas de configuración ni tarifas vigentes.
 
-El directorio padre que contiene ambos repos **no es un repositorio git**: nada
-que viva solo ahí sobrevive a un cambio de máquina.
-
-## Líneas de WhatsApp y recepción
-
-El administrador identifica cada chat por nombre y teléfono del canal. SUPER_ADMIN configura las líneas y asigna permisos desde Usuarios; RECEPCION solo atiende los números asignados y no accede a módulos comerciales. Se requiere desplegar la migración y el backend correspondiente antes de este frontend. Ver [guía de conexión y límites](../backend-crm-montalvo/docs/lineas-whatsapp.md): las tres líneas nuevas están registradas, pendientes de alta/configuración en Meta.
+El directorio padre no es un repositorio Git: los archivos de continuidad deben
+vivir en uno de estos repos. Canales y permisos: [líneas WhatsApp](../backend-crm-montalvo/docs/lineas-whatsapp.md).
+La lista inicial de una migración no demuestra qué números están conectados hoy.

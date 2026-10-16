@@ -1,5 +1,11 @@
 # Guía de Configuración e Integración con Meta (WhatsApp & Leads)
 
+> Receta de configuración, no inventario de cuentas activas. Nombres de
+> variables contrastados con código y `.env.example` el 15/10/2026. La interfaz,
+> permisos y vigencia de tokens de Meta deben comprobarse al operar; esta
+> auditoría documental no hizo cambios ni comprobaciones remotas en Meta.
+
+
 Para que el CRM Montalvo funcione al 100% integrando el módulo de **Conversaciones (WhatsApp Inbox Premium)** y la captura automática de **Leads desde Meta Ads**, se requiere configurar el portal de **Meta developers** y la consola de **Meta Business Manager**.
 
 ## Índice
@@ -140,12 +146,16 @@ META_APP_SECRET="..."          # firma HMAC-SHA256 del cuerpo crudo; sin esto no
 WHATSAPP_TOKEN="EAAG..."       # token permanente del System User (Paso 6)
 WHATSAPP_PHONE_ID="123..."     # identificador del número
 WHATSAPP_WABA_ID="123..."      # cuenta de WhatsApp Business
+
+# Lead Ads: LeadAdsGraphService consulta este token para resolver leadgen_id
+PAGE_ACCESS_TOKEN="..."
 ```
 
 **El token NO es uno solo si hay varias líneas.** Cada fila de `LineaWhatsapp`
 guarda en `tokenEnv` el **nombre** de la variable que contiene su token, y
 `LineasWhatsappService` lo resuelve con `config.get(linea.tokenEnv)`. Por eso en
-producción existen `WHATSAPP_TOKEN` y `WHATSAPP_CLIMON_TOKEN`: son dos líneas.
+la configuración puede usar `WHATSAPP_TOKEN`, `WHATSAPP_CLIMON_TOKEN` u
+otros nombres por línea; no deducir el número de líneas activas de estos ejemplos.
 Al dar de alta una línea nueva se añade su variable y se pone el nombre en
 `tokenEnv` — no se toca el código.
 
