@@ -29,7 +29,7 @@ const AVISO_ATENCION: Readonly<Record<AccionAtencion, string>> = {
   liberar: 'Vuelve a «Por atender» para que la tome otra persona.',
   resolver: 'Sale de «Por atender». Las respuestas automáticas siguen en pausa en este chat.',
   reanudar: 'El menú y la IA vuelven a escribir en este chat.',
-  listo: 'Marcada como atendida. Sale de «Por atender».',
+  listo: 'Marcada como atendida. El menú y la IA vuelven a responder en este chat.',
 };
 import { cambiosDeFicha, valoresDeFicha } from '../../clientes/ficha-paciente';
 import { ClientesService } from '../../clientes/clientes.service';
