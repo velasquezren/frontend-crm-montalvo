@@ -7,7 +7,9 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "npm run sello:build && npm run check:tipos && npm run check:skills && ng build",
+    "build": "npm run sello:build && npm run check:tipos && npm run lint && ng build",
+    "lint": "npm run check:skills && node --test tools/verificar-ui.spec.mjs && node tools/verificar-ui.mjs",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit && npm run check:tests",
     "watch": "npm run sello:build && ng build --watch --configuration development",
     "test": "npm run sello:build && ng test",
     "sello:build": "node tools/generar-sello-build.mjs",

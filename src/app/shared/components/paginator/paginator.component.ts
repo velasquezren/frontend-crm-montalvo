@@ -19,7 +19,7 @@ import { ButtonComponent } from '../button/button.component';
           de <span class="font-medium text-text-dark">{{ total() }}</span>
         </p>
 
-        <div class="flex items-center gap-2">
+        <nav class="flex flex-wrap items-center gap-2" aria-label="Paginación">
           <app-button
             variant="secondary"
             size="sm"
@@ -28,7 +28,7 @@ import { ButtonComponent } from '../button/button.component';
             Anterior
           </app-button>
 
-          <span class="text-xs text-text-muted px-2 whitespace-nowrap">
+          <span class="text-xs text-text-muted px-2" role="status" aria-atomic="true">
             Página {{ pagina() }} de {{ totalPaginas() }}
           </span>
 
@@ -39,7 +39,7 @@ import { ButtonComponent } from '../button/button.component';
             (clicked)="cambiar.emit(pagina() + 1)">
             Siguiente
           </app-button>
-        </div>
+        </nav>
       </div>
     }
   `,

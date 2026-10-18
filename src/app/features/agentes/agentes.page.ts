@@ -1,3 +1,4 @@
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { LineasWhatsappService } from '../lineas-whatsapp/lineas-whatsapp.service';
 import { LineaWhatsapp, silencioParaGuardar } from '../lineas-whatsapp/linea-whatsapp.model';
 import { SelectorLineasComponent } from '../lineas-whatsapp/selector-lineas.component';
@@ -45,6 +46,7 @@ export type FiltroRolAgentes = 'TODOS' | RolUsuario;
 @Component({
   selector: 'app-agentes-page',
   imports: [
+    CdkTrapFocus,
     LoadingSkeletonComponent,
     KpiCardComponent,
     PageHeaderComponent,

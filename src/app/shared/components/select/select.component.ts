@@ -36,6 +36,7 @@ let nextId = 0;
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-select',
+  host: { class: 'block min-w-0' },
   imports: [IconComponent],
   template: `
     <div class="flex flex-col gap-1.5" [class.w-full]="fullWidth()">

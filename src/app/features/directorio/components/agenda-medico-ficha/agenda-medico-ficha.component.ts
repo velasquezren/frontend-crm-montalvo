@@ -9,6 +9,7 @@ import { generarIniciales } from '../../../../core/auth/user.model';
 import { ToastService } from '../../../../core/toast/toast.service';
 import { RealtimeService } from '../../../../core/realtime/realtime.service';
 import { AvatarComponent } from '../../../../shared/components/avatar/avatar.component';
+import { TablistDirective } from '../../../../shared/directives/tablist.directive';
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { DrawerComponent } from '../../../../shared/components/drawer/drawer.component';
@@ -62,6 +63,7 @@ const PESTANA_WHATSAPP = { id: 'whatsapp', etiqueta: 'WhatsApp', icono: 'phone' 
 @Component({
   selector: 'app-agenda-medico-ficha',
   imports: [
+    TablistDirective,
     AgendaHorarioGrillaComponent,
     AgendaMedicoDatosComponent,
     AgendaMedicoServiciosComponent,

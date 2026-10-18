@@ -5,9 +5,9 @@
 }
 
 <!-- ── Selector de mes y acciones ─────────────────────────────────── -->
-<div class="barra-periodo">
+<div class="crm-barra-periodo">
   <div class="flex items-center gap-3 min-w-0">
-    <div class="icono-periodo">
+    <div class="crm-icono-periodo">
       <app-icon name="calendar" [size]="18" />
     </div>
     @if (periodos.isLoading()) {
@@ -35,7 +35,7 @@
       <app-badge [variant]="p.estado === 'CALCULADO' ? 'success' : 'neutral'">
         {{ estadoLabel[p.estado] }}
       </app-badge>
-      <span class="pill-meta">{{ p.filasTotales }} filas · TC {{ p.tipoCambio }}</span>
+      <span class="crm-meta tabular-nums">{{ p.filasTotales }} filas · TC {{ p.tipoCambio }}</span>
       <app-button icon="download" size="sm" [loading]="descargando()" (clicked)="descargarExcel()">
         Descargar Excel
       </app-button>
@@ -105,10 +105,10 @@
 
   <!-- ══ 2. Reparto de la comisión por tipo ══ -->
   @if (liquidacionLista()) {
-    <section class="panel">
+    <section class="crm-panel">
       <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div>
-          <h3 class="titulo-seccion">Comisión por tipo</h3>
+          <h3 class="crm-titulo-seccion">Comisión por tipo</h3>
           <p class="subtitulo-seccion">
             {{ a.resumen.vendedorasLiquidadas }} vendedoras liquidadas en el periodo
           </p>
@@ -195,7 +195,7 @@
       </div>
     </section>
   } @else {
-    <section class="panel aviso-sin-calcular">
+    <section class="crm-panel aviso-sin-calcular">
       <app-icon name="alert-circle" [size]="18" class="shrink-0 text-critical" />
       <span>
         Este mes está importado pero <strong>todavía no se ha calculado</strong>. Las cifras de venta
@@ -205,9 +205,9 @@
   }
 
   <!-- ══ 3. Categorías de servicio (Split Panel: Dona + Tabla con Ordenamiento) ══ -->
-  <section class="panel">
+  <section class="crm-panel">
     <div class="mb-4">
-      <h3 class="titulo-seccion">Categorías de servicio</h3>
+      <h3 class="crm-titulo-seccion">Categorías de servicio</h3>
       <p class="subtitulo-seccion">Peso y distribución de cada categoría en la facturación del mes (Haz clic en los encabezados para ordenar)</p>
     </div>
 
@@ -225,35 +225,25 @@
         <app-table [dense]="true">
           <thead>
             <tr>
-              <th class="text-left cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarClasif('etiqueta')">
+              <th class="text-left" appOrdenable="etiqueta"
+                [orden]="sortClasifCol()" [direccion]="sortClasifDir()" direccionInicial="desc" (ordenar)="ordenarClasif('etiqueta')">
                 Categoría
-                @if (sortClasifCol() === 'etiqueta') {
-                  <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortClasifDir() === 'asc'" />
-                }
               </th>
-              <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarClasif('cantidad')">
+              <th class="text-right" appOrdenable="cantidad"
+                [orden]="sortClasifCol()" [direccion]="sortClasifDir()" direccionInicial="desc" (ordenar)="ordenarClasif('cantidad')">
                 Ventas
-                @if (sortClasifCol() === 'cantidad') {
-                  <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortClasifDir() === 'asc'" />
-                }
               </th>
-              <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarClasif('montoVendido')">
+              <th class="text-right" appOrdenable="montoVendido"
+                [orden]="sortClasifCol()" [direccion]="sortClasifDir()" direccionInicial="desc" (ordenar)="ordenarClasif('montoVendido')">
                 Facturado
-                @if (sortClasifCol() === 'montoVendido') {
-                  <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortClasifDir() === 'asc'" />
-                }
               </th>
-              <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarClasif('baseCalculo')">
+              <th class="text-right" appOrdenable="baseCalculo"
+                [orden]="sortClasifCol()" [direccion]="sortClasifDir()" direccionInicial="desc" (ordenar)="ordenarClasif('baseCalculo')">
                 Base
-                @if (sortClasifCol() === 'baseCalculo') {
-                  <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortClasifDir() === 'asc'" />
-                }
               </th>
-              <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarClasif('pctMonto')">
+              <th class="text-right" appOrdenable="pctMonto"
+                [orden]="sortClasifCol()" [direccion]="sortClasifDir()" direccionInicial="desc" (ordenar)="ordenarClasif('pctMonto')">
                 % del mes
-                @if (sortClasifCol() === 'pctMonto') {
-                  <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortClasifDir() === 'asc'" />
-                }
               </th>
             </tr>
           </thead>
@@ -265,7 +255,7 @@
                 <td class="text-right font-semibold text-text-dark">{{ c.montoVendido | moneda }}</td>
                 <td class="text-right text-text-muted">{{ c.baseCalculo | moneda }}</td>
                 <td class="text-right">
-                  <span class="badge-pct">{{ c.pctMonto }}%</span>
+                  <span class="crm-porcentaje">{{ c.pctMonto }}%</span>
                 </td>
               </tr>
             }
@@ -277,7 +267,7 @@
 
   <!-- ══ 4. Evolución del mes (@defer on viewport con altura exacta de 240px) ══ -->
   @defer (on viewport) {
-    <section class="panel">
+    <section class="crm-panel">
       <app-bar-chart
         title="Evolución diaria"
         subtitle="Facturación acumulada por día del mes"
@@ -287,15 +277,15 @@
           [items]="serieDiaria()" />
     </section>
   } @placeholder {
-    <section class="panel">
+    <section class="crm-panel">
       <app-loading-skeleton shape="card" height="240px" />
     </section>
   }
 
   <!-- ══ 5. Canal y unidad de negocio (@defer on viewport con altura exacta de 200px) ══ -->
   @defer (on viewport) {
-    <div class="grid-dos-equitativo">
-      <section class="panel">
+    <div class="crm-grid-dos">
+      <section class="crm-panel">
         <app-donut-chart
           title="Canal de venta"
           subtitle="Empresa vs. gestión propia de la vendedora"
@@ -303,7 +293,7 @@
           origenMoneda="USD"
           [items]="serieCanal()" />
       </section>
-      <section class="panel">
+      <section class="crm-panel">
         <app-donut-chart
           title="Unidad de negocio"
           subtitle="Maternidad, Reproducción Asistida y Varios"
@@ -313,15 +303,15 @@
       </section>
     </div>
   } @placeholder {
-    <div class="grid-dos-equitativo">
+    <div class="crm-grid-dos">
       <app-loading-skeleton shape="card" height="200px" />
       <app-loading-skeleton shape="card" height="200px" />
     </div>
   }
 
   @defer (on viewport) {
-    <div class="grid-dos-equitativo">
-      <section class="panel">
+    <div class="crm-grid-dos">
+      <section class="crm-panel">
         <app-bar-chart
           title="Módulo de origen"
           subtitle="De qué parte de FileMaker viene cada venta"
@@ -329,7 +319,7 @@
           origenMoneda="USD"
           [items]="serieModulo()" />
       </section>
-      <section class="panel">
+      <section class="crm-panel">
         @if (serieNivel().length > 0) {
           <app-bar-chart
             title="Nivel de plan"
@@ -338,26 +328,26 @@
             origenMoneda="USD"
           [items]="serieNivel()" />
         } @else {
-          <h3 class="titulo-seccion mb-2">Nivel de plan</h3>
+          <h3 class="crm-titulo-seccion mb-2">Nivel de plan</h3>
           <app-empty-state icon="file-x" title="Sin planes de maternidad"
             description="Este mes no se vendieron planes con nivel asignado." />
         }
       </section>
     </div>
   } @placeholder {
-    <div class="grid-dos-equitativo">
+    <div class="crm-grid-dos">
       <app-loading-skeleton shape="card" height="190px" />
       <app-loading-skeleton shape="card" height="190px" />
     </div>
   }
 
   <!-- ══ 6. Rankings con Ordenamiento Interactivo ══ -->
-  <div class="grid-dos-equitativo">
-    <section class="panel">
+  <div class="crm-grid-dos">
+    <section class="crm-panel">
       <div class="flex items-center justify-between mb-2">
         <!-- Ver la nota del Dashboard: allí el ranking sale de las ventas del
              CRM y aquí de lo facturado en el Excel. Son cosas distintas. -->
-        <h3 class="titulo-seccion">Servicios que más facturan</h3>
+        <h3 class="crm-titulo-seccion">Servicios que más facturan</h3>
         <div class="flex items-center gap-2">
           <span class="badge-tag">Top 15</span>
           <app-button variant="ghost" size="sm" icon="copy" (clicked)="copiarRankingServicios()">Copiar</app-button>
@@ -368,29 +358,21 @@
         <thead>
           <tr>
             <th class="text-left w-[40px]">#</th>
-            <th class="text-left cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarServicios('etiqueta')">
+            <th class="text-left" appOrdenable="etiqueta"
+                [orden]="sortServiciosCol()" [direccion]="sortServiciosDir()" direccionInicial="desc" (ordenar)="ordenarServicios('etiqueta')">
               Servicio
-              @if (sortServiciosCol() === 'etiqueta') {
-                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortServiciosDir() === 'asc'" />
-              }
             </th>
-            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarServicios('cantidad')">
+            <th class="text-right" appOrdenable="cantidad"
+                [orden]="sortServiciosCol()" [direccion]="sortServiciosDir()" direccionInicial="desc" (ordenar)="ordenarServicios('cantidad')">
               Veces
-              @if (sortServiciosCol() === 'cantidad') {
-                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortServiciosDir() === 'asc'" />
-              }
             </th>
-            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarServicios('montoVendido')">
+            <th class="text-right" appOrdenable="montoVendido"
+                [orden]="sortServiciosCol()" [direccion]="sortServiciosDir()" direccionInicial="desc" (ordenar)="ordenarServicios('montoVendido')">
               Facturado
-              @if (sortServiciosCol() === 'montoVendido') {
-                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortServiciosDir() === 'asc'" />
-              }
             </th>
-            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarServicios('pctMonto')">
+            <th class="text-right" appOrdenable="pctMonto"
+                [orden]="sortServiciosCol()" [direccion]="sortServiciosDir()" direccionInicial="desc" (ordenar)="ordenarServicios('pctMonto')">
               %
-              @if (sortServiciosCol() === 'pctMonto') {
-                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortServiciosDir() === 'asc'" />
-              }
             </th>
           </tr>
         </thead>
@@ -410,13 +392,13 @@
       </app-table>
     </section>
 
-    <section class="panel">
+    <section class="crm-panel">
       <div class="flex items-center justify-between mb-2">
         <!-- El alcance va en el título a propósito: hay otra tabla de médicos en
              Historial de Servicios, con toda la base y ficha por médico. Esta es
              una rebanada de la facturación DE ESTE MES, así que las dos cifras
              pueden no cuadrar y conviene que se vea por qué. -->
-        <h3 class="titulo-seccion">Médicos en la facturación del mes</h3>
+        <h3 class="crm-titulo-seccion">Médicos en la facturación del mes</h3>
         <div class="flex items-center gap-2">
           <span class="badge-tag">Top 10</span>
           <app-button variant="ghost" size="sm" icon="copy" (clicked)="copiarRankingMedicos()">Copiar</app-button>
@@ -430,29 +412,21 @@
         <thead>
           <tr>
             <th class="text-left w-[40px]">#</th>
-            <th class="text-left cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarMedicos('etiqueta')">
+            <th class="text-left" appOrdenable="etiqueta"
+                [orden]="sortMedicosCol()" [direccion]="sortMedicosDir()" direccionInicial="desc" (ordenar)="ordenarMedicos('etiqueta')">
               Médico
-              @if (sortMedicosCol() === 'etiqueta') {
-                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortMedicosDir() === 'asc'" />
-              }
             </th>
-            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarMedicos('cantidad')">
+            <th class="text-right" appOrdenable="cantidad"
+                [orden]="sortMedicosCol()" [direccion]="sortMedicosDir()" direccionInicial="desc" (ordenar)="ordenarMedicos('cantidad')">
               Atenciones
-              @if (sortMedicosCol() === 'cantidad') {
-                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortMedicosDir() === 'asc'" />
-              }
             </th>
-            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarMedicos('montoVendido')">
+            <th class="text-right" appOrdenable="montoVendido"
+                [orden]="sortMedicosCol()" [direccion]="sortMedicosDir()" direccionInicial="desc" (ordenar)="ordenarMedicos('montoVendido')">
               Facturado
-              @if (sortMedicosCol() === 'montoVendido') {
-                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortMedicosDir() === 'asc'" />
-              }
             </th>
-            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarMedicos('pctMonto')">
+            <th class="text-right" appOrdenable="pctMonto"
+                [orden]="sortMedicosCol()" [direccion]="sortMedicosDir()" direccionInicial="desc" (ordenar)="ordenarMedicos('pctMonto')">
               %
-              @if (sortMedicosCol() === 'pctMonto') {
-                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="sortMedicosDir() === 'asc'" />
-              }
             </th>
           </tr>
         </thead>

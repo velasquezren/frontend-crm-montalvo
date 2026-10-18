@@ -18,6 +18,7 @@ import { LoadingSkeletonComponent } from '../../shared/components/loading-skelet
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { SelectComponent } from '../../shared/components/select/select.component';
 import { TableComponent } from '../../shared/components/table/table.component';
+import { ThOrdenableComponent } from '../../shared/components/table/th-ordenable.component';
 import { MonedaPipe } from '../../shared/pipes/moneda.pipe';
 import {
   ESTADO_PERIODO_LABEL,
@@ -50,6 +51,7 @@ type ColRanking = 'etiqueta' | 'cantidad' | 'montoVendido' | 'pctMonto';
 @Component({
   selector: 'app-analitica',
   imports: [
+    ThOrdenableComponent,
     MonedaPipe,
     BadgeComponent,
     ButtonComponent,

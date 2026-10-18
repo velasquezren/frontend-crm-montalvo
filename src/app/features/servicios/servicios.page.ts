@@ -1,3 +1,4 @@
+import { TablistDirective } from '../../shared/directives/tablist.directive';
 import { OverlayRef } from '@angular/cdk/overlay';
 import { nombreMes } from '../../shared/models/meses';
 import { DecimalPipe } from '@angular/common';
@@ -106,6 +107,7 @@ const TABS_SERVICIOS: readonly TabServicioConfig[] = [
 @Component({
   selector: 'app-servicios',
   imports: [
+    TablistDirective,
     DecimalPipe,
     MonedaPipe,
     BadgeComponent,

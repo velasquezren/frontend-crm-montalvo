@@ -4,60 +4,8 @@
    ========================================================================== */
 
 /* ── Toolbar de Periodo ───────────────────────────────────────────── */
-.barra-periodo {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 12px 18px;
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  box-shadow: var(--shadow-subtle);
-  margin-bottom: 20px;
-}
-
-.icono-periodo {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, var(--color-primary) 10%, white);
-  color: var(--color-primary);
-  flex-shrink: 0;
-}
-
-
-.pill-meta {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  background: var(--color-bg-workspace);
-  padding: 4px 12px;
-  border-radius: 9999px;
-  border: 1px solid var(--color-border);
-  font-variant-numeric: tabular-nums;
-}
-
 /* ── Paneles Generales ────────────────────────────────────────────── */
-.panel {
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: var(--shadow-subtle);
-  margin-bottom: 20px;
-}
 
-.titulo-seccion {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-text-dark);
-  letter-spacing: -0.01em;
-}
 
 .subtitulo-seccion {
   font-size: 12px;
@@ -66,27 +14,23 @@
 
 /* ── Matriz Compacta de Ventas (14 columnas) ─────────────────────── */
 .contenedor-matriz-compacta {
-  overflow-x: auto;
-  border-radius: 12px;
-  border: 1px solid var(--color-border);
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
+  min-width: 0;
 }
 
 /* Reducción de padding para encajar 14 columnas sin deformaciones */
-.contenedor-matriz-compacta .crm-table-dense .crm-table thead th {
+.contenedor-matriz-compacta thead th {
   padding: 8px 10px;
   font-size: 11px;
   white-space: nowrap;
 }
 
-.contenedor-matriz-compacta .crm-table-dense .crm-table tbody td {
+.contenedor-matriz-compacta tbody td {
   padding: 8px 10px;
   font-size: 12px;
   white-space: nowrap;
 }
 
-.contenedor-matriz-compacta .crm-table-dense .crm-table tfoot td {
+.contenedor-matriz-compacta tfoot td {
   padding: 10px;
   font-size: 12px;
   white-space: nowrap;
@@ -184,10 +128,6 @@
 }
 
 @media (max-width: 768px) {
-  .panel {
-    padding: 14px;
-  }
-
   .rejilla-trimestres {
     grid-template-columns: repeat(2, 1fr);
   }

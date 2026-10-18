@@ -19,7 +19,7 @@ import { IconComponent, IconName } from '../icon/icon.component';
       @if (description()) {
         <p class="text-sm text-text-muted mt-1 max-w-sm">{{ description() }}</p>
       }
-      <div class="mt-5">
+      <div class="mt-5 empty:hidden">
         <ng-content />
       </div>
     </div>

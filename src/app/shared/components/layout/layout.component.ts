@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, inject, signal } from '@angular/core';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
+import { afterRenderEffect, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { MonedaService } from '../../../core/moneda/moneda.service';
@@ -22,6 +23,7 @@ import { NAV_GROUPS } from './nav-items';
 @Component({
   selector: 'app-layout',
   imports: [
+    CdkTrapFocus,
     ButtonComponent,
     RouterOutlet,
     RouterLink,
@@ -66,6 +68,17 @@ export class LayoutComponent {
     if (this.authService.puedeGestionComercial()) void this.moneda.cargarTipoCambio();
     this.volverArribaAlCambiarDePagina();
     this.escucharCambioDeAnchura();
+    let estabaAbierto = false;
+    afterRenderEffect(() => {
+      const abierto = this.esMovil() && this.sidebarExpanded();
+      const host = this.elementRef.nativeElement as HTMLElement;
+      if (abierto && !estabaAbierto) {
+        host.querySelector<HTMLButtonElement>('.cerrar-menu button')?.focus();
+      } else if (!abierto && estabaAbierto) {
+        host.querySelector<HTMLButtonElement>('.logo-toggle-btn')?.focus();
+      }
+      estabaAbierto = abierto;
+    });
   }
 
   /**
@@ -104,7 +117,7 @@ export class LayoutComponent {
   /** En escritorio el sidebar arranca abierto (240px) y el workspace se adapta fluidamente.
    *  En móvil arranca cerrado como drawer. */
   protected readonly sidebarExpanded = signal(
-    typeof window !== 'undefined' ? window.innerWidth >= 768 : true,
+    typeof window !== 'undefined' ? !window.matchMedia('(max-width: 768px)').matches : true,
   );
 
   /* PWA Installation state */
@@ -282,15 +295,19 @@ export class LayoutComponent {
   }
 
   protected onNavClick(): void {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+    if (this.esMovil()) {
       this.sidebarExpanded.set(false);
     }
+  }
+
+  protected cerrarMenu(): void {
+    if (this.esMovil()) this.sidebarExpanded.set(false);
   }
 
   onDocumentClick(event: MouseEvent): void {
     if (!this.sidebarExpanded()) return;
     // En escritorio el sidebar es parte del layout docked flow, no se cierra al hacer clic en el workspace
-    if (typeof window !== 'undefined' && window.innerWidth >= 768) return;
+    if (!this.esMovil()) return;
 
     const target = event.target as HTMLElement | null;
     const sidebarEl = this.elementRef.nativeElement.querySelector('.sidebar-inner');

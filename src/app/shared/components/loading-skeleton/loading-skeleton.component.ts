@@ -9,6 +9,7 @@ export type SkeletonShape = 'text' | 'input' | 'card' | 'pill' | 'circle';
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-loading-skeleton',
+  host: { 'aria-hidden': 'true', class: 'block min-w-0 max-w-full' },
   template: `<div [class]="classes()" [style.width]="width()" [style.height]="height()"></div>`,
 })
 export class LoadingSkeletonComponent {
@@ -26,7 +27,7 @@ export class LoadingSkeletonComponent {
     };
 
     return [
-      'bg-neutral-bg animate-[skeleton-pulse_1.6s_ease-in-out_infinite]',
+      'max-w-full bg-neutral-bg animate-[skeleton-pulse_1.6s_ease-in-out_infinite]',
       radii[this.shape()],
       this.height() ? '' : 'h-4',
     ].join(' ');

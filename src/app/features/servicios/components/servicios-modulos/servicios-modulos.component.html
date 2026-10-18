@@ -1,6 +1,6 @@
 <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
   <div>
-    <h3 class="titulo-seccion">Servicios por módulo</h3>
+    <h3 class="crm-titulo-seccion">Servicios por módulo</h3>
     <p class="subtitulo-seccion">Toca cualquier módulo para filtrar el dashboard completo</p>
   </div>
   @if (filtroModulo(); as m) {
@@ -24,7 +24,7 @@
           <app-badge [variant]="filtroModulo() === m.etiqueta ? 'success' : 'neutral'">
             {{ m.etiqueta }}
           </app-badge>
-          <span class="badge-pct">{{ m.pct }}%</span>
+          <span class="crm-porcentaje">{{ m.pct }}%</span>
         </div>
         <div>
           <span class="sub-card-cifra">{{ m.total | number }}</span>

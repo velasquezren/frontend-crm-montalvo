@@ -105,7 +105,7 @@
 
 <!-- ══════════════ 1. IMPORTAR ══════════════ -->
 @if (pestana() === 'IMPORTAR' && esSuperAdmin()) {
-  <section class="panel">
+  <section class="crm-panel">
     <div
       class="zona-carga"
       [class.zona-carga-dragged]="isDragging()"
@@ -122,7 +122,7 @@
         cambio del propio archivo, y clasifica cada venta automáticamente.
       </p>
 
-      <label class="boton-archivo mt-5 cursor-pointer">
+      <label class="boton-archivo crm-foco-dentro mt-5 cursor-pointer">
         @if (subiendo()) {
           <app-icon name="loader" [size]="16" />
           <span>Procesando archivo…</span>
@@ -130,7 +130,7 @@
           <app-icon name="download" [size]="16" />
           <span>Subir o arrastrar .xlsx</span>
         }
-        <input type="file" accept=".xlsx,.xls" class="hidden" [disabled]="subiendo()" (change)="subirArchivo($event)" />
+        <input type="file" accept=".xlsx,.xls" class="sr-only" [disabled]="subiendo()" (change)="subirArchivo($event)" />
       </label>
 
       <p class="text-[11px] text-text-muted mt-3">
@@ -329,7 +329,7 @@
     }
 
     <!-- Panel principal de clasificación -->
-    <section class="panel">
+    <section class="crm-panel">
       @if (modificacionPendienteRecalculo() && periodoActual()?.estado === 'CALCULADO') {
         <div class="flex items-center justify-between gap-3 p-3.5 mb-4 rounded-xl border border-primary/30 bg-primary/5 flex-wrap">
           <div class="flex items-center gap-2.5 text-xs font-semibold text-text-dark">
@@ -347,7 +347,7 @@
            los chips de abajo, que ya cuentan antes de tocarlos. -->
       <div class="filtros filtros-fila-buscar">
         <div class="flex-1 min-w-[220px]">
-          <app-input type="search" placeholder="Buscar por servicio o paciente…" [(value)]="busqueda" />
+          <app-input type="search" ariaLabel="Buscar por servicio o paciente" placeholder="Buscar por servicio o paciente…" [(value)]="busqueda" />
         </div>
         <div class="min-w-[200px]">
           <app-select
@@ -877,7 +877,7 @@
         que="el estado de cierre del mes"
         (reintentar)="revision.reload()" />
     } @else if (revision.value(); as rev) {
-    <section class="panel mb-4">
+    <section class="crm-panel mb-4">
       <app-cierre-periodo [revision]="rev" [periodoId]="periodoId()" [refrescar]="refrescarTrasCierre" />
     </section>
     }
@@ -906,7 +906,7 @@
     <!-- Todavía no llegó. No se sabe si habrá filas o no, así que no se dice. -->
     <app-loading-skeleton height="200px" />
   } @else if (sinLiquidacion()) {
-    <div class="panel text-center py-12 px-6 flex flex-col items-center">
+    <div class="crm-panel text-center py-12 px-6 flex flex-col items-center">
       <div class="w-14 h-14 rounded-2xl bg-neutral-bg flex items-center justify-center mb-4 text-text-muted">
         <app-icon name="bar-chart" [size]="24" />
       </div>
@@ -968,7 +968,7 @@
       }
 
       <!-- Totales del equipo -->
-      <section class="panel mb-4">
+      <section class="crm-panel mb-4">
         <h3 class="text-sm font-bold text-text-dark mb-3">
           Consolidado General — {{ nombreMes(rep.periodo.mes) }} {{ rep.periodo.anio }}
         </h3>
@@ -998,7 +998,7 @@
       </section>
 
       <!-- Planilla final por persona -->
-      <section class="panel">
+      <section class="crm-panel">
         <h3 class="text-sm font-bold text-text-dark mb-1">Planilla por Persona</h3>
         <p class="text-xs text-text-muted mb-3">
           La tabla de abajo resume cada vendedora en una fila. Para el desglose por tipo y
@@ -1016,7 +1016,7 @@
       <!-- Desglose por tipo y sección: responde "¿cuánto cobramos de Tipo B
            este mes?" sin sumar a mano — arriba Tipo B es una columna por
            vendedora, aquí es una lista filtrable con su propia sumatoria. -->
-      <section class="panel">
+      <section class="crm-panel">
         <h3 class="text-sm font-bold text-text-dark mb-3">Desglose por Tipo y Sección</h3>
         @if (desglose.isLoading() && desglose.value().filas.length === 0) {
           <app-loading-skeleton height="200px" />

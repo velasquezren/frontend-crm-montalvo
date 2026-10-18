@@ -5,18 +5,7 @@
  * respectivos componentes locales bajo `components/`.
  */
 
-/* ── Tarjetas de cifras (usadas en Demografía) ──────────────────────── */
-
-/* ── Paneles y títulos ──────────────────────────────────────────────── */
-
-.panel {
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: var(--shadow-subtle);
-  margin-bottom: 20px;
-}
+/* Paneles, rejillas y barra de periodo: utilidades crm-* de styles.css. */
 
 .sub-panel {
   background: var(--color-bg-workspace);
@@ -25,14 +14,10 @@
   padding: 16px;
 }
 
-.titulo-seccion {
+.crm-titulo-seccion {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-text-dark);
-  letter-spacing: -0.01em;
 }
 
 .subtitulo-seccion {
@@ -42,28 +27,11 @@
   margin-bottom: 16px;
 }
 
-.grid-dos-equitativo {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
-}
-
-.badge-pct {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 10%, white);
-  padding: 2px 8px;
-  border-radius: 9999px;
-  font-variant-numeric: tabular-nums;
-}
-
 /* .celda-sticky, .fila-clicable y .badge-servicios son ahora utilidades
    globales (styles.css): las repetían byte a byte esta hoja y las dos tablas
    de subcomponentes de este módulo. */
 
-.panel .grid-kpis-modern {
+.crm-panel .grid-kpis-modern {
   margin-bottom: 20px;
 }
 
@@ -83,14 +51,14 @@
   font-weight: 800;
 }
 
-.titulo-seccion + app-table,
-.titulo-seccion + .grid-dos-equitativo,
-.titulo-seccion + app-donut-chart {
+.crm-titulo-seccion + app-table,
+.crm-titulo-seccion + .crm-grid-dos,
+.crm-titulo-seccion + app-donut-chart {
   margin-top: 16px;
 }
 
 /* El ranking ahora envuelve título y botón en un div; la tabla va después. */
-.panel > div + app-table {
+.crm-panel > div + app-table {
   margin-top: 16px;
 }
 
@@ -108,42 +76,4 @@
 
 .servicios-tab-panel[hidden] {
   display: none !important;
-}
-
-/* ── Barra de periodo ─────────────────────────────────────────────────── */
-
-.barra-periodo {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 12px 18px;
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  box-shadow: var(--shadow-subtle);
-  margin-bottom: 20px;
-}
-
-.icono-periodo {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, var(--color-primary) 10%, white);
-  color: var(--color-primary);
-  flex-shrink: 0;
-}
-
-.pill-meta {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  background: var(--color-bg-workspace);
-  padding: 4px 10px;
-  border-radius: 9999px;
-  border: 1px solid var(--color-border);
 }

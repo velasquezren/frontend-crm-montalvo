@@ -23,6 +23,7 @@ export type ButtonSize = 'xs' | 'sm' | 'md';
     <button
       [type]="type()"
       [disabled]="disabled() || loading()"
+      [attr.aria-busy]="loading() || null"
       [class]="classes()"
       [attr.aria-label]="ariaLabel() || null"
       (click)="clicked.emit($event)">

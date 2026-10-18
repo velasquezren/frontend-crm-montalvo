@@ -22,6 +22,7 @@ import { EmptyStateComponent } from '../empty-state/empty-state.component';
  */
 @Component({
   selector: 'app-error-carga',
+  host: { role: 'status', 'aria-live': 'polite' },
   imports: [EmptyStateComponent, ButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `

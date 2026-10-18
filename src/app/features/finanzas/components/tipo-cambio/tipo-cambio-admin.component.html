@@ -83,13 +83,13 @@
 
   <!-- ── Cabecera: navegación de mes + sincronizar ────────────────────── -->
   <div class="flex flex-wrap items-center justify-between gap-3">
-    <div class="flex items-center gap-2">
+    <div class="flex flex-wrap items-center gap-2">
       <app-button variant="ghost" size="sm" [circle]="true" icon="chevron-left" ariaLabel="Mes anterior" (clicked)="mesAnterior()" />
       <span class="text-sm font-bold text-text-dark min-w-32 text-center">{{ etiquetaMes() }}</span>
       <app-button variant="ghost" size="sm" [circle]="true" icon="chevron-right" [disabled]="esMesActual()" ariaLabel="Mes siguiente" (clicked)="mesSiguiente()" />
     </div>
 
-    <div class="flex items-center gap-2">
+    <div class="flex flex-wrap items-center gap-2">
       @if (esMesActual() && fechaEnEdicion() === null) {
         <app-button variant="ghost" size="sm" icon="plus" (clicked)="abrirEdicionHoy()">
           Cargar hoy a mano
@@ -111,9 +111,9 @@
   <!-- ── Fila de edición de "hoy" cuando todavía no tiene ninguna fila ─── -->
   @if (fechaEnEdicionEsNueva()) {
     @let fecha = fechaEnEdicion()!;
-    <div class="bg-white rounded-2xl shadow-subtle p-4 flex items-center gap-3 border border-primary/20">
+    <div class="bg-white rounded-2xl shadow-subtle p-4 flex flex-wrap items-center gap-3 border border-primary/20">
       <span class="text-sm font-semibold text-text-dark whitespace-nowrap">{{ formatearFecha(fecha) }}</span>
-      <app-input type="text" placeholder="Ej. 11.54" [(value)]="valorEdicion" class="max-w-32" />
+      <app-input type="text" ariaLabel="Tipo de cambio, bolivianos por dólar" placeholder="Ej. 11.54" [(value)]="valorEdicion" class="max-w-32" />
       <app-button size="sm" [loading]="guardando()" (clicked)="guardarEdicion(fecha)">Guardar</app-button>
       <app-button variant="ghost" size="sm" (clicked)="cancelarEdicion()">Cancelar</app-button>
     </div>
@@ -151,7 +151,7 @@
               @if (fechaEnEdicion() === dia.fecha) {
                 <td class="px-4 py-2 font-medium text-text-dark whitespace-nowrap">{{ formatearFecha(dia.fecha) }}</td>
                 <td class="px-4 py-2" colspan="2">
-                  <app-input type="text" placeholder="Ej. 11.54" [(value)]="valorEdicion" class="max-w-32" />
+                  <app-input type="text" ariaLabel="Tipo de cambio, bolivianos por dólar" placeholder="Ej. 11.54" [(value)]="valorEdicion" class="max-w-32" />
                 </td>
                 <td class="px-4 py-2 text-right">
                   <div class="flex items-center justify-end gap-1.5">

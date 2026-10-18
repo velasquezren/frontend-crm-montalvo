@@ -1,3 +1,4 @@
+import { TablistDirective } from '../../shared/directives/tablist.directive';
 import { OverlayRef } from '@angular/cdk/overlay';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, TemplateRef, viewChild, ViewContainerRef } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -44,7 +45,7 @@ export function tabPromocionesDe(valor: string | null | undefined): TabPromocion
  */
 @Component({
   selector: 'app-promociones-page',
-  imports: [AnunciosMetaComponent, ButtonComponent, IconComponent, NuevaPromocionComponent, PageHeaderComponent, PromocionesListaComponent],
+  imports: [TablistDirective, AnunciosMetaComponent, ButtonComponent, IconComponent, NuevaPromocionComponent, PageHeaderComponent, PromocionesListaComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './promociones.page.html',
 })

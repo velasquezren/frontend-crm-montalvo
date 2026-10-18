@@ -25,15 +25,14 @@
          por pestaña para decir "activo". -->
     <div
       class="crm-segmento self-start md:self-auto overflow-x-auto"
-      role="tablist"
+      role="group"
       aria-label="Filtrar usuarios por rol">
       @for (filtro of filtrosRol(); track filtro.valor) {
         <button
           type="button"
-          role="tab"
           class="crm-segmento-opcion"
           [class.crm-segmento-opcion-activo]="filtroRol() === filtro.valor"
-          [attr.aria-selected]="filtroRol() === filtro.valor"
+          [attr.aria-pressed]="filtroRol() === filtro.valor"
           (click)="filtroRol.set(filtro.valor)">
           <app-icon [name]="filtro.icono" [size]="14" />
           <span>{{ filtro.etiqueta }}</span>
@@ -344,7 +343,7 @@
   @if (agenteABaja(); as ag) {
     <div
       class="bg-white w-full max-w-md rounded-2xl shadow-lifted p-6 sm:p-8 animate-modal-pop pointer-events-auto"
-      role="alertdialog"
+      role="alertdialog" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"
       aria-modal="true"
       aria-labelledby="titulo-baja"
       (click)="$event.stopPropagation()">

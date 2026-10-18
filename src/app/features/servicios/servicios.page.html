@@ -3,9 +3,9 @@
   subtitle="Qué se hizo en la clínica, a quién y quién lo atendió" />
 
 <!-- ── Selector de mes y contexto ─────────────────────────────────── -->
-<div class="barra-periodo">
+<div class="crm-barra-periodo">
   <div class="flex items-center gap-3 min-w-0">
-    <div class="icono-periodo">
+    <div class="crm-icono-periodo">
       <app-icon name="calendar" [size]="18" />
     </div>
     @if (periodos.isLoading()) {
@@ -32,9 +32,9 @@
       <app-badge [variant]="p.estado === 'CALCULADO' ? 'success' : 'neutral'">
         {{ estadoLabel[p.estado] }}
       </app-badge>
-      <span class="pill-meta">{{ p.filasTotales }} filas · TC {{ p.tipoCambio }}</span>
+      <span class="crm-meta tabular-nums">{{ p.filasTotales }} filas · TC {{ p.tipoCambio }}</span>
     } @else if (dashboardVista(); as d) {
-      <span class="pill-meta">
+      <span class="crm-meta tabular-nums">
         {{ d.porMes.length }} {{ d.porMes.length === 1 ? 'mes cargado' : 'meses cargados' }}
       </span>
     }
@@ -42,11 +42,12 @@
 </div>
 
 <!-- ── Barra de Pestañas Segmentadas ──────────────────────────────── -->
-<nav class="crm-segmento crm-segmento-pestanas mb-5" role="tablist" aria-label="Secciones de Historial de Servicios">
+<nav class="crm-segmento crm-segmento-pestanas mb-5" role="tablist" appTablist aria-label="Secciones de Historial de Servicios">
   @for (t of tabs; track t.id) {
     <button
       type="button"
       role="tab"
+          [attr.tabindex]="pestana() === t.id ? 0 : -1"
       [attr.aria-selected]="pestana() === t.id"
       [attr.aria-controls]="'panel-' + t.id"
       [id]="'tab-' + t.id"
@@ -108,7 +109,7 @@
         [pctCobertura]="pctCobertura()"
         [cobertura]="d.cobertura" />
 
-      <section class="panel">
+      <section class="crm-panel">
         <app-servicios-modulos
           [serieModulos]="serieModulos()"
           [desgloseModulos]="desgloseModulos()"
@@ -117,8 +118,8 @@
       </section>
 
       @if (serieClasif().length > 1) {
-        <section class="panel">
-          <h3 class="titulo-seccion">Distribución por clasificación</h3>
+        <section class="crm-panel">
+          <h3 class="crm-titulo-seccion">Distribución por clasificación</h3>
           <p class="subtitulo-seccion">
             Cómo se reparten los servicios según su tipo de comisión
           </p>
@@ -130,7 +131,7 @@
       }
 
       @defer (on viewport) {
-        <section class="panel">
+        <section class="crm-panel">
           <app-bar-chart
             title="Evolución mensual"
             subtitle="Servicios por mes cargado"
@@ -140,13 +141,13 @@
             [items]="serieMeses()" />
         </section>
       } @placeholder {
-        <section class="panel">
+        <section class="crm-panel">
           <app-loading-skeleton shape="card" height="240px" />
         </section>
       }
 
       @defer (on viewport) {
-        <section class="panel">
+        <section class="crm-panel">
           <app-bar-chart
             title="Servicios más realizados"
             subtitle="Los doce con más volumen en el periodo"
@@ -156,16 +157,16 @@
             [items]="serieTopServicios()" />
         </section>
       } @placeholder {
-        <section class="panel">
+        <section class="crm-panel">
           <app-loading-skeleton shape="card" height="360px" />
         </section>
       }
 
       <!-- Ranking de médicos -->
-      <section class="panel">
+      <section class="crm-panel">
         <div class="flex items-start justify-between gap-3 mb-1 flex-wrap">
           <div>
-            <h3 class="titulo-seccion">Médicos con más atenciones</h3>
+            <h3 class="crm-titulo-seccion">Médicos con más atenciones</h3>
             <p class="subtitulo-seccion">
               Toda la base de médicos del historial clínico. Haz clic en cualquier profesional para ver su perfil 360°, pacientes y facturación.
             </p>
@@ -214,7 +215,7 @@
                 <td class="text-right font-medium">
                   <span class="badge-servicios">{{ m.total | number }}</span>
                 </td>
-                <td class="text-right"><span class="badge-pct">{{ pctDelTotal()(m.total) }}%</span></td>
+                <td class="text-right"><span class="crm-porcentaje">{{ pctDelTotal()(m.total) }}%</span></td>
                 <td class="text-right font-semibold text-primary tabular-nums">{{ m.ingreso | moneda }}</td>
                 <td class="text-right">
                   <app-button
@@ -232,8 +233,8 @@
       </section>
 
       <!-- Demografía de la base de pacientes -->
-      <section class="panel">
-        <h3 class="titulo-seccion">
+      <section class="crm-panel">
+        <h3 class="crm-titulo-seccion">
           Perfil de los pacientes
           <app-info-hint titulo="De dónde salen estos datos">
             <p>
@@ -269,7 +270,7 @@
             }
           </section>
 
-          <div class="grid-dos-equitativo mb-5">
+          <div class="crm-grid-dos mb-5">
             <div class="sub-panel">
               <app-donut-chart title="Por sexo" etiquetaTotal="pacientes" formatType="number" [items]="serieSexo()" />
             </div>

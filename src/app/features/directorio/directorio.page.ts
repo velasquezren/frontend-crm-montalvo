@@ -1,3 +1,4 @@
+import { TablistDirective } from '../../shared/directives/tablist.directive';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -33,7 +34,7 @@ export function tabDirectorioDe(valor: string | null | undefined): TabDirectorio
  */
 @Component({
   selector: 'app-directorio-page',
-  imports: [AgendaEspecialidadesComponent, AgendaMedicosListaComponent, ButtonComponent, IconComponent, PageHeaderComponent],
+  imports: [TablistDirective, AgendaEspecialidadesComponent, AgendaMedicosListaComponent, ButtonComponent, IconComponent, PageHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './directorio.page.html',
 })

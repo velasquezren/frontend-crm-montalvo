@@ -1,11 +1,7 @@
-.titulo-seccion {
+.crm-titulo-seccion {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-text-dark);
-  letter-spacing: -0.01em;
 }
 
 .subtitulo-seccion {
@@ -24,7 +20,7 @@
 
 @media (min-width: 1024px) {
   .grid-split {
-    grid-template-columns: minmax(260px, 380px) 1fr;
+    grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
     gap: 32px;
   }
 }
@@ -70,15 +66,4 @@
   font-size: 12px;
   font-weight: 500;
   color: var(--color-text-muted);
-}
-
-.badge-pct {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 10%, white);
-  padding: 2px 8px;
-  border-radius: 9999px;
-  font-variant-numeric: tabular-nums;
 }

@@ -5,9 +5,9 @@
 }
 
 <!-- ── Toolbar de Periodo ───────────────────────────────────────────── -->
-<div class="barra-periodo">
+<div class="crm-barra-periodo">
   <div class="flex items-center gap-3 min-w-0">
-    <div class="icono-periodo">
+    <div class="crm-icono-periodo">
       <app-icon name="calendar" [size]="18" />
     </div>
     <div class="min-w-[120px]">
@@ -27,13 +27,13 @@
   @if (resumen.value(); as res) {
     @if (!resumen.isLoading() && filasBase().length > 0) {
       <div class="flex items-center gap-2 flex-wrap">
-        <span class="pill-meta">{{ mesesConDatos() }} de 12 meses importados</span>
-        <span class="pill-meta">{{ filasBase().length }} vendedoras</span>
+        <span class="crm-meta tabular-nums">{{ mesesConDatos() }} de 12 meses importados</span>
+        <span class="crm-meta tabular-nums">{{ filasBase().length }} vendedoras</span>
         <!-- La matriz anual es un informe: las dadas de baja no se listan. Pero la
              ausencia se declara, y con nombres — si no, el año pasado y este no
              cuadran entre sí y no hay forma de saber por qué. -->
         @if (res.ocultas.length > 0) {
-          <span class="pill-meta inline-flex items-center gap-1">
+          <span class="crm-meta tabular-nums inline-flex items-center gap-1">
             <app-icon name="eye-off" [size]="12" />
             {{ res.ocultas.length }} dada{{ res.ocultas.length === 1 ? '' : 's' }} de baja, sin listar
             <app-info-hint titulo="Vendedoras dadas de baja">
@@ -55,7 +55,7 @@
             </app-info-hint>
           </span>
         }
-        <span class="pill-meta bg-primary/10 text-primary font-bold border-primary/20">
+        <span class="crm-meta tabular-nums bg-primary/10 text-primary font-bold border-primary/20">
           {{ totalAnual() | moneda: 'USD': tcReferencia() }}
         </span>
       </div>
@@ -67,7 +67,7 @@
   <div class="grid-kpis-modern mb-6">
     @for (n of [1,2,3,4]; track n) { <app-loading-skeleton height="100px" shape="card" /> }
   </div>
-  <div class="panel space-y-3">
+  <div class="crm-panel space-y-3">
     <app-loading-skeleton shape="text" height="2rem" />
     <app-loading-skeleton shape="text" height="2rem" />
   </div>
@@ -109,10 +109,10 @@
   </section>
 
   <!-- ══ 2. Gráfico de Evolución Mensual ══ -->
-  <section class="panel mb-6">
+  <section class="crm-panel mb-6">
     <div class="flex items-center justify-between gap-4 mb-4 flex-wrap">
       <div>
-        <h3 class="titulo-seccion flex items-center gap-1.5">
+        <h3 class="crm-titulo-seccion flex items-center gap-1.5">
           Evolución Mensual de Facturación
           <app-info-hint titulo="Facturación Mensual del Equipo">
             <p>Muestra el total facturado en dólares por todo el equipo comercial en cada mes del año {{ anio() }}.</p>
@@ -145,10 +145,10 @@
   </section>
 
   <!-- ══ 3. Matriz de Doce Meses ══ -->
-  <section class="panel mb-6">
+  <section class="crm-panel mb-6">
     <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
       <div>
-        <h3 class="titulo-seccion flex items-center gap-1.5">
+        <h3 class="crm-titulo-seccion flex items-center gap-1.5">
           Facturación por Vendedora (Mes a Mes)
           <app-info-hint titulo="Matriz Anual de Ventas">
             <p>Lo <strong>vendido en bruto</strong>, en dólares, tal como llega del Excel de FileMaker.</p>
@@ -304,10 +304,10 @@
   </section>
 
   <!-- ══ 4. Liquidación de Bono Trimestral ══ -->
-  <section class="panel">
+  <section class="crm-panel">
     <div class="flex items-center justify-between gap-3 mb-4 flex-wrap">
       <div>
-        <h3 class="titulo-seccion flex items-center gap-1.5">
+        <h3 class="crm-titulo-seccion flex items-center gap-1.5">
           Bono Trimestral por Vendedora
           <app-info-hint titulo="Reglas del Bono Trimestral">
             <p>

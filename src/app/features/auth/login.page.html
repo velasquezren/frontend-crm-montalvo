@@ -2,7 +2,7 @@
      Login Page — Minimalist Edition (Split-Screen / Sin Caja)
      Ref: CRM_MANIFESTO.md §3.1, §3.2, §3.3 (Minimalismo Orgánico & Premium)
      ═══════════════════════════════════════════════════════════════ -->
-<div class="min-h-dvh w-full grid grid-cols-1 lg:grid-cols-2 bg-white text-text-dark font-sans select-none">
+<div class="min-h-dvh w-full grid grid-cols-1 lg:grid-cols-2 bg-white text-text-dark font-poppins">
 
   <!-- ── Left Side: Ambient Brand Panel (Desktop) ── -->
   <div class="hidden lg:flex relative flex-col justify-between p-12 lg:p-16 bg-gradient-to-br from-bg-light via-white to-bg-light/60 overflow-hidden border-r border-border/40">
@@ -62,7 +62,7 @@
 
       <!-- Error Alert -->
       @if (errorMessage()) {
-        <div class="p-3.5 rounded-xl bg-critical-bg border border-critical/20 text-xs text-text-dark font-medium flex items-center gap-2.5 animate-fade-scale">
+        <div role="alert" class="p-3.5 rounded-xl bg-critical-bg border border-critical/20 text-xs text-text-dark font-medium flex items-center gap-2.5 animate-fade-scale">
           <app-icon name="alert-circle" [size]="16" class="text-critical shrink-0" />
           <span class="flex-1">{{ errorMessage() }}</span>
         </div>
@@ -84,7 +84,7 @@
           autocomplete="current-password"
           [(value)]="password" />
 
-        <div class="flex items-center justify-between text-xs pt-1">
+        <div class="flex flex-col items-start gap-3 text-xs pt-1">
           <label class="flex items-center gap-2 text-text-dark cursor-pointer select-none">
             <input
               type="checkbox"
@@ -93,9 +93,7 @@
               class="w-4 h-4 accent-primary cursor-pointer" />
             <span class="text-text-muted">Recordarme</span>
           </label>
-          <span class="text-text-muted hover:text-primary transition-colors text-xs cursor-not-allowed" title="Contacta al administrador para restablecer acceso">
-            ¿Olvidaste tu clave?
-          </span>
+          <p class="text-text-muted leading-relaxed">Para restablecer tu contraseña, contacta al administrador.</p>
         </div>
 
         <div class="pt-2">

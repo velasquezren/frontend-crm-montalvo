@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, signal } from '@an
 
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { FilterChipComponent } from '../../../shared/components/filter-chip/filter-chip.component';
-import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { ThOrdenableComponent } from '../../../shared/components/table/th-ordenable.component';
 import { InfoHintComponent } from '../../../shared/components/info-hint/info-hint.component';
 import { SelectComponent } from '../../../shared/components/select/select.component';
 import { TableComponent } from '../../../shared/components/table/table.component';
@@ -35,7 +35,7 @@ type DireccionOrden = 'asc' | 'desc';
  */
 @Component({
   selector: 'app-desglose-comisiones',
-  imports: [MonedaPipe, TableComponent, FilterChipComponent, InfoHintComponent, IconComponent, EmptyStateComponent, SelectComponent],
+  imports: [MonedaPipe, TableComponent, FilterChipComponent, InfoHintComponent, ThOrdenableComponent, EmptyStateComponent, SelectComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="desglose-filtros">
@@ -96,44 +96,32 @@ type DireccionOrden = 'asc' | 'desc';
       <app-table [dense]="true">
         <thead>
           <tr>
-            <th class="text-left cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('vendedoraNombre')">
+            <th class="text-left" appOrdenable="vendedoraNombre"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('vendedoraNombre')">
               Vendedora
-              @if (ordenCampo() === 'vendedoraNombre') {
-                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-              }
             </th>
             <th class="text-left">Categoría</th>
             <th class="text-left">Canal</th>
             <th class="text-left">Unidad de negocio</th>
-            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('cantidad')">
+            <th class="text-right" appOrdenable="cantidad"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('cantidad')">
               Cant.
-              @if (ordenCampo() === 'cantidad') {
-                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-              }
             </th>
-            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('montoVendido')">
+            <th class="text-right" appOrdenable="montoVendido"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('montoVendido')">
               Facturado
-              @if (ordenCampo() === 'montoVendido') {
-                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-              }
             </th>
-            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('baseCalculo')">
+            <th class="text-right" appOrdenable="baseCalculo"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('baseCalculo')">
               Base
-              @if (ordenCampo() === 'baseCalculo') {
-                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-              }
             </th>
-            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('porcentaje')">
+            <th class="text-right" appOrdenable="porcentaje"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('porcentaje')">
               %
-              @if (ordenCampo() === 'porcentaje') {
-                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-              }
             </th>
-            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('comisionUsd')">
+            <th class="text-right" appOrdenable="comisionUsd"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('comisionUsd')">
               Comisión
-              @if (ordenCampo() === 'comisionUsd') {
-                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-              }
             </th>
           </tr>
         </thead>

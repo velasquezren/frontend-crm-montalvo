@@ -22,14 +22,14 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   template: `
     <div class="flex flex-wrap items-end justify-between gap-4">
       <div class="min-w-0">
-        <h1 class="text-2xl font-bold text-text-dark tracking-tight leading-tight">
+        <h1 class="text-2xl font-bold text-text-dark tracking-tight leading-tight break-words">
           {{ title() }}
         </h1>
         @if (subtitle()) {
           <p class="text-sm text-text-muted mt-1.5 leading-relaxed max-w-2xl">{{ subtitle() }}</p>
         }
       </div>
-      <div class="flex items-center gap-3 shrink-0">
+      <div class="flex flex-wrap items-center gap-3 min-w-0 max-w-full empty:hidden">
         <ng-content />
       </div>
     </div>

@@ -1,3 +1,4 @@
+import { TablistDirective } from '../../shared/directives/tablist.directive';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -69,6 +70,7 @@ const TABS: readonly TabConfig[] = [
 @Component({
   selector: 'app-finanzas',
   imports: [
+    TablistDirective,
     PageHeaderComponent,
     IconComponent,
     DesempenoAgentesComponent,

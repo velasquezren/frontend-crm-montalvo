@@ -13,11 +13,12 @@
     </app-page-header>
 
     @if (tabsVisibles().length > 1) {
-      <nav class="crm-segmento crm-segmento-pestanas" role="tablist" aria-label="Secciones de Promociones">
+      <nav class="crm-segmento crm-segmento-pestanas" role="tablist" appTablist aria-label="Secciones de Promociones">
         @for (t of tabsVisibles(); track t.id) {
           <button
             type="button"
             role="tab"
+          [attr.tabindex]="tabActiva() === t.id ? 0 : -1"
             [attr.aria-selected]="tabActiva() === t.id"
             [attr.aria-controls]="'panel-' + t.id"
             [id]="'tab-' + t.id"

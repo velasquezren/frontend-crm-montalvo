@@ -22,11 +22,12 @@
     }
   </div>
 
-  <nav subcabecera class="crm-segmento crm-segmento-pestanas mt-4" role="tablist" aria-label="Partes de la ficha">
+  <nav subcabecera class="crm-segmento crm-segmento-pestanas mt-4" role="tablist" appTablist aria-label="Partes de la ficha">
     @for (p of pestanas(); track p.id) {
       <button
         type="button"
         role="tab"
+        [attr.tabindex]="pestana() === p.id ? 0 : -1"
         class="crm-segmento-opcion"
         [id]="'ficha-tab-' + p.id"
         [attr.aria-selected]="pestana() === p.id"

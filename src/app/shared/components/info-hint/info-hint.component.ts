@@ -43,11 +43,12 @@ import { IconComponent } from '../icon/icon.component';
       #disparador
       type="button"
       class="inline-flex items-center justify-center align-middle rounded-full text-text-muted
-             hover:text-primary hover:bg-bg-light transition-all duration-200 p-0.5 cursor-pointer"
+             hover:text-primary hover:bg-bg-light transition-all duration-200 min-w-6 min-h-6 p-0.5 cursor-pointer"
       [class.text-primary]="abierto()"
       [class.bg-bg-light]="abierto()"
       [attr.aria-label]="'Cómo funciona: ' + titulo()"
       [attr.aria-expanded]="abierto()"
+      [attr.aria-describedby]="abierto() ? panelId : null"
       (click)="alternar($event)">
       <app-icon name="alert-circle" [size]="size()" />
     </button>
@@ -56,7 +57,7 @@ import { IconComponent } from '../icon/icon.component';
       <div
         class="bg-white rounded-2xl shadow-lifted border border-border p-4 max-w-xs
                animate-fade-scale pointer-events-auto"
-        role="tooltip">
+        role="tooltip" [id]="panelId">
         <p class="text-sm font-bold text-text-dark mb-1.5">{{ titulo() }}</p>
         <div class="text-xs text-text-muted leading-relaxed space-y-2">
           <ng-content />
@@ -66,6 +67,8 @@ import { IconComponent } from '../icon/icon.component';
   `,
 })
 export class InfoHintComponent {
+  private static siguienteId = 0;
+  protected readonly panelId = `crm-ayuda-${InfoHintComponent.siguienteId++}`;
   private readonly overlay = inject(Overlay);
   private readonly vcr = inject(ViewContainerRef);
   private readonly destroyRef = inject(DestroyRef);

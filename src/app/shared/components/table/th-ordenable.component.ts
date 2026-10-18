@@ -25,9 +25,8 @@ export type DireccionOrden = 'asc' | 'desc';
  * La flecha se ve siempre, apagada, para que se note que la columna se puede
  * ordenar antes de tocarla; al activarse se enciende y gira.
  *
- * Ordena el SERVIDOR, no esta cabecera: solo emite qué columna se pidió. Con
- * 15.000+ fichas paginadas de 25 en 25, ordenar en el cliente ordenaría la
- * página visible y mentiría sobre el resto.
+ * Solo emite qué columna se pidió. La vista conserva su ordenación: en listas
+ * paginadas la hace el servidor; los informes completos pueden ordenarse localmente.
  */
 @Component({
   selector: 'th[appOrdenable]',
@@ -37,22 +36,20 @@ export type DireccionOrden = 'asc' | 'desc';
   host: {
     class: 'crm-th-orden',
     '[class.crm-th-orden-activa]': 'activa()',
-    role: 'button',
-    tabindex: '0',
+    scope: 'col',
     '[attr.aria-sort]': 'ariaSort()',
-    '(click)': 'alternar()',
-    '(keydown.enter)': 'alternar()',
-    '(keydown.space)': 'alternar()',
   },
   template: `
-    <span class="crm-th-orden-caja">
+    <button type="button" class="crm-th-orden-caja" (click)="alternar()">
       <ng-content />
       <app-icon
         name="chevron-down"
         [size]="12"
         class="crm-th-orden-flecha"
         [class.crm-th-orden-flecha-asc]="activa() && direccion() === 'asc'" />
-    </span>
+    </button>
+    <!-- La ayuda interactiva queda fuera del botón de ordenar. -->
+    <ng-content select="app-info-hint" />
   `,
   styles: `
     .crm-th-orden {
@@ -62,9 +59,8 @@ export type DireccionOrden = 'asc' | 'desc';
     }
 
     .crm-th-orden:hover,
-    .crm-th-orden:focus-visible {
+    .crm-th-orden:focus-within {
       color: var(--color-primary);
-      outline: none;
     }
 
     .crm-th-orden-activa {
@@ -75,6 +71,13 @@ export type DireccionOrden = 'asc' | 'desc';
       display: inline-flex;
       align-items: center;
       gap: 4px;
+      min-height: 24px;
+      max-width: 100%;
+      font: inherit;
+      text-transform: inherit;
+      letter-spacing: inherit;
+      text-align: inherit;
+      cursor: pointer;
     }
 
     /* Apagada mientras la columna no ordena: insinúa que se puede pulsar sin

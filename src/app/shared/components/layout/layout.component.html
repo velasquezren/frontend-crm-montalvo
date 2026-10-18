@@ -1,10 +1,13 @@
+<a href="#contenido-principal" class="saltar-contenido"
+   (click)="$event.preventDefault(); contenidoPrincipal.focus()">Saltar al contenido</a>
 <div class="layout-grid" [class.layout-grid--inmersivo]="inmersivo()" [class.layout-grid--sidebar-expanded]="sidebarExpanded()">
 
   <!-- ══════════════════════════════════════════════════════════════════════
        TOPBAR — Barra superior compacta (64px)
        Ref: CRM_MANIFESTO.md §3.2
        ══════════════════════════════════════════════════════════════════════ -->
-  <header class="topbar flex items-center justify-between bg-white border-b border-border px-4 sm:px-6">
+  <header class="topbar flex items-center justify-between bg-white border-b border-border px-4 sm:px-6"
+          [attr.inert]="esMovil() && sidebarExpanded() ? '' : null">
 
     <!-- Logo interactivo (único botón para contraer/expandir el menú) -->
     <div class="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -15,6 +18,7 @@
                transition-all duration-200 cursor-pointer border border-transparent hover:border-border shrink-0"
         title="Abrir o cerrar el menú de navegación"
         aria-label="Abrir o cerrar el menú de navegación"
+        aria-controls="navegacion-principal"
         [attr.aria-expanded]="sidebarExpanded()">
         <img src="/favicon.svg" alt="Montalvo Logo" class="w-8 h-8 sm:w-10 sm:h-10 object-contain transition-transform duration-200 hover:scale-105" />
       </button>
@@ -78,8 +82,14 @@
          aria-hidden="true"></div>
   }
 
-  <aside class="sidebar" [class.sidebar-expanded]="sidebarExpanded()">
+  <aside id="navegacion-principal" class="sidebar" [class.sidebar-expanded]="sidebarExpanded()"
+         [attr.inert]="esMovil() && !sidebarExpanded() ? '' : null">
     <div class="sidebar-inner py-4"
+         [cdkTrapFocus]="esMovil() && sidebarExpanded()"
+         [attr.role]="esMovil() ? 'dialog' : null"
+         [attr.aria-modal]="esMovil() && sidebarExpanded() ? 'true' : null"
+         [attr.aria-label]="esMovil() ? 'Menú de navegación' : null"
+         (keydown.escape)="cerrarMenu()"
          [class.sidebar-inner-expanded]="sidebarExpanded()"
          [class.sidebar-inner--arrastrando]="arrastrandoCajon()"
          [style.transform]="transformCajon()"
@@ -87,6 +97,12 @@
          (touchmove)="alArrastrarCajon($event)"
          (touchend)="alSoltarCajon()"
          (touchcancel)="alSoltarCajon()">
+      @if (esMovil()) {
+        <div class="cerrar-menu flex justify-end px-3 py-2 shrink-0">
+          <app-button variant="ghost" size="sm" icon="x" [circle]="true"
+                      ariaLabel="Cerrar menú" (clicked)="cerrarMenu()" />
+        </div>
+      }
       <!-- Navigation -->
       <nav class="nav-lista flex flex-col gap-2 px-3 flex-1 overflow-y-auto" aria-label="Navegación principal">
         @for (group of navGroups(); track group.titulo; let idx = $index) {
@@ -101,6 +117,7 @@
               @for (item of group.items; track item.path) {
                 <a [routerLink]="item.path"
                    routerLinkActive="nav-active"
+                   ariaCurrentWhenActive="page"
                    class="nav-link"
                    [title]="item.label"
                    (click)="onNavClick()">
@@ -121,7 +138,8 @@
        WORKSPACE — Contenedor principal con <router-outlet>
        Ref: CRM_MANIFESTO.md §3.2 — bg alternativo
        ══════════════════════════════════════════════════════════════════════ -->
-  <main class="workspace bg-bg-workspace overflow-y-auto">
+  <main #contenidoPrincipal id="contenido-principal" tabindex="-1" class="workspace bg-bg-workspace overflow-y-auto"
+        [attr.inert]="esMovil() && sidebarExpanded() ? '' : null">
     <div class="workspace-inner">
       <router-outlet />
     </div>
@@ -132,8 +150,9 @@
 <!-- ══════════════════════════════════════════════════════════════════════
      MOBILE BOTTOM BAR — Navegación nativa PWA para iOS / Android
      ══════════════════════════════════════════════════════════════════════ -->
-<nav class="mobile-bottom-bar" [class.mobile-bottom-bar--oculta]="inmersivo()" aria-label="Navegación móvil">
-  <a routerLink="/conversaciones" routerLinkActive="mobile-nav-active" class="mobile-nav-item">
+<nav class="mobile-bottom-bar" [class.mobile-bottom-bar--oculta]="inmersivo()" aria-label="Navegación móvil"
+     [attr.inert]="esMovil() && sidebarExpanded() ? '' : null">
+  <a routerLink="/conversaciones" routerLinkActive="mobile-nav-active" ariaCurrentWhenActive="page" class="mobile-nav-item">
     <app-icon name="message-circle" [size]="20" />
     <span>Chats</span>
   </a>
@@ -144,18 +163,18 @@
        arrastrables, así que el gesto de scroll levanta una tarjeta. Sigue en el
        menú lateral; lo que se quita es el acceso de un toque a una vista que en
        móvil no se puede usar. -->
-  <a routerLink="/dashboard" routerLinkActive="mobile-nav-active" class="mobile-nav-item">
+  <a routerLink="/dashboard" routerLinkActive="mobile-nav-active" ariaCurrentWhenActive="page" class="mobile-nav-item">
     <app-icon name="dashboard" [size]="20" />
     <span>Panel</span>
   </a>
 
-  <a routerLink="/ventas" routerLinkActive="mobile-nav-active" class="mobile-nav-item">
+  <a routerLink="/ventas" routerLinkActive="mobile-nav-active" ariaCurrentWhenActive="page" class="mobile-nav-item">
     <app-icon name="shopping-bag" [size]="20" />
     <span>Ventas</span>
   </a>
 
   }
-  <a routerLink="/perfil" routerLinkActive="mobile-nav-active" class="mobile-nav-item">
+  <a routerLink="/perfil" routerLinkActive="mobile-nav-active" ariaCurrentWhenActive="page" class="mobile-nav-item">
     <app-icon name="user" [size]="20" />
     <span>Perfil</span>
   </a>

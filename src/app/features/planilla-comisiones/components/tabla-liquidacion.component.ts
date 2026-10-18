@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
-import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { ThOrdenableComponent } from '../../../shared/components/table/th-ordenable.component';
 import { InfoHintComponent } from '../../../shared/components/info-hint/info-hint.component';
 import { InputComponent } from '../../../shared/components/input/input.component';
 import { TableComponent } from '../../../shared/components/table/table.component';
@@ -44,23 +44,14 @@ type DireccionOrden = 'asc' | 'desc';
  * Es **presentacional**: recibe filas y totales ya calculados y no pide nada al
  * servidor. Quien lo usa decide de dónde salen los datos.
  *
- * ## Orden y búsqueda son locales, y el patrón sale de `analitica.page.html`
+ * ## Orden y búsqueda son locales
  *
  * `filas()` llega COMPLETA — el consolidado de un periodo no se pagina, son
  * como mucho un puñado de vendedoras — así que ordenar y filtrar en memoria no
- * miente sobre nada que no esté en pantalla. Por eso este componente NO usa
- * `th[appOrdenable]` (`ThOrdenableComponent`): esa cabecera documenta
- * explícitamente que ordena el SERVIDOR, y usarla aquí contradiría lo que
- * promete en cualquier tabla paginada del CRM que sí la use.
- *
- * Para la cabecera ordenable local **no se inventó CSS nuevo**: es el mismo
- * patrón que ya usa `analitica.page.html` (mismo módulo de Finanzas) para su
- * tabla de categorías — clases Tailwind (`cursor-pointer select-none
- * hover:text-primary transition-colors`) más un `<app-icon>` condicional, sin
- * clases propias. La primera versión de este archivo sí se inventó un bloque
- * `.th-clic*` de 40 líneas que reproducía a mano el aspecto de
- * `ThOrdenableComponent` — duplicación evitable que ya existía resuelta a un
- * componente de distancia.
+ * miente sobre nada que no esté en pantalla. `th[appOrdenable]` comparte el
+ * botón, el indicador y la semántica accesible; emite la columna y este
+ * componente aplica el orden local. La cabecera no decide dónde ordenar:
+ * las vistas paginadas siguen delegando esa operación al servidor.
  *
  * ## La moneda se aplica UNA vez, salvo en la columna que ya la nombra
  *
@@ -90,12 +81,12 @@ type DireccionOrden = 'asc' | 'desc';
  */
 @Component({
   selector: 'app-tabla-liquidacion',
-  imports: [MonedaPipe, TableComponent, InfoHintComponent, IconComponent, InputComponent, EmptyStateComponent],
+  imports: [MonedaPipe, TableComponent, InfoHintComponent, ThOrdenableComponent, InputComponent, EmptyStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex items-center justify-between gap-3 mb-2.5 flex-wrap">
       <div class="tabla-liquidacion-buscador">
-        <app-input type="search" placeholder="Buscar vendedora…" [(value)]="busqueda" />
+        <app-input type="search" ariaLabel="Buscar vendedora" placeholder="Buscar vendedora…" [(value)]="busqueda" />
       </div>
       <div class="text-xs text-text-muted font-medium">
         {{ filasVisibles().length }} de {{ filas().length - filasMarketing().length }} vendedoras
@@ -110,17 +101,13 @@ type DireccionOrden = 'asc' | 'desc';
     <app-table [dense]="true" [maxHeight]="maxHeight()">
       <thead>
         <tr>
-          <th class="text-left celda-fija cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('nombre')">
+          <th class="text-left celda-fija" appOrdenable="nombre"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('nombre')">
             Vendedora
-            @if (ordenCampo() === 'nombre') {
-              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-            }
           </th>
-          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('montoVendido')">
+          <th class="text-right" appOrdenable="montoVendido"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('montoVendido')">
             Facturado
-            @if (ordenCampo() === 'montoVendido') {
-              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-            }
             <app-info-hint titulo="Facturado y base de cálculo">
               <p>Lo cobrado en el mes, convertido con el tipo de cambio del periodo.</p>
               <p>
@@ -129,11 +116,9 @@ type DireccionOrden = 'asc' | 'desc';
               </p>
             </app-info-hint>
           </th>
-          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('planesVendidos')">
+          <th class="text-right" appOrdenable="planesVendidos"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('planesVendidos')">
             Planes
-            @if (ordenCampo() === 'planesVendidos') {
-              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-            }
             <app-info-hint titulo="Cuántos planes comisionan">
               <p>
                 El objetivo es una <strong>franquicia</strong>: solo comisionan los que lo
@@ -164,11 +149,9 @@ type DireccionOrden = 'asc' | 'desc';
             </app-info-hint>
           </th>
           @if (mostrarCirugias()) {
-            <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('acumuladoCirugias')">
+            <th class="text-right" appOrdenable="acumuladoCirugias"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('acumuladoCirugias')">
               Cirugías
-              @if (ordenCampo() === 'acumuladoCirugias') {
-                <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-              }
               <app-info-hint titulo="Cirugías del mes">
                 <p>
                   Acumulado de cirugías e internaciones. Su <strong>nivel</strong> sale
@@ -177,17 +160,13 @@ type DireccionOrden = 'asc' | 'desc';
               </app-info-hint>
             </th>
           }
-          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('comisionA')">
+          <th class="text-right" appOrdenable="comisionA"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('comisionA')">
             Tipo A
-            @if (ordenCampo() === 'comisionA') {
-              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-            }
           </th>
-          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('comisionTipoARA')">
+          <th class="text-right" appOrdenable="comisionTipoARA"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('comisionTipoARA')">
             Tipo A (RA)
-            @if (ordenCampo() === 'comisionTipoARA') {
-              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-            }
             <app-info-hint titulo="Tipo A (RA)">
               <p>
                 No es la misma comisión que <strong>Tipo A</strong>: esta paga aparte, sobre las
@@ -202,23 +181,17 @@ type DireccionOrden = 'asc' | 'desc';
               </p>
             </app-info-hint>
           </th>
-          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('comisionB')">
+          <th class="text-right" appOrdenable="comisionB"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('comisionB')">
             Tipo B
-            @if (ordenCampo() === 'comisionB') {
-              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-            }
           </th>
-          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('comisionC')">
+          <th class="text-right" appOrdenable="comisionC"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('comisionC')">
             Tipo C
-            @if (ordenCampo() === 'comisionC') {
-              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-            }
           </th>
-          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('bonoTrimestral')">
+          <th class="text-right" appOrdenable="bonoTrimestral"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('bonoTrimestral')">
             Bono trimestral
-            @if (ordenCampo() === 'bonoTrimestral') {
-              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-            }
             <app-info-hint titulo="Bono trimestral">
               <p>
                 <strong>0,5 % del PROMEDIO</strong> de lo facturado en los tres meses del trimestre,
@@ -231,11 +204,9 @@ type DireccionOrden = 'asc' | 'desc';
               <p>Se paga en marzo, junio, septiembre y diciembre.</p>
             </app-info-hint>
           </th>
-          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('otrosBonos')">
+          <th class="text-right" appOrdenable="otrosBonos"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('otrosBonos')">
             Otros bonos
-            @if (ordenCampo() === 'otrosBonos') {
-              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-            }
             <app-info-hint titulo="Bono de jefatura y publicidad">
               <p>
                 Cada vendedora que supera su objetivo mensual aporta un porcentaje de su
@@ -247,29 +218,21 @@ type DireccionOrden = 'asc' | 'desc';
               </p>
             </app-info-hint>
           </th>
-          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('totalUsd')">
+          <th class="text-right" appOrdenable="totalUsd"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('totalUsd')">
             Total USD
-            @if (ordenCampo() === 'totalUsd') {
-              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-            }
           </th>
-          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('totalBob')">
+          <th class="text-right" appOrdenable="totalBob"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('totalBob')">
             Total Bs
-            @if (ordenCampo() === 'totalBob') {
-              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-            }
           </th>
-          <th class="text-right cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('sueldoBase')">
+          <th class="text-right" appOrdenable="sueldoBase"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('sueldoBase')">
             Sueldo
-            @if (ordenCampo() === 'sueldoBase') {
-              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-            }
           </th>
-          <th class="text-right celda-fija-der cursor-pointer select-none hover:text-primary transition-colors" (click)="ordenarPor('totalGanado')">
+          <th class="text-right celda-fija-der" appOrdenable="totalGanado"
+                [orden]="ordenCampo()" [direccion]="ordenDireccion()" direccionInicial="desc" (ordenar)="ordenarPor('totalGanado')">
             A pagar
-            @if (ordenCampo() === 'totalGanado') {
-              <app-icon name="chevron-down" [size]="13" class="inline ml-0.5 text-primary transition-transform duration-200" [class.rotate-180]="ordenDireccion() === 'asc'" />
-            }
           </th>
         </tr>
       </thead>

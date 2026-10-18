@@ -1,3 +1,4 @@
+import { TablistDirective } from '../../shared/directives/tablist.directive';
 import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -45,7 +46,7 @@ export function tabCampanasDe(valor: string | null | undefined): TabCampanas {
  */
 @Component({
   selector: 'app-campanas-page',
-  imports: [CampanaAudienciaComponent, CampanasListaComponent, IconComponent, PageHeaderComponent],
+  imports: [TablistDirective, CampanaAudienciaComponent, CampanasListaComponent, IconComponent, PageHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './campanas.page.html',
 })

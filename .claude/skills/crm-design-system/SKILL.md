@@ -81,7 +81,15 @@ hex local.
 
 ## Tipografía y números
 
-Poppins. Jerarquía: H1 48 / H2 36 / H3 28 / base 16 / small 14.
+Poppins. Jerarquía base del workspace: H1 24 / H2 20 / H3 16 / base 16 / small 14.
+Las cabeceras de sección usan `.crm-titulo-seccion` (15px); las utilidades de
+cada contexto conservan la densidad de tablas y cajones. Los radios `xl` y
+`2xl` se definen en `@theme` para CSS y Tailwind.
+
+Informes, Servicios y configuración comparten `.crm-panel`, `.crm-barra-periodo`,
+`.crm-icono-periodo` y `.crm-grid-dos`. Son utilidades de presentación en
+`styles.css`; no copiar sus reglas en hojas locales. Los porcentajes son
+`.crm-porcentaje` y los datos de contexto siguen siendo `.crm-meta`.
 
 **Montos, teléfonos, fechas y cualquier número en columna van con `tabular-nums`** (ya viene en
 `<app-table>` y en los charts). Sin ancho fijo por dígito, las cifras bailan al cambiar de fila y
@@ -154,7 +162,7 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 | Button | `<app-button>` | `variant` (primary/secondary/ghost/**critical** — destructiva; negro de paleta, no rojo), `size` (**xs** = acción de solo ícono en filas densas, círculo de 28 px con `[circle]` · sm = cabeceras y barras, como el cerrar del cajón · md), `type`, `icon`, `loading`, `disabled`, `fullWidth`, `circle`, **`ariaLabel`** (obligatorio en los solo-ícono: sin texto proyectado el lector de pantalla solo dice "botón") · `(clicked)` |
 | Switch | `<app-switch>` | `disabled`, `ariaLabel` · `[(value)]` — enciende/apaga una capacidad. `role="switch"`, no un checkbox: un checkbox marca una opción de un conjunto, un switch activa algo |
 | Select | `<app-select>` | `label`, `size` (sm=filtro de barra / md=campo de formulario), `icono`, `disabled`, `fullWidth`, `ariaLabel`, `activo` (filtro con valor puesto: se tiñe de primario) · `[(value)]` · proyecta sus `<option>` — **el único desplegable**; no escribas un `<select>` a mano |
-| Input | `<app-input>` | `label`, `type` (incl. password con toggle), `placeholder`, `autocomplete`, `error`, `disabled`, `multiline` (renderiza `<textarea>` en vez de `<input>`, mismo wrapper/label/error), `rows` (solo con `multiline`), **`ariaLabel`** (nombre accesible si no hay `label`: un buscador en una barra) · `[(value)]` |
+| Input | `<app-input>` | `label`, `type` (incl. password con toggle), `icon` (decorativo, solo en una línea), `placeholder`, `autocomplete`, `error`, `disabled`, `multiline` (renderiza `<textarea>` en vez de `<input>`, mismo wrapper/label/error), `rows` (solo con `multiline`), **`ariaLabel`** (nombre accesible si no hay `label`: un buscador en una barra) · `[(value)]` |
 | Badge | `<app-badge>` | `variant` (success/info/neutral/critical/gold — gold solo para la categoría Gold), `icon` |
 | Card | `<app-card>` | `padding` (sm/md/lg), `hoverable` |
 | Drawer | `<app-drawer>` | `ancho` (sm/md/lg/xl/ancho), `alto` (pantalla/contenido), `titulo`, `subtitulo`, `icono`, `etiqueta` · `(cerrar)` · slots `[cabecera]` (fila del título) y `[subcabecera]` (bloque a todo el ancho) — **el único cajón lateral**; se abre con `DialogService.abrirCajon()` |
@@ -166,8 +174,8 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 | LoadingSkeleton | `<app-loading-skeleton>` | `shape`, `width`, `height` |
 | PageHeader | `<app-page-header>` | `title` (requerido), **`subtitle`** + acciones proyectadas |
 | FilterChip | `<app-filter-chip>` | `active`, `count`, `size`, `transitions` (true por defecto; false en los filtros del inbox para pintar y cambiar de estado sin fundidos) · `(clicked)` |
-| Table | `<app-table>` | `dense`, `maxHeight` — proyecta `<thead>`/`<tbody>` nativos |
-| ThOrdenable | `th[appOrdenable]` | `appOrdenable` (columna, requerido), `orden`, `direccion`, `direccionInicial` · `(ordenar)` — cabecera ordenable; **ordena el servidor**, no el cliente |
+| Table | `<app-table>` | `dense`, `maxHeight`, `etiqueta` (nombre de la región desplazable por teclado) — proyecta `<thead>`/`<tbody>` nativos |
+| ThOrdenable | `th[appOrdenable]` | `appOrdenable` (columna, requerido), `orden`, `direccion`, `direccionInicial` · `(ordenar)` — conserva el orden de la vista (servidor en listas paginadas); proyecta `app-info-hint` fuera del botón |
 | Paginator | `<app-paginator>` | `pagina`, `totalPaginas`, `total` (requeridos), `limite` · `(cambiar)` |
 | BarChart | `<app-bar-chart>` | `items`, `mode` (BAR/COLUMN), `title`, `subtitle`, `height`, `formatType`, `origenMoneda` · `(segmentClick)` |
 | DonutChart | `<app-donut-chart>` | `items`, `title`, `subtitle`, `etiquetaTotal`, `formatType`, `origenMoneda` · `(segmentClick)` — un ítem sin color propio toma el de la rampa por índice (ver «Tonos de un gráfico») |

@@ -77,15 +77,16 @@ si algo cabe **antes** de escribirlo, no después de verlo roto.
   mide 22 px: **no cumple**. Iguala el alto al de sus vecinos (`min-height: 32px`). Pasó con el
   «Contexto» del bloque de atención (30×22 en el móvil).
 - **Todo control sin texto tiene nombre**, y desde el 2026-10-10 **lo comprueba el
-  build** (`verificarNombreAccesible`): un `<app-button>` con `icon` que no proyecta texto,
+  build** (`revisarPlantilla` en `tools/verificar-ui.mjs`): un `<app-button>` con `icon` que no proyecta texto,
   y un `<app-input>`/`<app-select>` sin `label`, exigen `ariaLabel`. **`title` no cuenta**
   —es un tooltip de ratón, no llega en táctil y como nombre accesible es el último recurso
   del algoritmo— y **`placeholder` tampoco**, que desaparece al escribir. El barrido de
   estreno encontró 6 botones solo-ícono (dos sin `title` siquiera: anunciados solo como
   «botón») y 37 campos con nada más que su placeholder. **Veintiuno de esos 37 sí tenían
   etiqueta visible al lado** —`<label class="edit-label">Nombre Completo</label>`— pero sin
-  asociar: el lector leía el placeholder y pulsar la etiqueta no enfocaba el campo. Lo de
-  Finanzas y Comisiones queda congelado (cerradas por decisión del propietario) y solo baja.
+  asociar: el lector leía el placeholder y pulsar la etiqueta no enfocaba el campo.
+  La revisión integral resolvió las excepciones de Finanzas y Comisiones y añadió
+  análisis de plantillas inline y switches, sin tolerancias.
 - **Todo control sin texto tiene nombre**: `ariaLabel` en `<app-button>`, `<app-select>` y
   `<app-input>` sin `label`. Un buscador sin label es mudo para un lector de pantalla.
 - **Lo que se anuncia va en una región viva**: los avisos (`<app-toast-container>`) son
@@ -98,8 +99,9 @@ si algo cabe **antes** de escribirlo, no después de verlo roto.
   `hidden`. **Tres estaban de verdad fuera del alcance del teclado** —adjuntar en el chat, el
   comprobante de una venta y la subida a Mi Memoria— porque su `<label>` era el único
   disparador. Los otros cuatro tenían además un botón que hacía `.click()` sobre el input, así
-  que se alcanzaban por ahí; el de la foto de perfil era uno de esos. El de Comisiones queda
-  como está.
+  que se alcanzaban por ahí; el de la foto de perfil era uno de esos. La revisión
+  integral también corrigió Comisiones y los dos selectores de archivo del
+  selector de periodo, con `sr-only` y `.crm-foco-dentro`.
 - **Contraste de texto ≥ 4,5:1**. El verde `info` (#39ADA3) sobre su fondo claro da ~2,4:1: sirve
   como acento o ícono, no para texto que hay que leer. `text-muted` (#6B7280) sobre blanco sí
   cumple.

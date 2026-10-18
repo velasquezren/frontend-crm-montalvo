@@ -1,12 +1,3 @@
-.panel {
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: var(--shadow-subtle);
-  margin-bottom: 20px;
-}
-
 /* .celda-sticky, .fila-clicable y .badge-servicios son utilidades globales
    (styles.css) — las repetía esta hoja, servicios.page.css y
    servicios-medicos-tabla byte a byte. De paso, esta fila pasa a usar el

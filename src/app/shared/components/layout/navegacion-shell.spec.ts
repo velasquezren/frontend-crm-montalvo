@@ -225,14 +225,14 @@ describe('navegación: el shell sobrevive al cambio de ruta', () => {
    */
   describe('menú en el teléfono', () => {
     /** Vuelve a montar el shell haciéndole creer que la pantalla es un teléfono. */
-    async function montarComoTelefono(): Promise<void> {
+    async function montarComoTelefono(ancho = 390): Promise<void> {
       esTelefono = true;
       TestBed.resetTestingModule();
       /* `innerWidth` además de `matchMedia`: el estado inicial del cajón y el
          cierre al tocar fuera lo consultan directamente. Sin esto el shell
          arranca como escritorio —con el cajón ya abierto— y la prueba mediría
          otra cosa. */
-      vi.stubGlobal('innerWidth', 390);
+      vi.stubGlobal('innerWidth', ancho);
       vi.stubGlobal('matchMedia', (consulta: string) => ({
         matches: consulta.includes('max-width: 768px'),
         addEventListener() {},
@@ -268,6 +268,35 @@ describe('navegación: el shell sobrevive al cambio de ruta', () => {
     const logo = () => fixture.nativeElement.querySelector('.logo-toggle-btn') as HTMLElement;
     const cajonAbierto = () =>
       !!fixture.nativeElement.querySelector('.sidebar-expanded');
+
+    it('el menú cerrado queda inerte y Escape devuelve el foco al logo', async () => {
+      await montarComoTelefono();
+      const sidebar: HTMLElement = fixture.nativeElement.querySelector('.sidebar');
+      expect(sidebar.hasAttribute('inert')).toBe(true);
+      logo().click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(sidebar.hasAttribute('inert')).toBe(false);
+      expect(shell().workspace!.hasAttribute('inert')).toBe(true);
+      const cerrar: HTMLButtonElement = sidebar.querySelector('.cerrar-menu button')!;
+      expect(document.activeElement).toBe(cerrar);
+      cerrar.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(cajonAbierto()).toBe(false);
+      expect(document.activeElement).toBe(logo());
+      expect(shell().workspace!.hasAttribute('inert')).toBe(false);
+    });
+
+    it('a 768px aplica el mismo corte que el CSS y cierra al elegir un destino', async () => {
+      await montarComoTelefono(768);
+      expect(cajonAbierto()).toBe(false);
+      logo().click();
+      fixture.detectChanges();
+      fixture.componentInstance['onNavClick']();
+      fixture.detectChanges();
+      expect(cajonAbierto()).toBe(false);
+    });
 
     it('8 · en el teléfono, el logo TAMBIÉN abre el menú', async () => {
       await montarComoTelefono();

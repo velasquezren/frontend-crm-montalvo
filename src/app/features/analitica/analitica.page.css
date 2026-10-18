@@ -3,63 +3,7 @@
    Manifiesto SSOT §3 (Tokens Inmutables, 2026 Spring Animations & Modern Layout)
    ========================================================================== */
 
-/* ── Toolbar de Periodo ───────────────────────────────────────────── */
-.barra-periodo {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 12px 18px;
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  box-shadow: var(--shadow-subtle);
-  margin-bottom: 20px;
-}
-
-.icono-periodo {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, var(--color-primary) 10%, white);
-  color: var(--color-primary);
-  flex-shrink: 0;
-}
-
-
-.pill-meta {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  background: var(--color-bg-workspace);
-  padding: 4px 10px;
-  border-radius: 9999px;
-  border: 1px solid var(--color-border);
-}
-
-/* ── Cifras del Mes (Modern KPI Grid) ──────────────────────────────── */
-/* El dato héroe que se mira primero al abrir el informe */
-/* ── Paneles Generales ────────────────────────────────────────────── */
-.panel {
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: var(--shadow-subtle);
-  margin-bottom: 20px;
-}
-
-.titulo-seccion {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-text-dark);
-  letter-spacing: -0.01em;
-}
-
+/* Paneles, barra de periodo y títulos: utilidades crm-* de styles.css. */
 .subtitulo-seccion {
   font-size: 12px;
   color: var(--color-text-muted);
@@ -97,9 +41,9 @@
   align-items: center;
 }
 
-@media (min-width: 992px) {
+@media (min-width: 1024px) {
   .grid-split-categorias {
-    grid-template-columns: 360px 1fr;
+    grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
   }
 }
 
@@ -109,25 +53,7 @@
 
 .contenedor-tabla-categorias {
   width: 100%;
-  overflow-x: auto;
-}
-
-.badge-pct {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 10%, white);
-  padding: 2px 8px;
-  border-radius: 9999px;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ── Grids de 2 Columnas Equitativas ───────────────────────────────── */
-.grid-dos-equitativo {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
+  min-width: 0;
 }
 
 /* ── Rankings ─────────────────────────────────────────────────────── */
@@ -141,29 +67,4 @@
   background: color-mix(in srgb, var(--color-primary) 12%, white);
   color: var(--color-primary);
   font-weight: 800;
-}
-
-/* ── Tabla de Liquidación con Sticky Scroll ────────────────────────── */
-.contenedor-tabla-scroll {
-  width: 100%;
-  overflow-x: auto;
-  border-radius: 12px;
-}
-
-/* ── Responsividad Móvil ──────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .barra-periodo {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 14px;
-  }
-
-  .panel {
-    padding: 16px;
-    border-radius: 16px;
-  }
-
-  .grid-dos-equitativo {
-    grid-template-columns: 1fr;
-  }
 }

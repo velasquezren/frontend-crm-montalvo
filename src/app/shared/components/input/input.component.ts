@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, model, signal } from '@angular/core';
 
-import { IconComponent } from '../icon/icon.component';
+import { IconComponent, IconName } from '../icon/icon.component';
 
 export type InputType =
   | 'text'
@@ -30,6 +30,7 @@ let nextId = 0;
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-input',
+  host: { class: 'block min-w-0' },
   imports: [IconComponent],
   template: `
     <div class="flex flex-col gap-1.5">
@@ -51,6 +52,10 @@ let nextId = 0;
             [attr.aria-label]="label() ? null : ariaLabel() || null"
             [class]="inputClasses()"></textarea>
         } @else {
+          @if (icon(); as nombreIcono) {
+            <app-icon [name]="nombreIcono" [size]="16"
+              class="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+          }
           <input
             [id]="id"
             [type]="resolvedType()"
@@ -67,9 +72,12 @@ let nextId = 0;
           @if (type() === 'password') {
             <button
               type="button"
+              [disabled]="disabled()"
               (click)="showPassword.set(!showPassword())"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary
-                     transition-colors cursor-pointer"
+              class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 inline-flex items-center justify-center
+                     rounded-full text-text-muted hover:text-primary hover:bg-bg-light
+                     transition-colors cursor-pointer disabled:cursor-not-allowed"
+              [attr.aria-controls]="id"
               [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'">
               <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="18" />
             </button>
@@ -88,6 +96,7 @@ export class InputComponent {
 
   readonly label = input<string | undefined>(undefined);
   readonly type = input<InputType>('text');
+  readonly icon = input<IconName | undefined>(undefined);
   readonly placeholder = input<string>('');
   readonly autocomplete = input<string>('off');
   readonly disabled = input(false);
@@ -125,9 +134,10 @@ export class InputComponent {
       ? 'border-critical/40 focus:border-critical focus:ring-4 focus:ring-critical/10'
       : 'border-border focus:border-primary focus:ring-4 focus:ring-primary/10';
 
-    const padding = this.type() === 'password' ? 'pr-11' : '';
+    const padding = this.type() === 'password' && !this.multiline() ? 'pr-12' : '';
     const resize = this.multiline() ? 'resize-none leading-relaxed' : '';
 
-    return [base, border, padding, resize].join(' ');
+    const izquierda = this.icon() && !this.multiline() ? 'pl-11' : '';
+    return [base, border, padding, resize, izquierda].join(' ');
   });
 }

@@ -30,10 +30,10 @@
             (dragover)="onDragOver($event)"
             (dragleave)="onDragLeave($event)"
             (drop)="onDrop($event)">
-            <label class="btn-importar-link">
+            <label class="btn-importar-link crm-foco-dentro">
               <app-icon name="download" [size]="14" />
               <span>Seleccionar o arrastrar archivo .xlsx</span>
-              <input type="file" accept=".xlsx,.xls" class="hidden" (change)="onFileChange($event)" />
+              <input type="file" accept=".xlsx,.xls" class="sr-only" (change)="onFileChange($event)" />
             </label>
           </div>
         }
@@ -53,10 +53,10 @@
         </div>
 
         @if (puedeImportar()) {
-          <label class="btn-subir-toolbar">
+          <label class="btn-subir-toolbar crm-foco-dentro">
             <app-icon name="download" [size]="13" />
             <span>Importar Excel</span>
-            <input type="file" accept=".xlsx,.xls" class="hidden" (change)="onFileChange($event)" />
+            <input type="file" accept=".xlsx,.xls" class="sr-only" (change)="onFileChange($event)" />
           </label>
         }
       </div>

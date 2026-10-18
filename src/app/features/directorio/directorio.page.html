@@ -11,11 +11,12 @@
       }
     </app-page-header>
 
-    <nav class="crm-segmento crm-segmento-pestanas" role="tablist" aria-label="Secciones del Directorio médico">
+    <nav class="crm-segmento crm-segmento-pestanas" role="tablist" appTablist aria-label="Secciones del Directorio médico">
       @for (t of tabs; track t.id) {
         <button
           type="button"
           role="tab"
+          [attr.tabindex]="tabActiva() === t.id ? 0 : -1"
           [attr.aria-selected]="tabActiva() === t.id"
           [attr.aria-controls]="'panel-' + t.id"
           [id]="'tab-' + t.id"

@@ -1,5 +1,5 @@
 <!-- Reglas globales del cálculo -->
-<section class="panel mb-4">
+<section class="crm-panel mb-4">
   <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">
     Reglas del cálculo
     <app-info-hint titulo="Las cuatro palancas globales">
@@ -42,7 +42,7 @@
 </section>
 
 <!-- Vendedoras -->
-<section class="panel mb-4">
+<section class="crm-panel mb-4">
   <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">
     Vendedoras
     <app-info-hint titulo="Cómo se reconoce a cada vendedora">
@@ -236,7 +236,7 @@
 
 @if (configuracion(); as cfg) {
   <!-- Tipo A -->
-  <section class="panel mb-4">
+  <section class="crm-panel mb-4">
     <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">
       Tipo A — Planes (%)
       <app-info-hint titulo="Tarifas de planes y paquetes">
@@ -311,7 +311,7 @@
   </section>
 
   <!-- Tipo C -->
-  <section class="panel mb-4">
+  <section class="crm-panel mb-4">
     <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">
       Tipo C — Consultas, laboratorios y otros (%)
       <app-info-hint titulo="Tarifas de servicios sueltos">
@@ -382,7 +382,7 @@
   </section>
 
   <!-- Tipo B -->
-  <section class="panel mb-4">
+  <section class="crm-panel mb-4">
     <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">
       Tipo B — Escala de cirugías
       <app-info-hint titulo="Cómo funciona la escala">
@@ -427,7 +427,7 @@
   </section>
 
   <!-- Tipo A (RA) -->
-  <section class="panel mb-4">
+  <section class="crm-panel mb-4">
     <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">
       Tipo A (RA) — Escala por excedente combinado
       <app-info-hint titulo="Cubo aparte del Tipo A de planes">
@@ -473,7 +473,7 @@
   </section>
 
   <!-- Tarifas RA (Histórico) -->
-  <section class="panel mb-4">
+  <section class="crm-panel mb-4">
     <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">
       Tipo B — Coordinadoras RA (USD por procedimiento)
       <app-badge variant="neutral">Histórico</app-badge>
@@ -513,7 +513,7 @@
   </section>
 
   <!-- Captación: qué cuenta como venta propia -->
-  <section class="panel mb-4">
+  <section class="crm-panel mb-4">
     <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">
       Canales de Captación
       <app-info-hint titulo="Cómo se decide si una venta es propia">
@@ -602,7 +602,7 @@
   </section>
 
   <!-- Metas del Equipo Comercial -->
-  <section class="panel mb-4">
+  <section class="crm-panel mb-4">
     <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">
       Metas del Equipo Comercial
       <app-info-hint titulo="Cómo funcionan las metas">
@@ -738,7 +738,7 @@
   </section>
 
   <!-- Diccionario de clasificación -->
-  <section class="panel mb-4">
+  <section class="crm-panel mb-4">
     <h3 class="text-sm font-bold text-text-dark mb-1 flex items-center gap-1.5">
       Diccionario de clasificación ({{ cfg.reglas.length }} reglas)
       <app-info-hint titulo="Para qué sirve el diccionario">
@@ -809,7 +809,7 @@
     que="la configuración de comisiones"
     (reintentar)="reintentarConfiguracion.emit()" />
 } @else {
-  <section class="panel">
+  <section class="crm-panel">
     <app-loading-skeleton height="200px" />
   </section>
 }

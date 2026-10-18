@@ -194,7 +194,7 @@
 <ng-template #confirmar>
   <div
     class="pointer-events-auto w-full max-w-md bg-background rounded-2xl shadow-lifted p-6 animate-modal-pop"
-    role="dialog"
+    role="dialog" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"
     aria-modal="true"
     aria-labelledby="titulo-envio">
     @if (candidato(); as c) {
@@ -239,7 +239,7 @@
 <ng-template #editarTelefono>
   <form
     class="pointer-events-auto w-full max-w-sm bg-background rounded-2xl shadow-lifted p-6 animate-modal-pop"
-    role="dialog"
+    role="dialog" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"
     aria-modal="true"
     aria-labelledby="titulo-telefono"
     (submit)="$event.preventDefault(); guardarTelefono()">
@@ -278,7 +278,7 @@
 <ng-template #crearFicha>
   <form
     class="pointer-events-auto w-full max-w-sm bg-background rounded-2xl shadow-lifted p-6 animate-modal-pop"
-    role="dialog"
+    role="dialog" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"
     aria-modal="true"
     aria-labelledby="titulo-alta"
     (submit)="$event.preventDefault(); alEnviarAlta()">

@@ -211,7 +211,7 @@
               </div>
             </div>
 
-            <label class="group border-2 border-dashed border-primary/30 hover:border-primary bg-bg-light/50 hover:bg-bg-light rounded-2xl p-6 text-center block cursor-pointer transition-all duration-200 shadow-subtle">
+            <label class="crm-foco-dentro group border-2 border-dashed border-primary/30 hover:border-primary bg-bg-light/50 hover:bg-bg-light rounded-2xl p-6 text-center block cursor-pointer transition-all duration-200 shadow-subtle">
               <div class="p-3 bg-white rounded-full w-12 h-12 mx-auto flex items-center justify-center shadow-subtle border border-border group-hover:scale-105 transition-transform">
                 <app-icon name="plus" [size]="20" class="text-primary" />
               </div>
@@ -234,27 +234,11 @@
             </div>
 
             <div class="space-y-3.5">
-              <div>
-                <label class="block text-[11px] font-extrabold text-text-dark mb-1">Título del Recurso *</label>
-                <app-input placeholder="ej. Promo Ortodoncia Implante" [(value)]="tituloNuevoMemoria" 
-  ariaLabel="Título del Recurso" />
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-extrabold text-text-dark mb-1">Atajo /comando (opcional)</label>
-                <app-input placeholder="ej. /ortodoncia" [(value)]="atajoNuevoMemoria" 
-  ariaLabel="Atajo /comando (opcional)" />
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-extrabold text-text-dark mb-1">Contenido o Enlace</label>
-                <textarea
-                  #txtMemoria
-                  [value]="contenidoNuevoMemoria()"
-                  (input)="contenidoNuevoMemoria.set(txtMemoria.value)"
-                  placeholder="Escribe la respuesta detallada, lista de precios o link..."
-                  class="w-full text-xs p-3 border border-border rounded-xl focus:border-primary focus:outline-none min-h-[90px] bg-white transition-colors"></textarea>
-              </div>
+              <app-input label="Título del recurso *" placeholder="ej. Promo Ortodoncia Implante" [(value)]="tituloNuevoMemoria" />
+              <app-input label="Atajo /comando (opcional)" placeholder="ej. /ortodoncia" [(value)]="atajoNuevoMemoria" />
+              <app-input label="Contenido o enlace" [multiline]="true" [rows]="3"
+                [(value)]="contenidoNuevoMemoria"
+                placeholder="Escribe la respuesta detallada, lista de precios o enlace…" />
 
               <app-button
                 type="button"

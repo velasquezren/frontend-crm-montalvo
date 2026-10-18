@@ -1,3 +1,4 @@
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, linkedSignal, signal, TemplateRef, untracked, viewChild, ViewContainerRef } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { OverlayRef } from '@angular/cdk/overlay';
@@ -54,6 +55,7 @@ import { FechaCivilPipe } from '../../core/fechas/fecha-civil.pipe';
   selector: 'app-resultados-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CdkTrapFocus,
     BadgeComponent,
     ButtonComponent,
     EmptyStateComponent,

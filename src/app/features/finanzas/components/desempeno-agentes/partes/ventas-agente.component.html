@@ -15,7 +15,9 @@
     <div class="controles">
       <app-input
         placeholder="Buscar paciente o servicio…"
+        type="search"
         icon="search"
+        ariaLabel="Buscar ventas por paciente o servicio"
         [value]="busqueda()"
         (valueChange)="busqueda.set($event)" />
 

@@ -37,7 +37,8 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
   encapsulation: ViewEncapsulation.None,
   template: `
     <div class="crm-table-marco" [class.crm-table-dense]="dense()">
-      <div class="crm-table-scroll" [style.max-height]="maxHeight()">
+      <div class="crm-table-scroll" [style.max-height]="maxHeight()" tabindex="0"
+           role="region" [attr.aria-label]="etiqueta()">
         <table class="crm-table">
           <ng-content />
         </table>
@@ -45,7 +46,7 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
     </div>
   `,
   styles: `
-    :host {
+    app-table {
       display: block;
       width: 100%;
       min-width: 0;
@@ -67,6 +68,12 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
       width: 100%;
       overflow: auto;
       overscroll-behavior-x: contain;
+    }
+
+    /* El foco queda dentro del marco que recorta las esquinas. */
+    .crm-table-scroll:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
     }
 
     .crm-table {
@@ -253,6 +260,7 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
   `,
 })
 export class TableComponent {
+  readonly etiqueta = input('Tabla de datos');
   readonly dense = input<boolean>(false);
   readonly maxHeight = input<string | undefined>(undefined);
 }
