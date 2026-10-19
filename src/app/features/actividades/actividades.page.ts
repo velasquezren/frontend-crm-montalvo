@@ -450,6 +450,7 @@ export class ActividadesPage {
     this.activeOverlayRef?.dispose();
     this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
       onClose: () => this.cerrarModal(),
+      confirmarDescarte: true,
     });
   }
 

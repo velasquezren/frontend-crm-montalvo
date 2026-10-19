@@ -162,7 +162,10 @@ export class AgendaMedicosListaComponent {
   abrirNuevo(): void {
     this.cajon?.dispose();
     this.seleccionadoId.set(null);
-    this.cajon = this.dialog.abrirCajon(this.nuevoTpl(), this.vcr, { onClose: () => (this.cajon = undefined) });
+    this.cajon = this.dialog.abrirCajon(this.nuevoTpl(), this.vcr, {
+      onClose: () => (this.cajon = undefined),
+      confirmarDescarte: true,
+    });
   }
 
   /** Recién creado: su ficha, para cargarle el horario. */

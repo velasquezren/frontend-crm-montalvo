@@ -178,7 +178,10 @@ export class CampanaAudienciaComponent {
   protected abrirNuevaCampana(): void {
     if (!this.puedeLanzar() || this.motivoSinCampana()) return;
     this.cajon?.dispose();
-    this.cajon = this.dialog.abrirCajon(this.nuevaCampanaTpl(), this.vcr, { onClose: () => (this.cajon = undefined) });
+    this.cajon = this.dialog.abrirCajon(this.nuevaCampanaTpl(), this.vcr, {
+      onClose: () => (this.cajon = undefined),
+      confirmarDescarte: true,
+    });
   }
 
   protected cerrarNuevaCampana(): void {

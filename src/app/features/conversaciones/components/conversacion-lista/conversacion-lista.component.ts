@@ -103,6 +103,7 @@ export class ConversacionListaComponent {
     this.cajonNuevoChat?.dispose();
     this.cajonNuevoChat = this.dialog.abrirCajon(this.nuevoChatTpl(), this.vcr, {
       onClose: () => (this.cajonNuevoChat = undefined),
+      confirmarDescarte: true,
     });
   }
 

@@ -308,6 +308,7 @@ export class ClientesPage {
       this.activeOverlayRef?.dispose();
       this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
         onClose: () => this.cerrarEdicion(),
+        confirmarDescarte: true,
       });
     }
   }

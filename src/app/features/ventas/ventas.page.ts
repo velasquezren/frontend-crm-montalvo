@@ -381,6 +381,7 @@ export class VentasPage {
     this.activeOverlayRef?.dispose();
     this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
       onClose: () => this.cerrarFormulario(),
+      confirmarDescarte: true,
     });
   }
 

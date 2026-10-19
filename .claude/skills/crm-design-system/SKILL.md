@@ -130,6 +130,14 @@ no se rompe nada visible, se rompe la consistencia y la accesibilidad en silenci
 | Una barra de pestañas bajo el título | slot `[subcabecera]` |
 | Un pie de acciones fijo | un hijo con `shrink-0` al final; si hay `<form>`, que el form sea la columna (`flex-1 min-h-0 flex flex-col`) y el pie su último hijo |
 
+**Un cajón de alta o edición se abre con `confirmarDescarte: true`.** Si ya se escribió o
+eligió algo dentro, Escape o un clic fuera preguntan antes de descartarlo; Guardar y Cancelar
+cierran con `dispose()` y no preguntan. Los buscadores (`type="search"`) no cuentan. Una ficha
+de consulta no lo lleva: preguntaría sin motivo. Un editor con su propio estado de «sin guardar»
+(Líneas → Menú, Cobro, Asistente) usa `puedeCerrar` y el mismo `AVISO_DESCARTE`. Hasta el
+2026-10-19 solo Líneas lo hacía: en Nueva venta, con el comprobante ya adjunto, un clic fuera
+lo borraba todo.
+
 Los cuatro anchos (`sm` 500/540 · `md` 520/580 · `lg` 560/640 · `xl` 600/720) son la
 escala completa. Si uno nuevo no cabe en ella, la pregunta es por qué esa vista es
 distinta, no qué número poner.

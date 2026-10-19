@@ -12,7 +12,7 @@ import { OverlayRef } from '@angular/cdk/overlay';
 import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model';
 import { mensajeDeError } from '../../core/api/http-error';
 import { ToastService } from '../../core/toast/toast.service';
-import { DialogService } from '../../shared/components/dialog/dialog.service';
+import { AVISO_DESCARTE, DialogService } from '../../shared/components/dialog/dialog.service';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { InputComponent } from '../../shared/components/input/input.component';
@@ -106,7 +106,10 @@ export class LineasWhatsappPage {
     this.activa.set(linea.activa);
     this.error.set('');
     this.overlay?.dispose();
-    this.overlay = this.dialog.abrirCajon(template, this.vcr, { onClose: () => this.seleccionada.set(null) });
+    this.overlay = this.dialog.abrirCajon(template, this.vcr, {
+      onClose: () => this.seleccionada.set(null),
+      confirmarDescarte: true,
+    });
   }
   protected editarMenu(linea: LineaWhatsapp, template: TemplateRef<unknown>): void {
     this.menuDe.set(linea);
@@ -129,7 +132,7 @@ export class LineasWhatsappPage {
   }
   /** Sin cambios, cierra; con cambios, solo si se confirma descartarlos. */
   private descartarEditor(): boolean {
-    return !this.editorSinGuardar() || window.confirm('Hay cambios sin guardar. ¿Cerrar y descartarlos?');
+    return !this.editorSinGuardar() || window.confirm(AVISO_DESCARTE);
   }
   protected editarCobro(linea: LineaWhatsapp, template: TemplateRef<unknown>): void {
     if (!linea.comercial) return;

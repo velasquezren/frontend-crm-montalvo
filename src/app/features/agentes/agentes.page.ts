@@ -206,6 +206,7 @@ export class AgentesPage {
       this.activeOverlayRef?.dispose();
       this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
         onClose: () => this.cerrarModal(),
+        confirmarDescarte: true,
       });
     }
   }
@@ -309,6 +310,7 @@ export class AgentesPage {
       this.activeOverlayRef?.dispose();
       this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
         onClose: () => this.cerrarEdicion(),
+        confirmarDescarte: true,
       });
     }
   }

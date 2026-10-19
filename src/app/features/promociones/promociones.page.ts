@@ -91,7 +91,10 @@ export class PromocionesPage {
 
   protected abrirNueva(): void {
     this.cajon?.dispose();
-    this.cajon = this.dialog.abrirCajon(this.nuevaTpl(), this.vcr, { onClose: () => (this.cajon = undefined) });
+    this.cajon = this.dialog.abrirCajon(this.nuevaTpl(), this.vcr, {
+      onClose: () => (this.cajon = undefined),
+      confirmarDescarte: true,
+    });
   }
 
   protected cerrarNueva(): void {

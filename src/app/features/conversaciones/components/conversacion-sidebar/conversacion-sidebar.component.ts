@@ -175,6 +175,7 @@ export class ConversacionSidebarComponent {
     this.activeOverlayRef?.dispose();
     this.activeOverlayRef = this.dialogService.abrirCajon(template, this.vcr, {
       onClose: () => (this.activeOverlayRef = undefined),
+      confirmarDescarte: true,
     });
   }
 
@@ -234,6 +235,7 @@ export class ConversacionSidebarComponent {
         this.modalActividadAbierto.set(false);
         this.activeOverlayRef = undefined;
       },
+      confirmarDescarte: true,
     });
   }
 

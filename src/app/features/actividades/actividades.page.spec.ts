@@ -444,6 +444,43 @@ describe('F10 · rango visible del calendario de Actividades', () => {
       expect(completados()).toHaveLength(0);
     });
   });
+  /** Un clic fuera o un Escape no borran una actividad a medio escribir. */
+  describe('cajón del formulario · cambios sin guardar', () => {
+    const formulario = () => document.querySelector('app-actividad-formulario');
+    const escape = () => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+    afterEach(() => vi.restoreAllMocks());
+
+    it('con un título escrito, Escape pregunta antes de descartarlo', async () => {
+      const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      pagina['abrirCreacion']();
+      await asentar();
+      const campo = formulario()?.querySelector('input:not([type="search"]), textarea');
+      expect(campo).toBeTruthy();
+      campo?.dispatchEvent(new Event('input', { bubbles: true }));
+
+      escape();
+      await asentar();
+      expect(confirmar).toHaveBeenCalledOnce();
+      expect(formulario()).not.toBeNull();
+
+      confirmar.mockReturnValue(true);
+      escape();
+      await asentar();
+      expect(formulario()).toBeNull();
+    });
+
+    it('sin escribir nada, Escape cierra sin preguntar', async () => {
+      const confirmar = vi.spyOn(window, 'confirm');
+      pagina['abrirCreacion']();
+      await asentar();
+      escape();
+      await asentar();
+      expect(confirmar).not.toHaveBeenCalled();
+      expect(formulario()).toBeNull();
+    });
+  });
+
   /**
    * A5.3 · cancelar: esta, o esta y las siguientes.
    *

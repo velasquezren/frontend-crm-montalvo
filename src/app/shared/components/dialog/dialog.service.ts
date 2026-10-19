@@ -14,7 +14,19 @@ export interface DialogOptions {
    * perder lo escrito por un clic distraído.
    */
   puedeCerrar?: () => boolean;
+  /**
+   * Cajón de alta o edición: si ya se escribió o eligió algo dentro, cerrar con
+   * Escape o con un clic fuera pide confirmación. Guardar y Cancelar no
+   * preguntan, porque cierran con `dispose()` y no pasan por aquí. No cuentan
+   * los buscadores (`type="search"`): buscar no es un cambio que se pierda.
+   *
+   * Antes solo Líneas WhatsApp lo protegía (con `puedeCerrar`); en Nueva venta,
+   * con el comprobante ya adjuntado, un clic fuera del cajón lo borraba todo.
+   */
+  confirmarDescarte?: boolean;
 }
+
+export const AVISO_DESCARTE = 'Hay cambios sin guardar. ¿Cerrar y descartarlos?';
 
 /**
  * Panel del cajón lateral: pega el contenido al borde derecho de la pantalla.
@@ -82,9 +94,19 @@ export class DialogService {
 
     overlayRef.attach(portal);
 
+    let hayCambios = false;
+    if (options.confirmarDescarte) {
+      const marcar = (evento: Event) => {
+        if (!(evento.target instanceof HTMLInputElement && evento.target.type === 'search')) hayCambios = true;
+      };
+      overlayRef.overlayElement.addEventListener('input', marcar);
+      overlayRef.overlayElement.addEventListener('change', marcar);
+    }
+
     if (!options.disableClose) {
       const cerrar = () => {
         if (options.puedeCerrar && !options.puedeCerrar()) return;
+        if (hayCambios && !window.confirm(AVISO_DESCARTE)) return;
         options.onClose?.();
         overlayRef.dispose();
       };
