@@ -788,6 +788,23 @@ function verificarRendimiento() {
  * lo hará escribiendo exactamente esa línea. Mismo criterio que la regla del
  * backend que prohíbe un `void algo.metodo(` sin `enSegundoPlano`.
  */
+/* ── Zoom de iOS al escribir ─────────────────────────────────────────────
+   Safari de iOS amplía la página al enfocar un campo de menos de 16px. El
+   arreglo del 2026-08-05 vivía en el CSS del inbox y desapareció sin que nada
+   avisara al partir el inbox en subcomponentes (ca412eb): el compositor volvió
+   a 13px. Ahora vive en styles.css y su ausencia rompe el build. */
+function verificarZoomIos() {
+  const css = readFileSync(STYLES, 'utf8');
+  const bloque = css.match(/@supports\s*\(-webkit-touch-callout:\s*none\)\s*\{[\s\S]*?\n\}/)?.[0] ?? '';
+  if (!/textarea/.test(bloque) || !/font-size:\s*16px\s*!important/.test(bloque)) {
+    problemas.push({
+      skill: 'crm-ui-desde-codigo',
+      mensaje: 'styles.css perdió el bloque `@supports (-webkit-touch-callout: none)` que sube ' +
+        'los campos a 16px: sin él, Safari de iPhone hace zoom al tocar cualquier campo.',
+    });
+  }
+}
+
 function verificarServiceWorkerUnico() {
   const señalaSw = mensaje => problemas.push({ skill: 'pwa (F09)', mensaje });
   const base = resolve(RAIZ, 'src', 'app');
@@ -1154,6 +1171,7 @@ verificarRadiosEnPlantillas();
 verificarCssEncapsulado();
 verificarRendimiento();
 verificarServiceWorkerUnico();
+verificarZoomIos();
 verificarZonaClinica();
 verificarEspejosDeRol();
 verificarDuenoDeEndpoint();

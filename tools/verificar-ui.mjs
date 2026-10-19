@@ -29,6 +29,17 @@ export function revisarPlantilla(texto, archivo = 'plantilla.html') {
             && !nombre('label') && !nombre('ariaLabel')) {
           reportar('nombre-control', `<${node.name}> necesita label o ariaLabel.`);
         }
+        if (node.name === 'app-input') {
+          /* El tipo decide el teclado del teléfono: un celular en `text` abre el
+             teclado de letras. Se mira el nombre visible o accesible estático. */
+          const rotulo = `${atributo('label')?.value ?? ''} ${atributo('ariaLabel')?.value ?? ''}`;
+          const tipo = atributo('type')?.value ?? (enlazado('type') ? null : 'text');
+          const esperado = /tel[eé]fono|celular|whatsapp/i.test(rotulo) ? 'tel'
+            : /correo|e-?mail/i.test(rotulo) ? 'email' : null;
+          if (esperado && tipo !== null && tipo !== esperado && tipo !== 'search') {
+            reportar('tipo-campo', `El campo «${rotulo.trim()}» debe ser type="${esperado}" para abrir el teclado correcto.`);
+          }
+        }
         if (node.name === 'app-button' && tiene('icon') && !nombre('ariaLabel')) {
           const contenido = texto.slice(node.startSourceSpan.end.offset, node.endSourceSpan?.start.offset ?? node.startSourceSpan.end.offset)
             .replace(/<!--[\s\S]*?-->/g, '').trim();

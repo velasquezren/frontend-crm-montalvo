@@ -58,3 +58,12 @@ test('CSS con nesting y @theme: rechaza duplicados exactos pero conserva fallbac
   assert.deepEqual(revisarCss(':host { display: block; }'), []);
   assert.equal(revisarCss('.a {')[0]?.regla, 'css-sintaxis');
 });
+
+test('teléfono y correo piden su teclado: type tel / email', () => {
+  const html = `<app-input label="Teléfono / WhatsApp *" [(value)]="t" />
+    <app-input ariaLabel="Correo Electrónico" type="text" />
+    <app-input label="Celular" type="tel" /><app-input label="Email" type="email" />
+    <app-input type="search" ariaLabel="Buscar por nombre, teléfono o PAC" />
+    <app-input label="Nombre" />`;
+  assert.deepEqual(revisarPlantilla(html).map(p => p.regla), ['tipo-campo', 'tipo-campo']);
+});

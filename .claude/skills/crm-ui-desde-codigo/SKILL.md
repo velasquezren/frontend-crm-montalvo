@@ -107,6 +107,17 @@ si algo cabe **antes** de escribirlo, no después de verlo roto.
 - **Contraste de texto ≥ 4,5:1**. El verde `info` (#39ADA3) sobre su fondo claro da ~2,4:1: sirve
   como acento o ícono, no para texto que hay que leer. `text-muted` (#6B7280) sobre blanco sí
   cumple.
+- **Ningún campo baja de 16 px en iOS.** Safari de iPhone hace zoom al enfocar un campo más
+  pequeño y deja la vista descuadrada. Lo resuelve un único bloque
+  `@supports (-webkit-touch-callout: none)` en `src/styles.css`, que solo aplica en iOS: no
+  repitas el arreglo en el CSS de una vista (así se perdió el del 2026-08-05 al partir el
+  inbox) y no lo quites, `check:skills` lo exige.
+- **El tipo abre el teclado.** Un `<app-input>` cuyo `label`/`ariaLabel` dice teléfono,
+  celular o WhatsApp va con `type="tel"`; correo/email con `type="email"`; un buscador con
+  `type="search"`. Lo comprueba `revisarPlantilla` (regla `tipo-campo`).
+- **El foco de lo que aparece se mueve a mano.** `autofocus` solo funciona una vez por
+  documento: un campo que entra con `@if` se enfoca con `afterNextRender`, y al cerrarlo el
+  foco vuelve al botón que lo abrió (buscador del chat, 2026-10-19).
 - **Movimiento reducido**: las animaciones del sistema ya lo respetan; una nueva usa las clases de
   `src/styles.css`, no un `@keyframes` propio.
 

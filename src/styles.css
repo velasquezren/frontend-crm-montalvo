@@ -155,6 +155,24 @@
 }
 
 /* ==========================================================================
+   Zoom de iOS al escribir
+   Safari de iPhone/iPad amplía la página al enfocar un campo con letra menor
+   de 16px y la deja descuadrada: el chat «saltaba» al ir a escribir. El
+   arreglo del 2026-08-05 vivía en el CSS del inbox y se perdió al partirlo en
+   subcomponentes; aquí no depende de ninguna vista y lo exige check:skills.
+   `-webkit-touch-callout` solo existe en Safari de iOS, así que el escritorio
+   conserva sus 13–14px. `!important` porque el CSS encapsulado de un
+   componente (`.chat-composer[_ngcontent]`) es más específico que esto.
+   ========================================================================== */
+@supports (-webkit-touch-callout: none) {
+  input:not([type='checkbox'], [type='radio'], [type='range'], [type='file']),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* ==========================================================================
    Base Layer — Defaults globales alineados al Manifiesto
    ========================================================================== */
 @layer base {

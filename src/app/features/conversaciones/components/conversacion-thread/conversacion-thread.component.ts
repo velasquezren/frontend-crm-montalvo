@@ -2,11 +2,13 @@ import { AtencionHumanaComponent } from '../atencion-humana/atencion-humana.comp
 import { PagoPromocionComponent } from '../pago-promocion/pago-promocion.component';
 import { CajaImagenPipe } from '../../caja-imagen';
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   effect,
   ElementRef,
   inject,
+  Injector,
   signal,
   untracked,
   viewChild,
@@ -90,6 +92,9 @@ export class ConversacionThreadComponent {
   }
   private readonly messagesContainer = viewChild<ElementRef<HTMLElement>>('messagesScroll');
   private readonly bottomAnchor = viewChild<ElementRef<HTMLElement>>('bottomAnchor');
+  private readonly injector = inject(Injector);
+  private readonly inputBuscarChat = viewChild<ElementRef<HTMLInputElement>>('inputBuscarChat');
+  private readonly botonBuscarChat = viewChild('botonBuscarChat', { read: ElementRef });
 
   /* ── Estado Local de Scroll & Lightbox ─────────────────────────── */
   protected readonly lightboxUrl = signal<string | null>(null);
@@ -289,10 +294,15 @@ export class ConversacionThreadComponent {
   }
 
   /* ── Buscador en Chat ─────────────────────────────────────────── */
+  /* El foco se mueve a mano, no con el atributo `autofocus`: el navegador solo
+     lo aplica una vez por documento, así que desde la segunda búsqueda el campo
+     aparecía sin foco. Al cerrar vuelve a la lupa: el botón que lo tenía
+     desaparece con el `@if` y el foco caía al `<body>`. */
   protected abrirBusquedaChat(): void {
     this.state.buscadorAbierto.set(true);
     this.state.busquedaChat.set('');
     this.state.indiceCoincidencia.set(0);
+    afterNextRender(() => this.inputBuscarChat()?.nativeElement.focus(), { injector: this.injector });
   }
 
   protected cerrarBusquedaChat(): void {
@@ -300,6 +310,10 @@ export class ConversacionThreadComponent {
     this.state.buscadorAbierto.set(false);
     this.state.busquedaChat.set('');
     this.state.indiceCoincidencia.set(0);
+    afterNextRender(
+      () => (this.botonBuscarChat()?.nativeElement as HTMLElement | undefined)?.querySelector('button')?.focus(),
+      { injector: this.injector },
+    );
   }
 
   /** Término al que ya se saltó: el primer Enter va a la PRIMERA coincidencia, no a la segunda. */
