@@ -25,6 +25,7 @@ import {
   ThOrdenableComponent,
 } from '../../shared/components/table/th-ordenable.component';
 import { ToastService } from '../../core/toast/toast.service';
+import { copiarAlPortapapeles } from '../../core/ui/portapapeles';
 import {
   CATEGORIA_BADGE,
   CATEGORIA_ICONO,
@@ -338,11 +339,10 @@ export class ClientesPage {
     }
   }
 
-  protected copiarTelefono(event: MouseEvent, telefono: string): void {
+  protected async copiarTelefono(event: MouseEvent, telefono: string): Promise<void> {
     event.stopPropagation();
-    navigator.clipboard.writeText(telefono).then(() => {
-      this.toast.success('Teléfono copiado al portapapeles.');
-    });
+    if (await copiarAlPortapapeles(telefono)) this.toast.success('Teléfono copiado al portapapeles.');
+    else this.toast.error('No se pudo copiar el teléfono.');
   }
 
   protected cerrarEdicion(): void {

@@ -34,6 +34,7 @@ import { aDatetimeLocal } from '../../../../core/api/fecha';
 import { etiquetasDe, textoExtra } from '../../../../core/api/datos-extra';
 import { mensajeDeError } from '../../../../core/api/http-error';
 import { ToastService } from '../../../../core/toast/toast.service';
+import { copiarAlPortapapeles } from '../../../../core/ui/portapapeles';
 import { FormularioVentaComponent } from '../../../ventas/formulario-venta/formulario-venta.component';
 import { Venta } from '../../../ventas/venta.model';
 import { ConversacionesStateService } from '../../services/conversaciones-state.service';
@@ -122,31 +123,9 @@ export class ConversacionSidebarComponent {
     return campanaOrigenDe(cliente.datosExtra);
   }
 
-  protected copiarTexto(texto: string, label: string): void {
-    if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(texto).then(
-        () => this.toast.success(`${label} copiado al portapapeles.`),
-        () => this.copiarFallback(texto, label),
-      );
-    } else {
-      this.copiarFallback(texto, label);
-    }
-  }
-
-  private copiarFallback(texto: string, label: string): void {
-    try {
-      const textarea = document.createElement('textarea');
-      textarea.value = texto;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      this.toast.success(`${label} copiado al portapapeles.`);
-    } catch {
-      this.toast.error(`No se pudo copiar ${label.toLowerCase()}.`);
-    }
+  protected async copiarTexto(texto: string, label: string): Promise<void> {
+    if (await copiarAlPortapapeles(texto)) this.toast.success(`${label} copiado al portapapeles.`);
+    else this.toast.error(`No se pudo copiar ${label.toLowerCase()}; selecciónalo y cópialo a mano.`);
   }
 
   protected tiempoRelativo(fecha: string): string {

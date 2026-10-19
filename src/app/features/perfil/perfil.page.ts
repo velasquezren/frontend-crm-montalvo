@@ -16,6 +16,7 @@ import { paginaVacia, RespuestaPaginada } from '../../core/api/pagination.model'
 import { AuthService } from '../../core/auth/auth.service';
 import { generarIniciales } from '../../core/auth/user.model';
 import { ToastService } from '../../core/toast/toast.service';
+import { copiarAlPortapapeles } from '../../core/ui/portapapeles';
 import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -323,8 +324,8 @@ export class PerfilPage {
     }
   }
 
-  protected copiarTexto(texto: string): void {
-    void navigator.clipboard.writeText(texto);
-    this.toast.success('Copiado al portapapeles', 'Memoria Personal');
+  protected async copiarTexto(texto: string): Promise<void> {
+    if (await copiarAlPortapapeles(texto)) this.toast.success('Copiado al portapapeles', 'Memoria Personal');
+    else this.toast.error('No se pudo copiar; selecciónalo y cópialo a mano.', 'Memoria Personal');
   }
 }

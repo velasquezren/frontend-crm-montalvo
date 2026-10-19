@@ -27,6 +27,7 @@ import { ImageViewerComponent } from '../../../../shared/components/image-viewer
 import { WhatsAppMarkdownPipe } from '../../../../shared/pipes/whatsapp-markdown.pipe';
 import { sePuedeReenviar } from '../../reenvio-mensaje';
 import { ToastService } from '../../../../core/toast/toast.service';
+import { copiarAlPortapapeles } from '../../../../core/ui/portapapeles';
 import { generarIniciales } from '../../../../core/auth/user.model';
 import { envioSeReintentaSinRiesgo } from '../../clasificar-error-envio';
 import { explicacionErrorWhatsapp } from '../../error-whatsapp';
@@ -235,31 +236,9 @@ export class ConversacionThreadComponent {
     return enlaceWhatsApp(telefono);
   }
 
-  protected copiarTexto(texto: string, label: string): void {
-    if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(texto).then(
-        () => this.toast.success(`${label} copiado al portapapeles.`),
-        () => this.copiarFallback(texto, label),
-      );
-    } else {
-      this.copiarFallback(texto, label);
-    }
-  }
-
-  private copiarFallback(texto: string, label: string): void {
-    try {
-      const textarea = document.createElement('textarea');
-      textarea.value = texto;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      this.toast.success(`${label} copiado al portapapeles.`);
-    } catch {
-      this.toast.error(`No se pudo copiar ${label.toLowerCase()}.`);
-    }
+  protected async copiarTexto(texto: string, label: string): Promise<void> {
+    if (await copiarAlPortapapeles(texto)) this.toast.success(`${label} copiado al portapapeles.`);
+    else this.toast.error(`No se pudo copiar ${label.toLowerCase()}; selecciónalo y cópialo a mano.`);
   }
 
   protected notaFijadaDe(cliente: { readonly datosExtra?: Record<string, unknown> | null }): string {

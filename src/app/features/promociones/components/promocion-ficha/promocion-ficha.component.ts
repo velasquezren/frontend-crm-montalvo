@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { esConflicto, mensajeDeError } from '../../../../core/api/http-error';
 import { paginaVacia, RespuestaPaginada } from '../../../../core/api/pagination.model';
 import { ToastService } from '../../../../core/toast/toast.service';
+import { copiarAlPortapapeles } from '../../../../core/ui/portapapeles';
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { DrawerComponent } from '../../../../shared/components/drawer/drawer.component';
@@ -329,12 +330,8 @@ export class PromocionFichaComponent {
   }
 
   protected async copiarMensaje(texto: string): Promise<void> {
-    try {
-      await navigator.clipboard.writeText(texto);
-      this.toast.success('Mensaje copiado.');
-    } catch {
-      this.toast.error('No se pudo copiar; selecciónalo y cópialo a mano.');
-    }
+    if (await copiarAlPortapapeles(texto)) this.toast.success('Mensaje copiado.');
+    else this.toast.error('No se pudo copiar; selecciónalo y cópialo a mano.');
   }
 
   /** La respuesta del servidor ya es la promoción entera: se pinta sin pedirla otra vez. */
