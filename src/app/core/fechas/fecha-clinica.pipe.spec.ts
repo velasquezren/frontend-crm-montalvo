@@ -112,6 +112,12 @@ describe('FechaClinicaPipe', () => {
     expect(pipe.transform('')).toBe('');
   });
 
+  /* DatePipe devolvía vacío para NaN; formatDate lanza. Un epoch calculado de
+     un campo ausente (`Date.parse(undefined)`) no puede romper la plantilla. */
+  it('NaN tampoco rompe la plantilla', () => {
+    expect(montar().transform(Number.NaN)).toBe('');
+  });
+
   it('acepta Date y epoch, no solo cadenas ISO', () => {
     const pipe = montar();
     const instante = new Date('2026-10-09T03:30:00.000Z');

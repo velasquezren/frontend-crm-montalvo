@@ -342,7 +342,7 @@ const REGLAS = [
      no compara literales. No cuenta lo escrito entre comillas invertidas: son
      los comentarios que advierten justamente de este patrón. */
   { clave: 'transicion', patron: TRANSICION_TODO_CLASE, ext: /\.(html|ts)$/, que: '`transition-all` — nombra la propiedad (`transition`, `transition-colors`, `transition-[width]`)' },
-  { clave: 'transicion', patron: TRANSICION_TODO_CSS, ext: /\.(css|ts)$/, que: '`transition: all` — nombra las propiedades que cambian' },
+  { clave: 'transicion-css', patron: TRANSICION_TODO_CSS, ext: /\.(css|ts)$/, que: '`transition: all` — nombra las propiedades que cambian' },
   { clave: 'elipsis', patron: TRES_PUNTOS, ext: /\.html$/, que: 'tres puntos `...` en texto visible — usa `…`' },
   { clave: 'rol', patron: ROL_A_MANO, ext: /\.(ts|html)$/, que: 'comparación(es) de rol con un literal — usa cubreRol / esRolOperativo / puedeEntregarResultados de core/auth/roles.ts' },
 ];

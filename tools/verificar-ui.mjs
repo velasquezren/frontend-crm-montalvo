@@ -46,7 +46,10 @@ export function revisarPlantilla(texto, archivo = 'plantilla.html') {
           const tipo = atributo('type')?.value ?? (enlazado('type') ? null : 'text');
           const esperado = /tel[eé]fono|celular|whatsapp/i.test(rotulo) ? 'tel'
             : /correo|e-?mail/i.test(rotulo) ? 'email' : null;
-          if (esperado && tipo !== null && tipo !== esperado && tipo !== 'search') {
+          /* `type="text"` escrito a mano es una decisión («Nombre de la línea
+             WhatsApp»); la regla solo atrapa el tipo olvidado. */
+          const explicito = atributo('type')?.value === 'text';
+          if (esperado && tipo !== null && tipo !== esperado && tipo !== 'search' && !explicito) {
             reportar('tipo-campo', `El campo «${rotulo.trim()}» debe ser type="${esperado}" para abrir el teclado correcto.`);
           }
         }
@@ -78,7 +81,14 @@ export function revisarPlantilla(texto, archivo = 'plantilla.html') {
           reportar('pestanas-tab', 'Las pestañas deben tener una sola parada de Tab con tabindex.');
         }
       }
-      recorrer(hijos(node), enBucle || ('trackBy' in node && 'item' in node));
+      /* El @empty de un @for se pinta una sola vez: no es una fila. */
+      const esFor = 'trackBy' in node && 'item' in node;
+      if (esFor) {
+        recorrer(node.children ?? [], true);
+        if (node.empty) recorrer([node.empty], enBucle);
+      } else {
+        recorrer(hijos(node), enBucle);
+      }
     }
   };
   recorrer(ast.nodes);

@@ -132,7 +132,10 @@ no se rompe nada visible, se rompe la consistencia y la accesibilidad en silenci
 
 **Un cajón de alta o edición se abre con `confirmarDescarte: true`.** Si ya se escribió o
 eligió algo dentro, Escape o un clic fuera preguntan antes de descartarlo; Guardar y Cancelar
-cierran con `dispose()` y no preguntan. Los buscadores (`type="search"`) no cuentan. Una ficha
+cierran con `dispose()` y no preguntan. Los buscadores (`type="search"`) no cuentan. **Límite:** se
+entera por los eventos `input` y `change`, así que un cambio hecho solo con clics (chips de rol,
+elegir un paciente de una lista) no lo activa; un formulario donde eso pese usa `puedeCerrar`
+con su propio estado, como Líneas. Una ficha
 de consulta no lo lleva: preguntaría sin motivo. Un editor con su propio estado de «sin guardar»
 (Líneas → Menú, Cobro, Asistente) usa `puedeCerrar` y el mismo `AVISO_DESCARTE`. Hasta el
 2026-10-19 solo Líneas lo hacía: en Nueva venta, con el comprobante ya adjunto, un clic fuera

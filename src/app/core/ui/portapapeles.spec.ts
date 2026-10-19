@@ -43,6 +43,27 @@ describe('copiarAlPortapapeles', () => {
     await expect(copiarAlPortapapeles('hola')).resolves.toBe(false);
   });
 
+  it('selecciona todo el texto (iOS no selecciona con select() en solo lectura)', async () => {
+    vi.stubGlobal('navigator', { ...navigator, clipboard: undefined });
+    const rango = vi.spyOn(HTMLTextAreaElement.prototype, 'setSelectionRange');
+    conExecCommand(true);
+
+    await copiarAlPortapapeles('70012345');
+    expect(rango).toHaveBeenCalledWith(0, 8);
+  });
+
+  it('devuelve el foco a donde estaba', async () => {
+    vi.stubGlobal('navigator', { ...navigator, clipboard: undefined });
+    conExecCommand(true);
+    const boton = document.createElement('button');
+    document.body.appendChild(boton);
+    boton.focus();
+
+    await copiarAlPortapapeles('hola');
+    expect(document.activeElement).toBe(boton);
+    boton.remove();
+  });
+
   it('no deja el área de texto auxiliar en la página', async () => {
     vi.stubGlobal('navigator', { ...navigator, clipboard: undefined });
     conExecCommand(true);

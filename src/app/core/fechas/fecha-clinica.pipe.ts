@@ -42,7 +42,9 @@ export class FechaClinicaPipe implements PipeTransform {
   private readonly locale = inject(LOCALE_ID);
 
   transform(valor: Date | string | number | null | undefined, formato = 'd MMM y'): string {
-    if (valor === null || valor === undefined || valor === '') return '';
+    /* `valor !== valor` es NaN: DatePipe lo devolvía vacío y `formatDate` lanza.
+       Un timestamp calculado de un campo ausente no puede romper la plantilla. */
+    if (valor === null || valor === undefined || valor === '' || valor !== valor) return '';
     return formatDate(valor, formato, this.locale, offsetClinica(valor));
   }
 }

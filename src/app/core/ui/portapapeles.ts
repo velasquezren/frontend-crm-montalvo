@@ -24,8 +24,13 @@ export async function copiarAlPortapapeles(texto: string): Promise<boolean> {
   return copiarConSeleccion(texto);
 }
 
+/* `readonly` evita que el teclado del teléfono se abra, pero en Safari de iOS
+   `select()` no selecciona nada en un campo de solo lectura: hace falta
+   `setSelectionRange`. Seleccionar mueve el foco al área auxiliar, así que se
+   devuelve a donde estaba (un cajón, el chat) en vez de dejarlo en el body. */
 function copiarConSeleccion(texto: string): boolean {
   if (typeof document === 'undefined') return false;
+  const previo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   const area = document.createElement('textarea');
   area.value = texto;
   area.setAttribute('readonly', '');
@@ -34,10 +39,12 @@ function copiarConSeleccion(texto: string): boolean {
   document.body.appendChild(area);
   try {
     area.select();
+    area.setSelectionRange(0, texto.length);
     return document.execCommand('copy');
   } catch {
     return false;
   } finally {
     area.remove();
+    previo?.focus();
   }
 }
