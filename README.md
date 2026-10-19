@@ -1,6 +1,6 @@
 # CRM Clínica Montalvo — frontend
 
-Angular 21 (signals, `OnPush` en todo), Tailwind v4, PWA. Se despliega en Vercel.
+Angular 22 (signals, `OnPush` en todo), Tailwind v4, PWA. Se despliega en Vercel.
 Habla con el backend NestJS que vive en el repo hermano `backend-crm-montalvo`.
 
 Lo usan a diario agentes de venta reales sobre datos de pacientes reales, y **no

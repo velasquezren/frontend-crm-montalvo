@@ -47,7 +47,7 @@ El pipeline comercial opera sobre 4 estados canónicos (`EstadoLead`):
 
 ---
 
-## 3. Arquitectura Frontend (Angular 21 + Signals)
+## 3. Arquitectura Frontend (Angular 22 + Signals)
 
 - **Dualidad de Vistas:**
   - **Pipeline Kanban (`PIPELINE`)**: Drag & Drop interactivo mediante `@angular/cdk/drag-drop` con `linkedSignal` optimista (`leadsLocales`).

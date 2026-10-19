@@ -5,7 +5,7 @@ description: Patrón obligatorio para construir o modificar una vista (página) 
 
 # Patrón de página de feature
 
-Arquitectura: `CRM_MANIFESTO.md` §1.2 y §4.4. Angular 21 con signals, sin NgModules, sin RxJS para estado de UI.
+Arquitectura: `CRM_MANIFESTO.md` §1.2 y §4.4. Angular 22 con signals, sin NgModules, sin RxJS para estado de UI.
 
 ## Consulta por tarea
 
@@ -194,7 +194,7 @@ Se resuelve con el átomo, no maquetando el bloque en cada vista:
 }
 ```
 
-El orden importa: el error va **antes** de leer datos. En Angular 21, `.value()`
+El orden importa: el error va **antes** de leer datos. En Angular (21 y 22), `.value()`
 puede lanzar cuando el recurso está en error, incluso con `defaultValue`.
 En derivados que se evalúan fuera de esa rama de la plantilla, comprobar
 `.hasValue()` antes de leer `.value()` y ofrecer un respaldo tipado. Véanse

@@ -245,7 +245,7 @@
                          acciones. -->
                     <span class="crm-meta crm-meta-sm">
                       @if (actividad.cliente?.pac) {
-                        <span class="crm-meta-clave">{{ actividad.cliente?.pac }}</span>
+                        <span class="crm-meta-clave">{{ actividad.cliente.pac }}</span>
                       }
                       <span class="crm-meta-clave">{{ actividad.cliente?.telefono }}</span>
                     </span>
@@ -384,7 +384,7 @@
                 <span class="block text-xs font-semibold text-text-dark truncate">{{ actividad.reservaPaciente || (actividad.cliente | nombreCliente) }}</span>
                 <span class="crm-meta crm-meta-sm">
                   @if (actividad.cliente?.pac) {
-                    <span class="crm-meta-clave">{{ actividad.cliente?.pac }}</span>
+                    <span class="crm-meta-clave">{{ actividad.cliente.pac }}</span>
                   }
                   <span class="crm-meta-clave">{{ actividad.cliente?.telefono }}</span>
                 </span>
@@ -396,14 +396,14 @@
             <div class="flex items-center gap-1.5 shrink-0">
               <a
                 routerLink="/conversaciones"
-                    [queryParams]="{ telefono: actividad.cliente?.telefono }"
+                    [queryParams]="{ telefono: actividad.cliente.telefono }"
                 class="crm-accion-enlace crm-accion-enlace-whatsapp"
                 [attr.aria-label]="'Ver conversaciones de ' + (actividad.cliente | nombreCliente)"
                 title="Ver conversación en el CRM">
                 <app-icon name="message-circle" [size]="15" />
               </a>
               <a
-                [href]="'tel:' + actividad.cliente?.telefono"
+                [href]="'tel:' + actividad.cliente.telefono"
                 class="crm-accion-enlace"
                 [attr.aria-label]="'Llamar a ' + (actividad.cliente | nombreCliente)"
                 title="Llamar">

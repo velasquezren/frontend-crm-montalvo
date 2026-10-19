@@ -100,8 +100,8 @@
               <p class="text-xs text-text-muted">Llegó una actualización. Se mostrará al terminar los cambios pendientes de esta ficha.</p>
             }
             <p class="text-xs text-text-muted mt-1">
-              @if (f.sincronizacionHorario?.pendiente) {
-                @if (f.sincronizacionHorario?.sincronizadoEn) {
+              @if (f.sincronizacionHorario.pendiente) {
+                @if (f.sincronizacionHorario.sincronizadoEn) {
                   Hay un cambio pendiente de sincronizar. Se muestran los cupos actuales de la agenda.
                 } @else {
                   Falta confirmar la primera sincronización. Se muestran los cupos actuales de la agenda.
