@@ -162,9 +162,11 @@ kB y 30 → 33 kB el 2026-10-19 (parche de seguridad de Angular 21.2.25, +0,6 kB
 zoom de iOS y variables del shell, +0,7 kB de CSS; el tema de Schedule-X 4.9
 pasó de 28,43 a 31,45 kB). Inicial ese día: 420,33 kB / 110,89 kB.
 425 → 435 kB al pasar a Angular 22 (rama `angular-22`): el framework y su nuevo
-empaquetador suman ~10 kB y `withXhr()` 3,4 kB más; inicial 433,88 kB / 114,21 kB
-(+3,3 kB transferidos). El margen hasta el ERROR queda en 6 kB: el próximo
-crecimiento pide recortar algo (pasar a `fetch` devuelve 3,4 kB), no subir el 440.
+empaquetador suman ~10 kB; inicial 430,46 kB / 113,47 kB (+2,6 kB transferidos).
+Con `withXhr()` eran 3,4 kB más: se quitó porque la guía oficial lo reserva para
+el progreso de subida, que el CRM no usa (contrato en `core/api/transporte-http.spec.ts`).
+El margen hasta el ERROR queda en ~9,5 kB: el próximo crecimiento pide recortar
+algo, no subir el 440.
 
 Para un cambio que afecta a una vista concreta, compara además el tamaño de su
 *lazy chunk* en la misma tabla. **Esa cifra puede importar más que el total

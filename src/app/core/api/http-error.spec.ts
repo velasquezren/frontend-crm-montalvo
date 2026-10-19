@@ -28,6 +28,13 @@ describe('mensajeDeError', () => {
   it('distingue el servidor que no contesta', () => {
     expect(mensajeDeError(new HttpErrorResponse({ status: 0 }), 'respaldo')).toContain('conexión');
   });
+
+  /* Con fetch, sin red `error.error` es el TypeError del navegador: su
+     `message` («Failed to fetch») no es del servidor y no se muestra. */
+  it('sin red no muestra el mensaje en inglés del navegador', () => {
+    const sinRed = new HttpErrorResponse({ status: 0, error: new TypeError('Failed to fetch') });
+    expect(mensajeDeError(sinRed, 'respaldo')).toBe('No se pudo contactar al servidor. Verifica tu conexión.');
+  });
 });
 
 describe('esConflicto', () => {

@@ -1,5 +1,5 @@
 import { registerLocaleData } from '@angular/common';
-import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import localeEsBo from '@angular/common/locales/es-BO';
 import { ApplicationConfig, inject, LOCALE_ID, provideAppInitializer, provideZonelessChangeDetection, provideBrowserGlobalErrorListeners, isDevMode } from '@angular/core';
 import { provideRouter, withComponentInputBinding, withViewTransitions, withPreloading } from '@angular/router';
@@ -44,12 +44,11 @@ export const appConfig: ApplicationConfig = {
     ),
     /* Orden a propósito: la caché va PRIMERO para que una respuesta servida de
        memoria ni siquiera pase por el interceptor del token. */
-    /* `withXhr()` lo puso la migración a Angular 22, que cambia el backend
-       predeterminado a `fetch`: conserva el mismo transporte con el que
-       producción viene funcionando. Pasar a `fetch` es un cambio aparte, a
-       probar por separado (cookies del refresh con `withCredentials`, errores
-       sin red con status 0). */
-    provideHttpClient(withXhr(), withInterceptors([cacheInterceptor, tokenInterceptor])),
+    /* Transporte `fetch`, el predeterminado de Angular 22: la guía oficial pide
+       `withXhr()` solo para progreso de subida, y el CRM no lo usa. Lo que el
+       CRM necesita de él (status 0 sin red, cookies con withCredentials,
+       cuerpo vacío = null) lo fija `core/api/transporte-http.spec.ts`. */
+    provideHttpClient(withInterceptors([cacheInterceptor, tokenInterceptor])),
     /* El usuario se restaura localmente para pintar sin esperar al servidor.
        La consulta de perfil actualiza esa presentación. El backend valida la
        sesión en cada petición; un cambio de rol revoca sus credenciales y

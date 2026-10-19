@@ -63,6 +63,13 @@ export function choqueDe(choque: Choque | null, actual: string | null): string |
 
 export function mensajeDeError(error: unknown, respaldo: string): string {
   if (error instanceof HttpErrorResponse) {
+    /* Va PRIMERO: con status 0 el servidor no respondió, así que `error.error`
+       no es un mensaje suyo sino la excepción del navegador. Con XHR era un
+       ProgressEvent sin `message`; con fetch (Angular 22) es un TypeError cuyo
+       `message` dice «Failed to fetch», y se habría mostrado tal cual. */
+    if (error.status === 0) {
+      return 'No se pudo contactar al servidor. Verifica tu conexión.';
+    }
     const detalle = error.error?.message;
 
     if (Array.isArray(detalle) && detalle.length > 0) {
@@ -70,10 +77,6 @@ export function mensajeDeError(error: unknown, respaldo: string): string {
     }
     if (typeof detalle === 'string' && detalle.trim()) {
       return detalle;
-    }
-    /* Sin cuerpo de error: el servidor no respondió (status 0) o cayó. */
-    if (error.status === 0) {
-      return 'No se pudo contactar al servidor. Verifica tu conexión.';
     }
   }
   return respaldo;
