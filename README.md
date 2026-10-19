@@ -8,7 +8,7 @@ hay entorno de staging**.
 
 ## Levantarlo
 
-Node **22.23.2** (`.nvmrc`; mínimo de la rama 22: 22.12), npm 10 (comprobado: Node 22.23.2 / npm 10.9.8).
+Node **22.23.2** (`.nvmrc`; Angular 22 exige ^22.22.3 o ^24.15), npm 10 (comprobado: Node 22.23.2 / npm 10.9.8 y Node 24.18).
 El `>=22` del proyecto no expresa el mínimo más estricto de sus dependencias.
 Los dos repos van clonados bajo el mismo
 directorio padre —`check:skills` busca al hermano por ruta relativa y avisa si
