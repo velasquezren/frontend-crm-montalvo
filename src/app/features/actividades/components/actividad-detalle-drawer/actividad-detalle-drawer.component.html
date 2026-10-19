@@ -62,22 +62,25 @@
           </div>
         </div>
 
-        <!-- Acciones de contacto directo (WhatsApp & Llamada) -->
+        <!-- Acciones de contacto directo (WhatsApp & Llamada). Sin teléfono no
+             hay a quién escribir ni llamar: antes «Llamar» apuntaba a `tel:null`. -->
+        @if (actividad().cliente?.telefono; as telefono) {
         <div class="grid grid-cols-2 gap-2 pt-2 border-t border-border/70">
           <a
             routerLink="/conversaciones"
-            [queryParams]="{ telefono: actividad().cliente?.telefono }"
+            [queryParams]="{ telefono }"
             class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
             <app-icon name="message-circle" [size]="15" />
             <span>Ver conversación</span>
           </a>
           <a
-            [href]="'tel:' + actividad().cliente?.telefono"
+            [href]="'tel:' + telefono"
             class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-bg-light text-text-dark hover:bg-border/60 transition-colors">
             <app-icon name="phone" [size]="15" />
             <span>Llamar</span>
           </a>
         </div>
+        }
         <p class="text-xs text-text-muted leading-relaxed">Abre los chats disponibles de este paciente para revisar el contexto antes de enviar. Este recordatorio no envía WhatsApps automáticamente.</p>
       </div>
 

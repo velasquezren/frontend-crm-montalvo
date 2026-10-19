@@ -119,6 +119,19 @@ describe('A4.2 · ActividadDetalleDrawerComponent', () => {
     expect(texto).not.toContain('Agendar nuevo seguimiento');
   });
 
+  it('con teléfono ofrece chat y llamada a ese número', () => {
+    montar(actividad());
+    const llamar = (fixture.nativeElement as HTMLElement).querySelector('a[href^="tel:"]');
+    expect(llamar?.getAttribute('href')).toBe('tel:+59171234567');
+    expect(html()).toContain('Ver conversación');
+  });
+
+  it('sin paciente no ofrece llamar a `tel:null` ni abrir un chat vacío', () => {
+    montar(actividad({ cliente: null }));
+    expect((fixture.nativeElement as HTMLElement).querySelector('a[href^="tel:"]')).toBeNull();
+    expect(html()).not.toContain('Ver conversación');
+  });
+
   it('reserva sin ficha: muestra el origen y abre la fecha de La Paz, sin acciones manuales', () => {
     TestBed.overrideProvider(AuthService, { useValue: { user: () => ({ rol: 'RECEPCION' }) } });
     montar(actividad({ cliente: null, agente: null, reservaAgenda: 42,
