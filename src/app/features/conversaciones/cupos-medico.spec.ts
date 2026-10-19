@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { alternarCupo, cantidadDeCupos, enumerarHoras, fechaParaPaciente, textoDeCupos } from './cupos-medico';
+import { alternarCupo, cantidadDeCupos, enumerarHoras, fechaParaPaciente, soloHorasLibres, textoDeCupos } from './cupos-medico';
 
 const medico = { nombre: 'Dra. Sintética', especialidad: 'Ginecología' };
 
@@ -13,6 +13,15 @@ describe('cupos de un médico en el compositor', () => {
     expect(dos).toEqual({ '2026-10-23': ['10:30', '11:00'] });
     expect(cantidadDeCupos(dos)).toBe(2);
     expect(alternarCupo(alternarCupo(dos, '2026-10-23', '10:30'), '2026-10-23', '11:00')).toEqual({});
+  });
+
+  it('al releer la agenda se descartan las horas que ya se ocuparon, solo de ese día', () => {
+    const seleccion = { '2026-10-23': ['10:30', '11:00'], '2026-10-26': ['09:00'] };
+    expect(soloHorasLibres(seleccion, '2026-10-23', ['11:00', '11:30'])).toEqual({ '2026-10-23': ['11:00'], '2026-10-26': ['09:00'] });
+    expect(soloHorasLibres(seleccion, '2026-10-23', [])).toEqual({ '2026-10-26': ['09:00'] });
+    /* Sin cambios devuelve la misma referencia: la señal no notifica en balde. */
+    expect(soloHorasLibres(seleccion, '2026-10-23', ['10:30', '11:00'])).toBe(seleccion);
+    expect(soloHorasLibres(seleccion, '2026-10-30', [])).toBe(seleccion);
   });
 
   it('la fecha se escribe como se le habla a la paciente, sin depender de la zona del navegador', () => {

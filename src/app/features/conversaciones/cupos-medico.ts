@@ -14,12 +14,28 @@ import { nombreDia, nombreMes } from '../../shared/models/meses';
 /** Las horas elegidas por fecha civil («2026-10-23» → «10:30», «11:00»), siempre en orden. */
 export type SeleccionCupos = Readonly<Record<string, readonly string[]>>;
 
-/** Pone o quita una hora; una fecha sin horas desaparece. No muta la selección recibida. */
+/** La selección con `horas` en esa fecha; una fecha sin horas desaparece. No muta la recibida. */
+function conHoras(seleccion: SeleccionCupos, fecha: string, horas: readonly string[]): SeleccionCupos {
+  const resto = Object.fromEntries(Object.entries(seleccion).filter(([f]) => f !== fecha));
+  return horas.length ? { ...resto, [fecha]: [...horas].sort() } : resto;
+}
+
+/** Pone o quita una hora. */
 export function alternarCupo(seleccion: SeleccionCupos, fecha: string, hora: string): SeleccionCupos {
   const actuales = seleccion[fecha] ?? [];
-  const horas = actuales.includes(hora) ? actuales.filter(h => h !== hora) : [...actuales, hora].sort();
-  const { [fecha]: _anterior, ...resto } = seleccion;
-  return horas.length ? { ...resto, [fecha]: horas } : resto;
+  return conHoras(seleccion, fecha, actuales.includes(hora) ? actuales.filter(h => h !== hora) : [...actuales, hora]);
+}
+
+/**
+ * Quita de esa fecha las horas que la agenda ya no da por libres. Al
+ * «Actualizar», una hora ocupada desaparecía de los chips pero seguía en el
+ * texto: se le habría ofrecido a la paciente un cupo que ya no existe.
+ */
+export function soloHorasLibres(seleccion: SeleccionCupos, fecha: string, libres: readonly string[]): SeleccionCupos {
+  const actuales = seleccion[fecha];
+  if (!actuales) return seleccion;
+  const vigentes = actuales.filter(h => libres.includes(h));
+  return vigentes.length === actuales.length ? seleccion : conHoras(seleccion, fecha, vigentes);
 }
 
 export function cantidadDeCupos(seleccion: SeleccionCupos): number {

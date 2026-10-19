@@ -2,9 +2,9 @@ import '@angular/compiler';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { MedicoAgendaConWeb } from '../../../directorio/agenda-medicos.model';
+import { HorasLibresAgenda, MedicoAgendaConWeb } from '../../../directorio/agenda-medicos.model';
 import { CuposMedicoComponent } from './cupos-medico.component';
 
 function medico(cambios: Partial<MedicoAgendaConWeb> = {}): MedicoAgendaConWeb {
@@ -16,6 +16,13 @@ function medico(cambios: Partial<MedicoAgendaConWeb> = {}): MedicoAgendaConWeb {
 }
 
 const pagina = (datos: MedicoAgendaConWeb[]) => ({ datos, total: datos.length, pagina: 1, limite: 25, totalPaginas: 1 });
+
+function horasLibres(fecha: string, horas: string[]): HorasLibresAgenda {
+  return {
+    medicoId: '41', fecha, zonaHoraria: 'America/La_Paz', consultadoEn: '2026-10-18T14:05:00.000Z',
+    estado: horas.length ? 'DISPONIBLE' : 'SIN_CUPOS', horarios: horas.map(hora => ({ id: hora, hora })),
+  };
+}
 
 describe('cajón «Cupos» del compositor', () => {
   let fixture: ComponentFixture<CuposMedicoComponent>;
@@ -29,15 +36,17 @@ describe('cajón «Cupos» del compositor', () => {
     for (let i = 0; i < 4; i++) { await Promise.resolve(); TestBed.tick(); }
     fixture.detectChanges();
   }
+  /** Escribe en el buscador y cumple el debounce de 300 ms. */
   async function buscar(texto: string) {
     const caja = raiz().querySelector('input[type="search"]') as HTMLInputElement;
     caja.value = texto;
     caja.dispatchEvent(new Event('input'));
     await asentar();
-    await new Promise(r => setTimeout(r, 350));
+    vi.advanceTimersByTime(300);
     await asentar();
   }
   async function montar() {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(CuposMedicoComponent);
@@ -46,7 +55,17 @@ describe('cajón «Cupos» del compositor', () => {
     fixture.detectChanges();
     await asentar();
   }
-  afterEach(() => { fixture?.destroy(); http.verify(); });
+  /** Busca, elige a la Dra. Sintética y responde sus días libres. */
+  async function elegirMedico(fechas: string[]) {
+    await buscar('gine');
+    http.expectOne(r => r.url.endsWith('/agenda/medicos')).flush(pagina([medico()]));
+    await asentar();
+    boton('Dra. Sintética')!.click();
+    await asentar();
+    http.expectOne(r => r.url.endsWith('/publico/agenda/dias')).flush({ medicoId: '41', zonaHoraria: 'America/La_Paz', fechas });
+    await asentar();
+  }
+  afterEach(() => { fixture?.destroy(); http.verify(); vi.useRealTimers(); });
 
   it('busca médicos activos, ofrece el primer día libre y deja el texto elegido listo para la caja', async () => {
     await montar();
@@ -69,16 +88,12 @@ describe('cajón «Cupos» del compositor', () => {
     /* Sin un toque más: el primer día libre ya está elegido y pide sus horas. */
     const horas = http.expectOne(r => r.url.endsWith('/publico/agenda/disponibilidad'));
     expect(horas.request.params.get('fecha')).toBe('2026-10-23');
-    horas.flush({
-      medicoId: '41', fecha: '2026-10-23', zonaHoraria: 'America/La_Paz', consultadoEn: '2026-10-18T14:05:00.000Z',
-      estado: 'DISPONIBLE', horarios: [{ id: 'a', hora: '10:30' }, { id: 'b', hora: '11:00' }],
-    });
+    horas.flush(horasLibres('2026-10-23', ['10:30', '11:00']));
     await asentar();
     expect(raiz().textContent).toContain('Consulta');
     expect(raiz().textContent).toContain('Agenda leída a las 10:05');
 
-    const poner = boton('Poner en el mensaje')!;
-    expect(poner.disabled).toBe(true);
+    expect(boton('Poner en el mensaje')!.disabled).toBe(true);
     boton('10:30')!.click();
     boton('11:00')!.click();
     await asentar();
@@ -91,6 +106,23 @@ describe('cajón «Cupos» del compositor', () => {
       '• Viernes 23 de octubre: 10:30 y 11:00',
       '¿Cuál le queda mejor?',
     ].join('\n')]);
+  });
+
+  it('al «Actualizar», una hora que ya se ocupó sale también del texto', async () => {
+    await montar();
+    await elegirMedico(['2026-10-23']);
+    http.expectOne(r => r.url.endsWith('/publico/agenda/disponibilidad')).flush(horasLibres('2026-10-23', ['10:30', '11:00']));
+    await asentar();
+    boton('10:30')!.click();
+    await asentar();
+    expect(raiz().querySelector('.cupos-vista-previa')?.textContent).toContain('10:30');
+
+    boton('Actualizar')!.click();
+    await asentar();
+    http.expectOne(r => r.url.endsWith('/publico/agenda/disponibilidad')).flush(horasLibres('2026-10-23', ['11:00']));
+    await asentar();
+    expect(raiz().querySelector('.cupos-vista-previa')).toBeNull();
+    expect(boton('Poner en el mensaje')!.disabled).toBe(true);
   });
 
   it('un médico sin horario es «a solicitud» y no se le piden días a la agenda', async () => {
@@ -126,26 +158,18 @@ describe('cajón «Cupos» del compositor', () => {
 
   it('cambiar de médico vuelve a la búsqueda con lo escrito y descarta lo elegido', async () => {
     await montar();
-    await buscar('gine');
-    http.expectOne(r => r.url.endsWith('/agenda/medicos')).flush(pagina([medico()]));
-    await asentar();
-    boton('Dra. Sintética')!.click();
-    await asentar();
-    http.expectOne(r => r.url.endsWith('/publico/agenda/dias')).flush({ medicoId: '41', zonaHoraria: 'America/La_Paz', fechas: ['2026-10-23'] });
-    await asentar();
-    http.expectOne(r => r.url.endsWith('/publico/agenda/disponibilidad')).flush({
-      medicoId: '41', fecha: '2026-10-23', zonaHoraria: 'America/La_Paz', consultadoEn: '2026-10-18T14:05:00.000Z',
-      estado: 'DISPONIBLE', horarios: [{ id: 'a', hora: '10:30' }],
-    });
+    await elegirMedico(['2026-10-23']);
+    http.expectOne(r => r.url.endsWith('/publico/agenda/disponibilidad')).flush(horasLibres('2026-10-23', ['10:30']));
     await asentar();
     boton('10:30')!.click();
     await asentar();
 
     boton('Cambiar')!.click();
     await asentar();
-    http.match(r => r.url.endsWith('/agenda/medicos')).forEach(r => r.flush(pagina([medico()])));
-    await asentar();
+    /* La lista ya estaba cargada para «gine»: volver no la pide de nuevo. */
+    http.expectNone(r => r.url.endsWith('/agenda/medicos'));
     expect((raiz().querySelector('input[type="search"]') as HTMLInputElement).value).toBe('gine');
+    expect(boton('Dra. Sintética')).toBeDefined();
     expect(raiz().querySelector('.cupos-vista-previa')).toBeNull();
     expect(boton('Poner en el mensaje')!.disabled).toBe(true);
   });

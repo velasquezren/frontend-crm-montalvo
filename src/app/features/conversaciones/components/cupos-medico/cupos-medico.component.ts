@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, linkedSignal, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, linkedSignal, output, signal, untracked } from '@angular/core';
 
 import { paginaVacia, RespuestaPaginada } from '../../../../core/api/pagination.model';
 import { horaClinica } from '../../../../core/fechas/zona-clinica';
@@ -14,7 +14,7 @@ import { MonedaPipe } from '../../../../shared/pipes/moneda.pipe';
 import { DiasLibresAgenda, HorasLibresAgenda, MedicoAgendaConWeb } from '../../../directorio/agenda-medicos.model';
 import { AgendaMedicosService } from '../../../directorio/agenda-medicos.service';
 import { fechaDeReserva } from '../../../reservas/reserva.model';
-import { alternarCupo, cantidadDeCupos, SeleccionCupos, textoDeCupos } from '../../cupos-medico';
+import { alternarCupo, cantidadDeCupos, SeleccionCupos, soloHorasLibres, textoDeCupos } from '../../cupos-medico';
 
 /**
  * El contenido del cajón «Cupos» del compositor: buscar un médico, ver sus
@@ -56,12 +56,9 @@ export class CuposMedicoComponent {
 
   /** Solo activos: un médico inactivo no tiene cupos que ofrecer. */
   protected readonly medicos = httpResource<RespuestaPaginada<MedicoAgendaConWeb>>(
-    () => {
-      const buscar = this.busquedaAplicada();
-      return buscar.length >= 2
-        ? this.agenda.listarRequest({ buscar, especialidad: '', estado: 'ACTIVO', pagina: 1 })
-        : undefined;
-    },
+    () => this.buscando()
+      ? this.agenda.listarRequest({ buscar: this.busquedaAplicada(), especialidad: '', estado: 'ACTIVO', pagina: 1 })
+      : undefined,
     { defaultValue: paginaVacia<MedicoAgendaConWeb>() },
   );
   protected readonly listaMedicos = computed(() => (this.medicos.hasValue() ? this.medicos.value().datos : []));
@@ -107,6 +104,13 @@ export class CuposMedicoComponent {
       const temporizador = setTimeout(() => this.busquedaAplicada.set(termino), 300);
       onCleanup(() => clearTimeout(temporizador));
     });
+    /* Lo elegido nunca ofrece una hora que la última lectura ya no da por libre. */
+    effect(() => {
+      const h = this.horasDelDia();
+      if (!h) return;
+      const libres = h.horarios.map(x => x.hora);
+      untracked(() => this.seleccion.update(s => soloHorasLibres(s, h.fecha, libres)));
+    });
   }
 
   protected precio(m: MedicoAgendaConWeb): number | null {
@@ -123,10 +127,6 @@ export class CuposMedicoComponent {
   protected cambiarMedico(): void {
     this.seleccion.set({});
     this.elegido.set(null);
-  }
-
-  protected elegidas(fecha: string): number {
-    return this.seleccion()[fecha]?.length ?? 0;
   }
 
   protected estaElegida(hora: string): boolean {

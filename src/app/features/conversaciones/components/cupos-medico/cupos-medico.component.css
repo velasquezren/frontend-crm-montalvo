@@ -23,6 +23,12 @@
     padding-bottom: 0.25rem;
     overscroll-behavior-x: contain;
   }
+
+  /* El hijo flexible es el host del chip, no su botón: sin esto se estrecha y
+     parte «vie 23 oct» en tres líneas en vez de deslizarse. */
+  .cupos-chips--dias > app-filter-chip {
+    flex-shrink: 0;
+  }
 }
 
 /* Una fila por médico, entera pulsable: con el teléfono no se apunta a un enlace. */
