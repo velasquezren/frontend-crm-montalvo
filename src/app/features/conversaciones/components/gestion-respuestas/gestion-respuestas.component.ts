@@ -88,7 +88,8 @@ export class GestionRespuestasComponent {
     }
   }
 
-  protected async eliminarPlantillaAgente(id: string): Promise<void> {
+  protected async eliminarPlantillaAgente(id: string, titulo: string): Promise<void> {
+    if (!window.confirm(`¿Eliminar la respuesta rápida «${titulo}»? No se puede deshacer.`)) return;
     try {
       await this.conversacionesService.eliminarPlantillaAgente(id);
       this.toast.success('Respuesta rápida eliminada.');

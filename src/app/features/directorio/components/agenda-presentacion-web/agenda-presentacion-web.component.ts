@@ -208,6 +208,7 @@ export class AgendaPresentacionWebComponent {
   }
 
   protected quitarFoto(): Promise<void> {
+    if (!window.confirm('¿Quitar la foto de la ficha web? Los pacientes dejarán de verla.')) return Promise.resolve();
     return this.trabajar('foto', () => this.servicio.quitarFoto(this.medicoId()), 'Foto quitada.');
   }
 

@@ -311,7 +311,8 @@ export class PerfilPage {
     }
   }
 
-  protected async eliminarRecursoMemoria(id: string): Promise<void> {
+  protected async eliminarRecursoMemoria(id: string, titulo: string): Promise<void> {
+    if (!window.confirm(`¿Eliminar «${titulo}» de tu memoria? El archivo se borra y no se puede deshacer.`)) return;
     try {
       await this.memoriaService.eliminar(id);
       this.toast.success('Recurso eliminado. Espacio liberado.', 'Éxito');

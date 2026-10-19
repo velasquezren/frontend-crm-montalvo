@@ -52,7 +52,7 @@
       </div>
       <div class="flex items-center gap-1 shrink-0">
         <app-button variant="ghost" size="xs" [circle]="true" icon="edit" title="Editar respuesta" ariaLabel="Editar respuesta" (clicked)="editarPlantilla(p)" />
-        <app-button variant="ghost" size="xs" [circle]="true" icon="trash" title="Eliminar respuesta" ariaLabel="Eliminar respuesta" (clicked)="eliminarPlantillaAgente(p.id)" />
+        <app-button variant="ghost" size="xs" [circle]="true" icon="trash" title="Eliminar respuesta" [ariaLabel]="'Eliminar la respuesta «' + p.titulo + '»'" (clicked)="eliminarPlantillaAgente(p.id, p.titulo)" />
       </div>
     </div>
   } @empty {

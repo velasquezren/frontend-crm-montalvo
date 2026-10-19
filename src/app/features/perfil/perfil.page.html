@@ -346,7 +346,7 @@
                     <span>Copiar</span>
                   </app-button>
 
-                  <app-button variant="ghost" size="xs" [circle]="true" icon="trash" title="Eliminar recurso" ariaLabel="Eliminar recurso" (clicked)="eliminarRecursoMemoria(item.id)" />
+                  <app-button variant="ghost" size="xs" [circle]="true" icon="trash" title="Eliminar recurso" [ariaLabel]="'Eliminar «' + item.titulo + '»'" (clicked)="eliminarRecursoMemoria(item.id, item.titulo)" />
                 </div>
               </div>
             } @empty {
