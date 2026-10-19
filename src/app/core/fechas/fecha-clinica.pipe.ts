@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { formatDate } from '@angular/common';
 import { inject, LOCALE_ID, Pipe, PipeTransform } from '@angular/core';
 
 import { offsetClinica } from './zona-clinica';
@@ -35,13 +35,14 @@ import { offsetClinica } from './zona-clinica';
  */
 @Pipe({ name: 'fechaClinica' })
 export class FechaClinicaPipe implements PipeTransform {
-  /* Se delega en el `DatePipe` real para no reimplementar su lenguaje de
-     formatos: lo único que cambia es de dónde sale la zona. Toma el locale de
-     la app, así que el texto es idéntico al de antes. */
-  private readonly date = new DatePipe(inject(LOCALE_ID));
+  /* `formatDate` es lo que `DatePipe` usa por dentro: mismo lenguaje de
+     formatos y mismo locale de la app, sin instanciar un pipe dentro de otro
+     (la guía oficial de pipes de Angular 22 lo desaconseja). Lo único que
+     cambia es de dónde sale la zona. */
+  private readonly locale = inject(LOCALE_ID);
 
   transform(valor: Date | string | number | null | undefined, formato = 'd MMM y'): string {
     if (valor === null || valor === undefined || valor === '') return '';
-    return this.date.transform(valor, formato, offsetClinica(valor)) ?? '';
+    return formatDate(valor, formato, this.locale, offsetClinica(valor));
   }
 }

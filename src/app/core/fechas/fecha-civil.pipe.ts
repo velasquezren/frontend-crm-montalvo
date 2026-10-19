@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { formatDate } from '@angular/common';
 import { inject, LOCALE_ID, Pipe, PipeTransform } from '@angular/core';
 
 /**
@@ -31,7 +31,7 @@ import { inject, LOCALE_ID, Pipe, PipeTransform } from '@angular/core';
  */
 @Pipe({ name: 'fechaCivil' })
 export class FechaCivilPipe implements PipeTransform {
-  private readonly date = new DatePipe(inject(LOCALE_ID));
+  private readonly locale = inject(LOCALE_ID);
 
   transform(valor: string | null | undefined, formato = 'd MMM y'): string {
     if (!valor) return '';
@@ -41,6 +41,6 @@ export class FechaCivilPipe implements PipeTransform {
     const partes = /^(\d{4})-(\d{2})-(\d{2})/.exec(valor);
     if (!partes) return '';
     const dia = new Date(Date.UTC(Number(partes[1]), Number(partes[2]) - 1, Number(partes[3])));
-    return this.date.transform(dia, formato, 'UTC') ?? '';
+    return formatDate(dia, formato, this.locale, 'UTC');
   }
 }
