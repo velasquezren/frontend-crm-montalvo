@@ -43,6 +43,20 @@
           (clicked)="enviarUbicacion()">
           Ubicación
         </app-button>
+        <!-- La segunda pregunta más repetida: «¿hay cupo con…?». Abre la agenda
+             real en un cajón y deja el texto en la caja; no envía. -->
+        <app-button
+          variant="secondary"
+          size="xs"
+          icon="calendar-check"
+          class="shrink-0"
+          [disabled]="state.fueraDeVentana24h()"
+          [title]="state.fueraDeVentana24h()
+            ? 'Pasaron más de 24 h desde el último mensaje del paciente: solo se pueden enviar plantillas'
+            : 'Ver las horas libres de un médico y ponerlas en el mensaje'"
+          (clicked)="abrirCupos()">
+          Cupos
+        </app-button>
         <span class="quick-reply-divisor" aria-hidden="true"></span>
         @for (plantilla of misRespuestas(); track plantilla.id) {
           <button
@@ -283,6 +297,12 @@
 </ng-template>
 
 <!-- ── Modal: gestión de respuestas rápidas del agente ─────────────── -->
+<ng-template #modalCupos>
+  <app-drawer ancho="md" titulo="Cupos de un médico" subtitulo="Las horas libres de la agenda, las mismas que ofrece la web" icono="calendar-check" (cerrar)="cerrarCupos()">
+    <app-cupos-medico (insertar)="insertarCupos($event)" />
+  </app-drawer>
+</ng-template>
+
 <ng-template #modalGestionPlantillas>
   <app-drawer alto="contenido" ancho="md" titulo="Mis respuestas rápidas" subtitulo="Textos reutilizables para preparar tus mensajes" icono="message-circle" (cerrar)="cerrarGestionPlantillas()">
     <app-gestion-respuestas />

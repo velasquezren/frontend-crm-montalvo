@@ -51,6 +51,19 @@ export class AgendaMedicosService {
     return unicos.length ? this.api.request('/agenda/medicos/por-codigo', { codigos: unicos.join(',') }) : undefined;
   }
 
+  /**
+   * Cupos libres: los mismos endpoints que usa la landing. No se duplican en
+   * una ruta del CRM porque la regla de disponibilidad es UNA (`AgendaService`,
+   * con citas y reservas que ocupan); el CORS del CRM vale también aquí.
+   */
+  diasLibresRequest(medicoId: number): ResourceRequest {
+    return this.api.request('/publico/agenda/dias', { medicoId: String(medicoId) });
+  }
+
+  horasLibresRequest(medicoId: number, fecha: string): ResourceRequest {
+    return this.api.request('/publico/agenda/disponibilidad', { medicoId: String(medicoId), fecha });
+  }
+
   bancosRequest(): ResourceRequest {
     return this.api.request('/agenda/medicos/bancos');
   }

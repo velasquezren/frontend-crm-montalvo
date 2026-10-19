@@ -77,6 +77,29 @@ export interface MedicoAgendaConWeb extends MedicoAgenda, FotoDeMedico {
   web: WebDeMedico | null;
 }
 
+/**
+ * Los días con al menos una hora libre en los próximos 30 (`/publico/agenda/dias`).
+ * Espejo de `DiasAgenda` en `agenda.contrato.ts` del backend: la misma lectura
+ * que ofrecen la web, el Flow y el asistente.
+ */
+export interface DiasLibresAgenda {
+  medicoId: string;
+  zonaHoraria: 'America/La_Paz';
+  /** Fechas civiles («2026-10-23»), en orden. */
+  fechas: string[];
+}
+
+/** Las horas libres de un médico en una fecha (`/publico/agenda/disponibilidad`). */
+export interface HorasLibresAgenda {
+  medicoId: string;
+  fecha: string;
+  zonaHoraria: 'America/La_Paz';
+  consultadoEn: string;
+  estado: 'DISPONIBLE' | 'SIN_CUPOS' | 'SIN_ATENCION' | 'A_SOLICITUD';
+  /** En orden; vacío salvo con `DISPONIBLE`. */
+  horarios: { id: string; hora: string }[];
+}
+
 export interface CasillaAgenda {
   id: number;
   dia: string;

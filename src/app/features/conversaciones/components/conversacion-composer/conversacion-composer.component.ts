@@ -30,6 +30,7 @@ import { MemoriaAgenteService } from '../../../memoria-agente/memoria-agente.ser
 import { RecursoMemoria } from '../../../memoria-agente/memoria-agente.model';
 import { MensajeApi, PlantillaResumen } from '../../conversacion.model';
 import { GestionRespuestasComponent } from '../gestion-respuestas/gestion-respuestas.component';
+import { CuposMedicoComponent } from '../cupos-medico/cupos-medico.component';
 import { EnvioPlantillaComponent } from '../envio-plantilla/envio-plantilla.component';
 import { faltaParaEnviar } from '../../plantillas';
 import { NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
@@ -90,6 +91,7 @@ export function esEnlaceInternoDelPortal(texto: string): boolean {
 @Component({
   selector: 'app-conversacion-composer',
   imports: [
+    CuposMedicoComponent,
     DrawerComponent,
     EnvioPlantillaComponent,
     GestionRespuestasComponent,
@@ -116,6 +118,7 @@ export class ConversacionComposerComponent {
   /* ── Template Refs ─────────────────────────────────────────────── */
   private readonly modalPlantillas = viewChild<TemplateRef<unknown>>('modalPlantillas');
   private readonly modalGestionPlantillas = viewChild<TemplateRef<unknown>>('modalGestionPlantillas');
+  private readonly modalCupos = viewChild<TemplateRef<unknown>>('modalCupos');
   private readonly modalConfirmarMedia = viewChild<TemplateRef<unknown>>('modalConfirmarMedia');
   private readonly txtComposer = viewChild<ElementRef<HTMLTextAreaElement>>('txtComposer');
 
@@ -686,6 +689,43 @@ export class ConversacionComposerComponent {
   protected cerrarGestionPlantillas(): void {
     this.overlayRef?.dispose();
     this.overlayRef = undefined;
+  }
+
+  /* ── Cupos de un médico ─────────────────────────────────────────── */
+  protected abrirCupos(): void {
+    const tmpl = this.modalCupos();
+    if (!tmpl || this.state.fueraDeVentana24h()) return;
+    this.overlayRef?.dispose();
+    /* `<app-cupos-medico>` nace con la búsqueda vacía en cada apertura. */
+    this.overlayRef = this.dialogService.abrirCajon(tmpl, this.vcr, {
+      onClose: () => {
+        this.overlayRef = undefined;
+      },
+    });
+  }
+
+  protected cerrarCupos(): void {
+    this.overlayRef?.dispose();
+    this.overlayRef = undefined;
+  }
+
+  /**
+   * Debajo de lo ya escrito, nunca encima, como «Usar y revisar» del asistente:
+   * la agente puede haber empezado el saludo. No se envía: lo revisa y lo manda.
+   */
+  protected insertarCupos(texto: string): void {
+    const actual = this.state.mensajeNuevo().trimEnd();
+    const nuevo = actual ? `${actual}\n\n${texto}` : texto;
+    this.state.mensajeNuevo.set(nuevo);
+    this.cerrarCupos();
+    /* Después del cierre: el cajón devuelve el foco al botón al destruirse. */
+    queueMicrotask(() => {
+      const caja = this.txtComposer()?.nativeElement;
+      if (!caja) return;
+      caja.focus();
+      caja.setSelectionRange(nuevo.length, nuevo.length);
+      this.ajustarAltura();
+    });
   }
 }
 

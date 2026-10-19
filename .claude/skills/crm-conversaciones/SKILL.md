@@ -651,6 +651,7 @@ La vista `conversaciones` se estructura en submódulos desacoplados gobernados p
 3. **`conversacion-thread`**: Hilo central de mensajes, separadores de fecha, burbujas, lightbox y reproducción de audio.
 4. **`conversacion-composer`**: Área de redacción, soporte de pegado (`Ctrl+V`), Drag & Drop, atajos (`/`), grabación de voz y selector de plantillas.
    - **`gestion-respuestas`** (`<app-gestion-respuestas>`): el contenido del cajón «Mis respuestas rápidas» (crear, editar y borrar las respuestas personales). El compositor abre el cajón y pone el marco; el formulario nace vacío en cada apertura.
+   - **`cupos-medico`** (`<app-cupos-medico>`): el contenido del cajón «Cupos de un médico». Emite el texto (`insertar`) y el compositor lo pone debajo del borrador; nace vacío en cada apertura.
 5. **`conversaciones.page`**: Orquestador que sincroniza rutas, modo inmersivo móvil y eventos globales.
 
 ## 5. Acuse Automático Fuera de Horario
@@ -676,6 +677,20 @@ como texto; el historial del CRM guarda ese texto (`CONTENIDO_PIN`).
   reclama igual que un texto. Deshabilitado fuera de la ventana de 24 h (un pin
   no es plantilla). Una clave `clientMessageId` **por chat**, que solo se
   renueva tras un envío correcto.
+
+**Botón «Cupos»** (19/10/2026), segundo de la barra: abre un cajón
+(`components/cupos-medico/`) para buscar un médico activo (`/agenda/medicos`, por nombre,
+código o especialidad), ver sus días y horas libres y dejar el texto en la caja.
+- Las horas son las de la web, el Flow y el asistente: `/publico/agenda/dias` y
+  `/disponibilidad`, declaradas en `AgendaMedicosService`. No hay una regla de
+  disponibilidad propia del CRM ni una ruta duplicada.
+- El primer día libre ya viene elegido.
+- El texto (`textoDeCupos` en `cupos-medico.ts`, de usted) va **debajo de lo escrito y no
+  se envía**: la agente lo revisa y lo manda. No reserva nada; ofrece y pregunta.
+- Un médico sin horario es «a solicitud» y no se piden días.
+- Un fallo de la agenda muestra «Reintentar», nunca «sin cupos».
+- Igual que «Ubicación», se desactiva fuera de las 24 h.
+- En móvil la etiqueta «Mis respuestas:» se oculta para que «Cupos» no quede cortado.
 
 **Un candado por conversación para todos los automáticos** (acuse, pedido de
 datos, ubicación): `guardarMensajeAutomatico` pregunta «¿ya se mandó?» y guarda

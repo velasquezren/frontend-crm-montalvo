@@ -49,6 +49,14 @@
   color: var(--color-text-muted);
 }
 
+/* A 390 px la etiqueta (~95 px) y «Personalizar» dejaban ~130 px a los chips:
+   «Cupos» quedaba cortado detrás de «Ubicación». Los chips se explican solos. */
+@media (max-width: 639px) {
+  .quick-reply-label {
+    display: none;
+  }
+}
+
 .quick-reply-chips {
   display: flex;
   align-items: center;

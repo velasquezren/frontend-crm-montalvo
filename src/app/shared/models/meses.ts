@@ -77,3 +77,10 @@ const DIAS_CORTOS = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'] as const
 export function nombreDiaCorto(dia: number): string {
   return DIAS_CORTOS[dia - 1] ?? `D${dia}`;
 }
+
+const DIAS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'] as const;
+
+/** Nombre completo de un día 1-7 (lunes a domingo), en minúscula. */
+export function nombreDia(dia: number): string {
+  return DIAS[dia - 1] ?? `Día ${dia}`;
+}
