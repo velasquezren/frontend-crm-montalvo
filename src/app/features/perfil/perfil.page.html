@@ -10,7 +10,7 @@
     <button
       type="button"
       (click)="cambiarTab('perfil')"
-      class="px-5 py-2.5 text-xs font-bold rounded-xl transition-all duration-200 flex items-center gap-2 cursor-pointer select-none"
+      class="px-5 py-2.5 text-xs font-bold rounded-xl transition duration-200 flex items-center gap-2 cursor-pointer select-none"
       [class.bg-primary]="tabActiva() === 'perfil'"
       [class.text-white]="tabActiva() === 'perfil'"
       [class.shadow-lifted]="tabActiva() === 'perfil'"
@@ -23,7 +23,7 @@
     <button
       type="button"
       (click)="cambiarTab('memoria')"
-      class="px-5 py-2.5 text-xs font-bold rounded-xl transition-all duration-200 flex items-center gap-2 cursor-pointer select-none"
+      class="px-5 py-2.5 text-xs font-bold rounded-xl transition duration-200 flex items-center gap-2 cursor-pointer select-none"
       [class.bg-primary]="tabActiva() === 'memoria'"
       [class.text-white]="tabActiva() === 'memoria'"
       [class.shadow-lifted]="tabActiva() === 'memoria'"
@@ -185,7 +185,7 @@
           <!-- Barra de progreso -->
           <div class="w-full h-3 bg-white rounded-full overflow-hidden border border-border/60 shadow-subtle">
             <div
-              class="h-full transition-all duration-500 rounded-full"
+              class="h-full transition-[width] duration-500 rounded-full"
               [class.bg-primary]="cuota.porcentajeUsado < 75"
               [class.bg-secondary]="cuota.porcentajeUsado >= 75 && cuota.porcentajeUsado < 90"
               [class.bg-text-critical]="cuota.porcentajeUsado >= 90"
@@ -211,7 +211,7 @@
               </div>
             </div>
 
-            <label class="crm-foco-dentro group border-2 border-dashed border-primary/30 hover:border-primary bg-bg-light/50 hover:bg-bg-light rounded-2xl p-6 text-center block cursor-pointer transition-all duration-200 shadow-subtle">
+            <label class="crm-foco-dentro group border-2 border-dashed border-primary/30 hover:border-primary bg-bg-light/50 hover:bg-bg-light rounded-2xl p-6 text-center block cursor-pointer transition duration-200 shadow-subtle">
               <div class="p-3 bg-white rounded-full w-12 h-12 mx-auto flex items-center justify-center shadow-subtle border border-border group-hover:scale-105 transition-transform">
                 <app-icon name="plus" [size]="20" class="text-primary" />
               </div>
@@ -292,14 +292,14 @@
               </button>
             </div>
 
-            <app-input type="search" placeholder="Buscar en mi memoria..." [(value)]="busquedaMemoria" class="w-full sm:max-w-xs sm:flex-1" 
+            <app-input type="search" placeholder="Buscar en mi memoria…" [(value)]="busquedaMemoria" class="w-full sm:max-w-xs sm:flex-1"
   ariaLabel="Buscar en mi memoria" />
           </div>
 
           <!-- Grid de Tarjetas de Recursos -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             @for (item of recursosMemoria(); track item.id) {
-              <div class="bg-white rounded-2xl border border-border p-4 shadow-subtle hover:shadow-lifted transition-all duration-200 flex flex-col justify-between space-y-3 group">
+              <div class="bg-white rounded-2xl border border-border p-4 shadow-subtle hover:shadow-lifted transition duration-200 flex flex-col justify-between space-y-3 group">
                 <div class="space-y-2.5">
                   <div class="flex items-start justify-between gap-2">
                     <div class="flex items-center gap-2 flex-wrap min-w-0">

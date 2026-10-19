@@ -32,7 +32,7 @@ export class FilterChipComponent {
   protected readonly classes = computed(() => {
     const isSm = this.size() === 'sm';
     const padding = isSm ? 'px-2.5 py-1 text-xs gap-1.5' : 'px-4 py-2 text-xs gap-2';
-    const transition = this.transitions() ? 'transition-all duration-200' : 'transition-none';
+    const transition = this.transitions() ? 'transition duration-200' : 'transition-none';
     const base =
       `inline-flex items-center ${padding} rounded-full font-medium ` +
       `${transition} cursor-pointer border shrink-0`;

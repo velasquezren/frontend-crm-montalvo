@@ -15,7 +15,7 @@
         type="button"
         (click)="toggleSidebar($event)"
         class="logo-toggle-btn p-1.5 -ml-1 rounded-xl hover:bg-bg-light
-               transition-all duration-200 cursor-pointer border border-transparent hover:border-border shrink-0"
+               transition duration-200 cursor-pointer border border-transparent hover:border-border shrink-0"
         title="Abrir o cerrar el menú de navegación"
         aria-label="Abrir o cerrar el menú de navegación"
         aria-controls="navegacion-principal"
@@ -187,8 +187,10 @@
 
 <!-- Banner de Instalación PWA (Estilo Nativo) -->
 @if (showInstallBanner()) {
-  <!-- En móvil se levanta por encima de la barra inferior; en desktop va abajo-izquierda. -->
-  <div class="fixed bottom-[4.8rem] left-4 right-4 sm:bottom-6 sm:left-6 sm:right-auto sm:max-w-sm z-50">
+  <!-- Se levanta por encima de la barra inferior mientras exista (hasta 768px,
+       área segura incluida); en desktop la variable vale 0 y va abajo-izquierda.
+       Con `bottom-[4.8rem] sm:bottom-6`, entre 640 y 768px quedaba debajo de la barra. -->
+  <div class="fixed bottom-[calc(var(--shell-barra-inferior-alto)+1rem)] left-4 right-4 sm:bottom-[calc(var(--shell-barra-inferior-alto)+1.5rem)] sm:left-6 sm:right-auto sm:max-w-sm z-50">
     <div class="bg-white border border-border shadow-lifted rounded-2xl p-4">
       <div class="flex gap-3 items-center">
         <div class="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0 border border-primary/20">

@@ -233,7 +233,7 @@
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
   cursor: pointer;
   width: 100%;
-  transition: all 0.15s;
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
   flex-shrink: 0;
 }
 
@@ -538,7 +538,7 @@
   cursor: pointer;
   border: none;
   background: transparent;
-  transition: all 0.15s;
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
 }
 
 .speed-btn:hover {

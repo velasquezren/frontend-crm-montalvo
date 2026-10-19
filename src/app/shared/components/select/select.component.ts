@@ -100,7 +100,7 @@ export class SelectComponent {
 
   protected readonly clases = computed(() => {
     const base =
-      'appearance-none rounded-xl border transition-all duration-200 outline-none ' +
+      'appearance-none rounded-xl border transition duration-200 outline-none ' +
       'cursor-pointer focus:border-primary focus:ring-4 focus:ring-primary/10 ' +
       'disabled:opacity-50 disabled:cursor-not-allowed';
 

@@ -14,7 +14,7 @@
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
   <button
     type="button"
-    class="text-left w-full rounded-2xl transition-all duration-200 cursor-pointer hover:shadow-lifted"
+    class="text-left w-full rounded-2xl transition duration-200 cursor-pointer hover:shadow-lifted"
     [class.ring-2]="filtroRapido() === 'HOY'"
     [class.ring-primary]="filtroRapido() === 'HOY'"
     [class.shadow-lifted]="filtroRapido() === 'HOY'"
@@ -30,7 +30,7 @@
 
   <button
     type="button"
-    class="text-left w-full rounded-2xl transition-all duration-200 cursor-pointer hover:shadow-lifted"
+    class="text-left w-full rounded-2xl transition duration-200 cursor-pointer hover:shadow-lifted"
     [class.ring-2]="filtroRapido() === 'VENCIDAS'"
     [class.ring-critical]="filtroRapido() === 'VENCIDAS'"
     [class.shadow-lifted]="filtroRapido() === 'VENCIDAS'"
@@ -46,7 +46,7 @@
 
   <button
     type="button"
-    class="text-left w-full rounded-2xl transition-all duration-200 cursor-pointer hover:shadow-lifted"
+    class="text-left w-full rounded-2xl transition duration-200 cursor-pointer hover:shadow-lifted"
     [class.ring-2]="filtroRapido() === 'PROXIMA_SEMANA'"
     [class.ring-secondary]="filtroRapido() === 'PROXIMA_SEMANA'"
     [class.shadow-lifted]="filtroRapido() === 'PROXIMA_SEMANA'"
@@ -62,7 +62,7 @@
 
   <button
     type="button"
-    class="text-left w-full rounded-2xl transition-all duration-200 cursor-pointer hover:shadow-lifted"
+    class="text-left w-full rounded-2xl transition duration-200 cursor-pointer hover:shadow-lifted"
     [class.ring-2]="filtroRapido() === 'COMPLETADAS'"
     [class.ring-primary]="filtroRapido() === 'COMPLETADAS'"
     [class.shadow-lifted]="filtroRapido() === 'COMPLETADAS'"

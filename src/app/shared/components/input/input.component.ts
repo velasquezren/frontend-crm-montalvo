@@ -127,7 +127,7 @@ export class InputComponent {
   protected readonly inputClasses = computed(() => {
     const base =
       'w-full px-4 py-3 rounded-xl border bg-white text-sm text-text-dark ' +
-      'transition-all duration-200 outline-none placeholder:text-text-muted/50 ' +
+      'transition duration-200 outline-none placeholder:text-text-muted/50 ' +
       'disabled:opacity-50 disabled:cursor-not-allowed';
 
     const border = this.error()

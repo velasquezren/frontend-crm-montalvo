@@ -956,7 +956,7 @@ tr:hover .celda-sticky {
   font-weight: 600;
   color: var(--color-primary);
   cursor: pointer;
-  transition: all 200ms;
+  transition: background-color 200ms;
 }
 
 .crm-subir-archivo:hover {

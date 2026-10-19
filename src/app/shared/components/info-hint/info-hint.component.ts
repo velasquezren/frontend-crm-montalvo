@@ -43,7 +43,7 @@ import { IconComponent } from '../icon/icon.component';
       #disparador
       type="button"
       class="inline-flex items-center justify-center align-middle rounded-full text-text-muted
-             hover:text-primary hover:bg-bg-light transition-all duration-200 min-w-6 min-h-6 p-0.5 cursor-pointer"
+             hover:text-primary hover:bg-bg-light transition duration-200 min-w-6 min-h-6 p-0.5 cursor-pointer"
       [class.text-primary]="abierto()"
       [class.bg-bg-light]="abierto()"
       [attr.aria-label]="'Cómo funciona: ' + titulo()"

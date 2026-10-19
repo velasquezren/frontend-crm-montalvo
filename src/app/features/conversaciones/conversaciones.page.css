@@ -19,7 +19,11 @@
   margin: calc(var(--workspace-pad-top) * -1)
           calc(var(--workspace-pad-x) * -1)
           calc(var(--workspace-pad-bottom) * -1);
-  height: calc(100dvh - 64px);
+  /* Las barras las mide el shell (`--shell-*` en `layout.component.css`).
+     Con `64px` fijo, en el teléfono sobraban el notch arriba y la barra
+     inferior abajo: el final de la lista quedaba tapado. Fuera del shell la
+     declaración es inválida y el alto queda en `auto`. */
+  height: calc(100dvh - var(--shell-topbar-alto) - var(--shell-barra-inferior-alto));
   overflow: hidden;
 }
 

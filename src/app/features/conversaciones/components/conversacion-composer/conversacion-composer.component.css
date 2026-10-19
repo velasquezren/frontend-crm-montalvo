@@ -76,7 +76,7 @@
   font-weight: 500;
   color: var(--color-text-dark);
   white-space: nowrap;
-  transition: all 0.15s;
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
 }
 
 .quick-reply-chip:hover {

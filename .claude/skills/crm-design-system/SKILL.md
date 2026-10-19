@@ -142,7 +142,11 @@ seguras y scroll del contenido proyectado viven en `styles.css`, bajo
 `.crm-drawer`; no se duplican estilos por vista.
 
 Curvas: `--ease-spring-smooth`, `--ease-spring-bounce`, `--ease-press`. Para hover y transiciones
-simples, `transition-all duration-200`. **Desde una plantilla, una curva se escribe
+simples, `transition duration-200` (colores, sombra, opacidad y transform); `transition-colors`
+si solo cambia el color, y una barra de progreso `transition-[width]`. **Nunca
+`transition-all` ni `transition: all`**: animan también ancho, alto y padding, así que
+cualquier cambio de layout se vuelve animación. Lo rechaza el build desde el 2026-10-19
+(45 usos; este párrafo lo recomendaba). **Desde una plantilla, una curva se escribe
 `ease-(--ease-spring-smooth)`**, nunca `cubic-bezier(…)` suelto: como clase eso son cuatro
 clases que Tailwind no conoce, y así estuvo `<app-button>` —todos los botones del CRM con el
 `ease` por defecto— hasta el 2026-09-23.
@@ -585,6 +589,8 @@ rompa lo que este archivo declara ley**:
 | Nombre de cliente | `{{ …cliente.nombre }}` o `iniciales(…cliente.nombre)` en crudo — va por `nombreCliente` / `inicialesCliente` |
 | Píldoras a mano | `rounded-full` + `text-[≤11px]` en un `class` fuera de `shared/components/` — usa el nombre que le corresponda |
 | Radios en plantillas | `rounded` / `rounded-sm` / `rounded-md` en cualquier `class`, y `rounded-lg` en un `<button>` — la regla de radios solo miraba `.css`, y por ahí entraron 81 (2026-09-23) |
+| Transiciones | `transition-all` en `.html`/`.ts` y `transition: all` en `.css`/`.ts` — se nombra la propiedad (2026-10-19) |
+| Puntos suspensivos | `...` tras una palabra en un `.html` — el texto visible usa `…` (2026-10-19) |
 
 Existe porque el inbox había acumulado **17 desviaciones** —una escala ámbar completa donde la
 paleta excluye ámbares a propósito, cinco sombras ajenas, ocho radios distintos— sin que nada
@@ -595,7 +601,9 @@ sombras y los tres radios. El mecanismo de `DEUDA` en `tools/verificar-skills.mj
 que aún no se puede arreglar: se anota el número por archivo y a partir de ahí **solo puede
 bajar** —arreglar obliga a actualizar la cifra, empeorar rompe el build—.
 
-**No queda ninguna entrada abierta** (2026-09-22). La última fue `ORIGEN_COLOR` en el
+**Abiertas desde el 2026-10-19:** los `transition-all` de `analitica.page.html` (5) y
+`resumen-anual.page.html` (1). Finanzas y comisiones no se toca salvo pedido explícito, así
+que se congelaron en vez de corregirse. Antes estuvo vacía desde el 2026-09-22; la última fue `ORIGEN_COLOR` en el
 dashboard: once hexadecimales de marca ajena (azul Facebook, violeta Instagram, ámbar) para
 distinguir nueve canales en una dona. Se resolvió como proponía esta sección — **distinguir por
 etiqueta, no por color**: los canales son filas de una tabla con su nombre y una barra de

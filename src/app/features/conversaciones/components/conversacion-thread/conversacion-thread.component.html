@@ -2,7 +2,9 @@
   <!-- Cabecera del chat -->
   <header class="chat-header" [class.chat-header--buscando]="state.buscadorAbierto()">
     <div class="chat-header__identidad flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
-      <app-button variant="ghost" size="sm" [circle]="true" icon="chevron-left" title="Volver a la lista de chats" ariaLabel="Volver a la lista de chats" class="md:hidden shrink-0" (clicked)="deseleccionar()" />
+      <!-- 769px, no `md:` (768): el inbox pasa a una columna con `max-width: 768px`.
+           Con `md:hidden`, en un iPad vertical el chat abierto no tenía cómo volver. -->
+      <app-button variant="ghost" size="sm" [circle]="true" icon="chevron-left" title="Volver a la lista de chats" ariaLabel="Volver a la lista de chats" class="min-[769px]:hidden shrink-0" (clicked)="deseleccionar()" />
       <app-avatar [initials]="chat.cliente | inicialesCliente" [nombre]="chat.cliente | nombreCliente" class="shrink-0" />
       <div class="min-w-0 flex-1">
         <div class="flex items-baseline gap-2 min-w-0">

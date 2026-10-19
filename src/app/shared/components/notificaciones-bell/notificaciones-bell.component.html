@@ -4,7 +4,7 @@
     (click)="toggle()"
     [attr.aria-expanded]="abierto()"
     aria-label="Recordatorios y notificaciones"
-    class="relative w-9 h-9 rounded-full flex items-center justify-center text-text-muted hover:text-primary hover:bg-bg-light transition-all duration-200 cursor-pointer">
+    class="relative w-9 h-9 rounded-full flex items-center justify-center text-text-muted hover:text-primary hover:bg-bg-light transition duration-200 cursor-pointer">
     <app-icon name="bell" [size]="18" />
     @if (resumen.error()) {
       <span class="crm-bell-badge" aria-label="No se pudo consultar los recordatorios">!</span>

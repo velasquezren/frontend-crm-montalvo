@@ -54,6 +54,8 @@ Para cada vista nueva o tocada, recorre esto y **escribe en tu respuesta lo que 
 | `<app-button>` | `md` ~40 px de alto (`py-2.5` + `text-sm`) · `sm` ~32 px · `xs` ~24 px; con `[circle]`: 44 / 36 / 28 px | `src/app/shared/components/button/button.component.ts` |
 | `<app-input>` | ~46 px de alto (`py-3` + `text-sm` + borde) + label de ~20 px encima | `src/app/shared/components/input/input.component.ts` |
 | Breakpoints | `sm` 640 · `md` 768 · `lg` 1024 · `xl` 1280 (Tailwind) | — |
+| **Modo teléfono del shell** | **≤ 768 px, el 768 incluido** (barra inferior, cajón, inbox a una columna): `max-width: 768px`. `md:` empieza en ese mismo 768, así que lo que solo existe en modo teléfono se oculta con `min-[769px]:hidden`, no con `md:hidden` | `src/app/shared/components/layout/layout.component.css` |
+| Alto de las barras | `--shell-topbar-alto` (64 px + notch en el teléfono) y `--shell-barra-inferior-alto` (61 px + área segura; 0 en escritorio). Una vista a sangre o algo fijo abajo los resta, no copia `64px` | mismo archivo |
 
 Si una medida cambia en el código, cambia esta tabla en el mismo commit.
 
@@ -128,6 +130,14 @@ podían ver leyendo el código con §2 y §3:
    (era del backend: la audiencia se calculaba después del cambio). Al razonar tiempo real,
    pregunta: ¿a quién le llega el aviso cuando el cambio lo saca de su vista?
 5. **Botón solo-ícono de 22 px** y **toasts sin `aria-live`**: ver §4.
+6. **El 768 exacto es un iPad vertical** (2026-10-19). El inbox pasaba a una columna con
+   `max-width: 768px` y la flecha «Volver» del chat era `md:hidden` (oculta desde 768): a
+   768 px el chat abierto, en modo inmersivo y sin barras, no tenía salida. Al usar `md:` en
+   una vista que cambia por CSS, compara los dos números.
+7. **Un `64px` copiado no ve el notch ni la barra inferior** (2026-10-19). La bandeja medía
+   `100dvh − 64px`; en el teléfono la topbar real es 64 px + área segura y la barra inferior
+   fija se monta encima, así que el final de la lista quedaba tapado. Ahora resta las
+   variables del shell (§2).
 
 ## 6. Cómo se dice que una pantalla está lista
 

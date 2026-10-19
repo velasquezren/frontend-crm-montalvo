@@ -275,19 +275,36 @@ const HEX_AJENO =
 
 const SOMBRA_AJENA = /\bshadow-(?:2xs|xs|sm|md|lg|xl|2xl|inner)\b/g;
 
+/** `transition: all` anima también ancho, alto y padding: cualquier cambio de
+    layout se vuelve una animación de layout (cara y a veces visible, como un
+    botón que «crece» al cambiar de texto). Se nombra la propiedad: `transition`
+    de Tailwind cubre colores, sombra, opacidad y transform; una barra de
+    progreso usa `transition-[width]`. Barrido del 2026-10-19: 45 usos. */
+const TRANSICION_TODO_CLASE = /(?<![\w-])transition-all(?![\w-])/g;
+const TRANSICION_TODO_CSS = /transition(?:-property)?:\s*all\b/g;
+
+/** Tres puntos tras una palabra en una plantilla: el texto visible usa `…`
+    («Cargando…»), un solo carácter que no se parte entre líneas. Solo .html:
+    en .ts aparecen en comentarios y el spread empieza sin letra delante. */
+const TRES_PUNTOS = /[\p{L})]\.\.\.(?![\w.])/gu;
+
 /** El sistema define tres radios: inputs 12px, tarjetas 16px, píldoras redondas. */
 const RADIO_AJENO = /border-radius:\s*(?!12px|16px|9999px|50%|0)[0-9]+(?:px|rem)/g;
 
 /**
- * Violaciones toleradas por archivo. **Vacío desde el 2026-08-05: la deuda se
- * pagó entera.** Se deja el mecanismo porque su gracia es no volver a
- * necesitarlo: si algún día hay que congelar algo, se anota aquí y a partir de
+ * Violaciones toleradas por archivo. Estuvo vacío del 2026-08-05 al
+ * 2026-10-19; hoy solo guarda lo que Finanzas no deja tocar. Su gracia es
+ * no volver a necesitarlo: si algún día hay que congelar algo, se anota aquí y a partir de
  * ese número **solo puede bajar** —arreglar obliga a actualizar la cifra,
  * empeorar rompe el build—. Lo que no se puede es añadir una entrada y
  * olvidarla: una que ya no corresponda a ningún archivo también falla.
  */
 const DEUDA = {
-  /* Vacía desde el 2026-09-22. La última entrada eran los 11 hexadecimales de
+  /* Finanzas y comisiones está cerrado a cambios salvo pedido explícito
+     (2026-10-19): sus `transition-all` quedan congelados, no corregidos. */
+  'features/analitica/analitica.page.html': { transicion: 5 },
+  'features/planilla-comisiones/resumen-anual.page.html': { transicion: 1 },
+  /* Antes del 2026-10-19 la última entrada eran los 11 hexadecimales de
      `ORIGEN_COLOR` en el dashboard (un color de marca por canal). Se resolvió
      distinguiendo los canales por su nombre en una tabla, no por color: con
      nueve orígenes y tres tonos de paleta, el color nunca iba a leerse. */
@@ -324,6 +341,9 @@ const REGLAS = [
      core/auth/roles.ts (cubreRol, esRolOperativo, puedeEntregarResultados), que
      no compara literales. No cuenta lo escrito entre comillas invertidas: son
      los comentarios que advierten justamente de este patrón. */
+  { clave: 'transicion', patron: TRANSICION_TODO_CLASE, ext: /\.(html|ts)$/, que: '`transition-all` — nombra la propiedad (`transition`, `transition-colors`, `transition-[width]`)' },
+  { clave: 'transicion', patron: TRANSICION_TODO_CSS, ext: /\.(css|ts)$/, que: '`transition: all` — nombra las propiedades que cambian' },
+  { clave: 'elipsis', patron: TRES_PUNTOS, ext: /\.html$/, que: 'tres puntos `...` en texto visible — usa `…`' },
   { clave: 'rol', patron: ROL_A_MANO, ext: /\.(ts|html)$/, que: 'comparación(es) de rol con un literal — usa cubreRol / esRolOperativo / puedeEntregarResultados de core/auth/roles.ts' },
 ];
 

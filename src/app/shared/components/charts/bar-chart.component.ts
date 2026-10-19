@@ -68,7 +68,7 @@ export interface ChartItem {
               </div>
               <div class="h-3 w-full bg-bg-light rounded-full overflow-hidden p-0.5 border border-border/50">
                 <div
-                  class="h-full rounded-full transition-all duration-500 ease-out"
+                  class="h-full rounded-full transition-[width] duration-500 ease-out"
                   [style.width.%]="item.barWidth"
                   [style.background-color]="item.color || 'var(--color-primary)'"></div>
               </div>
