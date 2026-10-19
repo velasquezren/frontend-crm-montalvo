@@ -147,14 +147,20 @@ avisa y luego falla solo si el paquete inicial se infla:
 
 | Presupuesto | Aviso | Error |
 | --- | --- | --- |
-| `initial` | 415 kB | 440 kB |
-| `anyComponentStyle` | 30 kB | 40 kB |
+| `initial` | 425 kB | 440 kB |
+| `anyComponentStyle` | 33 kB | 40 kB |
 
 Estaban en 500 kB / 1 MB, que con un inicial de 401 kB dejaba **99 kB de
 deriva silenciosa**: exactamente lo que un número anotado a mano en un markdown
-no atrapa. El de `anyComponentStyle` está en 30 kB porque el único que lo roza
-es el tema vendorizado de Schedule-X (28,43 kB); el CSS propio más grande del
-proyecto es de 10 kB.
+no atrapa. El de `anyComponentStyle` vigila sobre todo el tema vendorizado de
+Schedule-X; el CSS propio más grande del proyecto es de 10 kB.
+
+Los avisos se suben poco y con motivo, nunca se dejan sonando: un aviso
+permanente enseña a ignorarlos. El ERROR (440 kB / 40 kB) es el guardia y no se
+mueve. Historial: 415 → 420 kB el 2026-10-09 (locale es-BO, 1,9 kB); 420 → 425
+kB y 30 → 33 kB el 2026-10-19 (parche de seguridad de Angular 21.2.25, +0,6 kB;
+zoom de iOS y variables del shell, +0,7 kB de CSS; el tema de Schedule-X 4.9
+pasó de 28,43 a 31,45 kB). Inicial ese día: 420,33 kB / 110,89 kB.
 
 Para un cambio que afecta a una vista concreta, compara además el tamaño de su
 *lazy chunk* en la misma tabla. **Esa cifra puede importar más que el total
