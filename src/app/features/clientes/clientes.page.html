@@ -175,11 +175,11 @@
                   [queryParams]="{ telefono: cliente.telefono }"
                   class="crm-accion-enlace crm-accion-enlace-whatsapp"
                   title="Abrir chat en WhatsApp"
-                  aria-label="Abrir chat en WhatsApp">
+                  [attr.aria-label]="'Abrir el chat de ' + (cliente | nombreCliente)">
                   <app-icon name="message-circle" [size]="14" />
                 </a>
-                <app-button variant="ghost" size="xs" [circle]="true" icon="copy" title="Copiar teléfono" ariaLabel="Copiar teléfono" (clicked)="copiarTelefono($event, cliente.telefono)" />
-                <app-button variant="ghost" size="xs" [circle]="true" icon="edit" title="Ver / Editar ficha" ariaLabel="Ver / Editar ficha" (clicked)="abrirEdicion(cliente, modalFicha)" />
+                <app-button variant="ghost" size="xs" [circle]="true" icon="copy" title="Copiar teléfono" [ariaLabel]="'Copiar teléfono de ' + (cliente | nombreCliente)" (clicked)="copiarTelefono($event, cliente.telefono)" />
+                <app-button variant="ghost" size="xs" [circle]="true" icon="edit" title="Ver / Editar ficha" [ariaLabel]="'Ver o editar la ficha de ' + (cliente | nombreCliente)" (clicked)="abrirEdicion(cliente, modalFicha)" />
               </div>
             </td>
           </tr>

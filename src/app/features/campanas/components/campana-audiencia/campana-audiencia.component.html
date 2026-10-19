@@ -190,7 +190,7 @@
                 [queryParams]="{ telefono: p.telefono }"
                 class="crm-accion-enlace crm-accion-enlace-whatsapp"
                 title="Abrir su chat"
-                aria-label="Abrir su chat">
+                [attr.aria-label]="'Abrir el chat de ' + (p | nombreCliente)">
                 <app-icon name="message-circle" [size]="14" />
               </a>
             </td>

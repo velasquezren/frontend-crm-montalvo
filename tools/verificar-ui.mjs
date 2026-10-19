@@ -8,6 +8,15 @@ import postcss from 'postcss';
 
 const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
+/**
+ * Hallazgos tolerados por archivo y regla: congelados, solo pueden bajar (el
+ * mismo trato que `DEUDA` en verificar-skills.mjs). Finanzas y comisiones no se
+ * tocan salvo pedido explícito, así que lo suyo se congela en vez de corregirse.
+ */
+const DEUDA = {
+  'src/app/features/finanzas/components/tipo-cambio/tipo-cambio-admin.component.html': { 'nombre-repetido': 1 },
+};
+
 function hijos(node) {
   return ['children', 'branches', 'groups', 'cases', 'empty', 'placeholder', 'loading', 'error']
     .flatMap(key => node[key] ? (Array.isArray(node[key]) ? node[key] : [node[key]]) : []);
@@ -16,7 +25,8 @@ function hijos(node) {
 export function revisarPlantilla(texto, archivo = 'plantilla.html') {
   const ast = parseTemplate(texto, archivo, { preserveWhitespaces: true });
   const problemas = (ast.errors ?? []).map(error => ({ linea: error.span.start.line + 1, regla: 'sintaxis', mensaje: error.msg }));
-  const recorrer = nodes => {
+  /* `enBucle`: dentro de un @for, un nombre fijo se repite en cada fila. */
+  const recorrer = (nodes, enBucle = false) => {
     for (const node of nodes) {
       if (node.name && node.attributes && node.inputs) {
         const atributo = name => node.attributes.find(a => a.name === name);
@@ -45,6 +55,10 @@ export function revisarPlantilla(texto, archivo = 'plantilla.html') {
             .replace(/<!--[\s\S]*?-->/g, '').trim();
           if (!contenido) reportar('nombre-control', 'Un botón solo-ícono necesita ariaLabel.');
         }
+        if (enBucle && ['app-button', 'button', 'a'].includes(node.name)
+            && (atributo('ariaLabel') ?? atributo('aria-label'))?.value.trim()) {
+          reportar('nombre-repetido', 'Dentro de un @for el nombre accesible fijo se repite en cada fila: inclúyele el dato de la fila con [ariaLabel].');
+        }
         if (node.name === 'img' && !tiene('alt')) reportar('imagen-alt', 'La imagen necesita alt, vacío si es decorativa.');
         if (node.name === 'input' && atributo('type')?.value === 'file'
             && /(?:^|\s)hidden(?:\s|$)/.test(atributo('class')?.value ?? '')) {
@@ -64,7 +78,7 @@ export function revisarPlantilla(texto, archivo = 'plantilla.html') {
           reportar('pestanas-tab', 'Las pestañas deben tener una sola parada de Tab con tabindex.');
         }
       }
-      recorrer(hijos(node));
+      recorrer(hijos(node), enBucle || ('trackBy' in node && 'item' in node));
     }
   };
   recorrer(ast.nodes);
@@ -145,7 +159,21 @@ export function verificarUi(raiz = RAIZ) {
   }
   const estilos = resolve(raiz, 'src/styles.css');
   agregar(estilos, revisarCss(readFileSync(estilos, 'utf8'), estilos));
-  return { problemas, componentes };
+  return { problemas: aplicarDeuda(problemas, raiz === RAIZ ? DEUDA : {}), componentes };
+}
+
+export function aplicarDeuda(problemas, deuda) {
+  const cuenta = (archivo, regla) => problemas.filter(p => p.archivo === archivo && p.regla === regla).length;
+  const restantes = problemas.filter(p => cuenta(p.archivo, p.regla) > (deuda[p.archivo]?.[p.regla] ?? 0));
+  for (const [archivo, reglas] of Object.entries(deuda)) {
+    for (const [regla, tolerado] of Object.entries(reglas)) {
+      const hallados = cuenta(archivo, regla);
+      if (hallados < tolerado) {
+        restantes.push({ archivo, linea: 1, regla: 'deuda', mensaje: `mejoró a ${hallados} «${regla}»: baja DEUDA de tools/verificar-ui.mjs a ${hallados}.` });
+      }
+    }
+  }
+  return restantes;
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

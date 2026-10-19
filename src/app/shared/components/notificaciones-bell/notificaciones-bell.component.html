@@ -61,7 +61,7 @@
                   </div>
                 </button>
                 @if (!actividad.reservaAgenda) {
-                  <app-button variant="ghost" size="xs" [circle]="true" icon="check" title="Marcar como completada" ariaLabel="Marcar como completada" class="shrink-0" (clicked)="completar(actividad)" />
+                  <app-button variant="ghost" size="xs" [circle]="true" icon="check" title="Marcar como completada" [ariaLabel]="'Marcar como completada «' + actividad.titulo + '»'" class="shrink-0" (clicked)="completar(actividad)" />
                 }
               </li>
             }

@@ -47,7 +47,7 @@ describe('campana de reservas y actividades', () => {
     await asentar();
     const html = fixture.nativeElement as HTMLElement;
     expect(html.textContent).toContain('Paciente sintética');
-    expect(html.querySelector('[aria-label="Marcar como completada"]')).toBeNull();
+    expect(html.querySelector('[aria-label^="Marcar como completada"]')).toBeNull();
     const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     html.querySelector<HTMLButtonElement>('li button')!.click();
     expect(navegar).toHaveBeenCalledWith(['/actividades'], { queryParams: { actividad: 'actividad-reserva' } });

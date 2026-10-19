@@ -126,7 +126,7 @@
                   [queryParams]="{ id: chat }"
                   class="crm-accion-enlace crm-accion-enlace-whatsapp"
                   title="Ir al chat del paciente"
-                  aria-label="Ir al chat del paciente">
+                  [attr.aria-label]="'Ir al chat de ' + fila.pacientePortal.nombre">
                   <app-icon name="message-circle" [size]="14" />
                 </a>
               }

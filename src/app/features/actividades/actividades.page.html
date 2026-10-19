@@ -289,7 +289,7 @@
                       [circle]="true"
                       icon="check"
                       title="Marcar completada"
-                           ariaLabel="Marcar completada"
+                           [ariaLabel]="'Marcar completada «' + actividad.titulo + '»'"
                       (clicked)="cambiarEstado(actividad, 'COMPLETADA')" />
                     <app-button
                       variant="ghost"
@@ -297,7 +297,7 @@
                       [circle]="true"
                       icon="clock"
                       title="Posponer 24 horas"
-                           ariaLabel="Posponer 24 horas"
+                           [ariaLabel]="'Posponer 24 horas «' + actividad.titulo + '»'"
                       (clicked)="reprogramarRapido(actividad, 24)" />
                   }
                   <!-- El "ojo" se fue: la fila entera ya abre el detalle, así que
@@ -315,7 +315,7 @@
                     size="sm"
                     [circle]="true"
                     icon="edit"
-                    ariaLabel="Editar actividad"
+                    [ariaLabel]="'Editar actividad «' + actividad.titulo + '»'"
                     title="Editar"
                     (clicked)="abrirEdicion(actividad)" />
                   <app-button
@@ -323,7 +323,7 @@
                     size="sm"
                     [circle]="true"
                     icon="trash"
-                    ariaLabel="Eliminar actividad"
+                    [ariaLabel]="'Eliminar actividad «' + actividad.titulo + '»'"
                     title="Eliminar"
                     (clicked)="eliminar(actividad)" />
                   }
@@ -435,7 +435,7 @@
                   size="sm"
                   [circle]="true"
                   icon="clock"
-                  ariaLabel="Posponer 24 horas"
+                  [ariaLabel]="'Posponer 24 horas «' + actividad.titulo + '»'"
                   title="Posponer 24 h"
                   (clicked)="reprogramarRapido(actividad, 24)" />
               }
@@ -444,7 +444,7 @@
                 size="sm"
                 [circle]="true"
                 icon="edit"
-                ariaLabel="Editar actividad"
+                [ariaLabel]="'Editar actividad «' + actividad.titulo + '»'"
                 title="Editar"
                 (clicked)="abrirEdicion(actividad)" />
               <app-button
@@ -452,7 +452,7 @@
                 size="sm"
                 [circle]="true"
                 icon="trash"
-                ariaLabel="Eliminar actividad"
+                [ariaLabel]="'Eliminar actividad «' + actividad.titulo + '»'"
                 title="Eliminar"
                 (clicked)="eliminar(actividad)" />
               }

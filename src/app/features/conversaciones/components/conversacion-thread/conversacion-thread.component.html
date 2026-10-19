@@ -338,7 +338,7 @@
                     @let caja = item.mensaje | cajaImagen;
                     <button type="button" (click)="abrirLightbox(item.mensaje.mediaUrl)"
                       class="media-foto" [style.width.px]="caja.ancho" [style.height.px]="caja.alto"
-                      aria-label="Ver la imagen completa">
+                      [attr.aria-label]="'Ver la imagen completa de las ' + (item.mensaje.createdAt | date: 'HH:mm')">
                       <img [src]="item.mensaje.mediaUrl" alt="Imagen enviada en la conversación"
                         loading="lazy" decoding="async" [width]="caja.ancho" [height]="caja.alto"
                         class="media-foto-img" [class.media-foto-img-recortada]="caja.recortar" />

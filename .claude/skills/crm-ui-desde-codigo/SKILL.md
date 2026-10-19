@@ -112,6 +112,12 @@ si algo cabe **antes** de escribirlo, no después de verlo roto.
   `@supports (-webkit-touch-callout: none)` en `src/styles.css`, que solo aplica en iOS: no
   repitas el arreglo en el CSS de una vista (así se perdió el del 2026-08-05 al partir el
   inbox) y no lo quites, `check:skills` lo exige.
+- **En una lista, cada botón dice de qué fila es.** Dentro de un `@for`, un `ariaLabel` fijo
+  («Editar actividad») se lee igual en las veinte filas y el lector de pantalla no sabe cuál
+  es cuál: va con `[ariaLabel]="'Editar actividad «' + a.titulo + '»'"`, y el nombre de un
+  paciente por `nombreCliente`. Lo comprueba `revisarPlantilla` (regla `nombre-repetido`,
+  2026-10-19: 23 casos). La única tolerada es la de Tipo de cambio, en `DEUDA` de
+  `tools/verificar-ui.mjs`, porque Finanzas no se toca sin pedido explícito.
 - **El tipo abre el teclado.** Un `<app-input>` cuyo `label`/`ariaLabel` dice teléfono,
   celular o WhatsApp va con `type="tel"`; correo/email con `type="email"`; un buscador con
   `type="search"`. Lo comprueba `revisarPlantilla` (regla `tipo-campo`).

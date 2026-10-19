@@ -222,7 +222,7 @@
                     variant="ghost"
                     size="sm"
                     icon="chevron-right"
-                    ariaLabel="Ver perfil del médico"
+                    [ariaLabel]="'Ver perfil de ' + m.etiqueta"
                     [circle]="true"
                     (clicked)="$event.stopPropagation(); m.codigo && abrirMedico(m.codigo)" />
                 </td>

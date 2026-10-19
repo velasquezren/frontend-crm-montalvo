@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { componentesDe, revisarCss, revisarPlantilla } from './verificar-ui.mjs';
+import { aplicarDeuda, componentesDe, revisarCss, revisarPlantilla } from './verificar-ui.mjs';
 
 test('nombres: Angular control flow, comparaciones, inline y comentarios', () => {
   const html = `<!-- <app-input /> -->
@@ -66,4 +66,21 @@ test('teléfono y correo piden su teclado: type tel / email', () => {
     <app-input type="search" ariaLabel="Buscar por nombre, teléfono o PAC" />
     <app-input label="Nombre" />`;
   assert.deepEqual(revisarPlantilla(html).map(p => p.regla), ['tipo-campo', 'tipo-campo']);
+});
+
+test('dentro de un @for el nombre accesible lleva el dato de la fila', () => {
+  const html = `@for (a of filas(); track a.id) {
+      <app-button icon="edit" ariaLabel="Editar" />
+      <app-button icon="edit" [ariaLabel]="'Editar ' + a.titulo" />
+      <button aria-label="Borrar"></button>
+    }
+    <app-button icon="x" ariaLabel="Cerrar" />`;
+  assert.deepEqual(revisarPlantilla(html).map(p => p.regla), ['nombre-repetido', 'nombre-repetido']);
+});
+
+test('la deuda tolera hasta su cifra y exige bajarla si mejora', () => {
+  const p = (archivo, regla) => ({ archivo, regla, linea: 1, mensaje: '' });
+  assert.deepEqual(aplicarDeuda([p('a.html', 'x')], { 'a.html': { x: 1 } }), []);
+  assert.equal(aplicarDeuda([p('a.html', 'x'), p('a.html', 'x')], { 'a.html': { x: 1 } }).length, 2);
+  assert.equal(aplicarDeuda([], { 'a.html': { x: 1 } })[0]?.regla, 'deuda');
 });

@@ -437,13 +437,13 @@
                     @if (esAdmin()) {
                       <div class="flex items-center gap-0.5">
                         @if (venta.estado !== 'GANADA') {
-                          <app-button variant="ghost" size="xs" [circle]="true" icon="check-circle" [disabled]="cambiandoEstado()" title="Marcar ganada" ariaLabel="Marcar ganada" (clicked)="cambiarEstadoVenta(venta, 'GANADA')" />
+                          <app-button variant="ghost" size="xs" [circle]="true" icon="check-circle" [disabled]="cambiandoEstado()" title="Marcar ganada" [ariaLabel]="'Marcar ganada la venta de ' + (venta.cliente | nombreCliente)" (clicked)="cambiarEstadoVenta(venta, 'GANADA')" />
                         }
                         @if (venta.estado !== 'EN_PROCESO') {
-                          <app-button variant="ghost" size="xs" [circle]="true" icon="clock" [disabled]="cambiandoEstado()" title="Marcar en proceso" ariaLabel="Marcar en proceso" (clicked)="cambiarEstadoVenta(venta, 'EN_PROCESO')" />
+                          <app-button variant="ghost" size="xs" [circle]="true" icon="clock" [disabled]="cambiandoEstado()" title="Marcar en proceso" [ariaLabel]="'Marcar en proceso la venta de ' + (venta.cliente | nombreCliente)" (clicked)="cambiarEstadoVenta(venta, 'EN_PROCESO')" />
                         }
                         @if (venta.estado !== 'PERDIDA') {
-                          <app-button variant="ghost" size="xs" [circle]="true" icon="x-circle" [disabled]="cambiandoEstado()" title="Marcar perdida" ariaLabel="Marcar perdida" (clicked)="cambiarEstadoVenta(venta, 'PERDIDA')" />
+                          <app-button variant="ghost" size="xs" [circle]="true" icon="x-circle" [disabled]="cambiandoEstado()" title="Marcar perdida" [ariaLabel]="'Marcar perdida la venta de ' + (venta.cliente | nombreCliente)" (clicked)="cambiarEstadoVenta(venta, 'PERDIDA')" />
                         }
                       </div>
                     }
