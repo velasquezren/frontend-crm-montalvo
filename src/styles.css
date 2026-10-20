@@ -18,6 +18,14 @@
 /* Geometría compartida de los paneles. Aquí vive el CSS del contenido
    proyectado: la encapsulación del átomo no alcanza los formularios hijos. */
 .crm-panel-cajon { height: 100dvh; max-height: 100dvh; }
+/* El hijo flex del panel tiene que ser el <aside>. Cuando un componente envuelve
+   al cajón (la ficha del médico, la de una promoción, el formulario de venta…)
+   su etiqueta queda en medio, y como hijo flex no encoge por debajo de su
+   contenido más ancho que no se parte: la barra de cinco pestañas de la ficha
+   del médico (~450 px) dejaba, en un teléfono de 390 px, el cajón pegado a la
+   derecha y cortado por la izquierda. `display: contents` la saca del layout,
+   como el átomo ya hace con la suya (`:host`). */
+.crm-panel-cajon > :not(app-drawer):has(> app-drawer) { display: contents; }
 .crm-drawer { min-width: 0; }
 .crm-drawer-cabecera { padding-top: max(1rem, env(safe-area-inset-top)); }
 .crm-drawer :where(.overflow-y-auto) {
@@ -27,7 +35,9 @@
   scrollbar-color: var(--color-border) transparent;
   scroll-padding-block: 1rem;
 }
-.crm-drawer :where(aside > :last-child, form > :last-child).shrink-0 {
+/* El pie fijo no queda bajo la barra de inicio del iPhone; también el de cada
+   pestaña de una ficha (`[role=tabpanel]`), que no es el último hijo del aside. */
+.crm-drawer :where(aside > :last-child, form > :last-child, [role='tabpanel'] > :last-child).shrink-0 {
   padding-bottom: max(0.875rem, env(safe-area-inset-bottom));
 }
 @media (min-width: 640px) {
@@ -806,6 +816,19 @@ tr:hover .celda-sticky {
 
 .crm-segmento-pestanas .crm-segmento-opcion {
   flex-shrink: 0;
+}
+
+/* Variante para una barra con muchas pestañas dentro de un cajón (la ficha del
+   médico: cinco). A 390 px el cajón deja 350 px y las cinco con ícono miden
+   ~450: «WhatsApp» quedaba tras un desplazamiento que no se ve. Sin ícono y con
+   menos relleno caben (~340 px); en pantallas mayores es la barra normal. */
+@media (max-width: 639px) {
+  .crm-segmento-pestanas-compactas .crm-segmento-opcion {
+    padding-inline: 10px;
+  }
+  .crm-segmento-pestanas-compactas .crm-segmento-opcion > app-icon {
+    display: none;
+  }
 }
 
 /* ── El cuerpo de una página con pestañas (Finanzas, Campañas) ───────────

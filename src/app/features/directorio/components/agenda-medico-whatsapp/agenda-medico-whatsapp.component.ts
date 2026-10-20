@@ -28,6 +28,8 @@ import { AgendaMedicosService } from '../../agenda-medicos.service';
   imports: [BadgeComponent, ButtonComponent, DatePipe, ErrorCargaComponent, IconComponent, InputComponent, LoadingSkeletonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agenda-medico-whatsapp.component.html',
+  /* Columna que encoge: sin esto su cuerpo `flex-1 overflow-y-auto` no desplaza y el cajón corta el final. */
+  host: { class: 'flex-1 min-h-0 flex flex-col' },
 })
 export class AgendaMedicoWhatsappComponent {
   private readonly servicio = inject(AgendaMedicosService);

@@ -114,6 +114,37 @@ export function revisarCss(texto, archivo = 'estilos.css', sinEncapsulacion = fa
   return problemas;
 }
 
+/**
+ * Una pestaña o un panel cuyo primer elemento es `flex-1 overflow-y-auto` solo
+ * desplaza si su etiqueta es una columna flex que encoge: sin eso, el `flex-1`
+ * no tiene padre flex, la etiqueta crece con el contenido y el cajón, que corta
+ * lo que sobra, deja el final fuera de la vista y sin poder llegar a él. Así
+ * estaban Servicios y WhatsApp en la ficha del médico (2026-10-20); Web y los
+ * cupos del chat ya llevaban `host: { class: 'flex-1 min-h-0 flex flex-col' }`.
+ */
+export function revisarRaizDesplazable(plantilla, claseHost, archivo = 'plantilla.html') {
+  const primero = nodos => {
+    for (const node of nodos) {
+      if (node.name && node.attributes) return node;
+      if (typeof node.value === 'string' && !node.value.trim()) continue;
+      if (node.value !== undefined) return undefined;
+      const dentro = primero(hijos(node));
+      if (dentro) return dentro;
+    }
+    return undefined;
+  };
+  const raiz = primero(parseTemplate(plantilla, archivo, { preserveWhitespaces: true }).nodes);
+  const clases = new Set((raiz?.attributes.find(a => a.name === 'class')?.value ?? '').split(/\s+/));
+  if (!clases.has('flex-1') || !clases.has('overflow-y-auto')) return [];
+  const host = new Set((claseHost ?? '').split(/\s+/));
+  const faltan = ['flex', 'flex-col', 'flex-1', 'min-h-0'].filter(c => !host.has(c));
+  return faltan.length === 0 ? [] : [{
+    linea: raiz.sourceSpan.start.line + 1,
+    regla: 'raiz-desplazable',
+    mensaje: `La raíz desplaza (flex-1 overflow-y-auto) pero la etiqueta del componente no es una columna que encoge: añade host: { class: 'flex-1 min-h-0 flex flex-col' } (falta ${faltan.join(', ')}).`,
+  }];
+}
+
 /** Extrae solo los literales de @Component, no HTML de comentarios ni de tests. */
 export function componentesDe(texto, archivo) {
   const ast = ts.createSourceFile(archivo, texto, ts.ScriptTarget.Latest, true);
@@ -126,8 +157,13 @@ export function componentesDe(texto, archivo) {
         const props = Object.fromEntries(config.properties.filter(ts.isPropertyAssignment).map(p => [p.name.getText(ast), p.initializer]));
         const literal = n => n && (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n))
           ? { texto: n.text, linea: ast.getLineAndCharacterOfPosition(n.getStart(ast)).line } : undefined;
+        const host = props.host && ts.isObjectLiteralExpression(props.host)
+          ? props.host.properties.filter(ts.isPropertyAssignment).find(p => p.name.getText(ast).replace(/['"]/g, '') === 'class')
+          : undefined;
         componentes.push({
           template: literal(props.template),
+          templateUrl: literal(props.templateUrl),
+          claseHost: literal(host?.initializer)?.texto,
           styles: props.styles && ts.isArrayLiteralExpression(props.styles) ? props.styles.elements.map(literal).filter(Boolean) : [literal(props.styles)].filter(Boolean),
           styleUrls: props.styleUrls && ts.isArrayLiteralExpression(props.styleUrls) ? props.styleUrls.elements.map(literal).filter(Boolean) : [literal(props.styleUrl)].filter(Boolean),
           sinEncapsulacion: props.encapsulation?.getText(ast) === 'ViewEncapsulation.None',
@@ -159,6 +195,11 @@ export function verificarUi(raiz = RAIZ) {
       componentes++;
       if (!c.onPush) agregar(archivo, [{ linea: 1, regla: 'onpush', mensaje: 'El componente debe conservar ChangeDetectionStrategy.OnPush.' }]);
       if (c.template) agregar(archivo, revisarPlantilla(c.template.texto, archivo), c.template.linea);
+      if (c.template) agregar(archivo, revisarRaizDesplazable(c.template.texto, c.claseHost, archivo), c.template.linea);
+      if (c.templateUrl) {
+        const html = resolve(dirname(archivo), c.templateUrl.texto);
+        agregar(html, revisarRaizDesplazable(readFileSync(html, 'utf8'), c.claseHost, html));
+      }
       for (const s of c.styles) agregar(archivo, revisarCss(s.texto, archivo, c.sinEncapsulacion), s.linea);
       if (c.sinEncapsulacion) for (const s of c.styleUrls) globales.add(resolve(dirname(archivo), s.texto));
     }

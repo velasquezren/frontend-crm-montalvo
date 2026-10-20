@@ -29,6 +29,8 @@ const SERVICIOS_A_MOSTRAR = 5;
   imports: [DecimalPipe, EmptyStateComponent, ErrorCargaComponent, FechaClinicaPipe, IconComponent, LoadingSkeletonComponent, MonedaPipe, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agenda-medico-servicios.component.html',
+  /* Columna que encoge: sin esto su cuerpo `flex-1 overflow-y-auto` no desplaza y el cajón corta el final. */
+  host: { class: 'flex-1 min-h-0 flex flex-col' },
 })
 export class AgendaMedicoServiciosComponent {
   private readonly servicios = inject(ServiciosService);

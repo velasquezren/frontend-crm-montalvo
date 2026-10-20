@@ -155,6 +155,20 @@ podían ver leyendo el código con §2 y §3:
    `100dvh − 64px`; en el teléfono la topbar real es 64 px + área segura y la barra inferior
    fija se monta encima, así que el final de la lista quedaba tapado. Ahora resta las
    variables del shell (§2).
+8. **Un cajón envuelto en un componente no encogía** (2026-10-20). La ficha del médico es
+   un componente cuya raíz es `<app-drawer>`: su etiqueta quedaba entre el panel y el
+   `<aside>`, y como hijo flex medía al menos su contenido más ancho que no se parte
+   —cinco pestañas, ~450 px—. A 390 px el cajón, pegado a la derecha, se salía por la
+   izquierda. Lo arregla una regla de `src/styles.css` (`display: contents` para esa
+   etiqueta) que `check:skills` exige. Al calcular el ancho de un cajón, suma también lo
+   que no se parte: una barra de pestañas con `nowrap` mide la suma de todas. Para muchas
+   pestañas en un cajón, `.crm-segmento-pestanas-compactas` quita íconos y relleno en el
+   teléfono.
+9. **Una pestaña que no desplazaba** (2026-10-20). Servicios y WhatsApp de esa ficha
+   empezaban con `flex-1 overflow-y-auto`, pero su etiqueta no era una columna flex: el
+   `flex-1` no tenía padre flex, la pestaña crecía con su contenido y el cajón cortaba el
+   final sin dejar llegar a él. Va con `host: { class: 'flex-1 min-h-0 flex flex-col' }`,
+   y lo comprueba `revisarPlantilla` (regla `raiz-desplazable`).
 
 ## 6. Cómo se dice que una pantalla está lista
 

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { aplicarDeuda, componentesDe, revisarCss, revisarPlantilla } from './verificar-ui.mjs';
+import { aplicarDeuda, componentesDe, revisarCss, revisarPlantilla, revisarRaizDesplazable } from './verificar-ui.mjs';
 
 test('nombres: Angular control flow, comparaciones, inline y comentarios', () => {
   const html = `<!-- <app-input /> -->
@@ -84,4 +84,22 @@ test('la deuda tolera hasta su cifra y exige bajarla si mejora', () => {
   assert.deepEqual(aplicarDeuda([p('a.html', 'x')], { 'a.html': { x: 1 } }), []);
   assert.equal(aplicarDeuda([p('a.html', 'x'), p('a.html', 'x')], { 'a.html': { x: 1 } }).length, 2);
   assert.equal(aplicarDeuda([], { 'a.html': { x: 1 } })[0]?.regla, 'deuda');
+});
+
+test('una raíz que desplaza exige que la etiqueta del componente sea una columna que encoge', () => {
+  const panel = '<div class="flex-1 overflow-y-auto p-5">…</div>';
+  assert.equal(revisarRaizDesplazable(panel, undefined)[0]?.regla, 'raiz-desplazable');
+  assert.match(revisarRaizDesplazable(panel, 'flex-1 flex flex-col')[0].mensaje, /min-h-0/);
+  assert.deepEqual(revisarRaizDesplazable(panel, 'flex-1 min-h-0 flex flex-col'), []);
+  // También detrás de un @if, que es como empieza la pestaña Web.
+  assert.equal(revisarRaizDesplazable('@if (p) {\n  <div class="flex-1 overflow-y-auto">x</div>\n}', undefined)[0]?.regla, 'raiz-desplazable');
+  // Una raíz que no desplaza no pide nada.
+  assert.deepEqual(revisarRaizDesplazable('<div class="flex-1 p-5">x</div><div class="overflow-y-auto">y</div>', undefined), []);
+});
+
+test('lee la clase del host y la plantilla externa del decorador', () => {
+  const [c] = componentesDe("@Component({ templateUrl: './a.html', host: { class: 'flex-1 min-h-0 flex flex-col' } }) class A {}", 'a.ts');
+  assert.equal(c.templateUrl.texto, './a.html');
+  assert.equal(c.claseHost, 'flex-1 min-h-0 flex flex-col');
+  assert.equal(componentesDe("@Component({ host: { '(keydown)': 'x()' } }) class B {}", 'b.ts')[0].claseHost, undefined);
 });

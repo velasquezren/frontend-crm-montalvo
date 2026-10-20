@@ -805,6 +805,20 @@ function verificarZoomIos() {
   }
 }
 
+/* Un componente cuya raíz es <app-drawer> queda entre el panel del cajón y el
+   <aside>: sin esta regla no encoge y el cajón se corta en el teléfono (ficha
+   del médico, 2026-10-20). La prueba de dialog.service fija a quién elige. */
+function verificarCajonEnvuelto() {
+  const css = readFileSync(STYLES, 'utf8');
+  if (!/\.crm-panel-cajon\s*>\s*:not\(app-drawer\):has\(>\s*app-drawer\)\s*\{\s*display:\s*contents;?\s*\}/.test(css)) {
+    problemas.push({
+      skill: 'crm-ui-desde-codigo',
+      mensaje: 'styles.css perdió `.crm-panel-cajon > :not(app-drawer):has(> app-drawer) { display: contents; }`: ' +
+        'un cajón envuelto en un componente (la ficha del médico) se sale por la izquierda en el teléfono.',
+    });
+  }
+}
+
 function verificarServiceWorkerUnico() {
   const señalaSw = mensaje => problemas.push({ skill: 'pwa (F09)', mensaje });
   const base = resolve(RAIZ, 'src', 'app');
@@ -1172,6 +1186,7 @@ verificarCssEncapsulado();
 verificarRendimiento();
 verificarServiceWorkerUnico();
 verificarZoomIos();
+verificarCajonEnvuelto();
 verificarZonaClinica();
 verificarEspejosDeRol();
 verificarDuenoDeEndpoint();
