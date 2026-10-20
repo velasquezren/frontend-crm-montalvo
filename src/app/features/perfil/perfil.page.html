@@ -63,7 +63,7 @@
             [imageUrl]="previewFoto()"
             size="lg" />
 
-          <div class="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
+          <div class="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 flex items-center justify-center transition-opacity duration-200">
             <app-icon name="image" class="text-white" [size]="22" />
           </div>
 
@@ -78,7 +78,7 @@
 
         <div class="space-y-1">
           <p class="text-xs text-text-muted">Formatos: JPG, PNG o WEBP.</p>
-          <p class="text-[10px] text-text-muted/80">Tamaño máximo de archivo: 2MB.</p>
+          <p class="text-xs text-text-muted">Tamaño máximo de archivo: 2 MB.</p>
         </div>
 
         <div class="flex items-center justify-center gap-2 w-full pt-2">
