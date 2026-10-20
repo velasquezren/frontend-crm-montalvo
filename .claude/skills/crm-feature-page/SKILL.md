@@ -121,11 +121,14 @@ Reglas:
 - Pestañas y filtros de una lista viven en la URL (`?tab=`, `?estado=`, `?q=`): se
   leen del `snapshot` al crear los signals, validando cada valor (la URL la escribe
   cualquiera: lo desconocido es el valor por defecto), y se escriben con
-  `replaceUrl: true` + `queryParamsHandling: 'merge'`, con `null` para el valor por
-  defecto. La búsqueda va ya con su pausa, nunca una navegación por tecla.
-  Referencias: `filtrosVentasDeUrl`/`filtrosVentasAUrl` (Ventas), `pestanaServiciosDe`
-  (Servicios) y `sincronizarUrl` (Resultados). Al quitar parámetros de un enlace de
-  entrada (`?nuevo=1`) se ponen a `null` solo esos: `queryParams: {}` borraba los filtros.
+  `reflejarEnUrl(() => ({ … }))` de `core/ui/reflejar-en-url.ts` (`replaceUrl` +
+  `merge`, `null` para el valor por defecto, no navega si la URL ya lo dice). Solo
+  escribe: leer también los cambios de la URL pisaría lo que se está tecleando. La
+  búsqueda va ya con su pausa, nunca una navegación por tecla. Lo usan Ventas
+  (`filtrosVentasDeUrl`), Pacientes, Leads (`?origen=` también por input) y Reservas;
+  las pestañas siguen el patrón de arriba (`pestanaServiciosDe`). Al quitar
+  parámetros de un enlace de entrada (`?nuevo=1`) se ponen a `null` solo esos:
+  `queryParams: {}` borraba los filtros.
 
 ## Una ficha que editan varias personas: versión y solo lo que cambió
 

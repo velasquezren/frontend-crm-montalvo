@@ -45,12 +45,15 @@ import { DrawerComponent } from '../../shared/components/drawer/drawer.component
 import { OverlayRef } from '@angular/cdk/overlay';
 import { TemplateRef, ViewContainerRef } from '@angular/core';
 import { AVISO_TELEFONO_INVALIDO, telefonoParaEscribir } from '../../shared/models/telefono';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { reflejarEnUrl } from '../../core/ui/reflejar-en-url';
 import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { SelectComponent } from '../../shared/components/select/select.component';
 import { valorOVacio } from '../../core/api/valor-o-vacio';
 
 type FiltroCategoria = CategoriaCliente | 'TODOS';
+
+const FILTROS_CATEGORIA: readonly FiltroCategoria[] = ['TODOS', 'GOLD', 'SILVER', 'BRONZE', 'PROSPECTO'];
 type PestanaModal = 'EXPEDIENTE' | 'CONTACTO' | 'NOTAS';
 
 /**
@@ -117,19 +120,17 @@ export class ClientesPage {
     { id: 'NOTAS', etiqueta: 'Perfil & Notas', icono: 'edit' },
   ];
 
-  protected readonly busqueda = signal('');
-  protected readonly filtro = signal<FiltroCategoria>('TODOS');
+  /* Categoría y búsqueda vienen de la URL (`?categoria=`, `?q=`) y vuelven a ella. */
+  private readonly urlInicial = inject(ActivatedRoute).snapshot.queryParamMap;
+  protected readonly busqueda = signal((this.urlInicial.get('q') ?? '').trim());
+  protected readonly filtro = signal<FiltroCategoria>(
+    FILTROS_CATEGORIA.find(f => f === this.urlInicial.get('categoria')) ?? 'TODOS',
+  );
 
   /* Búsqueda con debounce de 300ms para no disparar una petición por tecla */
-  private readonly busquedaAplicada = signal('');
+  private readonly busquedaAplicada = signal(this.busqueda());
 
-  protected readonly filtros: readonly FiltroCategoria[] = [
-    'TODOS',
-    'GOLD',
-    'SILVER',
-    'BRONZE',
-    'PROSPECTO',
-  ];
+  protected readonly filtros = FILTROS_CATEGORIA;
 
   protected readonly pagina = signal(1);
 
@@ -244,6 +245,10 @@ export class ClientesPage {
       }, 300);
       onCleanup(() => clearTimeout(timeout));
     });
+    reflejarEnUrl(() => ({
+      categoria: this.filtro() === 'TODOS' ? null : this.filtro(),
+      q: this.busquedaAplicada() || null,
+    }));
   }
 
   /** Etiquetas ya limpias, para la vista previa bajo el campo. */

@@ -1,4 +1,5 @@
-import { ActivatedRoute, ParamMap, Params, Router } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
+import { ParametrosUrl, reflejarEnUrl } from '../../core/ui/reflejar-en-url';
 import { enlaceWhatsApp } from '../../shared/models/telefono';
 import {
   ChangeDetectionStrategy,
@@ -124,7 +125,7 @@ export function filtrosVentasDeUrl(p: ParamMap): FiltrosVentasUrl {
 }
 
 /** Cada clave va siempre: con `null` el valor por defecto sale de la URL al hacer `merge`. */
-export function filtrosVentasAUrl(f: FiltrosVentasUrl): Params {
+export function filtrosVentasAUrl(f: FiltrosVentasUrl): ParametrosUrl {
   const personalizado = f.periodo === 'PERSONALIZADO';
   return {
     vista: f.vista === 'tabla' ? null : f.vista,
@@ -416,10 +417,8 @@ export class VentasPage {
       onCleanup(() => clearTimeout(timer));
     });
 
-    /* La lista que se ve queda en la URL (sin apilar historial: Atrás sale de
-       Ventas). La búsqueda va ya con su pausa, no una navegación por tecla. */
-    effect(() => {
-      const params = filtrosVentasAUrl({
+    reflejarEnUrl(() =>
+      filtrosVentasAUrl({
         vista: this.vistaActiva(),
         estado: this.filtro(),
         periodo: this.presetPeriodo(),
@@ -430,13 +429,8 @@ export class VentasPage {
         comprobante: this.comprobanteFiltro(),
         modulo: this.moduloFiltro(),
         q: this.busquedaDebounced(),
-      });
-      untracked(() => {
-        const actual = this.route.snapshot.queryParamMap;
-        if (Object.entries(params).every(([clave, valor]) => actual.get(clave) === valor)) return;
-        void this.router.navigate([], { relativeTo: this.route, queryParams: params, queryParamsHandling: 'merge', replaceUrl: true });
-      });
-    });
+      }),
+    );
 
     /* `?nuevo=1` desde la ficha de un paciente o de un lead: abre el
        formulario con la paciente —y, si vino de un lead, su origen— ya puestos. */

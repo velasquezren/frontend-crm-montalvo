@@ -14,6 +14,7 @@ import {
   ViewContainerRef,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ParametrosUrl, reflejarEnUrl } from '../../core/ui/reflejar-en-url';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 import { mensajeDeError } from '../../core/api/http-error';
@@ -97,10 +98,16 @@ export class ReservasPage {
   protected readonly precioEnBs = precioEnBs;
   protected readonly enlaceWhatsApp = enlaceWhatsApp;
 
-  protected readonly periodo = signal<PeriodoReservas>('mes');
-  protected readonly estado = signal<EstadoReserva | null>(null);
-  protected readonly busqueda = signal('');
-  private readonly busquedaAplicada = signal('');
+  /* Período, estado y búsqueda vienen de la URL y vuelven a ella; lo desconocido es el valor por defecto. */
+  private readonly urlInicial = this.route.snapshot.queryParamMap;
+  protected readonly periodo = signal<PeriodoReservas>(
+    PERIODOS.find(p => p.id === this.urlInicial.get('periodo'))?.id ?? 'mes',
+  );
+  protected readonly estado = signal<EstadoReserva | null>(
+    ESTADOS_FILTRO.find(e => e === this.urlInicial.get('estado')) ?? null,
+  );
+  protected readonly busqueda = signal((this.urlInicial.get('q') ?? '').trim());
+  private readonly busquedaAplicada = signal(this.busqueda());
   protected readonly pagina = signal(1);
 
   /**
@@ -191,6 +198,17 @@ export class ReservasPage {
       }, 300);
       onCleanup(() => clearTimeout(temporizador));
     });
+    /* Con un enlace a una reserva (`?reserva=&fecha=`) la lista es esa reserva,
+       no un filtro elegido: no se escribe nada hasta que se elija un período. */
+    reflejarEnUrl((): ParametrosUrl =>
+      this.fechaEnlace()
+        ? {}
+        : {
+            periodo: this.periodo() === 'mes' ? null : this.periodo(),
+            estado: this.estado(),
+            q: this.busquedaAplicada() || null,
+          },
+    );
     /*
      * La agenda vive en MySQL y no avisa de lo nuevo por el socket del CRM: una
      * reserva hecha en la web aparecería recién al salir y volver. Se refresca

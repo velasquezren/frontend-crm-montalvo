@@ -49,7 +49,8 @@ import {
 import { INTERESES_SUGERIDOS, Lead, ORIGEN_LABEL, OrigenLeadApi } from './lead.model';
 import { AVISO_TELEFONO_INVALIDO, telefonoParaEscribir } from '../../shared/models/telefono';
 import { FiltroLeads, LeadsService, ResumenLeads } from './leads.service';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { reflejarEnUrl } from '../../core/ui/reflejar-en-url';
 import { InicialesClientePipe, NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { valorOVacio } from '../../core/api/valor-o-vacio';
 
@@ -171,8 +172,8 @@ export class LeadsPage {
   });
   /** Cambiar de filtro —con el chip o por la URL— vuelve a la página 1. */
   protected readonly pagina = linkedSignal({ source: this.filtro, computation: () => 1 });
-  protected readonly busqueda = signal('');
-  private readonly busquedaDebounced = signal('');
+  protected readonly busqueda = signal((inject(ActivatedRoute).snapshot.queryParamMap.get('q') ?? '').trim());
+  private readonly busquedaDebounced = signal(this.busqueda());
 
   /**
    * "Importados" es el histórico de FileMaker: 15.000+ pacientes antiguos que
@@ -254,6 +255,12 @@ export class LeadsPage {
       }, 200);
       onCleanup(() => clearTimeout(timer));
     });
+    /* El chip escribe `?origen=` y el router lo devuelve por `origen()`: una sola
+       fuente, y pulsar «Leads» en el menú vuelve a «Captación activa». */
+    reflejarEnUrl(() => ({
+      origen: this.filtro() === 'TODOS' ? null : this.filtro(),
+      q: this.busquedaDebounced() || null,
+    }));
   }
 
   protected cambiarFiltro(valor: FiltroOrigen): void {
