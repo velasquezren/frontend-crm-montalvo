@@ -35,6 +35,7 @@ import { EnvioPlantillaComponent } from '../envio-plantilla/envio-plantilla.comp
 import { faltaParaEnviar } from '../../plantillas';
 import { NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe';
 import { buscarAtajos, insertarEnCursor, rellenarNombre } from '../../atajos';
+import { reducirFoto, seReduce } from '../../../../shared/models/reducir-foto';
 
 interface AdjuntoLocal {
   readonly mediaKey: string;
@@ -320,17 +321,21 @@ export class ConversacionComposerComponent {
     }
   }
 
-  protected async subirAdjunto(file: File): Promise<void> {
+  protected async subirAdjunto(original: File): Promise<void> {
+    const contexto = this.state.contextoChat();
+    this.subiendoArchivo.set(original.name);
+    /* La foto de cámara se achica ANTES de validar: una de 6 MB ya no se
+       rechaza por pesar más de 5, y sube varias veces más rápido. */
+    const file = seReduce(original) ? await reducirFoto(original) : original;
     /* Lo comprueban los tres caminos (arrastrar, elegir y pegar). Antes solo
        arrastrar: elegir un HEIC del iPhone o un PDF de 12 MB lo subía igual y
        el envío rebotaba después, con el archivo ya en Mi Memoria. */
     const motivo = motivoParaRechazarAdjunto(file);
     if (motivo) {
       this.toast.warning(motivo);
+      if (contexto === this.state.contextoChat()) this.subiendoArchivo.set(null);
       return;
     }
-    const contexto = this.state.contextoChat();
-    this.subiendoArchivo.set(file.name);
     try {
       const recurso = await this.memoriaService.subirBinario(file, { titulo: file.name });
       /* La agente ya está en otra conversación: el archivo queda en Mi Memoria

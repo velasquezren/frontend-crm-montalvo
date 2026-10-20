@@ -7,7 +7,7 @@
         @if (firstName()) { Hola, {{ firstName() }} } @else { Panel comercial }
       </h1>
       <p class="text-sm text-text-muted mt-1">
-        <span class="capitalize">{{ fechaHoy }}</span>
+        <span class="capitalize">{{ fechaHoy() }}</span>
         @if (actualizadoA()) { · datos de las {{ actualizadoA() }} }
       </p>
     </div>

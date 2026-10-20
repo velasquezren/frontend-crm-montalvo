@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, linkedSignal, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
@@ -21,6 +21,15 @@ import { enlaceAlChat } from '../conversaciones/enlace-chat';
 import { DashAnalisisComponent } from './components/dash-analisis/dash-analisis.component';
 import { ActividadItem, formatearEspera, inicioReciente, KpiResumen, PeriodoKpi, porcentaje, variacion } from './kpis.model';
 import { KpisService } from './kpis.service';
+
+/**
+ * Cada cuánto se actualiza solo con la pestaña a la vista. Recepción lo deja
+ * abierto todo el día: sin esto, los números, la fecha y el «hace 5 min» eran
+ * los de la hora en que se abrió (20/10/2026). `/kpis/resumen` tarda ~40 ms.
+ */
+const REFRESCO_MS = 5 * 60_000;
+/** Al volver a la pestaña, solo si lo que se ve tiene más de esto. */
+const VIEJO_AL_VOLVER_MS = 60_000;
 
 /** Durante cuántos días «Este mes» avisa que todavía tiene pocos datos. */
 const DIAS_MES_RECIEN_EMPEZADO = 3;
@@ -93,7 +102,11 @@ export class DashboardPage {
   protected readonly pct = porcentaje;
 
   protected readonly firstName = computed(() => this.authService.user()?.nombre.split(' ')[0] ?? '');
-  protected readonly fechaHoy = new Date().toLocaleDateString('es-BO', { weekday: 'long', day: 'numeric', month: 'long' });
+  /** El reloj de la vista: avanza con cada actualización, así la fecha no se queda en ayer. */
+  private readonly ahora = signal(Date.now());
+  protected readonly fechaHoy = computed(() =>
+    new Date(this.ahora()).toLocaleDateString('es-BO', { weekday: 'long', day: 'numeric', month: 'long' }),
+  );
 
   protected readonly kpiData = httpResource<KpiResumen>(() =>
     this.kpisService.resumenRequest(this.periodo()),
@@ -119,8 +132,26 @@ export class DashboardPage {
 
   protected readonly actualizadoA = computed(() => {
     if (!this.kpiData.hasValue()) return '';
-    return new Date().toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' });
+    return new Date(this.ahora()).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' });
   });
+
+  constructor() {
+    const actualizar = () => {
+      this.ahora.set(Date.now());
+      this.kpiData.reload();
+    };
+    const intervalo = setInterval(() => {
+      if (!document.hidden) actualizar();
+    }, REFRESCO_MS);
+    const alVolver = () => {
+      if (!document.hidden && Date.now() - this.ahora() > VIEJO_AL_VOLVER_MS) actualizar();
+    };
+    document.addEventListener('visibilitychange', alVolver);
+    inject(DestroyRef).onDestroy(() => {
+      clearInterval(intervalo);
+      document.removeEventListener('visibilitychange', alVolver);
+    });
+  }
 
   private readonly periodoActual = computed(() => PERIODOS.find(p => p.clave === this.periodo()) ?? PERIODOS[0]);
 
@@ -261,14 +292,15 @@ export class DashboardPage {
     }));
   });
 
-  protected readonly actividad = computed(() =>
-    (this.datos()?.actividadReciente ?? []).map(a => ({
+  protected readonly actividad = computed(() => {
+    const ahora = this.ahora();
+    return (this.datos()?.actividadReciente ?? []).map(a => ({
       ...a,
       que: a.tipo === 'VENTA' ? a.detalle : `Lead · ${ORIGEN_LABEL[a.detalle as keyof typeof ORIGEN_LABEL] ?? a.detalle}`,
       monto: a.monto > 0 ? this.moneda.formatearBob(a.monto) : '',
-      cuando: cuando(a.fecha),
-    })),
-  );
+      cuando: cuando(a.fecha, ahora),
+    }));
+  });
 
   protected irACanal(origen: string): void {
     void this.router.navigate(['/leads'], { queryParams: { origen } });
@@ -285,12 +317,12 @@ export class DashboardPage {
 }
 
 /** «hace 5 min», «14:32», «18 sep». */
-function cuando(iso: string): string {
+function cuando(iso: string, ahora: number): string {
   const fecha = new Date(iso);
-  const minutos = Math.floor((Date.now() - fecha.getTime()) / 60_000);
+  const minutos = Math.floor((ahora - fecha.getTime()) / 60_000);
   if (minutos < 1) return 'ahora';
   if (minutos < 60) return `hace ${minutos} min`;
-  if (fecha.toDateString() === new Date().toDateString()) {
+  if (fecha.toDateString() === new Date(ahora).toDateString()) {
     return fecha.toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' });
   }
   return fecha.toLocaleDateString('es-BO', { day: 'numeric', month: 'short' });
