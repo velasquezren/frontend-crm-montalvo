@@ -1,4 +1,4 @@
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, ParamMap, Params, Router } from '@angular/router';
 import { enlaceWhatsApp } from '../../shared/models/telefono';
 import {
   ChangeDetectionStrategy,
@@ -78,6 +78,67 @@ export const PRESETS_PERIODO: readonly { id: PresetPeriodo; label: string }[] = 
   { id: 'MES_ANTERIOR', label: 'Mes anterior' },
   { id: 'PERSONALIZADO', label: 'Rango libre' },
 ];
+
+type FiltroComprobante = 'TODOS' | 'CON_COMPROBANTE' | 'SIN_COMPROBANTE';
+
+/** Lo que de Ventas se guarda en la URL: recargar, volver desde otra pantalla o pasar el enlace deja la misma lista. */
+export interface FiltrosVentasUrl {
+  readonly vista: 'tabla' | 'analitica';
+  readonly estado: FiltroVenta;
+  readonly periodo: PresetPeriodo;
+  readonly desde: string;
+  readonly hasta: string;
+  readonly agenteId: string;
+  readonly metodoPago: MetodoPagoVenta | 'TODOS';
+  readonly comprobante: FiltroComprobante;
+  readonly modulo: string | null;
+  readonly q: string;
+}
+
+const FECHA_URL = /^\d{4}-\d{2}-\d{2}$/;
+
+/* La URL la puede escribir cualquiera: lo que no es un valor conocido se
+   descarta y queda el filtro por defecto, nunca un pedido raro al backend. */
+export function filtrosVentasDeUrl(p: ParamMap): FiltrosVentasUrl {
+  const uno = <T extends string>(clave: string, validos: readonly T[], porDefecto: T): T => {
+    const valor = p.get(clave) as T | null;
+    return valor !== null && validos.includes(valor) ? valor : porDefecto;
+  };
+  const periodo = uno('periodo', PRESETS_PERIODO.map(x => x.id), 'TODAS');
+  const fecha = (clave: string) => {
+    const valor = p.get(clave) ?? '';
+    return periodo === 'PERSONALIZADO' && FECHA_URL.test(valor) ? valor : '';
+  };
+  return {
+    vista: p.get('vista') === 'analitica' ? 'analitica' : 'tabla',
+    estado: uno('estado', Object.keys(ESTADO_VENTA_LABEL) as EstadoVenta[], 'TODAS'),
+    periodo,
+    desde: fecha('desde'),
+    hasta: fecha('hasta'),
+    agenteId: p.get('agente') || 'TODOS',
+    metodoPago: uno('pago', METODOS_PAGO.map(m => m.id), 'TODOS'),
+    comprobante: uno('comprobante', ['CON_COMPROBANTE', 'SIN_COMPROBANTE'] as const, 'TODOS'),
+    modulo: p.get('modulo') || null,
+    q: (p.get('q') ?? '').trim(),
+  };
+}
+
+/** Cada clave va siempre: con `null` el valor por defecto sale de la URL al hacer `merge`. */
+export function filtrosVentasAUrl(f: FiltrosVentasUrl): Params {
+  const personalizado = f.periodo === 'PERSONALIZADO';
+  return {
+    vista: f.vista === 'tabla' ? null : f.vista,
+    estado: f.estado === 'TODAS' ? null : f.estado,
+    periodo: f.periodo === 'TODAS' ? null : f.periodo,
+    desde: personalizado && f.desde ? f.desde : null,
+    hasta: personalizado && f.hasta ? f.hasta : null,
+    agente: f.agenteId === 'TODOS' ? null : f.agenteId,
+    pago: f.metodoPago === 'TODOS' ? null : f.metodoPago,
+    comprobante: f.comprobante === 'TODOS' ? null : f.comprobante,
+    modulo: f.modulo,
+    q: f.q.trim() || null,
+  };
+}
 
 /**
  * Calcula fechas ISO desde/hasta en tiempo local para enviar al backend.
@@ -219,31 +280,32 @@ export class VentasPage {
   protected readonly presetsPeriodo = PRESETS_PERIODO;
 
   /* ── Filtros Principales ────────────────────────────────────────── */
-  protected readonly filtro = signal<FiltroVenta>('TODAS');
+  private readonly filtrosIniciales = filtrosVentasDeUrl(this.route.snapshot.queryParamMap);
+  protected readonly filtro = signal<FiltroVenta>(this.filtrosIniciales.estado);
   protected readonly filtros: readonly FiltroVenta[] = ['TODAS', 'GANADA', 'EN_PROCESO', 'PERDIDA'];
 
   protected readonly pagina = signal(1);
-  protected readonly busqueda = signal('');
-  private readonly busquedaDebounced = signal('');
+  protected readonly busqueda = signal(this.filtrosIniciales.q);
+  private readonly busquedaDebounced = signal(this.filtrosIniciales.q);
 
   /* Filtro de Período Temporal */
-  protected readonly presetPeriodo = signal<PresetPeriodo>('TODAS');
-  protected readonly fechaDesdePersonalizada = signal('');
-  protected readonly fechaHastaPersonalizada = signal('');
+  protected readonly presetPeriodo = signal<PresetPeriodo>(this.filtrosIniciales.periodo);
+  protected readonly fechaDesdePersonalizada = signal(this.filtrosIniciales.desde);
+  protected readonly fechaHastaPersonalizada = signal(this.filtrosIniciales.hasta);
 
-  /* Filtro de Agente (ADMIN / SUPER_ADMIN) */
-  protected readonly agenteSeleccionadoId = signal<string>('TODOS');
+  /* Filtro de Agente (ADMIN / SUPER_ADMIN): un enlace con `?agente=` no le sirve a quien no lo es. */
+  protected readonly agenteSeleccionadoId = signal<string>(this.esAdmin() ? this.filtrosIniciales.agenteId : 'TODOS');
 
-  /* Filtros Secundarios en Memoria */
-  protected readonly metodoPagoFiltro = signal<MetodoPagoVenta | 'TODOS'>('TODOS');
-  protected readonly comprobanteFiltro = signal<'TODOS' | 'CON_COMPROBANTE' | 'SIN_COMPROBANTE'>('TODOS');
+  /* Filtros Secundarios */
+  protected readonly metodoPagoFiltro = signal<MetodoPagoVenta | 'TODOS'>(this.filtrosIniciales.metodoPago);
+  protected readonly comprobanteFiltro = signal<FiltroComprobante>(this.filtrosIniciales.comprobante);
 
   /* Modo de Visualización: Tabla Operativa vs Métricas & Distribución */
-  protected readonly vistaActiva = signal<'tabla' | 'analitica'>('tabla');
+  protected readonly vistaActiva = signal<'tabla' | 'analitica'>(this.filtrosIniciales.vista);
 
   /* ── Datos Remotos: Ventas Paginadas ───────────────────────────── */
   /** Filtro de módulo que se aplica al pulsar un sector del gráfico. */
-  protected readonly moduloFiltro = signal<string | null>(null);
+  protected readonly moduloFiltro = signal<string | null>(this.filtrosIniciales.modulo);
 
   /** Lo que filtra listado y resumen por igual: si divergen, las tarjetas mienten sobre la tabla. */
   private readonly filtroActual = computed<FiltroVentas>(() => {
@@ -354,6 +416,28 @@ export class VentasPage {
       onCleanup(() => clearTimeout(timer));
     });
 
+    /* La lista que se ve queda en la URL (sin apilar historial: Atrás sale de
+       Ventas). La búsqueda va ya con su pausa, no una navegación por tecla. */
+    effect(() => {
+      const params = filtrosVentasAUrl({
+        vista: this.vistaActiva(),
+        estado: this.filtro(),
+        periodo: this.presetPeriodo(),
+        desde: this.fechaDesdePersonalizada(),
+        hasta: this.fechaHastaPersonalizada(),
+        agenteId: this.agenteSeleccionadoId(),
+        metodoPago: this.metodoPagoFiltro(),
+        comprobante: this.comprobanteFiltro(),
+        modulo: this.moduloFiltro(),
+        q: this.busquedaDebounced(),
+      });
+      untracked(() => {
+        const actual = this.route.snapshot.queryParamMap;
+        if (Object.entries(params).every(([clave, valor]) => actual.get(clave) === valor)) return;
+        void this.router.navigate([], { relativeTo: this.route, queryParams: params, queryParamsHandling: 'merge', replaceUrl: true });
+      });
+    });
+
     /* `?nuevo=1` desde la ficha de un paciente o de un lead: abre el
        formulario con la paciente —y, si vino de un lead, su origen— ya puestos. */
     effect(() => {
@@ -390,7 +474,13 @@ export class VentasPage {
     this.activeOverlayRef = undefined;
     abierto?.dispose();
     if (this.route.snapshot.queryParams['nuevo']) {
-      void this.router.navigate([], { queryParams: {}, replaceUrl: true });
+      /* Solo lo del formulario: los filtros de la lista se quedan. */
+      void this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { nuevo: null, clienteId: null, clienteNombre: null, clienteTelefono: null, leadId: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
     }
   }
 
@@ -499,7 +589,7 @@ export class VentasPage {
   }
 
   protected cambiarComprobanteFiltro(tipo: string): void {
-    this.comprobanteFiltro.set(tipo as 'TODOS' | 'CON_COMPROBANTE' | 'SIN_COMPROBANTE');
+    this.comprobanteFiltro.set(tipo as FiltroComprobante);
     this.pagina.set(1);
   }
 

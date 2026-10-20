@@ -118,6 +118,14 @@ Reglas:
 - Tras un comando exitoso: `recurso.reload()`.
 - Errores: siempre `mensajeDeError(err, respaldo)` de `core/api/http-error.ts` — nunca `err.error?.message` a mano ni `catch (err: any)`.
 - Debounce de búsqueda: `effect(onCleanup => …)` con `clearTimeout` en el `onCleanup` (evita fugas al destruir).
+- Pestañas y filtros de una lista viven en la URL (`?tab=`, `?estado=`, `?q=`): se
+  leen del `snapshot` al crear los signals, validando cada valor (la URL la escribe
+  cualquiera: lo desconocido es el valor por defecto), y se escriben con
+  `replaceUrl: true` + `queryParamsHandling: 'merge'`, con `null` para el valor por
+  defecto. La búsqueda va ya con su pausa, nunca una navegación por tecla.
+  Referencias: `filtrosVentasDeUrl`/`filtrosVentasAUrl` (Ventas), `pestanaServiciosDe`
+  (Servicios) y `sincronizarUrl` (Resultados). Al quitar parámetros de un enlace de
+  entrada (`?nuevo=1`) se ponen a `null` solo esos: `queryParams: {}` borraba los filtros.
 
 ## Una ficha que editan varias personas: versión y solo lo que cambió
 

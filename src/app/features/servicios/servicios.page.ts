@@ -16,7 +16,9 @@ import {
   viewChild,
 } from '@angular/core';
 
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
+import { map } from 'rxjs';
 
 import { mensajeDeError } from '../../core/api/http-error';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
@@ -98,6 +100,11 @@ const TABS_SERVICIOS: readonly TabServicioConfig[] = [
   },
 ];
 
+/** `?tab=` va en minúsculas (`pacientes`, `medicos`); sin él, o con uno desconocido, es el resumen. */
+export function pestanaServiciosDe(valor: string | null | undefined): Pestana {
+  return TABS_SERVICIOS.find(t => t.id.toLowerCase() === valor)?.id ?? 'DASHBOARD';
+}
+
 /**
  * Historial de Servicios — qué se hizo en la clínica, a quién y quién lo hizo.
  *
@@ -151,13 +158,18 @@ export class ServiciosPage {
 
   /* ── Estado de UI ───────────────────────────────────────────────────── */
 
-  protected readonly pestana = signal<Pestana>('DASHBOARD');
+  /* La pestaña vive en la URL: se comparte, sobrevive a F5 y Atrás la respeta. */
+  private readonly pestanaEnRuta = toSignal(this.route.queryParamMap.pipe(map(p => p.get('tab'))), {
+    initialValue: this.route.snapshot.queryParamMap.get('tab'),
+  });
+  private readonly pestanaInicial = pestanaServiciosDe(this.pestanaEnRuta());
+  protected readonly pestana = signal<Pestana>(this.pestanaInicial);
   protected readonly filtroModulo = signal<string | null>(null);
   /** null = todo el historial; con id = solo ese mes. */
   protected readonly periodoId = signal<string | null>(null);
 
   /** Pestañas ya visitadas para retención instantánea de estado (0ms). */
-  private readonly visitadas = signal<ReadonlySet<Pestana>>(new Set(['DASHBOARD']));
+  private readonly visitadas = signal<ReadonlySet<Pestana>>(new Set([this.pestanaInicial]));
 
   protected readonly estaMontada = computed(() => {
     const vistas = new Set(this.visitadas());
@@ -206,14 +218,22 @@ export class ServiciosPage {
   private readonly medicoPedido = signal<string | null>(this.route.snapshot.queryParamMap.get('medico'));
 
   constructor() {
+    effect(() => this.mostrar(pestanaServiciosDe(this.pestanaEnRuta())));
+
     effect(() => {
       const codigo = this.medicoPedido();
       if (!codigo || !this.plantillaMedico()) return;
       this.medicoPedido.set(null);
-      this.setPestana('MEDICOS');
+      this.mostrar('MEDICOS');
       void this.abrirMedico(codigo);
-      /* Se quita de la URL: recargar no debe volver a abrir el cajón. */
-      void this.router.navigate([], { relativeTo: this.route, queryParams: { medico: null }, queryParamsHandling: 'merge', replaceUrl: true });
+      /* Se quita de la URL (recargar no debe volver a abrir el cajón) y queda la
+         pestaña: una sola navegación, dos seguidas con `merge` se pisan. */
+      void this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { medico: null, tab: 'medicos' },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
     });
 
     /* Lo que ya se sabe de cada cara se queda: pasar de página o abrir un
@@ -552,8 +572,18 @@ export class ServiciosPage {
 
   protected setPestana(p: Pestana): void {
     if (this.pestana() === p) return;
-    this.visitadas.update(vistas => new Set(vistas).add(this.pestana()).add(p));
+    this.mostrar(p);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab: p === 'DASHBOARD' ? null : p.toLowerCase() },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  private mostrar(p: Pestana): void {
     this.pestana.set(p);
+    this.visitadas.update(vistas => (vistas.has(p) ? vistas : new Set(vistas).add(p)));
   }
 
   /** Una sola definición: `shared/models/meses.ts`. */

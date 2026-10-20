@@ -51,7 +51,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <!-- Panel de Avatar / Foto -->
       <div class="bg-white rounded-2xl border border-border p-6 flex flex-col items-center text-center space-y-4 shadow-subtle">
-        <h3 class="text-xs font-bold text-text-muted uppercase tracking-wider">Foto de Perfil</h3>
+        <h2 class="text-xs font-bold text-text-muted uppercase tracking-wider">Foto de Perfil</h2>
 
         <!-- `<label>` y no un `<div (click)>`: era la única forma de cambiar la
              foto y ni el div ni el input oculto eran enfocables, así que con
@@ -105,7 +105,7 @@
       <!-- Formulario de Detalles -->
       <div class="md:col-span-2 bg-white rounded-2xl border border-border p-6 shadow-subtle">
         <form [formGroup]="perfilForm" (ngSubmit)="onSubmit()" class="space-y-5">
-          <h3 class="text-xs font-bold text-text-muted uppercase tracking-wider pb-1 border-b border-border">Datos Personales</h3>
+          <h2 class="text-xs font-bold text-text-muted uppercase tracking-wider pb-1 border-b border-border">Datos Personales</h2>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="flex flex-col gap-1.5">
@@ -129,7 +129,7 @@
             </div>
           </div>
 
-          <h3 class="text-xs font-bold text-text-muted uppercase tracking-wider pt-2 pb-1 border-b border-border">Seguridad</h3>
+          <h2 class="text-xs font-bold text-text-muted uppercase tracking-wider pt-2 pb-1 border-b border-border">Seguridad</h2>
 
           <div class="flex flex-col gap-1.5">
             <label for="password" class="text-xs font-bold text-text-dark">Nueva Contraseña (Opcional)</label>
@@ -168,7 +168,7 @@
                 <app-icon name="hard-drive" [size]="26" />
               </div>
               <div>
-                <h3 class="text-base font-extrabold text-text-dark">Almacenamiento Privado del Agente</h3>
+                <h2 class="text-base font-extrabold text-text-dark">Almacenamiento Privado del Agente</h2>
                 <p class="text-xs text-text-muted mt-0.5">Espacio exclusivo para guardar banners, listas de precios, respuestas frecuentes y documentos PDF.</p>
               </div>
             </div>
@@ -206,7 +206,7 @@
                 <app-icon name="image" [size]="18" />
               </div>
               <div>
-                <h4 class="text-xs font-extrabold text-text-dark uppercase tracking-wider">Subir Imagen o Documento</h4>
+                <h3 class="text-xs font-extrabold text-text-dark uppercase tracking-wider">Subir Imagen o Documento</h3>
                 <p class="text-[11px] text-text-muted">Banners de ofertas, listas de precios o PDF</p>
               </div>
             </div>
@@ -228,7 +228,7 @@
                 <app-icon name="edit" [size]="18" />
               </div>
               <div>
-                <h4 class="text-xs font-extrabold text-text-dark uppercase tracking-wider">Guardar Nota o Respuesta</h4>
+                <h3 class="text-xs font-extrabold text-text-dark uppercase tracking-wider">Guardar Nota o Respuesta</h3>
                 <p class="text-[11px] text-text-muted">Respuestas listas para pegar en chat</p>
               </div>
             </div>
