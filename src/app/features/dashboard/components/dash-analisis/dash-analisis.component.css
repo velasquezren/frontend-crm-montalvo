@@ -153,3 +153,9 @@
   .ana, .ana-mapa-celda { transition: none; }
   .ana-mapa-celda:hover { transform: none; }
 }
+
+/* La lectura de una celda va en el mismo sitio que «Más leads», sin moverlo:
+   cifras de ancho fijo para que no baile al pasar de una celda a otra. */
+.ana-pico-lectura {
+  font-variant-numeric: tabular-nums;
+}

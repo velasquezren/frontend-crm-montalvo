@@ -124,6 +124,13 @@ export class DashAnalisisComponent {
     return d ? mapaDeCalor(d.porHora) : null;
   });
 
+  /**
+   * La celda que se señala o se toca, ya escrita («mar, 10–12 h: 4 leads»).
+   * Ocupa el sitio de «Más leads» mientras dura: el `title` de antes no llegaba
+   * al teléfono. Vuelve a ninguna al cambiar de periodo.
+   */
+  protected readonly celdaActiva = linkedSignal<unknown, string | null>({ source: () => this.mapa(), computation: () => null });
+
   protected readonly pico = computed(() => {
     const p = this.mapa()?.pico;
     return p ? `${DIAS_SEMANA_CORTOS[p.dia]}, de ${etiquetaDeBanda(p.banda)}` : null;

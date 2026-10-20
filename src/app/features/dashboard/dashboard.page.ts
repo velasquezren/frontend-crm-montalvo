@@ -253,6 +253,19 @@ export class DashboardPage {
     };
   });
 
+  /** La barra que se señala o se toca; vuelve a ninguna al cambiar de periodo. */
+  protected readonly barraActiva = linkedSignal<unknown, number | null>({ source: () => this.serie(), computation: () => null });
+
+  /** «15 oct: 12 leads, 9 respondidos», o el total si no se señala ninguna. */
+  protected readonly lecturaSerie = computed(() => {
+    const s = this.serie();
+    const e = this.datos()?.embudo;
+    if (!s || !e) return '';
+    const i = this.barraActiva();
+    if (i !== null && s.barras[i]) return s.barras[i].titulo;
+    return `En el periodo: ${e.captados} ${e.captados === 1 ? 'lead' : 'leads'}, ${e.respondidos} ${e.respondidos === 1 ? 'respondido' : 'respondidos'}. Señala o toca una barra para ver su día.`;
+  });
+
   protected readonly embudo = computed(() => {
     const e = this.datos()?.embudo;
     if (!e) return [];

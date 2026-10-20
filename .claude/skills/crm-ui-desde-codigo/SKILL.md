@@ -170,6 +170,17 @@ podían ver leyendo el código con §2 y §3:
    final sin dejar llegar a él. Va con `host: { class: 'flex-1 min-h-0 flex flex-col' }`,
    y lo comprueba `revisarPlantilla` (regla `raiz-desplazable`).
 
+10. **Una cifra de KPI cortada por la tarjeta** (2026-10-20). Las cuatro tarjetas del
+    Dashboard a 1280 px con el menú abierto miden ~233 px (193 útiles) y «Bs 245.300,00» a
+    30 px ocupa ~234: la tarjeta recorta y el monto se cortaba sin aviso. La etiqueta, en la
+    misma fila que la insignia, se partía en cuatro líneas. Ahora la cifra se mide contra su
+    tarjeta (`container-type: inline-size` + `--kpi-largo` = caracteres, tamaño
+    `~155–158cqi / largo` con techo y piso) y solo baja la que no cabe; `<app-kpi-card>` lo
+    hace solo. Al poner una cifra grande en una caja estrecha, multiplica caracteres × ~0,6 em.
+11. **Un `title` no llega al teléfono** (2026-10-20). Las barras de leads y el mapa de horas
+    decían su valor solo al pasar el ratón. Ahora una línea fija (`pointerenter`, y la
+    salida solo con ratón: un toque deja el dato puesto) lo dice en la propia tarjeta.
+
 ## 6. Cómo se dice que una pantalla está lista
 
 No con «se ve bien». Con lo razonado, por ejemplo:

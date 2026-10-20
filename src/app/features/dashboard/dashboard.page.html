@@ -68,11 +68,17 @@
     <!-- ── 1. Pendiente ahora: lo único que pide acción ─────────────────── -->
     <section class="dash-ahora" aria-label="Pendiente ahora">
       <a class="dash-ahora-item" routerLink="/conversaciones" [queryParams]="{ pestana: 'SIN_RESPONDER' }">
-        <app-icon name="message-circle" [size]="16" class="text-primary shrink-0" />
-        <span class="dash-ahora-numero">{{ r.ahora.chatsSinResponder }}</span>
-        <span class="text-sm text-text-muted">
-          {{ r.ahora.chatsSinResponder === 1 ? 'chat espera' : 'chats esperan' }} respuesta
-        </span>
+        @if (r.ahora.chatsSinResponder > 0) {
+          <app-icon name="message-circle" [size]="16" class="text-primary shrink-0" />
+          <span class="dash-ahora-numero">{{ r.ahora.chatsSinResponder }}</span>
+          <span class="text-sm text-text-muted">
+            {{ r.ahora.chatsSinResponder === 1 ? 'chat espera' : 'chats esperan' }} respuesta
+          </span>
+        } @else {
+          <!-- Un «0 chats esperan» se lee como dato; esto se lee como lo que es: al día. -->
+          <app-icon name="check-circle" [size]="16" class="text-primary shrink-0" />
+          <span class="text-sm font-semibold text-text-dark">Todos los chats respondidos</span>
+        }
         <app-icon name="chevron-right" [size]="14" class="dash-ahora-flecha" />
       </a>
       <!-- Solo si hay alguna: es la urgencia de las urgencias, y un «0» sería ruido. -->
@@ -110,15 +116,18 @@
          caja), y la línea verde del pie es la serie de ese mismo indicador. -->
     <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5" aria-label="Resumen del periodo">
       @for (k of tarjetas(); track k.label) {
+        <!-- La etiqueta va sola en su fila y la insignia junto a la cifra, que
+             baja de línea si no cabe: a 1280 px con el menú abierto la tarjeta
+             deja ~193 px y las dos juntas partían la etiqueta en cuatro líneas. -->
         <article class="dash-kpi">
-          <div class="dash-kpi-cabecera">
-            <span class="dash-kpi-label">
-              <app-icon [name]="k.icon" [size]="14" class="text-primary shrink-0" />
-              {{ k.label }}
-            </span>
+          <span class="dash-kpi-label">
+            <app-icon [name]="k.icon" [size]="14" class="text-primary shrink-0" />
+            {{ k.label }}
+          </span>
+          <div class="dash-kpi-cifra">
+            <p class="dash-kpi-valor" [style.--kpi-largo]="k.valor.length">{{ k.valor }}</p>
             <app-badge [variant]="k.badge.variant" [icon]="k.badge.icon">{{ k.badge.texto }}</app-badge>
           </div>
-          <p class="dash-kpi-valor">{{ k.valor }}</p>
           <p class="dash-kpi-detalle">{{ k.detalle }}</p>
           <div class="dash-kpi-tendencia">
             <app-sparkline [valores]="k.serie" [area]="true" [grosor]="2" />
@@ -143,14 +152,25 @@
 
         @if (serie(); as s) {
           @if (s.hayDatos) {
-            <div class="dash-serie" role="img" [attr.aria-label]="'Leads ' + s.unidad + ' del periodo'">
+            <!-- El dato de la barra que se señala (o se toca: el title no llega
+                 al teléfono) y, sin ninguna, el total. Una línea fija: no salta. -->
+            <p class="dash-serie-lectura">{{ lecturaSerie() }}</p>
+            <div
+              class="dash-serie"
+              [class.dash-serie-enfocada]="barraActiva() !== null"
+              role="img"
+              [attr.aria-label]="'Leads ' + s.unidad + ' del periodo. ' + lecturaSerie()"
+              (pointerleave)="$event.pointerType === 'mouse' && barraActiva.set(null)">
               <!-- Guías al máximo y a la mitad: la altura de una barra se lee contra algo. -->
               <span class="dash-serie-guia dash-serie-guia-max" aria-hidden="true"></span>
               <span class="dash-serie-guia dash-serie-guia-mitad" aria-hidden="true"></span>
               <span class="dash-serie-max">{{ s.max }}</span>
               @if (s.max > 1) { <span class="dash-serie-max dash-serie-mitad">{{ s.mitad }}</span> }
               @for (b of s.barras; track b.fecha) {
-                <div class="dash-serie-col" [title]="b.titulo">
+                <div
+                  class="dash-serie-col"
+                  [class.dash-serie-col-activa]="barraActiva() === $index"
+                  (pointerenter)="barraActiva.set($index)">
                   <div class="dash-serie-barra" [style.height.%]="b.alto">
                     <div class="dash-serie-respondido" [style.height.%]="b.respondidos"></div>
                   </div>
@@ -291,6 +311,8 @@
             @for (a of actividad(); track a.id) {
               <li
                 class="fila-clicable flex items-center gap-3 -mx-2 px-2 py-1.5 rounded-xl"
+                role="link"
+                [attr.aria-label]="(a.cliente | nombreCliente) + ' · ' + a.que + ' · ' + a.cuando"
                 tabindex="0"
                 (click)="irAActividad(a)"
                 (keydown.enter)="irAActividad(a)">

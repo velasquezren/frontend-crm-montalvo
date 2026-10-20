@@ -53,7 +53,9 @@
           <h2>Cuándo escriben</h2>
           <p>Leads por día y hora de La Paz: para saber cuándo hace falta gente.</p>
         </div>
-        @if (pico(); as p) {
+        @if (celdaActiva(); as c) {
+          <span class="ana-pico ana-pico-lectura"><app-icon name="clock" [size]="12" />{{ c }}</span>
+        } @else if (pico(); as p) {
           <span class="ana-pico"><app-icon name="trending-up" [size]="12" />Más leads: {{ p }}</span>
         }
       </div>
@@ -64,7 +66,11 @@
         <app-error-carga que="el mapa de horas" (reintentar)="detalle.reload()" />
       } @else if (mapa(); as m) {
         @if (m.max > 0) {
-          <div class="ana-mapa" role="img" [attr.aria-label]="'Leads por día y hora. ' + (pico() ? 'Más leads: ' + pico() : '')">
+          <div
+            class="ana-mapa"
+            role="img"
+            [attr.aria-label]="'Leads por día y hora. ' + (pico() ? 'Más leads: ' + pico() : '')"
+            (pointerleave)="$event.pointerType === 'mouse' && celdaActiva.set(null)">
             <span></span>
             @for (b of bandas; track b) {
               <span class="ana-mapa-hora">@if (b % 2 === 0) { {{ etiquetaBanda(b) }} }</span>
@@ -72,7 +78,10 @@
             @for (fila of m.celdas; track $index; let d = $index) {
               <span class="ana-mapa-dia">{{ dias[d] }}</span>
               @for (c of fila; track $index; let b = $index) {
-                <span class="ana-mapa-celda" [style.background]="fondo(c.intensidad)" [title]="tituloCelda(d, b, c.leads)"></span>
+                <span
+                  class="ana-mapa-celda"
+                  [style.background]="fondo(c.intensidad)"
+                  (pointerenter)="celdaActiva.set(tituloCelda(d, b, c.leads))"></span>
               }
             }
           </div>

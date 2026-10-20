@@ -62,6 +62,30 @@ describe('el análisis del Dashboard', () => {
     expect(new Set(tonos).size).toBeGreaterThan(2);
   });
 
+  /* El title de antes no llegaba al teléfono: el dato de la celda se lee en la tarjeta. */
+  it('señalar o tocar una celda del mapa dice sus leads en el sitio de «Más leads»', async () => {
+    await montar(DETALLE);
+    const raiz = fixture.nativeElement as HTMLElement;
+    const celdas = raiz.querySelectorAll<HTMLElement>('.ana-mapa-celda:not(.ana-mapa-muestra)');
+    /* Martes (fila 1), banda 9 (18 a 20 h): 12 bandas por fila. */
+    celdas[1 * 12 + 9].dispatchEvent(new Event('pointerenter'));
+    fixture.detectChanges();
+    expect(texto()).toContain('Mar, 18 a 20 h: 5 leads');
+    expect(texto()).not.toContain('Más leads:');
+
+    /* Un toque no se borra al levantar el dedo; el ratón, al salir del mapa, sí. */
+    const salir = (pointerType: string) => {
+      const e = new Event('pointerleave') as Event & { pointerType: string };
+      Object.defineProperty(e, 'pointerType', { value: pointerType });
+      raiz.querySelector('.ana-mapa')!.dispatchEvent(e);
+      fixture.detectChanges();
+    };
+    salir('touch');
+    expect(texto()).toContain('Mar, 18 a 20 h: 5 leads');
+    salir('mouse');
+    expect(texto()).toContain('Más leads: Mar, de 18 a 20 h');
+  });
+
   it('una agente (sin asistente) y una sola línea: no se pintan esas tarjetas', async () => {
     await montar({ ...DETALLE, asistente: null, chatsPorLinea: [DETALLE.chatsPorLinea[0]] });
     expect(texto()).not.toContain('Asistente de IA');

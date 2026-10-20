@@ -51,6 +51,8 @@
    texto, sin caja. */
 .dash-kpi {
   position: relative;
+  /* La cifra se mide contra la tarjeta, no contra la ventana (ver .dash-kpi-valor). */
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   min-height: 178px;
@@ -67,26 +69,30 @@
   transform: translateY(-2px);
 }
 
-.dash-kpi-cabecera {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-}
-
 .dash-kpi-label {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 6px;
-  min-width: 0;
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-text-muted);
 }
 
+/* Cifra e insignia en una fila que se parte: si no caben, la insignia baja. */
+.dash-kpi-cifra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-top: 12px;
+}
+
+/* «Bs 245.300,00» a 30 px mide ~234 px y a 1280 px la tarjeta deja ~193: se
+   cortaba sin aviso (la tarjeta recorta). Solo baja la cifra que no cabe: a
+   ~0,6 em por carácter, el tamaño que cabe es ~158cqi / caracteres (con margen). */
 .dash-kpi-valor {
-  margin-top: 14px;
-  font-size: 1.875rem;
+  font-size: clamp(1.25rem, calc(158cqi / var(--kpi-largo, 6)), 1.875rem);
+  white-space: nowrap;
   line-height: 1.1;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -278,11 +284,24 @@
   align-items: flex-end;
   background: color-mix(in srgb, var(--color-secondary) 30%, white);
   overflow: hidden;
-  transition: height 0.4s var(--ease-spring-smooth);
+  transition: height 0.4s var(--ease-spring-smooth), opacity 0.15s var(--ease-press);
 }
 
-.dash-serie-col:hover .dash-serie-barra {
-  filter: brightness(0.92);
+/* Al señalar una, las demás se apagan: se lee de qué barra habla la línea de arriba. */
+.dash-serie-enfocada .dash-serie-col:not(.dash-serie-col-activa) .dash-serie-barra {
+  opacity: 0.45;
+}
+
+.dash-serie-lectura {
+  margin: -8px 0 10px;
+  min-height: 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-dark);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dash-serie-respondido {

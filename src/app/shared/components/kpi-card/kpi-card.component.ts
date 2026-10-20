@@ -37,7 +37,7 @@ export type KpiTono = 'primary' | 'secondary' | 'neutral' | 'critical';
           <app-icon [name]="icon()" [size]="compacto() ? 14 : 18" />
         </div>
       </div>
-      <span [class]="tonoValor() ? 'kpi-valor kpi-valor-' + tonoValor() : 'kpi-valor'">
+      <span [class]="tonoValor() ? 'kpi-valor kpi-valor-' + tonoValor() : 'kpi-valor'" [style.--kpi-largo]="valorFormateado().length">
         {{ valorFormateado() }}
       </span>
       @if (pie()) {
@@ -100,6 +100,6 @@ export class KpiCardComponent {
   /** Mismo locale que el resto del CRM (`es-BO`): separador de miles con punto. */
   protected readonly valorFormateado = computed(() => {
     const v = this.valor();
-    return typeof v === 'number' ? v.toLocaleString('es-BO') : v;
+    return typeof v === 'number' ? v.toLocaleString('es-BO') : String(v);
   });
 }
