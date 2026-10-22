@@ -5,6 +5,9 @@
   <app-page-header
     title="Reservas"
     subtitle="Las citas reservadas en la agenda de la clínica, desde la web y desde ScriptCase. Se confirman, cobran y anulan en la agenda.">
+    @if (esAdmin()) {
+      <app-button variant="secondary" size="sm" icon="bell" (clicked)="abrirAvisosCaja()">Avisos a caja</app-button>
+    }
     <app-button variant="secondary" size="sm" icon="rotate-cw" [loading]="reservas.isLoading() && hayReservas()" (clicked)="actualizar()">Actualizar</app-button>
   </app-page-header>
 
@@ -217,6 +220,12 @@
       </div>
     </app-drawer>
   }
+</ng-template>
+
+<ng-template #avisosCajaTpl>
+  <app-drawer ancho="md" titulo="Avisos a caja" subtitulo="WhatsApp por cada comprobante nuevo" icono="bell" (cerrar)="cerrar()">
+    <app-avisos-caja />
+  </app-drawer>
 </ng-template>
 
 <app-image-viewer [imageUrl]="visorUrl()" [title]="visorTitulo()" (closed)="cerrarVisor()" />

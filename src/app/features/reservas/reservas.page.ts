@@ -50,6 +50,8 @@ import {
   ReservaAgenda,
 } from './reserva.model';
 import { ReservasService } from './reservas.service';
+import { AuthService } from '../../core/auth/auth.service';
+import { AvisosCajaComponent } from './avisos-caja/avisos-caja.component';
 
 /**
  * Reservas: todas las de la agenda de la clínica (las de la web y las de
@@ -60,6 +62,7 @@ import { ReservasService } from './reservas.service';
 @Component({
   selector: 'app-reservas-page',
   imports: [
+    AvisosCajaComponent,
     BadgeComponent,
     ButtonComponent,
     DrawerComponent,
@@ -89,7 +92,10 @@ export class ReservasPage {
   private readonly vcr = inject(ViewContainerRef);
   private readonly toast = inject(ToastService);
   private readonly fichaTpl = viewChild.required<TemplateRef<unknown>>('fichaTpl');
+  private readonly avisosCajaTpl = viewChild.required<TemplateRef<unknown>>('avisosCajaTpl');
   private cajon?: OverlayRef;
+  /** «Avisos a caja» lo ve solo administración (el backend lo vuelve a exigir). */
+  protected readonly esAdmin = inject(AuthService).isAdmin;
 
   protected readonly periodos = PERIODOS;
   protected readonly estadosFiltro = ESTADOS_FILTRO;
@@ -261,6 +267,12 @@ export class ReservasPage {
         this.seleccionada.set(null);
       },
     });
+  }
+
+  protected abrirAvisosCaja(): void {
+    this.seleccionada.set(null);
+    this.cajon?.dispose();
+    this.cajon = this.dialog.abrirCajon(this.avisosCajaTpl(), this.vcr, { onClose: () => { this.cajon = undefined; } });
   }
 
   protected cerrar(): void {
