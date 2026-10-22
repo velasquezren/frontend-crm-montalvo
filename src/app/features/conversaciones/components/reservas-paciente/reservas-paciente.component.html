@@ -24,11 +24,33 @@
             }{{ r.especialidad ? ' · ' + r.especialidad : '' }}
           </span>
           @if (r.pagoChat?.estado === 'COMPROBANTE_RECIBIDO') {
-            <p class="text-xs text-text-muted" role="status">Comprobante recibido en el chat; pendiente de registrar en la agenda.</p>
+            <p class="text-xs text-text-muted" role="status">Comprobante recibido en el chat; la IA lo está revisando antes de registrarlo en la agenda.</p>
           } @else if (r.pagoChat?.estado === 'REVISION') {
             <p class="text-xs text-text-dark" role="status">Revisión manual: {{ r.pagoChat.detalle }}</p>
           } @else if (r.pagoChat?.estado === 'PAGO_REGISTRADO') {
             <p class="text-xs text-text-muted">Comprobante registrado en la agenda. Caja debe verificar el pago.</p>
+          } @else if (r.pagoChat?.estado === 'ESPERANDO_COMPROBANTE' && r.pagoChat.lectura?.resultado === 'NO_ES_COMPROBANTE') {
+            <p class="text-xs text-text-dark" role="status">La imagen que mandó no parece un comprobante: se le pidió el comprobante.</p>
+          }
+          <!-- Lo que leyó la IA: ayuda a mirar la imagen, no la reemplaza. -->
+          @if (r.pagoChat?.lectura; as l) {
+            <div class="reservas-paciente-lectura" role="group" [attr.aria-label]="'Lectura automática del comprobante de la reserva del ' + fechaDeReserva(r.fecha)">
+              <p class="reservas-paciente-lectura-titulo">
+                <app-icon name="sparkles" [size]="12" class="shrink-0" />
+                <span>Lectura IA:</span>
+                <app-badge [variant]="resultadosLectura[l.resultado].variante">{{ resultadosLectura[l.resultado].texto }}</app-badge>
+              </p>
+              @if (l.resultado !== 'NO_ES_COMPROBANTE') {
+                <ul class="reservas-paciente-lectura-lista">
+                  @for (v of l.verificaciones; track v.campo) {
+                    <li class="reservas-paciente-verificacion" [class.reservas-paciente-verificacion--alerta]="v.estado === 'ALERTA'" [class.reservas-paciente-verificacion--ok]="v.estado === 'OK'">
+                      <app-icon [name]="iconosVerificacion[v.estado]" [size]="12" class="shrink-0 mt-0.5" />
+                      <span class="min-w-0">{{ v.texto }}</span>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
           }
         </li>
       }

@@ -63,5 +63,20 @@ describe('próximas reservas en la ficha del chat', () => {
     expect(texto).toContain('Revisión manual');
     expect(texto).not.toContain('Pago confirmado');
   });
+  it('muestra lo que leyó la IA del comprobante y avisa cuando la imagen no lo era', async () => {
+    await montar();
+    http.expectOne(p=>p.url.endsWith('/conversacion/chat-1')).flush([
+      {id:3,fecha:'2026-10-13',hora:'11:30',medicoId:null,estado:'PENDIENTE',pagoChat:{estado:'REVISION',detalle:'La IA no lo dio por bueno.',lectura:{resultado:'REVISAR',leidoEn:'2026-10-13T15:00:00Z',
+        verificaciones:[{campo:'MONTO',estado:'ALERTA',texto:'Dice Bs 250,00; se esperaba Bs 400,00.'},{campo:'REFERENCIA',estado:'OK',texto:'Operación 123456.'}]}}},
+      {id:4,fecha:'2026-10-13',hora:'12:30',medicoId:null,estado:'PENDIENTE',pagoChat:{estado:'ESPERANDO_COMPROBANTE',detalle:null,lectura:{resultado:'NO_ES_COMPROBANTE',leidoEn:'2026-10-13T15:00:00Z',
+        verificaciones:[{campo:'COMPROBANTE',estado:'ALERTA',texto:'No parece un comprobante de pago.'}]}}},
+    ]);
+    await asentar();
+    const el=fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('Hay algo que revisar');
+    expect(el.querySelector('.reservas-paciente-verificacion--alerta')?.textContent).toContain('se esperaba Bs 400,00');
+    expect(el.textContent).toContain('No parece un comprobante');
+    expect(el.textContent).toContain('se le pidió el comprobante');
+  });
 
 });

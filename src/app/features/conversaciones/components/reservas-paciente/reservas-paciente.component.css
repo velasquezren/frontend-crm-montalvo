@@ -21,3 +21,45 @@
   gap: 2px;
   min-width: 0;
 }
+
+/* La lectura del comprobante, como en el bloque del pago de una promoción
+   (pago-promocion.component.css): pequeña y con forma por estado, no solo color. */
+.reservas-paciente-lectura {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.reservas-paciente-lectura-titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-dark);
+  font-weight: 600;
+}
+
+.reservas-paciente-lectura-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reservas-paciente-verificacion {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--color-text-muted);
+}
+
+.reservas-paciente-verificacion--ok {
+  color: var(--color-text-dark);
+}
+
+.reservas-paciente-verificacion--alerta {
+  color: var(--color-text-critical);
+  font-weight: 600;
+}

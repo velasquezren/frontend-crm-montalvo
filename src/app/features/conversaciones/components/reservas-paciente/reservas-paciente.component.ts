@@ -6,9 +6,11 @@ import { RouterLink } from '@angular/router';
 
 import { BadgeComponent } from '../../../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { estadoDeReserva, fechaDeReserva, ReservaAgenda } from '../../../reservas/reserva.model';
 import { ReservasService } from '../../../reservas/reservas.service';
+import { ICONO_VERIFICACION, RESULTADO_LECTURA } from '../../asistente-chat';
 
 /**
  * «Próximas reservas» en la ficha del chat: las citas que esta paciente tiene
@@ -18,7 +20,7 @@ import { ReservasService } from '../../../reservas/reservas.service';
  */
 @Component({
   selector: 'app-reservas-paciente',
-  imports: [BadgeComponent, ButtonComponent, LoadingSkeletonComponent, RouterLink],
+  imports: [BadgeComponent, ButtonComponent, IconComponent, LoadingSkeletonComponent, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './reservas-paciente.component.html',
   styleUrl: './reservas-paciente.component.css',
@@ -31,6 +33,8 @@ export class ReservasPacienteComponent {
 
   protected readonly estadoDeReserva = estadoDeReserva;
   protected readonly fechaDeReserva = fechaDeReserva;
+  protected readonly resultadosLectura = RESULTADO_LECTURA;
+  protected readonly iconosVerificacion = ICONO_VERIFICACION;
 
   protected readonly reservas = httpResource<ReservaAgenda[]>(
     () => this.servicio.deConversacionRequest(this.conversacionId()),

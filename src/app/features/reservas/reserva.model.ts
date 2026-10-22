@@ -5,6 +5,7 @@ import { RespuestaPaginada } from '../../core/api/pagination.model';
 import { BadgeVariant } from '../../shared/components/badge/badge.component';
 import { ZONA_CLINICA } from '../../core/fechas/zona-clinica';
 import { nombreDiaCorto, nombreMesCortoMinuscula } from '../../shared/models/meses';
+import type { LecturaComprobante } from '../conversaciones/asistente-chat';
 
 /*
  * Las reservas de la agenda de la clínica (ScriptCase), tal como las devuelve
@@ -40,7 +41,12 @@ export interface ReservaAgenda {
   tieneComprobante: boolean;
   registradaEl: string | null;
   registradaA: string | null;
-  pagoChat?: { estado: EstadoReservaChat; detalle: string | null };
+  pagoChat?: {
+    estado: EstadoReservaChat;
+    detalle: string | null;
+    /** Lo que la IA leyó del último comprobante (22/10/2026); ausente en un backend anterior. */
+    lectura?: Pick<LecturaComprobante, 'resultado' | 'verificaciones' | 'leidoEn'> | null;
+  };
 }
 
 export interface PaginaReservas extends RespuestaPaginada<ReservaAgenda> {
