@@ -91,6 +91,8 @@ export class ImageViewerComponent {
 
   private abrirOverlay(): void {
     const tpl = this.modalLightbox();
+    /* Uno ya cerrado por fuera no cuenta como abierto (ver `onClose`). */
+    if (this.overlayRef && !this.overlayRef.hasAttached()) this.overlayRef = null;
     if (!tpl || this.overlayRef) return;
 
     this.resetTransform();
@@ -98,6 +100,17 @@ export class ImageViewerComponent {
     this.overlayRef = this.dialogService.openTemplate(tpl, this.vcr, {
       panelClass: ['fixed', 'inset-0', 'z-[99999]', 'pointer-events-auto'],
       backdropClass: ['fixed', 'inset-0', 'bg-black/95', 'z-[99998]'],
+      /**
+       * Escape (y el clic en el fondo) lo cierra el DialogService con su propio
+       * `dispose()`, sin pasar por `cerrar()`. Sin este aviso el visor seguía
+       * guardando ese overlay muerto como «abierto», nunca emitía `closed`, y
+       * quien lo usa conservaba la URL: ninguna otra foto se abría hasta
+       * recargar la página (23/10/2026).
+       */
+      onClose: () => {
+        this.overlayRef = null;
+        this.closed.emit();
+      },
     });
   }
 
