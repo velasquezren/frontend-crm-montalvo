@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
-import { EstadoCola } from './resultado.model';
+import { EstadoCola, TipoInforme } from './resultado.model';
 
 /**
  * Entrega de informes del portal de resultados al WhatsApp del paciente.
@@ -19,7 +19,7 @@ export class ResultadosService {
    * portal— sobre la lista entera de cada pestaña: filtrar aquí una página ya
    * cortada diría «no hay más» con informes en la página siguiente.
    */
-  pendientesRequest(filtro: { pagina: number; estado: EstadoCola; busqueda?: string }): ResourceRequest {
+  pendientesRequest(filtro: { pagina: number; estado: EstadoCola; busqueda?: string; tipo?: TipoInforme }): ResourceRequest {
     return this.api.request('/resultados/pendientes', filtro);
   }
 

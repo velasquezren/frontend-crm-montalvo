@@ -1,6 +1,6 @@
 <app-page-header
-  title="Entrega de Resultados"
-  subtitle="Informes publicados por los médicos. Envía al paciente el enlace para consultarlo.">
+  title="Resultados clínicos"
+  subtitle="Ecografías, Papanicolau y laboratorio. Revisa el informe y avisa al paciente desde su ficha.">
   <!-- Lo que cambia en el portal (un informe nuevo, un paciente que abre el
        suyo) no llega por socket: se refresca al volver a la pestaña, y aquí
        cuando la asistente quiere mirar ya. Sin esqueleto: la tabla sigue. -->
@@ -14,13 +14,19 @@
 </app-page-header>
 
 <!-- ── Búsqueda y pestañas: el mismo patrón que Clientes y Leads ───────── -->
-<div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6">
-  <div class="w-full sm:w-80">
+<div class="space-y-4 mb-6">
+  <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_14rem] gap-3">
     <app-input
-      placeholder="Buscar por nombre, PAC o CI…"
+      label="Buscar informe"
+      placeholder="Paciente, PAC, CI o estudio…"
       icon="search"
-      [(value)]="busqueda" 
-      ariaLabel="Buscar por nombre, PAC o CI" />
+      [(value)]="busqueda" />
+    <app-select label="Tipo de informe" [value]="tipo() ?? ''" [activo]="!!tipo()" (valueChange)="cambiarTipo($event)">
+      <option value="">Todos los tipos</option>
+      @for (opcion of tipos; track opcion) {
+        <option [value]="opcion">{{ nombresTipo[opcion] }}</option>
+      }
+    </app-select>
   </div>
   <!-- Cada chip cuenta el total de su pestaña, no lo que queda al combinarlo
        con la búsqueda: un número que cambia mientras escribes no sirve para
@@ -77,10 +83,12 @@
                 <span class="crm-meta-clave">{{ ficha.telefono }}</span>
                 <button
                   type="button"
-                  class="text-primary hover:underline inline-flex items-center gap-1"
+                  class="text-primary hover:underline inline-flex items-center gap-1 min-h-8"
+                  [attr.aria-label]="'Editar teléfono de ' + fila.pacientePortal.nombre"
                   (click)="abrirTelefono(fila)">
-                  <app-icon name="edit" [size]="12" />Cambiar
+                  <app-icon name="edit" [size]="12" />Editar teléfono
                 </button>
+                @if (fila.pacientePortal.pac; as pac) { <span class="crm-meta-clave">{{ pac }}</span> }
                 @if (fila.vinculo === 'CI') { <span>Vinculado por CI</span> }
               </div>
               <!-- Con CI el cruce es por un número tecleado en dos sistemas:
@@ -97,10 +105,12 @@
             }
           </td>
           <td class="text-left">
-            {{ fila.estudio }}
+            <p class="text-xs text-text-muted mb-1">{{ nombresTipo[fila.tipo ?? 'ECOGRAFIA'] }}</p>
+            <p class="font-medium text-text-dark max-w-xs whitespace-normal break-words">{{ fila.estudio }}</p>
             <button
               type="button"
-              class="mt-0.5 text-xs text-primary font-bold hover:underline flex items-center gap-1.5 disabled:opacity-50"
+              class="mt-0.5 min-h-8 text-xs text-primary font-bold hover:underline flex items-center gap-1.5 disabled:opacity-50"
+              [attr.aria-label]="'Revisar ' + fila.estudio + ' de ' + fila.pacientePortal.nombre"
               [disabled]="abriendo() === fila.informeId"
               (click)="verInforme(fila)">
               <app-icon name="eye" [size]="12" />
@@ -183,6 +193,10 @@
     [description]="'Nada en «' + textos[estado()].etiqueta + '» para «' + buscado + '». Prueba en «Todos» o revisa el PAC.'">
     <app-button variant="ghost" size="sm" icon="x" (clicked)="limpiarBusqueda()">Limpiar búsqueda</app-button>
   </app-empty-state>
+} @else if (tipo(); as tipoElegido) {
+  <app-empty-state icon="search" title="Sin informes con estos filtros" [description]="nombresTipo[tipoElegido] + ' · ' + textos[estado()].etiqueta">
+    <app-button variant="ghost" (clicked)="cambiarTipo('')">Ver todos los tipos</app-button>
+  </app-empty-state>
 } @else {
   <app-empty-state
     [icon]="estado() === 'POR_AVISAR' ? 'check-check' : 'file-text'"
@@ -245,7 +259,8 @@
     (submit)="$event.preventDefault(); guardarTelefono()">
     @if (editando(); as ficha) {
       <h2 id="titulo-telefono" class="text-base font-bold text-text-dark">Teléfono de {{ ficha.nombre }}</h2>
-      <p class="mt-2 text-sm text-text-muted">Es el número al que saldrá el aviso.</p>
+      <p class="mt-2 text-sm text-text-muted">Cambiarás el teléfono de la ficha del paciente en todo el CRM. Los próximos mensajes usarán este número; no es un destino temporal para una prueba.</p>
+      <p class="mt-2 text-sm text-text-dark">Actual: <span class="tabular-nums">{{ ficha.telefono }}</span></p>
       <div class="mt-4">
         <app-input
           type="tel"
@@ -260,14 +275,14 @@
         }
       </div>
     }
-    <div class="mt-6 flex justify-end gap-3">
+    <div class="mt-6 flex flex-col-reverse sm:flex-row sm:flex-wrap justify-end gap-3">
       <app-button variant="ghost" [disabled]="guardandoTelefono()" (clicked)="cerrarTelefono()">Cancelar</app-button>
       <app-button
         type="submit"
         icon="check"
         [loading]="guardandoTelefono()"
         [disabled]="!telefonoNuevoE164() || telefonoSinCambios() || !!errorTelefonoNuevo()">
-        Guardar
+        Guardar teléfono del paciente
       </app-button>
     </div>
   </form>

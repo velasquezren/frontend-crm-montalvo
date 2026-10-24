@@ -229,3 +229,15 @@ describe('las pestañas de la cola', () => {
     for (const estado of ESTADOS_COLA) expect(PESTANAS_COLA[estado].etiqueta).toBeTruthy();
   });
 });
+
+describe('estados de entrega sin falsas confirmaciones', () => {
+  it('un aviso guardado sin mensaje todavía está en proceso', () => {
+    expect(estadoEntrega({ ...base, aviso: { enviadoEn: '2026-01-01T12:00:00Z', estadoMensaje: null } }).texto).toBe('En proceso de envío');
+  });
+  it('un enlace vencido prevalece sobre un WhatsApp entregado sin apertura', () => {
+    expect(estadoEntrega({ ...base, accesoVigente: false, aviso: { enviadoEn: '2026-01-01T12:00:00Z', estadoMensaje: 'ENTREGADO' } }).texto).toBe('Enlace vencido');
+  });
+  it('si el paciente ya lo abrió no ofrece avisarle de nuevo aunque no haya aviso CRM', () => {
+    expect(sePuedeEntregar({ ...base, abiertoEn: '2026-01-02T12:00:00Z', aviso: null })).toBe(false);
+  });
+});
