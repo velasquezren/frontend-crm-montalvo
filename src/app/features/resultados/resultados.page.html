@@ -80,7 +80,7 @@
             @if (fila.paciente; as ficha) {
               <p class="font-medium text-text-dark">{{ ficha | nombreCliente }}</p>
               <div class="crm-meta crm-meta-sm mt-0.5">
-                <span class="crm-meta-clave">{{ ficha.telefono }}</span>
+                <span class="crm-meta-clave">{{ ficha.telefono ?? 'Sin número' }}</span>
                 <button
                   type="button"
                   class="text-primary hover:underline inline-flex items-center gap-1 min-h-8"
@@ -218,8 +218,8 @@
       </h2>
       @if (fila.paciente; as ficha) {
         <p class="mt-3 text-sm text-text-dark">
-          Se enviará a <strong>{{ ficha | nombreCliente }}</strong> al número
-          <strong class="tabular-nums">{{ ficha.telefono }}</strong>.
+          Se enviará a <strong>{{ ficha | nombreCliente }}</strong>
+          @if (ficha.telefono) { al número <strong class="tabular-nums">{{ ficha.telefono }}</strong>. } @else { por su usuario de WhatsApp. }
         </p>
         @if (fila.vinculo === 'CI') {
           <!-- El PAC es único en los dos sistemas; el CI se teclea a mano en
@@ -260,7 +260,7 @@
     @if (editando(); as ficha) {
       <h2 id="titulo-telefono" class="text-base font-bold text-text-dark">Teléfono de {{ ficha.nombre }}</h2>
       <p class="mt-2 text-sm text-text-muted">Cambiarás el teléfono de la ficha del paciente en todo el CRM. Los próximos mensajes usarán este número; no es un destino temporal para una prueba.</p>
-      <p class="mt-2 text-sm text-text-dark">Actual: <span class="tabular-nums">{{ ficha.telefono }}</span></p>
+      <p class="mt-2 text-sm text-text-dark">Actual: <span class="tabular-nums">{{ ficha.telefono || 'sin número' }}</span></p>
       <div class="mt-4">
         <app-input
           type="tel"
