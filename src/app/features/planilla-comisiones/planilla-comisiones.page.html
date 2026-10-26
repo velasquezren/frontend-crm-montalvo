@@ -130,7 +130,7 @@
           <app-icon name="download" [size]="16" />
           <span>Subir o arrastrar .xlsx</span>
         }
-        <input type="file" accept=".xlsx,.xls" class="sr-only" [disabled]="subiendo()" (change)="subirArchivo($event)" />
+        <input type="file" accept=".xlsx" class="sr-only" [disabled]="subiendo()" (change)="subirArchivo($event)" />
       </label>
 
       <p class="text-[11px] text-text-muted mt-3">

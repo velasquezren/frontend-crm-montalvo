@@ -107,3 +107,5 @@ export type ModoAsistente = 'APAGADO' | 'SUGERIR' | 'RESPONDER' | 'SOLO_MEDICOS'
 export type EstadoSugerencia = 'PENDIENTE' | 'USADA' | 'DESCARTADA' | 'SUPERADA';
 
 export type ResultadoTurnoAsistente = 'SUGIRIO' | 'RESPONDIO' | 'DERIVO' | 'OMITIDO' | 'FALLO';
+
+export type EstadoConversionMeta = 'PENDIENTE' | 'ENVIADO' | 'DESCARTADO' | 'FALLIDO' | 'INCIERTO';

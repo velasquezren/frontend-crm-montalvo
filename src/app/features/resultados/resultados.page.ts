@@ -205,8 +205,8 @@ export class ResultadosPage {
    */
   protected abrirTelefono(fila: EntregaResultado): void {
     if (!fila.paciente) return;
-    this.editando.set({ informeId: fila.informeId, nombre: nombreParaMostrar(fila.paciente), telefono: fila.paciente.telefono });
-    this.telefonoNuevo.set(fila.paciente.telefono);
+    this.editando.set({ informeId: fila.informeId, nombre: nombreParaMostrar(fila.paciente), telefono: fila.paciente.telefono ?? '' });
+    this.telefonoNuevo.set(fila.paciente.telefono ?? '');
     this.telefonoChocado.set(null);
     this.abrirModal(this.plantillaTelefono(), () => this.cerrarTelefono());
   }

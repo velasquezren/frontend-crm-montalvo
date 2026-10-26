@@ -33,7 +33,7 @@ import {
 interface ClienteDeLaActividad {
   id: string;
   nombre: string;
-  telefono: string;
+  telefono: string | null;
 }
 
 /**
@@ -98,7 +98,7 @@ export class ActividadDetalleDrawerComponent {
   protected readonly formatoFechaRelativa = formatoFechaRelativa;
   protected readonly origenLabel = ORIGEN_LABEL;
 
-  protected sinNombre(cliente: { nombre: string; telefono: string } | null): boolean {
+  protected sinNombre(cliente: { nombre: string; telefono: string | null } | null): boolean {
     return !cliente || esNombreProvisional(cliente.nombre);
   }
 

@@ -68,3 +68,17 @@ describe('inicialesCliente', () => {
     }
   });
 });
+
+describe('contacto sin número (nombre de usuario de WhatsApp)', () => {
+  /* El backend da de alta a quien escribe solo con su BSUID como «WhatsApp @usuario»,
+     o «WhatsApp sin número» si tampoco tiene usuario (`nombreProvisional`). */
+  it('muestra su @usuario, y si no lo tiene, que es un usuario de WhatsApp', () => {
+    expect(nombreParaMostrar({ nombre: 'WhatsApp @ana.p', telefono: null })).toBe('@ana.p');
+    expect(nombreParaMostrar({ nombre: 'WhatsApp sin número', telefono: null })).toBe('Usuario de WhatsApp');
+    expect(inicialesCliente({ nombre: 'WhatsApp @ana.p', telefono: null })).toBe('?');
+  });
+
+  it('con nombre de perfil real, el nombre manda aunque no haya número', () => {
+    expect(nombreParaMostrar({ nombre: 'Ana Pérez', telefono: null })).toBe('Ana Pérez');
+  });
+});

@@ -3,7 +3,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { inicialesCliente, nombreParaMostrar } from '../models/nombre-cliente';
 
 /** Lo mínimo para escribir a un contacto en pantalla. */
-type ContactoVisible = { nombre: string; telefono: string };
+type ContactoVisible = { nombre: string; telefono: string | null };
 
 /**
  * Los dos pipes viven en el mismo archivo a propósito: dicen la misma regla

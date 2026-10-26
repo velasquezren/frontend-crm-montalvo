@@ -32,7 +32,7 @@ import { AVISO_TELEFONO_INVALIDO, telefonoParaEscribir } from '../../../../share
 export interface ClienteMinimo {
   id: string;
   nombre: string;
-  telefono: string;
+  telefono: string | null;
   pac?: string | null;
 }
 

@@ -702,8 +702,9 @@ export class PlanillaComisionesPage {
 
   /** Procesa la importación del archivo cargado o arrastrado. */
   protected async procesarArchivo(archivo: File): Promise<void> {
-    if (!archivo.name.endsWith('.xlsx') && !archivo.name.endsWith('.xls')) {
-      this.toast.error('Por favor selecciona o arrastra un archivo de Excel (.xlsx o .xls).', 'Formato no válido');
+    /* Solo .xlsx: el backend ya no lee el formato antiguo .xls (ver `leerExcel`). */
+    if (!archivo.name.toLowerCase().endsWith('.xlsx')) {
+      this.toast.error('Selecciona o arrastra el Excel en formato .xlsx (un .xls antiguo se abre y se guarda como .xlsx).', 'Formato no válido');
       return;
     }
 

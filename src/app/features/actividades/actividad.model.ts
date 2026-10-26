@@ -91,7 +91,7 @@ export interface Actividad {
   readonly fechaProgramada: string;
   readonly duracionMinutos: number;
   readonly estado: EstadoActividad;
-  readonly cliente: { readonly id: string; readonly nombre: string; readonly telefono: string; readonly pac?: string | null } | null;
+  readonly cliente: { readonly id: string; readonly nombre: string; readonly telefono: string | null; readonly pac?: string | null } | null;
   readonly lead: { readonly id: string; readonly estado: string; readonly origen: string } | null;
   readonly agente: { readonly id: string; readonly nombre: string } | null;
   readonly reservaAgenda?: number | null;

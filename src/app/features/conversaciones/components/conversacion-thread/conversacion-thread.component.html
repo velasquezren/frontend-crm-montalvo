@@ -26,15 +26,21 @@
           </span>
         </div>
         <div class="flex items-center gap-1.5 mt-0.5 min-w-0">
-          <span class="text-[11px] sm:text-xs text-text-muted leading-tight truncate max-w-[120px] sm:max-w-none">{{ chat.cliente.telefono }}</span>
-          <button
-            type="button"
-            (click)="copiarTexto(chat.cliente.telefono, 'Teléfono')"
-            class="text-text-muted hover:text-primary transition-colors cursor-pointer shrink-0"
-            title="Copiar número de teléfono"
-            aria-label="Copiar número de teléfono">
-            <app-icon name="copy" [size]="12" />
-          </button>
+          @if (chat.cliente.telefono; as telefono) {
+            <span class="text-[11px] sm:text-xs text-text-muted leading-tight truncate max-w-[120px] sm:max-w-none">{{ telefono }}</span>
+            <button
+              type="button"
+              (click)="copiarTexto(telefono, 'Teléfono')"
+              class="text-text-muted hover:text-primary transition-colors cursor-pointer shrink-0"
+              title="Copiar número de teléfono"
+              aria-label="Copiar número de teléfono">
+              <app-icon name="copy" [size]="12" />
+            </button>
+          } @else {
+            <!-- Escribió con su nombre de usuario de WhatsApp sin dar su número:
+                 el chat funciona igual; lo que no hay es a qué número llamar. -->
+            <span class="text-[11px] sm:text-xs text-text-muted leading-tight truncate" title="Escribió con su nombre de usuario de WhatsApp: el chat funciona, pero no compartió su número">Usuario de WhatsApp · sin número</span>
+          }
           @if (chat.cliente.pac) {
             <span class="text-text-muted/40">·</span>
             <span class="crm-meta-clave text-[11px] shrink-0" title="Código PAC en FileMaker">
@@ -99,17 +105,19 @@
           (clicked)="abrirBusquedaChat()" />
       }
 
-      <!-- Acceso a WhatsApp Web de la agente -->
-      <a
-        [href]="enlaceWhatsApp(chat.cliente.telefono)"
-        target="_blank"
-        rel="noopener"
-        class="accion-wa"
-        title="Abrir esta conversación en WhatsApp Web (fuera del CRM)"
-        aria-label="Abrir esta conversación en mi WhatsApp Web">
-        <app-icon name="message-circle" [size]="15" />
-        <span class="accion-wa__texto"><span>WhatsApp Web</span></span>
-      </a>
+      <!-- Acceso a WhatsApp Web de la agente: wa.me necesita un número. -->
+      @if (chat.cliente.telefono; as telefono) {
+        <a
+          [href]="enlaceWhatsApp(telefono)"
+          target="_blank"
+          rel="noopener"
+          class="accion-wa"
+          title="Abrir esta conversación en WhatsApp Web (fuera del CRM)"
+          aria-label="Abrir esta conversación en mi WhatsApp Web">
+          <app-icon name="message-circle" [size]="15" />
+          <span class="accion-wa__texto"><span>WhatsApp Web</span></span>
+        </a>
+      }
 
       @if (chat.agente) {
         <div class="hidden lg:flex items-center gap-1.5 bg-bg-light rounded-full px-2.5 py-1">

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { ConversacionResumen } from './conversacion.model';
-import { resolverChatDePaciente } from './enlace-chat';
+import { enlaceAlChat, resolverChatDePaciente } from './enlace-chat';
 
-const chat = (id: string, telefono: string) => ({ id, cliente: { telefono } }) as unknown as ConversacionResumen;
+const chat = (id: string, telefono: string | null) => ({ id, cliente: { telefono } }) as unknown as ConversacionResumen;
 
 describe('resolverChatDePaciente', () => {
   it('abre el chat de la paciente aunque el número venga con otro formato', () => {
@@ -16,5 +16,16 @@ describe('resolverChatDePaciente', () => {
 
   it('con chats en varias líneas deja elegir', () => {
     expect(resolverChatDePaciente([chat('a', '+59170012345'), chat('b', '+59170012345')], '+59170012345')).toEqual({ tipo: 'VARIOS' });
+  });
+});
+
+describe('pacientes sin número (solo usuario de WhatsApp)', () => {
+  it('el enlace sin número abre la bandeja en vez de buscar «null»', () => {
+    expect(enlaceAlChat(null)).toEqual({});
+    expect(enlaceAlChat('+59170012345')).toEqual({ telefono: '+59170012345' });
+  });
+
+  it('un chat sin número nunca coincide con un número buscado', () => {
+    expect(resolverChatDePaciente([chat('a', null)], '+59170012345')).toEqual({ tipo: 'NINGUNO' });
   });
 });

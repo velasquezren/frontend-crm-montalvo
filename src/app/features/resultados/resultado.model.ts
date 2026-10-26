@@ -19,7 +19,7 @@ export interface EntregaResultado {
   /** Si el acceso del paciente venció o fue revocado, no se puede avisar. */
   readonly accesoVigente: boolean;
   /** La ficha del CRM a la que se enviaría. `null` = no se reconoció. */
-  readonly paciente: { readonly id: string; readonly nombre: string; readonly telefono: string } | null;
+  readonly paciente: { readonly id: string; readonly nombre: string; readonly telefono: string | null } | null;
   /** Por qué clave se reconoció. Con CI, la asistente compara el nombre. */
   readonly vinculo: 'PAC' | 'CI' | null;
   /** Por qué no se reconoció. */

@@ -97,7 +97,9 @@ export interface ConversacionResumen {
   readonly cliente: {
     id: string;
     nombre: string;
-    telefono: string;
+    /** Null si escribió con nombre de usuario de WhatsApp sin dar su número: se le responde por `waUsuarioId`. */
+    telefono: string | null;
+    waUsuarioId?: string | null;
     email: string | null;
     categoria: CategoriaCliente;
     /** Fijada a mano, o null si es la calculada. Solo viaja en el DETALLE. */

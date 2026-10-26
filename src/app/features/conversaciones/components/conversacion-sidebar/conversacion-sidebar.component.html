@@ -240,39 +240,50 @@
         <div class="client-details">
           <h3 class="detail-section-title">Contacto</h3>
           <div class="space-y-1">
-            <div class="detail-row-clean">
-              <div class="flex items-center gap-2 min-w-0 flex-1">
-                <app-icon name="phone" [size]="14" class="text-text-muted shrink-0" />
-                <span class="text-xs text-text-muted shrink-0">Teléfono:</span>
-                <span class="text-xs font-medium text-text-dark truncate tabular-nums">{{ chat.cliente.telefono }}</span>
+            @if (chat.cliente.telefono; as telefono) {
+              <div class="detail-row-clean">
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <app-icon name="phone" [size]="14" class="text-text-muted shrink-0" />
+                  <span class="text-xs text-text-muted shrink-0">Teléfono:</span>
+                  <span class="text-xs font-medium text-text-dark truncate tabular-nums">{{ telefono }}</span>
+                </div>
+                <div class="acciones-telefono">
+                  <a
+                    [href]="enlaceWhatsApp(telefono)"
+                    target="_blank"
+                    rel="noopener"
+                    class="accion-telefono accion-telefono--whatsapp"
+                    title="Abrir en mi WhatsApp (fuera del CRM)"
+                    aria-label="Abrir esta conversación en mi WhatsApp personal">
+                    <app-icon name="message-circle" [size]="13" />
+                  </a>
+                  <a
+                    [href]="enlaceLlamada(telefono)"
+                    class="accion-telefono"
+                    title="Llamar por teléfono"
+                    aria-label="Llamar a este paciente">
+                    <app-icon name="phone" [size]="13" />
+                  </a>
+                  <button
+                    type="button"
+                    (click)="copiarTexto(telefono, 'Teléfono')"
+                    class="accion-telefono"
+                    title="Copiar teléfono"
+                    aria-label="Copiar el teléfono">
+                    <app-icon name="copy" [size]="13" />
+                  </button>
+                </div>
               </div>
-              <div class="acciones-telefono">
-                <a
-                  [href]="enlaceWhatsApp(chat.cliente.telefono)"
-                  target="_blank"
-                  rel="noopener"
-                  class="accion-telefono accion-telefono--whatsapp"
-                  title="Abrir en mi WhatsApp (fuera del CRM)"
-                  aria-label="Abrir esta conversación en mi WhatsApp personal">
-                  <app-icon name="message-circle" [size]="13" />
-                </a>
-                <a
-                  [href]="enlaceLlamada(chat.cliente.telefono)"
-                  class="accion-telefono"
-                  title="Llamar por teléfono"
-                  aria-label="Llamar a este paciente">
-                  <app-icon name="phone" [size]="13" />
-                </a>
-                <button
-                  type="button"
-                  (click)="copiarTexto(chat.cliente.telefono, 'Teléfono')"
-                  class="accion-telefono"
-                  title="Copiar teléfono"
-                  aria-label="Copiar el teléfono">
-                  <app-icon name="copy" [size]="13" />
-                </button>
+            } @else {
+              <!-- Nombre de usuario de WhatsApp sin número: se le contesta por el
+                   chat; el número se añade en su ficha cuando lo comparta. -->
+              <div class="detail-row-clean">
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <app-icon name="phone" [size]="14" class="text-text-muted shrink-0" />
+                  <span class="text-xs text-text-muted">Sin número: escribió con su usuario de WhatsApp</span>
+                </div>
               </div>
-            </div>
+            }
             @if (chat.cliente.ci) {
               <div class="detail-row-clean">
                 <div class="flex items-center gap-2 min-w-0 flex-1">

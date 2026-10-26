@@ -290,7 +290,7 @@ export class ClientesPage {
     return {
       clienteId: cliente.id,
       clienteNombre: cliente.nombre,
-      clienteTelefono: cliente.telefono,
+      ...(cliente.telefono ? { clienteTelefono: cliente.telefono } : {}),
     };
   }
 
@@ -326,7 +326,7 @@ export class ClientesPage {
     const ficha = valoresDeFicha(cliente);
     this.editNombre.set(ficha.nombre);
     this.editEmail.set(ficha.email);
-    this.editTelefono.set(cliente.telefono);
+    this.editTelefono.set(cliente.telefono ?? '');
     this.editPac.set(ficha.pac);
     this.editCi.set(ficha.ci);
     this.editAgenteId.set(cliente.agente?.id || cliente.agenteId || null);
@@ -344,8 +344,9 @@ export class ClientesPage {
     }
   }
 
-  protected async copiarTelefono(event: MouseEvent, telefono: string): Promise<void> {
+  protected async copiarTelefono(event: MouseEvent, telefono: string | null): Promise<void> {
     event.stopPropagation();
+    if (!telefono) return;
     if (await copiarAlPortapapeles(telefono)) this.toast.success('Teléfono copiado al portapapeles.');
     else this.toast.error('No se pudo copiar el teléfono.');
   }
@@ -376,12 +377,16 @@ export class ClientesPage {
     if (this.guardando()) return;
 
     const nombre = this.editNombre().trim();
-    if (!nombre || !this.editTelefono().trim()) {
+    /* Quien escribió con nombre de usuario de WhatsApp puede no haber dado su
+       número: su ficha se edita igual, y el teléfono se añade cuando lo diga. */
+    const sinNumero = !this.esCreacion() && !this.clienteSeleccionado()?.telefono;
+    const tecleado = this.editTelefono().trim();
+    if (!nombre || (!tecleado && !sinNumero)) {
       this.toast.error('Nombre y teléfono son requeridos', 'Ficha Cliente');
       return;
     }
-    const telefono = this.telefonoAGuardar();
-    if (!telefono) return; // el aviso ya está en el campo
+    const telefono = tecleado ? this.telefonoAGuardar() : null;
+    if (tecleado && !telefono) return; // el aviso ya está en el campo
 
     this.guardando.set(true);
     try {
@@ -402,6 +407,7 @@ export class ClientesPage {
       );
 
       if (alta) {
+        if (!telefono) return;
         await this.clientesService.crear({
           ...ficha,
           nombre,
@@ -415,7 +421,7 @@ export class ClientesPage {
         if (!cliente) return;
         await this.clientesService.actualizar(cliente.id, {
           ...ficha,
-          telefono,
+          ...(telefono ? { telefono } : {}),
           agenteId: this.editAgenteId() || null,
         });
         this.toast.success('Ficha de cliente actualizada', 'Guardado');

@@ -59,7 +59,7 @@ export interface PacienteConServicios {
 export interface FichaPaciente {
   id: string;
   nombre: string;
-  telefono: string;
+  telefono: string | null;
   email: string | null;
   pac: string | null;
   fechaNacimiento: string | null;

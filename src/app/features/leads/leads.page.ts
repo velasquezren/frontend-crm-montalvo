@@ -134,7 +134,7 @@ export class LeadsPage {
 
   /* Un contacto que llegó por WhatsApp sin dar su nombre se guarda como
      "WhatsApp +591…". Ver `shared/models/nombre-cliente`. */
-  protected sinNombre(cliente: { nombre: string; telefono: string }): boolean {
+  protected sinNombre(cliente: { nombre: string; telefono: string | null }): boolean {
     return esNombreProvisional(cliente.nombre);
   }
 

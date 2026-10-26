@@ -5,7 +5,7 @@ export type PeriodoKpi = 'MES' | 'MES_ANTERIOR' | 'TRES_MESES';
 
 export interface ContactoVisible {
   readonly nombre: string;
-  readonly telefono: string;
+  readonly telefono: string | null;
 }
 
 export interface ActividadItem {

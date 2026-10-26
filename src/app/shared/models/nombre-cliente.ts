@@ -27,8 +27,13 @@ export function esNombreProvisional(nombre: string): boolean {
  * campana de recordatorios: si cada vista lo resuelve a su manera, vuelve a
  * aparecer el marcador en la que se olvide.
  */
-export function nombreParaMostrar(cliente: { nombre: string; telefono: string }): string {
-  return esNombreProvisional(cliente.nombre) ? cliente.telefono : cliente.nombre;
+export function nombreParaMostrar(cliente: { nombre: string; telefono: string | null }): string {
+  if (!esNombreProvisional(cliente.nombre)) return cliente.nombre;
+  if (cliente.telefono) return cliente.telefono;
+  /* Escribió con nombre de usuario de WhatsApp sin dar su número: el marcador
+     del backend es «WhatsApp @usuario», o «WhatsApp sin número» si no tiene. */
+  const resto = cliente.nombre.slice(PREFIJO_PROVISIONAL.length);
+  return resto.startsWith('@') ? resto : 'Usuario de WhatsApp';
 }
 
 /**
@@ -39,6 +44,6 @@ export function nombreParaMostrar(cliente: { nombre: string; telefono: string })
  * internacional. Un contacto sin nombre se dibuja como lo que es, un
  * interrogante, en vez de fingir unas iniciales.
  */
-export function inicialesCliente(cliente: { nombre: string; telefono: string }): string {
+export function inicialesCliente(cliente: { nombre: string; telefono: string | null }): string {
   return esNombreProvisional(cliente.nombre) ? '?' : generarIniciales(cliente.nombre);
 }

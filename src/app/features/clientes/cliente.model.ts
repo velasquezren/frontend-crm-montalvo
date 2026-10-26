@@ -15,7 +15,9 @@ export interface InteresApi {
 export interface Cliente {
   readonly id: string;
   readonly nombre: string;
-  readonly telefono: string;
+  /** Null si escribió con nombre de usuario de WhatsApp sin dar su número (solo `waUsuarioId`). */
+  readonly telefono: string | null;
+  readonly waUsuarioId?: string | null;
   readonly email: string | null;
   readonly categoria: CategoriaCliente;
   /** Fijada a mano por un SUPER_ADMIN, o null si es la calculada. */

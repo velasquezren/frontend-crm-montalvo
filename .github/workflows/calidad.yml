@@ -29,12 +29,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: velasquezren/backend-crm-montalvo
-          ref: ee0806f2a9adc032ede649769888a8b02bfc158a
+          ref: d22ef19ef5c813f76f7091f4901d71d3e3d1db41
           path: backend-crm-montalvo
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: '24'
+          # La misma versión que `.nvmrc`, el desarrollo local y el VPS (Node 22).
+          # Antes era '24' a mano: CI probaba un Node que no corre en producción.
+          node-version-file: frontend-crm-montalvo/.nvmrc
           cache: npm
           cache-dependency-path: frontend-crm-montalvo/package-lock.json
       - run: npm ci

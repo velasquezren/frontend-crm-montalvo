@@ -10,8 +10,9 @@ import { ConversacionResumen } from './conversacion.model';
  * nada. Ahora todo enlace a la paciente va por teléfono (`enlaceAlChat`), que
  * es su identidad en WhatsApp y lo que tienen a mano todas las pantallas.
  */
-export function enlaceAlChat(telefono: string): { telefono: string } {
-  return { telefono };
+export function enlaceAlChat(telefono: string | null): { telefono?: string } {
+  /* Sin número (escribió solo con su usuario de WhatsApp) se abre la bandeja. */
+  return telefono ? { telefono } : {};
 }
 
 export type ChatDePaciente =
@@ -29,7 +30,7 @@ export type ChatDePaciente =
  */
 export function resolverChatDePaciente(chats: readonly ConversacionResumen[], telefono: string): ChatDePaciente {
   const buscado = soloDigitos(telefono);
-  const suyos = chats.filter(c => soloDigitos(c.cliente.telefono) === buscado);
+  const suyos = chats.filter(c => soloDigitos(c.cliente.telefono ?? '') === buscado);
   if (suyos.length === 1) return { tipo: 'UNO', id: suyos[0]!.id };
   return suyos.length > 1 ? { tipo: 'VARIOS' } : { tipo: 'NINGUNO' };
 }

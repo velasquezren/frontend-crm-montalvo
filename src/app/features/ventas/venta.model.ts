@@ -31,7 +31,7 @@ export interface Venta {
   readonly medico?: string | null;
   readonly modulo?: string | null;
   readonly notas?: string | null;
-  readonly cliente: { id: string; nombre: string; telefono: string; pac?: string | null };
+  readonly cliente: { id: string; nombre: string; telefono: string | null; pac?: string | null };
   readonly agente: { id: string; nombre: string };
   /** Lead que originó esta venta, si el agente lo indicó al registrarla. */
   readonly leadId?: string | null;
