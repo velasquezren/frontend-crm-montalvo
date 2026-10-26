@@ -41,6 +41,8 @@ import {
 } from './resultado.model';
 import { ResultadosService } from './resultados.service';
 import { FechaClinicaPipe } from '../../core/fechas/fecha-clinica.pipe';
+import { SelectComponent } from '../../shared/components/select/select.component';
+import { TIPOS_INFORME, NOMBRES_TIPO, tipoDeUrl } from './resultado.model';
 import { FechaCivilPipe } from '../../core/fechas/fecha-civil.pipe';
 
 /**
@@ -68,7 +70,7 @@ import { FechaCivilPipe } from '../../core/fechas/fecha-civil.pipe';
     PageHeaderComponent,
     PaginatorComponent,
     RouterLink,
-    TableComponent, FechaClinicaPipe, FechaCivilPipe],
+    SelectComponent, TableComponent, FechaClinicaPipe, FechaCivilPipe],
   templateUrl: './resultados.page.html',
 })
 export class ResultadosPage {
@@ -100,6 +102,14 @@ export class ResultadosPage {
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly pagina = signal(1);
+  protected readonly tipos = TIPOS_INFORME;
+  protected readonly nombresTipo = NOMBRES_TIPO;
+  protected readonly tipo = signal(tipoDeUrl(this.route.snapshot.queryParamMap.get('tipo')));
+  protected cambiarTipo(valor: string): void {
+    this.tipo.set(tipoDeUrl(valor));
+    this.pagina.set(1);
+    this.sincronizarUrl();
+  }
 
   /* ── Pestañas y búsqueda ────────────────────────────────────────────
      Viven en la URL (`?estado=&q=`): al volver del chat con «atrás», la
@@ -121,6 +131,7 @@ export class ResultadosPage {
     () => this.resultadosService.pendientesRequest({
       pagina: this.pagina(),
       estado: this.estado(),
+      tipo: this.tipo(),
       busqueda: this.busquedaAplicada(),
     }),
     { defaultValue: colaVacia() },
@@ -161,7 +172,7 @@ export class ResultadosPage {
 
   private sincronizarUrl(): void {
     void this.router.navigate([], {
-      queryParams: { estado: this.estado() === 'POR_AVISAR' ? null : this.estado(), q: this.busquedaAplicada() ?? null },
+      queryParams: { estado: this.estado() === 'POR_AVISAR' ? null : this.estado(), q: this.busquedaAplicada() ?? null, tipo: this.tipo() ?? null },
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });

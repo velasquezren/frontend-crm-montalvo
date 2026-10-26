@@ -10,7 +10,17 @@ import { IconName } from '../../shared/components/icon/icon.component';
  * decidir a quién avisar. Nunca llega el código de acceso del paciente, ni el
  * PDF, ni nada clínico.
  */
+export const TIPOS_INFORME = ['ECOGRAFIA', 'PAPANICOLAU', 'LABORATORIO', 'OTRO'] as const;
+export type TipoInforme = (typeof TIPOS_INFORME)[number];
+export const NOMBRES_TIPO: Readonly<Record<TipoInforme, string>> = {
+  ECOGRAFIA: 'Ecografías', PAPANICOLAU: 'Papanicolau', LABORATORIO: 'Laboratorio', OTRO: 'Otros estudios',
+};
+export function tipoDeUrl(valor: string | null): TipoInforme | undefined {
+  return TIPOS_INFORME.find(tipo => tipo === valor);
+}
+
 export interface EntregaResultado {
+  readonly tipo?: TipoInforme;
   readonly informeId: string;
   readonly estudio: string;
   /** Fecha del estudio, ISO 8601. */
@@ -114,7 +124,7 @@ export function busquedaParaEnviar(tecleado: string): string | undefined {
  * ofrecer un botón que iba a fallar.
  */
 export function sePuedeEntregar(fila: EntregaResultado): boolean {
-  return fila.paciente !== null && fila.accesoVigente && (fila.aviso === null || avisoFallido(fila));
+  return fila.paciente !== null && fila.abiertoEn === null && fila.accesoVigente && (fila.aviso === null || avisoFallido(fila));
 }
 
 /**
@@ -135,13 +145,14 @@ export function estadoEntrega(fila: EntregaResultado): { texto: string; variant:
   const estado = fila.aviso?.estadoMensaje;
   /* Lo que de verdad importa va primero: si lo abrió, lo demás ya da igual. */
   if (fila.abiertoEn) return { texto: 'Abierto por el paciente', variant: 'success', icon: 'eye' };
+  if (!fila.accesoVigente) return { texto: 'Enlace vencido', variant: 'neutral', icon: 'clock' };
   if (fila.aviso) {
     if (estado === 'FALLIDO') return { texto: 'No se entregó', variant: 'critical', icon: 'alert-circle' };
     if (estado === 'INCIERTO') return { texto: 'Sin confirmar', variant: 'neutral', icon: 'clock' };
     if (estado === 'ENTREGADO' || estado === 'LEIDO') return { texto: 'Entregado', variant: 'success', icon: 'check-check' };
+    if (estado === null) return { texto: 'En proceso de envío', variant: 'neutral', icon: 'clock' };
     return { texto: 'Enviado', variant: 'info', icon: 'check' };
   }
-  if (!fila.accesoVigente) return { texto: 'Enlace vencido', variant: 'neutral', icon: 'clock' };
   if (fila.sinFicha === 'CI_REPETIDO') return { texto: 'CI repetido', variant: 'critical', icon: 'alert-circle' };
   if (!fila.paciente) return { texto: 'Sin vincular', variant: 'neutral', icon: 'user-plus' };
   return { texto: 'Pendiente de avisar', variant: 'info', icon: 'clock' };
