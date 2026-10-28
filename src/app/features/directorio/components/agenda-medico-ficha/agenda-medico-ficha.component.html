@@ -117,6 +117,12 @@
             Este médico no tiene código de FileMaker: se pueden apagar casillas, pero no encender horas nuevas.
           </p>
         }
+        <app-agenda-medico-ausencias
+          [id]="f.medico.id"
+          [nombre]="nombreConTitulo(f.medico)"
+          [ausencias]="f.ausencias ?? []"
+          [editable]="puedeEditar()"
+          (cambiadas)="ausenciasGuardadas($event)" />
         <app-agenda-horario-grilla
           [dias]="f.grilla.dias"
           [horas]="f.grilla.horas"

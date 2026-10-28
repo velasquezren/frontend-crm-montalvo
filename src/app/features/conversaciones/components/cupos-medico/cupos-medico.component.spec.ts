@@ -156,6 +156,23 @@ describe('cajón «Cupos» del compositor', () => {
     expect(raiz().textContent).toContain('Sin cupos en los próximos 30 días');
   });
 
+  it('de vacaciones: dice hasta cuándo y desde cuándo vuelve, aunque no quede ningún día libre', async () => {
+    await montar();
+    await buscar('gine');
+    http.expectOne(r => r.url.endsWith('/agenda/medicos')).flush(pagina([medico()]));
+    await asentar();
+    boton('Dra. Sintética')!.click();
+    await asentar();
+    http.expectOne(r => r.url.endsWith('/publico/agenda/dias')).flush({
+      medicoId: '41', zonaHoraria: 'America/La_Paz', fechas: [],
+      ausencias: [{ desde: '2026-10-26', hasta: '2026-11-30', motivo: 'Vacaciones', vuelve: '2026-12-01' }],
+    });
+    await asentar();
+    const texto = raiz().textContent ?? '';
+    expect(texto).toMatch(/No atiende del .*26 oct.* al .*30 nov.* \(Vacaciones\); vuelve el .*1 dic/);
+    expect(texto).toContain('Sin cupos en los próximos 30 días');
+  });
+
   it('cambiar de médico vuelve a la búsqueda con lo escrito y descarta lo elegido', async () => {
     await montar();
     await elegirMedico(['2026-10-23']);

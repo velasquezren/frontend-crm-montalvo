@@ -26,55 +26,63 @@
       </div>
     } @else if (dias.error()) {
       <app-error-carga que="los días libres de la agenda" (reintentar)="dias.reload()" />
-    } @else if (fechas().length) {
-      <section class="flex flex-col gap-2">
-        <h3 id="cupos-dias" class="text-xs font-semibold text-text-muted">Días con cupo</h3>
-        <div class="cupos-chips cupos-chips--dias" role="group" aria-labelledby="cupos-dias">
-          @for (f of fechas(); track f) {
-            <app-filter-chip size="sm" [active]="fecha() === f" (clicked)="fecha.set(f)">{{ fechaCorta(f) }}</app-filter-chip>
-          }
-        </div>
-      </section>
-
-      @if (fecha(); as dia) {
+    } @else {
+      @for (a of ausencias(); track a.desde) {
+        <p class="flex items-start gap-2 text-sm text-text-dark bg-bg-light rounded-xl px-3 py-2" role="status">
+          <app-icon name="calendar" [size]="16" class="shrink-0 mt-0.5" />
+          <span>No atiende del {{ fechaCorta(a.desde) }} al {{ fechaCorta(a.hasta) }}@if (a.motivo) { ({{ a.motivo }})}; vuelve el {{ fechaCorta(a.vuelve) }}.</span>
+        </p>
+      }
+      @if (fechas().length) {
         <section class="flex flex-col gap-2">
-          <h3 id="cupos-horas" class="text-xs font-semibold text-text-muted">Horas libres del {{ fechaCorta(dia) }}</h3>
-          @if (horas.isLoading()) {
-            <div class="flex flex-wrap gap-2" aria-hidden="true">
-              @for (n of [1, 2, 3, 4, 5, 6]; track n) {
-                <app-loading-skeleton shape="pill" width="4rem" height="1.75rem" />
-              }
-            </div>
-          } @else if (horas.error()) {
-            <app-error-carga que="las horas libres de ese día" (reintentar)="horas.reload()" />
-          } @else if (horasDelDia(); as h) {
-            @if (h.horarios.length) {
-              <div class="cupos-chips" role="group" aria-labelledby="cupos-horas">
-                @for (hora of h.horarios; track hora.id) {
-                  <app-filter-chip size="sm" [active]="estaElegida(hora.hora)" (clicked)="alternar(hora.hora)">{{ hora.hora }}</app-filter-chip>
+          <h3 id="cupos-dias" class="text-xs font-semibold text-text-muted">Días con cupo</h3>
+          <div class="cupos-chips cupos-chips--dias" role="group" aria-labelledby="cupos-dias">
+            @for (f of fechas(); track f) {
+              <app-filter-chip size="sm" [active]="fecha() === f" (clicked)="fecha.set(f)">{{ fechaCorta(f) }}</app-filter-chip>
+            }
+          </div>
+        </section>
+
+        @if (fecha(); as dia) {
+          <section class="flex flex-col gap-2">
+            <h3 id="cupos-horas" class="text-xs font-semibold text-text-muted">Horas libres del {{ fechaCorta(dia) }}</h3>
+            @if (horas.isLoading()) {
+              <div class="flex flex-wrap gap-2" aria-hidden="true">
+                @for (n of [1, 2, 3, 4, 5, 6]; track n) {
+                  <app-loading-skeleton shape="pill" width="4rem" height="1.75rem" />
                 }
               </div>
-              <p class="crm-meta">
-                <span>Agenda leída a las {{ consultadoA() }}</span>
-                <button type="button" class="crm-enlace" (click)="horas.reload()">Actualizar</button>
-              </p>
-            } @else {
-              <p class="text-sm text-text-muted" role="status">
-                @switch (h.estado) {
-                  @case ('SIN_ATENCION') { Ese día no atiende. }
-                  @case ('A_SOLICITUD') { Ese día atiende a solicitud. }
-                  @default { Ese día ya no quedan horas libres: se ocuparon hace un momento. }
-                }
-              </p>
+            } @else if (horas.error()) {
+              <app-error-carga que="las horas libres de ese día" (reintentar)="horas.reload()" />
+            } @else if (horasDelDia(); as h) {
+              @if (h.horarios.length) {
+                <div class="cupos-chips" role="group" aria-labelledby="cupos-horas">
+                  @for (hora of h.horarios; track hora.id) {
+                    <app-filter-chip size="sm" [active]="estaElegida(hora.hora)" (clicked)="alternar(hora.hora)">{{ hora.hora }}</app-filter-chip>
+                  }
+                </div>
+                <p class="crm-meta">
+                  <span>Agenda leída a las {{ consultadoA() }}</span>
+                  <button type="button" class="crm-enlace" (click)="horas.reload()">Actualizar</button>
+                </p>
+              } @else {
+                <p class="text-sm text-text-muted" role="status">
+                  @switch (h.estado) {
+                    @case ('SIN_ATENCION') { Ese día no atiende. }
+                    @case ('A_SOLICITUD') { Ese día atiende a solicitud. }
+                    @default { Ese día ya no quedan horas libres: se ocuparon hace un momento. }
+                  }
+                </p>
+              }
             }
-          }
-        </section>
+          </section>
+        }
+      } @else {
+        <app-empty-state
+          icon="calendar"
+          title="Sin cupos en los próximos 30 días"
+          description="La agenda no tiene horas libres para este médico." />
       }
-    } @else {
-      <app-empty-state
-        icon="calendar"
-        title="Sin cupos en los próximos 30 días"
-        description="La agenda no tiene horas libres para este médico." />
     }
   } @else {
     <app-input

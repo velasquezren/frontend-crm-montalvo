@@ -71,6 +71,8 @@ export class CuposMedicoComponent {
     return m?.reservaEnLinea ? this.agenda.diasLibresRequest(m.id) : undefined;
   });
   protected readonly fechas = computed(() => (this.dias.hasValue() ? this.dias.value().fechas : []));
+  /** Sus vacaciones en estos 30 días: esos días ya no vienen en `fechas`, y la paciente preguntará por qué. */
+  protected readonly ausencias = computed(() => (this.dias.hasValue() ? this.dias.value().ausencias ?? [] : []));
 
   /** El primer día libre ya elegido: lo más común es ofrecer lo más cercano. */
   protected readonly fecha = linkedSignal<readonly string[], string | null>({

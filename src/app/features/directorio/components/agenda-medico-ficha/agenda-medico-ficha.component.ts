@@ -17,6 +17,7 @@ import { ErrorCargaComponent } from '../../../../shared/components/error-carga/e
 import { IconComponent, IconName } from '../../../../shared/components/icon/icon.component';
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import {
+  AusenciaAgenda,
   BancoAgenda,
   casillasEncendidas,
   datosDeFormulario,
@@ -29,6 +30,7 @@ import {
 } from '../../agenda-medicos.model';
 import { AgendaMedicosService } from '../../agenda-medicos.service';
 import { AgendaHorarioGrillaComponent } from '../agenda-horario-grilla/agenda-horario-grilla.component';
+import { AgendaMedicoAusenciasComponent } from '../agenda-medico-ausencias/agenda-medico-ausencias.component';
 import { AgendaMedicoDatosComponent } from '../agenda-medico-datos/agenda-medico-datos.component';
 import { AgendaMedicoServiciosComponent } from '../agenda-medico-servicios/agenda-medico-servicios.component';
 import { AgendaMedicoWhatsappComponent } from '../agenda-medico-whatsapp/agenda-medico-whatsapp.component';
@@ -65,6 +67,7 @@ const PESTANA_WHATSAPP = { id: 'whatsapp', etiqueta: 'WhatsApp', icono: 'phone' 
   imports: [
     TablistDirective,
     AgendaHorarioGrillaComponent,
+    AgendaMedicoAusenciasComponent,
     AgendaMedicoDatosComponent,
     AgendaMedicoServiciosComponent,
     AgendaMedicoWhatsappComponent,
@@ -233,7 +236,7 @@ export class AgendaMedicoFichaComponent {
    * Una ficha nueva del servidor reinicia los borradores de datos y horario: lo
    * que no se estaba guardando se conserva. La ficha web se cuida sola.
    */
-  protected aplicar(ficha: FichaMedicoAgenda): void {
+  protected aplicar(ficha: FichaMedicoAgenda, avisarListado = true): void {
     const formularioPendiente = this.hayCambiosDatos() ? this.formulario() : null;
     const horarioPendiente = this.hayCambiosHorario() ? this.encendidas() : null;
     const antes = this.ficha();
@@ -244,7 +247,16 @@ export class AgendaMedicoFichaComponent {
     if (horarioPendiente && antes && JSON.stringify([...casillasEncendidas(antes)].sort()) === JSON.stringify([...casillasEncendidas(ficha)].sort())) {
       this.encendidas.set(horarioPendiente);
     }
-    this.cambio.emit();
+    if (avisarListado) this.cambio.emit();
+  }
+
+  /**
+   * Las ausencias se guardan solas: la ficha conserva la lista nueva sin perder
+   * lo que se estaba editando en Datos u Horario. El listado no cambia por esto.
+   */
+  protected ausenciasGuardadas(ausencias: AusenciaAgenda[]): void {
+    const f = this.ficha();
+    if (f) this.aplicar({ ...f, ausencias }, false);
   }
 
   /** Trae lo último de la agenda y descarta lo que no se guardó. */

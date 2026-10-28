@@ -85,8 +85,10 @@ export interface MedicoAgendaConWeb extends MedicoAgenda, FotoDeMedico {
 export interface DiasLibresAgenda {
   medicoId: string;
   zonaHoraria: 'America/La_Paz';
-  /** Fechas civiles («2026-10-23»), en orden. */
+  /** Fechas civiles («2026-10-23»), en orden. Sin los días de vacaciones del médico. */
   fechas: string[];
+  /** Vacaciones o congreso que tocan estos 30 días, con el día en que vuelve. Solo si hay. */
+  ausencias?: { desde: string; hasta: string; motivo: string | null; vuelve: string }[];
 }
 
 /** Las horas libres de un médico en una fecha (`/publico/agenda/disponibilidad`). */
@@ -117,6 +119,31 @@ export interface FichaMedicoAgenda extends FotoDeMedico {
   presentacion: FichaMedico | null;
   /** Opcional durante el despliegue gradual del backend. */
   sincronizacionHorario?: { origen: 'CRM' | 'FILEMAKER'; pendiente: boolean; sincronizadoEn: string | null };
+  /** Vacaciones y ausencias que todavía no terminaron. Opcional hasta que el backend las mande. */
+  ausencias?: AusenciaAgenda[];
+}
+
+/**
+ * Vacaciones o congreso de un médico de la agenda (días de La Paz, los dos
+ * extremos incluidos). Esos días la web, el Flow, el asistente y «Cupos» no los
+ * ofrecen y la reserva se rechaza; las citas que ya estaban no se tocan.
+ */
+export interface AusenciaAgenda {
+  readonly id: string;
+  readonly desde: string;
+  readonly hasta: string;
+  readonly motivo: string | null;
+  /** Citas vigentes y reservas sin cargar que ya tiene esos días; `null` si la agenda no respondió. */
+  readonly pendientes: { readonly citas: number; readonly reservas: number } | null;
+}
+
+/** «3 citas y 1 reserva», o null si no hay nada que reprogramar. */
+export function textoPendientes(p: { readonly citas: number; readonly reservas: number }): string | null {
+  const partes = [
+    p.citas ? `${p.citas} ${p.citas === 1 ? 'cita' : 'citas'}` : '',
+    p.reservas ? `${p.reservas} ${p.reservas === 1 ? 'reserva' : 'reservas'}` : '',
+  ].filter(Boolean);
+  return partes.length ? partes.join(' y ') : null;
 }
 
 /** Lo que falta para que una ficha web se vea bien publicada. Solo la especialidad es obligatoria. */

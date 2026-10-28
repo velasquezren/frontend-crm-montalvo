@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
-import { AccesoWhatsappMedico, DatosMedicoAgenda, EstadoMedicoAgenda, FichaMedicoAgenda } from './agenda-medicos.model';
+import { AccesoWhatsappMedico, AusenciaAgenda, DatosMedicoAgenda, EstadoMedicoAgenda, FichaMedicoAgenda } from './agenda-medicos.model';
 
 /** Lo que se edita de la ficha web. Nombre de la agenda, precio y horario los pone la agenda. */
 export interface CambiosPresentacion {
@@ -123,6 +123,16 @@ export class AgendaMedicosService {
   /** Renombra (o unifica, si `nueva` ya existe) una especialidad en todos sus médicos. */
   renombrarEspecialidad(actual: string, nueva: string): Promise<{ medicos: number }> {
     return this.api.post<{ medicos: number }>('/agenda/medicos/especialidades/renombrar', { actual, nueva });
+  }
+
+  /* ── Vacaciones y ausencias: esos días no se ofrecen ni se reservan ── */
+
+  agregarAusencia(id: number, datos: { desde: string; hasta: string; motivoPublico?: string }): Promise<{ ausencias: AusenciaAgenda[] }> {
+    return this.api.post<{ ausencias: AusenciaAgenda[] }>(`/agenda/medicos/${id}/ausencias`, datos);
+  }
+
+  quitarAusencia(id: number, ausenciaId: string): Promise<{ ausencias: AusenciaAgenda[] }> {
+    return this.api.delete<{ ausencias: AusenciaAgenda[] }>(`/agenda/medicos/${id}/ausencias/${ausenciaId}`);
   }
 
   /* ── El número de WhatsApp del médico para su agenda en el asistente (solo administración) ── */

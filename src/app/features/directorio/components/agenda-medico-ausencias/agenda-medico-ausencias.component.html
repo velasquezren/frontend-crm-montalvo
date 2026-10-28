@@ -1,0 +1,69 @@
+<section class="flex flex-col gap-3" aria-labelledby="ausencias-titulo">
+  <div class="flex flex-col gap-0.5">
+    <h3 id="ausencias-titulo" class="text-sm font-semibold text-text-dark">Vacaciones y ausencias</h3>
+    <p class="text-xs text-text-muted">
+      Esos días no se ofrecen en la web, en el WhatsApp ni en «Cupos», y el asistente avisa cuándo vuelve.
+      Las citas ya agendadas no se mueven.
+    </p>
+  </div>
+
+  @if (lista().length > 0) {
+    <ul class="flex flex-col gap-2" aria-label="Próximas ausencias">
+      @for (a of lista(); track a.id) {
+        <li class="flex items-start gap-3 rounded-xl border border-border px-3 py-2.5">
+          <app-icon name="calendar" [size]="16" class="shrink-0 mt-0.5 text-text-muted" />
+          <div class="flex-1 min-w-0 flex flex-col gap-0.5">
+            <p class="text-sm text-text-dark">
+              Del {{ a.desde | fechaCivil }} al {{ a.hasta | fechaCivil }}@if (a.motivo) { <span class="text-text-muted"> · {{ a.motivo }}</span> }
+            </p>
+            @if (a.pendientes; as p) {
+              @if (textoPendientes(p); as pendientes) {
+                <p class="flex items-start gap-1.5 text-xs text-text-dark">
+                  <app-icon name="alert-triangle" [size]="14" class="shrink-0 mt-px" />
+                  <span>Ya tiene {{ pendientes }} esos días: reprográmalas en FileMaker.</span>
+                </p>
+              } @else {
+                <p class="text-xs text-text-muted">Sin citas agendadas esos días.</p>
+              }
+            } @else {
+              <p class="text-xs text-text-muted">No se pudo revisar si tiene citas esos días.</p>
+            }
+          </div>
+          @if (editable()) {
+            <app-button
+              variant="ghost"
+              size="xs"
+              [circle]="true"
+              icon="x"
+              [ariaLabel]="'Quitar la ausencia del ' + (a.desde | fechaCivil) + ' al ' + (a.hasta | fechaCivil)"
+              [disabled]="ocupado() !== null"
+              [loading]="ocupado() === a.id"
+              (clicked)="quitar(a)" />
+          }
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="text-xs text-text-muted">{{ nombre() }} no tiene vacaciones ni ausencias cargadas.</p>
+  }
+
+  @if (editable()) {
+    <div class="flex flex-col gap-3 rounded-2xl bg-bg-workspace border border-border p-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <app-input type="date" label="Primer día sin atender" [(value)]="desde" [disabled]="ocupado() !== null" />
+        <app-input type="date" label="Último día sin atender" [(value)]="hasta" [disabled]="ocupado() !== null" />
+      </div>
+      <app-input label="Motivo que se le dice a la paciente" placeholder="Vacaciones, congreso" [(value)]="motivo" [disabled]="ocupado() !== null" />
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <span class="flex-1 min-w-0 text-xs text-text-muted" role="status">{{ falta() ?? 'Sin detalles personales: lo lee la paciente.' }}</span>
+        <app-button
+          variant="secondary"
+          size="sm"
+          icon="plus"
+          [disabled]="!!falta() || ocupado() !== null"
+          [loading]="ocupado() === 'agregar'"
+          (clicked)="agregar()">Guardar ausencia</app-button>
+      </div>
+    </div>
+  }
+</section>
