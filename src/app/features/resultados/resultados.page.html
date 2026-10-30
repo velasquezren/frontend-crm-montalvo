@@ -83,10 +83,11 @@
                 <span class="crm-meta-clave">{{ ficha.telefono ?? 'Sin número' }}</span>
                 <button
                   type="button"
-                  class="text-primary hover:underline inline-flex items-center gap-1 min-h-8"
-                  [attr.aria-label]="'Editar teléfono de ' + fila.pacientePortal.nombre"
+                  class="text-primary hover:underline inline-flex items-center gap-1 min-h-8 disabled:opacity-50"
+                  [disabled]="enviando() !== null || guardandoTelefono()"
+                  [attr.aria-label]="'Corregir teléfono de ' + fila.pacientePortal.nombre"
                   (click)="abrirTelefono(fila)">
-                  <app-icon name="edit" [size]="12" />Editar teléfono
+                  <app-icon name="edit" [size]="12" />Corregir teléfono
                 </button>
                 @if (fila.pacientePortal.pac; as pac) { <span class="crm-meta-clave">{{ pac }}</span> }
                 @if (fila.vinculo === 'CI') { <span>Vinculado por CI</span> }
@@ -123,9 +124,16 @@
             <app-badge [variant]="estado.variant" [icon]="estado.icon">
               {{ estado.texto }}@if (fila.abiertoEn) { · {{ fila.abiertoEn | fechaClinica: 'd MMM, HH:mm' }}} @else if (fila.aviso) { · {{ fila.aviso.enviadoEn | fechaClinica: 'd MMM, HH:mm' }}}
             </app-badge>
+            @if (problemaDeEntrega(fila); as problema) {
+              <p class="mt-2 max-w-xs whitespace-normal break-words text-xs text-text-muted">
+                Último intento: {{ problema }}
+              </p>
+            } @else if (orientacionEntrega(fila); as orientacion) {
+              <p class="mt-2 max-w-xs whitespace-normal break-words text-xs text-text-muted">{{ orientacion }}</p>
+            }
           </td>
           <td class="text-right">
-            <div class="flex items-center justify-end gap-2">
+            <div class="flex flex-wrap items-center justify-end gap-2">
               <!-- El chat de la línea de resultados: donde está el aviso y donde
                    contestará el paciente. Por id, no por teléfono: con teléfono,
                    a un admin se le podía abrir el chat comercial de la misma
@@ -147,7 +155,7 @@
                   [loading]="enviando() === fila.informeId"
                   [disabled]="enviando() !== null"
                   (clicked)="pedirConfirmacion(fila)">
-                  {{ fila.aviso ? 'Reenviar' : 'Enviar por WhatsApp' }}
+                  {{ fila.aviso ? 'Reintentar aviso' : 'Enviar aviso' }}
                 </app-button>
               } @else if (sePuedeRenovar(fila)) {
                 <app-button
@@ -207,15 +215,20 @@
 <!-- Enviar cuesta dinero y no se puede deshacer: se confirma a quién va. -->
 <ng-template #confirmar>
   <div
-    class="pointer-events-auto w-full max-w-md bg-background rounded-2xl shadow-lifted p-6 animate-modal-pop"
+    class="pointer-events-auto w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto bg-background rounded-2xl shadow-lifted p-6 animate-modal-pop"
     role="dialog" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"
     aria-modal="true"
     aria-labelledby="titulo-envio">
     @if (candidato(); as c) {
       @let fila = c.fila;
       <h2 id="titulo-envio" class="text-base font-bold text-text-dark">
-        {{ c.renovar ? 'Renovar el enlace y enviarlo' : 'Enviar el resultado por WhatsApp' }}
+        {{ c.renovar ? 'Renovar el enlace y enviar aviso' : fila.aviso ? 'Reintentar el aviso por WhatsApp' : 'Enviar aviso por WhatsApp' }}
       </h2>
+      @if (problemaDeEntrega(fila); as problema) {
+        <p class="mt-3 text-sm text-text-dark rounded-xl bg-bg-light px-3 py-2.5">
+          El intento anterior falló. {{ problema }} Reenvía cuando hayas revisado la causa.
+        </p>
+      }
       @if (fila.paciente; as ficha) {
         <p class="mt-3 text-sm text-text-dark">
           Se enviará a <strong>{{ ficha | nombreCliente }}</strong>
@@ -239,10 +252,10 @@
         WhatsApp puede generar un cargo y el envío no se puede deshacer.
       </p>
     }
-    <div class="mt-6 flex justify-end gap-3">
+    <div class="mt-6 flex flex-col-reverse sm:flex-row sm:flex-wrap justify-end gap-3">
       <app-button variant="ghost" (clicked)="cerrarConfirmacion()">Cancelar</app-button>
       <app-button icon="message-circle" (clicked)="confirmarEnvio()">
-        {{ candidato()?.renovar ? 'Renovar y enviar' : 'Enviar aviso' }}
+        {{ candidato()?.renovar ? 'Renovar y enviar' : candidato()?.fila?.aviso ? 'Reintentar aviso' : 'Enviar aviso' }}
       </app-button>
     </div>
   </div>
@@ -252,14 +265,21 @@
      aquí evita salir a Clientes y volver, con el mensaje ya a punto de salir. -->
 <ng-template #editarTelefono>
   <form
-    class="pointer-events-auto w-full max-w-sm bg-background rounded-2xl shadow-lifted p-6 animate-modal-pop"
+    class="pointer-events-auto w-full max-w-sm max-h-[calc(100dvh-2rem)] overflow-y-auto bg-background rounded-2xl shadow-lifted p-6 animate-modal-pop"
     role="dialog" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"
     aria-modal="true"
     aria-labelledby="titulo-telefono"
     (submit)="$event.preventDefault(); guardarTelefono()">
     @if (editando(); as ficha) {
-      <h2 id="titulo-telefono" class="text-base font-bold text-text-dark">Teléfono de {{ ficha.nombre }}</h2>
+      <h2 id="titulo-telefono" class="text-base font-bold text-text-dark">Corregir teléfono de {{ ficha.nombre }}</h2>
       <p class="mt-2 text-sm text-text-muted">Cambiarás el teléfono de la ficha del paciente en todo el CRM. Los próximos mensajes usarán este número; no es un destino temporal para una prueba.</p>
+      <p class="mt-2 text-sm text-text-dark">Guardar no envía ni reenvía el informe. Confirma con el paciente que este es su número de WhatsApp.</p>
+      @if (ficha.avisoPrevio) {
+        <p class="mt-3 text-sm text-text-dark rounded-xl bg-bg-light px-3 py-2.5">
+          Ya hay un aviso previo. Corregir el teléfono no retira ese mensaje ni revoca su enlace.
+          Si se envió a otra persona, pide a administración que revise el acceso al informe.
+        </p>
+      }
       <p class="mt-2 text-sm text-text-dark">Actual: <span class="tabular-nums">{{ ficha.telefono || 'sin número' }}</span></p>
       <div class="mt-4">
         <app-input
@@ -268,6 +288,7 @@
           placeholder="70012345 o +591…"
           [error]="errorTelefonoNuevo()"
           [(value)]="telefonoNuevo" />
+        <p class="mt-1.5 text-xs text-text-muted">Se comprueba el formato, no que el número tenga WhatsApp.</p>
         @if (telefonoNuevoE164(); as e164) {
           @if (e164 !== telefonoNuevo().trim()) {
             <p class="mt-1.5 text-xs text-text-muted">Se guardará como <span class="tabular-nums">{{ e164 }}</span></p>
@@ -282,7 +303,7 @@
         icon="check"
         [loading]="guardandoTelefono()"
         [disabled]="!telefonoNuevoE164() || telefonoSinCambios() || !!errorTelefonoNuevo()">
-        Guardar teléfono del paciente
+        Guardar sin enviar
       </app-button>
     </div>
   </form>

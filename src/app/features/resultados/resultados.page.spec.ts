@@ -13,7 +13,9 @@ import {
   fichaVinculable,
   motivoBloqueo,
   nombresDistintos,
+  orientacionEntrega,
   PESTANAS_COLA,
+  problemaDeEntrega,
   sePuedeEntregar,
   sePuedeRenovar,
 } from './resultado.model';
@@ -74,7 +76,47 @@ describe('cuándo se puede entregar un resultado', () => {
   });
 });
 
+describe('diagnóstico del último intento de entrega', () => {
+  const aviso = { enviadoEn: '2026-10-01T12:00:00Z', estadoMensaje: 'FALLIDO' as const, codigoErrorEnvio: 131026 };
+
+  it('el error de destinatario orienta sin certificar que no tenga WhatsApp', () => {
+    expect(problemaDeEntrega({ ...base, aviso })).toContain('este error no confirma');
+    expect(problemaDeEntrega({ ...base, aviso })).toContain('pide al paciente que escriba');
+  });
+
+  it('distingue una restricción de país de un problema de facturación', () => {
+    expect(problemaDeEntrega({ ...base, aviso: { ...aviso, codigoErrorEnvio: 130497 } })).toContain('país');
+    expect(problemaDeEntrega({ ...base, aviso: { ...aviso, codigoErrorEnvio: 131042 } })).toContain('facturación');
+  });
+
+  it('sin código, incluido un backend anterior, no inventa un diagnóstico', () => {
+    expect(problemaDeEntrega({ ...base, aviso: { ...aviso, codigoErrorEnvio: undefined } })).toContain('consulta al administrador');
+  });
+
+  it('no muestra errores obsoletos cuando se entregó, se abrió o no se envió', () => {
+    expect(problemaDeEntrega(base)).toBeNull();
+    expect(problemaDeEntrega({ ...base, aviso, abiertoEn: '2026-10-02T12:00:00Z' })).toBeNull();
+    expect(problemaDeEntrega({ ...base, aviso: { ...aviso, estadoMensaje: 'ENTREGADO' } })).toBeNull();
+  });
+});
+
 describe('enlace abierto y enlace vencido', () => {
+  it('un informe abierto no ofrece renovación y envío aunque después venza', () => {
+    const abierto = { ...base, abiertoEn: '2026-10-02T12:00:00Z', accesoVigente: false };
+    expect(sePuedeRenovar(abierto)).toBe(false);
+    expect(motivoBloqueo(abierto)).toBe('Informe ya abierto');
+  });
+
+  it.each(['INCIERTO', null] as const)('no ofrece renovación mientras el aviso está %s', estadoMensaje => {
+    expect(sePuedeRenovar({ ...base, accesoVigente: false, aviso: { enviadoEn: '2026-10-01T12:00:00Z', estadoMensaje } })).toBe(false);
+  });
+
+  it('explica la diferencia entre envío y entrega', () => {
+    const enviado = { ...base, aviso: { enviadoEn: '2026-10-01T12:00:00Z', estadoMensaje: 'ENVIADO' as const } };
+    expect(motivoBloqueo(enviado)).toBe('Esperando entrega');
+    expect(orientacionEntrega(enviado)).toContain('aún no confirmó');
+    expect(orientacionEntrega({ ...enviado, aviso: { ...enviado.aviso, estadoMensaje: 'ENTREGADO' } })).toContain('todavía no abrió');
+  });
   it('«abierto por el paciente» manda sobre el estado del mensaje', () => {
     const abierto = { ...base, abiertoEn: '2026-09-23T10:00:00.000Z', aviso: { enviadoEn: '2026-09-22T12:00:00.000Z', estadoMensaje: 'ENTREGADO' as const } };
     expect(estadoEntrega(abierto).texto).toBe('Abierto por el paciente');

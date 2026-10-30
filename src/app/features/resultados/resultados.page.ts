@@ -35,7 +35,9 @@ import {
   fichaVinculable,
   motivoBloqueo,
   nombresDistintos,
+  orientacionEntrega,
   PESTANAS_COLA,
+  problemaDeEntrega,
   sePuedeEntregar,
   sePuedeRenovar,
 } from './resultado.model';
@@ -190,11 +192,13 @@ export class ResultadosPage {
   protected readonly sePuedeRenovar = sePuedeRenovar;
   protected readonly motivoBloqueo = motivoBloqueo;
   protected readonly estadoEntrega = estadoEntrega;
+  protected readonly problemaDeEntrega = problemaDeEntrega;
+  protected readonly orientacionEntrega = orientacionEntrega;
   protected readonly distintos = nombresDistintos;
 
   /** Ficha cuyo teléfono se está corrigiendo, y el valor tecleado. */
   /* Se guarda el INFORME, no la ficha: el backend decide a qué ficha va. */
-  protected readonly editando = signal<{ informeId: string; nombre: string; telefono: string } | null>(null);
+  protected readonly editando = signal<{ informeId: string; nombre: string; telefono: string; avisoPrevio: boolean } | null>(null);
   protected readonly telefonoNuevo = signal('');
   protected readonly guardandoTelefono = signal(false);
   /** Lo tecleado en el formato que exige el backend: `70012345` → `+59170012345`. */
@@ -215,8 +219,11 @@ export class ResultadosPage {
    * aviso se manda una sola vez.
    */
   protected abrirTelefono(fila: EntregaResultado): void {
-    if (!fila.paciente) return;
-    this.editando.set({ informeId: fila.informeId, nombre: nombreParaMostrar(fila.paciente), telefono: fila.paciente.telefono ?? '' });
+    if (!fila.paciente || this.enviando() || this.guardandoTelefono()) return;
+    this.editando.set({
+      informeId: fila.informeId, nombre: nombreParaMostrar(fila.paciente), telefono: fila.paciente.telefono ?? '',
+      avisoPrevio: !!fila.abiertoEn || (!!fila.aviso && fila.aviso.estadoMensaje !== 'FALLIDO'),
+    });
     this.telefonoNuevo.set(fila.paciente.telefono ?? '');
     this.telefonoChocado.set(null);
     this.abrirModal(this.plantillaTelefono(), () => this.cerrarTelefono());
@@ -236,7 +243,7 @@ export class ResultadosPage {
     try {
       await this.resultadosService.corregirTelefono(edicion.informeId, telefono);
       this.cerrarTelefono();
-      this.toast.success('El aviso saldrá a ese número.', 'Teléfono actualizado');
+      this.toast.success('Se guardó en la ficha. No se envió ningún mensaje; el estado del aviso anterior se conserva.', 'Teléfono actualizado');
       this.entregas.reload();
     } catch (err) {
       /* El teléfono es único en el CRM. Que ya sea de otra ficha no es un
@@ -500,6 +507,7 @@ export class ResultadosPage {
   }
 
   protected pedirConfirmacion(fila: EntregaResultado, renovar = false): void {
+    if (this.enviando() || this.guardandoTelefono() || !(renovar ? sePuedeRenovar(fila) : sePuedeEntregar(fila))) return;
     this.candidato.set({ fila, renovar });
     this.abrirModal(this.plantillaConfirmar(), () => this.cerrarConfirmacion());
   }
@@ -512,7 +520,7 @@ export class ResultadosPage {
 
   protected async confirmarEnvio(): Promise<void> {
     const candidato = this.candidato();
-    if (!candidato) return;
+    if (!candidato || this.enviando()) return;
     const { fila, renovar } = candidato;
     this.cerrarConfirmacion();
     this.enviando.set(fila.informeId);

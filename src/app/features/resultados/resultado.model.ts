@@ -2,6 +2,7 @@ import { EstadoMensaje } from '../../core/api/db-enums';
 import { RespuestaPaginada } from '../../core/api/pagination.model';
 import { BadgeVariant } from '../../shared/components/badge/badge.component';
 import { IconName } from '../../shared/components/icon/icon.component';
+import { explicacionErrorWhatsapp } from '../conversaciones/error-whatsapp';
 
 /**
  * Espejo de `FilaEntrega` (backend: modules/resultados/resultados.service.ts).
@@ -37,7 +38,12 @@ export interface EntregaResultado {
   /** Cómo figura el paciente en el portal de resultados. */
   readonly pacientePortal: { readonly nombre: string; readonly pac: string | null; readonly ci: string | null };
   /** `null` = todavía no se le avisó. */
-  readonly aviso: { readonly enviadoEn: string; readonly estadoMensaje: EstadoMensaje | null } | null;
+  readonly aviso: {
+    readonly enviadoEn: string;
+    readonly estadoMensaje: EstadoMensaje | null;
+    /** Opcional para convivir con el backend anterior durante la publicación. */
+    readonly codigoErrorEnvio?: number | null;
+  } | null;
   /** Primera vez que el paciente abrió su informe. Entregado no es visto: esto sí. */
   readonly abiertoEn: string | null;
   /** Su chat en la línea de resultados, si ya existe: donde está el aviso y donde contestará. */
@@ -136,6 +142,23 @@ function avisoFallido(fila: EntregaResultado): boolean {
   return fila.aviso?.estadoMensaje === 'FALLIDO';
 }
 
+/** Diagnóstico del intento anterior, no una certificación del teléfono actual. */
+export function problemaDeEntrega(fila: EntregaResultado): string | null {
+  return avisoFallido(fila) && !fila.abiertoEn
+    ? explicacionErrorWhatsapp(fila.aviso?.codigoErrorEnvio)
+    : null;
+}
+
+/** Qué significa el estado para la asistente; enviado no equivale a entregado. */
+export function orientacionEntrega(fila: EntregaResultado): string | null {
+  if (fila.abiertoEn) return 'El paciente ya abrió el informe. No hace falta otro aviso.';
+  if (!fila.aviso || fila.aviso.estadoMensaje === 'FALLIDO') return null;
+  if (fila.aviso.estadoMensaje === 'INCIERTO') return 'No se sabe si llegó. Revisa el chat; otro envío podría duplicarlo.';
+  if (fila.aviso.estadoMensaje === null) return 'El aviso se está procesando. Espera la confirmación.';
+  if (fila.aviso.estadoMensaje === 'ENVIADO') return 'WhatsApp aún no confirmó la entrega. No vuelvas a enviarlo.';
+  return 'El aviso llegó por WhatsApp; el paciente todavía no abrió el informe.';
+}
+
 /**
  * La etiqueta de estado de la fila. Un aviso guardado no es un aviso
  * entregado: pintarlo "Avisado" en verde cuando Meta lo rechazó le dice al
@@ -164,13 +187,18 @@ export function estadoEntrega(fila: EntregaResultado): { texto: string; variant:
  * también vuelve a abrir.
  */
 export function sePuedeRenovar(fila: EntregaResultado): boolean {
-  return fila.paciente !== null && !fila.accesoVigente;
+  return fila.paciente !== null && !fila.accesoVigente && !fila.abiertoEn
+    && fila.aviso?.estadoMensaje !== 'INCIERTO'
+    && (fila.aviso === null || fila.aviso.estadoMensaje !== null);
 }
 
 /** Por qué no se puede, en las palabras que ve el asistente. */
 export function motivoBloqueo(fila: EntregaResultado): string {
+  if (fila.abiertoEn) return 'Informe ya abierto';
   if (fila.aviso?.estadoMensaje === 'INCIERTO') return 'Esperando confirmación de WhatsApp';
-  if (fila.aviso) return 'Ya se le avisó';
+  if (fila.aviso?.estadoMensaje === null) return 'En proceso de envío';
+  if (fila.aviso?.estadoMensaje === 'ENVIADO') return 'Esperando entrega';
+  if (fila.aviso?.estadoMensaje === 'ENTREGADO' || fila.aviso?.estadoMensaje === 'LEIDO') return 'Aviso entregado';
   if (fila.sinFicha === 'CI_REPETIDO') return 'Su CI está en dos fichas: corrígelas';
   if (!fila.paciente) return 'Sin ficha con ese PAC o CI';
   if (!fila.accesoVigente) return 'Enlace vencido';

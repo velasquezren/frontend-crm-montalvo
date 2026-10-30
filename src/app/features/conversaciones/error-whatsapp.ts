@@ -8,7 +8,7 @@ export function explicacionErrorWhatsapp(codigo?: number | null): string {
     case 131047:
       return 'La ventana de 24 horas está cerrada. Usa una plantilla aprobada o espera un nuevo mensaje del paciente.';
     case 131026:
-      return 'WhatsApp no pudo entregar a este destinatario. Confirma el número y coordina por otro medio si es necesario.';
+      return 'WhatsApp no pudo entregar a este destinatario. Puede no tener WhatsApp o no poder recibir mensajes; este error no confirma cuál es la causa. Confirma el número y pide al paciente que escriba a la clínica, o contacta por otro medio.';
     case 190:
     case 10:
     case 200:
