@@ -44,6 +44,16 @@ describe('el Dashboard abierto se actualiza solo', () => {
     TestBed.resetTestingModule();
   });
 
+  /* «Este mes» los primeros días se veía casi vacío (16/11/2026). */
+  it('abre en los últimos tres meses', () => {
+    const fixture = TestBed.createComponent(DashboardPage);
+    fixture.detectChanges(); TestBed.tick();
+    const [pedido] = http.match(req => req.url.endsWith('/kpis/resumen'));
+    expect(pedido.request.params.get('periodo')).toBe('TRES_MESES');
+    pedido.flush('sintético', { status: 500, statusText: 'Error' });
+    fixture.destroy();
+  });
+
   it('cada 5 minutos con la pestaña a la vista, y no con la pestaña oculta', async () => {
     const fixture = TestBed.createComponent(DashboardPage);
     fixture.detectChanges(); TestBed.tick();

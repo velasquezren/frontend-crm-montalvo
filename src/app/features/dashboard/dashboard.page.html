@@ -41,7 +41,7 @@
       <app-error-carga que="los indicadores" (reintentar)="kpiData.reload()" />
     } @else {
       <!-- Mismas alturas que el contenido real: al llegar los datos no salta nada. -->
-      <app-loading-skeleton shape="card" height="52px" />
+      @if (veePendientes()) { <app-loading-skeleton shape="card" height="52px" /> }
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
         @for (i of [1, 2, 3]; track i) { <app-loading-skeleton shape="card" height="178px" /> }
       </div>
@@ -66,50 +66,52 @@
     @let r = datos()!;
 
     <!-- ── 1. Pendiente ahora: lo único que pide acción ─────────────────── -->
-    <section class="dash-ahora" aria-label="Pendiente ahora">
-      <a class="dash-ahora-item" routerLink="/conversaciones" [queryParams]="{ pestana: 'SIN_RESPONDER' }">
-        @if (r.ahora.chatsSinResponder > 0) {
-          <app-icon name="message-circle" [size]="16" class="text-primary shrink-0" />
-          <span class="dash-ahora-numero">{{ r.ahora.chatsSinResponder }}</span>
-          <span class="text-sm text-text-muted">
-            {{ r.ahora.chatsSinResponder === 1 ? 'chat espera' : 'chats esperan' }} respuesta
-          </span>
-        } @else {
-          <!-- Un «0 chats esperan» se lee como dato; esto se lee como lo que es: al día. -->
-          <app-icon name="check-circle" [size]="16" class="text-primary shrink-0" />
-          <span class="text-sm font-semibold text-text-dark">Todos los chats respondidos</span>
+    @if (veePendientes()) {
+      <section class="dash-ahora" aria-label="Pendiente ahora">
+        <a class="dash-ahora-item" routerLink="/conversaciones" [queryParams]="{ pestana: 'SIN_RESPONDER' }">
+          @if (r.ahora.chatsSinResponder > 0) {
+            <app-icon name="message-circle" [size]="16" class="text-primary shrink-0" />
+            <span class="dash-ahora-numero">{{ r.ahora.chatsSinResponder }}</span>
+            <span class="text-sm text-text-muted">
+              {{ r.ahora.chatsSinResponder === 1 ? 'chat espera' : 'chats esperan' }} respuesta
+            </span>
+          } @else {
+            <!-- Un «0 chats esperan» se lee como dato; esto se lee como lo que es: al día. -->
+            <app-icon name="check-circle" [size]="16" class="text-primary shrink-0" />
+            <span class="text-sm font-semibold text-text-dark">Todos los chats respondidos</span>
+          }
+          <app-icon name="chevron-right" [size]="14" class="dash-ahora-flecha" />
+        </a>
+        <!-- Solo si hay alguna: es la urgencia de las urgencias, y un «0» sería ruido. -->
+        @if (r.ahora.chatsGoldSinResponder > 0) {
+          <a class="dash-ahora-item" routerLink="/conversaciones" [queryParams]="{ pestana: 'SIN_RESPONDER', categoria: 'GOLD' }">
+            <app-icon name="star" [size]="16" class="text-gold shrink-0" />
+            <span class="dash-ahora-numero">{{ r.ahora.chatsGoldSinResponder }}</span>
+            <span class="text-sm text-text-muted">
+              {{ r.ahora.chatsGoldSinResponder === 1 ? 'paciente Gold espera' : 'pacientes Gold esperan' }} respuesta
+            </span>
+            <app-icon name="chevron-right" [size]="14" class="dash-ahora-flecha" />
+          </a>
         }
-        <app-icon name="chevron-right" [size]="14" class="dash-ahora-flecha" />
-      </a>
-      <!-- Solo si hay alguna: es la urgencia de las urgencias, y un «0» sería ruido. -->
-      @if (r.ahora.chatsGoldSinResponder > 0) {
-        <a class="dash-ahora-item" routerLink="/conversaciones" [queryParams]="{ pestana: 'SIN_RESPONDER', categoria: 'GOLD' }">
-          <app-icon name="star" [size]="16" class="text-gold shrink-0" />
-          <span class="dash-ahora-numero">{{ r.ahora.chatsGoldSinResponder }}</span>
-          <span class="text-sm text-text-muted">
-            {{ r.ahora.chatsGoldSinResponder === 1 ? 'paciente Gold espera' : 'pacientes Gold esperan' }} respuesta
-          </span>
+        <!-- Pidieron hablar con una persona y nadie la tomó: «Atención» del inbox. Solo si hay. -->
+        @if (r.ahora.esperanPersona) {
+          <a class="dash-ahora-item" routerLink="/conversaciones" [queryParams]="{ pestana: 'ATENCION' }">
+            <app-icon name="alert-circle" [size]="16" class="text-primary shrink-0" />
+            <span class="dash-ahora-numero">{{ r.ahora.esperanPersona }}</span>
+            <span class="text-sm text-text-muted">
+              {{ r.ahora.esperanPersona === 1 ? 'espera' : 'esperan' }} a una persona
+            </span>
+            <app-icon name="chevron-right" [size]="14" class="dash-ahora-flecha" />
+          </a>
+        }
+        <a class="dash-ahora-item" routerLink="/leads">
+          <app-icon name="user-plus" [size]="16" class="text-primary shrink-0" />
+          <span class="dash-ahora-numero">{{ r.ahora.leadsHoy }}</span>
+          <span class="text-sm text-text-muted">{{ r.ahora.leadsHoy === 1 ? 'lead nuevo' : 'leads nuevos' }} hoy</span>
           <app-icon name="chevron-right" [size]="14" class="dash-ahora-flecha" />
         </a>
-      }
-      <!-- Pidieron hablar con una persona y nadie la tomó: «Atención» del inbox. Solo si hay. -->
-      @if (r.ahora.esperanPersona) {
-        <a class="dash-ahora-item" routerLink="/conversaciones" [queryParams]="{ pestana: 'ATENCION' }">
-          <app-icon name="alert-circle" [size]="16" class="text-primary shrink-0" />
-          <span class="dash-ahora-numero">{{ r.ahora.esperanPersona }}</span>
-          <span class="text-sm text-text-muted">
-            {{ r.ahora.esperanPersona === 1 ? 'espera' : 'esperan' }} a una persona
-          </span>
-          <app-icon name="chevron-right" [size]="14" class="dash-ahora-flecha" />
-        </a>
-      }
-      <a class="dash-ahora-item" routerLink="/leads">
-        <app-icon name="user-plus" [size]="16" class="text-primary shrink-0" />
-        <span class="dash-ahora-numero">{{ r.ahora.leadsHoy }}</span>
-        <span class="text-sm text-text-muted">{{ r.ahora.leadsHoy === 1 ? 'lead nuevo' : 'leads nuevos' }} hoy</span>
-        <app-icon name="chevron-right" [size]="14" class="dash-ahora-flecha" />
-      </a>
-    </section>
+      </section>
+    }
 
     <!-- ── 2. El periodo en cuatro números ──────────────────────────────
          La cifra manda; el ícono acompaña a la etiqueta en su tamaño (sin

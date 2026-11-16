@@ -99,8 +99,19 @@ export class DashboardPage {
   private readonly router = inject(Router);
 
   protected readonly periodos = PERIODOS;
-  protected readonly periodo = signal<PeriodoKpi>('MES');
+  /**
+   * Abre en tres meses: «Este mes» los primeros días se veía casi vacío
+   * (pedido de René, 16/11/2026). Los otros siguen a un clic.
+   */
+  protected readonly periodo = signal<PeriodoKpi>('TRES_MESES');
   protected readonly origenLabel = ORIGEN_LABEL;
+
+  /**
+   * La franja «Pendiente ahora» es la lista de tareas de quien atiende chats
+   * (las agentes). Administración no la ve: leía el retraso de recepción como
+   * una falla del CRM (16/11/2026). Lo pendiente sigue en Conversaciones.
+   */
+  protected readonly veePendientes = computed(() => !this.authService.isAdmin());
 
   protected readonly firstName = computed(() => this.authService.user()?.nombre.split(' ')[0] ?? '');
   /** El reloj de la vista: avanza con cada actualización, así la fecha no se queda en ayer. */
