@@ -1,0 +1,48 @@
+<app-card class="h-full">
+  <div class="ven-titulo">
+    <div class="min-w-0">
+      <h2>Ventas acumuladas</h2>
+      <p>Lo vendido {{ grafico().semanal ? 'semana a semana' : 'día a día' }}, sumado: cómo va el periodo.</p>
+    </div>
+    <div class="ven-total">
+      <span class="ven-total-valor">{{ total() }}</span>
+      <span class="ven-total-nota">{{ cantidad() }} {{ cantidad() === 1 ? 'venta' : 'ventas' }}</span>
+    </div>
+  </div>
+
+  @if (grafico(); as g) {
+    @if (g.hayVentas) {
+      <p class="ven-lectura">{{ lectura() }}</p>
+      <!-- El tope arriba a la izquierda: la línea sube hacia la derecha y ahí nunca la tapa. -->
+      <div class="ven-grafico">
+        <span class="ven-eje-y" aria-hidden="true">{{ g.tope }}</span>
+        <span class="ven-eje-y ven-eje-y-mitad" aria-hidden="true">{{ g.mitadTope }}</span>
+        <div
+          class="ven-lienzo"
+          role="img"
+          [attr.aria-label]="'Ventas acumuladas del periodo: ' + total() + '. ' + lectura()"
+          (pointerdown)="senalar($event)"
+          (pointermove)="senalar($event)"
+          (pointerleave)="$event.pointerType === 'mouse' && activo.set(null)">
+          <span class="ven-guia" aria-hidden="true"></span>
+          <span class="ven-guia ven-guia-mitad" aria-hidden="true"></span>
+          <svg class="ven-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <path class="ven-area" [attr.d]="g.area" />
+            <path class="ven-linea" [attr.d]="g.linea" vector-effect="non-scaling-stroke" />
+          </svg>
+          @if (marcado(); as m) {
+            @if (activo() !== null) {
+              <span class="ven-marca" [style.left.%]="m.x" aria-hidden="true"></span>
+            }
+            <span class="ven-punto" [style.left.%]="m.x" [style.top.%]="m.y" aria-hidden="true"></span>
+          }
+        </div>
+      </div>
+      <div class="ven-ejes" aria-hidden="true">
+        @for (e of g.ejes; track $index) { <span>{{ e }}</span> }
+      </div>
+    } @else {
+      <app-empty-state icon="wallet" title="Sin ventas en este periodo" description="Las ventas que registre el equipo se irán sumando aquí." />
+    }
+  }
+</app-card>

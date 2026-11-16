@@ -184,6 +184,20 @@ export function formatearEspera(minutos: number | null): string {
   return restoHoras ? `${dias} d ${restoHoras} h` : `${dias} d`;
 }
 
+/**
+ * El techo de un gráfico: el primer número «redondo» (1, 2, 2,5 o 5 por una
+ * potencia de diez) que no queda por debajo del valor. La guía de arriba se
+ * lee como «20 mil», no como «18.437».
+ */
+export function topeRedondo(valor: number): number {
+  if (!(valor > 0)) return 1;
+  const potencia = 10 ** Math.floor(Math.log10(valor));
+  for (const m of [1, 2, 2.5, 5]) {
+    if (m * potencia >= valor) return m * potencia;
+  }
+  return 10 * potencia;
+}
+
 /** Porcentaje entero, o `null` si no hay base: «0 %» sobre cero sería inventar. */
 export function porcentaje(parte: number, total: number): number | null {
   return total > 0 ? Math.round((parte / total) * 100) : null;

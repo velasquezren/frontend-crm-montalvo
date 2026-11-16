@@ -1,7 +1,7 @@
 <div class="ana" [class.ana-recargando]="recargando()" [attr.aria-busy]="recargando()">
 
-  <!-- ── 1. Tres tortas: de dónde vienen, cuánto esperan y qué se vende ── -->
-  <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5" aria-label="Repartos del periodo">
+  <!-- ── 1. Dos tortas: de dónde vienen y qué se vende ── -->
+  <section class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5" aria-label="Repartos del periodo">
     <app-card>
       <div class="ana-titulo">
         <h2>Leads por canal</h2>
@@ -11,32 +11,6 @@
     </app-card>
 
     <app-card>
-      <div class="ana-titulo">
-        <h2 class="flex items-center gap-1.5">
-          Primera respuesta
-          <app-info-hint titulo="Cómo se cuenta">
-            <p>Cuánto tardó una persona del equipo en escribirle a cada lead del periodo. El mensaje automático fuera de horario no cuenta.</p>
-          </app-info-hint>
-        </h2>
-        @if (primeraRespuesta(); as pr) {
-          <p>
-            @if (pr.enLaHora !== null) { {{ pr.enLaHora }} % respondidos en la primera hora }
-            @else { Sin leads en el periodo }
-          </p>
-        } @else {
-          <p>Cuánto esperó cada lead.</p>
-        }
-      </div>
-      @if (detalle.isLoading() && !datos()) {
-        <app-loading-skeleton shape="card" height="170px" />
-      } @else if (detalle.error() && !datos()) {
-        <app-error-carga que="la primera respuesta" (reintentar)="detalle.reload()" />
-      } @else if (primeraRespuesta(); as pr) {
-        <app-donut-chart etiquetaTotal="leads" formatType="number" [items]="pr.items" />
-      }
-    </app-card>
-
-    <app-card class="md:col-span-2 xl:col-span-1">
       <div class="ana-titulo">
         <h2>Ventas por servicio</h2>
         <p>Lo más vendido en el CRM, en bolivianos.</p>

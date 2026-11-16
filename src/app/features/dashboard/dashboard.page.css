@@ -5,9 +5,7 @@
 /* Números en columna: sin ancho fijo por dígito, las cifras bailan. */
 .dash-cifra,
 .dash-kpi-valor,
-.dash-ahora-numero,
-.dash-serie-max,
-.dash-serie-ejes {
+.dash-ahora-numero {
   font-variant-numeric: tabular-nums;
 }
 
@@ -115,6 +113,12 @@
   transition: opacity 0.2s var(--ease-press);
 }
 
+/* Lo que no tiene serie diaria (una proporción) lleva una barra en el mismo sitio. */
+.dash-kpi-barra {
+  margin-top: auto;
+  padding: 14px 0 22px;
+}
+
 .dash-kpi:hover .dash-kpi-tendencia {
   opacity: 0.85;
 }
@@ -207,129 +211,7 @@
   margin-top: 2px;
 }
 
-.dash-leyenda {
-  display: flex;
-  gap: 14px;
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-}
-
-.dash-leyenda span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.dash-muestra {
-  width: 10px;
-  height: 10px;
-  border-radius: 9999px;
-}
-
-.dash-muestra-respondido {
-  background: var(--color-primary);
-}
-
-.dash-muestra-pendiente {
-  background: color-mix(in srgb, var(--color-secondary) 30%, white);
-}
-
-/* ── Serie de leads ──────────────────────────────────────────────────
-   Columnas de CSS, no un SVG: cada barra es un div con su altura y dentro el
-   tramo respondido, apoyado en la base. */
-.dash-serie {
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  height: 180px;
-  padding-top: 18px;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.dash-serie-max {
-  position: absolute;
-  top: 0;
-  left: 0;
-  font-size: 0.6875rem;
-  color: var(--color-text-muted);
-}
-
-.dash-serie-guia {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 0;
-  border-top: 1px dashed var(--color-border);
-  pointer-events: none;
-}
-
-/* El tope de las barras está a 18 px del borde (el `padding-top` de `.dash-serie`). */
-.dash-serie-guia-max { top: 18px; }
-.dash-serie-guia-mitad { top: calc(18px + (100% - 18px) / 2); }
-
-.dash-serie-mitad { top: calc(18px + (100% - 18px) / 2 - 16px); }
-
-.dash-serie-col {
-  flex: 1;
-  height: 100%;
-  display: flex;
-  align-items: flex-end;
-  min-width: 0;
-}
-
-.dash-serie-barra {
-  width: 100%;
-  display: flex;
-  align-items: flex-end;
-  background: color-mix(in srgb, var(--color-secondary) 30%, white);
-  overflow: hidden;
-  transition: height 0.4s var(--ease-spring-smooth), opacity 0.15s var(--ease-press);
-}
-
-/* Al señalar una, las demás se apagan: se lee de qué barra habla la línea de arriba. */
-.dash-serie-enfocada .dash-serie-col:not(.dash-serie-col-activa) .dash-serie-barra {
-  opacity: 0.45;
-}
-
-.dash-serie-lectura {
-  margin: -8px 0 10px;
-  min-height: 1.25rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--color-text-dark);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.dash-serie-respondido {
-  width: 100%;
-  background: var(--color-primary);
-}
-
-.dash-serie-ejes {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 8px;
-  font-size: 0.6875rem;
-  color: var(--color-text-muted);
-}
-
-/* ── Embudo y barras de proporción ──────────────────────────────────── */
-.dash-embudo {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.dash-embudo li {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
+/* ── Barras de proporción ──────────────────────────────────── */
 .dash-pista {
   height: 8px;
   border-radius: 9999px;
@@ -350,11 +232,11 @@
 
 /* ── Canales ─────────────────────────────────────────────────────────
    Filas en rejilla sobre la tarjeta: cabecera en voz baja, separadores de
-   una línea, cifras alineadas a la derecha. En el teléfono se quedan las tres
-   columnas que responden «cuántos y cuántos atendidos». */
+   una línea, cifras alineadas a la derecha. Sin la columna «Con venta» queda
+   «cuántos y qué parte compró», que es lo que cabe en el teléfono. */
 .dash-canal {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 3.5rem 6rem 6.5rem 4.5rem;
+  grid-template-columns: minmax(0, 1fr) 3.5rem 5rem 6rem;
   align-items: center;
   gap: 12px;
   padding: 12px 8px;

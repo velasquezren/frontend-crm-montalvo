@@ -12,14 +12,14 @@ import { CardComponent } from '../../shared/components/card/card.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
 import { IconComponent, IconName } from '../../shared/components/icon/icon.component';
-import { InfoHintComponent } from '../../shared/components/info-hint/info-hint.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { SparklineComponent } from '../../shared/components/sparkline/sparkline.component';
 import { NombreClientePipe } from '../../shared/pipes/nombre-cliente.pipe';
 import { ORIGEN_LABEL } from '../leads/lead.model';
 import { enlaceAlChat } from '../conversaciones/enlace-chat';
 import { DashAnalisisComponent } from './components/dash-analisis/dash-analisis.component';
-import { ActividadItem, formatearEspera, inicioReciente, KpiResumen, PeriodoKpi, porcentaje, variacion } from './kpis.model';
+import { DashVentasComponent } from './components/dash-ventas/dash-ventas.component';
+import { ActividadItem, inicioReciente, KpiResumen, PeriodoKpi, porcentaje, variacion } from './kpis.model';
 import { KpisService } from './kpis.service';
 
 /**
@@ -47,7 +47,10 @@ interface Tarjeta {
   readonly icon: IconName;
   readonly badge: { readonly texto: string; readonly variant: BadgeVariant; readonly icon: IconName };
   readonly detalle: string;
-  readonly serie: ReadonlyArray<number | null>;
+  /** La línea del pie, día a día. Sin ella, la tarjeta lleva `barra`. */
+  readonly serie?: ReadonlyArray<number | null>;
+  /** Una proporción (0 a 100) en el pie, para lo que no tiene serie diaria. */
+  readonly barra?: number;
 }
 
 /**
@@ -76,10 +79,10 @@ interface Tarjeta {
     ButtonComponent,
     CardComponent,
     DashAnalisisComponent,
+    DashVentasComponent,
     EmptyStateComponent,
     ErrorCargaComponent,
     IconComponent,
-    InfoHintComponent,
     LoadingSkeletonComponent,
     NombreClientePipe,
     SparklineComponent,
@@ -98,8 +101,6 @@ export class DashboardPage {
   protected readonly periodos = PERIODOS;
   protected readonly periodo = signal<PeriodoKpi>('MES');
   protected readonly origenLabel = ORIGEN_LABEL;
-  protected readonly espera = formatearEspera;
-  protected readonly pct = porcentaje;
 
   protected readonly firstName = computed(() => this.authService.user()?.nombre.split(' ')[0] ?? '');
   /** El reloj de la vista: avanza con cada actualización, así la fecha no se queda en ayer. */
@@ -166,6 +167,13 @@ export class DashboardPage {
     return this.periodo() === 'MES' && r ? inicioReciente(r.periodo.desde, new Date(), DIAS_MES_RECIEN_EMPEZADO) : null;
   });
 
+  /**
+   * Tres números del periodo: cuántos entraron, cuántos compraron y cuánto se
+   * vendió. Hasta el 16/11/2026 había dos más —«Respondidos por el equipo» y
+   * «Primera respuesta»— que René pidió quitar: el retraso es de recepción y
+   * el Dashboard lo hacía parecer una falla del CRM. Lo pendiente sigue en
+   * Conversaciones y en la franja «Pendiente ahora».
+   */
   protected readonly tarjetas = computed<Tarjeta[]>(() => {
     const r = this.datos();
     if (!r) return [];
@@ -173,9 +181,9 @@ export class DashboardPage {
     const { comparado, corto } = this.periodoActual();
     const vsLeads = variacion(embudo.captados, embudo.anterior.captados);
     const vsVentas = variacion(ventas.total, ventas.anterior.total);
-    const tasa = porcentaje(embudo.respondidos, embudo.captados);
-    const rapido = porcentaje(embudo.respondidosEnUnaHora, embudo.captados);
-    const sinRespuesta = embudo.captados - embudo.respondidos;
+    const tasa = porcentaje(embudo.convertidos, embudo.captados);
+    const tasaAnterior = porcentaje(embudo.anterior.convertidos, embudo.anterior.captados);
+    const puntos = tasa !== null && tasaAnterior !== null ? tasa - tasaAnterior : null;
     const cambio = (v: ReturnType<typeof variacion>) => (v ? `${v.corto} ${corto}` : '');
 
     return [
@@ -190,98 +198,32 @@ export class DashboardPage {
         serie: serie.map(p => p.captados),
       },
       {
-        label: 'Respondidos por el equipo',
+        label: 'Leads que compraron',
         valor: tasa === null ? '—' : `${tasa} %`,
-        icon: 'message-circle',
-        badge: sinRespuesta > 0
-          ? { texto: `${sinRespuesta} sin respuesta`, variant: 'info', icon: 'alert-circle' }
-          : { texto: 'Todos respondidos', variant: 'success', icon: 'check-circle' },
-        detalle: embudo.captados ? `${embudo.respondidos} de ${embudo.captados} leads` : 'Sin leads en el periodo',
-        serie: serie.map(p => porcentaje(p.respondidos, p.captados)),
-      },
-      {
-        label: 'Primera respuesta',
-        valor: formatearEspera(embudo.medianaRespuestaMinutos),
-        icon: 'clock',
-        badge: { texto: rapido === null ? 'Sin datos' : `${rapido} % en 1 h`, variant: 'info', icon: 'activity' },
-        detalle: 'Mediana: la mitad se respondió en menos',
-        serie: serie.map(p => p.medianaMinutos),
+        icon: 'percent',
+        badge: puntos === null
+          ? { texto: `${embudo.convertidos} con venta`, variant: 'info', icon: 'check-circle' }
+          : {
+              texto: `${puntos > 0 ? '+' : puntos < 0 ? '−' : ''}${Math.abs(puntos)} pts ${corto}`,
+              variant: puntos >= 0 ? 'success' : 'neutral',
+              icon: 'trending-up',
+            },
+        detalle: embudo.captados
+          ? `${embudo.convertidos} de ${embudo.captados} leads con una venta registrada`
+          : 'Sin leads en el periodo',
+        barra: tasa ?? 0,
       },
       {
         label: 'Ventas',
         valor: this.moneda.formatearBob(ventas.total),
         icon: 'wallet',
-        badge: {
-          texto: `${ventas.cantidad} ${ventas.cantidad === 1 ? 'venta' : 'ventas'}`,
-          variant: ventas.cantidad > 0 ? 'success' : 'neutral',
-          icon: 'check-circle',
-        },
+        badge: vsVentas
+          ? { texto: cambio(vsVentas), variant: vsVentas.sube ? 'success' : 'neutral', icon: 'trending-up' }
+          : { texto: `${ventas.cantidad} ${ventas.cantidad === 1 ? 'venta' : 'ventas'}`, variant: ventas.cantidad > 0 ? 'success' : 'neutral', icon: 'check-circle' },
         detalle: ventas.cantidad
-          ? `Ticket ${this.moneda.formatearBob(ventas.ticketPromedio)}${vsVentas ? ` · ${cambio(vsVentas)}` : ''}`
+          ? `${ventas.cantidad} ${ventas.cantidad === 1 ? 'venta' : 'ventas'} · ticket ${this.moneda.formatearBob(ventas.ticketPromedio)}`
           : 'Sin ventas registradas en el periodo',
         serie: serie.map(p => p.ventas),
-      },
-    ];
-  });
-
-  /**
-   * Barras de la serie, en proporción al día con más leads. Cada barra se
-   * parte en respondidos (sólido) y sin respuesta (suave): así se ve de un
-   * vistazo QUÉ días quedaron gente sin atender, no solo cuántos entraron.
-   */
-  protected readonly serie = computed(() => {
-    const r = this.datos();
-    if (!r) return null;
-    const max = Math.max(...r.serie.map(p => p.captados), 1);
-    const semanal = r.periodo.granularidad === 'SEMANA';
-    const etiqueta = (iso: string) =>
-      new Date(`${iso}T12:00:00Z`).toLocaleDateString('es-BO', { day: 'numeric', month: 'short', timeZone: 'UTC' });
-    const barras = r.serie.map(p => ({
-      fecha: p.fecha,
-      alto: (p.captados / max) * 100,
-      respondidos: p.captados ? (p.respondidos / p.captados) * 100 : 0,
-      titulo: `${semanal ? 'Semana del ' : ''}${etiqueta(p.fecha)}: ${p.captados} leads, ${p.respondidos} respondidos`,
-    }));
-    const mitad = r.serie[Math.floor(r.serie.length / 2)];
-    return {
-      barras,
-      max,
-      mitad: Math.round(max / 2),
-      ejes: r.serie.length ? [etiqueta(r.serie[0].fecha), mitad ? etiqueta(mitad.fecha) : '', etiqueta(r.serie[r.serie.length - 1].fecha)] : [],
-      unidad: semanal ? 'por semana' : 'por día',
-      hayDatos: r.serie.some(p => p.captados > 0),
-    };
-  });
-
-  /** La barra que se señala o se toca; vuelve a ninguna al cambiar de periodo. */
-  protected readonly barraActiva = linkedSignal<unknown, number | null>({ source: () => this.serie(), computation: () => null });
-
-  /** «15 oct: 12 leads, 9 respondidos», o el total si no se señala ninguna. */
-  protected readonly lecturaSerie = computed(() => {
-    const s = this.serie();
-    const e = this.datos()?.embudo;
-    if (!s || !e) return '';
-    const i = this.barraActiva();
-    if (i !== null && s.barras[i]) return s.barras[i].titulo;
-    return `En el periodo: ${e.captados} ${e.captados === 1 ? 'lead' : 'leads'}, ${e.respondidos} ${e.respondidos === 1 ? 'respondido' : 'respondidos'}. Señala o toca una barra para ver su día.`;
-  });
-
-  protected readonly embudo = computed(() => {
-    const e = this.datos()?.embudo;
-    if (!e) return [];
-    return [
-      { etapa: 'Captados', cantidad: e.captados, ancho: e.captados ? 100 : 0, nota: 'leads que entraron en el periodo' },
-      {
-        etapa: 'Respondidos',
-        cantidad: e.respondidos,
-        ancho: porcentaje(e.respondidos, e.captados) ?? 0,
-        nota: `${porcentaje(e.respondidos, e.captados) ?? 0} % de los captados`,
-      },
-      {
-        etapa: 'Con venta',
-        cantidad: e.convertidos,
-        ancho: porcentaje(e.convertidos, e.captados) ?? 0,
-        nota: `${porcentaje(e.convertidos, e.respondidos) ?? 0} % de los respondidos`,
       },
     ];
   });
@@ -290,7 +232,7 @@ export class DashboardPage {
     const r = this.datos();
     if (!r) return [];
     const max = Math.max(...r.canales.map(c => c.captados), 1);
-    return r.canales.map(c => ({ ...c, ancho: (c.captados / max) * 100 }));
+    return r.canales.map(c => ({ ...c, ancho: (c.captados / max) * 100, conversion: porcentaje(c.convertidos, c.captados) }));
   });
 
   protected readonly equipo = computed(() => {

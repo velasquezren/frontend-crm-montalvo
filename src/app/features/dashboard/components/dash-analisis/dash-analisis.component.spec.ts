@@ -51,15 +51,19 @@ describe('el análisis del Dashboard', () => {
   it('pinta las tortas, el mapa con su pico, las líneas y el asistente', async () => {
     await montar(DETALLE);
     const raiz = fixture.nativeElement as HTMLElement;
-    expect(raiz.querySelectorAll('app-donut-chart')).toHaveLength(4);
-    expect(texto()).toContain('50 % respondidos en la primera hora');
+    /* Canal, servicio y categoría. La de primera respuesta salió el 16/11/2026:
+       el retraso de recepción no se muestra en el Dashboard. */
+    expect(raiz.querySelectorAll('app-donut-chart')).toHaveLength(3);
+    expect(texto()).not.toContain('Primera respuesta');
+    expect(texto()).toContain('1 con venta');
     expect(texto()).toContain('Más leads: Mar, de 18 a 20 h');
     expect(raiz.querySelectorAll('.ana-mapa-celda:not(.ana-mapa-muestra)')).toHaveLength(84);
     expect(texto()).toContain('Chats por línea');
     expect(texto()).toContain('75 % resuelto solo');
     /* Cada porción con su tono: la dona ya no es de un solo verde. */
-    const tonos = Array.from(raiz.querySelectorAll<SVGCircleElement>('.donut-porcion')).map(c => c.style.stroke);
-    expect(new Set(tonos).size).toBeGreaterThan(2);
+    const tonos = Array.from(raiz.querySelector('app-donut-chart')!.querySelectorAll<SVGCircleElement>('.donut-porcion')).map(c => c.style.stroke);
+    expect(tonos).toHaveLength(2);
+    expect(new Set(tonos).size).toBe(2);
   });
 
   /* El title de antes no llegaba al teléfono: el dato de la celda se lee en la tarjeta. */

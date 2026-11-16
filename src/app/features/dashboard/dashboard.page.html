@@ -42,8 +42,8 @@
     } @else {
       <!-- Mismas alturas que el contenido real: al llegar los datos no salta nada. -->
       <app-loading-skeleton shape="card" height="52px" />
-      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
-        @for (i of [1, 2, 3, 4]; track i) { <app-loading-skeleton shape="card" height="178px" /> }
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
+        @for (i of [1, 2, 3]; track i) { <app-loading-skeleton shape="card" height="178px" /> }
       </div>
       <app-loading-skeleton shape="card" height="300px" />
     }
@@ -114,7 +114,7 @@
     <!-- ── 2. El periodo en cuatro números ──────────────────────────────
          La cifra manda; el ícono acompaña a la etiqueta en su tamaño (sin
          caja), y la línea verde del pie es la serie de ese mismo indicador. -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5" aria-label="Resumen del periodo">
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5" aria-label="Resumen del periodo">
       @for (k of tarjetas(); track k.label) {
         <!-- La etiqueta va sola en su fila y la insignia junto a la cifra, que
              baja de línea si no cabe: a 1280 px con el menú abierto la tarjeta
@@ -129,149 +129,24 @@
             <app-badge [variant]="k.badge.variant" [icon]="k.badge.icon">{{ k.badge.texto }}</app-badge>
           </div>
           <p class="dash-kpi-detalle">{{ k.detalle }}</p>
-          <div class="dash-kpi-tendencia">
-            <app-sparkline [valores]="k.serie" [area]="true" [grosor]="2" />
-          </div>
+          @if (k.serie) {
+            <div class="dash-kpi-tendencia">
+              <app-sparkline [valores]="k.serie" [area]="true" [grosor]="2" />
+            </div>
+          } @else {
+            <div class="dash-kpi-barra" aria-hidden="true">
+              <div class="dash-pista"><div class="dash-relleno" [style.width.%]="k.barra ?? 0"></div></div>
+            </div>
+          }
         </article>
       }
     </section>
 
-    <!-- ── 3. Leads en el tiempo + embudo ───────────────────────────────── -->
+    <!-- ── 3. Ventas: cómo va el periodo y quién vende ─────────────────── -->
     <section class="grid grid-cols-1 xl:grid-cols-5 gap-4 sm:gap-5">
-      <app-card class="xl:col-span-3">
-        <div class="dash-titulo">
-          <div>
-            <h2>Leads {{ serie()?.unidad }}</h2>
-            <p>Cada barra se divide entre los respondidos y los que siguen sin respuesta.</p>
-          </div>
-          <div class="dash-leyenda">
-            <span><i class="dash-muestra dash-muestra-respondido"></i>Respondidos</span>
-            <span><i class="dash-muestra dash-muestra-pendiente"></i>Sin respuesta</span>
-          </div>
-        </div>
-
-        @if (serie(); as s) {
-          @if (s.hayDatos) {
-            <!-- El dato de la barra que se señala (o se toca: el title no llega
-                 al teléfono) y, sin ninguna, el total. Una línea fija: no salta. -->
-            <p class="dash-serie-lectura">{{ lecturaSerie() }}</p>
-            <div
-              class="dash-serie"
-              [class.dash-serie-enfocada]="barraActiva() !== null"
-              role="img"
-              [attr.aria-label]="'Leads ' + s.unidad + ' del periodo. ' + lecturaSerie()"
-              (pointerleave)="$event.pointerType === 'mouse' && barraActiva.set(null)">
-              <!-- Guías al máximo y a la mitad: la altura de una barra se lee contra algo. -->
-              <span class="dash-serie-guia dash-serie-guia-max" aria-hidden="true"></span>
-              <span class="dash-serie-guia dash-serie-guia-mitad" aria-hidden="true"></span>
-              <span class="dash-serie-max">{{ s.max }}</span>
-              @if (s.max > 1) { <span class="dash-serie-max dash-serie-mitad">{{ s.mitad }}</span> }
-              @for (b of s.barras; track b.fecha) {
-                <div
-                  class="dash-serie-col"
-                  [class.dash-serie-col-activa]="barraActiva() === $index"
-                  (pointerenter)="barraActiva.set($index)">
-                  <div class="dash-serie-barra" [style.height.%]="b.alto">
-                    <div class="dash-serie-respondido" [style.height.%]="b.respondidos"></div>
-                  </div>
-                </div>
-              }
-            </div>
-            <div class="dash-serie-ejes">
-              @for (e of s.ejes; track $index) { <span>{{ e }}</span> }
-            </div>
-          } @else {
-            <app-empty-state icon="users" title="Sin leads en este periodo" description="Cuando entren leads por WhatsApp, Meta o recepción, aparecerán aquí." />
-          }
-        }
-      </app-card>
+      <app-dash-ventas class="xl:col-span-3" [resumen]="r" />
 
       <app-card class="xl:col-span-2">
-        <div class="dash-titulo">
-          <div>
-            <h2 class="flex items-center gap-1.5">
-              Embudo del periodo
-              <app-info-hint titulo="Cómo se cuenta">
-                <p><strong>Respondido</strong>: una persona del equipo le escribió al paciente después de que entró el lead. El mensaje automático fuera de horario no cuenta.</p>
-                <p>No depende de mover la tarjeta en el Kanban: se lee de los mensajes enviados.</p>
-                <p><strong>Con venta</strong>: el lead quedó convertido al registrarse una venta del paciente.</p>
-              </app-info-hint>
-            </h2>
-            <p>Sin el histórico importado de FileMaker.</p>
-          </div>
-        </div>
-
-        <ol class="dash-embudo">
-          @for (paso of embudo(); track paso.etapa) {
-            <li>
-              <div class="flex items-baseline justify-between gap-3">
-                <span class="text-sm font-semibold text-text-dark">{{ paso.etapa }}</span>
-                <span class="dash-cifra text-lg">{{ paso.cantidad }}</span>
-              </div>
-              <div class="dash-pista"><div class="dash-relleno" [style.width.%]="paso.ancho"></div></div>
-              <span class="text-xs text-text-muted">{{ paso.nota }}</span>
-            </li>
-          }
-        </ol>
-      </app-card>
-    </section>
-
-    <!-- ── 4. El análisis: tortas, mapa de horas, líneas y asistente ─────
-         Bajo el pliegue y con su propia petición (`/kpis/detalle`): lo de
-         arriba no lo espera. El esqueleto mide lo que su primera fila. -->
-    @defer (on viewport; prefetch on idle) {
-      <app-dash-analisis [periodo]="periodo()" [resumen]="r" />
-    } @placeholder {
-      <app-loading-skeleton shape="card" height="360px" />
-    }
-
-    <!-- ── 5. Por canal, en detalle ─────────────────────────────────────── -->
-    <app-card>
-      <div class="dash-titulo">
-        <div>
-          <h2>Por canal, en detalle</h2>
-          <p>Respuesta y ventas de cada canal. Pulsa uno para ver sus leads.</p>
-        </div>
-      </div>
-      @if (canales().length) {
-        <!-- Filas sobre la propia tarjeta, sin un <app-table> dentro: su marco
-             con borde y sombra, metido en otra tarjeta, era una caja dentro
-             de otra caja. -->
-        <div>
-          <div class="dash-canal dash-canal-cabecera" aria-hidden="true">
-            <span>Canal</span>
-            <span>Leads</span>
-            <span>Respondidos</span>
-            <span class="dash-canal-extra">1.ª respuesta</span>
-            <span class="dash-canal-extra">Con venta</span>
-          </div>
-          @for (c of canales(); track c.origen) {
-            <div
-              class="dash-canal fila-clicable"
-              role="link"
-              tabindex="0"
-              [attr.aria-label]="'Ver leads de ' + origenLabel[c.origen]"
-              (click)="irACanal(c.origen)"
-              (keydown.enter)="irACanal(c.origen)">
-              <div class="min-w-0">
-                <span class="text-sm font-medium text-text-dark">{{ origenLabel[c.origen] }}</span>
-                <div class="dash-pista dash-pista-fina mt-1.5"><div class="dash-relleno" [style.width.%]="c.ancho"></div></div>
-              </div>
-              <span class="dash-cifra text-sm">{{ c.captados }}</span>
-              <span class="text-sm text-text-dark">{{ pct(c.respondidos, c.captados) ?? '—' }} %</span>
-              <span class="dash-canal-extra text-sm text-text-muted">{{ espera(c.medianaRespuestaMinutos) }}</span>
-              <span class="dash-canal-extra text-sm text-text-muted">{{ c.convertidos }}</span>
-            </div>
-          }
-        </div>
-      } @else {
-        <app-empty-state icon="bar-chart" title="Sin leads por canal" description="Aún no entró ningún lead en este periodo." />
-      }
-    </app-card>
-
-    <!-- ── 6. Equipo + últimos movimientos ─────────────────────────────── -->
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-      <app-card>
         <div class="dash-titulo">
           <div>
             <h2>Equipo</h2>
@@ -286,7 +161,7 @@
                 <div class="flex-1 min-w-0">
                   <div class="flex items-baseline justify-between gap-2">
                     <span class="text-sm font-medium text-text-dark truncate">{{ a.agente }}</span>
-                    <span class="dash-cifra text-sm">{{ a.monto }}</span>
+                    <span class="dash-cifra text-sm shrink-0">{{ a.monto }}</span>
                   </div>
                   <div class="dash-pista dash-pista-fina mt-1.5"><div class="dash-relleno" [style.width.%]="a.ancho"></div></div>
                   <span class="text-xs text-text-muted">{{ a.cantidad }} {{ a.cantidad === 1 ? 'venta' : 'ventas' }}</span>
@@ -295,11 +170,64 @@
             }
           </ul>
         } @else {
-          <app-empty-state icon="award" title="Sin ventas en el periodo" description="Las ventas que registre el equipo aparecerán aquí." />
+          <app-empty-state icon="briefcase" title="Sin ventas en el periodo" description="Las ventas que registre el equipo aparecerán aquí." />
+        }
+      </app-card>
+    </section>
+
+    <!-- ── 4. El análisis: tortas, mapa de horas, líneas y asistente ─────
+         Bajo el pliegue y con su propia petición (`/kpis/detalle`): lo de
+         arriba no lo espera. El esqueleto mide lo que su primera fila. -->
+    @defer (on viewport; prefetch on idle) {
+      <app-dash-analisis [periodo]="periodo()" [resumen]="r" />
+    } @placeholder {
+      <app-loading-skeleton shape="card" height="360px" />
+    }
+
+    <!-- ── 5. Canales + últimos movimientos ─────────────────────────────── -->
+    <section class="grid grid-cols-1 xl:grid-cols-5 gap-4 sm:gap-5">
+      <app-card class="xl:col-span-3">
+        <div class="dash-titulo">
+          <div>
+            <h2>Por canal</h2>
+            <p>De dónde llegan los leads y cuántos terminan en venta. Pulsa uno para ver sus leads.</p>
+          </div>
+        </div>
+        @if (canales().length) {
+          <!-- Filas sobre la propia tarjeta, sin un <app-table> dentro: su marco
+               con borde y sombra, metido en otra tarjeta, era una caja dentro
+               de otra caja. -->
+          <div>
+            <div class="dash-canal dash-canal-cabecera" aria-hidden="true">
+              <span>Canal</span>
+              <span>Leads</span>
+              <span class="dash-canal-extra">Con venta</span>
+              <span>Conversión</span>
+            </div>
+            @for (c of canales(); track c.origen) {
+              <div
+                class="dash-canal fila-clicable"
+                role="link"
+                tabindex="0"
+                [attr.aria-label]="'Ver leads de ' + origenLabel[c.origen]"
+                (click)="irACanal(c.origen)"
+                (keydown.enter)="irACanal(c.origen)">
+                <div class="min-w-0">
+                  <span class="block text-sm font-medium text-text-dark truncate">{{ origenLabel[c.origen] }}</span>
+                  <div class="dash-pista dash-pista-fina mt-1.5"><div class="dash-relleno" [style.width.%]="c.ancho"></div></div>
+                </div>
+                <span class="dash-cifra text-sm">{{ c.captados }}</span>
+                <span class="dash-canal-extra text-sm text-text-muted">{{ c.convertidos }}</span>
+                <span class="text-sm text-text-dark">{{ c.conversion ?? '—' }} %</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <app-empty-state icon="activity" title="Sin leads por canal" description="Aún no entró ningún lead en este periodo." />
         }
       </app-card>
 
-      <app-card>
+      <app-card class="xl:col-span-2">
         <div class="dash-titulo">
           <div>
             <h2>Últimos movimientos</h2>

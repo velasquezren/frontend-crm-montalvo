@@ -1,7 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
 import { esFiltroInbox } from '../conversaciones/conversacion.model';
-import { etiquetaDeBanda, formatearEspera, inicioReciente, mapaDeCalor, porcentaje, TRAMOS_RESPUESTA, variacion } from './kpis.model';
+import { etiquetaDeBanda, formatearEspera, inicioReciente, mapaDeCalor, porcentaje, topeRedondo, TRAMOS_RESPUESTA, variacion } from './kpis.model';
+
+describe('topeRedondo', () => {
+  it('sube al siguiente número redondo', () => {
+    expect(topeRedondo(18_437)).toBe(20_000);
+    expect(topeRedondo(2_100)).toBe(2_500);
+    expect(topeRedondo(3_000)).toBe(5_000);
+    expect(topeRedondo(7_200)).toBe(10_000);
+    expect(topeRedondo(500)).toBe(500);
+  });
+
+  it('sin ventas no divide por cero', () => {
+    expect(topeRedondo(0)).toBe(1);
+  });
+});
 
 /**
  * Lo que el dashboard le DICE a la agente sale de estas tres funciones. Se

@@ -4,10 +4,16 @@ export type CardPadding = 'sm' | 'md' | 'lg';
 
 /**
  * Átomo Card — CRM_MANIFESTO.md §3.2: rounded-2xl (16px) + shadow-subtle.
+ *
+ * La superficie llena su etiqueta (`block` + `h-full`): en una fila de la
+ * rejilla la etiqueta se estira a la más alta, y sin esto cada tarjeta
+ * terminaba a su altura y la fila quedaba escalonada (Dashboard, 16/11/2026).
+ * Con alto automático, `h-full` no cambia nada.
  */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-card',
+  host: { class: 'block' },
   template: `
     <div [class]="classes()">
       <ng-content />
@@ -29,6 +35,6 @@ export class CardComponent {
       ? 'transition-shadow duration-200 hover:shadow-lifted'
       : '';
 
-    return ['bg-white rounded-2xl shadow-subtle', paddings[this.padding()], hover].join(' ');
+    return ['h-full bg-white rounded-2xl shadow-subtle', paddings[this.padding()], hover].join(' ');
   });
 }

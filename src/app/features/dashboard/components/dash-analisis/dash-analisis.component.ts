@@ -9,29 +9,15 @@ import { COLOR_NEUTRO_GRAFICO, colorDeRampa } from '../../../../shared/component
 import { CardComponent } from '../../../../shared/components/card/card.component';
 import { ErrorCargaComponent } from '../../../../shared/components/error-carga/error-carga.component';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
-import { InfoHintComponent } from '../../../../shared/components/info-hint/info-hint.component';
 import { LoadingSkeletonComponent } from '../../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { ORIGEN_LABEL } from '../../../leads/lead.model';
 import {
-  BANDAS_HORA, DIAS_SEMANA_CORTOS, etiquetaDeBanda, KpiDetalle, KpiResumen, mapaDeCalor, PeriodoKpi, porcentaje, TRAMOS_RESPUESTA,
+  BANDAS_HORA, DIAS_SEMANA_CORTOS, etiquetaDeBanda, KpiDetalle, KpiResumen, mapaDeCalor, PeriodoKpi, porcentaje,
 } from '../../kpis.model';
 import { KpisService } from '../../kpis.service';
 
 const CATEGORIA_LABEL: Readonly<Record<CategoriaCliente, string>> = {
   GOLD: 'Gold', SILVER: 'Silver', BRONZE: 'Bronze', PROSPECTO: 'Prospecto',
-};
-
-/**
- * Los tonos de la primera respuesta van de lo mejor (el verde de la marca) a lo
- * peor, y «sin respuesta» en gris claro: no es un tramo, es lo que falta.
- */
-const TONO_TRAMO: Readonly<Record<keyof KpiDetalle['primeraRespuesta'], string>> = {
-  menos15: 'var(--color-primary)',
-  menosHora: 'var(--color-secondary)',
-  menos4Horas: 'color-mix(in srgb, var(--color-secondary) 55%, white)',
-  menosDia: 'color-mix(in srgb, var(--color-primary) 30%, white)',
-  masDia: 'color-mix(in srgb, var(--color-primary) 65%, var(--color-text-dark))',
-  sinRespuesta: COLOR_NEUTRO_GRAFICO,
 };
 
 /** Los resultados del asistente que se cuentan, en orden y con su tono. */
@@ -43,9 +29,8 @@ const RESULTADOS_ASISTENTE = [
 ] as const;
 
 /**
- * El análisis de abajo del Dashboard: tortas de canal, primera respuesta,
- * servicios, quién escribe y por qué línea; el mapa de cuándo escriben, y el
- * asistente. Se monta con `@defer (on viewport)` y pide `GET /kpis/detalle`
+ * El análisis de abajo del Dashboard: tortas de canal, servicios y quién
+ * escribe; chats por línea, el mapa de cuándo escriben y el asistente. Se monta con `@defer (on viewport)` y pide `GET /kpis/detalle`
  * recién entonces: lo de arriba (lo que pide acción) no lo espera.
  *
  * Lo que ya trae el resumen (canales, servicios) no se vuelve a pedir: llega
@@ -53,7 +38,7 @@ const RESULTADOS_ASISTENTE = [
  */
 @Component({
   selector: 'app-dash-analisis',
-  imports: [BarChartComponent, CardComponent, DonutChartComponent, ErrorCargaComponent, IconComponent, InfoHintComponent, LoadingSkeletonComponent],
+  imports: [BarChartComponent, CardComponent, DonutChartComponent, ErrorCargaComponent, IconComponent, LoadingSkeletonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dash-analisis.component.html',
   styleUrl: './dash-analisis.component.css',
@@ -84,7 +69,7 @@ export class DashAnalisisComponent {
       id: c.origen,
       label: ORIGEN_LABEL[c.origen] ?? c.origen,
       value: c.captados,
-      sublabel: `${porcentaje(c.respondidos, c.captados) ?? 0} % resp.`,
+      sublabel: `${c.convertidos} con venta`,
       color: colorDeRampa(i),
     })),
   );
@@ -94,20 +79,6 @@ export class DashAnalisisComponent {
   );
 
   /* ── Tortas del detalle ── */
-
-  protected readonly primeraRespuesta = computed(() => {
-    const d = this.datos();
-    if (!d) return null;
-    const p = d.primeraRespuesta;
-    const total = TRAMOS_RESPUESTA.reduce((s, t) => s + p[t.clave], 0);
-    return {
-      items: TRAMOS_RESPUESTA.filter(t => p[t.clave] > 0).map<ChartItem>(t => ({
-        id: t.clave, label: t.etiqueta, value: p[t.clave], sublabel: `${p[t.clave]}`, color: TONO_TRAMO[t.clave],
-      })),
-      enLaHora: porcentaje(p.menos15 + p.menosHora, total),
-      sinRespuesta: p.sinRespuesta,
-    };
-  });
 
   protected readonly porCategoria = computed<ChartItem[]>(() =>
     (this.datos()?.pacientesPorCategoria ?? []).map((c, i) => ({ label: CATEGORIA_LABEL[c.categoria], value: c.pacientes, color: colorDeRampa(i) })),
