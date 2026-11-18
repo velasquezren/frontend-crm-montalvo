@@ -30,6 +30,17 @@ export const routes: Routes = [
     ],
   },
 
+  /* ── Para imprimir (sin layout: lo que se ve es lo que sale en papel) ── */
+  {
+    /* Constancia mensual de entregas de resultados, para notariar. Solo
+       administración: son todos los pacientes avisados del mes. El backend
+       exige ADMIN también. */
+    path: 'imprimir/constancia-resultados',
+    canActivate: [authGuard, exigeRol('ADMIN')],
+    loadComponent: () =>
+      import('./features/resultados/constancia/constancia-resultados.page').then(m => m.ConstanciaResultadosPage),
+  },
+
   /* ── CRM (con LayoutComponent como wrapper + authGuard) ────────── */
   {
     path: '',

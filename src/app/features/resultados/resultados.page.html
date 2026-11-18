@@ -4,6 +4,10 @@
   <!-- Lo que cambia en el portal (un informe nuevo, un paciente que abre el
        suyo) no llega por socket: se refresca al volver a la pestaña, y aquí
        cuando la asistente quiere mirar ya. Sin esqueleto: la tabla sigue. -->
+  @if (auth.isAdmin()) {
+    <!-- Solo administración: la constancia son todos los pacientes avisados del mes. -->
+    <app-button variant="secondary" icon="file-text" (clicked)="abrirConstancia()">Constancia mensual</app-button>
+  }
   <app-button
     variant="secondary"
     icon="rotate-cw"

@@ -46,6 +46,7 @@ import { FechaClinicaPipe } from '../../core/fechas/fecha-clinica.pipe';
 import { SelectComponent } from '../../shared/components/select/select.component';
 import { TIPOS_INFORME, NOMBRES_TIPO, tipoDeUrl } from './resultado.model';
 import { FechaCivilPipe } from '../../core/fechas/fecha-civil.pipe';
+import { AuthService } from '../../core/auth/auth.service';
 
 /**
  * Entrega de resultados: la cola de informes publicados en el portal, con el
@@ -100,6 +101,8 @@ export class ResultadosPage {
 
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  /** La constancia mensual es solo de administración (el backend también lo exige). */
+  protected readonly auth = inject(AuthService);
   private readonly realtime = inject(RealtimeService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -181,6 +184,11 @@ export class ResultadosPage {
   }
 
   /** Refresco sin esqueleto: la tabla sigue a la vista mientras llega. */
+  /** La constancia mensual de entregas, fuera del layout para imprimirla. */
+  protected abrirConstancia(): void {
+    void this.router.navigate(['/imprimir/constancia-resultados']);
+  }
+
   protected actualizar(): void {
     this.entregas.reload();
   }

@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
+import { ConstanciaMensual } from './constancia/constancia.model';
 import { EstadoCola, TipoInforme } from './resultado.model';
 
 /**
@@ -67,4 +68,16 @@ export class ResultadosService {
   renovarYEnviar(informeId: string): Promise<{ enviado: true; mensajeId: string }> {
     return this.api.post<{ enviado: true; mensajeId: string }>(`/resultados/${informeId}/renovar-y-enviar`);
   }
+
+  /**
+   * Una página de la constancia mensual de entregas (solo administración). Es
+   * una promesa y no un `ResourceRequest`: la pantalla de impresión pide todas
+   * las páginas una tras otra, y una constancia a medias no se imprime.
+   */
+  constanciaPagina(mes: string, pagina: number): Promise<ConstanciaMensual> {
+    return this.api.get<ConstanciaMensual>('/resultados/constancia', { mes, pagina, limite: LIMITE_CONSTANCIA });
+  }
 }
+
+/** El tope del backend por página: menos peticiones para un mes entero. */
+export const LIMITE_CONSTANCIA = 100;

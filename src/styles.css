@@ -1030,3 +1030,17 @@ tr:hover .celda-sticky {
   cursor: progress;
   opacity: 0.7;
 }
+
+/* ── Impresión ─────────────────────────────────────────────────────────
+   `html` y `body` miden el 100 % de la ventana y ocultan el desborde: en
+   papel eso deja solo la PRIMERA hoja de un documento largo (la constancia
+   de entregas de Resultados, 18/11/2026). Al imprimir crecen con el
+   contenido. Cada vista decide lo demás con su propio `@media print`. */
+@media print {
+  html,
+  body {
+    height: auto;
+    overflow: visible;
+    background: var(--color-background);
+  }
+}

@@ -1,0 +1,206 @@
+/* La constancia va fuera del layout: la página entera es el documento. */
+:host { display: block; min-height: 100dvh; background: var(--color-background); }
+
+.constancia {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+@media (min-width: 640px) {
+  .constancia { padding: 24px; }
+}
+
+/* ── Barra de pantalla ─────────────────────────────────────────────── */
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 16px;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 40px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  border-radius: 12px;
+}
+
+.volver:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+.barra-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+/* «Noviembre de 2026 (en curso)» son ~27 caracteres a 14 px: ~210 px + flecha. */
+.barra-mes { width: 15.5rem; max-width: 100%; }
+
+.cargando {
+  margin-bottom: 12px;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Documento ─────────────────────────────────────────────────────── */
+.documento { color: var(--color-text-dark); }
+
+.doc-cabecera { margin-bottom: 16px; }
+
+.doc-entidad {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.doc-cabecera h1 {
+  margin-top: 2px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.doc-datos {
+  margin-top: 8px;
+  display: grid;
+  gap: 2px;
+  font-size: 0.8125rem;
+}
+
+.doc-datos > div { display: flex; flex-wrap: wrap; gap: 0 6px; }
+.doc-datos dt { font-weight: 600; }
+.doc-datos dt::after { content: ':'; }
+
+.doc-aviso {
+  margin-top: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+/* Seis cifras: dos columnas en el teléfono, tres en tableta, seis en escritorio. */
+.resumen {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 640px) { .resumen { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .resumen { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+
+.resumen > div {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+
+.resumen dt { font-size: 0.6875rem; color: var(--color-text-muted); line-height: 1.3; }
+.resumen dd { font-size: 1.125rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* La tabla tiene ocho columnas: en pantalla estrecha se desplaza dentro de su
+   caja; en papel (A4 apaisado) cabe entera con la letra de impresión. */
+.constancia-tabla-caja {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.constancia-tabla-caja:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+.tabla {
+  width: 100%;
+  min-width: 1100px;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.tabla th,
+.tabla td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.tabla td + td,
+.tabla th + th { border-left: 1px solid var(--color-border); }
+
+.tabla thead th {
+  background: var(--color-bg-workspace);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tabla tbody tr:last-child td { border-bottom: 0; }
+
+/* Cada dato en su línea: en papel se lee de arriba abajo, sin píldoras. */
+.tabla td > span,
+.pedido > span { display: block; }
+
+.pedido + .pedido { margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--color-border); }
+
+.col-n { width: 2.5rem; text-align: right; font-variant-numeric: tabular-nums; }
+.fuerte { font-weight: 600; }
+.suave { color: var(--color-text-muted); }
+.tabular { font-variant-numeric: tabular-nums; }
+.marca { margin-left: 2px; font-weight: 700; }
+
+.notas {
+  margin-top: 16px;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.notas h2 { font-size: 0.8125rem; font-weight: 700; margin-bottom: 4px; }
+.notas ul { list-style: disc; padding-left: 18px; display: grid; gap: 2px; }
+
+.firmas {
+  margin-top: 48px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px 64px;
+  font-size: 0.75rem;
+}
+
+.firmas > div { width: 16rem; max-width: 100%; text-align: center; }
+.linea { display: block; height: 40px; border-bottom: 1px solid var(--color-text-dark); margin-bottom: 4px; }
+
+/* ── Papel ─────────────────────────────────────────────────────────── */
+@page {
+  size: A4 landscape;
+  margin: 10mm;
+}
+
+@media print {
+  :host { min-height: 0; }
+  .no-imprimir { display: none !important; }
+  .constancia { max-width: none; padding: 0; }
+  .doc-cabecera h1 { font-size: 14pt; }
+  .doc-datos, .doc-aviso { font-size: 8.5pt; }
+  .resumen { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }
+  .resumen > div { padding: 4px 6px; }
+  .resumen dt { font-size: 7pt; }
+  .resumen dd { font-size: 11pt; }
+  .constancia-tabla-caja { overflow: visible; }
+  .tabla { min-width: 0; font-size: 7.5pt; }
+  .tabla th, .tabla td { padding: 3px 4px; }
+  /* La cabecera se repite en cada hoja y una fila no se parte entre dos. */
+  .tabla thead { display: table-header-group; }
+  .tabla tr { break-inside: avoid; }
+  .notas { font-size: 7.5pt; break-inside: avoid; }
+  .firmas { break-inside: avoid; margin-top: 32px; font-size: 8pt; }
+}

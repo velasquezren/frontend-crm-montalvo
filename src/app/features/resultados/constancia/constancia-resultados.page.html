@@ -1,0 +1,181 @@
+<div class="constancia">
+  <!-- ── Barra de pantalla: no sale en papel ─────────────────────────── -->
+  <div class="barra no-imprimir">
+    <a routerLink="/resultados" class="volver">
+      <app-icon name="chevron-left" [size]="16" />
+      Volver a Resultados
+    </a>
+    <div class="barra-acciones">
+      <div class="barra-mes">
+        <app-select label="Mes" [value]="mes()" (valueChange)="cambiarMes($event)">
+          @for (m of meses; track m.valor) {
+            <option [value]="m.valor">{{ m.etiqueta }}</option>
+          }
+        </app-select>
+      </div>
+      <app-button icon="file-text" [disabled]="!listo() || !filas().length" (clicked)="imprimir()">Imprimir</app-button>
+    </div>
+  </div>
+
+  @if (constancia.isLoading()) {
+    <p class="cargando" role="status">
+      @if (progreso(); as p) {
+        Cargando {{ p.cargados }} de {{ p.total }} avisos de {{ nombreMes() }}…
+      } @else {
+        Cargando los avisos de {{ nombreMes() }}…
+      }
+    </p>
+    <app-loading-skeleton shape="text" height="6rem" />
+    <app-loading-skeleton shape="text" height="3rem" />
+    <app-loading-skeleton shape="text" height="3rem" />
+  } @else if (constancia.error()) {
+    <!-- Antes que el contenido: con el portal caído la constancia no existe,
+         y no se imprime a medias. -->
+    <app-error-carga
+      titulo="No se pudo armar la constancia"
+      descripcion="El CRM o el portal de resultados no respondieron. Sin los datos del portal la constancia quedaría incompleta: inténtalo de nuevo en un momento."
+      (reintentar)="constancia.reload()" />
+  } @else if (constancia.hasValue()) {
+    @let c = constancia.value();
+    <article class="documento" aria-labelledby="titulo-constancia">
+      <header class="doc-cabecera">
+        <p class="doc-entidad">Clínica Montalvo</p>
+        <h1 id="titulo-constancia">Constancia de entrega electrónica de resultados</h1>
+        <dl class="doc-datos">
+          <div><dt>Periodo</dt><dd>{{ nombreMes() }} · avisos enviados del {{ c.desde | fechaClinica: 'dd/MM/yyyy' }} al {{ ultimoDia() | fechaClinica: 'dd/MM/yyyy' }}, hora de Bolivia</dd></div>
+          <div><dt>Generada</dt><dd>{{ c.generadoEn | fechaClinica: "dd/MM/yyyy 'a las' HH:mm" }}@if (auth.user(); as u) { por {{ u.nombre }}}</dd></div>
+          <div><dt>Medio</dt><dd>WhatsApp Business de la clínica y portal de resultados con enlace personal del paciente</dd></div>
+        </dl>
+        @if (enCurso()) {
+          <p class="doc-aviso">El mes está en curso: la constancia incluye los avisos enviados hasta el momento en que se generó.</p>
+        }
+      </header>
+
+      @if (!filas().length) {
+        <app-empty-state icon="file-text" [title]="'No se enviaron avisos de resultados en ' + nombreMes()" description="Elige otro mes arriba." />
+      } @else {
+        @let r = resumen();
+        <dl class="resumen">
+          <div><dt>Avisos enviados</dt><dd>{{ r.avisos }}</dd></div>
+          <div><dt>Entregados al teléfono</dt><dd>{{ r.entregados }}</dd></div>
+          <div><dt>Leídos</dt><dd>{{ r.leidos }}</dd></div>
+          <div><dt>No entregados</dt><dd>{{ r.noEntregados }}</dd></div>
+          <div><dt>Informe abierto en el portal</dt><dd>{{ r.abiertos }}</dd></div>
+          <div><dt>PDF pedido por WhatsApp</dt><dd>{{ r.pdfPedidos }}</dd></div>
+        </dl>
+
+        <div class="constancia-tabla-caja" tabindex="0" role="region" aria-label="Detalle de los avisos">
+          <table class="tabla">
+            <caption class="sr-only">Avisos de resultados enviados en {{ nombreMes() }}</caption>
+            <thead>
+              <tr>
+                <th scope="col" class="col-n">N.º</th>
+                <th scope="col">Envío</th>
+                <th scope="col">Paciente</th>
+                <th scope="col">Enviado a</th>
+                <th scope="col">Informe enviado</th>
+                <th scope="col">WhatsApp</th>
+                <th scope="col">Portal de resultados</th>
+                <th scope="col">PDF por WhatsApp</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (f of filas(); track f.avisoId; let i = $index) {
+                <tr>
+                  <td class="col-n">{{ i + 1 }}</td>
+                  <td>
+                    <span class="fuerte">{{ f.enviadoEn | fechaClinica: 'dd/MM/yyyy' }}</span>
+                    <span class="tabular">{{ f.enviadoEn | fechaClinica: 'HH:mm:ss' }}</span>
+                    <span class="suave">por {{ f.enviadoPor.nombre ?? 'cuenta eliminada' }}@if (f.enviadoPor.usuarioFilemaker) { · FileMaker: {{ f.enviadoPor.usuarioFilemaker }}}</span>
+                  </td>
+                  <td>
+                    @if (f.informe) {
+                      <span class="fuerte">{{ f.informe.paciente.nombre }}</span>
+                      @if (f.informe.paciente.pac) { <span class="suave">PAC {{ f.informe.paciente.pac }}</span> }
+                      @if (f.informe.paciente.ci) { <span class="suave">CI {{ f.informe.paciente.ci }}</span> }
+                    } @else {
+                      <span class="suave">El informe ya no está en el portal</span>
+                    }
+                  </td>
+                  <td>
+                    @if (f.destinatario; as d) {
+                      <span class="fuerte tabular">{{ d.telefono ?? 'Usuario de WhatsApp sin número' }}@if (!d.telefonoAlEnviar) {<span class="marca" aria-label="número actual de la ficha">*</span>}</span>
+                      @if (d.otraFicha || !f.informe || d.nombre !== f.informe.paciente.nombre) {
+                        <span class="suave">WhatsApp de {{ d | nombreCliente }}</span>
+                      }
+                    } @else {
+                      <span class="suave">Ficha eliminada del CRM</span>
+                    }
+                  </td>
+                  <td>
+                    @if (f.informe) { <span class="suave">{{ nombresTipo[f.informe.tipo] }}</span> }
+                    <span class="fuerte">{{ f.estudio ?? 'Estudio sin nombre' }}</span>
+                    @if (f.informe; as inf) {
+                      <span class="suave">Estudio del {{ inf.fechaEstudio | fechaCivil: 'dd/MM/yyyy' }} · {{ inf.medico }}</span>
+                      @if (inf.estado === 'RETIRADO') {
+                        <span class="suave">Retirado del portal@if (inf.retiradoEn) { el {{ inf.retiradoEn | fechaClinica: 'dd/MM/yyyy' }}}</span>
+                      }
+                    }
+                  </td>
+                  <td>
+                    <span class="fuerte">{{ estadoWhatsapp(f.whatsapp) }}</span>
+                    @if (f.whatsapp?.entregadoEn; as en) { <span class="tabular">Entregado {{ en | fechaClinica: 'dd/MM/yyyy HH:mm' }}</span> }
+                    @if (f.whatsapp?.leidoEn; as en) { <span class="tabular">Leído {{ en | fechaClinica: 'dd/MM/yyyy HH:mm' }}</span> }
+                  </td>
+                  <td>
+                    @if (f.portal; as p) {
+                      @if (p.primera) {
+                        <span class="fuerte tabular">Abierto {{ p.primera | fechaClinica: 'dd/MM/yyyy HH:mm' }}</span>
+                      } @else {
+                        <span class="fuerte">Sin abrir</span>
+                      }
+                      @if (p.pdf; as u) { <span class="tabular">PDF visto {{ u.veces }} {{ u.veces === 1 ? 'vez' : 'veces' }}@if (u.veces > 1) {, último {{ u.ultima | fechaClinica: 'dd/MM HH:mm' }}}</span> }
+                      @if (p.original; as u) { <span class="tabular">PDF guardado {{ u.veces }} {{ u.veces === 1 ? 'vez' : 'veces' }}</span> }
+                      @if (p.adjuntos; as u) { <span class="tabular">Imágenes o videos guardados {{ u.veces }} {{ u.veces === 1 ? 'vez' : 'veces' }}</span> }
+                    } @else {
+                      <span class="suave">Sin datos: el informe ya no está en el portal</span>
+                    }
+                  </td>
+                  <td>
+                    @for (pedido of f.pdfPorWhatsapp; track pedido.solicitadoEn) {
+                      <span class="pedido">
+                        <span class="tabular">Pedido {{ pedido.solicitadoEn | fechaClinica: 'dd/MM/yyyy HH:mm' }}</span>
+                        @if (pedido.envio; as e) {
+                          <span class="fuerte">{{ estadoWhatsapp(e) }}</span>
+                          @if (e.entregadoEn; as en) { <span class="tabular">Entregado {{ en | fechaClinica: 'dd/MM HH:mm' }}</span> }
+                        } @else {
+                          <span class="suave">Sin envío automático: lo atiende recepción</span>
+                        }
+                      </span>
+                    } @empty {
+                      <span class="suave">—</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <section class="notas" aria-label="Cómo leer esta constancia">
+          <h2>Cómo leer esta constancia</h2>
+          <ul>
+            <li><strong>Envío</strong>: fecha y hora (Bolivia) en que el CRM registró el aviso y lo entregó a WhatsApp, y la cuenta que lo envió.</li>
+            <li><strong>Entregado</strong> y <strong>Leído</strong>: las confirmaciones que envía WhatsApp. «Leído» solo llega si el paciente tiene activadas las confirmaciones de lectura; sin ella el mensaje pudo leerse igual.</li>
+            <li><strong>Abierto</strong>: la primera vez que se usó el enlace personal del aviso para abrir el informe en el portal o ver su PDF. El portal registra el uso del enlace, no quién lo usó.</li>
+            <li><strong>PDF visto</strong> y <strong>guardado</strong>: veces que el PDF se mostró en el teléfono y veces que se descargó en calidad original.</li>
+            <li><strong>PDF por WhatsApp</strong>: el paciente tocó «Recibir PDF» en el aviso (o eligió el informe en «Mis informes») y el CRM le envió el documento por el mismo chat.</li>
+            @if (hayNumerosActuales()) {
+              <li><span class="marca">*</span> Aviso anterior al 18/11/2026: no guardó el número al que salió. Se muestra el número actual de la ficha del paciente.</li>
+            }
+          </ul>
+        </section>
+
+        <footer class="firmas">
+          <div><span class="linea"></span>Responsable de la clínica</div>
+          <div><span class="linea"></span>Firma y sello</div>
+        </footer>
+      }
+    </article>
+  }
+</div>
