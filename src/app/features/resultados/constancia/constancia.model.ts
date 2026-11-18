@@ -195,6 +195,64 @@ export function grupoDeUrl(valor: string | null): GrupoConstancia | null {
   return GRUPOS_CONSTANCIA.find(g => g === valor) ?? null;
 }
 
+/** Filtro por lo que pasó con el aviso. Cada uno es una pregunta que se hace a la constancia. */
+export const FILTROS_ESTADO = {
+  TODOS: 'Todos los estados',
+  ENTREGADOS: 'Entregados al teléfono',
+  LEIDOS: 'Leídos',
+  SIN_CONFIRMAR: 'Sin confirmación de entrega',
+  NO_ENTREGADOS: 'No entregados',
+  ABIERTOS: 'Abiertos en el portal',
+  SIN_ABRIR: 'Sin abrir en el portal',
+  PDF_PEDIDO: 'Con PDF pedido por WhatsApp',
+} as const;
+export type FiltroEstado = keyof typeof FILTROS_ESTADO;
+
+export function filtroEstadoDeUrl(valor: string | null): FiltroEstado {
+  /* `hasOwn`, no `in`: «toString» está en el prototipo y la URL la escribe cualquiera. */
+  return valor && Object.hasOwn(FILTROS_ESTADO, valor) ? (valor as FiltroEstado) : 'TODOS';
+}
+
+export function cumpleEstado(f: FilaConstancia, filtro: FiltroEstado): boolean {
+  switch (filtro) {
+    case 'TODOS': return true;
+    case 'ENTREGADOS': return llegoAlTelefono(f.whatsapp);
+    case 'LEIDOS': return !!f.whatsapp?.leidoEn || f.whatsapp?.estado === 'LEIDO';
+    case 'SIN_CONFIRMAR': return f.whatsapp?.estado !== 'FALLIDO' && !llegoAlTelefono(f.whatsapp);
+    case 'NO_ENTREGADOS': return f.whatsapp?.estado === 'FALLIDO';
+    case 'ABIERTOS': return !!f.portal?.primera;
+    /* Sin datos del portal no consta que se abriera, pero tampoco que no: no entra. */
+    case 'SIN_ABRIR': return !!f.portal && !f.portal.primera;
+    case 'PDF_PEDIDO': return f.pdfPorWhatsapp.length > 0;
+  }
+}
+
+/** Minúsculas y sin tildes: «García» se encuentra escribiendo «garcia». */
+function normalizar(texto: string): string {
+  return texto.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+}
+
+/**
+ * ¿El aviso coincide con lo que se escribió en «Buscar»? Por número, en
+ * dígitos (así «7000 0001», «+591 70000001» y «70000001» encuentran lo mismo),
+ * y por texto en nombre del paciente o de quien recibió el WhatsApp, PAC, CI,
+ * estudio, médico y cuenta que lo envió. Vacío = todos.
+ */
+export function coincideBusqueda(f: FilaConstancia, busqueda: string): boolean {
+  const texto = normalizar(busqueda);
+  if (!texto) return true;
+  const digitos = texto.replace(/\D/g, '');
+  /* Lo que se escribió es un número (con espacios, + o guiones): se compara en dígitos. */
+  if (digitos.length >= 3 && /^[\d\s+()-]+$/.test(texto)) {
+    return [f.destinatario?.telefono, f.informe?.paciente.ci, f.informe?.paciente.pac]
+      .some(v => !!v && v.replace(/\D/g, '').includes(digitos));
+  }
+  return [
+    f.destinatario?.nombre, f.destinatario?.telefono, f.informe?.paciente.nombre, f.informe?.paciente.pac,
+    f.informe?.paciente.ci, f.estudio, f.informe?.medico, f.enviadoPor.nombre, f.enviadoPor.usuarioFilemaker,
+  ].some(v => !!v && normalizar(v).includes(texto));
+}
+
 /** «2026-11». La URL la escribe cualquiera: lo que no es un mes vale el de por defecto. */
 export function mesDeUrl(valor: string | null, porDefecto: string): string {
   return valor && /^\d{4}-(0[1-9]|1[0-2])$/.test(valor) ? valor : porDefecto;

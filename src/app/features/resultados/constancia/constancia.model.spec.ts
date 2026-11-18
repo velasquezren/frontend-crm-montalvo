@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  detalleWhatsapp, estadoWhatsapp, EntregaWhatsapp, etiquetaWhatsapp, FilaConstancia, grupoDeUrl, mesAnterior, mesDeUrl, mesesParaElegir,
+  coincideBusqueda, cumpleEstado, detalleWhatsapp, estadoWhatsapp, filtroEstadoDeUrl, EntregaWhatsapp, etiquetaWhatsapp, FilaConstancia, grupoDeUrl, mesAnterior, mesDeUrl, mesesParaElegir,
   nombreDelMes, porcentaje, resumenConstancia, seccionesPorTipo, varianteWhatsapp,
 } from './constancia.model';
 
@@ -118,5 +118,39 @@ describe('separada por tipo de informe', () => {
     expect(grupoDeUrl('SIN_PORTAL')).toBe('SIN_PORTAL');
     expect(grupoDeUrl('laboratorio')).toBeNull();
     expect(grupoDeUrl(null)).toBeNull();
+  });
+});
+
+describe('filtros de la constancia', () => {
+  const conDatos = fila({
+    destinatario: { nombre: 'José Pérez', telefono: '+59170012345', telefonoAlEnviar: true, otraFicha: false },
+    informe: { ...informe('ECOGRAFIA')!, paciente: { nombre: 'María García', pac: 'PAC33009', ci: '4567890' } },
+    estudio: 'Ecografía obstétrica',
+  });
+
+  it('busca por número en dígitos, se escriba como se escriba', () => {
+    for (const q of ['70012345', '+591 700 12345', '7001-2345', '12345']) expect(coincideBusqueda(conDatos, q)).toBe(true);
+    expect(coincideBusqueda(conDatos, '70099999')).toBe(false);
+    /* El CI y el número del PAC también son números. */
+    expect(coincideBusqueda(conDatos, '4567890')).toBe(true);
+    expect(coincideBusqueda(conDatos, '33009')).toBe(true);
+  });
+
+  it('busca por texto sin importar tildes ni mayúsculas', () => {
+    for (const q of ['garcia', 'MARÍA', 'jose perez', 'pac33009', 'obstetrica', 'sintética']) expect(coincideBusqueda(conDatos, q)).toBe(true);
+    expect(coincideBusqueda(conDatos, 'gonzales')).toBe(false);
+    expect(coincideBusqueda(conDatos, '   ')).toBe(true);
+  });
+
+  it('cada estado es una pregunta: lo que no consta no entra', () => {
+    const leido = fila({ whatsapp: whatsapp({ estado: 'LEIDO' }), portal: { primera: 'x', pdf: null, original: null, adjuntos: null } });
+    const fallido = fila({ whatsapp: whatsapp({ estado: 'FALLIDO' }), portal: { primera: null, pdf: null, original: null, adjuntos: null } });
+    const sinPortal = fila({ portal: null });
+    expect([cumpleEstado(leido, 'ENTREGADOS'), cumpleEstado(leido, 'LEIDOS'), cumpleEstado(leido, 'ABIERTOS')]).toEqual([true, true, true]);
+    expect([cumpleEstado(fallido, 'NO_ENTREGADOS'), cumpleEstado(fallido, 'SIN_CONFIRMAR'), cumpleEstado(fallido, 'SIN_ABRIR')]).toEqual([true, false, true]);
+    expect(cumpleEstado(sinPortal, 'SIN_CONFIRMAR')).toBe(true);
+    /* Sin datos del portal no consta que no se abriera. */
+    expect(cumpleEstado(sinPortal, 'SIN_ABRIR')).toBe(false);
+    expect([filtroEstadoDeUrl('LEIDOS'), filtroEstadoDeUrl('toString'), filtroEstadoDeUrl(null)]).toEqual(['LEIDOS', 'TODOS', 'TODOS']);
   });
 });

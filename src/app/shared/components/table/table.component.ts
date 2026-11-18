@@ -36,7 +36,7 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
   selector: 'app-table',
   encapsulation: ViewEncapsulation.None,
   template: `
-    <div class="crm-table-marco" [class.crm-table-dense]="dense()">
+    <div class="crm-table-marco" [class.crm-table-dense]="dense()" [class.crm-table-plana]="plana()">
       <div class="crm-table-scroll" [style.max-height]="maxHeight()" tabindex="0"
            role="region" [attr.aria-label]="etiqueta()">
         <table class="crm-table">
@@ -243,6 +243,29 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
     .crm-table:has(thead th:nth-child(14).text-left) tfoot td:nth-child(14) { text-align: left; }
 
     /* Modo denso (ideal para planillas de datos / Excel) */
+    /* Plana: para un documento (la constancia de Resultados). Sin marco, radio
+       ni sombra —una tabla enmarcada dentro de una hoja son cajas dentro de
+       cajas—; la cabecera es texto sobre una raya, no una banda gris. */
+    .crm-table-plana {
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .crm-table-plana .crm-table thead th {
+      background: var(--color-background);
+      color: var(--color-text-dark);
+      box-shadow: inset 0 -1px 0 var(--color-text-dark);
+    }
+
+    .crm-table-plana .crm-table tbody tr:hover { background: none; }
+
+    .crm-table-plana .crm-table tfoot td {
+      background: var(--color-background);
+      box-shadow: inset 0 1px 0 var(--color-text-dark);
+    }
+
     /* En papel no hay scroll ni pegajosos: el marco deja ver todo, la cabecera
        se repite en cada hoja y una fila no se parte entre dos (la constancia de
        Resultados se imprime así). */
@@ -276,4 +299,6 @@ export class TableComponent {
   readonly etiqueta = input('Tabla de datos');
   readonly dense = input<boolean>(false);
   readonly maxHeight = input<string | undefined>(undefined);
+  /** Sin marco ni sombra: una tabla dentro de un documento, no una superficie propia. */
+  readonly plana = input<boolean>(false);
 }

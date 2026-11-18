@@ -1,31 +1,31 @@
-/* La constancia va fuera del layout: la página entera es el documento. */
-:host { display: block; min-height: 100dvh; background: var(--color-bg-workspace); }
+/* La constancia va fuera del layout y es un documento, no un panel: una
+   página blanca sin tarjetas. La jerarquía la hacen el tipo y unas pocas
+   rayas, no cajas dentro de cajas. */
+:host { display: block; min-height: 100dvh; background: var(--color-background); }
 
-.constancia {
+.pagina {
   max-width: 1400px;
   margin: 0 auto;
   padding: 16px;
 }
 
 @media (min-width: 640px) {
-  .constancia { padding: 24px; }
+  .pagina { padding: 24px 32px; }
 }
 
 /* ── Barra de pantalla ─────────────────────────────────────────────── */
 .barra {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px 16px;
-  margin-bottom: 16px;
+  padding-bottom: 16px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .volver {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  min-height: 40px;
+  min-height: 32px;
+  margin-bottom: 8px;
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-primary);
@@ -34,23 +34,41 @@
 
 .volver:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 
-.barra-acciones {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
+/* Los controles en rejilla, cuentas hechas sobre el ancho útil:
+   - ≥1280 px (≥1216 útiles): buscar (≥14rem) + tres selects de 15,5rem
+     («Noviembre de 2026 (en curso)», «Con PDF pedido por WhatsApp»: ~27
+     caracteres a 14 px ≈ 210 px + flecha) + Imprimir (~120 px) + 4 huecos de
+     12 px ≈ 1136 px. Cabe en una fila.
+   - 640–1279: dos columnas, el buscador a lo ancho.
+   - teléfono (358 px útiles): una columna. */
+.filtros {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: end;
   gap: 12px;
 }
 
-/* «Noviembre de 2026 (en curso)» son ~27 caracteres a 14 px: ~210 px + flecha.
-   «Informes que ya no están en el portal (12)» no cabe en 15,5rem: se corta en
-   el control cerrado y se lee entero al abrirlo. En el teléfono, cada uno a lo ancho. */
-.barra-mes,
-.barra-tipo { width: 15.5rem; max-width: 100%; }
-
-@media (max-width: 639px) {
-  .barra-acciones { width: 100%; }
-  .barra-mes, .barra-tipo { width: 100%; }
+@media (min-width: 640px) {
+  .filtros { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .filtro-buscar { grid-column: 1 / -1; }
 }
+
+@media (min-width: 1280px) {
+  .filtros { grid-template-columns: minmax(14rem, 1fr) repeat(3, 15.5rem) auto; }
+  .filtro-buscar { grid-column: auto; }
+}
+
+.filtro-activo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-top: 12px;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.filtro-activo > span:first-child { font-weight: 600; color: var(--color-text-dark); }
 
 .cargando {
   margin-bottom: 12px;
@@ -59,34 +77,26 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Documento: la hoja ────────────────────────────────────────────── */
+/* ── Documento ─────────────────────────────────────────────────────── */
 .documento {
   color: var(--color-text-dark);
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  box-shadow: var(--shadow-subtle);
-  padding: 20px 16px;
-  /* Que las insignias y los fondos suaves salgan también en papel. */
+  /* Que el verde de los estados salga también en papel. */
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
 
-@media (min-width: 640px) {
-  .documento { padding: 32px; }
-}
-
-.doc-cabecera {
+/* Membrete: la única raya de color del documento. */
+.membrete {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 12px 32px;
-  padding-bottom: 16px;
+  gap: 16px 48px;
+  padding-bottom: 14px;
   border-bottom: 2px solid var(--color-primary);
 }
 
-.doc-entidad {
+.entidad {
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -94,109 +104,76 @@
   color: var(--color-primary);
 }
 
-.doc-titulo h1 {
+.membrete h1 {
   margin-top: 4px;
   font-size: 1.375rem;
   font-weight: 700;
   line-height: 1.25;
 }
 
-.doc-alcance {
-  margin-top: 4px;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--color-primary);
-}
-
-.doc-datos {
+.ficha {
   display: grid;
   gap: 2px;
   font-size: 0.8125rem;
-  max-width: 34rem;
+  line-height: 1.45;
 }
 
-.doc-datos > div { display: flex; flex-wrap: wrap; gap: 0 6px; }
-.doc-datos dt { font-weight: 600; min-width: 4.5rem; }
-.doc-datos dd { color: var(--color-text-muted); }
+.ficha > div { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); gap: 8px; }
+.ficha dt { color: var(--color-text-muted); }
 
-.doc-aviso {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.advertencia {
   margin-top: 12px;
   font-size: 0.8125rem;
-  font-weight: 500;
+  line-height: 1.5;
 }
 
-/* Seis cifras: dos columnas en el teléfono, tres en tableta, seis en escritorio. */
-.resumen {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+/* Resumen de un solo tipo: cifras en fila, sin casillas. */
+.cifras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 40px;
   margin-top: 20px;
 }
 
-@media (min-width: 640px) { .resumen { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (min-width: 1024px) { .resumen { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.cifras dt { font-size: 0.75rem; color: var(--color-text-muted); }
 
-.resumen > div {
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 10px 12px;
-}
-
-.resumen > .resumen-total {
-  background: var(--color-bg-light);
-  border-color: color-mix(in srgb, var(--color-primary) 25%, var(--color-border));
-}
-
-.resumen dt { font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.3; }
-
-.resumen dd {
-  margin-top: 2px;
-  font-size: 1.375rem;
+.cifras dd {
+  font-size: 1.25rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  line-height: 1.2;
+  line-height: 1.3;
 }
 
-.resumen-total dd { color: var(--color-primary); }
-.resumen dd .crm-porcentaje { margin-left: 2px; color: var(--color-text-muted); }
-
-.subtitulo {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  margin-bottom: 8px;
+.pct {
+  margin-left: 2px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
-.por-tipo { margin-top: 24px; }
+/* ── Bloques: resumen por tipo, una sección por tipo, notas ─────────── */
+.bloque { margin-top: 36px; }
+.bloque:first-of-type { margin-top: 24px; }
 
-/* ── Una sección por tipo de informe ───────────────────────────────── */
-.seccion { margin-top: 32px; }
-
-.seccion-cabecera {
-  display: grid;
-  gap: 2px;
-  margin-bottom: 10px;
-  padding-left: 12px;
-  border-left: 3px solid var(--color-secondary);
-}
-
-.seccion-titulo {
+.titulo-bloque {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0 10px;
-  font-size: 1.0625rem;
+  font-size: 1rem;
   font-weight: 700;
 }
 
-.seccion-cuenta {
+.cuenta {
   font-size: 0.8125rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
 }
+
+.seccion .crm-meta { margin-top: 2px; }
+.bloque app-table { display: block; margin-top: 10px; }
 
 /* ── Tablas: lo que va DENTRO del átomo (thead/tbody son de esta plantilla) ──
    `.constancia-tabla` es el host de <app-table>, así que estas reglas pesan más
@@ -220,9 +197,9 @@
 .tabla-resumen td { font-variant-numeric: tabular-nums; }
 
 /* Ocho columnas. En una tabla automática el `width` de la cabecera es el
-   MÍNIMO de la columna: suman ~74rem (~1190 px), así que a 1352 px útiles cabe
-   y sobra, y en el teléfono (358 px) se desplaza dentro del marco del átomo,
-   que es una región con foco y nombre. En papel se sueltan (ver `@media print`). */
+   MÍNIMO de la columna: suman ~74rem (~1190 px), así que a 1336 px útiles cabe,
+   y en el teléfono (358 px) se desplaza dentro del átomo, que es una región con
+   foco y nombre. En papel se sueltan (ver `@media print`). */
 .col-n { width: 2.75rem; text-align: right; font-variant-numeric: tabular-nums; color: var(--color-text-muted); }
 .col-envio { width: 8.5rem; }
 .col-paciente { width: 11rem; }
@@ -236,9 +213,19 @@
 .tabla-detalle td > span,
 .pedido > span { display: block; }
 
-.tabla-detalle app-badge { display: block; margin-bottom: 4px; }
-
 .pedido + .pedido { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--color-border); }
+
+/* El estado es una palabra con su ícono, no una píldora: en un documento se lee, no se mira. */
+.tabla-detalle .estado {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.tabla-detalle .estado-ok { color: var(--color-primary); }
+.tabla-detalle .estado-falla { color: var(--color-text-critical); }
 
 .fuerte { font-weight: 600; }
 .suave { color: var(--color-text-muted); }
@@ -247,18 +234,25 @@
 
 /* ── Cierre ────────────────────────────────────────────────────────── */
 .notas {
-  margin-top: 32px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: var(--color-bg-workspace);
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
   font-size: 0.8125rem;
   line-height: 1.5;
 }
 
-.notas ul { list-style: disc; padding-left: 18px; display: grid; gap: 4px; }
+.notas ul {
+  margin-top: 6px;
+  list-style: disc;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+  color: var(--color-text-muted);
+}
+
+.notas strong { color: var(--color-text-dark); }
 
 .firmas {
-  margin-top: 56px;
+  margin-top: 64px;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-around;
@@ -289,30 +283,26 @@
 }
 
 @media print {
-  :host { min-height: 0; background: var(--color-background); }
+  :host { min-height: 0; }
   .no-imprimir { display: none !important; }
-  .constancia { max-width: none; padding: 0; }
-  .documento { border: 0; border-radius: 0; box-shadow: none; padding: 0; }
-  .doc-titulo h1 { font-size: 15pt; }
-  .doc-alcance { font-size: 10pt; }
-  .doc-datos, .doc-aviso { font-size: 8.5pt; }
-  .resumen { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; margin-top: 10px; }
-  .resumen > div { padding: 4px 8px; }
-  .resumen dt { font-size: 7pt; }
-  .resumen dd { font-size: 12pt; }
-  .subtitulo { font-size: 10pt; margin-bottom: 4px; }
-  .por-tipo { margin-top: 12px; break-inside: avoid; }
-  /* Cada tipo de informe empieza en hoja nueva, salvo que sea el único y no haya resumen por tipo. */
-  .por-tipo ~ .seccion { break-before: page; margin-top: 0; }
-  .seccion { margin-top: 14px; }
-  .seccion-cabecera { margin-bottom: 6px; break-after: avoid; }
-  .seccion-titulo { font-size: 11pt; }
-  .seccion-cabecera .crm-meta { font-size: 7.5pt; }
+  .pagina { max-width: none; padding: 0; }
+  .membrete h1 { font-size: 15pt; }
+  .ficha, .advertencia { font-size: 8.5pt; }
+  .cifras { margin-top: 10px; gap: 6px 28px; }
+  .cifras dt { font-size: 7pt; }
+  .cifras dd { font-size: 12pt; }
+  .pct { font-size: 7pt; }
+  .bloque, .bloque:first-of-type { margin-top: 14px; }
+  .titulo-bloque { font-size: 11pt; break-after: avoid; }
+  .seccion .crm-meta { font-size: 7.5pt; break-after: avoid; }
+  .bloque app-table { margin-top: 6px; }
+  /* Cada tipo de informe empieza en hoja nueva; el primero sigue al resumen. */
+  .seccion + .seccion { break-before: page; margin-top: 0; }
+  .tabla-resumen { break-inside: avoid; }
   .constancia-tabla th { font-size: 6.5pt; padding: 4px 5px; }
   .constancia-tabla td { font-size: 7.5pt; padding: 3px 5px; }
   .col-envio, .col-paciente, .col-destino, .col-informe, .col-whatsapp, .col-portal, .col-pdf { width: auto; }
   .col-n { width: 1.5rem; }
-  .tabla-detalle app-badge { margin-bottom: 2px; }
-  .notas { margin-top: 14px; padding: 8px 10px; font-size: 7.5pt; break-inside: avoid; }
+  .notas { padding-top: 8px; font-size: 7.5pt; break-inside: avoid; }
   .firmas { break-inside: avoid; margin-top: 36px; font-size: 8pt; }
 }

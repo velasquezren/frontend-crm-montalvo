@@ -4,7 +4,6 @@ import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/auth/auth.service';
-import { BadgeComponent } from '../../../shared/components/badge/badge.component';
 import { FechaCivilPipe } from '../../../core/fechas/fecha-civil.pipe';
 import { FechaClinicaPipe } from '../../../core/fechas/fecha-clinica.pipe';
 import { fechaCivilClinica } from '../../../core/fechas/zona-clinica';
@@ -13,15 +12,21 @@ import { ButtonComponent } from '../../../shared/components/button/button.compon
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { ErrorCargaComponent } from '../../../shared/components/error-carga/error-carga.component';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { InputComponent } from '../../../shared/components/input/input.component';
 import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { SelectComponent } from '../../../shared/components/select/select.component';
 import { TableComponent } from '../../../shared/components/table/table.component';
 import { NombreClientePipe } from '../../../shared/pipes/nombre-cliente.pipe';
 import { ResultadosService } from '../resultados.service';
 import {
+  coincideBusqueda,
   ConstanciaMensual,
+  cumpleEstado,
   estadoWhatsapp,
   FilaConstancia,
+  FILTROS_ESTADO,
+  FiltroEstado,
+  filtroEstadoDeUrl,
   grupoDe,
   grupoDeUrl,
   GrupoConstancia,
@@ -60,7 +65,7 @@ import {
 @Component({
   selector: 'app-constancia-resultados-page',
   imports: [
-    RouterLink, BadgeComponent, ButtonComponent, EmptyStateComponent, ErrorCargaComponent, IconComponent, LoadingSkeletonComponent,
+    RouterLink, ButtonComponent, EmptyStateComponent, ErrorCargaComponent, IconComponent, InputComponent, LoadingSkeletonComponent,
     SelectComponent, TableComponent, NombreClientePipe, FechaClinicaPipe, FechaCivilPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -81,6 +86,11 @@ export class ConstanciaResultadosPage {
   protected readonly mes = signal(mesDeUrl(this.url.get('mes'), this.porDefecto));
   /** `null` = todos los tipos de informe. */
   protected readonly tipo = signal<GrupoConstancia | null>(grupoDeUrl(this.url.get('tipo')));
+  protected readonly estado = signal<FiltroEstado>(filtroEstadoDeUrl(this.url.get('estado')));
+  /** Lo que se escribe en «Buscar»: filtra al instante (los avisos ya están en memoria). */
+  protected readonly busqueda = signal((this.url.get('q') ?? '').slice(0, 80));
+  /** La búsqueda que va a la URL, con su pausa: nunca una navegación por tecla. */
+  private readonly busquedaEnUrl = signal(this.busqueda());
   protected readonly nombreMes = computed(() => nombreDelMes(this.mes()));
   protected readonly enCurso = computed(() => this.mes() === this.mesEnCurso);
 
@@ -108,11 +118,29 @@ export class ConstanciaResultadosPage {
 
   /** Todos los avisos del mes, de cualquier tipo. */
   private readonly todas = computed<readonly FilaConstancia[]>(() => (this.constancia.hasValue() ? this.constancia.value().datos : []));
-  /** Los del tipo elegido: lo que se ve y lo que se imprime. */
-  protected readonly filas = computed(() => {
+  /** Los del tipo elegido, antes de buscar: el «de cuántos» cuando hay filtro. */
+  private readonly delTipo = computed(() => {
     const tipo = this.tipo();
     return tipo ? this.todas().filter(f => grupoDe(f) === tipo) : this.todas();
   });
+  /** Lo que se ve y lo que se imprime. */
+  protected readonly filas = computed(() => {
+    const estado = this.estado();
+    const busqueda = this.busqueda();
+    return this.delTipo().filter(f => cumpleEstado(f, estado) && coincideBusqueda(f, busqueda));
+  });
+  /**
+   * El filtro puesto, dicho en palabras, para la cabecera del documento: una
+   * constancia filtrada impresa no puede leerse como la del mes entero.
+   */
+  protected readonly filtroAplicado = computed(() => {
+    const partes = [
+      this.estado() !== 'TODOS' ? FILTROS_ESTADO[this.estado()] : null,
+      this.busqueda().trim() ? `búsqueda «${this.busqueda().trim()}»` : null,
+    ].filter((p): p is string => !!p);
+    return partes.length ? partes.join(' · ') : null;
+  });
+  protected readonly totalDelTipo = computed(() => this.delTipo().length);
   protected readonly secciones = computed(() => seccionesPorTipo(this.filas()));
   protected readonly resumen = computed(() => resumenConstancia(this.filas()));
   /** El selector de tipo con cuántos avisos tiene cada uno en el mes; solo los que tienen. */
@@ -128,6 +156,7 @@ export class ConstanciaResultadosPage {
   /** Hay avisos anteriores al 18/11/2026 cuyo número es el actual de la ficha: la nota lo explica. */
   protected readonly hayNumerosActuales = computed(() => this.filas().some(f => f.destinatario && !f.destinatario.telefonoAlEnviar));
 
+  protected readonly filtrosEstado = Object.entries(FILTROS_ESTADO) as Array<[FiltroEstado, string]>;
   protected readonly estadoWhatsapp = estadoWhatsapp;
   protected readonly varianteWhatsapp = varianteWhatsapp;
   protected readonly etiquetaWhatsapp = etiquetaWhatsapp;
@@ -136,7 +165,17 @@ export class ConstanciaResultadosPage {
   protected readonly porcentaje = porcentaje;
 
   constructor() {
-    reflejarEnUrl(() => ({ mes: this.mes() === this.porDefecto ? null : this.mes(), tipo: this.tipo() }));
+    reflejarEnUrl(() => ({
+      mes: this.mes() === this.porDefecto ? null : this.mes(),
+      tipo: this.tipo(),
+      estado: this.estado() === 'TODOS' ? null : this.estado(),
+      q: this.busquedaEnUrl().trim() || null,
+    }));
+    effect(onCleanup => {
+      const texto = this.busqueda();
+      const pausa = setTimeout(() => this.busquedaEnUrl.set(texto), 400);
+      onCleanup(() => clearTimeout(pausa));
+    });
     /* El título es el nombre del archivo al «Guardar como PDF». Ninguna otra
        ruta pone título, así que al salir se devuelve el de siempre. */
     const tituloAnterior = this.titulo.getTitle();
@@ -153,6 +192,15 @@ export class ConstanciaResultadosPage {
 
   protected cambiarTipo(valor: string): void {
     this.tipo.set(grupoDeUrl(valor));
+  }
+
+  protected cambiarEstado(valor: string): void {
+    this.estado.set(filtroEstadoDeUrl(valor));
+  }
+
+  protected limpiarFiltros(): void {
+    this.estado.set('TODOS');
+    this.busqueda.set('');
   }
 
   protected imprimir(): void {

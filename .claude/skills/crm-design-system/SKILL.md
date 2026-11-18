@@ -189,7 +189,7 @@ que el contenido real, la página salta al cargar (CLS) y se siente barata. Ver
 | LoadingSkeleton | `<app-loading-skeleton>` | `shape`, `width`, `height` |
 | PageHeader | `<app-page-header>` | `title` (requerido), **`subtitle`** + acciones proyectadas |
 | FilterChip | `<app-filter-chip>` | `active`, `count`, `size`, `transitions` (true por defecto; false en los filtros del inbox para pintar y cambiar de estado sin fundidos) · `(clicked)` |
-| Table | `<app-table>` | `dense`, `maxHeight`, `etiqueta` (nombre de la región desplazable por teclado) — proyecta `<thead>`/`<tbody>` nativos |
+| Table | `<app-table>` | `dense`, `maxHeight`, `etiqueta` (nombre de la región desplazable por teclado), `plana` (sin marco, radio ni sombra: tabla dentro de un documento, como la constancia de Resultados; nunca enmarcar una tabla dentro de otra superficie) — proyecta `<thead>`/`<tbody>` nativos |
 | ThOrdenable | `th[appOrdenable]` | `appOrdenable` (columna, requerido), `orden`, `direccion`, `direccionInicial` · `(ordenar)` — conserva el orden de la vista (servidor en listas paginadas); proyecta `app-info-hint` fuera del botón |
 | Paginator | `<app-paginator>` | `pagina`, `totalPaginas`, `total` (requeridos), `limite` · `(cambiar)` |
 | BarChart | `<app-bar-chart>` | `items`, `mode` (BAR/COLUMN), `title`, `subtitle`, `height`, `formatType`, `origenMoneda` · `(segmentClick)` |

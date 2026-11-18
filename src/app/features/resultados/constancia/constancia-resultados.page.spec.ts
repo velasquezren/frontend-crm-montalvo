@@ -102,15 +102,17 @@ describe('constancia mensual de entregas', () => {
     http.expectOne(r => r.url.endsWith('/resultados/constancia')).flush(pagina(1, [fila(1), lab(2), lab(3)], 3, 1));
     await asentar();
 
-    const titulos = [...raiz.querySelectorAll('.seccion-titulo')].map(h => h.textContent?.replace(/\s+/g, ' ').trim());
+    const titulos = [...raiz.querySelectorAll('.seccion .titulo-bloque')].map(h => h.textContent?.replace(/\s+/g, ' ').trim());
     expect(titulos).toEqual(['Ecografías 1 aviso', 'Laboratorio 2 avisos']);
     /* El reparto por tipo, con su fila de total. */
-    expect(raiz.textContent).toContain('Por tipo de informe');
+    expect(raiz.textContent).toContain('Resumen por tipo de informe');
+    /* Un documento, no un panel: ninguna tabla enmarcada dentro de la hoja. */
+    expect(raiz.querySelectorAll('.crm-table-marco:not(.crm-table-plana)')).toHaveLength(0);
     expect(raiz.querySelector('.tabla-resumen tfoot')?.textContent).toContain('3');
     /* Cada sección dice por qué línea salió: el laboratorio no sale por la de la clínica. */
     const [eco, laboratorio] = [...raiz.querySelectorAll('.seccion')];
-    expect(eco.textContent).toContain('Línea Recepción');
-    expect(laboratorio.textContent).toContain('Línea Laboratorio CLIMON');
+    expect(eco.textContent).toContain('línea Recepción');
+    expect(laboratorio.textContent).toContain('línea Laboratorio CLIMON');
     expect(laboratorio.querySelectorAll('tbody tr')).toHaveLength(2);
     http.verify();
   });
@@ -123,9 +125,41 @@ describe('constancia mensual de entregas', () => {
     await asentar();
     expect(raiz.querySelectorAll('.seccion')).toHaveLength(1);
     expect(raiz.querySelector('.tabla-resumen')).toBeNull();
-    expect(raiz.querySelector('.doc-alcance')?.textContent).toContain('Laboratorio');
-    expect(raiz.querySelector('.resumen-total')?.textContent).toContain('1');
+    expect(raiz.querySelector('.ficha')?.textContent).toContain('Laboratorio');
+    expect(raiz.querySelector('.cifras')?.textContent).toContain('Avisos enviados1');
     expect(botonImprimir(raiz).disabled).toBe(false);
+  });
+
+  it('busca por número aunque se escriba con espacios, y la hoja dice que está filtrada', async () => {
+    const raiz = montar('/imprimir/constancia-resultados?q=7000%200002');
+    await asentar();
+    const otra = fila(2, { destinatario: { nombre: 'Otra', telefono: '+59170000002', telefonoAlEnviar: true, otraFicha: false } });
+    http.expectOne(r => r.url.endsWith('/resultados/constancia')).flush(pagina(1, [fila(1), otra], 2, 1));
+    await asentar();
+    expect(raiz.querySelectorAll('.tabla-detalle tbody tr')).toHaveLength(1);
+    expect(raiz.querySelector('.tabla-detalle tbody')?.textContent).toContain('+59170000002');
+    /* Impresa, una constancia filtrada no puede pasar por la del mes entero. */
+    expect(raiz.querySelector('.documento')?.textContent).toContain('Constancia filtrada');
+    expect(raiz.querySelector('.documento')?.textContent).toContain('incluye 1 de los 2 avisos');
+    expect(botonImprimir(raiz).disabled).toBe(false);
+  });
+
+  it('el filtro de estado deja solo los no entregados; sin coincidencias ofrece quitar los filtros', async () => {
+    const raiz = montar('/imprimir/constancia-resultados?estado=NO_ENTREGADOS');
+    await asentar();
+    const fallido = fila(2, { whatsapp: { estado: 'FALLIDO', enviadoEn: '2026-10-03T14:05:09.000Z', entregadoEn: null, leidoEn: null, codigoError: 131026 } });
+    http.expectOne(r => r.url.endsWith('/resultados/constancia')).flush(pagina(1, [fila(1), fallido], 2, 1));
+    await asentar();
+    const filas = raiz.querySelectorAll('.tabla-detalle tbody tr');
+    expect(filas).toHaveLength(1);
+    expect(filas[0].textContent).toContain('No entregado');
+    expect(filas[0].textContent).toContain('Código 131026');
+
+    const quitar = [...raiz.querySelectorAll('button')].find(b => b.textContent?.includes('Quitar filtros')) as HTMLButtonElement;
+    quitar.click();
+    await asentar();
+    expect(raiz.querySelectorAll('.tabla-detalle tbody tr')).toHaveLength(2);
+    expect(raiz.textContent).not.toContain('Constancia filtrada');
   });
 
   it('imprimir llama al diálogo del navegador', async () => {
