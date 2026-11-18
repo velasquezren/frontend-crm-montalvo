@@ -1,7 +1,9 @@
 import { EstadoMensaje } from '../../../core/api/db-enums';
 import { RespuestaPaginada } from '../../../core/api/pagination.model';
+import { BadgeVariant } from '../../../shared/components/badge/badge.component';
 import { nombreMes } from '../../../shared/models/meses';
-import { TipoInforme } from '../resultado.model';
+import { explicacionErrorWhatsapp } from '../../conversaciones/error-whatsapp';
+import { NOMBRES_TIPO, TIPOS_INFORME, TipoInforme } from '../resultado.model';
 
 /**
  * Espejo de `FilaConstancia` y `ConstanciaMensual` (backend:
@@ -46,6 +48,8 @@ export interface FilaConstancia {
     readonly medico: string;
   } | null;
   readonly whatsapp: EntregaWhatsapp | null;
+  /** La línea de WhatsApp por la que salió (LABORATORIO sale por la de Laboratorio Climon). */
+  readonly linea: { readonly nombre: string; readonly telefono: string | null } | null;
   readonly portal: {
     readonly primera: string | null;
     readonly pdf: UsoPortal | null;
@@ -76,6 +80,11 @@ export interface ResumenConstancia {
   readonly pdfPedidos: number;
 }
 
+/** Cuántos de `total` son `n`, en porcentaje entero («95 %»); sin total no hay porcentaje. */
+export function porcentaje(n: number, total: number): string | null {
+  return total > 0 ? `${Math.round((n / total) * 100)} %` : null;
+}
+
 /** ¿Consta que el mensaje llegó al teléfono? */
 export function llegoAlTelefono(w: EntregaWhatsapp | null): boolean {
   return !!w && (!!w.entregadoEn || !!w.leidoEn || w.estado === 'ENTREGADO' || w.estado === 'LEIDO');
@@ -104,6 +113,86 @@ export function estadoWhatsapp(w: EntregaWhatsapp | null): string {
   if (w.entregadoEn || w.estado === 'ENTREGADO') return 'Entregado';
   if (w.estado === 'INCIERTO') return 'Envío sin confirmar';
   return 'Enviado, sin confirmación de entrega';
+}
+
+/** La insignia del estado de WhatsApp: llegó (verde), Meta lo rechazó (negro), lo demás sin confirmar. */
+export function varianteWhatsapp(w: EntregaWhatsapp | null): BadgeVariant {
+  if (w?.estado === 'FALLIDO') return 'critical';
+  return llegoAlTelefono(w) ? 'success' : 'neutral';
+}
+
+/**
+ * Lo que dice la insignia: el estado en una o dos palabras, para que quepa en
+ * la columna (~11rem). El matiz va debajo, con `detalleWhatsapp`.
+ */
+export function etiquetaWhatsapp(w: EntregaWhatsapp | null): string {
+  if (!w) return 'Sin registro';
+  if (w.estado === 'FALLIDO') return 'No entregado';
+  if (w.leidoEn || w.estado === 'LEIDO') return 'Leído';
+  if (w.entregadoEn || w.estado === 'ENTREGADO') return 'Entregado';
+  if (w.estado === 'INCIERTO') return 'Sin confirmar';
+  return 'Enviado';
+}
+
+/** La línea bajo la insignia: por qué no llegó (código de Meta y su explicación) o qué falta confirmar. */
+export function detalleWhatsapp(w: EntregaWhatsapp | null): string | null {
+  if (!w) return 'No se encontró el mensaje del aviso';
+  if (w.estado === 'FALLIDO') return w.codigoError ? `Código ${w.codigoError}: ${explicacionErrorWhatsapp(w.codigoError)}` : 'WhatsApp no dio el motivo';
+  if (llegoAlTelefono(w)) return null;
+  return w.estado === 'INCIERTO' ? 'No se sabe si WhatsApp lo aceptó' : 'WhatsApp no confirmó la entrega';
+}
+
+/**
+ * Un tipo de informe en la constancia. `SIN_PORTAL` = el informe ya no existe
+ * en el portal y no se sabe de qué tipo era: va aparte, al final, sin
+ * mezclarse con ningún tipo.
+ */
+export type GrupoConstancia = TipoInforme | 'SIN_PORTAL';
+export const GRUPOS_CONSTANCIA: readonly GrupoConstancia[] = [...TIPOS_INFORME, 'SIN_PORTAL'];
+export const NOMBRES_GRUPO: Readonly<Record<GrupoConstancia, string>> = {
+  ...NOMBRES_TIPO,
+  SIN_PORTAL: 'Informes que ya no están en el portal',
+};
+
+export function grupoDe(f: FilaConstancia): GrupoConstancia {
+  return f.informe?.tipo ?? 'SIN_PORTAL';
+}
+
+export interface SeccionConstancia {
+  readonly grupo: GrupoConstancia;
+  readonly nombre: string;
+  readonly filas: readonly FilaConstancia[];
+  readonly resumen: ResumenConstancia;
+  /** Las líneas por las que salieron sus avisos, con cuántos cada una (la más usada primero). */
+  readonly lineas: ReadonlyArray<{ readonly nombre: string; readonly telefono: string | null; readonly avisos: number }>;
+}
+
+/**
+ * Los avisos separados por tipo de informe, en el orden fijo de los tipos y
+ * conservando el orden de envío dentro de cada uno. Solo los tipos con avisos.
+ */
+export function seccionesPorTipo(filas: readonly FilaConstancia[]): SeccionConstancia[] {
+  return GRUPOS_CONSTANCIA.flatMap(grupo => {
+    const propias = filas.filter(f => grupoDe(f) === grupo);
+    if (!propias.length) return [];
+    const lineas = new Map<string, { nombre: string; telefono: string | null; avisos: number }>();
+    for (const f of propias) {
+      if (!f.linea) continue;
+      const clave = `${f.linea.nombre}|${f.linea.telefono ?? ''}`;
+      const actual = lineas.get(clave) ?? { ...f.linea, avisos: 0 };
+      actual.avisos++;
+      lineas.set(clave, actual);
+    }
+    return [{
+      grupo, nombre: NOMBRES_GRUPO[grupo], filas: propias, resumen: resumenConstancia(propias),
+      lineas: [...lineas.values()].sort((a, b) => b.avisos - a.avisos),
+    }];
+  });
+}
+
+/** El tipo elegido en la URL; cualquier otra cosa es «todos». */
+export function grupoDeUrl(valor: string | null): GrupoConstancia | null {
+  return GRUPOS_CONSTANCIA.find(g => g === valor) ?? null;
 }
 
 /** «2026-11». La URL la escribe cualquiera: lo que no es un mes vale el de por defecto. */

@@ -243,6 +243,19 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
     .crm-table:has(thead th:nth-child(14).text-left) tfoot td:nth-child(14) { text-align: left; }
 
     /* Modo denso (ideal para planillas de datos / Excel) */
+    /* En papel no hay scroll ni pegajosos: el marco deja ver todo, la cabecera
+       se repite en cada hoja y una fila no se parte entre dos (la constancia de
+       Resultados se imprime así). */
+    @media print {
+      .crm-table-marco { overflow: visible; box-shadow: none; }
+      .crm-table-scroll { overflow: visible; max-height: none !important; }
+      .crm-table thead { display: table-header-group; }
+      .crm-table thead th,
+      .crm-table tfoot td { position: static; }
+      .crm-table tbody tr { break-inside: avoid; }
+      .crm-table tbody tr:hover { background: none; }
+    }
+
     .crm-table-dense .crm-table thead th {
       padding: 10px 14px;
       font-size: 11px;

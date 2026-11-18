@@ -1,5 +1,5 @@
 /* La constancia va fuera del layout: la página entera es el documento. */
-:host { display: block; min-height: 100dvh; background: var(--color-background); }
+:host { display: block; min-height: 100dvh; background: var(--color-bg-workspace); }
 
 .constancia {
   max-width: 1400px;
@@ -18,9 +18,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 12px 16px;
-  padding-bottom: 16px;
-  margin-bottom: 20px;
-  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 16px;
 }
 
 .volver {
@@ -43,8 +41,16 @@
   gap: 12px;
 }
 
-/* «Noviembre de 2026 (en curso)» son ~27 caracteres a 14 px: ~210 px + flecha. */
-.barra-mes { width: 15.5rem; max-width: 100%; }
+/* «Noviembre de 2026 (en curso)» son ~27 caracteres a 14 px: ~210 px + flecha.
+   «Informes que ya no están en el portal (12)» no cabe en 15,5rem: se corta en
+   el control cerrado y se lee entero al abrirlo. En el teléfono, cada uno a lo ancho. */
+.barra-mes,
+.barra-tipo { width: 15.5rem; max-width: 100%; }
+
+@media (max-width: 639px) {
+  .barra-acciones { width: 100%; }
+  .barra-mes, .barra-tipo { width: 100%; }
+}
 
 .cargando {
   margin-bottom: 12px;
@@ -53,39 +59,71 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Documento ─────────────────────────────────────────────────────── */
-.documento { color: var(--color-text-dark); }
+/* ── Documento: la hoja ────────────────────────────────────────────── */
+.documento {
+  color: var(--color-text-dark);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-subtle);
+  padding: 20px 16px;
+  /* Que las insignias y los fondos suaves salgan también en papel. */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
 
-.doc-cabecera { margin-bottom: 16px; }
+@media (min-width: 640px) {
+  .documento { padding: 32px; }
+}
+
+.doc-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 32px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--color-primary);
+}
 
 .doc-entidad {
   font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-primary);
 }
 
-.doc-cabecera h1 {
-  margin-top: 2px;
-  font-size: 1.25rem;
+.doc-titulo h1 {
+  margin-top: 4px;
+  font-size: 1.375rem;
   font-weight: 700;
-  line-height: 1.3;
+  line-height: 1.25;
+}
+
+.doc-alcance {
+  margin-top: 4px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-primary);
 }
 
 .doc-datos {
-  margin-top: 8px;
   display: grid;
   gap: 2px;
   font-size: 0.8125rem;
+  max-width: 34rem;
 }
 
 .doc-datos > div { display: flex; flex-wrap: wrap; gap: 0 6px; }
-.doc-datos dt { font-weight: 600; }
-.doc-datos dt::after { content: ':'; }
+.doc-datos dt { font-weight: 600; min-width: 4.5rem; }
+.doc-datos dd { color: var(--color-text-muted); }
 
 .doc-aviso {
-  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
   font-size: 0.8125rem;
   font-weight: 500;
 }
@@ -95,7 +133,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-  margin-bottom: 16px;
+  margin-top: 20px;
 }
 
 @media (min-width: 640px) { .resumen { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
@@ -104,103 +142,177 @@
 .resumen > div {
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  padding: 8px 10px;
+  padding: 10px 12px;
 }
 
-.resumen dt { font-size: 0.6875rem; color: var(--color-text-muted); line-height: 1.3; }
-.resumen dd { font-size: 1.125rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-
-/* La tabla tiene ocho columnas: en pantalla estrecha se desplaza dentro de su
-   caja; en papel (A4 apaisado) cabe entera con la letra de impresión. */
-.constancia-tabla-caja {
-  overflow-x: auto;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
+.resumen > .resumen-total {
+  background: var(--color-bg-light);
+  border-color: color-mix(in srgb, var(--color-primary) 25%, var(--color-border));
 }
 
-.constancia-tabla-caja:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.resumen dt { font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.3; }
 
-.tabla {
-  width: 100%;
-  min-width: 1100px;
-  border-collapse: collapse;
-  font-size: 0.75rem;
-  line-height: 1.35;
+.resumen dd {
+  margin-top: 2px;
+  font-size: 1.375rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
 }
 
-.tabla th,
-.tabla td {
-  padding: 6px 8px;
-  border-bottom: 1px solid var(--color-border);
-  text-align: left;
-  vertical-align: top;
+.resumen-total dd { color: var(--color-primary); }
+.resumen dd .crm-porcentaje { margin-left: 2px; color: var(--color-text-muted); }
+
+.subtitulo {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin-bottom: 8px;
 }
 
-.tabla td + td,
-.tabla th + th { border-left: 1px solid var(--color-border); }
+.por-tipo { margin-top: 24px; }
 
-.tabla thead th {
-  background: var(--color-bg-workspace);
+/* ── Una sección por tipo de informe ───────────────────────────────── */
+.seccion { margin-top: 32px; }
+
+.seccion-cabecera {
+  display: grid;
+  gap: 2px;
+  margin-bottom: 10px;
+  padding-left: 12px;
+  border-left: 3px solid var(--color-secondary);
+}
+
+.seccion-titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 10px;
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.seccion-cuenta {
+  font-size: 0.8125rem;
   font-weight: 600;
-  white-space: nowrap;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
-.tabla tbody tr:last-child td { border-bottom: 0; }
+/* ── Tablas: lo que va DENTRO del átomo (thead/tbody son de esta plantilla) ──
+   `.constancia-tabla` es el host de <app-table>, así que estas reglas pesan más
+   que las densas del átomo sin tocar su CSS. */
+.constancia-tabla th,
+.constancia-tabla td {
+  vertical-align: top;
+  line-height: 1.4;
+}
 
-/* Cada dato en su línea: en papel se lee de arriba abajo, sin píldoras. */
-.tabla td > span,
+.constancia-tabla td { font-size: 0.8125rem; }
+
+.tabla-resumen .celda-tipo {
+  padding: 10px 14px;
+  border-top: 1px solid var(--color-border);
+  text-align: left;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.tabla-resumen td { font-variant-numeric: tabular-nums; }
+
+/* Ocho columnas. En una tabla automática el `width` de la cabecera es el
+   MÍNIMO de la columna: suman ~74rem (~1190 px), así que a 1352 px útiles cabe
+   y sobra, y en el teléfono (358 px) se desplaza dentro del marco del átomo,
+   que es una región con foco y nombre. En papel se sueltan (ver `@media print`). */
+.col-n { width: 2.75rem; text-align: right; font-variant-numeric: tabular-nums; color: var(--color-text-muted); }
+.col-envio { width: 8.5rem; }
+.col-paciente { width: 11rem; }
+.col-destino { width: 9.5rem; }
+.col-informe { width: 12rem; }
+.col-whatsapp { width: 11rem; }
+.col-portal { width: 11rem; }
+.col-pdf { width: 9rem; }
+
+/* Cada dato en su línea: en papel se lee de arriba abajo. */
+.tabla-detalle td > span,
 .pedido > span { display: block; }
 
-.pedido + .pedido { margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--color-border); }
+.tabla-detalle app-badge { display: block; margin-bottom: 4px; }
 
-.col-n { width: 2.5rem; text-align: right; font-variant-numeric: tabular-nums; }
+.pedido + .pedido { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--color-border); }
+
 .fuerte { font-weight: 600; }
 .suave { color: var(--color-text-muted); }
 .tabular { font-variant-numeric: tabular-nums; }
 .marca { margin-left: 2px; font-weight: 700; }
 
+/* ── Cierre ────────────────────────────────────────────────────────── */
 .notas {
-  margin-top: 16px;
-  font-size: 0.75rem;
-  line-height: 1.45;
+  margin-top: 32px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--color-bg-workspace);
+  font-size: 0.8125rem;
+  line-height: 1.5;
 }
 
-.notas h2 { font-size: 0.8125rem; font-weight: 700; margin-bottom: 4px; }
-.notas ul { list-style: disc; padding-left: 18px; display: grid; gap: 2px; }
+.notas ul { list-style: disc; padding-left: 18px; display: grid; gap: 4px; }
 
 .firmas {
-  margin-top: 48px;
+  margin-top: 56px;
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-around;
   gap: 32px 64px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
 }
 
 .firmas > div { width: 16rem; max-width: 100%; text-align: center; }
-.linea { display: block; height: 40px; border-bottom: 1px solid var(--color-text-dark); margin-bottom: 4px; }
+.linea { display: block; height: 48px; border-bottom: 1px solid var(--color-text-dark); margin-bottom: 6px; }
 
 /* ── Papel ─────────────────────────────────────────────────────────── */
 @page {
   size: A4 landscape;
-  margin: 10mm;
+  margin: 10mm 10mm 14mm;
+
+  /* Pie de cada hoja (Chrome 131+; otro navegador lo omite sin romper nada).
+     Sin var(): las variables de :root no llegan al contexto de página. */
+  @bottom-left {
+    content: 'Clínica Montalvo · Constancia de entrega electrónica de resultados';
+    font-size: 7pt;
+  }
+
+  @bottom-right {
+    content: 'Página ' counter(page) ' de ' counter(pages);
+    font-size: 7pt;
+  }
 }
 
 @media print {
-  :host { min-height: 0; }
+  :host { min-height: 0; background: var(--color-background); }
   .no-imprimir { display: none !important; }
   .constancia { max-width: none; padding: 0; }
-  .doc-cabecera h1 { font-size: 14pt; }
+  .documento { border: 0; border-radius: 0; box-shadow: none; padding: 0; }
+  .doc-titulo h1 { font-size: 15pt; }
+  .doc-alcance { font-size: 10pt; }
   .doc-datos, .doc-aviso { font-size: 8.5pt; }
-  .resumen { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }
-  .resumen > div { padding: 4px 6px; }
+  .resumen { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; margin-top: 10px; }
+  .resumen > div { padding: 4px 8px; }
   .resumen dt { font-size: 7pt; }
-  .resumen dd { font-size: 11pt; }
-  .constancia-tabla-caja { overflow: visible; }
-  .tabla { min-width: 0; font-size: 7.5pt; }
-  .tabla th, .tabla td { padding: 3px 4px; }
-  /* La cabecera se repite en cada hoja y una fila no se parte entre dos. */
-  .tabla thead { display: table-header-group; }
-  .tabla tr { break-inside: avoid; }
-  .notas { font-size: 7.5pt; break-inside: avoid; }
-  .firmas { break-inside: avoid; margin-top: 32px; font-size: 8pt; }
+  .resumen dd { font-size: 12pt; }
+  .subtitulo { font-size: 10pt; margin-bottom: 4px; }
+  .por-tipo { margin-top: 12px; break-inside: avoid; }
+  /* Cada tipo de informe empieza en hoja nueva, salvo que sea el único y no haya resumen por tipo. */
+  .por-tipo ~ .seccion { break-before: page; margin-top: 0; }
+  .seccion { margin-top: 14px; }
+  .seccion-cabecera { margin-bottom: 6px; break-after: avoid; }
+  .seccion-titulo { font-size: 11pt; }
+  .seccion-cabecera .crm-meta { font-size: 7.5pt; }
+  .constancia-tabla th { font-size: 6.5pt; padding: 4px 5px; }
+  .constancia-tabla td { font-size: 7.5pt; padding: 3px 5px; }
+  .col-envio, .col-paciente, .col-destino, .col-informe, .col-whatsapp, .col-portal, .col-pdf { width: auto; }
+  .col-n { width: 1.5rem; }
+  .tabla-detalle app-badge { margin-bottom: 2px; }
+  .notas { margin-top: 14px; padding: 8px 10px; font-size: 7.5pt; break-inside: avoid; }
+  .firmas { break-inside: avoid; margin-top: 36px; font-size: 8pt; }
 }

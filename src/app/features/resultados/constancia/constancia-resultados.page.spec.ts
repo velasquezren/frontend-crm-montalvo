@@ -3,7 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { routes } from '../../../app.routes';
@@ -25,6 +25,7 @@ const fila = (n: number, f: Partial<FilaConstancia> = {}): FilaConstancia => ({
   informe: { tipo: 'ECOGRAFIA', fechaEstudio: '2026-10-02', estado: 'PUBLICADO', publicadoEn: '2026-10-03T13:00:00.000Z', retiradoEn: null,
     paciente: { nombre: 'Paciente Sintética', pac: 'PAC1', ci: null }, medico: 'Dra. Sintética' },
   whatsapp: { estado: 'LEIDO', enviadoEn: '2026-10-03T14:05:09.000Z', entregadoEn: '2026-10-03T14:05:20.000Z', leidoEn: '2026-10-03T15:00:00.000Z', codigoError: null },
+  linea: { nombre: 'Recepción', telefono: '+59170000100' },
   portal: { primera: '2026-10-03T15:01:00.000Z', pdf: { veces: 2, primera: '2026-10-03T15:01:00.000Z', ultima: '2026-10-04T09:00:00.000Z' }, original: null, adjuntos: null },
   pdfPorWhatsapp: [], ...f,
 });
@@ -42,9 +43,10 @@ describe('constancia mensual de entregas', () => {
     for (let i = 0; i < 4; i++) { await Promise.resolve(); TestBed.tick(); }
     fixture.detectChanges();
   }
-  function montar() {
+  function montar(url = '/imprimir/constancia-resultados') {
     TestBed.configureTestingModule({ providers: [
       provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
+      { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(Object.fromEntries(new URL(url, 'http://x').searchParams)) } } },
       { provide: AuthService, useValue: { user: signal({ nombre: 'Admin Sintético' }) } },
     ] });
     http = TestBed.inject(HttpTestingController);
@@ -77,12 +79,53 @@ describe('constancia mensual de entregas', () => {
     /* En hora de Bolivia: 14:05 UTC son las 10:05 en La Paz. */
     expect(texto).toContain('10:05:09');
     expect(texto).toContain('Leído 03/10/2026 11:00');
-    expect(texto).toContain('Abierto 03/10/2026 11:01');
+    /* La insignia dice el estado y debajo, la hora de la primera apertura. */
+    const portal = raiz.querySelector('tbody tr td:nth-child(7)')?.textContent?.replace(/\s+/g, ' ');
+    expect(portal).toContain('Abierto');
+    expect(portal).toContain('Primera vez 03/10/2026 11:01');
+    /* El PAC ya trae su prefijo: «PAC1», no «PAC PAC1». */
+    expect(texto).not.toContain('PAC PAC1');
     expect(texto).toContain('PDF visto 2 veces');
     /* El aviso a otra ficha dice de quién es el WhatsApp, y el número actual se marca y se explica. */
     expect(texto).toContain('WhatsApp de Madre');
     expect(texto).toContain('no guardó el número al que salió');
     http.verify();
+  });
+
+  it('separa los avisos por tipo de informe, con el reparto arriba y la línea de cada tipo', async () => {
+    const raiz = montar();
+    await asentar();
+    const lab = (n: number) => fila(n, {
+      estudio: 'Hemograma', linea: { nombre: 'Laboratorio CLIMON', telefono: '+59177385889' },
+      informe: { ...fila(n).informe!, tipo: 'LABORATORIO' },
+    });
+    http.expectOne(r => r.url.endsWith('/resultados/constancia')).flush(pagina(1, [fila(1), lab(2), lab(3)], 3, 1));
+    await asentar();
+
+    const titulos = [...raiz.querySelectorAll('.seccion-titulo')].map(h => h.textContent?.replace(/\s+/g, ' ').trim());
+    expect(titulos).toEqual(['Ecografías 1 aviso', 'Laboratorio 2 avisos']);
+    /* El reparto por tipo, con su fila de total. */
+    expect(raiz.textContent).toContain('Por tipo de informe');
+    expect(raiz.querySelector('.tabla-resumen tfoot')?.textContent).toContain('3');
+    /* Cada sección dice por qué línea salió: el laboratorio no sale por la de la clínica. */
+    const [eco, laboratorio] = [...raiz.querySelectorAll('.seccion')];
+    expect(eco.textContent).toContain('Línea Recepción');
+    expect(laboratorio.textContent).toContain('Línea Laboratorio CLIMON');
+    expect(laboratorio.querySelectorAll('tbody tr')).toHaveLength(2);
+    http.verify();
+  });
+
+  it('con un tipo en la URL muestra e imprime solo ese tipo, sin el reparto', async () => {
+    const raiz = montar('/imprimir/constancia-resultados?tipo=LABORATORIO');
+    await asentar();
+    const lab = fila(2, { informe: { ...fila(2).informe!, tipo: 'LABORATORIO' } });
+    http.expectOne(r => r.url.endsWith('/resultados/constancia')).flush(pagina(1, [fila(1), lab], 2, 1));
+    await asentar();
+    expect(raiz.querySelectorAll('.seccion')).toHaveLength(1);
+    expect(raiz.querySelector('.tabla-resumen')).toBeNull();
+    expect(raiz.querySelector('.doc-alcance')?.textContent).toContain('Laboratorio');
+    expect(raiz.querySelector('.resumen-total')?.textContent).toContain('1');
+    expect(botonImprimir(raiz).disabled).toBe(false);
   });
 
   it('imprimir llama al diálogo del navegador', async () => {

@@ -4,6 +4,7 @@ import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { BadgeComponent } from '../../../shared/components/badge/badge.component';
 import { FechaCivilPipe } from '../../../core/fechas/fecha-civil.pipe';
 import { FechaClinicaPipe } from '../../../core/fechas/fecha-clinica.pipe';
 import { fechaCivilClinica } from '../../../core/fechas/zona-clinica';
@@ -14,18 +15,28 @@ import { ErrorCargaComponent } from '../../../shared/components/error-carga/erro
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { SelectComponent } from '../../../shared/components/select/select.component';
+import { TableComponent } from '../../../shared/components/table/table.component';
 import { NombreClientePipe } from '../../../shared/pipes/nombre-cliente.pipe';
-import { NOMBRES_TIPO } from '../resultado.model';
 import { ResultadosService } from '../resultados.service';
 import {
   ConstanciaMensual,
   estadoWhatsapp,
   FilaConstancia,
+  grupoDe,
+  grupoDeUrl,
+  GrupoConstancia,
+  llegoAlTelefono,
   mesAnterior,
   mesDeUrl,
   mesesParaElegir,
+  detalleWhatsapp,
+  etiquetaWhatsapp,
   nombreDelMes,
+  NOMBRES_GRUPO,
+  porcentaje,
   resumenConstancia,
+  seccionesPorTipo,
+  varianteWhatsapp,
 } from './constancia.model';
 
 /**
@@ -33,6 +44,11 @@ import {
  * (18/11/2026, pedido de René): cada aviso de resultado enviado en el mes con
  * el número, el paciente, el informe, la fecha y hora, lo que confirmó
  * WhatsApp y lo que hizo el paciente con el enlace del portal.
+ *
+ * Los avisos van separados por tipo de informe (ecografía, Papanicolau,
+ * laboratorio…), cada tipo con su resumen y la línea de WhatsApp por la que
+ * salió, y en papel cada tipo empieza en hoja nueva. Se puede imprimir uno
+ * solo: el laboratorio lo entrega Laboratorio Climon, otra empresa.
  *
  * Va fuera del layout del CRM (sin menú ni barras): lo que se ve es lo que se
  * imprime. La barra de arriba no sale en papel (`.no-imprimir`).
@@ -44,8 +60,8 @@ import {
 @Component({
   selector: 'app-constancia-resultados-page',
   imports: [
-    RouterLink, ButtonComponent, EmptyStateComponent, ErrorCargaComponent, IconComponent, LoadingSkeletonComponent,
-    SelectComponent, NombreClientePipe, FechaClinicaPipe, FechaCivilPipe,
+    RouterLink, BadgeComponent, ButtonComponent, EmptyStateComponent, ErrorCargaComponent, IconComponent, LoadingSkeletonComponent,
+    SelectComponent, TableComponent, NombreClientePipe, FechaClinicaPipe, FechaCivilPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './constancia-resultados.page.html',
@@ -61,7 +77,10 @@ export class ConstanciaResultadosPage {
   private readonly mesEnCurso = fechaCivilClinica(new Date()).slice(0, 7);
   private readonly porDefecto = mesAnterior(this.mesEnCurso);
   protected readonly meses = mesesParaElegir(this.mesEnCurso);
-  protected readonly mes = signal(mesDeUrl(inject(ActivatedRoute).snapshot.queryParamMap.get('mes'), this.porDefecto));
+  private readonly url = inject(ActivatedRoute).snapshot.queryParamMap;
+  protected readonly mes = signal(mesDeUrl(this.url.get('mes'), this.porDefecto));
+  /** `null` = todos los tipos de informe. */
+  protected readonly tipo = signal<GrupoConstancia | null>(grupoDeUrl(this.url.get('tipo')));
   protected readonly nombreMes = computed(() => nombreDelMes(this.mes()));
   protected readonly enCurso = computed(() => this.mes() === this.mesEnCurso);
 
@@ -87,28 +106,53 @@ export class ConstanciaResultadosPage {
     },
   });
 
-  protected readonly filas = computed<readonly FilaConstancia[]>(() => (this.constancia.hasValue() ? this.constancia.value().datos : []));
+  /** Todos los avisos del mes, de cualquier tipo. */
+  private readonly todas = computed<readonly FilaConstancia[]>(() => (this.constancia.hasValue() ? this.constancia.value().datos : []));
+  /** Los del tipo elegido: lo que se ve y lo que se imprime. */
+  protected readonly filas = computed(() => {
+    const tipo = this.tipo();
+    return tipo ? this.todas().filter(f => grupoDe(f) === tipo) : this.todas();
+  });
+  protected readonly secciones = computed(() => seccionesPorTipo(this.filas()));
   protected readonly resumen = computed(() => resumenConstancia(this.filas()));
+  /** El selector de tipo con cuántos avisos tiene cada uno en el mes; solo los que tienen. */
+  protected readonly opcionesTipo = computed(() =>
+    seccionesPorTipo(this.todas()).map(s => ({ valor: s.grupo, etiqueta: `${s.nombre} (${s.filas.length})` })));
+  protected readonly nombreTipo = computed(() => {
+    const tipo = this.tipo();
+    return tipo ? NOMBRES_GRUPO[tipo] : null;
+  });
   protected readonly listo = computed(() => this.constancia.hasValue() && !this.constancia.isLoading());
   /** El último día del periodo: `hasta` es el primer instante del mes siguiente. */
   protected readonly ultimoDia = computed(() => (this.constancia.hasValue() ? new Date(Date.parse(this.constancia.value().hasta) - 1) : null));
   /** Hay avisos anteriores al 18/11/2026 cuyo número es el actual de la ficha: la nota lo explica. */
   protected readonly hayNumerosActuales = computed(() => this.filas().some(f => f.destinatario && !f.destinatario.telefonoAlEnviar));
 
-  protected readonly nombresTipo = NOMBRES_TIPO;
   protected readonly estadoWhatsapp = estadoWhatsapp;
+  protected readonly varianteWhatsapp = varianteWhatsapp;
+  protected readonly etiquetaWhatsapp = etiquetaWhatsapp;
+  protected readonly detalleWhatsapp = detalleWhatsapp;
+  protected readonly llegoAlTelefono = llegoAlTelefono;
+  protected readonly porcentaje = porcentaje;
 
   constructor() {
-    reflejarEnUrl(() => ({ mes: this.mes() === this.porDefecto ? null : this.mes() }));
+    reflejarEnUrl(() => ({ mes: this.mes() === this.porDefecto ? null : this.mes(), tipo: this.tipo() }));
     /* El título es el nombre del archivo al «Guardar como PDF». Ninguna otra
        ruta pone título, así que al salir se devuelve el de siempre. */
     const tituloAnterior = this.titulo.getTitle();
-    effect(() => this.titulo.setTitle(`Constancia de entrega de resultados — ${this.nombreMes()}`));
+    effect(() => {
+      const tipo = this.nombreTipo();
+      this.titulo.setTitle(`Constancia de entrega de resultados — ${tipo ? `${tipo} — ` : ''}${this.nombreMes()}`);
+    });
     inject(DestroyRef).onDestroy(() => this.titulo.setTitle(tituloAnterior));
   }
 
   protected cambiarMes(valor: string): void {
     this.mes.set(mesDeUrl(valor, this.porDefecto));
+  }
+
+  protected cambiarTipo(valor: string): void {
+    this.tipo.set(grupoDeUrl(valor));
   }
 
   protected imprimir(): void {
