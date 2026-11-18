@@ -37,11 +37,45 @@ import { NombreClientePipe } from '../../../../shared/pipes/nombre-cliente.pipe'
 import { buscarAtajos, insertarEnCursor, rellenarNombre } from '../../atajos';
 import { reducirFoto, seReduce } from '../../../../shared/models/reducir-foto';
 
-interface AdjuntoLocal {
-  readonly mediaKey: string;
-  readonly mediaMime?: string | null;
-  readonly mediaNombre?: string | null;
-  readonly vistaPrevia?: string | null;
+/**
+ * Un archivo del envío, en el orden en que la agente lo eligió. Mientras sube
+ * ya ocupa su lugar (con la miniatura local del navegador), así el orden de
+ * la bandeja es el de la selección y no el de qué subida terminó antes.
+ */
+export type AdjuntoLocal =
+  | { readonly id: string; readonly subiendo: true; readonly mediaNombre: string; readonly mediaMime: string; readonly miniatura: string | null }
+  | {
+    readonly id: string;
+    readonly subiendo: false;
+    readonly mediaKey: string;
+    readonly mediaMime?: string | null;
+    readonly mediaNombre?: string | null;
+    readonly vistaPrevia?: string | null;
+  };
+export type AdjuntoListo = Extract<AdjuntoLocal, { subiendo: false }>;
+
+/** Por envío: cada archivo es un WhatsApp, y diez seguidos ya es una tanda larga para la paciente. */
+export const MAXIMO_ADJUNTOS = 10;
+/** Subidas a la vez: más no acelera (el ancho de banda es el mismo) y llena el límite de peticiones. */
+const SUBIDAS_SIMULTANEAS = 3;
+
+/**
+ * Lo que sale al confirmar: un mensaje por archivo, en orden, y el texto como
+ * pie del PRIMERO (como al compartir varias fotos en WhatsApp con un solo
+ * texto). Sin archivos, un mensaje de texto.
+ */
+export function planDeEnvio(texto: string, adjuntos: readonly AdjuntoListo[]): Array<{ texto: string; adjunto: AdjuntoListo | null }> {
+  if (!adjuntos.length) return [{ texto, adjunto: null }];
+  return adjuntos.map((adjunto, i) => ({ texto: i === 0 ? texto : '', adjunto }));
+}
+
+/** «3 imágenes», «1 PDF», «4 archivos» (si mezcla imágenes y PDF). */
+export function describirAdjuntos(adjuntos: ReadonlyArray<{ mediaMime?: string | null }>): string {
+  const n = adjuntos.length;
+  const imagenes = adjuntos.filter(a => a.mediaMime?.startsWith('image/')).length;
+  if (imagenes === n) return n === 1 ? '1 imagen' : `${n} imágenes`;
+  if (imagenes === 0) return n === 1 ? '1 PDF' : `${n} PDF`;
+  return `${n} archivos`;
 }
 
 const TAMANO_MAXIMO_ADJUNTO = 5 * 1024 * 1024;
@@ -144,21 +178,29 @@ export class ConversacionComposerComponent {
   private overlayRef?: OverlayRef;
 
   /* ── Adjuntos & Drag and Drop ──────────────────────────────────── */
-  protected readonly adjuntoPendiente = signal<AdjuntoLocal | null>(null);
   /**
-   * Nombre del archivo que está viajando a R2 ahora mismo, o `null`.
+   * Los archivos del próximo envío, en orden (hasta `MAXIMO_ADJUNTOS`).
    *
    * El estado de subida vive AQUÍ y no en `envioLocal` del mensaje, aunque
    * `envioLocal` sea donde están ENVIANDO/ERROR/AMBIGUO. La razón es que el
-   * upload ocurre antes de que exista mensaje: la agente adjunta, revisa el
-   * archivo en el modal de confirmación y solo entonces decide enviar. Pintar
+   * upload ocurre antes de que exista mensaje: la agente adjunta, revisa los
+   * archivos en el modal de confirmación y solo entonces decide enviar. Pintar
    * una burbuja en el hilo durante la subida diría "esto ya salió" de algo que
    * todavía puede descartar — y habría que borrarla si quita el adjunto.
    *
    * Sin porcentaje a propósito: `HttpClient` aquí no reporta progreso, y una
    * barra inventada miente sobre cuánto falta.
    */
-  protected readonly subiendoArchivo = signal<string | null>(null);
+  protected readonly adjuntos = signal<readonly AdjuntoLocal[]>([]);
+  protected readonly adjuntosListos = computed(() => this.adjuntos().filter((a): a is AdjuntoListo => !a.subiendo));
+  /** Hay al menos un archivo viajando a R2: enviar ahora lo dejaría fuera. */
+  protected readonly subiendoArchivo = computed(() => this.adjuntos().some(a => a.subiendo));
+  protected readonly cuantosAdjuntos = computed(() => describirAdjuntos(this.adjuntos()));
+  protected readonly soloImagenesListas = computed(() => {
+    const lista = this.adjuntosListos();
+    return lista.length > 0 && lista.every(a => !!a.mediaMime?.startsWith('image/'));
+  });
+  protected readonly maximoAdjuntos = MAXIMO_ADJUNTOS;
   protected readonly arrastrandoSobre = signal(false);
 
   /* ── Mi Memoria Personal (Biblioteca Privada del Agente) ───────── */
@@ -220,8 +262,7 @@ export class ConversacionComposerComponent {
     });
     effect(() => {
       this.state.contextoChat();
-      this.adjuntoPendiente.set(null);
-      this.subiendoArchivo.set(null);
+      untracked(() => this.vaciarAdjuntos());
       /* El texto no se vacía aquí: lo guarda y lo devuelve el servicio por chat (`borradores`). */
       this.mostrarPopoverMemoria.set(false);
       this.plantillaSeleccionada.set(null);
@@ -263,7 +304,7 @@ export class ConversacionComposerComponent {
     const files = event.dataTransfer?.files;
     if (!files || files.length === 0) return;
 
-    await this.subirAdjunto(files[0]);
+    await this.agregarArchivos(Array.from(files));
   }
 
   /* ── Mi Memoria Personal Popover ───────────────────────────────── */
@@ -275,12 +316,18 @@ export class ConversacionComposerComponent {
     this.mostrarPopoverMemoria.set(false);
 
     if (recurso.mediaKey) {
-      this.adjuntoPendiente.set({
-        mediaKey: recurso.mediaKey,
+      if (this.adjuntos().length >= MAXIMO_ADJUNTOS) {
+        this.toast.warning(`Puedes enviar hasta ${MAXIMO_ADJUNTOS} archivos a la vez.`);
+        return;
+      }
+      this.adjuntos.update(lista => [...lista, {
+        id: crypto.randomUUID(),
+        subiendo: false,
+        mediaKey: recurso.mediaKey!,
         mediaMime: recurso.mediaMime,
         mediaNombre: recurso.mediaNombre ?? recurso.titulo,
         vistaPrevia: recurso.mediaUrl,
-      });
+      }]);
       this.toast.success('Archivo adjuntado al mensaje.');
       return;
     }
@@ -294,77 +341,116 @@ export class ConversacionComposerComponent {
   /* ── Adjuntos desde Input / Clipboard ──────────────────────────── */
   protected async adjuntarMediaChat(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-
-    await this.subirAdjunto(file);
+    const files = Array.from(input.files ?? []);
+    /* Se vacía antes de subir: elegir otra vez los mismos archivos vuelve a disparar `change`. */
     input.value = '';
+    if (!files.length) return;
+    await this.agregarArchivos(files);
   }
 
   protected async pegarEnComposer(event: ClipboardEvent): Promise<void> {
     const items = event.clipboardData?.items;
     if (!items) return;
 
+    const imagenes: File[] = [];
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      if (item.type.startsWith('image/')) {
-        const file = item.getAsFile();
-        if (file) {
-          event.preventDefault();
-          const extension = file.type.split('/')[1] || 'png';
-          await this.subirAdjunto(
-            new File([file], `captura-${Date.now()}.${extension}`, { type: file.type }),
-          );
-          return;
-        }
-      }
+      const file = item.type.startsWith('image/') ? item.getAsFile() : null;
+      if (!file) continue;
+      const extension = file.type.split('/')[1] || 'png';
+      imagenes.push(new File([file], `captura-${Date.now()}-${i + 1}.${extension}`, { type: file.type }));
     }
+    if (!imagenes.length) return;
+    /* Solo si hay imágenes: pegar texto sigue siendo pegar texto. */
+    event.preventDefault();
+    await this.agregarArchivos(imagenes);
   }
 
-  protected async subirAdjunto(original: File): Promise<void> {
-    const contexto = this.state.contextoChat();
-    this.subiendoArchivo.set(original.name);
-    /* La foto de cámara se achica ANTES de validar: una de 6 MB ya no se
-       rechaza por pesar más de 5, y sube varias veces más rápido. */
-    const file = seReduce(original) ? await reducirFoto(original) : original;
-    /* Lo comprueban los tres caminos (arrastrar, elegir y pegar). Antes solo
-       arrastrar: elegir un HEIC del iPhone o un PDF de 12 MB lo subía igual y
-       el envío rebotaba después, con el archivo ya en Mi Memoria. */
-    const motivo = motivoParaRechazarAdjunto(file);
-    if (motivo) {
-      this.toast.warning(motivo);
-      if (contexto === this.state.contextoChat()) this.subiendoArchivo.set(null);
+  /**
+   * Varios archivos de una vez (elegir, arrastrar o pegar). Todos ocupan su
+   * lugar AL INSTANTE, en el orden en que llegaron —así el tope cuenta también
+   * lo que todavía no subió— y suben de a `SUBIDAS_SIMULTANEAS`. Lo que pase
+   * del máximo no entra, y se dice.
+   */
+  protected async agregarArchivos(files: readonly File[]): Promise<void> {
+    const espacio = MAXIMO_ADJUNTOS - this.adjuntos().length;
+    if (espacio <= 0) {
+      this.toast.warning(`Puedes enviar hasta ${MAXIMO_ADJUNTOS} archivos a la vez. Envía estos primero.`);
       return;
     }
+    const tomados = files.slice(0, espacio);
+    if (files.length > espacio) {
+      this.toast.warning(`Se agregaron ${tomados.length} de ${files.length}: el máximo es ${MAXIMO_ADJUNTOS} archivos por envío.`);
+    }
+    const contexto = this.state.contextoChat();
+    const lugares = tomados.map(file => ({
+      file,
+      id: crypto.randomUUID(),
+      miniatura: file.type.startsWith('image/') && typeof URL.createObjectURL === 'function' ? URL.createObjectURL(file) : null,
+    }));
+    this.adjuntos.update(lista => [
+      ...lista,
+      ...lugares.map(l => ({ id: l.id, subiendo: true as const, mediaNombre: l.file.name, mediaMime: l.file.type, miniatura: l.miniatura })),
+    ]);
+    const cola = [...lugares];
+    const trabajador = async () => {
+      for (let l = cola.shift(); l; l = cola.shift()) await this.subirEnSuLugar(l.file, l.id, l.miniatura, contexto);
+    };
+    await Promise.all(Array.from({ length: Math.min(SUBIDAS_SIMULTANEAS, cola.length) }, trabajador));
+  }
+
+  /** Un archivo suelto: el mismo camino que varios. */
+  protected subirAdjunto(file: File): Promise<void> {
+    return this.agregarArchivos([file]);
+  }
+
+  /** Sube un archivo que ya tiene su lugar en la bandeja y lo deja listo, o lo saca si no se puede. */
+  private async subirEnSuLugar(original: File, id: string, miniatura: string | null, contexto: unknown): Promise<void> {
+    const sacar = () => this.adjuntos.update(lista => lista.filter(a => a.id !== id));
     try {
+      /* La agente quitó el archivo o cambió de chat antes de que le tocara subir: no se sube. */
+      if (contexto !== this.state.contextoChat() || !this.adjuntos().some(a => a.id === id)) return;
+      /* La foto de cámara se achica ANTES de validar: una de 6 MB ya no se
+         rechaza por pesar más de 5, y sube varias veces más rápido. */
+      const file = seReduce(original) ? await reducirFoto(original) : original;
+      /* Lo comprueban los tres caminos (arrastrar, elegir y pegar). Antes solo
+         arrastrar: elegir un HEIC del iPhone o un PDF de 12 MB lo subía igual y
+         el envío rebotaba después, con el archivo ya en Mi Memoria. */
+      const motivo = motivoParaRechazarAdjunto(file);
+      if (motivo) {
+        if (contexto === this.state.contextoChat()) this.toast.warning(`${original.name}: ${motivo}`);
+        sacar();
+        return;
+      }
       const recurso = await this.memoriaService.subirBinario(file, { titulo: file.name });
       /* La agente ya está en otra conversación: el archivo queda en Mi Memoria
          —visible y borrable— pero NO se adjunta aquí. Mandarle a la paciente
-         equivocada la foto de otra es mucho peor que perder el adjunto. */
+         equivocada la foto de otra es mucho peor que perder el adjunto. (Al
+         cambiar de chat la bandeja ya se vació, así que su lugar no existe.) */
       if (contexto !== this.state.contextoChat()) return;
-      if (recurso.mediaKey) {
-        this.adjuntoPendiente.set({
-          mediaKey: recurso.mediaKey,
-          mediaMime: recurso.mediaMime,
-          mediaNombre: file.name,
-          vistaPrevia: recurso.mediaUrl,
-        });
-        this.toast.success('Archivo adjuntado.');
-      }
+      if (!recurso.mediaKey) { sacar(); return; }
+      /* Si la agente lo quitó mientras subía, su lugar ya no está y no vuelve. */
+      this.adjuntos.update(lista => lista.map(a => a.id !== id ? a : {
+        id, subiendo: false as const, mediaKey: recurso.mediaKey!, mediaMime: recurso.mediaMime,
+        mediaNombre: original.name, vistaPrevia: recurso.mediaUrl,
+      }));
     } catch (err) {
       if (contexto === this.state.contextoChat()) {
-        this.toast.error(mensajeDeError(err, 'No se pudo adjuntar el archivo.'));
+        sacar();
+        this.toast.error(mensajeDeError(err, `No se pudo adjuntar ${original.name}.`));
       }
     } finally {
-      /* Solo si seguimos donde empezamos: si cambió el chat, el effect del
-         constructor ya lo limpió y podríamos estar borrando el indicador de
-         una subida que arrancó en la conversación nueva. */
-      if (contexto === this.state.contextoChat()) this.subiendoArchivo.set(null);
+      if (miniatura) URL.revokeObjectURL(miniatura);
     }
   }
 
-  protected quitarAdjunto(): void {
-    this.adjuntoPendiente.set(null);
+  protected quitarAdjunto(id: string): void {
+    this.adjuntos.update(lista => lista.filter(a => a.id !== id));
+  }
+
+  /** Vacía la bandeja (cambio de chat, «Quitar todo»). Las subidas en vuelo pierden su lugar y no vuelven. */
+  protected vaciarAdjuntos(): void {
+    this.adjuntos.set([]);
   }
 
   /* ── Envío de Mensajes con Rollback Optimista & Confirmación de Media ── */
@@ -372,11 +458,11 @@ export class ConversacionComposerComponent {
     event?.preventDefault();
     const texto = this.state.mensajeNuevo().trim();
     const id = this.state.seleccionadaId();
-    const adj = this.adjuntoPendiente();
+    const hayAdjuntos = this.adjuntos().length > 0;
 
-    if ((!texto && !adj) || !id || this.state.enviando()) return;
-    /* Con una subida en vuelo el adjunto todavía no tiene clave: enviar ahora
-       mandaría el texto solo y el archivo llegaría a ninguna parte. */
+    if ((!texto && !hayAdjuntos) || !id || this.state.enviando()) return;
+    /* Con una subida en vuelo ese adjunto todavía no tiene clave: enviar ahora
+       lo dejaría fuera y llegaría a ninguna parte. */
     if (this.subiendoArchivo()) return;
 
     if (esEnlaceInternoDelPortal(texto)) {
@@ -390,8 +476,8 @@ export class ConversacionComposerComponent {
       return;
     }
 
-    // Si hay un adjunto (imagen o documento), solicitar confirmación explícita para evitar envíos accidentales
-    if (adj) {
+    // Con archivos (imágenes o documentos), confirmación explícita para evitar envíos accidentales
+    if (hayAdjuntos) {
       this.abrirConfirmarMedia();
       return;
     }
@@ -415,9 +501,10 @@ export class ConversacionComposerComponent {
     this.overlayRef = undefined;
   }
 
-  protected quitarAdjuntoDesdeModal(): void {
-    this.quitarAdjunto();
-    this.cerrarConfirmarMedia();
+  /** Quitar desde la confirmación: si era el último, ya no hay nada que confirmar. */
+  protected quitarAdjuntoDesdeModal(id: string): void {
+    this.quitarAdjunto(id);
+    if (!this.adjuntos().length) this.cerrarConfirmarMedia();
   }
 
   protected async confirmarYEnviarMedia(): Promise<void> {
@@ -429,9 +516,10 @@ export class ConversacionComposerComponent {
     marcarEnvio('message-send-click');
     const texto = this.state.mensajeNuevo().trim();
     const id = this.state.seleccionadaId();
-    const adj = this.adjuntoPendiente();
+    /* Solo los ya subidos: `enviar` no deja llegar aquí con una subida en vuelo. */
+    const adjuntos = this.adjuntosListos();
 
-    if ((!texto && !adj) || !id) return;
+    if ((!texto && !adjuntos.length) || !id) return;
 
     /* Antes aquí había `|| this.state.enviando()`, y con el input limpiándose
        al instante eso descartaba EN SILENCIO un segundo mensaje legítimo
@@ -441,23 +529,23 @@ export class ConversacionComposerComponent {
        Lo que sí hay que impedir es que el MISMO submit se procese dos veces
        —doble Enter, doble clic sobre el botón—, y para eso basta con el texto
        en vuelo: el input ya se vació, así que un segundo evento del mismo
-       envío trae exactamente el mismo contenido. Un adjunto no se compara:
-       exige confirmación explícita en su modal. */
-    if (!adj && this.enviosEnVuelo.has(texto)) return;
+       envío trae exactamente el mismo contenido. Los adjuntos no se comparan:
+       exigen confirmación explícita en su modal. */
+    const soloTexto = !adjuntos.length;
+    if (soloTexto && this.enviosEnVuelo.has(texto)) return;
 
     const contexto = this.state.contextoChat();
-    if (!adj) this.enviosEnVuelo.add(texto);
+    if (soloTexto) this.enviosEnVuelo.add(texto);
     this.state.enviando.set(true);
     const chatPrevio = this.state.detalleActual();
-    const idOptimista = idTemporal();
-    /* Una intención de envío, un `clientMessageId`. Se genera aquí —no al
-       reintentar— porque identifica lo que la agente quiso mandar, no el
-       intento técnico. El reintento reutiliza el del globo. */
-    const clientMessageId = idDeEnvio();
+    /* Una intención de envío por mensaje, un `clientMessageId` cada uno. Se
+       generan aquí —no al reintentar— porque identifican lo que la agente quiso
+       mandar, no el intento técnico. El reintento reutiliza el del globo. */
+    const envios = planDeEnvio(texto, adjuntos).map(e => ({ ...e, idOptimista: idTemporal(), clientMessageId: idDeEnvio() }));
 
-    // Actualización optimista de la UI
+    // Actualización optimista de la UI: todos los globos a la vez, en orden.
     if (chatPrevio) {
-      const mensajeOptimista: MensajeApi = {
+      const optimistas = envios.map(({ texto: contenido, adjunto: adj, idOptimista, clientMessageId }): MensajeApi => ({
         id: idOptimista,
         /* EXACTAMENTE lo que va en el POST, ni más ni menos.
            Antes caía a `adj.mediaNombre` cuando no había texto, y eso tenía dos
@@ -466,7 +554,7 @@ export class ConversacionComposerComponent {
            adjunto— ese nombre se habría convertido en el pie real al reintentar.
            Un reintento tiene que repetir la intención, no inventarle un texto.
            La plantilla ya enseña el nombre del documento por su cuenta. */
-        contenido: texto,
+        contenido,
         direccion: 'SALIENTE',
         tipo: adj ? (adj.mediaMime?.startsWith('image/') ? 'IMAGEN' : 'DOCUMENTO') : 'TEXTO',
         mediaKey: adj?.mediaKey ?? null,
@@ -481,56 +569,73 @@ export class ConversacionComposerComponent {
         automatico: false,
         autor: this.state.autorPropio(),
         createdAt: new Date().toISOString(),
-      };
+      }));
 
       this.state.detalle.set({
         ...chatPrevio,
-        mensajes: [...chatPrevio.mensajes, mensajeOptimista],
+        mensajes: [...chatPrevio.mensajes, ...optimistas],
       });
       marcarEnvio('message-optimistic-painted');
     }
 
     this.state.mensajeNuevo.set('');
-    this.adjuntoPendiente.set(null);
+    this.vaciarAdjuntos();
 
     try {
-      const real = await this.conversacionesService.enviarMensaje(id, texto, adj ? {
-        mediaKey: adj.mediaKey,
-        mediaMime: adj.mediaMime ?? null,
-        mediaNombre: adj.mediaNombre ?? null,
-      } : undefined, clientMessageId);
+      /* Uno tras otro, no en paralelo: el backend despacha a Meta antes de
+         responder, así que esperar cada POST es lo que hace que la paciente
+         reciba las fotos en el orden en que se eligieron. */
+      for (let i = 0; i < envios.length; i++) {
+        const { texto: contenido, adjunto: adj, idOptimista, clientMessageId } = envios[i];
+        try {
+          const real = await this.conversacionesService.enviarMensaje(id, contenido, adj ? {
+            mediaKey: adj.mediaKey,
+            mediaMime: adj.mediaMime ?? null,
+            mediaNombre: adj.mediaNombre ?? null,
+          } : undefined, clientMessageId);
 
-      // Sin reload: reemplaza el mensaje optimista con el real, en memoria.
-      // Ver el porqué en `reconciliarEnvioLocal`.
-      if (contexto === this.state.contextoChat()) {
-        this.state.reconciliarEnvioLocal(id, idOptimista, real);
-        medirEnvio('message-server-confirmed', 'message-send-click');
-      }
-    } catch (err) {
-      // Una respuesta tardía no toca la conversación que ya no se está mirando.
-      if (contexto !== this.state.contextoChat()) return;
+          // Sin reload: reemplaza el mensaje optimista con el real, en memoria.
+          // Ver el porqué en `reconciliarEnvioLocal`.
+          if (contexto === this.state.contextoChat()) {
+            this.state.reconciliarEnvioLocal(id, idOptimista, real);
+            if (i === 0) medirEnvio('message-server-confirmed', 'message-send-click');
+          }
+        } catch (err) {
+          /* Una respuesta tardía no toca la conversación que ya no se está
+             mirando, pero sí se avisa: lo que faltaba de la tanda no salió. */
+          if (contexto !== this.state.contextoChat()) {
+            this.toast.error(`No se enviaron ${envios.length - i} de ${envios.length} mensajes al chat anterior: al volver, revisa cuáles faltan.`);
+            return;
+          }
 
-      /* Antes esto restauraba `chatPrevio`: el globo desaparecía y el texto
-         volvía al input con un toast. Un mensaje que se ve salir y luego se
-         esfuma se lee como enviado-y-perdido, que es peor que un error
-         visible. Ahora el globo se queda donde está, marcado, y ofrece
-         reintentar sin volver a escribirlo. */
-      if (chatPrevio) {
-        /* Un error NO es permiso para reintentar. El backend persiste y
-           dispara el envío a Meta antes de responder, así que solo los
-           códigos que corta antes de la transacción son seguros. */
-        this.state.marcarEnvioFallido(
-          id, idOptimista, envioSeReintentaSinRiesgo(err) ? 'ERROR' : 'AMBIGUO',
-        );
-      } else {
-        /* Sin detalle cargado no hay globo donde poner el error: ahí sí toca
-           devolver el texto al input. */
-        this.state.mensajeNuevo.set(texto);
-        this.adjuntoPendiente.set(adj);
+          /* Antes esto restauraba `chatPrevio`: el globo desaparecía y el texto
+             volvía al input con un toast. Un mensaje que se ve salir y luego se
+             esfuma se lee como enviado-y-perdido, que es peor que un error
+             visible. Ahora el globo se queda donde está, marcado, y ofrece
+             reintentar sin volver a escribirlo. */
+          if (chatPrevio) {
+            /* Un error NO es permiso para reintentar. El backend persiste y
+               dispara el envío a Meta antes de responder, así que solo los
+               códigos que corta antes de la transacción son seguros. */
+            this.state.marcarEnvioFallido(id, idOptimista, envioSeReintentaSinRiesgo(err) ? 'ERROR' : 'AMBIGUO');
+            /* Los que faltan NO se mandan: llegarían desordenados. No salieron
+               —ni siquiera se pidieron—, así que reintentarlos es seguro. */
+            for (const resto of envios.slice(i + 1)) this.state.marcarEnvioFallido(id, resto.idOptimista, 'ERROR');
+          } else {
+            /* Sin detalle cargado no hay globo donde poner el error: ahí sí toca
+               devolver al compositor lo que no salió. */
+            if (i === 0) this.state.mensajeNuevo.set(texto);
+            this.adjuntos.set(envios.slice(i).flatMap(e => (e.adjunto ? [e.adjunto] : [])));
+          }
+          const pendientes = envios.length - i;
+          this.toast.error(mensajeDeError(err, envios.length > 1
+            ? `No se pudieron enviar ${pendientes} de ${envios.length}: quedan marcados en el chat para reintentar.`
+            : 'No se pudo enviar el mensaje.'));
+          return;
+        }
       }
-      this.toast.error(mensajeDeError(err, 'No se pudo enviar el mensaje.'));
     } finally {
-      if (!adj) this.enviosEnVuelo.delete(texto);
+      if (soloTexto) this.enviosEnVuelo.delete(texto);
       this.state.enviando.set(false);
     }
   }

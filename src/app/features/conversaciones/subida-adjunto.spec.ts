@@ -7,7 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { API_URL } from '../../core/api/api.constants';
 import { AuthService } from '../../core/auth/auth.service';
-import { ConversacionComposerComponent, esEnlaceInternoDelPortal, motivoParaRechazarAdjunto } from './components/conversacion-composer/conversacion-composer.component';
+import {
+  AdjuntoLocal, ConversacionComposerComponent, describirAdjuntos, esEnlaceInternoDelPortal, MAXIMO_ADJUNTOS, motivoParaRechazarAdjunto, planDeEnvio,
+} from './components/conversacion-composer/conversacion-composer.component';
 import { ConversacionDetalle, ConversacionResumen, PaginaInbox, MensajeApi } from './conversacion.model';
 import { ConversacionesStateService } from './services/conversaciones-state.service';
 
@@ -60,9 +62,13 @@ const PAGINA: PaginaInbox = {
 /** Lo que el compositor expone y estas pruebas necesitan tocar. */
 interface ComposerInterno {
   subirAdjunto(file: File): Promise<void>;
-  adjuntoPendiente(): { mediaKey: string } | null;
-  subiendoArchivo(): string | null;
+  agregarArchivos(files: readonly File[]): Promise<void>;
+  adjuntos(): readonly AdjuntoLocal[];
+  subiendoArchivo(): boolean;
+  quitarAdjunto(id: string): void;
+  confirmarYEnviarMedia(): Promise<void>;
 }
+const claveDe = (a: AdjuntoLocal | undefined) => (a && !a.subiendo ? a.mediaKey : null);
 
 describe('R2.2 · subida de adjuntos', () => {
   let state: ConversacionesStateService;
@@ -125,7 +131,9 @@ describe('R2.2 · subida de adjuntos', () => {
     void composer.subirAdjunto(archivo());
     fixture.detectChanges();
 
-    expect(composer.subiendoArchivo()).toBe('ecografia.jpg');
+    expect(composer.subiendoArchivo()).toBe(true);
+    /* Ya ocupa su lugar en la bandeja, marcado como subiendo. */
+    expect(composer.adjuntos()).toMatchObject([{ subiendo: true, mediaNombre: 'ecografia.jpg' }]);
     const texto = fixture.nativeElement.textContent as string;
     expect(texto).toContain('Subiendo archivo…');
     /* Nada de barras ni "37 %": no tenemos progreso real que contar. */
@@ -142,8 +150,8 @@ describe('R2.2 · subida de adjuntos', () => {
     await subida;
     fixture.detectChanges();
 
-    expect(composer.subiendoArchivo()).toBeNull();
-    expect(composer.adjuntoPendiente()?.mediaKey).toBe('memoria/agente-1/1-a.jpg');
+    expect(composer.subiendoArchivo()).toBe(false);
+    expect(claveDe(composer.adjuntos()[0])).toBe('memoria/agente-1/1-a.jpg');
   });
 
   it('S3 · si la subida falla, no queda ni adjunto ni anuncio colgado', async () => {
@@ -151,8 +159,8 @@ describe('R2.2 · subida de adjuntos', () => {
     uploadEnVuelo().flush({ message: 'Capacidad agotada' }, { status: 400, statusText: 'Bad Request' });
     await subida;
 
-    expect(composer.subiendoArchivo()).toBeNull();
-    expect(composer.adjuntoPendiente()).toBeNull();
+    expect(composer.subiendoArchivo()).toBe(false);
+    expect(composer.adjuntos()).toHaveLength(0);
   });
 
   it('S4 · mientras sube, el botón de enviar está bloqueado', () => {
@@ -186,8 +194,8 @@ describe('R2.2 · subida de adjuntos', () => {
     await subida;
     fixture.detectChanges();
 
-    expect(composer.adjuntoPendiente()).toBeNull();
-    expect(composer.subiendoArchivo()).toBeNull();
+    expect(composer.adjuntos()).toHaveLength(0);
+    expect(composer.subiendoArchivo()).toBe(false);
     /* Y desde luego no se mandó nada a B. */
     expect(http.match(r => r.method === 'POST' && r.url.includes('/mensajes'))).toHaveLength(0);
   });
@@ -229,7 +237,128 @@ describe('R2.2 · subida de adjuntos', () => {
       mediaMime: 'image/jpeg', mediaUrl: 'https://r2.example/firmada',
     });
     await subida;
-    expect(composer.adjuntoPendiente()?.mediaKey).toBe('memoria/agente-1/1-a.jpg');
+    expect(claveDe(composer.adjuntos()[0])).toBe('memoria/agente-1/1-a.jpg');
+  });
+
+  /* ── Varias imágenes a la vez ────────────────────────────────────────── */
+
+  /** Deja correr las promesas pendientes (subidas y envíos encadenados) sin consumir peticiones. */
+  async function asentar(): Promise<void> {
+    for (let i = 0; i < 20; i++) await Promise.resolve();
+    TestBed.tick();
+  }
+
+  const recurso = (n: number) => ({
+    id: `rec-${n}`, titulo: `foto-${n}.jpg`, mediaKey: `memoria/agente-1/${n}.jpg`, mediaMime: 'image/jpeg', mediaUrl: `https://r2.example/${n}`,
+  });
+
+  it('M1 · varias a la vez: todas ocupan su lugar en el orden elegido aunque terminen de subir al revés', async () => {
+    const fotos = [1, 2, 3].map(n => archivo(`foto-${n}.jpg`));
+    const subida = composer.agregarArchivos(fotos);
+    fixture.detectChanges();
+    expect(composer.adjuntos().map(a => a.mediaNombre)).toEqual(['foto-1.jpg', 'foto-2.jpg', 'foto-3.jpg']);
+    expect(fixture.nativeElement.textContent).toContain('3 imágenes');
+
+    await asentar();
+    const subidas = http.match(r => r.method === 'POST' && r.url === `${API_URL}/memoria-agente/upload`);
+    expect(subidas).toHaveLength(3);
+    /* Terminan al revés: la bandeja no se reordena. */
+    [...subidas].reverse().forEach(p => {
+      const n = Number(((p.request.body as FormData).get('titulo') as string).match(/\d/)?.[0]);
+      p.flush(recurso(n));
+    });
+    await subida;
+    expect(composer.adjuntos().map(claveDe)).toEqual(['memoria/agente-1/1.jpg', 'memoria/agente-1/2.jpg', 'memoria/agente-1/3.jpg']);
+  });
+
+  it('M2 · no pasa del máximo por envío, y lo dice', async () => {
+    const fotos = Array.from({ length: MAXIMO_ADJUNTOS + 2 }, (_, i) => archivo(`foto-${i + 1}.jpg`));
+    void composer.agregarArchivos(fotos);
+    expect(composer.adjuntos()).toHaveLength(MAXIMO_ADJUNTOS);
+    /* Una segunda tanda con la bandeja llena no entra. */
+    void composer.agregarArchivos([archivo('otra.jpg')]);
+    expect(composer.adjuntos()).toHaveLength(MAXIMO_ADJUNTOS);
+  });
+
+  it('M3 · quitar una mientras sube: no vuelve al terminar', async () => {
+    const subida = composer.agregarArchivos([archivo('foto-1.jpg'), archivo('foto-2.jpg')]);
+    composer.quitarAdjunto(composer.adjuntos()[0].id);
+    await asentar();
+    http.match(r => r.method === 'POST' && r.url === `${API_URL}/memoria-agente/upload`)
+      .forEach(p => p.flush(recurso(Number(((p.request.body as FormData).get('titulo') as string).match(/\d/)?.[0]))));
+    await subida;
+    expect(composer.adjuntos().map(a => a.mediaNombre)).toEqual(['foto-2.jpg']);
+  });
+
+  it('M4 · al confirmar sale un mensaje por foto, EN ORDEN y de a uno, con el texto en la primera', async () => {
+    const subida = composer.agregarArchivos([1, 2, 3].map(n => archivo(`foto-${n}.jpg`)));
+    await asentar();
+    http.match(r => r.method === 'POST' && r.url === `${API_URL}/memoria-agente/upload`)
+      .forEach(p => p.flush(recurso(Number(((p.request.body as FormData).get('titulo') as string).match(/\d/)?.[0]))));
+    await subida;
+    state.mensajeNuevo.set('Sus fotos del estudio');
+
+    const envio = composer.confirmarYEnviarMedia();
+    await Promise.resolve();
+    TestBed.tick();
+    /* Tres globos a la vez, en orden, aunque al servidor vayan de a uno. */
+    const globos = state.detalleActual()!.mensajes.filter(m => m.envioLocal === 'ENVIANDO');
+    expect(globos.map(m => m.mediaKey)).toEqual(['memoria/agente-1/1.jpg', 'memoria/agente-1/2.jpg', 'memoria/agente-1/3.jpg']);
+    expect(composer.adjuntos()).toHaveLength(0);
+
+    const cuerpos: Array<Record<string, unknown>> = [];
+    for (let n = 1; n <= 3; n++) {
+      await asentar();
+      const pendientes = http.match(r => r.method === 'POST' && r.url === `${API_URL}/conversaciones/chat-a/mensajes`);
+      /* De a uno: el siguiente no sale hasta que respondió el anterior. */
+      expect(pendientes).toHaveLength(1);
+      const cuerpo = pendientes[0].request.body as Record<string, unknown>;
+      cuerpos.push(cuerpo);
+      pendientes[0].flush({ id: `real-${n}`, direccion: 'SALIENTE', contenido: cuerpo['contenido'], tipo: 'IMAGEN',
+        mediaKey: cuerpo['mediaKey'], estadoEnvio: 'ENVIADO', automatico: false, createdAt: FECHA, clientMessageId: cuerpo['clientMessageId'] });
+    }
+    await envio;
+    expect(cuerpos.map(c => c['mediaKey'])).toEqual(['memoria/agente-1/1.jpg', 'memoria/agente-1/2.jpg', 'memoria/agente-1/3.jpg']);
+    expect(cuerpos.map(c => c['contenido'])).toEqual(['Sus fotos del estudio', '', '']);
+    /* Cada mensaje es su propia intención: claves distintas. */
+    expect(new Set(cuerpos.map(c => c['clientMessageId'])).size).toBe(3);
+  });
+
+  it('M5 · si una falla, las siguientes NO salen (llegarían desordenadas) y quedan para reintentar', async () => {
+    const subida = composer.agregarArchivos([1, 2, 3].map(n => archivo(`foto-${n}.jpg`)));
+    await asentar();
+    http.match(r => r.method === 'POST' && r.url === `${API_URL}/memoria-agente/upload`)
+      .forEach(p => p.flush(recurso(Number(((p.request.body as FormData).get('titulo') as string).match(/\d/)?.[0]))));
+    await subida;
+
+    const envio = composer.confirmarYEnviarMedia();
+    await asentar();
+    const primero = http.match(r => r.method === 'POST' && r.url === `${API_URL}/conversaciones/chat-a/mensajes`);
+    expect(primero).toHaveLength(1);
+    primero[0].flush({ message: 'Demasiadas peticiones' }, { status: 429, statusText: 'Too Many Requests' });
+    await envio;
+
+    expect(http.match(r => r.method === 'POST' && r.url.endsWith('/mensajes'))).toHaveLength(0);
+    const globos = state.detalleActual()!.mensajes.filter(m => m.mediaKey?.startsWith('memoria/agente-1/'));
+    /* 429 consta que no salió; las otras dos ni se pidieron: las tres se reintentan sin riesgo. */
+    expect(globos.map(m => m.envioLocal)).toEqual(['ERROR', 'ERROR', 'ERROR']);
+  });
+});
+
+describe('el plan de un envío con varios archivos', () => {
+  const listo = (n: number, mime = 'image/jpeg') => ({ id: `${n}`, subiendo: false as const, mediaKey: `k${n}`, mediaMime: mime, mediaNombre: `f${n}` });
+
+  it('un mensaje por archivo y el texto como pie del primero; sin archivos, solo el texto', () => {
+    expect(planDeEnvio('Hola', [])).toEqual([{ texto: 'Hola', adjunto: null }]);
+    expect(planDeEnvio('Sus fotos', [listo(1), listo(2)]).map(p => [p.texto, p.adjunto?.mediaKey])).toEqual([['Sus fotos', 'k1'], ['', 'k2']]);
+  });
+
+  it('dice cuántos y de qué tipo', () => {
+    expect(describirAdjuntos([listo(1)])).toBe('1 imagen');
+    expect(describirAdjuntos([listo(1), listo(2)])).toBe('2 imágenes');
+    expect(describirAdjuntos([listo(1, 'application/pdf')])).toBe('1 PDF');
+    expect(describirAdjuntos([listo(1, 'application/pdf'), listo(2, 'application/pdf')])).toBe('2 PDF');
+    expect(describirAdjuntos([listo(1), listo(2, 'application/pdf')])).toBe('2 archivos');
   });
 });
 

@@ -17,8 +17,8 @@
     <div class="drag-drop-overlay animate-fade-scale">
       <div class="drag-drop-box">
         <app-icon name="image" [size]="28" class="text-primary animate-bounce mb-2" />
-        <p class="text-xs font-bold text-text-dark">Suelta tu archivo aquí</p>
-        <p class="text-[10px] text-text-muted mt-0.5">Fotos (hasta 5 MB) y documentos PDF (hasta 15 MB)</p>
+        <p class="text-xs font-bold text-text-dark">Suelta tus archivos aquí</p>
+        <p class="text-[10px] text-text-muted mt-0.5">Hasta {{ maximoAdjuntos }} por envío: fotos (5 MB cada una) y PDF (15 MB)</p>
       </div>
     </div>
   }
@@ -142,28 +142,53 @@
 
   <!-- ── Caja de Entrada de Mensajes ───────────────────────────────── -->
   @if (!state.fueraDeVentana24h()) {
-    <!-- Subida en vuelo — estado indeterminado, sin porcentaje inventado -->
-    @if (subiendoArchivo(); as nombreArchivo) {
-      <div class="adjunto-pendiente">
-        <!-- `loader` ya gira solo: el átomo le pone `animate-spin` siempre. -->
-        <app-icon name="loader" [size]="18" class="text-primary shrink-0" />
-        <span class="adjunto-nombre">Subiendo archivo… {{ nombreArchivo }}</span>
-      </div>
-    }
-
-    <!-- Adjunto pendiente -->
-    @if (adjuntoPendiente(); as adj) {
-      <div class="adjunto-pendiente">
-        @if (adj.vistaPrevia) {
-          <img [src]="adj.vistaPrevia" alt="" class="adjunto-miniatura" />
-        } @else {
-          <app-icon name="file-text" [size]="18" class="text-primary shrink-0" />
-        }
-        <span class="adjunto-nombre">{{ adj.mediaNombre }}</span>
-        <app-button
-          variant="ghost" size="sm" icon="x" [circle]="true"
-          ariaLabel="Quitar adjunto"
-          (clicked)="quitarAdjunto()" />
+    <!-- Bandeja de archivos del próximo envío, en el orden elegido. Cada uno
+         saldrá como su propio WhatsApp. Mientras sube: su miniatura local y el
+         indicador, sin porcentaje inventado (no hay progreso real que contar). -->
+    @if (adjuntos().length) {
+      <div class="bandeja-adjuntos" role="group" [attr.aria-label]="'Archivos para enviar: ' + cuantosAdjuntos()">
+        <div class="bandeja-cabecera">
+          <span class="bandeja-cuenta">
+            {{ cuantosAdjuntos() }}
+            @if (subiendoArchivo()) { <span class="bandeja-estado" role="status">· Subiendo archivo…</span> }
+          </span>
+          <button type="button" class="crm-enlace" (click)="vaciarAdjuntos()">Quitar todo</button>
+        </div>
+        <ul class="bandeja-lista">
+          @for (a of adjuntos(); track a.id; let i = $index) {
+            <li class="bandeja-item" [class.bandeja-item-subiendo]="a.subiendo">
+              @if (a.subiendo) {
+                @if (a.miniatura) {
+                  <img [src]="a.miniatura" alt="" class="bandeja-imagen" />
+                } @else {
+                  <span class="bandeja-documento"><app-icon name="file-text" [size]="18" /></span>
+                }
+                <!-- `loader` ya gira solo: el átomo le pone `animate-spin` siempre. -->
+                <span class="bandeja-cargando"><app-icon name="loader" [size]="18" /></span>
+              } @else if (a.mediaMime?.startsWith('image/') && a.vistaPrevia) {
+                <img [src]="a.vistaPrevia" [alt]="a.mediaNombre ?? 'Imagen ' + (i + 1)" class="bandeja-imagen" />
+              } @else {
+                <span class="bandeja-documento" [title]="a.mediaNombre ?? 'Documento'">
+                  <app-icon name="file-text" [size]="18" />
+                  <span class="bandeja-documento-nombre">{{ a.mediaNombre ?? 'Documento' }}</span>
+                </span>
+              }
+              <app-button
+                class="bandeja-quitar"
+                variant="secondary" size="xs" icon="x" [circle]="true"
+                [ariaLabel]="'Quitar ' + (a.mediaNombre ?? 'archivo ' + (i + 1))"
+                (clicked)="quitarAdjunto(a.id)" />
+            </li>
+          }
+          @if (adjuntos().length < maximoAdjuntos) {
+            <li>
+              <label class="bandeja-agregar crm-foco-dentro" title="Agregar más fotos o PDF">
+                <app-icon name="plus" [size]="18" />
+                <input type="file" multiple (change)="adjuntarMediaChat($event)" accept="image/jpeg,image/png,image/webp,application/pdf" class="sr-only" aria-label="Agregar más fotos o PDF" />
+              </label>
+            </li>
+          }
+        </ul>
       </div>
     }
 
@@ -192,11 +217,11 @@
     <!-- Formulario de Envío -->
     <form (submit)="enviar($event)" class="chat-input-bar">
       <!-- Botón Adjuntar Archivo o Imagen -->
-      <label class="p-2.5 rounded-full text-text-muted hover:text-primary hover:bg-bg-light cursor-pointer transition-colors shrink-0 flex items-center justify-center border border-border/80 crm-foco-dentro" title="Adjuntar archivo o imagen">
+      <label class="p-2.5 rounded-full text-text-muted hover:text-primary hover:bg-bg-light cursor-pointer transition-colors shrink-0 flex items-center justify-center border border-border/80 crm-foco-dentro" [title]="'Adjuntar fotos o PDF (hasta ' + maximoAdjuntos + ' a la vez)'">
         <app-icon name="image" [size]="18" />
         <!-- `sr-only`, no `hidden`: con `display:none` el input no es enfocable
              y adjuntar quedaba fuera del alcance del teclado. -->
-        <input type="file" (change)="adjuntarMediaChat($event)" accept="image/jpeg,image/png,image/webp,application/pdf" class="sr-only" aria-label="Adjuntar archivo o imagen" />
+        <input type="file" multiple (change)="adjuntarMediaChat($event)" accept="image/jpeg,image/png,image/webp,application/pdf" class="sr-only" aria-label="Adjuntar fotos o PDF" />
       </label>
 
       <!-- Botón Mi Memoria Personal (Biblioteca Privada) -->
@@ -237,7 +262,7 @@
       <!-- Botón Enviar -->
       <button
         type="submit"
-        [disabled]="(!state.mensajeNuevo().trim() && !adjuntoPendiente()) || state.enviando() || !!subiendoArchivo()"
+        [disabled]="(!state.mensajeNuevo().trim() && !adjuntos().length) || state.enviando() || subiendoArchivo()"
         class="chat-send-btn"
         aria-label="Enviar mensaje"
         title="Enviar mensaje (Enter · Shift+Enter para otra línea)">
@@ -309,85 +334,98 @@
   </app-drawer>
 </ng-template>
 
-<!-- ── Modal: confirmación de envío de imagen o archivo ────────────── -->
+<!-- ── Modal: confirmación de envío de imágenes o archivos ────────────── -->
 <ng-template #modalConfirmarMedia>
-  <div class="pointer-events-auto w-full max-w-md bg-white rounded-2xl shadow-lifted overflow-hidden border border-border animate-modal-pop">
+  @let lista = adjuntosListos();
+  @let soloImagenes = soloImagenesListas();
+  <div class="pointer-events-auto w-full max-w-md bg-white rounded-2xl shadow-lifted overflow-hidden border border-border animate-modal-pop flex flex-col max-h-[90dvh]">
     <!-- Cabecera -->
-    <div class="flex items-center justify-between px-5 py-4 border-b border-border bg-bg-light/40">
-      <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-          <app-icon [name]="adjuntoPendiente()?.mediaMime?.startsWith('image/') ? 'image' : 'file-text'" [size]="16" />
-        </div>
-        <div>
+    <div class="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <app-icon [name]="soloImagenes ? 'image' : 'file-text'" [size]="18" class="text-primary shrink-0" />
+        <div class="min-w-0">
           <h3 class="text-sm font-bold text-text-dark">Confirmar envío</h3>
-          <p class="text-[11px] text-text-muted">
-            Verifica {{ adjuntoPendiente()?.mediaMime?.startsWith('image/') ? 'la imagen' : 'el archivo' }} antes de enviarlo al paciente
+          <p class="text-xs text-text-muted">
+            @if (lista.length === 1) {
+              Verifica {{ soloImagenes ? 'la imagen' : 'el archivo' }} antes de enviarlo
+            } @else {
+              Verifica {{ cuantosAdjuntos() }}: cada uno sale como un mensaje, en este orden
+            }
           </p>
         </div>
       </div>
       <app-button variant="ghost" size="xs" [circle]="true" icon="x" ariaLabel="Cerrar" (clicked)="cerrarConfirmarMedia()" />
     </div>
 
-    <!-- Cuerpo con vista previa -->
-    <div class="p-5 space-y-4">
-      <!-- Ficha del paciente / destinatario -->
-      <div class="p-3 rounded-xl bg-bg-workspace border border-border flex items-center justify-between">
-        <div class="min-w-0 flex-1">
-          <span class="text-[10px] uppercase font-bold text-text-muted block">Destinatario</span>
-          <p class="text-xs font-bold text-text-dark truncate">
-            @if (state.detalleActual()?.cliente; as cli) {
-              {{ cli | nombreCliente }}
-            } @else {
-              Paciente
-            }
-          </p>
-        </div>
-        @if (state.detalleActual()?.cliente?.telefono; as tel) {
-          <span class="crm-meta-clave text-xs text-text-muted shrink-0 ml-2">{{ tel }}</span>
-        }
-      </div>
+    <!-- Cuerpo con vista previa: desplaza si son muchos; cabecera y pie quedan fijos -->
+    <div class="p-5 space-y-4 overflow-y-auto min-h-0">
+      <!-- Destinatario: sin caja, una línea de datos -->
+      <p class="crm-meta">
+        <span class="font-semibold text-text-dark">Para
+          @if (state.detalleActual()?.cliente; as cli) { {{ cli | nombreCliente }} } @else { la paciente }
+        </span>
+        @if (state.detalleActual()?.cliente?.telefono; as tel) { <span class="crm-meta-clave">{{ tel }}</span> }
+      </p>
 
-      <!-- Vista previa de la imagen -->
-      @if (adjuntoPendiente(); as adj) {
+      @if (lista.length === 1) {
+        @let adj = lista[0];
         <div class="space-y-2">
-          @if (adj.vistaPrevia) {
-            <div class="relative rounded-xl overflow-hidden bg-bg-light border border-border/80 flex items-center justify-center max-h-60 p-1 shadow-subtle">
-              <img [src]="adj.vistaPrevia" [alt]="adj.mediaNombre || 'Vista previa'" class="max-h-56 w-auto object-contain rounded-lg" />
+          @if (adj.vistaPrevia && adj.mediaMime?.startsWith('image/')) {
+            <div class="rounded-xl overflow-hidden bg-bg-workspace flex items-center justify-center max-h-64">
+              <img [src]="adj.vistaPrevia" [alt]="adj.mediaNombre || 'Vista previa'" class="max-h-64 w-auto object-contain" />
             </div>
           }
-          <div class="flex items-center justify-between text-xs text-text-muted px-0.5">
-            <span class="truncate font-medium flex items-center gap-1.5">
+          <div class="flex items-center justify-between gap-2 text-xs text-text-muted">
+            <span class="truncate font-medium flex items-center gap-1.5 min-w-0">
               <app-icon [name]="adj.mediaMime?.startsWith('image/') ? 'image' : 'file-text'" [size]="14" class="text-primary shrink-0" />
-              {{ adj.mediaNombre || 'Archivo adjunto' }}
+              <span class="truncate">{{ adj.mediaNombre || 'Archivo adjunto' }}</span>
             </span>
-            <button
-              type="button"
-              (click)="quitarAdjuntoDesdeModal()"
-              class="crm-enlace crm-enlace-critico text-xs shrink-0 ml-2">
-              Quitar
-            </button>
+            <button type="button" (click)="quitarAdjuntoDesdeModal(adj.id)" class="crm-enlace crm-enlace-critico text-xs shrink-0">Quitar</button>
           </div>
         </div>
+      } @else {
+        <ol class="confirmar-rejilla">
+          @for (a of lista; track a.id; let i = $index) {
+            <li class="confirmar-item">
+              @if (a.vistaPrevia && a.mediaMime?.startsWith('image/')) {
+                <img [src]="a.vistaPrevia" [alt]="a.mediaNombre || 'Imagen ' + (i + 1)" class="confirmar-imagen" />
+              } @else {
+                <span class="confirmar-documento">
+                  <app-icon name="file-text" [size]="20" />
+                  <span class="confirmar-documento-nombre">{{ a.mediaNombre || 'Documento' }}</span>
+                </span>
+              }
+              <span class="confirmar-orden" aria-hidden="true">{{ i + 1 }}</span>
+              <app-button
+                class="confirmar-quitar"
+                variant="secondary" size="xs" icon="x" [circle]="true"
+                [ariaLabel]="'Quitar ' + (a.mediaNombre || 'archivo ' + (i + 1))"
+                (clicked)="quitarAdjuntoDesdeModal(a.id)" />
+            </li>
+          }
+        </ol>
       }
 
-      <!-- Mensaje o texto adjunto opcional -->
+      <!-- Texto opcional: con varios archivos va como pie del primero -->
       @if (state.mensajeNuevo().trim(); as msg) {
-        <div class="p-3 rounded-xl bg-bg-light/60 border border-border/70">
-          <span class="text-[10px] uppercase font-bold text-text-muted block mb-1">Texto adjunto</span>
-          <p class="text-xs text-text-dark whitespace-pre-wrap leading-relaxed">{{ msg }}</p>
+        <div>
+          <span class="text-xs font-semibold text-text-muted block mb-1">{{ lista.length > 1 ? 'Texto (va como pie del primero)' : 'Texto' }}</span>
+          <p class="text-sm text-text-dark whitespace-pre-wrap leading-relaxed">{{ msg }}</p>
         </div>
       }
     </div>
 
     <!-- Pie con acciones -->
-    <div class="flex items-center justify-end px-5 py-3.5 border-t border-border bg-bg-light/30">
+    <div class="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-border shrink-0">
+      <app-button variant="ghost" size="sm" (clicked)="cerrarConfirmarMedia()">Seguir editando</app-button>
       <app-button
         variant="primary"
         size="sm"
         icon="send"
         [loading]="state.enviando()"
+        [disabled]="!lista.length"
         (clicked)="confirmarYEnviarMedia()">
-        {{ adjuntoPendiente()?.mediaMime?.startsWith('image/') ? 'Enviar imagen' : 'Enviar archivo' }}
+        @if (lista.length === 1) { {{ soloImagenes ? 'Enviar imagen' : 'Enviar archivo' }} } @else { Enviar {{ cuantosAdjuntos() }} }
       </app-button>
     </div>
   </div>

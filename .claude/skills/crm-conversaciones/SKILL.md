@@ -652,6 +652,16 @@ Funciones puras en `presentacion-chat.ts` (probadas en su `.spec`); la vista sol
   asignar» / «Todos los chats de tus líneas»); era una banda fija de dos líneas.
 - **Adjuntos**: `motivoParaRechazarAdjunto` vale para arrastrar, elegir y pegar. Antes solo
   arrastrar validaba, y elegir un HEIC o un PDF de 12 MB lo subía y rebotaba al enviar.
+- **Varias fotos o PDF a la vez** (18/11/2026): elegir (`multiple`), arrastrar y pegar
+  aceptan varios, hasta `MAXIMO_ADJUNTOS` (10) por envío. La bandeja (`adjuntos`) guarda
+  el ORDEN de selección: cada archivo ocupa su lugar al instante —con su miniatura local—
+  y suben de a 3; quitar uno mientras sube no lo devuelve al terminar. Al confirmar,
+  `planDeEnvio` hace **un mensaje por archivo** con el texto como pie del primero; los
+  globos se pintan juntos y los POST salen **de a uno**. Si uno falla, los siguientes no
+  se piden (llegarían desordenados) y quedan `ERROR`, reintentables sin riesgo. En el
+  backend, `enOrdenPorChat` encola los despachos a Meta de un mismo chat: sin eso, la
+  foto grande salía después de la chica aunque se mandara antes. Cada archivo sigue
+  subiendo por `/memoria-agente/upload` (lo ya enviado no cuenta en la cuota).
 
 ## 4. Despiece Modular de Componentes
 
