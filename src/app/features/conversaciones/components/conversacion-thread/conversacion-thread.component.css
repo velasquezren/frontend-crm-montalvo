@@ -48,6 +48,14 @@
   border-radius: 9999px;
   padding: 2px 8px;
   animation: fadeIn 0.15s ease;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* El input va sin outline (vive dentro de la píldora): el foco lo pinta la
+   píldora, igual que el compositor y los demás campos del chat. */
+.chat-search-box:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
 
 .chat-search-input {

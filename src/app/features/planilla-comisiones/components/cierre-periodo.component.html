@@ -87,7 +87,7 @@
         <app-icon name="clock" [size]="12" /> Pendiente de firma ({{ rev.faltan.length }})
       </p>
       @if (rev.faltan.length === 0) {
-        <p class="text-xs text-secondary font-semibold mt-1">Nadie: el mes se cierra con la última firma.</p>
+        <p class="text-xs text-secondary-texto font-semibold mt-1">Nadie: el mes se cierra con la última firma.</p>
       } @else {
         <div class="flex flex-col gap-2 mt-1.5">
           @for (f of rev.faltan; track f.id) {

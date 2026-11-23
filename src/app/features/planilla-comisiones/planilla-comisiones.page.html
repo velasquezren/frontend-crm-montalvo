@@ -201,7 +201,7 @@
                   </app-badge>
                 </td>
                 <td class="text-right font-medium text-text-dark">{{ p.filasTotales | number }}</td>
-                <td class="text-right font-semibold text-secondary">{{ p.filasValidas | number }}</td>
+                <td class="text-right font-semibold text-secondary-texto">{{ p.filasValidas | number }}</td>
                 <td class="text-left text-xs text-text-muted truncate max-w-[180px]">{{ p.archivoNombre }}</td>
                 <td class="text-left text-xs text-text-muted">{{ p.calculadoEn ? (p.calculadoEn | date: 'dd/MM/yy HH:mm') : '—' }}</td>
                 <td class="text-right whitespace-nowrap" (click)="$event.stopPropagation()">

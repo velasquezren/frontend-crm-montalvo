@@ -119,7 +119,7 @@
 
 /* Tinte del número, para cuando el valor comunica por sí mismo. */
 .kpi-valor-primary { color: var(--color-primary); }
-.kpi-valor-secondary { color: var(--color-secondary); }
+.kpi-valor-secondary { color: var(--color-secondary-texto); }
 .kpi-valor-critical { color: var(--color-text-critical); }
 .kpi-valor-neutral { color: var(--color-text-muted); }
 

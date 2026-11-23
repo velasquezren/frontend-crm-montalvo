@@ -362,7 +362,7 @@
             <div class="flex items-center gap-3">
               <span class="text-xs text-text-muted">
                 bono del año:
-                <strong class="text-sm font-bold text-secondary font-mono">${{ f.totalBonoTrimestralUsd | number: '1.2-2' }}</strong>
+                <strong class="text-sm font-bold text-secondary-texto font-mono">${{ f.totalBonoTrimestralUsd | number: '1.2-2' }}</strong>
               </span>
               <app-icon
                 [name]="esExpandida(f.vendedoraId) ? 'chevron-up' : 'chevron-down'"
@@ -410,7 +410,7 @@
                   @if (t.bonoUsd > 0) {
                     <div class="mt-2 pt-1.5 border-t border-border/40 flex items-center justify-between">
                       <span class="text-3xs font-bold text-text-dark">Bono:</span>
-                      <span class="text-xs font-bold text-secondary font-mono">{{ t.bonoUsd | moneda: 'USD': tcReferencia() }}</span>
+                      <span class="text-xs font-bold text-secondary-texto font-mono">{{ t.bonoUsd | moneda: 'USD': tcReferencia() }}</span>
                     </div>
                   }
                 </div>

@@ -89,6 +89,12 @@
   --color-critical-bg: color-mix(in srgb, var(--color-text-critical) 6%, white);
   --color-gold-bg: color-mix(in srgb, var(--color-gold) 12%, white);
 
+  /* Texto en el verde secundario. #39ADA3 da 2,73:1 sobre blanco (AA pide 4,5:1
+     y, para texto grande, 3:1): sirve de acento o ícono, no para leer. Esta
+     mezcla con el primario (#147C71) da 5,06:1 sobre blanco, 4,61:1 sobre
+     bg-light y 4,80:1 sobre workspace, y sigue leyéndose como el verde claro. */
+  --color-secondary-texto: color-mix(in srgb, var(--color-secondary) 35%, var(--color-primary));
+
   /* 📐 Sombras del Sistema de Diseño (§3.2) */
   --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.08);
   --shadow-lifted: 0 8px 30px rgba(0, 0, 0, 0.12);

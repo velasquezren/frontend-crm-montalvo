@@ -168,7 +168,13 @@
 .dash-ahora-item:hover,
 .dash-ahora-item:focus-visible {
   background: var(--color-bg-light);
-  outline: none;
+}
+
+/* Solo el fondo claro (1,07:1 contra el blanco) no se distingue con teclado:
+   el contorno del sistema, hacia dentro para que la rejilla no lo recorte. */
+.dash-ahora-item:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
 }
 
 .dash-ahora-numero {

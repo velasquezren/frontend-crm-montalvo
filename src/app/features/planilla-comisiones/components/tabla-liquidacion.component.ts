@@ -298,7 +298,7 @@ type DireccionOrden = 'asc' | 'desc';
             </td>
             <td class="text-right font-medium text-text-dark whitespace-nowrap">{{ formatearBs(f.totalBob) }}</td>
             <td class="text-right text-text-muted whitespace-nowrap">{{ formatearBs(f.sueldoBase) }}</td>
-            <td class="text-right font-extrabold text-secondary text-base whitespace-nowrap celda-fija-der">
+            <td class="text-right font-extrabold text-secondary-texto text-base whitespace-nowrap celda-fija-der">
               {{ formatearBs(f.totalGanado) }}
             </td>
           </tr>
@@ -331,7 +331,7 @@ type DireccionOrden = 'asc' | 'desc';
           <td class="text-right font-bold text-primary whitespace-nowrap">{{ formatearUsd(totalesMostrados()['totalUsd']) }}</td>
           <td class="text-right font-bold whitespace-nowrap">{{ formatearBs(totalesMostrados()['totalBob']) }}</td>
           <td class="text-right font-bold whitespace-nowrap">{{ formatearBs(totalesMostrados()['sueldoBase']) }}</td>
-          <td class="text-right font-extrabold text-secondary text-base whitespace-nowrap celda-fija-der">
+          <td class="text-right font-extrabold text-secondary-texto text-base whitespace-nowrap celda-fija-der">
             {{ formatearBs(totalesMostrados()['totalGanado']) }}
           </td>
         </tr>

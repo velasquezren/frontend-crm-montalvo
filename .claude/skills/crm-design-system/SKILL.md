@@ -97,6 +97,14 @@ Informes, Servicios y configuración comparten `.crm-panel`, `.crm-barra-periodo
 `<app-table>` y en los charts). Sin ancho fijo por dígito, las cifras bailan al cambiar de fila y
 una tabla de comisiones se vuelve incómoda de escanear.
 
+## Verde secundario: acento, no texto
+
+`--color-secondary` (#39ADA3) mide 2,73:1 sobre blanco: vale para íconos,
+fondos tenues y bordes, no para leer. El texto en ese verde va con
+`text-secondary-texto` / `var(--color-secondary-texto)` (mezcla 35 % secundario +
+65 % primario, ≥ 4,6:1 en los tres fondos). `verificar-ui` rechaza
+`text-secondary` en etiquetas de texto.
+
 ## Capas (z-index)
 
 Una sola escala en `styles.css` (`--z-topbar`, `--z-sidebar`, `--z-panel-movil`,

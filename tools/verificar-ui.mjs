@@ -19,6 +19,9 @@ const DEUDA = {
 
 /* Capas globales (≥ 100) y cuerpos diminutos con token: solo por su nombre. */
 const CAPA_SUELTA_CLASE = /(?:^|\s)(?:[\w-]+:)*z-(?:\[\d{3,}\]|\d{3,})(?:\s|$)/;
+/* #39ADA3 da 2,73:1 sobre blanco: acento o ícono, nunca texto (usa text-secondary-texto). */
+const TEXTO_SECUNDARIO = /(?:^|\s)text-secondary(?:\s|$)/;
+const ETIQUETAS_TEXTO = new Set(['p', 'span', 'td', 'th', 'strong', 'b', 'em', 'small', 'label', 'a', 'li', 'dt', 'dd', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
 const TIPO_SUELTO = /(?:^|\s)(?:[\w-]+:)*text-\[1[01]px\](?:\s|$)/;
 
 function hijos(node) {
@@ -42,6 +45,9 @@ export function revisarPlantilla(texto, archivo = 'plantilla.html') {
         const clases = atributo('class')?.value ?? '';
         if (CAPA_SUELTA_CLASE.test(clases)) {
           reportar('capa-suelta', 'z-index global escrito a mano: usa la escala de styles.css con z-(--z-…).');
+        }
+        if (ETIQUETAS_TEXTO.has(node.name) && TEXTO_SECUNDARIO.test(clases)) {
+          reportar('contraste-secundario', 'text-secondary (2,73:1) no alcanza AA como texto: usa text-secondary-texto.');
         }
         if (TIPO_SUELTO.test(clases)) {
           reportar('tipo-suelto', 'text-[10px]/text-[11px] tienen nombre: usa text-3xs/text-2xs.');

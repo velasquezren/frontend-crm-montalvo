@@ -112,3 +112,10 @@ test('capas globales y cuerpos diminutos solo por su nombre', () => {
   assert.deepEqual(revisarCss('.a { z-index: 120; } .b { z-index: 40; } .c { z-index: var(--z-topbar); }', 'x.component.css').map(p => p.regla), ['capa-suelta']);
   assert.deepEqual(revisarCss('.cdk { z-index: 1000; }', 'src/styles.css'), []);
 });
+
+test('el verde secundario no se usa como color de texto', () => {
+  const html = `<p class="text-xs text-secondary">Ana</p><td class="font-bold text-secondary">12</td>
+    <app-icon class="text-secondary" /><div class="bg-secondary/15 text-secondary"></div>
+    <span class="text-secondary-texto">ok</span><a class="hover:text-secondary">ok</a>`;
+  assert.deepEqual(revisarPlantilla(html).map(p => p.regla), ['contraste-secundario', 'contraste-secundario']);
+});
