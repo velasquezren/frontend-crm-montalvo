@@ -72,7 +72,7 @@
               <app-icon name="check-circle" [size]="14" class="text-primary shrink-0 mt-0.5" />
               <div>
                 <span class="text-xs font-bold text-text-dark">{{ a.nombre }}</span>
-                <span class="text-[11px] text-text-muted ml-1.5">· {{ a.fecha | fechaClinica: 'd MMM, HH:mm' }}</span>
+                <span class="text-2xs text-text-muted ml-1.5">· {{ a.fecha | fechaClinica: 'd MMM, HH:mm' }}</span>
                 @if (a.comentario) {
                   <p class="text-xs text-text-muted/90 italic mt-0.5">"{{ a.comentario }}"</p>
                 }
@@ -114,7 +114,7 @@
        SUPER_ADMIN activos: si alguien baja a ADMIN deja de bloquear, y si
        entra uno nuevo el mes vuelve a quedar pendiente. Decirlo evita que
        un cambio aparentemente espontáneo parezca un fallo. -->
-  <p class="text-[11px] text-text-muted mt-3">
+  <p class="text-2xs text-text-muted mt-3">
     Firman los SUPER_ADMIN activos en este momento. Si alguno cambia de rol, la lista se
     ajusta sola.
   </p>
@@ -161,7 +161,7 @@
           label="Motivo (queda en el registro de auditoría)"
           [placeholder]="accion === 'RECHAZAR' ? 'Ej. falta la cirugía del 12' : 'Ej. el Excel traía dos filas repetidas'"
           [(value)]="motivoAccion" />
-        <p class="text-[11px] text-text-muted mt-1">
+        <p class="text-2xs text-text-muted mt-1">
           Mínimo 3 caracteres. Dentro de tres meses esta es la única forma de saber por qué el
           mes volvió atrás.
         </p>

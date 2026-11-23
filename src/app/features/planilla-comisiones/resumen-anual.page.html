@@ -228,7 +228,7 @@
                 <div class="flex items-center justify-between gap-2">
                   <div class="min-w-0 flex-1">
                     <span class="font-semibold text-xs text-text-dark block truncate">{{ f.nombre }}</span>
-                    <span class="block text-[10px] text-text-muted font-normal truncate">{{ f.tipo }} · {{ f.area }}</span>
+                    <span class="block text-3xs text-text-muted font-normal truncate">{{ f.tipo }} · {{ f.area }}</span>
                   </div>
                   <svg class="w-12 h-3.5 shrink-0 opacity-85" viewBox="0 0 48 14" aria-hidden="true" title="Tendencia mensual">
                     @for (b of sparklineBarras(f.meses); track $index) {
@@ -246,7 +246,7 @@
 
               @for (mes of f.meses; track mes.mes) {
                 <td
-                  class="text-right col-mes font-mono text-[11px] whitespace-nowrap"
+                  class="text-right col-mes font-mono text-2xs whitespace-nowrap"
                   [class.celda-sin-datos]="!mes.importado"
                   [class.celda-sin-liquidar]="mes.importado && !mes.liquidado">
                   @if (mes.importado) {
@@ -282,11 +282,11 @@
                    cuadre con las filas de encima. Se dice, o parece que el año
                    entero vendió menos. -->
               @if (hayFiltro()) {
-                <span class="block text-[10px] font-normal text-text-muted">solo lo filtrado</span>
+                <span class="block text-3xs font-normal text-text-muted">solo lo filtrado</span>
               }
             </td>
             @for (t of totalesPorMesFiltrados(); track $index; let i = $index) {
-              <td class="text-right col-mes font-mono font-bold text-[11px] whitespace-nowrap">
+              <td class="text-right col-mes font-mono font-bold text-2xs whitespace-nowrap">
                 @if (t > 0) {
                   {{ t | moneda: 'USD': tcPorMes()[i] }}
                 } @else {
@@ -387,7 +387,7 @@
                   </div>
 
                   <div class="flex items-baseline justify-between text-xs my-1">
-                    <span class="text-text-muted text-[11px]">Promedio:</span>
+                    <span class="text-text-muted text-2xs">Promedio:</span>
                     <span class="font-bold text-text-dark font-mono">{{ t.promedio | moneda: 'USD': tcReferencia() }}</span>
                   </div>
 
@@ -399,17 +399,17 @@
                       [style.width.%]="calcularPctMetaTrimestral(t.promedio, t.objetivoUsd)"></div>
                   </div>
 
-                  <p class="text-[10px] text-text-muted leading-tight font-mono">
+                  <p class="text-3xs text-text-muted leading-tight font-mono">
                     meta {{ t.objetivoUsd | moneda: 'USD': tcReferencia() }}
                   </p>
 
                   @if (leyendaTrimestre(t); as leyenda) {
-                    <p class="text-[10px] text-text-muted italic mt-1">{{ leyenda }}</p>
+                    <p class="text-3xs text-text-muted italic mt-1">{{ leyenda }}</p>
                   }
 
                   @if (t.bonoUsd > 0) {
                     <div class="mt-2 pt-1.5 border-t border-border/40 flex items-center justify-between">
-                      <span class="text-[10px] font-bold text-text-dark">Bono:</span>
+                      <span class="text-3xs font-bold text-text-dark">Bono:</span>
                       <span class="text-xs font-bold text-secondary font-mono">{{ t.bonoUsd | moneda: 'USD': tcReferencia() }}</span>
                     </div>
                   }

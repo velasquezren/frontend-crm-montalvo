@@ -56,13 +56,13 @@ export interface ChartItem {
                 <span class="font-medium text-text-dark truncate max-w-[65%] group-hover:text-primary transition-colors">
                   {{ item.label }}
                   @if (item.sublabel) {
-                    <span class="text-text-muted font-normal text-[11px]">({{ item.sublabel }})</span>
+                    <span class="text-text-muted font-normal text-2xs">({{ item.sublabel }})</span>
                   }
                 </span>
                 <span class="font-bold text-text-dark whitespace-nowrap">
                   {{ format(item.value) }}
                   @if (item.pct > 0) {
-                    <span class="text-[10px] text-text-muted font-normal ml-1">({{ item.pct }}%)</span>
+                    <span class="text-3xs text-text-muted font-normal ml-1">({{ item.pct }}%)</span>
                   }
                 </span>
               </div>

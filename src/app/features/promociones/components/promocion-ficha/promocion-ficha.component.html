@@ -75,7 +75,7 @@
               }
             </div>
             @if (hayCambios()) {
-              <p class="text-[11px] text-text-muted">Guarda o descarta los cambios antes de cambiar el estado.</p>
+              <p class="text-2xs text-text-muted">Guarda o descarta los cambios antes de cambiar el estado.</p>
             }
           }
         </section>
@@ -86,7 +86,7 @@
         <div class="flex items-center justify-between gap-2">
           <h3 id="ficha-contenido" class="text-xs font-bold text-text-dark uppercase tracking-wider">Contenido</h3>
           @if (!p.puedeEditar && p.estado !== 'ARCHIVADA') {
-            <span class="text-[11px] text-text-muted">En este estado solo la edita un administrador.</span>
+            <span class="text-2xs text-text-muted">En este estado solo la edita un administrador.</span>
           }
         </div>
         <app-input label="Título" [disabled]="!p.puedeEditar" [value]="b.titulo" (valueChange)="editar('titulo', $event)" />
@@ -98,7 +98,7 @@
         <div class="flex flex-col gap-2" role="group" aria-labelledby="ficha-servicios">
           <div class="flex items-baseline justify-between gap-2">
             <span id="ficha-servicios" class="text-sm font-medium text-text-dark">Servicios incluidos</span>
-            <span class="text-[11px] text-text-muted">{{ b.servicios.length }} de {{ maximoServicios }}</span>
+            <span class="text-2xs text-text-muted">{{ b.servicios.length }} de {{ maximoServicios }}</span>
           </div>
           <p class="text-xs text-text-muted -mt-1">
             @if (b.servicios.length) {
@@ -236,9 +236,9 @@
                   {{ f.nombre }}
                   @if (f.obligatorio) { <span class="font-normal text-text-muted">· obligatorio</span> }
                 </p>
-                <p class="text-[11px] text-text-muted leading-snug">{{ f.medida }} · {{ f.uso }}</p>
+                <p class="text-2xs text-text-muted leading-snug">{{ f.medida }} · {{ f.uso }}</p>
                 @if (img) {
-                  <p class="text-[11px] text-text-muted tabular-nums">{{ img.ancho }}×{{ img.alto }} px</p>
+                  <p class="text-2xs text-text-muted tabular-nums">{{ img.ancho }}×{{ img.alto }} px</p>
                 }
                 @if (p.puedeEditar) {
                   <div class="flex items-center gap-2 mt-1">
@@ -261,7 +261,7 @@
       <!-- ── Meta: anuncios y lo que trajeron ──────────────────────── -->
       <section class="flex flex-col gap-3" aria-labelledby="ficha-anuncios">
         <h3 id="ficha-anuncios" class="text-xs font-bold text-text-dark uppercase tracking-wider">Anuncios de Meta</h3>
-        <p class="text-[11px] text-text-muted leading-relaxed">
+        <p class="text-2xs text-text-muted leading-relaxed">
           Cuando una paciente llega por un anuncio de Facebook o Instagram, el CRM guarda su id. Enlázalo aquí y el chat
           sabrá que vino por esta promoción. El id está en el Administrador de anuncios, o en la pestaña «Anuncios de Meta».
         </p>
@@ -297,7 +297,7 @@
       <!-- ── Lo que escribe la paciente desde la landing ───────────── -->
       <section class="flex flex-col gap-2" aria-labelledby="ficha-whatsapp">
         <h3 id="ficha-whatsapp" class="text-xs font-bold text-text-dark uppercase tracking-wider">Mensaje de WhatsApp</h3>
-        <p class="text-[11px] text-text-muted">Lo que la landing pone en el botón de WhatsApp. El código identifica la promoción en el chat.</p>
+        <p class="text-2xs text-text-muted">Lo que la landing pone en el botón de WhatsApp. El código identifica la promoción en el chat.</p>
         <div class="flex items-center gap-2">
           <p class="flex-1 min-w-0 text-xs text-text-dark bg-bg-workspace border border-border rounded-xl px-3 py-2">{{ p.mensajeWhatsapp }}</p>
           <app-button variant="ghost" size="xs" [circle]="true" icon="copy" ariaLabel="Copiar el mensaje" (clicked)="copiarMensaje(p.mensajeWhatsapp)" />

@@ -28,7 +28,7 @@
            diga. El nombre de la app lo pone el sistema operativo en la PWA. -->
       <span class="hidden sm:flex text-sm sm:text-base font-bold text-text-dark tracking-tight items-center gap-1.5 sm:gap-2 truncate">
         Clínica Montalvo
-        <span class="text-[10px] sm:text-xs font-semibold text-primary bg-primary/10 px-1.5 sm:px-2 py-0.5 rounded-md">CRM</span>
+        <span class="text-3xs sm:text-xs font-semibold text-primary bg-primary/10 px-1.5 sm:px-2 py-0.5 rounded-md">CRM</span>
       </span>
     </div>
 
@@ -49,7 +49,7 @@
               <p class="text-sm font-medium text-text-dark leading-tight group-hover:text-primary transition-colors">
                 {{ currentUser.nombre }}
               </p>
-              <p class="text-[11px] text-text-muted leading-tight">
+              <p class="text-2xs text-text-muted leading-tight">
                 {{ rolLabel[currentUser.rol] }}
               </p>
             </div>
@@ -190,7 +190,7 @@
   <!-- Se levanta por encima de la barra inferior mientras exista (hasta 768px,
        área segura incluida); en desktop la variable vale 0 y va abajo-izquierda.
        Con `bottom-[4.8rem] sm:bottom-6`, entre 640 y 768px quedaba debajo de la barra. -->
-  <div class="fixed bottom-[calc(var(--shell-barra-inferior-alto)+1rem)] left-4 right-4 sm:bottom-[calc(var(--shell-barra-inferior-alto)+1.5rem)] sm:left-6 sm:right-auto sm:max-w-sm z-50">
+  <div class="fixed bottom-[calc(var(--shell-barra-inferior-alto)+1rem)] left-4 right-4 sm:bottom-[calc(var(--shell-barra-inferior-alto)+1.5rem)] sm:left-6 sm:right-auto sm:max-w-sm z-(--z-panel-movil)">
     <div class="bg-white border border-border shadow-lifted rounded-2xl p-4">
       <div class="flex gap-3 items-center">
         <div class="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0 border border-primary/20">

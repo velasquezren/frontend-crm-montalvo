@@ -98,8 +98,8 @@ export class ImageViewerComponent {
     this.resetTransform();
 
     this.overlayRef = this.dialogService.openTemplate(tpl, this.vcr, {
-      panelClass: ['fixed', 'inset-0', 'z-[99999]', 'pointer-events-auto'],
-      backdropClass: ['fixed', 'inset-0', 'bg-black/95', 'z-[99998]'],
+      panelClass: ['fixed', 'inset-0', 'z-(--z-visor)', 'pointer-events-auto'],
+      backdropClass: ['fixed', 'inset-0', 'bg-black/95', 'z-(--z-visor-fondo)'],
       /**
        * Escape (y el clic en el fondo) lo cierra el DialogService con su propio
        * `dispose()`, sin pasar por `cerrar()`. Sin este aviso el visor seguía

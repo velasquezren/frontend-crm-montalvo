@@ -1,6 +1,6 @@
 @if (state.panelAbierto() && !!state.detalleActual()) {
   <div
-    class="xl:hidden fixed inset-0 bg-black/40 z-40 animate-fade-scale cursor-pointer"
+    class="xl:hidden fixed inset-0 bg-black/40 z-(--z-velo-movil) animate-fade-scale cursor-pointer"
     (click)="togglePanel()"
     aria-hidden="true"></div>
 }
@@ -28,7 +28,7 @@
             </div>
             <div>
               <h3 class="text-sm font-bold text-text-dark leading-tight">Editar Ficha</h3>
-              <p class="text-[10px] text-text-muted leading-tight truncate max-w-[180px]">{{ chat.cliente | nombreCliente }}</p>
+              <p class="text-3xs text-text-muted leading-tight truncate max-w-[180px]">{{ chat.cliente | nombreCliente }}</p>
             </div>
           </div>
           <app-button variant="ghost" size="sm" [circle]="true" icon="x" ariaLabel="Cancelar edición" (clicked)="state.cancelarEdicionFicha()" />
@@ -185,7 +185,7 @@
                    es un dato, y se escribe como tal. El botón de copiar queda
                    fuera del texto en vez de dentro de la cápsula. -->
               <span class="inline-flex items-center gap-1" title="Código PAC (FileMaker)">
-                <span class="crm-meta-clave text-[11px]">{{ codigo }}</span>
+                <span class="crm-meta-clave text-2xs">{{ codigo }}</span>
                 <button
                   type="button"
                   (click)="copiarTexto(codigo, 'Código PAC')"
@@ -385,14 +385,14 @@
                 </div>
               }
               @if (campana.cuerpo) {
-                <p class="text-[11px] text-text-muted leading-tight line-clamp-2">{{ campana.cuerpo }}</p>
+                <p class="text-2xs text-text-muted leading-tight line-clamp-2">{{ campana.cuerpo }}</p>
               }
               @if (campana.saludo) {
-                <p class="text-[11px] text-text-muted leading-tight">
+                <p class="text-2xs text-text-muted leading-tight">
                   <span class="font-semibold text-text-dark">Escribió:</span> «{{ campana.saludo }}»
                 </p>
               }
-              <div class="flex items-center justify-between gap-1 pt-1.5 border-t border-primary/10 text-[10px] text-text-muted">
+              <div class="flex items-center justify-between gap-1 pt-1.5 border-t border-primary/10 text-3xs text-text-muted">
                 <span>Meta Ads</span>
                 @if (campana.anuncioId) {
                   <span class="font-mono text-primary font-semibold">ID: {{ campana.anuncioId }}</span>
@@ -459,7 +459,7 @@
                       <app-avatar [initials]="iniciales(ag.nombre)" size="sm" />
                       <div class="min-w-0">
                         <p class="text-sm text-text-dark truncate">{{ ag.nombre }}</p>
-                        <p class="text-[10px] text-text-muted">{{ rolLabel[ag.rol] }}</p>
+                        <p class="text-3xs text-text-muted">{{ rolLabel[ag.rol] }}</p>
                       </div>
                       @if (chat.agente?.id === ag.id) {
                         <app-icon name="check-circle" [size]="16" class="text-primary ml-auto shrink-0" />
@@ -535,7 +535,7 @@
           }
 
           <div class="space-y-1.5">
-            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Tipo</label>
+            <label class="block text-3xs font-bold uppercase tracking-wider text-text-muted">Tipo</label>
             <div class="flex flex-wrap gap-1.5" role="group" aria-label="Tipo de actividad">
               @for (t of tiposActividad; track t) {
                 <app-filter-chip size="sm" [active]="tipoActividad() === t" (clicked)="tipoActividad.set(t)">
@@ -546,19 +546,19 @@
           </div>
 
           <div class="space-y-1.5">
-            <label [for]="tituloInput.id" class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Título *</label>
+            <label [for]="tituloInput.id" class="block text-3xs font-bold uppercase tracking-wider text-text-muted">Título *</label>
             <app-input #tituloInput placeholder="Ej. Llamar para confirmar cita" [(value)]="tituloActividad" 
   ariaLabel="Título" />
           </div>
 
           <div class="space-y-1.5">
-            <label [for]="fechaInput.id" class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Fecha y hora *</label>
+            <label [for]="fechaInput.id" class="block text-3xs font-bold uppercase tracking-wider text-text-muted">Fecha y hora *</label>
             <app-input #fechaInput type="datetime-local" [(value)]="fechaActividad" 
   ariaLabel="Fecha y hora" />
           </div>
 
           <div class="space-y-1.5">
-            <label [for]="notasInput.id" class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Notas (opcional)</label>
+            <label [for]="notasInput.id" class="block text-3xs font-bold uppercase tracking-wider text-text-muted">Notas (opcional)</label>
             <app-input #notasInput [multiline]="true" [rows]="3" placeholder="Detalles para recordar…" [(value)]="notasActividad" 
   ariaLabel="Notas (opcional)" />
           </div>

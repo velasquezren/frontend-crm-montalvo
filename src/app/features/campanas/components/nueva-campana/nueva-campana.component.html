@@ -64,7 +64,7 @@
         <h3 class="text-xs font-bold text-text-dark uppercase tracking-wider">Así le llegará a una paciente llamada María</h3>
         <app-vista-previa-plantilla [plantilla]="p" [valores]="ejemplo()" />
         @if (usaNombre()) {
-          <p class="text-[11px] text-text-muted">A un contacto sin nombre: «{{ ejemploSinNombre().join(' · ') }}» donde iría el nombre.</p>
+          <p class="text-2xs text-text-muted">A un contacto sin nombre: «{{ ejemploSinNombre().join(' · ') }}» donde iría el nombre.</p>
         }
       </section>
     }
@@ -77,7 +77,7 @@
       @if (programar()) {
         <app-input type="datetime-local" label="Empieza el (hora de La Paz)" [(value)]="programadaPara" />
       }
-      <p class="text-[11px] text-text-muted leading-relaxed">
+      <p class="text-2xs text-text-muted leading-relaxed">
         Sale de a poco (unas 80 por minuto), de las que más gastaron a las que menos, y solo de 9:00 a 20:00
         en La Paz: fuera de esa hora espera. Puedes pausarla o cancelarla en Campañas.
       </p>

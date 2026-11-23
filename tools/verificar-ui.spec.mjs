@@ -103,3 +103,12 @@ test('lee la clase del host y la plantilla externa del decorador', () => {
   assert.equal(c.claseHost, 'flex-1 min-h-0 flex flex-col');
   assert.equal(componentesDe("@Component({ host: { '(keydown)': 'x()' } }) class B {}", 'b.ts')[0].claseHost, undefined);
 });
+
+test('capas globales y cuerpos diminutos solo por su nombre', () => {
+  const html = `<div class="fixed z-[101]"></div><div class="sm:z-100"></div>
+    <p class="text-[11px] font-bold"></p><span class="md:text-[10px]"></span>
+    <div class="fixed z-(--z-aviso)"></div><div class="relative z-10"></div><p class="text-2xs"></p>`;
+  assert.deepEqual(revisarPlantilla(html).map(p => p.regla), ['capa-suelta', 'capa-suelta', 'tipo-suelto', 'tipo-suelto']);
+  assert.deepEqual(revisarCss('.a { z-index: 120; } .b { z-index: 40; } .c { z-index: var(--z-topbar); }', 'x.component.css').map(p => p.regla), ['capa-suelta']);
+  assert.deepEqual(revisarCss('.cdk { z-index: 1000; }', 'src/styles.css'), []);
+});

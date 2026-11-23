@@ -82,6 +82,8 @@ hex local.
 ## Tipografía y números
 
 Poppins. Jerarquía base del workspace: H1 24 / H2 20 / H3 16 / base 16 / small 14.
+Los cuerpos diminutos tienen nombre: `text-2xs` (11px) y `text-3xs` (10px), en
+`@theme`. `text-[10px]`/`text-[11px]` escritos a mano los rechaza `verificar-ui`.
 Las cabeceras de sección usan `.crm-titulo-seccion` (15px); las utilidades de
 cada contexto conservan la densidad de tablas y cajones. Los radios `xl` y
 `2xl` se definen en `@theme` para CSS y Tailwind.
@@ -94,6 +96,17 @@ Informes, Servicios y configuración comparten `.crm-panel`, `.crm-barra-periodo
 **Montos, teléfonos, fechas y cualquier número en columna van con `tabular-nums`** (ya viene en
 `<app-table>` y en los charts). Sin ancho fijo por dígito, las cifras bailan al cambiar de fila y
 una tabla de comisiones se vuelve incómoda de escanear.
+
+## Capas (z-index)
+
+Una sola escala en `styles.css` (`--z-topbar`, `--z-sidebar`, `--z-panel-movil`,
+`--z-barra-inferior`, `--z-dialogo`, `--z-aviso`…). Las superficies globales la
+leen con `z-index: var(--z-…)` en CSS o `z-(--z-…)` en clases; `verificar-ui`
+rechaza cualquier capa ≥ 100 escrita a mano. Los números pequeños dentro de un
+componente siguen siendo locales. Los diálogos y cajones viven en
+`.cdk-overlay-container` (1000): lo que deba verse con un cajón abierto —los
+avisos— va en `--z-aviso` (1100). Hasta 2026-11 los avisos estaban en `z-50` y
+un error al guardar dentro de un cajón quedaba tapado por su fondo.
 
 ## Animación
 
@@ -598,7 +611,7 @@ rompa lo que este archivo declara ley**:
 | Hexadecimales | cualquier `#rrggbb` ajeno a los nueve de la paleta, en `.css` **y en `.ts`** |
 | Un solo cajón | `animate-drawer-in` o el `panelClass` del cajón fuera de su dueño — se usa `<app-drawer>` y `DialogService.abrirCajon()` |
 | Nombre de cliente | `{{ …cliente.nombre }}` o `iniciales(…cliente.nombre)` en crudo — va por `nombreCliente` / `inicialesCliente` |
-| Píldoras a mano | `rounded-full` + `text-[≤11px]` en un `class` fuera de `shared/components/` — usa el nombre que le corresponda |
+| Píldoras a mano | `rounded-full` + `text-2xs`/`text-3xs`/`text-[≤11px]` en un `class` fuera de `shared/components/` — usa el nombre que le corresponda |
 | Radios en plantillas | `rounded` / `rounded-sm` / `rounded-md` en cualquier `class`, y `rounded-lg` en un `<button>` — la regla de radios solo miraba `.css`, y por ahí entraron 81 (2026-09-23) |
 | Transiciones | `transition-all` en `.html`/`.ts` y `transition: all` en `.css`/`.ts` — se nombra la propiedad (2026-10-19) |
 | Puntos suspensivos | `...` tras una palabra en un `.html` — el texto visible usa `…` (2026-10-19) |

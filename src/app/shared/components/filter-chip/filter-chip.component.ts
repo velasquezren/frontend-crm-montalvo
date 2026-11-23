@@ -44,7 +44,7 @@ export class FilterChipComponent {
 
   protected readonly countClasses = computed(() =>
     this.active()
-      ? 'rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] leading-none'
-      : 'rounded-full bg-neutral-bg px-1.5 py-0.5 text-[10px] leading-none',
+      ? 'rounded-full bg-white/20 px-1.5 py-0.5 text-3xs leading-none'
+      : 'rounded-full bg-neutral-bg px-1.5 py-0.5 text-3xs leading-none',
   );
 }

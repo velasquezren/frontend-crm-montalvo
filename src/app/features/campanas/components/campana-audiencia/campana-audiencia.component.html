@@ -96,7 +96,7 @@
          paciente cuenta una vez, por su primer motivo, y todo suma el total. -->
     <section class="lg:col-span-2 bg-white rounded-2xl border border-border p-4">
       <div class="flex items-center justify-between gap-3 mb-3">
-        <h2 class="text-[10px] font-bold uppercase tracking-wider text-text-muted">Quedan fuera</h2>
+        <h2 class="text-3xs font-bold uppercase tracking-wider text-text-muted">Quedan fuera</h2>
         <span class="text-xs font-semibold tabular-nums text-text-dark">{{ totalExcluidas() }}</span>
       </div>
       <ul class="flex flex-col gap-2">
@@ -118,7 +118,7 @@
         label="Tarifa de Meta por mensaje ($us)"
         [error]="tarifaInvalida() ? 'Escribe un monto en dólares, como 0.055' : ''"
         [(value)]="tarifa" />
-      <p class="text-[11px] leading-relaxed text-text-muted">
+      <p class="text-2xs leading-relaxed text-text-muted">
         Dólares por plantilla de Marketing entregada a Bolivia. Es aproximada: Meta publica la exacta en su
         tarifario y puede cambiarla cada trimestre.
       </p>

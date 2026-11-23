@@ -65,7 +65,7 @@ Para estimar sin navegador, por carácter de texto en castellano (mezcla de min�
 
 | Clase | px por carácter | Ejemplo |
 |---|---|---|
-| `text-[11px]` | ~6,0 | «Pidió persona · 14 min» (22 c) ≈ 135 px |
+| `text-2xs` (11px) | ~6,0 | «Pidió persona · 14 min» (22 c) ≈ 135 px |
 | `text-xs` (12 px) | ~6,6 | «Solicitud de cita · 3 min» (25 c) ≈ 165 px |
 | `text-sm` (14 px) | ~7,7 | un nombre de 30 c ≈ 230 px |
 | `font-semibold` | +5 % | — |

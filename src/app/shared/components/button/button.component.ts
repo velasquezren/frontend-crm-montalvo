@@ -69,7 +69,7 @@ export class ButtonComponent {
 
     const sizes: Record<ButtonSize, string> = this.circle()
       ? { xs: 'w-7 h-7 p-0 shrink-0', sm: 'w-9 h-9 p-0 shrink-0', md: 'w-11 h-11 p-0 shrink-0' }
-      : { xs: 'px-3 py-1 text-[11px]', sm: 'px-4 py-2 text-xs', md: 'px-5 py-2.5 text-sm' };
+      : { xs: 'px-3 py-1 text-2xs', sm: 'px-4 py-2 text-xs', md: 'px-5 py-2.5 text-sm' };
 
     const variants: Record<ButtonVariant, string> = {
       primary: 'bg-primary text-white shadow-subtle hover:opacity-90',

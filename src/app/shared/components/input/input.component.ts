@@ -41,10 +41,11 @@ let nextId = 0;
       <div class="relative">
         @if (multiline()) {
           <textarea
+            #areaTexto
             [id]="id"
             [placeholder]="placeholder()"
             [value]="value()"
-            (input)="value.set($any($event.target).value)"
+            (input)="value.set(areaTexto.value)"
             [disabled]="disabled()"
             [attr.aria-invalid]="error() ? 'true' : null"
             [attr.aria-describedby]="error() ? id + '-error' : null"
@@ -57,11 +58,12 @@ let nextId = 0;
               class="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
           }
           <input
+            #campo
             [id]="id"
             [type]="resolvedType()"
             [placeholder]="placeholder()"
             [value]="value()"
-            (input)="value.set($any($event.target).value)"
+            (input)="value.set(campo.value)"
             [autocomplete]="autocomplete()"
             [attr.aria-label]="label() ? null : ariaLabel() || null"
             [disabled]="disabled()"

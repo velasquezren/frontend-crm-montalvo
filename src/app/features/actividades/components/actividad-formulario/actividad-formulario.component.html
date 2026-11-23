@@ -18,7 +18,7 @@
       <!-- Tipo + duración: van juntos porque uno sugiere al otro -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Tipo</label>
+          <label class="block text-3xs font-bold uppercase tracking-wider text-text-muted">Tipo</label>
           <div class="flex flex-wrap gap-1.5" role="group" aria-label="Tipo de actividad">
             @for (t of tipos; track t) {
               <app-filter-chip size="sm" [active]="formTipo() === t" (clicked)="elegirTipo(t)">
@@ -28,7 +28,7 @@
           </div>
         </div>
         <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Duración</label>
+          <label class="block text-3xs font-bold uppercase tracking-wider text-text-muted">Duración</label>
           <div class="flex flex-wrap gap-1.5" role="group" aria-label="Duración de la actividad">
             @for (min of duracionesPreset; track min) {
               <app-filter-chip size="sm" [active]="formDuracion() === min" (clicked)="elegirDuracion(min)">
@@ -47,14 +47,14 @@
       <!-- Título + sugerencias de horario + fecha -->
       <div class="space-y-2">
         <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Título *</label>
+          <label class="block text-3xs font-bold uppercase tracking-wider text-text-muted">Título *</label>
           <app-input placeholder="Ej. Llamar para confirmar cita o cotización" [(value)]="formTitulo" 
   ariaLabel="Título" />
         </div>
 
         <div class="space-y-1.5">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Fecha y hora *</label>
+            <label class="block text-3xs font-bold uppercase tracking-wider text-text-muted">Fecha y hora *</label>
             <div class="flex flex-wrap items-center gap-1">
               <app-button variant="secondary" size="xs" (clicked)="aplicarPresetFecha('1H')">+1 h</app-button>
               <app-button variant="secondary" size="xs" (clicked)="aplicarPresetFecha('HOY_TARDE')">Hoy 16:00</app-button>
@@ -72,7 +72,7 @@
            prometer una propagación que no existe (`cambioDeHoraPura`). -->
       @if (cambioDeHoraPura(); as horaNueva) {
         <div class="space-y-1.5 p-3 rounded-xl bg-bg-workspace border border-border">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">
+          <label class="block text-3xs font-bold uppercase tracking-wider text-text-muted">
             Aplicar el cambio de hora a
           </label>
           <div class="flex flex-wrap gap-1.5" role="group" aria-label="Alcance del cambio de hora">
@@ -90,7 +90,7 @@
             </app-filter-chip>
           </div>
           @if (alcanceEdicion() === 'FUTURAS') {
-            <p class="text-[11px] text-text-muted leading-relaxed">
+            <p class="text-2xs text-text-muted leading-relaxed">
               Las pendientes de esta repetición, de esta en adelante, pasarán a las {{ horaNueva }} en su propio día. Las completadas y las canceladas no se tocan.
             </p>
           }
@@ -100,7 +100,7 @@
       <!-- Repetir: solo al crear -->
       @if (!actividadEditando()) {
         <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Repetir (opcional)</label>
+          <label class="block text-3xs font-bold uppercase tracking-wider text-text-muted">Repetir (opcional)</label>
           <div class="flex flex-wrap gap-1.5" role="group" aria-label="Frecuencia de repetición">
             <app-filter-chip size="sm" [active]="formRepetir() === null" (clicked)="formRepetir.set(null)">No repetir</app-filter-chip>
             @for (f of frecuencias; track f) {
@@ -121,7 +121,7 @@
               </div>
               <span class="text-xs text-text-muted shrink-0">veces</span>
             </div>
-            <p class="text-[11px] text-text-muted leading-relaxed">
+            <p class="text-2xs text-text-muted leading-relaxed">
               Se crean {{ formRepetirVeces() }} actividades de una vez, {{ frecuenciaLabel[frecuencia].toLowerCase() }} — cada una se completa, se mueve y se cancela por separado, y al pertenecer a la misma repetición también podrás cancelar o cambiar la hora de «esta y las siguientes».
             </p>
           }
@@ -129,7 +129,7 @@
       }
 
       <div class="space-y-1.5">
-        <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">Notas (opcional)</label>
+        <label class="block text-3xs font-bold uppercase tracking-wider text-text-muted">Notas (opcional)</label>
         <app-input [multiline]="true" [rows]="3" placeholder="Detalles para recordar al retomar el contacto…" [(value)]="formNotas" 
   ariaLabel="Notas (opcional)" />
       </div>

@@ -32,7 +32,7 @@ export const AVISO_DESCARTE = 'Hay cambios sin guardar. ¿Cerrar y descartarlos?
  * Panel del cajón lateral: pega el contenido al borde derecho de la pantalla.
  *
  * Vive aquí y no en cada página porque estaba copiado literal en nueve sitios
- * —`['fixed','inset-0','z-[101]','flex','justify-end','pointer-events-none']`—
+ * —`['fixed','inset-0','z-(--z-dialogo)','flex','justify-end','pointer-events-none']`—
  * y una constante que se copia deja de ser una constante: basta que un sitio se
  * olvide de `pointer-events-none` para que un panel invisible se coma los clics
  * de toda la página.
@@ -49,7 +49,7 @@ export const AVISO_DESCARTE = 'Hay cambios sin guardar. ¿Cerrar y descartarlos?
  * teléfono, el modal de Registrar Venta se salía por abajo y no se podía
  * deslizar hasta el botón de guardar.
  */
-const PANEL_CAJON = ['crm-panel-cajon', 'fixed', 'inset-0', 'h-full', 'z-[101]', 'flex', 'justify-end', 'pointer-events-none'];
+const PANEL_CAJON = ['crm-panel-cajon', 'fixed', 'inset-0', 'h-full', 'z-(--z-dialogo)', 'flex', 'justify-end', 'pointer-events-none'];
 
 /**
  * DialogService — abre plantillas proyectadas en `document.body` con CDK
@@ -83,8 +83,8 @@ export class DialogService {
   ): OverlayRef {
     const config = new OverlayConfig({
       hasBackdrop: options.hasBackdrop ?? true,
-      backdropClass: options.backdropClass ?? ['fixed', 'inset-0', 'bg-black/50', 'z-[100]'],
-      panelClass: options.panelClass ?? ['fixed', 'inset-0', 'z-[101]', 'flex', 'items-center', 'justify-center', 'p-4', 'sm:p-6', 'pointer-events-none'],
+      backdropClass: options.backdropClass ?? ['fixed', 'inset-0', 'bg-black/50', 'z-(--z-dialogo-fondo)'],
+      panelClass: options.panelClass ?? ['fixed', 'inset-0', 'z-(--z-dialogo)', 'flex', 'items-center', 'justify-center', 'p-4', 'sm:p-6', 'pointer-events-none'],
       scrollStrategy: this.overlay.scrollStrategies.block(),
       positionStrategy: this.overlay.position().global().centerHorizontally().centerVertically(),
     });

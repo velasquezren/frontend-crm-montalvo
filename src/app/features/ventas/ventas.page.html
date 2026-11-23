@@ -202,7 +202,7 @@
     <!-- Fila 3: Tira de Filtros Activos (Tags con botón de remoción rápida) -->
     @if (hayFiltrosActivos()) {
       <div class="flex flex-wrap items-center gap-1.5 pt-2.5 border-t border-border text-xs text-text-muted">
-        <span class="font-medium mr-1 text-[11px] uppercase tracking-wider text-text-muted">Filtros:</span>
+        <span class="font-medium mr-1 text-2xs uppercase tracking-wider text-text-muted">Filtros:</span>
 
         @if (busqueda().trim()) {
           <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-bg-light text-primary border border-primary/20 text-xs font-medium max-w-full">
@@ -389,7 +389,7 @@
                   <div class="flex flex-col gap-0.5">
                     <p class="font-medium text-text-dark text-sm leading-tight">{{ venta.producto }}</p>
                     @if (venta.modulo) {
-                      <span class="text-[11px] font-medium text-text-muted">{{ venta.modulo }}</span>
+                      <span class="text-2xs font-medium text-text-muted">{{ venta.modulo }}</span>
                     }
                   </div>
                 </td>
@@ -399,7 +399,7 @@
                 <td>
                   <div class="flex flex-col gap-1">
                     @if (venta.metodoPago) {
-                      <span class="inline-flex items-center gap-1 w-fit text-[10px] font-medium text-text-muted">
+                      <span class="inline-flex items-center gap-1 w-fit text-3xs font-medium text-text-muted">
                         <app-icon name="dollar-sign" [size]="10" class="text-primary shrink-0" />
                         {{ venta.metodoPago }}
                       </span>
@@ -408,13 +408,13 @@
                       <button
                         type="button"
                         (click)="$event.stopPropagation(); abrirVisorImagen(venta.comprobanteUrl, venta.comprobanteNombre || venta.comprobante)"
-                        class="crm-enlace text-[11px] w-fit"
+                        class="crm-enlace text-2xs w-fit"
                         title="Ver comprobante adjunto">
                         <app-icon name="image" [size]="11" />
                         <span>Ver adjunto</span>
                       </button>
                     } @else if (venta.comprobante) {
-                      <span class="text-[10px] font-mono text-text-muted">
+                      <span class="text-3xs font-mono text-text-muted">
                         #{{ venta.comprobante }}
                       </span>
                     }
@@ -507,13 +507,13 @@
           <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle flex flex-col gap-3">
             <div class="flex items-center justify-between gap-3">
               <div>
-                <span class="text-[10px] font-bold uppercase tracking-wider text-text-muted block">Monto Transaccionado</span>
+                <span class="text-3xs font-bold uppercase tracking-wider text-text-muted block">Monto Transaccionado</span>
                 <span class="text-2xl font-black text-primary tabular-nums tracking-tight">
                   {{ +venta.monto | moneda:'BOB' }}
                 </span>
               </div>
               <div class="flex flex-col items-end gap-1">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-text-muted">Estado Actual</span>
+                <span class="text-3xs font-bold uppercase tracking-wider text-text-muted">Estado Actual</span>
                 <app-badge [variant]="estadoBadge[venta.estado]">
                   {{ estadoLabel[venta.estado] }}
                 </app-badge>
@@ -523,7 +523,7 @@
             <!-- Acciones de Estado (para Administradores) -->
             @if (esAdmin()) {
               <div class="pt-2.5 border-t border-border/70 flex items-center justify-between gap-2">
-                <span class="text-[11px] font-medium text-text-muted">Cambiar estado:</span>
+                <span class="text-2xs font-medium text-text-muted">Cambiar estado:</span>
                 <div class="flex items-center gap-1.5">
                   @if (venta.estado !== 'GANADA') {
                     <app-button variant="secondary" size="xs" icon="check-circle" [disabled]="cambiandoEstado()" (clicked)="cambiarEstadoVenta(venta, 'GANADA')">Ganada</app-button>
@@ -540,7 +540,7 @@
 
             @if (venta.estado === 'PERDIDA' && venta.motivoPerdida) {
               <div class="p-3 rounded-xl bg-critical-bg/50 border border-border text-xs text-text-dark">
-                <div class="flex items-center gap-1.5 font-bold text-critical text-[11px] mb-0.5">
+                <div class="flex items-center gap-1.5 font-bold text-critical text-2xs mb-0.5">
                   <app-icon name="alert-circle" [size]="12" />
                   <span>Motivo de Pérdida</span>
                 </div>
@@ -638,7 +638,7 @@
             @if (venta.comprobanteUrl) {
               <div class="mt-3 pt-3 border-t border-border">
                 <div class="flex items-center justify-between mb-2">
-                  <span class="text-[11px] font-bold text-text-dark flex items-center gap-1">
+                  <span class="text-2xs font-bold text-text-dark flex items-center gap-1">
                     <app-icon name="file-text" [size]="13" class="text-primary" />
                     <span>Voucher Digital</span>
                   </span>
@@ -690,7 +690,7 @@
                       type="button"
                       data-test="corregir-origen"
                       (click)="alternarCorreccionOrigen()"
-                      class="crm-enlace text-[11px] shrink-0">
+                      class="crm-enlace text-2xs shrink-0">
                       {{ corrigiendoOrigen() ? 'Cancelar' : 'Corregir' }}
                     </button>
                   </div>
@@ -699,19 +699,19 @@
                 @if (corrigiendoOrigen()) {
                   <div class="mt-2 p-2.5 rounded-xl bg-bg-workspace border border-border space-y-2">
                     @if (leadsDeLaVentaAbierta.isLoading()) {
-                      <p class="text-[11px] text-text-muted">Cargando los leads de la paciente…</p>
+                      <p class="text-2xs text-text-muted">Cargando los leads de la paciente…</p>
                     } @else if (leadsDeLaVentaAbierta.error()) {
                       <!-- Sin esta rama, un backend caído diría "no tiene leads", que
                            es una mentira y llevaría a quitar una atribución correcta. -->
-                      <p class="text-[11px] text-text-critical">
+                      <p class="text-2xs text-text-critical">
                         No se pudieron cargar los leads de la paciente. Reintenta al reabrir el detalle.
                       </p>
                     } @else if (leadsDeLaVentaAbierta.value().datos.length === 0) {
-                      <p class="text-[11px] text-text-muted">
+                      <p class="text-2xs text-text-muted">
                         Esta paciente no tiene ningún lead registrado, así que no hay origen que asignar.
                       </p>
                     } @else {
-                      <p class="text-[10px] text-text-muted leading-relaxed">
+                      <p class="text-3xs text-text-muted leading-relaxed">
                         Elige de qué lead vino esta venta. Corregirlo cambia solo la atribución: no
                         reabre ni cierra ningún lead.
                       </p>
@@ -736,7 +736,7 @@
               </div>
               @if (venta.notas) {
                 <div class="pt-2">
-                  <span class="text-text-muted block text-[11px] mb-1">Observaciones / Notas:</span>
+                  <span class="text-text-muted block text-2xs mb-1">Observaciones / Notas:</span>
                   <p class="text-text-dark bg-bg-workspace p-2.5 rounded-xl border border-border leading-relaxed">
                     {{ venta.notas }}
                   </p>
@@ -769,7 +769,7 @@
             </div>
             <div class="min-w-0">
               <h3 class="text-sm font-bold text-text-dark leading-tight truncate">Marcar venta como perdida</h3>
-              <p class="text-[11px] text-text-muted mt-0.5 truncate">{{ v.cliente | nombreCliente }} · {{ v.producto }}</p>
+              <p class="text-2xs text-text-muted mt-0.5 truncate">{{ v.cliente | nombreCliente }} · {{ v.producto }}</p>
             </div>
           </div>
           <app-button variant="ghost" size="sm" [circle]="true" icon="x" ariaLabel="Cerrar" (clicked)="cerrarMotivoPerdidaVenta()" />
@@ -780,7 +780,7 @@
             label="Motivo (queda en el registro de auditoría)"
             placeholder="Ej. Se fue con la competencia, no pudo pagar, canceló…"
             [(value)]="motivoPerdidaTexto" />
-          <p class="text-[11px] text-text-muted">
+          <p class="text-2xs text-text-muted">
             Mínimo 3 caracteres. Sin motivo no se puede: dentro de tres meses nadie
             sabría si fue un error o una decisión concreta.
           </p>

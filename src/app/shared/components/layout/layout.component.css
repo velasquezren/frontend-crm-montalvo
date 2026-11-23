@@ -31,7 +31,7 @@
   position: fixed;
   top: 0.5rem;
   left: 0.5rem;
-  z-index: 130;
+  z-index: var(--z-saltar-contenido);
   padding: 0.75rem 1rem;
   border-radius: var(--radius-xl);
   color: var(--color-primary);
@@ -138,7 +138,7 @@
    TOPBAR — Compacta (64px)
    ═══════════════════════════════════════════════════════════════ */
 .topbar {
-  z-index: 30;
+  z-index: var(--z-topbar);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -148,7 +148,7 @@
 .sidebar {
   width: 72px;
   transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 40;
+  z-index: var(--z-sidebar);
   overflow: visible;
   position: relative;
 }
@@ -169,7 +169,7 @@
   transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  z-index: 40;
+  z-index: var(--z-sidebar);
 }
 
 .sidebar-inner-expanded {
@@ -317,7 +317,7 @@
     top: 0;
     left: 0;
     bottom: 0;
-    z-index: 120;
+    z-index: var(--z-sidebar-movil);
     width: 0;
     overflow: visible;
   }
@@ -373,7 +373,7 @@
   .sidebar-velo {
     position: fixed;
     inset: 0;
-    z-index: 110;
+    z-index: var(--z-sidebar-velo);
     background: rgba(0, 0, 0, 0.32);
     opacity: 0;
     pointer-events: none;
@@ -421,7 +421,7 @@
   display: none;              /* ← oculto por defecto (desktop) */
   align-items: center;
   justify-content: space-around;
-  z-index: 100;
+  z-index: var(--z-barra-inferior);
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
 }
 

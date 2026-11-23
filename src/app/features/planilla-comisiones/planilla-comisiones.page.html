@@ -133,7 +133,7 @@
         <input type="file" accept=".xlsx" class="sr-only" [disabled]="subiendo()" (change)="subirArchivo($event)" />
       </label>
 
-      <p class="text-[11px] text-text-muted mt-3">
+      <p class="text-2xs text-text-muted mt-3">
         Reimportar un mes ya cargado lo reemplaza y conserva las correcciones manuales.
       </p>
     </div>
@@ -287,7 +287,7 @@
                   <div class="fila-sin-clasificar">
                     <div class="min-w-0 flex-1">
                       <span class="font-semibold text-sm text-text-dark truncate block">{{ s.detalle }}</span>
-                      <span class="text-[11px] text-text-muted">
+                      <span class="text-2xs text-text-muted">
                         Módulo: {{ s.modulo ?? 'General' }} · {{ s.veces }} venta(s) · {{ s.montoAfectado | moneda }}
                       </span>
                     </div>
@@ -490,10 +490,10 @@
           @if (v.porVendedora.length > 0) {
             <div class="resumen-agentes">
               <div class="resumen-agentes-cabecera">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-text-muted">
+                <span class="text-2xs font-bold uppercase tracking-wider text-text-muted">
                   Resumen por agente
                 </span>
-                <span class="text-[10px] text-text-muted">
+                <span class="text-3xs text-text-muted">
                   sobre las {{ v.totales.ventas }} ventas del filtro actual, no solo las de esta página
                 </span>
               </div>
@@ -660,7 +660,7 @@
                 <td class="text-left">
                   <span class="font-semibold text-sm text-text-dark block">{{ v.detalle }}</span>
                   @if (v.paciente) {
-                    <span class="block text-[11px] text-text-muted truncate max-w-[240px]">{{ v.paciente }}</span>
+                    <span class="block text-2xs text-text-muted truncate max-w-[240px]">{{ v.paciente }}</span>
                   }
                 </td>
                 <td class="text-left text-xs font-medium text-text-dark">{{ v.vendedora?.nombre ?? '—' }}</td>
@@ -696,7 +696,7 @@
                   <span class="text-text-muted tabular-nums">{{ v.ingresoNeto | moneda }}</span>
                 </td>
                 <td class="text-right whitespace-nowrap">
-                  <span class="text-[11px] font-semibold tabular-nums"
+                  <span class="text-2xs font-semibold tabular-nums"
                         [class.text-primary]="v.canal === 'PROPIO'"
                         [class.text-text-muted]="v.canal !== 'PROPIO'">
                     {{ tarifaDe(v) }}
@@ -727,7 +727,7 @@
                     @if (v.requiereRevision) {
                       <app-badge variant="critical">Revisar</app-badge>
                     } @else if (!v.comisionable) {
-                      <span class="text-[11px] font-semibold text-text-muted" [title]="v.motivoExclusion ?? ''">No comisiona</span>
+                      <span class="text-2xs font-semibold text-text-muted" [title]="v.motivoExclusion ?? ''">No comisiona</span>
                     } @else if (v.ajustadaManual) {
                       <app-badge variant="info">Ajustada</app-badge>
                     } @else {
@@ -952,7 +952,7 @@
                 </span>
               }
             </p>
-            <p class="text-[11px] text-text-muted mt-1">
+            <p class="text-2xs text-text-muted mt-1">
               Sus ventas siguen contando en la facturación del mes; lo que cambia es si su
               liquidación figura aquí y en el Excel que descargues.
             </p>
@@ -1076,7 +1076,7 @@
           label="Motivo (queda en el registro de auditoría)"
           placeholder="Ej. Devolución de la paciente, cobrada dos veces…"
           [(value)]="motivoExclusion" />
-        <p class="text-[11px] text-text-muted mt-1">
+        <p class="text-2xs text-text-muted mt-1">
           Mínimo 3 caracteres. Sin motivo no se puede: dentro de tres meses nadie
           sabría si fue un error del Excel o una decisión de administración.
         </p>

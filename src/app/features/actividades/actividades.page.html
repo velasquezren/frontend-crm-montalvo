@@ -264,7 +264,7 @@
                   <!-- La repetición es metadata del horario, no una etiqueta
                        nueva: se cuelga de la línea que ya lleva fecha y
                        duración, con su mismo peso. -->
-                  <span class="text-[11px] text-text-muted">
+                  <span class="text-2xs text-text-muted">
                     {{ actividad.fechaProgramada | fechaClinica: 'd MMM, HH:mm' }} · {{ formatearDuracion(actividad.duracionMinutos) }}@if (etiquetaRepeticion(actividad); as repeticion) { · {{ repeticion }}}
                   </span>
                 </div>
@@ -415,7 +415,7 @@
 
           <!-- Pie Móvil: Horario exacto + Botones de Gestión Rápida -->
           <div class="flex items-center justify-between pt-2 border-t border-border/50 text-xs" (click)="$event.stopPropagation()">
-            <span class="text-[11px] text-text-muted">
+            <span class="text-2xs text-text-muted">
               {{ actividad.fechaProgramada | fechaClinica: 'd MMM, HH:mm' }} · {{ formatearDuracion(actividad.duracionMinutos) }}@if (etiquetaRepeticion(actividad); as repeticion) { · {{ repeticion }}}
             </span>
 
@@ -586,7 +586,7 @@
         </app-filter-chip>
       </div>
 
-      <p class="text-[11px] text-text-muted leading-relaxed mt-2">
+      <p class="text-2xs text-text-muted leading-relaxed mt-2">
         @if (alcanceCancelacion() === 'FUTURAS') {
           Se cancelan esta y las pendientes que vengan después. Las ya completadas y las canceladas no se tocan.
         } @else {

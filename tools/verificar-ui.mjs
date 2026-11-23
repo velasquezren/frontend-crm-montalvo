@@ -17,6 +17,10 @@ const DEUDA = {
   'src/app/features/finanzas/components/tipo-cambio/tipo-cambio-admin.component.html': { 'nombre-repetido': 1 },
 };
 
+/* Capas globales (≥ 100) y cuerpos diminutos con token: solo por su nombre. */
+const CAPA_SUELTA_CLASE = /(?:^|\s)(?:[\w-]+:)*z-(?:\[\d{3,}\]|\d{3,})(?:\s|$)/;
+const TIPO_SUELTO = /(?:^|\s)(?:[\w-]+:)*text-\[1[01]px\](?:\s|$)/;
+
 function hijos(node) {
   return ['children', 'branches', 'groups', 'cases', 'empty', 'placeholder', 'loading', 'error']
     .flatMap(key => node[key] ? (Array.isArray(node[key]) ? node[key] : [node[key]]) : []);
@@ -35,6 +39,13 @@ export function revisarPlantilla(texto, archivo = 'plantilla.html') {
         const nombre = name => !!atributo(name)?.value.trim() || enlazado(name);
         const reportar = (regla, mensaje) => problemas.push({ linea: node.sourceSpan.start.line + 1, regla, mensaje });
         const rol = atributo('role')?.value;
+        const clases = atributo('class')?.value ?? '';
+        if (CAPA_SUELTA_CLASE.test(clases)) {
+          reportar('capa-suelta', 'z-index global escrito a mano: usa la escala de styles.css con z-(--z-…).');
+        }
+        if (TIPO_SUELTO.test(clases)) {
+          reportar('tipo-suelto', 'text-[10px]/text-[11px] tienen nombre: usa text-3xs/text-2xs.');
+        }
         if (['app-input', 'app-select', 'app-switch'].includes(node.name)
             && !nombre('label') && !nombre('ariaLabel')) {
           reportar('nombre-control', `<${node.name}> necesita label o ariaLabel.`);
@@ -106,6 +117,9 @@ export function revisarCss(texto, archivo = 'estilos.css', sinEncapsulacion = fa
     }
     const vistas = new Set();
     for (const decl of rule.nodes.filter(n => n.type === 'decl')) {
+      if (decl.prop === 'z-index' && /^\d{3,}$/.test(decl.value.trim()) && !archivo.endsWith('styles.css')) {
+        problemas.push({ linea: decl.source.start.line, regla: 'capa-suelta', mensaje: `z-index: ${decl.value} global escrito a mano: usa var(--z-…) de styles.css.` });
+      }
       const clave = `${decl.prop}:${decl.value}:${decl.important}`;
       if (vistas.has(clave)) problemas.push({ linea: decl.source.start.line, regla: 'css-duplicado', mensaje: `Declaración duplicada: ${decl.prop}: ${decl.value}.` });
       vistas.add(clave);

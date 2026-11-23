@@ -127,7 +127,7 @@ app-conversacion-composer {
     bottom: 0;
     width: 340px;
     max-width: 85vw;
-    z-index: 50;
+    z-index: var(--z-panel-movil);
     box-shadow: -8px 0 30px rgba(0, 0, 0, 0.15);
     display: none;
   }

@@ -40,7 +40,7 @@
 
   <!-- Filtros de Canales de Origen -->
   <div class="flex flex-col gap-2 mt-4 mb-2">
-    <span class="text-[10px] font-bold text-text-muted uppercase tracking-wider">Canal de origen:</span>
+    <span class="text-3xs font-bold text-text-muted uppercase tracking-wider">Canal de origen:</span>
     <div class="flex flex-wrap items-center gap-2">
       @for (opcion of filtros; track opcion.valor) {
         <app-filter-chip
@@ -118,11 +118,11 @@
                 (click)="abrirFichaLead(lead, modalFichaLead)" />
             } @empty {
               <div class="flex flex-col items-center justify-center py-10 border border-dashed border-border/80 rounded-xl bg-white/40">
-                <p class="text-[10px] text-text-muted font-medium">Arrastra leads aquí</p>
+                <p class="text-3xs text-text-muted font-medium">Arrastra leads aquí</p>
               </div>
             }
             @if (ocultasEn('NUEVO', nuevos().length); as ocultas) {
-              <p class="text-[10px] text-text-muted text-center py-2 italic">
+              <p class="text-3xs text-text-muted text-center py-2 italic">
                 +{{ ocultas }} sin cargar · usa los filtros o la vista tabla
               </p>
             }
@@ -154,11 +154,11 @@
                 (click)="abrirFichaLead(lead, modalFichaLead)" />
             } @empty {
               <div class="flex flex-col items-center justify-center py-10 border border-dashed border-border/80 rounded-xl bg-white/40">
-                <p class="text-[10px] text-text-muted font-medium">Arrastra leads aquí</p>
+                <p class="text-3xs text-text-muted font-medium">Arrastra leads aquí</p>
               </div>
             }
             @if (ocultasEn('CONTACTADO', contactados().length); as ocultas) {
-              <p class="text-[10px] text-text-muted text-center py-2 italic">
+              <p class="text-3xs text-text-muted text-center py-2 italic">
                 +{{ ocultas }} sin cargar · usa los filtros o la vista tabla
               </p>
             }
@@ -190,11 +190,11 @@
                 (click)="abrirFichaLead(lead, modalFichaLead)" />
             } @empty {
               <div class="flex flex-col items-center justify-center py-10 border border-dashed border-border/80 rounded-xl bg-white/40">
-                <p class="text-[10px] text-text-muted font-medium">Arrastra leads aquí</p>
+                <p class="text-3xs text-text-muted font-medium">Arrastra leads aquí</p>
               </div>
             }
             @if (ocultasEn('CONVERTIDO', convertidos().length); as ocultas) {
-              <p class="text-[10px] text-text-muted text-center py-2 italic">
+              <p class="text-3xs text-text-muted text-center py-2 italic">
                 +{{ ocultas }} sin cargar · usa los filtros o la vista tabla
               </p>
             }
@@ -226,11 +226,11 @@
                 (click)="abrirFichaLead(lead, modalFichaLead)" />
             } @empty {
               <div class="flex flex-col items-center justify-center py-10 border border-dashed border-border/80 rounded-xl bg-white/40">
-                <p class="text-[10px] text-text-muted font-medium">Arrastra leads aquí</p>
+                <p class="text-3xs text-text-muted font-medium">Arrastra leads aquí</p>
               </div>
             }
             @if (ocultasEn('PERDIDO', perdidos().length); as ocultas) {
-              <p class="text-[10px] text-text-muted text-center py-2 italic">
+              <p class="text-3xs text-text-muted text-center py-2 italic">
                 +{{ ocultas }} sin cargar · usa los filtros o la vista tabla
               </p>
             }
@@ -356,7 +356,7 @@
 
         <!-- 1. Datos de Contacto -->
         <div class="space-y-3">
-          <span class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">
+          <span class="block text-3xs font-bold uppercase tracking-wider text-text-muted">
             1. Datos del Prospecto
           </span>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -374,7 +374,7 @@
 
         <!-- 2. Interés o Servicio buscado -->
         <div class="space-y-2 pt-2 border-t border-border/60">
-          <span class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">
+          <span class="block text-3xs font-bold uppercase tracking-wider text-text-muted">
             2. Interés o Especialidad Consultada (Opcional)
           </span>
           <app-input
@@ -452,7 +452,7 @@
       <div class="p-6 overflow-y-auto space-y-5 flex-1">
         <!-- 1. Estado en Pipeline (Segmented Control amplio) -->
         <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">
+          <label class="block text-3xs font-bold uppercase tracking-wider text-text-muted">
             Etapa en el Pipeline Comercial
           </label>
           <!-- Rejilla y no `.crm-segmento`: esa clase vive fuera de @layer y su
@@ -473,12 +473,12 @@
 
         <!-- 2. Información Comercial y Origen en Cards Grid -->
         <div class="space-y-1.5">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">
+          <label class="block text-3xs font-bold uppercase tracking-wider text-text-muted">
             Contexto del Prospecto
           </label>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="p-3 rounded-xl bg-bg-workspace border border-border/70 flex flex-col justify-between">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+              <span class="text-3xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
                 <app-icon name="share-2" [size]="12" class="text-primary/70" />
                 Canal de Entrada
               </span>
@@ -486,7 +486,7 @@
             </div>
 
             <div class="p-3 rounded-xl bg-bg-workspace border border-border/70 flex flex-col justify-between">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+              <span class="text-3xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
                 <app-icon name="user" [size]="12" class="text-primary/70" />
                 Agente Asignado
               </span>
@@ -494,7 +494,7 @@
             </div>
 
             <div class="p-3 rounded-xl bg-bg-workspace border border-border/70 flex flex-col justify-between">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+              <span class="text-3xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
                 <app-icon name="calendar" [size]="12" class="text-primary/70" />
                 Fecha de Captación
               </span>
@@ -502,7 +502,7 @@
             </div>
 
             <div class="p-3 rounded-xl bg-bg-workspace border border-border/70 flex flex-col justify-between">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+              <span class="text-3xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
                 <app-icon name="shield" [size]="12" class="text-primary/70" />
                 Ficha del Paciente
               </span>
@@ -518,7 +518,7 @@
           <div class="p-3.5 rounded-xl bg-critical-bg border border-border flex items-start gap-2.5">
             <app-icon name="alert-circle" [size]="16" class="text-critical shrink-0 mt-0.5" />
             <div>
-              <span class="text-[10px] font-bold uppercase tracking-wider text-text-muted">Motivo de la Pérdida</span>
+              <span class="text-3xs font-bold uppercase tracking-wider text-text-muted">Motivo de la Pérdida</span>
               <p class="text-xs font-medium text-text-dark mt-0.5">{{ l.motivoPerdida }}</p>
             </div>
           </div>
@@ -526,7 +526,7 @@
 
         <!-- 4. Acciones Comerciales Directas -->
         <div class="space-y-2 pt-2 border-t border-border">
-          <span class="block text-[10px] font-bold uppercase tracking-wider text-text-muted">
+          <span class="block text-3xs font-bold uppercase tracking-wider text-text-muted">
             Acciones Rápidas
           </span>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">

@@ -37,7 +37,7 @@ const AUTOMATICA = 'AUTOMATICA';
       <app-badge [variant]="badge[categoria()]" [icon]="icono[categoria()]" [title]="origen()">
         {{ etiqueta[categoria()] }}
       </app-badge>
-      <span class="text-[11px] text-text-muted">{{ fijadaEn() ? 'Fijada a mano' : 'Automática' }}</span>
+      <span class="text-2xs text-text-muted">{{ fijadaEn() ? 'Fijada a mano' : 'Automática' }}</span>
       @if (puedeFijar()) {
         <div class="w-40">
           <app-select

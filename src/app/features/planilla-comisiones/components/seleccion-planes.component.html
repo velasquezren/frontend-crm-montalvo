@@ -45,7 +45,7 @@
           <header class="grupo-planes-cabecera">
             <div class="min-w-0">
               <p class="font-bold text-sm text-text-dark truncate">{{ grupo.vendedoraNombre }}</p>
-              <p class="text-[11px] text-text-muted">
+              <p class="text-2xs text-text-muted">
                 {{ grupo.tipo === 'PLANPAQ' ? 'Paquetes de maternidad' : 'Planes varios' }}
               </p>
             </div>
@@ -121,7 +121,7 @@
                       <span class="block truncate text-xs font-medium text-text-dark">
                         {{ plan.detalle }}
                       </span>
-                      <span class="block text-[11px] text-text-muted tabular-nums">
+                      <span class="block text-2xs text-text-muted tabular-nums">
                         @if (plan.codOrigen) {
                           {{ plan.codOrigen }}
                         }
@@ -142,7 +142,7 @@
                       <span class="block text-xs font-semibold tabular-nums text-text-dark">
                         {{ plan.ingresoNeto | moneda }}
                       </span>
-                      <span class="block text-[11px] text-text-muted tabular-nums">
+                      <span class="block text-2xs text-text-muted tabular-nums">
                         precio {{ plan.precio | moneda }}
                       </span>
                     </span>

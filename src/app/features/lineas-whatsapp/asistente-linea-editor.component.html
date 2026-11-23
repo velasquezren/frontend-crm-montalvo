@@ -20,7 +20,7 @@
           </span>
         </div>
       } @else {
-        <p class="text-[11px] text-text-muted leading-relaxed flex items-start gap-1.5">
+        <p class="text-2xs text-text-muted leading-relaxed flex items-start gap-1.5">
           <app-icon name="check-circle" [size]="12" class="text-primary shrink-0 mt-0.5" />
           <span class="min-w-0">
             Conectado a Gemini: responde con {{ d.proveedor.modelo }}@if (d.proveedor.modeloRespaldo; as respaldo) {, y si Google tarda, con {{ respaldo }}}@if (d.proveedor.modeloTranscripcion; as oido) {. Escucha las notas de voz con {{ oido }}}.
@@ -36,14 +36,14 @@
         @if (prueba(); as r) {
           <ul class="space-y-1" aria-live="polite">
             @for (p of r.pasos; track p.paso) {
-              <li class="flex items-start gap-2 text-[11px] leading-relaxed" [class.text-text-dark]="p.ok" [class.text-critical]="!p.ok">
+              <li class="flex items-start gap-2 text-2xs leading-relaxed" [class.text-text-dark]="p.ok" [class.text-critical]="!p.ok">
                 <app-icon [name]="p.ok ? 'check-circle' : 'x-circle'" [size]="13" class="shrink-0 mt-0.5" [class.text-primary]="p.ok" />
                 <span><span class="font-semibold">{{ nombresPaso[p.paso] }}:</span> {{ p.detalle }}@if (p.ms) { <span class="text-text-muted tabular-nums"> · {{ p.ms }} ms</span> }</span>
               </li>
             }
           </ul>
         } @else {
-          <p class="text-[11px] text-text-muted leading-relaxed">Prueba el filtro, una respuesta con herramienta y la lectura de un comprobante, con datos de ejemplo. No toca a ninguna paciente.</p>
+          <p class="text-2xs text-text-muted leading-relaxed">Prueba el filtro, una respuesta con herramienta y la lectura de un comprobante, con datos de ejemplo. No toca a ninguna paciente.</p>
         }
       </section>
 
@@ -69,7 +69,7 @@
             </span>
             <span class="min-w-0">
               <span class="block text-xs font-semibold text-text-dark">{{ m.titulo }}</span>
-              <span class="block text-[11px] text-text-muted leading-relaxed mt-0.5">{{ m.texto }}</span>
+              <span class="block text-2xs text-text-muted leading-relaxed mt-0.5">{{ m.texto }}</span>
             </span>
           </label>
         }
@@ -82,7 +82,7 @@
           placeholder="Ej.: La consulta de ginecología incluye ecografía. Las promociones no se combinan. Atendemos de lunes a sábado…"
           [value]="borrador().conocimiento"
           (valueChange)="cambiar({ conocimiento: $event })" />
-        <p class="text-[11px] text-text-muted leading-relaxed flex justify-between gap-3">
+        <p class="text-2xs text-text-muted leading-relaxed flex justify-between gap-3">
           <span>Precios, médicos, horarios y promociones los lee solo del CRM: aquí va lo que no está en ningún lado.</span>
           <span class="tabular-nums shrink-0" [class.text-critical]="borrador().conocimiento.length > limites.conocimiento">{{ borrador().conocimiento.length }}/{{ limites.conocimiento }}</span>
         </p>
@@ -96,7 +96,7 @@
           [value]="borrador().criterioDerivacion"
           (valueChange)="cambiar({ criterioDerivacion: $event })"
           [error]="borrador().modo === 'RESPONDER' ? (motivo() ?? undefined) : undefined" />
-        <p class="text-[11px] text-text-muted leading-relaxed flex justify-between gap-3">
+        <p class="text-2xs text-text-muted leading-relaxed flex justify-between gap-3">
           <span>Lo aprueba la clínica. Lo médico y las posibles urgencias ya pasan a una persona; esto agrega lo propio de la clínica. Obligatorio para «Responder solo».</span>
           <span class="tabular-nums shrink-0" [class.text-critical]="borrador().criterioDerivacion.length > limites.criterioDerivacion">{{ borrador().criterioDerivacion.length }}/{{ limites.criterioDerivacion }}</span>
         </p>
@@ -106,7 +106,7 @@
         <div class="flex items-start justify-between gap-4 p-3.5 rounded-xl border border-border bg-bg-workspace">
           <div class="min-w-0">
             <p class="text-xs font-semibold text-text-dark">Leer los comprobantes de pago</p>
-            <p class="text-[11px] text-text-muted leading-relaxed mt-0.5">
+            <p class="text-2xs text-text-muted leading-relaxed mt-0.5">
               Lee monto, fecha, operación y a nombre de quién, y avisa si algo no coincide. Confirmar el pago sigue siendo de una persona.
             </p>
           </div>
@@ -123,7 +123,7 @@
             }
           </div>
           @if (d.actividad.latencia; as l) {
-            <p class="text-[11px] text-text-muted leading-relaxed">
+            <p class="text-2xs text-text-muted leading-relaxed">
               Tarda en contestar <span class="font-semibold text-text-dark tabular-nums">{{ enSegundos(l.medianaMs) }}</span> la mitad de las veces,
               y menos de <span class="font-semibold text-text-dark tabular-nums">{{ enSegundos(l.p90Ms) }}</span> en 9 de cada 10
               (<span class="tabular-nums">{{ l.turnos }}</span> respuestas). Sin contar los segundos que espera a que termine de escribir.
@@ -134,7 +134,7 @@
     </div>
 
     <div class="flex items-center justify-between gap-3 px-5 py-3 shrink-0 border-t border-border bg-bg-light">
-      <p class="text-[11px] text-text-muted min-w-0 truncate">
+      <p class="text-2xs text-text-muted min-w-0 truncate">
         @if (sinGuardar()) { Cambios sin guardar } @else if (d.configuracion.actualizadoPor; as quien) { Última edición: {{ quien.nombre }} } @else { Sin guardar todavía }
       </p>
       <div class="flex items-center gap-2 shrink-0">

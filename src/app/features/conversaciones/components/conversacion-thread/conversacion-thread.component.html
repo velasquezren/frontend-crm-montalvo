@@ -27,7 +27,7 @@
         </div>
         <div class="flex items-center gap-1.5 mt-0.5 min-w-0">
           @if (chat.cliente.telefono; as telefono) {
-            <span class="text-[11px] sm:text-xs text-text-muted leading-tight truncate max-w-[120px] sm:max-w-none">{{ telefono }}</span>
+            <span class="text-2xs sm:text-xs text-text-muted leading-tight truncate max-w-[120px] sm:max-w-none">{{ telefono }}</span>
             <button
               type="button"
               (click)="copiarTexto(telefono, 'Teléfono')"
@@ -39,11 +39,11 @@
           } @else {
             <!-- Escribió con su nombre de usuario de WhatsApp sin dar su número:
                  el chat funciona igual; lo que no hay es a qué número llamar. -->
-            <span class="text-[11px] sm:text-xs text-text-muted leading-tight truncate" title="Escribió con su nombre de usuario de WhatsApp: el chat funciona, pero no compartió su número">Usuario de WhatsApp · sin número</span>
+            <span class="text-2xs sm:text-xs text-text-muted leading-tight truncate" title="Escribió con su nombre de usuario de WhatsApp: el chat funciona, pero no compartió su número">Usuario de WhatsApp · sin número</span>
           }
           @if (chat.cliente.pac) {
             <span class="text-text-muted/40">·</span>
-            <span class="crm-meta-clave text-[11px] shrink-0" title="Código PAC en FileMaker">
+            <span class="crm-meta-clave text-2xs shrink-0" title="Código PAC en FileMaker">
               {{ chat.cliente.pac }}
             </span>
             <button
@@ -69,7 +69,8 @@
             #inputBuscarChat
             [value]="state.busquedaChat()"
             (input)="state.busquedaChat.set(inputBuscarChat.value)"
-            (keydown.enter)="$any($event).shiftKey ? irACoincidencia(-1) : irACoincidencia(1)"
+            (keydown.enter)="irACoincidencia(1)"
+            (keydown.shift.enter)="irACoincidencia(-1)"
             (keydown.escape)="cerrarBusquedaChat()"
             placeholder="Buscar en el chat…"
             aria-label="Buscar dentro de esta conversación"
@@ -216,7 +217,7 @@
               <p class="text-xs text-text-dark leading-relaxed">{{ campana.cuerpo }}</p>
             }
             @if (campana.saludo) {
-              <p class="text-[11px] text-text-muted leading-relaxed">
+              <p class="text-2xs text-text-muted leading-relaxed">
                 <span class="font-semibold text-text-dark">Escribió desde el anuncio:</span>
                 «{{ campana.saludo }}»
               </p>
@@ -234,7 +235,7 @@
                 [href]="campana.origenUrl"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline">
+                class="inline-flex items-center gap-1 text-2xs font-semibold text-primary hover:underline">
                 <app-icon name="external-link" [size]="11" />
                 Ver el anuncio
               </a>
@@ -463,13 +464,13 @@
                     <span class="inline-flex items-center gap-0.5 ml-1 text-text-muted"
                           title="Esperando confirmación de nuestro servidor. Todavía no ha salido hacia WhatsApp.">
                       <app-icon name="clock" [size]="12" />
-                      <span class="text-[10px] font-semibold">Enviando</span>
+                      <span class="text-3xs font-semibold">Enviando</span>
                     </span>
                   } @else if (item.mensaje.envioLocal === 'AMBIGUO') {
                     <span class="inline-flex items-center gap-1 ml-1 text-text-muted"
                           title="Se perdió la respuesta del servidor y el mensaje puede haber salido igualmente. Reintentar es seguro: lleva la misma clave de envío, así que el servidor devolverá el mensaje que ya existe en vez de mandar otro.">
                       <app-icon name="alert-circle" [size]="12" />
-                      <span class="text-[10px] font-semibold">No se pudo confirmar</span>
+                      <span class="text-3xs font-semibold">No se pudo confirmar</span>
                       @if (item.mensaje.clientMessageId) {
                         <button type="button" class="envio-accion"
                                 (click)="reintentarEnvio(item.mensaje)">Reintentar</button>
@@ -480,7 +481,7 @@
                   } @else if (item.mensaje.envioLocal === 'ERROR') {
                     <span class="inline-flex items-center gap-1 ml-1 text-critical">
                       <app-icon name="alert-circle" [size]="12" />
-                      <span class="text-[10px] font-semibold">No se envió</span>
+                      <span class="text-3xs font-semibold">No se envió</span>
                       <!-- La condición es la MISMA que la de AMBIGUO y que la del
                            handler: hay clave de envío. Antes aquí se miraba
                            `!mediaKey` y en AMBIGUO no, así que un adjunto ambiguo
@@ -505,7 +506,7 @@
                         class="inline-flex items-center gap-0.5 ml-1 text-critical"
                         [title]="errorWhatsapp(item.mensaje.codigoErrorEnvio)">
                         <app-icon name="alert-circle" [size]="12" />
-                        <span class="text-[10px] font-semibold">No enviado</span>
+                        <span class="text-3xs font-semibold">No enviado</span>
                       </span>
                       <!-- Resuelta la causa (la cuenta de Meta, la red), se reenvía la
                            MISMA fila: la paciente lo recibe una vez. Fuera de las 24 h
@@ -525,7 +526,7 @@
                         class="inline-flex items-center gap-0.5 ml-1 text-text-muted"
                         title="No se pudo confirmar si llegó: se cortó la conexión con WhatsApp mientras se enviaba. NO lo reenvíes todavía — puede haberse entregado igual. Si salió, el tick se corrige solo en unos minutos.">
                         <app-icon name="clock" [size]="12" />
-                        <span class="text-[10px] font-semibold">Sin confirmar</span>
+                        <span class="text-3xs font-semibold">Sin confirmar</span>
                       </span>
                     }
                     @default {
@@ -539,7 +540,7 @@
                 <div class="clear-both mt-2 pt-2 border-t border-critical/20 text-xs text-text-dark leading-relaxed" role="note">
                   {{ errorWhatsapp(item.mensaje.codigoErrorEnvio) }}
                   @if (item.mensaje.codigoErrorEnvio) {
-                    <span class="block mt-1 text-[10px] text-text-muted">Código de Meta: {{ item.mensaje.codigoErrorEnvio }}</span>
+                    <span class="block mt-1 text-3xs text-text-muted">Código de Meta: {{ item.mensaje.codigoErrorEnvio }}</span>
                   }
                 </div>
               }

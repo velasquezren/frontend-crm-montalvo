@@ -444,7 +444,7 @@ function verificarCodigo() {
 function verificarPildoras() {
   const base = resolve(RAIZ, 'src', 'app');
   const ATRIBUTO = /class="([^"]*)"/g;
-  const MINUSCULA = /\btext-\[(?:[0-9]|1[01])px\]/;
+  const MINUSCULA = /\btext-(?:\[(?:[0-9]|1[01])px\]|(?:2xs|3xs)\b)/;
 
   for (const ruta of indexar(base)) {
     if (!/\.(html|ts)$/.test(ruta)) continue;
@@ -462,7 +462,7 @@ function verificarPildoras() {
       skill: 'crm-design-system',
       mensaje:
         `${rel}: ${sueltas.length} píldora(s) armada(s) a mano con utilidades ` +
-        '(`rounded-full` + `text-[≤11px]`). Decide qué es y usa su nombre: ' +
+        '(`rounded-full` + `text-2xs`/`text-3xs`/`text-[≤11px]`). Decide qué es y usa su nombre: ' +
         '<app-badge> si es un estado, `.crm-contador` si es un contador de pestaña, ' +
         '`.crm-meta` si es un dato de apoyo, `.crm-atajo` si es algo que se teclea.',
     });

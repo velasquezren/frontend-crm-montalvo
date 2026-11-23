@@ -90,20 +90,20 @@
 
         <div class="grid grid-cols-2 gap-3 text-xs">
           <div class="p-2.5 rounded-xl bg-bg-workspace border border-border/60">
-            <span class="text-[11px] text-text-muted block">Programada para</span>
+            <span class="text-2xs text-text-muted block">Programada para</span>
             @let r = formatoFechaRelativa(actividad().fechaProgramada);
             <span class="font-bold text-xs" [class.text-critical]="r.urgente" [class.text-text-dark]="!r.urgente">
               {{ r.texto }}
             </span>
-            <span class="text-[10px] text-text-muted block mt-0.5">
+            <span class="text-3xs text-text-muted block mt-0.5">
               {{ actividad().fechaProgramada | fechaClinica: 'd MMM yyyy, HH:mm' }}
             </span>
           </div>
 
           <div class="p-2.5 rounded-xl bg-bg-workspace border border-border/60">
-            <span class="text-[11px] text-text-muted block">Duración estimada</span>
+            <span class="text-2xs text-text-muted block">Duración estimada</span>
             <span class="font-bold text-xs text-text-dark">{{ formatearDuracion(actividad().duracionMinutos) }}</span>
-            <span class="text-[10px] text-text-muted block mt-0.5">Bloque de calendario</span>
+            <span class="text-3xs text-text-muted block mt-0.5">Bloque de calendario</span>
           </div>
         </div>
 

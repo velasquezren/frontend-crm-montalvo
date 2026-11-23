@@ -96,6 +96,12 @@
   /* 🔤 Tipografía Principal (§3.3) */
   --font-poppins: 'Poppins', ui-sans-serif, system-ui, sans-serif;
 
+  /* 🔡 Cuerpos diminutos con nombre (antes `text-[10px]`/`text-[11px]` sueltos
+     en 228 sitios). Mismo tamaño en píxeles: el nombre permite subir la escala
+     en un solo lugar y lo vigila `check:skills` (cápsulas a mano). */
+  --text-3xs: 0.625rem;
+  --text-2xs: 0.6875rem;
+
   /* Radios compartidos por utilidades Tailwind y superficies CSS. */
   --radius-xl: 0.75rem;
   --radius-2xl: 1rem;
@@ -277,6 +283,31 @@
 /* ==========================================================================
    Animaciones & Micro-interacciones (2026 Spring Easing & Hardware Accelerated)
    ========================================================================== */
+/* ==========================================================================
+   Capas (z-index) — única escala del shell. Cada superficie global lee su
+   variable; nadie escribe un número ≥ 100 a mano (lo rechaza verificar-ui).
+   Los números locales pequeños (1–60) dentro de un componente siguen siendo
+   locales. `.cdk-overlay-container` (diálogos, cajones, visor) vive en 1000:
+   lo que deba verse ENCIMA de un cajón abierto —los avisos— va por sobre él.
+   ========================================================================== */
+:root {
+  --z-topbar: 30;
+  --z-sidebar: 40;
+  --z-velo-movil: 40;
+  --z-panel-movil: 50;
+  --z-barra-inferior: 100;
+  --z-sidebar-velo: 110;
+  --z-sidebar-movil: 120;
+  --z-saltar-contenido: 130;
+  /* Dentro de .cdk-overlay-container (relativos a él). */
+  --z-dialogo-fondo: 100;
+  --z-dialogo: 101;
+  --z-visor-fondo: 99998;
+  --z-visor: 99999;
+  /* Sobre .cdk-overlay-container (1000): un aviso no puede quedar bajo un cajón. */
+  --z-aviso: 1100;
+}
+
 :root {
   --ease-spring-smooth: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -447,7 +478,7 @@ tr:hover .celda-sticky {
 
 /* Teléfono, código PAC, agente asignada: datos de apoyo, no etiquetas de
    estado. Estaban escritos como píldoras —cada uno con su borde, su fondo y su
-   `text-[10px]`— y una cabecera con cinco píldoras de colores distintos no se
+   `text-3xs`— y una cabecera con cinco píldoras de colores distintos no se
    lee: se mira. El estado sí es una píldora, y para eso está <app-badge>; el
    resto es texto tranquilo separado por puntos.
 
@@ -475,7 +506,7 @@ tr:hover .celda-sticky {
 
 /* Variante compacta para tarjetas (kanban), donde 12px no entra.
    Va con doble clase a propósito: `.crm-meta` vive fuera de toda `@layer` y por
-   eso le gana en cascada a cualquier `text-[10px]` de Tailwind, que sí está en
+   eso le gana en cascada a cualquier `text-3xs` de Tailwind, que sí está en
    `@layer utilities`. Intentar ajustarlo desde la plantilla no funcionaría. */
 .crm-meta.crm-meta-sm {
   font-size: 10px;

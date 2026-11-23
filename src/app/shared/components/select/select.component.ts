@@ -53,9 +53,10 @@ let nextId = 0;
         }
 
         <select
+          #lista
           [id]="id"
           [value]="value()"
-          (change)="value.set($any($event.target).value)"
+          (change)="value.set(lista.value)"
           [disabled]="disabled()"
           [attr.aria-label]="label() ? null : ariaLabel() || null"
           [class]="clases()">

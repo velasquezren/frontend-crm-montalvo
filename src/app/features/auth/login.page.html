@@ -35,7 +35,7 @@
     <!-- Bottom Footer Note -->
     <div class="relative z-10 pt-6 border-t border-border/40 text-xs text-text-muted flex items-center justify-between">
       <span>© {{ currentYear }} CRM Montalvo</span>
-      <span class="inline-flex items-center gap-1.5 text-[11px]">
+      <span class="inline-flex items-center gap-1.5 text-2xs">
         <span class="w-2 h-2 rounded-full bg-primary inline-block"></span>
         Servicios activos
       </span>
@@ -87,9 +87,10 @@
         <div class="flex flex-col items-start gap-3 text-xs pt-1">
           <label class="flex items-center gap-2 text-text-dark cursor-pointer select-none">
             <input
+              #recordarme
               type="checkbox"
               [checked]="rememberMe()"
-              (change)="rememberMe.set($any($event.target).checked)"
+              (change)="rememberMe.set(recordarme.checked)"
               class="w-4 h-4 accent-primary cursor-pointer" />
             <span class="text-text-muted">Recordarme</span>
           </label>

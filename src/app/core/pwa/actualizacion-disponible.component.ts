@@ -32,7 +32,7 @@ import { PwaUpdateService } from './pwa-update.service';
         title="Nueva versión del CRM disponible — haz clic para actualizar"
         aria-label="Nueva versión disponible, actualizar ahora">
         <app-icon name="rotate-cw" [size]="14" />
-        <span class="hidden sm:inline text-[11px] font-semibold whitespace-nowrap">Actualizar</span>
+        <span class="hidden sm:inline text-2xs font-semibold whitespace-nowrap">Actualizar</span>
       </button>
     }
   `,

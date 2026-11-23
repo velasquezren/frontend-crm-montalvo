@@ -27,10 +27,10 @@
           @if (fotoDeAgenda()) {
             <app-button variant="secondary" size="sm" icon="check" [disabled]="!!ocupado()" [loading]="ocupado() === 'foto'" (clicked)="usarFotoDeAgenda()">Usar la de la agenda</app-button>
           }
-          <p class="text-[11px] text-text-muted text-center">JPG, PNG o WebP · mín. 400×400 px</p>
+          <p class="text-2xs text-text-muted text-center">JPG, PNG o WebP · mín. 400×400 px</p>
         }
         @if (fotoDeAgenda()) {
-          <p class="text-[11px] text-text-muted text-center">Es la foto de la agenda: la reserva web ya la muestra, «Staff médico» todavía no.</p>
+          <p class="text-2xs text-text-muted text-center">Es la foto de la agenda: la reserva web ya la muestra, «Staff médico» todavía no.</p>
         }
       </div>
 
@@ -67,7 +67,7 @@
               {{ p.publicado ? 'Ocultar de la web' : 'Publicar en la web' }}
             </app-button>
             @if (hayCambios()) {
-              <span class="text-[11px] text-text-muted">Guarda los cambios antes de {{ p.publicado ? 'ocultarla' : 'publicarla' }}.</span>
+              <span class="text-2xs text-text-muted">Guarda los cambios antes de {{ p.publicado ? 'ocultarla' : 'publicarla' }}.</span>
             }
           </div>
         }
@@ -83,11 +83,11 @@
       </div>
       <div class="flex flex-col gap-1">
         <app-input label="Resumen (una línea en su tarjeta)" placeholder="Ej. Control prenatal y parto humanizado" [disabled]="!editable() || !!ocupado()" [value]="texto().resumen" (valueChange)="editar('resumen', $event)" />
-        <span class="self-end text-[11px] tabular-nums" [class.text-text-muted]="texto().resumen.length <= largoResumen" [class.text-text-critical]="texto().resumen.length > largoResumen">{{ texto().resumen.length }}/{{ largoResumen }}</span>
+        <span class="self-end text-2xs tabular-nums" [class.text-text-muted]="texto().resumen.length <= largoResumen" [class.text-text-critical]="texto().resumen.length > largoResumen">{{ texto().resumen.length }}/{{ largoResumen }}</span>
       </div>
       <div class="flex flex-col gap-1">
         <app-input label="Biografía" [multiline]="true" [rows]="6" placeholder="Formación, experiencia y en qué se especializa." [disabled]="!editable() || !!ocupado()" [value]="texto().biografia" (valueChange)="editar('biografia', $event)" />
-        <span class="self-end text-[11px] tabular-nums" [class.text-text-muted]="texto().biografia.length <= largoBiografia" [class.text-text-critical]="texto().biografia.length > largoBiografia">{{ texto().biografia.length }}/{{ largoBiografia }}</span>
+        <span class="self-end text-2xs tabular-nums" [class.text-text-muted]="texto().biografia.length <= largoBiografia" [class.text-text-critical]="texto().biografia.length > largoBiografia">{{ texto().biografia.length }}/{{ largoBiografia }}</span>
       </div>
 
       <div class="flex flex-col gap-2">
@@ -127,13 +127,13 @@
           @if (texto().resumen.trim()) {
             <p class="text-xs text-text-dark">{{ texto().resumen }}</p>
           }
-          <p class="text-[11px] text-text-muted">
+          <p class="text-2xs text-text-muted">
             {{ p.resumenHorario || 'Con cita a solicitud' }}
             @if (p.precioConsulta !== null) { · Consulta {{ p.precioConsulta | moneda:'BOB' }} }
           </p>
         </div>
       </article>
-      <p class="text-[11px] text-text-muted">El horario y el precio salen de la agenda: se cambian en «Horario» y «Datos».</p>
+      <p class="text-2xs text-text-muted">El horario y el precio salen de la agenda: se cambian en «Horario» y «Datos».</p>
     </section>
   </div>
 
@@ -160,7 +160,7 @@
       </div>
       @if (editable()) {
         <app-button icon="plus" [loading]="ocupado() === 'crear'" (clicked)="crear()">Crear ficha web</app-button>
-        <p class="text-[11px] text-text-muted">Nace oculta: nada se publica hasta que lo decidas.</p>
+        <p class="text-2xs text-text-muted">Nace oculta: nada se publica hasta que lo decidas.</p>
       }
     </div>
   </div>

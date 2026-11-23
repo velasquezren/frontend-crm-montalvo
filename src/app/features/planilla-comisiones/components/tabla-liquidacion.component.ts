@@ -91,7 +91,7 @@ type DireccionOrden = 'asc' | 'desc';
       <div class="text-xs text-text-muted font-medium">
         {{ filasVisibles().length }} de {{ filas().length - filasMarketing().length }} vendedoras
         @if (filasMarketing().length > 0) {
-          <span class="block text-[10px] text-text-muted/80 mt-0.5">
+          <span class="block text-3xs text-text-muted/80 mt-0.5">
             + {{ filasMarketing().length }} de Marketing (solo bono, sin comisión) — en el Excel del informe
           </span>
         }
@@ -242,7 +242,7 @@ type DireccionOrden = 'asc' | 'desc';
           <tr>
             <td class="celda-fija">
               <span class="font-semibold text-sm text-text-dark block">{{ f.nombre }}</span>
-              <span class="block text-[11px] text-text-muted font-normal">{{ f.tipo }} · {{ f.area }}</span>
+              <span class="block text-2xs text-text-muted font-normal">{{ f.tipo }} · {{ f.area }}</span>
             </td>
 
             <td class="text-right font-medium text-text-dark whitespace-nowrap">
@@ -253,7 +253,7 @@ type DireccionOrden = 'asc' | 'desc';
               <span class="font-medium text-text-dark">{{ f.planesVendidos }}</span>
               @if (planesInfo(f); as info) {
                 <span
-                  class="text-[10px] font-semibold block text-right"
+                  class="text-3xs font-semibold block text-right"
                   [class.text-primary]="info.esComisionable"
                   [class.text-text-muted]="!info.esComisionable"
                   [title]="desglosePlanes(f)">
@@ -266,7 +266,7 @@ type DireccionOrden = 'asc' | 'desc';
               <td class="text-right whitespace-nowrap">
                 <span class="font-medium text-text-dark">{{ f.acumuladoCirugias | moneda: 'USD' : tipoCambio() }}</span>
                 @if (f.nivelCirugia) {
-                  <span class="text-[10px] text-text-muted font-medium block text-right">
+                  <span class="text-3xs text-text-muted font-medium block text-right">
                     nivel {{ f.nivelCirugia }}
                   </span>
                 }
@@ -277,7 +277,7 @@ type DireccionOrden = 'asc' | 'desc';
             <td class="text-right whitespace-nowrap">
               {{ f.comisionTipoARA | moneda: 'USD' : tipoCambio() }}
               @if (f.nivelTipoARA) {
-                <span class="text-[10px] text-text-muted font-medium block text-right">
+                <span class="text-3xs text-text-muted font-medium block text-right">
                   nivel {{ f.nivelTipoARA }}
                 </span>
               }

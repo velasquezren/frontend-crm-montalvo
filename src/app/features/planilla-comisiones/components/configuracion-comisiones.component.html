@@ -23,8 +23,8 @@
       <div class="regla-global">
         <div class="min-w-0">
           <p class="text-xs font-bold text-text-dark">{{ p.titulo }}</p>
-          <p class="text-[11px] text-text-muted leading-snug mt-0.5">{{ p.ayuda }}</p>
-          <code class="text-[10px] text-text-muted">{{ p.clave }}</code>
+          <p class="text-2xs text-text-muted leading-snug mt-0.5">{{ p.ayuda }}</p>
+          <code class="text-3xs text-text-muted">{{ p.clave }}</code>
         </div>
         <div class="flex items-center gap-2 shrink-0">
           <input
@@ -34,7 +34,7 @@
             [value]="valorParametro(p.clave)"
             [disabled]="!esSuperAdmin()"
             (change)="guardarParametro(p.clave, $any($event.target).value)" />
-          <span class="text-[10px] text-text-muted w-28">{{ p.sufijo }}</span>
+          <span class="text-3xs text-text-muted w-28">{{ p.sufijo }}</span>
         </div>
       </div>
     }
@@ -158,7 +158,7 @@
             <td class="text-left">
               @if (v.agente; as ag) {
                 <span class="text-sm font-medium text-text-dark">{{ ag.nombre }}</span>
-                <span class="block text-[10px] text-text-muted">{{ ag.email }}</span>
+                <span class="block text-3xs text-text-muted">{{ ag.email }}</span>
               } @else {
                 <app-badge variant="neutral" icon="alert-circle">Sin agente</app-badge>
               }
@@ -207,7 +207,7 @@
                      tenga o no tipo y sueldo asignados dejó de ser accionable. -->
                 <app-badge variant="neutral" icon="eye-off">Dada de baja</app-badge>
                 @if (v.motivoOculta) {
-                  <span class="block text-[10px] text-text-muted mt-0.5">{{ v.motivoOculta }}</span>
+                  <span class="block text-3xs text-text-muted mt-0.5">{{ v.motivoOculta }}</span>
                 }
               } @else if (v.configurada) {
                 <app-badge variant="success">Configurada</app-badge>
@@ -779,7 +779,7 @@
             <td class="text-left">
               <span class="font-semibold text-sm text-text-dark block">{{ r.patron }}</span>
               @if (r.notas) {
-                <span class="block text-[11px] text-text-muted">{{ r.notas }}</span>
+                <span class="block text-2xs text-text-muted">{{ r.notas }}</span>
               }
             </td>
             <td class="text-center">
@@ -858,7 +858,7 @@
           label="Motivo (queda en el registro de auditoría)"
           placeholder="Ej. Ya no trabaja en la clínica, renuncia de marzo…"
           [(value)]="motivoOculta" />
-        <p class="text-[11px] text-text-muted mt-1">
+        <p class="text-2xs text-text-muted mt-1">
           Mínimo 3 caracteres. Se imprime en el Excel del informe, junto a la lista de
           quiénes se dejaron fuera.
         </p>
@@ -898,7 +898,7 @@
         [(value)]="nuevoCodigo" />
       <!-- El código es la clave que cruza con el agente del CRM. Se explica acá
            porque quien la da de alta no tiene por qué saber para qué sirve. -->
-      <p class="text-[11px] text-text-muted -mt-2">
+      <p class="text-2xs text-text-muted -mt-2">
         Tiene que ser único. Es lo que enlaza a esta persona con su usuario del CRM, si
         algún día tiene uno.
       </p>

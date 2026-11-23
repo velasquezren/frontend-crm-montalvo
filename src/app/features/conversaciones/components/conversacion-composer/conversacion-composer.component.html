@@ -18,7 +18,7 @@
       <div class="drag-drop-box">
         <app-icon name="image" [size]="28" class="text-primary animate-bounce mb-2" />
         <p class="text-xs font-bold text-text-dark">Suelta tus archivos aquí</p>
-        <p class="text-[10px] text-text-muted mt-0.5">Hasta {{ maximoAdjuntos }} por envío: fotos (5 MB cada una) y PDF (15 MB)</p>
+        <p class="text-3xs text-text-muted mt-0.5">Hasta {{ maximoAdjuntos }} por envío: fotos (5 MB cada una) y PDF (15 MB)</p>
       </div>
     </div>
   }
@@ -70,7 +70,7 @@
             {{ plantilla.titulo }}
           </button>
         } @empty {
-          <span class="text-[11px] text-text-muted italic">Crea atajos para responder en 1 clic</span>
+          <span class="text-2xs text-text-muted italic">Crea atajos para responder en 1 clic</span>
         }
       </div>
     </div>
@@ -96,7 +96,7 @@
           Mi Memoria Personal
         </span>
         <div class="flex items-center gap-2">
-          <a routerLink="/perfil" [queryParams]="{ tab: 'memoria' }" class="text-[10px] text-primary font-extrabold hover:underline flex items-center gap-0.5 cursor-pointer">
+          <a routerLink="/perfil" [queryParams]="{ tab: 'memoria' }" class="text-3xs text-primary font-extrabold hover:underline flex items-center gap-0.5 cursor-pointer">
             <span>Gestionar (30 MB)</span>
             <app-icon name="external-link" [size]="10" />
           </a>
@@ -122,10 +122,10 @@
               }
             </div>
             @if (item.contenido) {
-              <p class="text-[11px] text-text-muted truncate mt-0.5 leading-tight">{{ item.contenido }}</p>
+              <p class="text-2xs text-text-muted truncate mt-0.5 leading-tight">{{ item.contenido }}</p>
             }
             @if (item.mediaUrl) {
-              <span class="text-[10px] text-primary font-bold flex items-center gap-1 mt-1">
+              <span class="text-3xs text-primary font-bold flex items-center gap-1 mt-1">
                 <app-icon name="image" [size]="10" /> {{ item.mediaNombre || 'Archivo Adjunto' }}
               </span>
             }
@@ -133,7 +133,7 @@
         } @empty {
           <div class="text-center py-5 space-y-1">
             <p class="text-xs text-text-muted">Sin recursos guardados en memoria.</p>
-            <p class="text-[10px] text-text-muted">Sube archivos y textos frecuentes desde <a routerLink="/perfil" [queryParams]="{ tab: 'memoria' }" class="text-primary underline">Mi Perfil</a>.</p>
+            <p class="text-3xs text-text-muted">Sube archivos y textos frecuentes desde <a routerLink="/perfil" [queryParams]="{ tab: 'memoria' }" class="text-primary underline">Mi Perfil</a>.</p>
           </div>
         }
       </div>
@@ -280,7 +280,7 @@
           <p class="text-xs font-bold text-text-dark leading-tight">
             Pasaron más de {{ state.horasVentanaMeta() }} h desde su último mensaje
           </p>
-          <p class="text-[11px] text-text-muted leading-snug mt-0.5">
+          <p class="text-2xs text-text-muted leading-snug mt-0.5">
             WhatsApp solo deja escribirle con una plantilla aprobada{{ state.ventana72hMetaActiva() ? ', y ahora sale gratis: llegó desde un anuncio hace menos de 72 h' : '' }}. Cuando conteste, vuelves a escribir libre.
           </p>
         </div>

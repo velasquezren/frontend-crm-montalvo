@@ -32,11 +32,11 @@ import { sinFormato } from '../../vista-previa';
               <app-icon name="check-check" [size]="14" class="text-text-muted/70 shrink-0" title="Entregado" />
             }
             @case ('FALLIDO') {
-              <span class="text-critical font-semibold text-[11px] shrink-0 leading-none" [title]="errorWhatsapp(ultimo.codigoErrorEnvio)">No enviado</span>
+              <span class="text-critical font-semibold text-2xs shrink-0 leading-none" [title]="errorWhatsapp(ultimo.codigoErrorEnvio)">No enviado</span>
             }
             @case ('INCIERTO') {
               <span
-                class="text-text-muted font-semibold text-[11px] shrink-0 leading-none"
+                class="text-text-muted font-semibold text-2xs shrink-0 leading-none"
                 title="No se pudo confirmar si llegó; no lo reenvíes todavía">Sin confirmar</span>
             }
             @default {

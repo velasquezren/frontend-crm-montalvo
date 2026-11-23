@@ -148,7 +148,7 @@
           <app-kpi-card label="No entregados" [valor]="m.rechazadosMeta + m.fallidos" icon="alert-circle" tono="neutral" [compacto]="true"
             [pie]="m.limiteMeta + ' por el tope de Meta por persona'" />
         </div>
-        <p class="text-[11px] text-text-muted leading-relaxed">
+        <p class="text-2xs text-text-muted leading-relaxed">
           «Compraron» cuenta a quien compró en los 30 días siguientes (FileMaker o CRM): dice que compró después,
           no prueba que fue por la campaña.
         </p>
@@ -175,7 +175,7 @@
                   <tr>
                     <td>
                       <p class="font-medium text-text-dark leading-tight">{{ d.cliente | nombreCliente }}</p>
-                      <span class="crm-meta-clave text-[11px]">{{ d.cliente.telefono }}</span>
+                      <span class="crm-meta-clave text-2xs">{{ d.cliente.telefono }}</span>
                     </td>
                     <td>
                       <app-badge [variant]="categoriaBadge[d.cliente.categoria]" [icon]="categoriaIcono[d.cliente.categoria]">
@@ -185,7 +185,7 @@
                     <td>
                       <span class="text-xs text-text-dark">{{ estadoDestinatario[d.estado] }}</span>
                       @if (d.motivo) {
-                        <span class="block text-[11px] text-text-muted">{{ d.motivo }}</span>
+                        <span class="block text-2xs text-text-muted">{{ d.motivo }}</span>
                       }
                     </td>
                     <td class="text-xs text-text-muted">{{ entregaDe(d) }}</td>
