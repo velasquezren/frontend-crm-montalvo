@@ -35,7 +35,8 @@ export class BadgeComponent {
 
     const variants: Record<BadgeVariant, string> = {
       success: 'bg-success-bg text-success',
-      info: 'bg-info-bg text-info',
+      /* Texto en secondary-texto: el verde info sobre su fondo daba 2,49:1. */
+      info: 'bg-info-bg text-secondary-texto',
       neutral: 'bg-neutral-bg text-neutral',
       critical: 'bg-critical-bg text-critical',
       gold: 'bg-gold-bg text-gold',

@@ -300,7 +300,7 @@
 }
 
 .chat-composer::placeholder {
-  color: color-mix(in srgb, var(--color-text-muted) 60%, transparent);
+  color: var(--color-text-muted);
 }
 
 .chat-send-btn {

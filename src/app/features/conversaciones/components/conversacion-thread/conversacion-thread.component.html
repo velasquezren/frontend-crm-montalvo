@@ -42,7 +42,7 @@
             <span class="text-2xs sm:text-xs text-text-muted leading-tight truncate" title="Escribió con su nombre de usuario de WhatsApp: el chat funciona, pero no compartió su número">Usuario de WhatsApp · sin número</span>
           }
           @if (chat.cliente.pac) {
-            <span class="text-text-muted/40">·</span>
+            <span class="text-text-muted/40" aria-hidden="true">·</span>
             <span class="crm-meta-clave text-2xs shrink-0" title="Código PAC en FileMaker">
               {{ chat.cliente.pac }}
             </span>

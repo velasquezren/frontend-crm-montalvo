@@ -29,7 +29,7 @@ import { sinFormato } from '../../vista-previa';
               <app-icon name="check-check" [size]="14" class="text-secondary shrink-0" title="Leído" />
             }
             @case ('ENTREGADO') {
-              <app-icon name="check-check" [size]="14" class="text-text-muted/70 shrink-0" title="Entregado" />
+              <app-icon name="check-check" [size]="14" class="text-text-muted shrink-0" title="Entregado" />
             }
             @case ('FALLIDO') {
               <span class="text-critical font-semibold text-2xs shrink-0 leading-none" [title]="errorWhatsapp(ultimo.codigoErrorEnvio)">No enviado</span>
@@ -40,7 +40,7 @@ import { sinFormato } from '../../vista-previa';
                 title="No se pudo confirmar si llegó; no lo reenvíes todavía">Sin confirmar</span>
             }
             @default {
-              <app-icon name="check" [size]="14" class="text-text-muted/70 shrink-0" title="Enviado" />
+              <app-icon name="check" [size]="14" class="text-text-muted shrink-0" title="Enviado" />
             }
           }
           <!-- Lo último lo contestó la IA: se ve sin abrir el chat. -->
@@ -92,7 +92,7 @@ import { sinFormato } from '../../vista-previa';
         }
       </p>
     } @else {
-      <p class="text-xs text-text-muted/50 italic truncate">Sin mensajes</p>
+      <p class="text-xs text-text-muted italic truncate">Sin mensajes</p>
     }
   `,
 })

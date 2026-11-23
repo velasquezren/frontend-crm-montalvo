@@ -91,7 +91,7 @@ type DireccionOrden = 'asc' | 'desc';
       <div class="text-xs text-text-muted font-medium">
         {{ filasVisibles().length }} de {{ filas().length - filasMarketing().length }} vendedoras
         @if (filasMarketing().length > 0) {
-          <span class="block text-3xs text-text-muted/80 mt-0.5">
+          <span class="block text-3xs text-text-muted mt-0.5">
             + {{ filasMarketing().length }} de Marketing (solo bono, sin comisión) — en el Excel del informe
           </span>
         }

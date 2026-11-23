@@ -19,8 +19,10 @@ const DEUDA = {
 
 /* Capas globales (≥ 100) y cuerpos diminutos con token: solo por su nombre. */
 const CAPA_SUELTA_CLASE = /(?:^|\s)(?:[\w-]+:)*z-(?:\[\d{3,}\]|\d{3,})(?:\s|$)/;
-/* #39ADA3 da 2,73:1 sobre blanco: acento o ícono, nunca texto (usa text-secondary-texto). */
-const TEXTO_SECUNDARIO = /(?:^|\s)text-secondary(?:\s|$)/;
+/* Colores que no alcanzan 4,5:1 como texto: el verde secundario/info (#39ADA3,
+   2,73:1 sobre blanco; usa text-secondary-texto) y el gris muted con opacidad
+   (/90 ya baja a 3,96:1; usa text-text-muted entero). */
+const TEXTO_SECUNDARIO = /(?:^|\s)(?:text-secondary|text-info|text-text-muted\/\d+)(?:\s|$)/;
 const ETIQUETAS_TEXTO = new Set(['p', 'span', 'td', 'th', 'strong', 'b', 'em', 'small', 'label', 'a', 'li', 'dt', 'dd', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
 const TIPO_SUELTO = /(?:^|\s)(?:[\w-]+:)*text-\[1[01]px\](?:\s|$)/;
 
@@ -46,8 +48,9 @@ export function revisarPlantilla(texto, archivo = 'plantilla.html') {
         if (CAPA_SUELTA_CLASE.test(clases)) {
           reportar('capa-suelta', 'z-index global escrito a mano: usa la escala de styles.css con z-(--z-…).');
         }
-        if (ETIQUETAS_TEXTO.has(node.name) && TEXTO_SECUNDARIO.test(clases)) {
-          reportar('contraste-secundario', 'text-secondary (2,73:1) no alcanza AA como texto: usa text-secondary-texto.');
+        /* Lo decorativo (`aria-hidden`) no lleva información y WCAG no le exige contraste. */
+        if (ETIQUETAS_TEXTO.has(node.name) && atributo('aria-hidden')?.value !== 'true' && TEXTO_SECUNDARIO.test(clases)) {
+          reportar('contraste-secundario', 'Color de texto bajo AA (text-secondary/text-info 2,73:1, text-text-muted/N < 4:1): usa text-secondary-texto o text-text-muted.');
         }
         if (TIPO_SUELTO.test(clases)) {
           reportar('tipo-suelto', 'text-[10px]/text-[11px] tienen nombre: usa text-3xs/text-2xs.');

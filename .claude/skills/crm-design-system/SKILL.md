@@ -102,8 +102,11 @@ una tabla de comisiones se vuelve incómoda de escanear.
 `--color-secondary` (#39ADA3) mide 2,73:1 sobre blanco: vale para íconos,
 fondos tenues y bordes, no para leer. El texto en ese verde va con
 `text-secondary-texto` / `var(--color-secondary-texto)` (mezcla 35 % secundario +
-65 % primario, ≥ 4,6:1 en los tres fondos). `verificar-ui` rechaza
-`text-secondary` en etiquetas de texto.
+65 % primario, ≥ 4,6:1 en los tres fondos). Lo mismo vale para `info`, que es
+el mismo verde: `<app-badge variant="info">` ya pinta su texto así. El gris
+`text-muted` va entero: con opacidad (`/90` = 3,96:1, `/50` = 1,98:1) no llega,
+tampoco en un *placeholder*. `verificar-ui` rechaza `text-secondary`, `text-info`
+y `text-text-muted/N` en etiquetas de texto.
 
 ## Capas (z-index)
 

@@ -125,7 +125,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.contador-estado-info { background: var(--color-info-bg); color: var(--color-info); }
+.contador-estado-info { background: var(--color-info-bg); color: var(--color-secondary-texto); }
 .contador-estado-neutral { background: var(--color-neutral-bg); color: var(--color-neutral); }
 .contador-estado-success { background: var(--color-success-bg); color: var(--color-success); }
 .contador-estado-critical { background: var(--color-critical-bg); color: var(--color-critical); }

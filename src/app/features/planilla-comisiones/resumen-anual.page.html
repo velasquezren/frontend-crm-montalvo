@@ -254,7 +254,7 @@
                       {{ mes.montoVendido | moneda: 'USD': mes.tipoCambio }}
                     </span>
                   } @else {
-                    <span class="text-text-muted/60">—</span>
+                    <span class="text-text-muted">—</span>
                   }
                 </td>
               }
@@ -290,7 +290,7 @@
                 @if (t > 0) {
                   {{ t | moneda: 'USD': tcPorMes()[i] }}
                 } @else {
-                  <span class="text-text-muted/60">—</span>
+                  <span class="text-text-muted">—</span>
                 }
               </td>
             }
