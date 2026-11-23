@@ -120,3 +120,12 @@ test('el verde secundario no se usa como color de texto', () => {
     <p class="text-info">x</p><span class="text-text-muted/70">—</span><span class="text-text-muted">ok</span><span class="text-text-muted/40" aria-hidden="true">·</span>`;
   assert.deepEqual(revisarPlantilla(html).map(p => p.regla), Array(4).fill('contraste-secundario'));
 });
+
+test('un control cuyo texto desaparece en el teléfono necesita aria-label', () => {
+  const html = `<button><app-icon name="x" /><span class="hidden sm:inline">Compartir</span></button>
+    <a routerLink="/p"><app-avatar /><div class="hidden lg:block"><p>Ana</p></div></a>
+    <button aria-label="Compartir"><span class="hidden sm:inline">Compartir</span></button>
+    <button [attr.aria-label]="nombre"><span class="hidden sm:inline">x</span></button>
+    <button><span class="hidden sm:inline">Guardar</span> cambios</button>`;
+  assert.deepEqual(revisarPlantilla(html).map(p => p.regla), ['nombre-oculto', 'nombre-oculto']);
+});

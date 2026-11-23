@@ -26,6 +26,16 @@ const TEXTO_SECUNDARIO = /(?:^|\s)(?:text-secondary|text-info|text-text-muted\/\
 const ETIQUETAS_TEXTO = new Set(['p', 'span', 'td', 'th', 'strong', 'b', 'em', 'small', 'label', 'a', 'li', 'dt', 'dd', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
 const TIPO_SUELTO = /(?:^|\s)(?:[\w-]+:)*text-\[1[01]px\](?:\s|$)/;
 
+/* ¿Muestra texto en TODOS los anchos? Lo de dentro de un `hidden sm:inline`
+   desaparece en el teléfono, y con él el nombre accesible del control. */
+const OCULTO_EN_MOVIL = /(?:^|\s)hidden(?:\s|$)/;
+function textoSiempreVisible(node) {
+  if (node.value !== undefined && !node.name) return typeof node.value !== 'string' || !!node.value.trim();
+  if (node.name === 'app-icon') return false;
+  if (node.name && OCULTO_EN_MOVIL.test(node.attributes?.find(a => a.name === 'class')?.value ?? '')) return false;
+  return hijos(node).some(textoSiempreVisible);
+}
+
 function hijos(node) {
   return ['children', 'branches', 'groups', 'cases', 'empty', 'placeholder', 'loading', 'error']
     .flatMap(key => node[key] ? (Array.isArray(node[key]) ? node[key] : [node[key]]) : []);
@@ -81,6 +91,10 @@ export function revisarPlantilla(texto, archivo = 'plantilla.html') {
         if (enBucle && ['app-button', 'button', 'a'].includes(node.name)
             && (atributo('ariaLabel') ?? atributo('aria-label'))?.value.trim()) {
           reportar('nombre-repetido', 'Dentro de un @for el nombre accesible fijo se repite en cada fila: inclúyele el dato de la fila con [ariaLabel].');
+        }
+        if (['button', 'a'].includes(node.name) && !nombre('aria-label') && !nombre('ariaLabel') && !tiene('attr.aria-label')
+            && !textoSiempreVisible(node) && JSON.stringify(texto.slice(node.startSourceSpan.end.offset, node.endSourceSpan?.start.offset ?? 0)).match(/hidden (?:sm|md|lg|xl):/)) {
+          reportar('nombre-oculto', 'Su texto se oculta en el teléfono (hidden …:inline) y queda sin nombre: añade aria-label.');
         }
         if (node.name === 'img' && !tiene('alt')) reportar('imagen-alt', 'La imagen necesita alt, vacío si es decorativa.');
         if (node.name === 'input' && atributo('type')?.value === 'file'

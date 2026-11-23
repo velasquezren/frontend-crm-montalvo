@@ -43,7 +43,8 @@
       }
       @if (user(); as currentUser) {
         <div class="flex items-center gap-3">
-          <a routerLink="/perfil" class="flex items-center gap-3 hover:opacity-90 transition-opacity cursor-pointer group" title="Ver mi perfil">
+          <a routerLink="/perfil" class="flex items-center gap-3 hover:opacity-90 transition-opacity cursor-pointer group" title="Ver mi perfil"
+            [attr.aria-label]="'Ver mi perfil: ' + currentUser.nombre">
             <app-avatar [initials]="currentUser.iniciales" [imageUrl]="currentUser.foto" size="sm" />
             <div class="hidden lg:block">
               <p class="text-sm font-medium text-text-dark leading-tight group-hover:text-primary transition-colors">
