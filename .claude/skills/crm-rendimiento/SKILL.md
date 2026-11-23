@@ -147,7 +147,7 @@ avisa y luego falla solo si el paquete inicial se infla:
 
 | Presupuesto | Aviso | Error |
 | --- | --- | --- |
-| `initial` | 435 kB | 440 kB |
+| `initial` | 438 kB | 440 kB |
 | `anyComponentStyle` | 33 kB | 40 kB |
 
 Estaban en 500 kB / 1 MB, que con un inicial de 401 kB dejaba **99 kB de
@@ -167,6 +167,10 @@ Con `withXhr()` eran 3,4 kB más: se quitó porque la guía oficial lo reserva p
 el progreso de subida, que el CRM no usa (contrato en `core/api/transporte-http.spec.ts`).
 El margen hasta el ERROR queda en ~9,5 kB: el próximo crecimiento pide recortar
 algo, no subir el 440.
+435 → 438 kB el 2026-11-23 (Angular 22.2.3 → 22.3.0): +3,5 kB brutos del
+framework, pero **−5,6 kB transferidos**; inicial 435,16 kB / 108,30 kB. Quedan
+~4,8 kB hasta el ERROR: **lo próximo que crezca obliga a recortar** (candidatos:
+lo que el shell importa de forma ansiosa), no a tocar el aviso otra vez.
 
 Para un cambio que afecta a una vista concreta, compara además el tamaño de su
 *lazy chunk* en la misma tabla. **Esa cifra puede importar más que el total
