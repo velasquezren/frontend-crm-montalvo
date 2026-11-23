@@ -242,6 +242,16 @@ export function verificarUi(raiz = RAIZ) {
     }
   }
   for (const archivo of archivos) {
+    /* El portapapeles solo por `core/ui/portapapeles.ts`: falla sin permiso o sin
+       gesto en Safari, y una llamada directa sin respaldo ni aviso deja el botón
+       mudo (Analítica, 2026-11-23). */
+    if (archivo.endsWith('.ts') && !archivo.endsWith('portapapeles.ts')) {
+      readFileSync(archivo, 'utf8').split('\n').forEach((linea, i) => {
+        if (/navigator\.clipboard\b/.test(linea) && !/^\s*(\*|\/\/)/.test(linea)) {
+          agregar(archivo, [{ linea: i + 1, regla: 'portapapeles-directo', mensaje: 'Usa copiarAlPortapapeles() de core/ui/portapapeles.ts y avisa si devuelve false.' }]);
+        }
+      });
+    }
     if (archivo.endsWith('.html')) agregar(archivo, revisarPlantilla(readFileSync(archivo, 'utf8'), archivo));
     if (archivo.endsWith('.css')) agregar(archivo, revisarCss(readFileSync(archivo, 'utf8'), archivo, globales.has(archivo)));
   }

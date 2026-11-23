@@ -25,6 +25,7 @@ import {
   MESES,
   PeriodoComision,
 } from '../planilla-comisiones/planilla.model';
+import { copiarAlPortapapeles } from '../../core/ui/portapapeles';
 import { AnaliticaService } from './analitica.service';
 import { AnaliticaPeriodo, FilaRanking, Porcion } from './analitica.model';
 
@@ -293,24 +294,26 @@ export class AnaliticaPage {
     }
   }
 
-  protected copiarRankingServicios(): void {
+  protected async copiarRankingServicios(): Promise<void> {
     const list = this.topServiciosOrdenados();
     if (list.length === 0) return;
     const encabezados = 'Servicio\tCantidad\tMonto (Bs)\t% Total\n';
     const filas = list.map(s => `${s.etiqueta}\t${s.cantidad}\t${s.montoVendido}\t${s.pctMonto}%`).join('\n');
-    navigator.clipboard.writeText(encabezados + filas).then(() => {
-      this.toast.success('Ranking de servicios copiado al portapapeles.');
-    });
+    /* Con el ayudante común: el portapapeles falla sin permiso o sin gesto en
+       Safari, y antes el botón no hacía nada ni avisaba. */
+    if (await copiarAlPortapapeles(encabezados + filas)) this.toast.success('Ranking de servicios copiado al portapapeles.');
+    else this.toast.error('No se pudo copiar el ranking de servicios; inténtalo de nuevo o cópialo a mano.');
   }
 
-  protected copiarRankingMedicos(): void {
+  protected async copiarRankingMedicos(): Promise<void> {
     const list = this.topMedicosOrdenados();
     if (list.length === 0) return;
     const encabezados = 'Médico\tCantidad\tMonto (Bs)\t% Total\n';
     const filas = list.map(m => `${m.etiqueta}\t${m.cantidad}\t${m.montoVendido}\t${m.pctMonto}%`).join('\n');
-    navigator.clipboard.writeText(encabezados + filas).then(() => {
-      this.toast.success('Ranking de médicos copiado al portapapeles.');
-    });
+    /* Con el ayudante común: el portapapeles falla sin permiso o sin gesto en
+       Safari, y antes el botón no hacía nada ni avisaba. */
+    if (await copiarAlPortapapeles(encabezados + filas)) this.toast.success('Ranking de médicos copiado al portapapeles.');
+    else this.toast.error('No se pudo copiar el ranking de médicos; inténtalo de nuevo o cópialo a mano.');
   }
 
   protected seleccionarPeriodo(id: string): void {
