@@ -57,6 +57,7 @@ la compuerta oficial, más tests pertinentes (`npm test -- --watch=false`) y
 ## Skills de terceros
 
 La referencia Angular está en `.agents/skills/angular-developer/` (ruta relativa
-al repo, no `/.agents/`). Consultar solo la API necesaria. `web-design-guidelines`
-es apoyo opcional; la marca y los patrones del CRM prevalecen. No añadir librerías
-de diseño ni cambiar la paleta por recomendación genérica de un proveedor.
+al repo, no `/.agents/`). Consultar solo la API necesaria; la marca y los patrones
+del CRM prevalecen. No añadir librerías de diseño ni cambiar la paleta por
+recomendación genérica de un proveedor. No instalar skills que descarguen sus
+reglas de internet al usarse: se vendorizan con versión fija o no se usan.
