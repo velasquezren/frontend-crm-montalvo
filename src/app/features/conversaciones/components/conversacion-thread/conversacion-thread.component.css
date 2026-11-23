@@ -569,7 +569,9 @@
   padding: 1px 6px;
   border-radius: 9999px;
   background: color-mix(in srgb, currentColor 14%, transparent);
-  font-size: 9px;
+  /* El suelo de la escala es 10 px (text-3xs): a 9 px, en mayúsculas y
+     negrita, «AUTOMÁTICO» se leía como una mancha en el teléfono. */
+  font-size: var(--text-3xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
