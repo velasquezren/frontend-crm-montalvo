@@ -665,7 +665,7 @@ function verificarRendimiento() {
   const skill = 'crm-rendimiento';
   const archivo = join(SKILLS, skill, 'SKILL.md');
   if (!existsSync(archivo)) return;
-  const texto = readFileSync(archivo, 'utf8');
+  const texto = leerSkill(join(SKILLS, skill));
 
   /* a) La lista de endpoints cacheados del skill contra la del código. Es la
      comprobación que más importa: ampliar la caché a un endpoint de la operación
@@ -853,6 +853,16 @@ function verificarServiceWorkerUnico() {
   }
 }
 
+/* Una skill es su SKILL.md más sus `references/*.md` (divulgación progresiva):
+   todo se contrasta con el código igual, esté en el índice o en una referencia. */
+function leerSkill(carpeta) {
+  const refs = join(carpeta, 'references');
+  const extra = existsSync(refs)
+    ? readdirSync(refs).filter(f => f.endsWith('.md')).sort().map(f => readFileSync(join(refs, f), 'utf8'))
+    : [];
+  return [readFileSync(join(carpeta, 'SKILL.md'), 'utf8'), ...extra].join('\n\n');
+}
+
 // ── Ejecución ─────────────────────────────────────────────────────────────────
 if (!existsSync(SKILLS)) {
   console.log('· No hay .claude/skills/ — nada que verificar.');
@@ -869,7 +879,7 @@ for (const nombre of readdirSync(SKILLS)) {
   // angular-developer es un skill de terceros (ver skills-lock.json): no lo auditamos.
   if (nombre === 'angular-developer') continue;
 
-  const texto = readFileSync(archivo, 'utf8');
+  const texto = leerSkill(join(SKILLS, nombre));
   verificarRutas(nombre, texto);
   verificarSelectores(nombre, texto);
   verificarInventario(nombre, texto);
