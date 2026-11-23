@@ -78,6 +78,9 @@ si algo cabe **antes** de escribirlo, no después de verlo roto.
 - **Objetivo táctil ≥ 24×24 px** (WCAG 2.2 AA). Un botón solo-ícono de 14 px con `padding: 4px`
   mide 22 px: **no cumple**. Iguala el alto al de sus vecinos (`min-height: 32px`). Pasó con el
   «Contexto» del bloque de atención (30×22 en el móvil).
+  Si el botón va pegado a un dato y no puede crecer sin mover la fila (copiar teléfono o
+  PAC, la «x» de un menú), `relative crm-tactil` le da un área invisible de 24×24 px sin
+  tocar la maquetación (2026-11-23: cinco botones de 11–14 px).
 - **Todo control sin texto tiene nombre**, y desde el 2026-10-10 **lo comprueba el
   build** (`revisarPlantilla` en `tools/verificar-ui.mjs`): un `<app-button>` con `icon` que no proyecta texto,
   y un `<app-input>`/`<app-select>` sin `label`, exigen `ariaLabel`. **`title` no cuenta**

@@ -289,6 +289,20 @@
 /* ==========================================================================
    Animaciones & Micro-interacciones (2026 Spring Easing & Hardware Accelerated)
    ========================================================================== */
+/* Objetivo táctil mínimo (WCAG 2.2, 2.5.8: 24×24 px) para un botón de solo
+   ícono que va pegado a un dato —copiar teléfono o PAC, cerrar un menú— y no
+   puede crecer sin mover la fila. Un área invisible centrada recibe el toque;
+   el botón necesita estar posicionado (`relative`, o ya `absolute`). */
+.crm-tactil::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100%, 24px);
+  height: max(100%, 24px);
+  transform: translate(-50%, -50%);
+}
+
 /* ==========================================================================
    Capas (z-index) — única escala del shell. Cada superficie global lee su
    variable; nadie escribe un número ≥ 100 a mano (lo rechaza verificar-ui).
