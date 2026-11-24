@@ -242,6 +242,6 @@ export interface FichaVinculable {
 /** Lee `vinculable` del 409, o `null` si no viene o no tiene la forma esperada. */
 export function fichaVinculable(dato: unknown): FichaVinculable | null {
   if (!dato || typeof dato !== 'object' || !('nombre' in dato)) return null;
-  const nombre = (dato as { nombre: unknown }).nombre;
+  const nombre = (dato).nombre;
   return typeof nombre === 'string' || nombre === null ? { nombre } : null;
 }

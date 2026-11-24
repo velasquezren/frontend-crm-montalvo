@@ -30,7 +30,7 @@ describe('próximas reservas en la ficha del chat', () => {
     const r: Partial<ReservaAgenda> = { id: 7, fecha: '2026-10-13', hora: '09:30', medicoId: 3, medico: 'Dra. Sintética', especialidad: 'Ginecología', estado: 'PENDIENTE' };
     http.expectOne(p => p.url.endsWith('/agenda/reservas/conversacion/chat-1')).flush([r]);
     await asentar();
-    const texto = (fixture.nativeElement as HTMLElement).textContent!;
+    const texto = (fixture.nativeElement as HTMLElement).textContent;
     expect(texto).toContain('mar 13 oct · 09:30');
     expect(texto).toContain('Dra. Sintética · Ginecología');
     expect(texto).toContain('Por confirmar');
@@ -47,7 +47,7 @@ describe('próximas reservas en la ficha del chat', () => {
     await asentar();
     http.expectOne(p => p.url.endsWith('/conversacion/chat-2')).flush({}, { status: 503, statusText: 'Unavailable' });
     await asentar();
-    const texto = (fixture.nativeElement as HTMLElement).textContent!;
+    const texto = (fixture.nativeElement as HTMLElement).textContent;
     expect(texto).toContain('No pudimos consultar la agenda');
     expect(texto).not.toContain('Sin reservas próximas');
   });
@@ -58,7 +58,7 @@ describe('próximas reservas en la ficha del chat', () => {
       {id:2,fecha:'2026-10-13',hora:'10:30',medicoId:null,estado:'PENDIENTE',pagoChat:{estado:'REVISION',detalle:'Revisa la agenda antes de cargarlo a mano.'}},
     ]);
     await asentar();
-    const texto=(fixture.nativeElement as HTMLElement).textContent!;
+    const texto=(fixture.nativeElement as HTMLElement).textContent;
     expect(texto).toContain('Caja debe verificar el pago');
     expect(texto).toContain('Revisión manual');
     expect(texto).not.toContain('Pago confirmado');

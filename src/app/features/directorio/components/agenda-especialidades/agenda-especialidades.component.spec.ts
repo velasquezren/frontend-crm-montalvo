@@ -40,7 +40,7 @@ describe('pestaña Especialidades: las de la agenda, cada una con su página web
     http.expectOne(r => r.url.endsWith('/agenda/medicos/especialidades')).flush(lista(ESPECIALIDADES));
     await asentar();
   }
-  const texto = () => (fixture.nativeElement as HTMLElement).textContent!;
+  const texto = () => (fixture.nativeElement as HTMLElement).textContent;
   const boton = (t: string) => Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(b => b.textContent?.includes(t));
   afterEach(() => { fixture?.destroy(); http.verify(); });
 

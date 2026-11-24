@@ -51,7 +51,7 @@ describe('«Cupos» en el compositor', () => {
     http.expectOne(req => req.url === `${API_URL}${ruta}`).flush(respuesta);
   const botonCupos = () =>
     Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'))
-      .find(b => b.textContent?.trim() === 'Cupos') as HTMLButtonElement | undefined;
+      .find(b => b.textContent?.trim() === 'Cupos');
   const cajon = () => document.querySelector('app-cupos-medico');
 
   beforeEach(async () => {

@@ -185,6 +185,6 @@ export class MenuAtencionEditorComponent {
 /** Un 400 de validación trae la lista de motivos; se muestran uno por línea. */
 function erroresDe(error: unknown): readonly string[] {
   const detalle: unknown = error instanceof HttpErrorResponse ? error.error?.message : undefined;
-  if (Array.isArray(detalle) && detalle.every(d => typeof d === 'string') && detalle.length) return detalle as string[];
+  if (Array.isArray(detalle) && detalle.every(d => typeof d === 'string') && detalle.length) return detalle;
   return [mensajeDeError(error, 'No se pudo guardar el menú.')];
 }

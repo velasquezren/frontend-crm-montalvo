@@ -350,7 +350,7 @@ export class LeadsPage {
     if (!lead || lead.estado === nuevoEstado) return;
 
     if (nuevoEstado === 'PERDIDO') {
-      this.abrirMotivoPerdida(lead, motivo => this.aplicarCambioEstado(lead, nuevoEstado, motivo));
+      this.abrirMotivoPerdida(lead, motivo => void this.aplicarCambioEstado(lead, nuevoEstado, motivo));
       return;
     }
 

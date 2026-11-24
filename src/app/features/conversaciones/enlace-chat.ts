@@ -31,6 +31,6 @@ export type ChatDePaciente =
 export function resolverChatDePaciente(chats: readonly ConversacionResumen[], telefono: string): ChatDePaciente {
   const buscado = soloDigitos(telefono);
   const suyos = chats.filter(c => soloDigitos(c.cliente.telefono ?? '') === buscado);
-  if (suyos.length === 1) return { tipo: 'UNO', id: suyos[0]!.id };
+  if (suyos.length === 1) return { tipo: 'UNO', id: suyos[0].id };
   return suyos.length > 1 ? { tipo: 'VARIOS' } : { tipo: 'NINGUNO' };
 }

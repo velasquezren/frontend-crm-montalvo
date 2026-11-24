@@ -98,9 +98,7 @@ describe('R2.2 · reintentar un adjunto sin resubirlo', () => {
 
   /** El botón «Reintentar» del último globo, si existe. */
   function botonReintentar(): HTMLButtonElement | null {
-    const botones = Array.from(
-      fixture.nativeElement.querySelectorAll('button'),
-    ) as HTMLButtonElement[];
+    const botones = Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('button'));
     return botones.find(b => b.textContent?.trim() === 'Reintentar') ?? null;
   }
 
@@ -281,7 +279,7 @@ describe('R2.2 · reintentar un adjunto sin resubirlo', () => {
     pintar(globoConMedia('temp-1', 'ERROR', '11111111-1111-4111-8111-111111111111', 'memoria/a/1.jpg'));
     pintar(globoConMedia('temp-2', 'ERROR', '22222222-2222-4222-8222-222222222222', 'memoria/a/2.jpg'));
 
-    const botones = (Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[])
+    const botones = Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('button'))
       .filter(b => b.textContent?.trim() === 'Reintentar');
     expect(botones).toHaveLength(2);
 

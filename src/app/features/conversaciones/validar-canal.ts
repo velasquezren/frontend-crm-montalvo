@@ -32,7 +32,7 @@ export function validarPaginaInbox(valor: unknown): PaginaInbox {
 
 export function validarDetalle(valor: unknown): ConversacionDetalle {
   comprobarCanal(valor);
-  return valor as ConversacionDetalle;
+  return valor;
 }
 
 export function validarResumenInbox(valor: unknown): ResumenInbox {

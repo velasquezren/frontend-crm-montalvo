@@ -48,7 +48,7 @@ describe('pantalla Reservas', () => {
     expect(pedido.request.params.has('estado')).toBe(false);
     pedido.flush(pagina([reserva], { PAGADO: 1, PENDIENTE: 3 }));
     await asentar();
-    const texto = (fixture.nativeElement as HTMLElement).textContent!;
+    const texto = (fixture.nativeElement as HTMLElement).textContent;
     expect(texto).toContain('María Sintética');
     expect(texto).toContain('mar 13 oct');
     expect(texto).toContain('Pago por verificar');
@@ -60,7 +60,7 @@ describe('pantalla Reservas', () => {
     await montar();
     http.expectOne(r => r.url.endsWith('/agenda/reservas')).flush({ codigo: 'AGENDA_NO_DISPONIBLE' }, { status: 503, statusText: 'Unavailable' });
     await asentar();
-    const texto = (fixture.nativeElement as HTMLElement).textContent!;
+    const texto = (fixture.nativeElement as HTMLElement).textContent;
     expect(texto).toContain('Reintentar');
     expect(texto).not.toContain('No hay reservas en este periodo');
   });
@@ -92,7 +92,7 @@ describe('pantalla Reservas', () => {
     await asentar();
     http.expectOne(r => r.url.endsWith('/agenda/reservas')).flush({ codigo: 'AGENDA_NO_DISPONIBLE' }, { status: 503, statusText: 'Unavailable' });
     await asentar();
-    let texto = (fixture.nativeElement as HTMLElement).textContent!;
+    let texto = (fixture.nativeElement as HTMLElement).textContent;
     expect(texto).toContain('María Sintética');
     expect(texto).toContain('No se pudo actualizar la agenda');
 
@@ -114,7 +114,7 @@ describe('pantalla Reservas', () => {
     await asentar();
     http.expectOne(r => r.url.endsWith('/agenda/reservas')).flush({}, { status: 503, statusText: 'Unavailable' });
     await asentar();
-    const texto = (fixture.nativeElement as HTMLElement).textContent!;
+    const texto = (fixture.nativeElement as HTMLElement).textContent;
     expect(texto).not.toContain('María Sintética');
     expect(texto).toContain('Reintentar');
   });

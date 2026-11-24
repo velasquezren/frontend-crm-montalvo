@@ -114,7 +114,7 @@ export class PwaUpdateService {
       'Nueva versión disponible',
       0, // Permanece visible hasta interactuar
       'Actualizar ahora',
-      () => this.aplicarActualizacion(),
+      () => void this.aplicarActualizacion(),
     );
 
     /* 3. Si el usuario cierra el toast o ignora sin actualizar, se re-notifica en 1 hora */
@@ -157,6 +157,7 @@ export class PwaUpdateService {
    */
   private sellarBuild(): void {
     window.crmBuild = APP_BUILD;
+    // eslint-disable-next-line no-console -- el sello de versión es el único console.* a propósito (ver arriba).
     console.info(`CRM Montalvo · build ${APP_BUILD.sha} · ${APP_BUILD.compiladoEn}`);
   }
 }

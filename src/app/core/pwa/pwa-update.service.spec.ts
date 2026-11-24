@@ -1,6 +1,6 @@
 import { Component, DestroyRef, inject } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { SwUpdate, VersionEvent, VersionReadyEvent } from '@angular/service-worker';
+import { SwUpdate, VersionEvent } from '@angular/service-worker';
 import { Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -50,7 +50,7 @@ class SwUpdateFalso {
       type: 'VERSION_READY',
       currentVersion: { hash: 'viejo' },
       latestVersion: { hash: 'nuevo' },
-    } as VersionReadyEvent);
+    });
   }
 }
 

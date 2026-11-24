@@ -21,7 +21,7 @@ describe('teclado de pestañas', () => {
   it('recorre las disponibles, vuelve al extremo y deja una sola parada de Tab', () => {
     const fixture = TestBed.createComponent(PestanasPrueba);
     fixture.detectChanges();
-    const botones = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
+    const botones = Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('button'));
     const tecla = (indice: number, key: string) => {
       const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
       botones[indice].dispatchEvent(event);

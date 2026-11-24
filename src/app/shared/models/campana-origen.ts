@@ -38,7 +38,7 @@ export function campanaOrigenDe(datosExtra: Record<string, unknown> | null | und
 
   const c = raw as Record<string, unknown>;
   const texto = (clave: string): string | undefined =>
-    typeof c[clave] === 'string' && c[clave] !== '' ? (c[clave] as string) : undefined;
+    typeof c[clave] === 'string' && c[clave] !== '' ? (c[clave]) : undefined;
 
   const campana: CampanaOrigen = {
     titular: texto('titular'),

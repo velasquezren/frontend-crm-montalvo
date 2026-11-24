@@ -87,6 +87,11 @@ features/campanas/
 - Los 4 estados (carga / error / vacío / contenido) están cubiertos.
 - Ningún hex nuevo, ningún `any`, ningún `console.log`, ningún `rol === '…'` a mano.
 
+- `npm run lint` incluye ESLint con tipos (`eslint.config.mjs`): promesas sin esperar
+  o pasadas donde se espera `void` (usa `void this.x()` si el método ya captura sus
+  errores), `switch` incompletos sobre un enum, `any`, `==`, `console.log`. No se
+  desactiva una regla para pasar: se corrige la causa.
+
 ## Mantenimiento
 
 `npm run check:skills` contrasta los datos de este archivo con el código (rutas citadas,

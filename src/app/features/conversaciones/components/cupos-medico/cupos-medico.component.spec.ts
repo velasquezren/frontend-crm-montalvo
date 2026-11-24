@@ -31,7 +31,7 @@ describe('cajón «Cupos» del compositor', () => {
 
   const raiz = () => fixture.nativeElement as HTMLElement;
   const boton = (texto: string) =>
-    Array.from(raiz().querySelectorAll('button')).find(b => b.textContent?.trim().startsWith(texto)) as HTMLButtonElement | undefined;
+    Array.from(raiz().querySelectorAll('button')).find(b => b.textContent?.trim().startsWith(texto));
   async function asentar() {
     for (let i = 0; i < 4; i++) { await Promise.resolve(); TestBed.tick(); }
     fixture.detectChanges();

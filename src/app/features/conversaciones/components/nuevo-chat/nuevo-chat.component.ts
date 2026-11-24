@@ -142,7 +142,7 @@ export class NuevoChatComponent {
     /* Con una sola línea no hay nada que elegir. */
     effect(() => {
       const disponibles = this.lineas();
-      if (!this.lineaId() && disponibles.length === 1) this.lineaId.set(disponibles[0]!.id);
+      if (!this.lineaId() && disponibles.length === 1) this.lineaId.set(disponibles[0].id);
     });
 
     /* Buscar mientras escribe, sin una petición por tecla. */

@@ -8,7 +8,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "npm run sello:build && npm run check:tipos && npm run lint && ng build",
-    "lint": "npm run check:skills && node --test tools/verificar-ui.spec.mjs && node tools/verificar-ui.mjs",
+    "lint": "npm run check:skills && node --test tools/verificar-ui.spec.mjs && node tools/verificar-ui.mjs && eslint src",
     "typecheck": "tsc -p tsconfig.app.json --noEmit && npm run check:tests",
     "watch": "npm run sello:build && ng build --watch --configuration development",
     "test": "npm run sello:build && ng test",
@@ -44,11 +44,13 @@
     "@angular/cli": "^22.3.0",
     "@angular/compiler-cli": "^22.3.0",
     "@tailwindcss/postcss": "^4.1.12",
+    "eslint": "^9.39.5",
     "jsdom": "^30.1.3",
     "postcss": "^8.5.3",
     "prettier": "^3.8.1",
     "tailwindcss": "^4.1.12",
     "typescript": "~6.0.3",
+    "typescript-eslint": "^8.74.0",
     "vitest": "^5.0.5"
   }
 }

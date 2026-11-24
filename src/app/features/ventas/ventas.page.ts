@@ -349,7 +349,7 @@ export class VentasPage {
   /* Etiquetas amigables para filtros activos */
   protected readonly etiquetaEstadoActivo = computed(() => {
     const f = this.filtro();
-    return f === 'TODAS' ? 'Todas' : this.estadoLabel[f as EstadoVenta];
+    return f === 'TODAS' ? 'Todas' : this.estadoLabel[f];
   });
 
   protected readonly etiquetaPeriodoActivo = computed(() => {

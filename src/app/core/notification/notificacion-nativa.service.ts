@@ -116,7 +116,7 @@ export class NotificacionNativaService {
       const sub = await this.swPush.requestSubscription({ serverPublicKey: resKey.publicKey });
 
       const subJson = sub.toJSON();
-      const keys = subJson.keys as Record<string, string> | undefined;
+      const keys = subJson.keys;
       const p256dh = keys?.['p256dh'];
       const auth = keys?.['auth'];
       if (subJson.endpoint && p256dh && auth) {

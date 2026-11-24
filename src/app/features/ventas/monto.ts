@@ -32,7 +32,7 @@ export function parsearMonto(texto: string): number | null {
       normalizado = limpio;
     } else {
       const partes = limpio.split(separador);
-      const esDeMiles = partes.length > 2 || partes[partes.length - 1]!.length === 3;
+      const esDeMiles = partes.length > 2 || partes[partes.length - 1].length === 3;
       normalizado = esDeMiles ? partes.join('') : partes.join('.');
     }
   }

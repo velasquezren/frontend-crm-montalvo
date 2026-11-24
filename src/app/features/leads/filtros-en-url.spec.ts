@@ -35,7 +35,7 @@ describe('Leads: origen y búsqueda en la URL', () => {
     /* Como el router de verdad: tras navegar, el snapshot dice lo nuevo. */
     navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockImplementation(async (_, extras) => {
       const nuevo = { ...params, ...extras?.queryParams };
-      params = Object.fromEntries(Object.entries(nuevo).filter(([, v]) => v !== null)) as Record<string, string>;
+      params = Object.fromEntries(Object.entries(nuevo).filter(([, v]) => v !== null));
       ruta.snapshot.queryParamMap = convertToParamMap(params);
       return true;
     });

@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import { VentasService } from '../ventas.service';
 import { FormularioVentaComponent } from './formulario-venta.component';
@@ -24,7 +24,7 @@ describe('formulario de venta', () => {
   let fixture: ComponentFixture<FormularioVentaComponent>;
   let form: FormularioVentaComponent;
   let http: HttpTestingController;
-  let crear: ReturnType<typeof vi.fn>;
+  let crear: Mock<(venta: Parameters<VentasService['crear']>[0]) => Promise<Partial<Awaited<ReturnType<VentasService['crear']>>>>>;
 
   async function asentar(): Promise<void> {
     for (let i = 0; i < 4; i++) {
@@ -77,19 +77,19 @@ describe('formulario de venta', () => {
   it('con dos leads abiertos no inventa el origen', async () => {
     await conPaciente([lead('l1', 'NUEVO'), lead('l2', 'CONTACTADO')]);
     await enviar();
-    expect(crear.mock.calls[0]![0].leadId).toBeUndefined();
+    expect(crear.mock.calls[0][0].leadId).toBeUndefined();
   });
 
   it('el lead de contexto manda sobre la preselección', async () => {
     await conPaciente([lead('l1', 'NUEVO')], { leadIdContexto: 'l9' });
     await enviar();
-    expect(crear.mock.calls[0]![0].leadId).toBe('l9');
+    expect(crear.mock.calls[0][0].leadId).toBe('l9');
   });
 
   it('«4.500» se registra como cuatro mil quinientos, con clave de intención', async () => {
     await conPaciente([]);
     await enviar();
-    const dto = crear.mock.calls[0]![0];
+    const dto = crear.mock.calls[0][0];
     expect(dto.monto).toBe(4500);
     expect(dto.clientRequestId).toMatch(/^[0-9a-f-]{36}$/);
   });
@@ -118,21 +118,21 @@ describe('formulario de venta', () => {
       await asentar();
       const peticiones = http.match(r => r.url.includes('/clientes'));
       if (peticiones.length === 0) return false;
-      peticiones[peticiones.length - 1]!.flush(pagina([CLIENTE]));
+      peticiones[peticiones.length - 1].flush(pagina([CLIENTE]));
       await asentar();
       return true;
     }
 
     it('desenvuelve `datos`: la respuesta paginada NO es un array', async () => {
       expect(await buscar('12345678')).toBe(true);
-      expect(form['resultados'].value().datos[0]!.ci).toBe('12345678');
+      expect(form['resultados'].value().datos[0].ci).toBe('12345678');
     });
 
     it('el término viaja como `busqueda`, que es lo que el DTO acepta', async () => {
       form['busqueda'].set('Paciente');
       await asentar();
       const peticiones = http.match(r => r.url.includes('/clientes'));
-      expect(peticiones[peticiones.length - 1]!.request.urlWithParams).toContain('busqueda=Paciente');
+      expect(peticiones[peticiones.length - 1].request.urlWithParams).toContain('busqueda=Paciente');
     });
 
     it('con menos de 2 caracteres no consulta', async () => {

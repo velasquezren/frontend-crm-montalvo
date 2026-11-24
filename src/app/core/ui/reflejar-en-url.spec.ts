@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, ParamMap, provideRouter, Router } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { reflejarEnUrl } from './reflejar-en-url';
@@ -20,7 +20,7 @@ describe('reflejarEnUrl', () => {
   afterEach(() => { vi.restoreAllMocks(); TestBed.resetTestingModule(); });
 
   function montar(params: Record<string, string> = {}) {
-    const ruta = { snapshot: { queryParamMap: convertToParamMap(params) as ParamMap } };
+    const ruta = { snapshot: { queryParamMap: convertToParamMap(params) } };
     TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: ActivatedRoute, useValue: ruta }] });
     const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockImplementation(async (_, extras) => {
       /* Como el router de verdad: tras navegar, el snapshot dice lo nuevo. */

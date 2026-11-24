@@ -169,7 +169,7 @@ describe('ficha de un médico de la agenda', () => {
     await asentar();
     http.expectOne(r => r.url.endsWith('/directorio/especialidades')).flush({ datos: [], total: 0, pagina: 1, limite: 100, totalPaginas: 1 });
     await asentar();
-    const texto = (fixture.nativeElement as HTMLElement).textContent!;
+    const texto = (fixture.nativeElement as HTMLElement).textContent;
     expect(texto).toContain('Así se verá en la web');
     expect(texto).toContain('obligatorio');
     // Sin especialidad web no se puede publicar.
