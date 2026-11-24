@@ -7,10 +7,8 @@
 }
 
 .reservas-paciente-titulo {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--color-text-muted);
   margin-bottom: 8px;
 }

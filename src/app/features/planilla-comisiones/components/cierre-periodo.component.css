@@ -38,10 +38,8 @@
 }
 
 .cierre-firmas-titulo {
-  font-size: 0.625rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--color-text-muted);
   margin-bottom: 0.25rem;
 }

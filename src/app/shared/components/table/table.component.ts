@@ -90,8 +90,6 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@a
       color: var(--color-text-muted);
       font-weight: 600;
       font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
       text-align: left;
       padding: 12px 20px;
       white-space: nowrap;

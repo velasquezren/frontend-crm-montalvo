@@ -184,13 +184,11 @@ import { colorDeRampa } from './rampa-graficos';
     }
 
     .donut-centro-etiqueta {
-      font-size: 10px;
-      font-weight: 600;
+      font-size: var(--text-2xs);
+      font-weight: 500;
       line-height: 1.25;
       color: var(--color-text-muted);
       margin-top: 3px;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
     }
 
     .donut-leyenda {

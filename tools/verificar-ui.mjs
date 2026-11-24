@@ -62,6 +62,9 @@ export function revisarPlantilla(texto, archivo = 'plantilla.html') {
         if (ETIQUETAS_TEXTO.has(node.name) && atributo('aria-hidden')?.value !== 'true' && TEXTO_SECUNDARIO.test(clases)) {
           reportar('contraste-secundario', 'Color de texto bajo AA (text-secondary/text-info 2,73:1, text-text-muted/N < 4:1): usa text-secondary-texto o text-text-muted.');
         }
+        if (/(?:^|\s)(?:[\w-]+:)*uppercase(?:\s|$)/.test(clases)) {
+          reportar('mayusculas', 'Títulos y etiquetas van en tipo oración, sin uppercase ni tracking: se leen mejor y más naturales.');
+        }
         if (TIPO_SUELTO.test(clases)) {
           reportar('tipo-suelto', 'text-[10px]/text-[11px] tienen nombre: usa text-3xs/text-2xs.');
         }
@@ -140,6 +143,10 @@ export function revisarCss(texto, archivo = 'estilos.css', sinEncapsulacion = fa
     }
     const vistas = new Set();
     for (const decl of rule.nodes.filter(n => n.type === 'decl')) {
+      /* La constancia es un documento formal para notariar: ahí sí caben. */
+      if (decl.prop === 'text-transform' && decl.value.trim() === 'uppercase' && !archivo.includes('constancia')) {
+        problemas.push({ linea: decl.source.start.line, regla: 'mayusculas', mensaje: 'Títulos y etiquetas van en tipo oración: quita text-transform: uppercase (y su letter-spacing).' });
+      }
       if (decl.prop === 'z-index' && /^\d{3,}$/.test(decl.value.trim()) && !archivo.endsWith('styles.css')) {
         problemas.push({ linea: decl.source.start.line, regla: 'capa-suelta', mensaje: `z-index: ${decl.value} global escrito a mano: usa var(--z-…) de styles.css.` });
       }

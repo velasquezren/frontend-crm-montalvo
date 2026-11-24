@@ -43,7 +43,7 @@
     @if (plantilla(); as p) {
       @if (variables().length > 0) {
         <section class="p-4 rounded-xl bg-bg-workspace border border-border flex flex-col gap-3">
-          <h3 class="text-xs font-bold text-text-dark uppercase tracking-wider">Qué va en cada dato</h3>
+          <h3 class="text-xs font-semibold text-text-dark">Qué va en cada dato</h3>
           @for (v of variables(); track $index; let i = $index) {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 items-end">
               <app-select size="sm" [label]="etiqueta(p, i)" [ariaLabel]="'Origen de ' + etiqueta(p, i)" [value]="v.tipo" (valueChange)="cambiarTipo(i, $event)">
@@ -61,7 +61,7 @@
       }
 
       <section class="flex flex-col gap-2">
-        <h3 class="text-xs font-bold text-text-dark uppercase tracking-wider">Así le llegará a una paciente llamada María</h3>
+        <h3 class="text-xs font-semibold text-text-dark">Así le llegará a una paciente llamada María</h3>
         <app-vista-previa-plantilla [plantilla]="p" [valores]="ejemplo()" />
         @if (usaNombre()) {
           <p class="text-2xs text-text-muted">A un contacto sin nombre: «{{ ejemploSinNombre().join(' · ') }}» donde iría el nombre.</p>

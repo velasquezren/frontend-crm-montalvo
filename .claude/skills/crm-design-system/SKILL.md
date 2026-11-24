@@ -82,6 +82,12 @@ hex local.
 ## Tipografía y números
 
 Poppins. Jerarquía base del workspace: H1 24 / H2 20 / H3 16 / base 16 / small 14.
+**Títulos y etiquetas en tipo oración** («Agente asignado», no «AGENTE ASIGNADO» ni
+«Agente Asignado»): sin `uppercase` ni `tracking-*`, seminegrita (600) y 12 px.
+Una mayúscula de 10 px ocupa lo mismo que una minúscula de 12 px, pero se lee peor
+y endurece la pantalla (2026-11-24: 90 etiquetas pasadas a este estilo). Solo la
+constancia imprimible conserva mayúsculas; `verificar-ui` rechaza el resto.
+
 Los cuerpos diminutos tienen nombre: `text-2xs` (11px) y `text-3xs` (10px), en
 `@theme`. `text-[10px]`/`text-[11px]` escritos a mano los rechaza `verificar-ui`.
 Las cabeceras de sección usan `.crm-titulo-seccion` (15px); las utilidades de

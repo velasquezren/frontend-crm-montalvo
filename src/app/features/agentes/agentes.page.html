@@ -65,7 +65,7 @@
     <div class="overflow-x-auto">
       <table class="w-full text-left text-sm text-text-dark border-collapse">
         <thead>
-          <tr class="bg-bg-workspace border-b border-border text-xs font-semibold text-text-muted uppercase tracking-wider">
+          <tr class="bg-bg-workspace border-b border-border text-xs font-semibold text-text-muted">
             <th class="py-3.5 px-6">Agente / Usuario</th>
             <th class="py-3.5 px-6">Email</th>
             <th class="py-3.5 px-6">Rol</th>
@@ -187,7 +187,7 @@
         <app-input label="Contraseña (mín. 8 caracteres) *" type="password" placeholder="••••••••" autocomplete="new-password" [(value)]="formPassword" />
 
         <div class="space-y-1.5">
-          <label class="block text-3xs font-bold uppercase tracking-wider text-text-muted">Rol de sistema</label>
+          <label class="block text-xs font-semibold text-text-muted">Rol de sistema</label>
           <!-- Todos con el MISMO átomo. Antes "Recepción" era un
                `<app-button variant="secondary">` y los otros dos `<button>` a
                mano con estado activo: elegir Recepción no daba ninguna señal
@@ -253,7 +253,7 @@
 
         <!-- Datos de la cuenta -->
         <section class="flex flex-col gap-4">
-          <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider">
+          <h3 class="text-xs font-semibold text-text-muted">
             Datos de la cuenta
           </h3>
 
@@ -281,7 +281,7 @@
 
           <!-- Rol -->
           <div class="flex flex-col gap-1.5">
-            <label class="block text-3xs font-bold uppercase tracking-wider text-text-muted">Rol</label>
+            <label class="block text-xs font-semibold text-text-muted">Rol</label>
             <!-- Todos con el mismo átomo. "Recepción" era un
                  `<app-button variant="secondary">` que NUNCA se pintaba activo
                  —igual que en el formulario de alta—, así que elegirlo no daba
@@ -314,7 +314,7 @@
       @else { <app-selector-lineas [lineas]="lineasEdicion()" [(ids)]="editLineas" [(silenciadas)]="editSilenciadas" /> }
         <!-- Contraseña -->
         <section class="flex flex-col gap-4 pt-2 border-t border-border">
-          <h3 class="text-xs font-semibold text-text-muted uppercase tracking-wider pt-4">
+          <h3 class="text-xs font-semibold text-text-muted pt-4">
             Restablecer contraseña
           </h3>
           <app-input

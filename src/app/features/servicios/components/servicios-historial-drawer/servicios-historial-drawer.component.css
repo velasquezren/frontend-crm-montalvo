@@ -58,11 +58,9 @@
 }
 
 .dato-label {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
 }
 
 .dato-valor {

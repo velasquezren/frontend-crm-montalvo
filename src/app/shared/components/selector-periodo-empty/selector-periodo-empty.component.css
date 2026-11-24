@@ -99,10 +99,8 @@
   border-radius: 9999px;
   background-color: var(--color-primary);
   color: var(--color-background);
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: var(--text-3xs);
+  font-weight: 600;
 }
 
 .btn-abrir-fila {

@@ -1,6 +1,6 @@
 <!-- Formulario -->
 <div class="p-4 rounded-xl bg-bg-light border border-border space-y-3">
-  <h4 class="text-xs font-bold text-text-dark uppercase tracking-wider">
+  <h4 class="text-sm font-semibold text-text-dark">
     {{ editandoPlantillaId() ? 'Editar Respuesta' : 'Nueva Respuesta Rápida' }}
   </h4>
   <app-input
@@ -38,7 +38,7 @@
 
 <!-- Lista de respuestas del agente -->
 <div class="space-y-2">
-  <h4 class="text-xs font-bold text-text-dark uppercase tracking-wider">Respuestas guardadas</h4>
+  <h4 class="text-sm font-semibold text-text-dark">Respuestas guardadas</h4>
   @for (p of misRespuestas(); track p.id) {
     <div class="p-3 rounded-xl border border-border hover:border-primary/30 bg-white transition flex items-start justify-between gap-3">
       <div class="min-w-0 flex-1">

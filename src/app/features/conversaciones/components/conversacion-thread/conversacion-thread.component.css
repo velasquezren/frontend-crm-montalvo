@@ -287,10 +287,8 @@
 }
 
 .date-separator-label {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   padding: 3px 10px;
   border-radius: 9999px;
   background: color-mix(in srgb, var(--color-text-muted) 12%, white);
@@ -572,9 +570,7 @@
   /* El suelo de la escala es 10 px (text-3xs): a 9 px, en mayúsculas y
      negrita, «AUTOMÁTICO» se leía como una mancha en el teléfono. */
   font-size: var(--text-3xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-weight: 600;
   vertical-align: 1px;
 }
 

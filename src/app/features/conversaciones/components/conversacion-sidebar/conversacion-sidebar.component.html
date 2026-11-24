@@ -40,7 +40,7 @@
           <div class="edit-form-section">
             <p class="edit-form-section-title">
               <app-icon name="user" [size]="12" />
-              Datos del Paciente
+              Datos del paciente
             </p>
             <div class="space-y-3">
               <div>
@@ -81,7 +81,7 @@
           <div class="edit-form-section">
             <p class="edit-form-section-title">
               <app-icon name="briefcase" [size]="12" />
-              Perfil Extendido
+              Perfil extendido
             </p>
             <div class="space-y-3">
               <div class="grid grid-cols-2 gap-2">
@@ -313,7 +313,7 @@
         <!-- Perfil extendido minimalista -->
         @if (empresaDe(chat.cliente) || edadDe(chat.cliente) || lugarNacimientoDe(chat.cliente) || ocupacionDe(chat.cliente)) {
           <div class="client-details">
-            <h3 class="detail-section-title">Perfil Extendido</h3>
+            <h3 class="detail-section-title">Perfil extendido</h3>
             <div class="space-y-1">
               @if (empresaDe(chat.cliente); as emp) {
                 <div class="detail-row-clean">
@@ -349,7 +349,7 @@
         <!-- Notas médicas minimalistas -->
         @if (notasDe(chat.cliente)) {
           <div class="client-details">
-            <h3 class="detail-section-title">Notas Médicas</h3>
+            <h3 class="detail-section-title">Notas médicas</h3>
             <div class="p-3 rounded-xl bg-primary/4 border-l-2 border-primary text-xs text-text-dark whitespace-pre-wrap leading-relaxed">
               {{ notasDe(chat.cliente) }}
             </div>
@@ -375,7 +375,7 @@
           <div class="client-details">
             <h3 class="detail-section-title flex items-center gap-1.5">
               <app-icon name="volume-2" [size]="12" class="text-primary" />
-              <span>Campaña de Origen</span>
+              <span>Campaña de origen</span>
             </h3>
             <div class="p-3 rounded-xl bg-primary/5 border border-primary/20 space-y-1.5">
               @if (campana.titular) {
@@ -535,7 +535,7 @@
           }
 
           <div class="space-y-1.5">
-            <label class="block text-3xs font-bold uppercase tracking-wider text-text-muted">Tipo</label>
+            <label class="block text-xs font-medium text-text-muted">Tipo</label>
             <div class="flex flex-wrap gap-1.5" role="group" aria-label="Tipo de actividad">
               @for (t of tiposActividad; track t) {
                 <app-filter-chip size="sm" [active]="tipoActividad() === t" (clicked)="tipoActividad.set(t)">
@@ -546,19 +546,19 @@
           </div>
 
           <div class="space-y-1.5">
-            <label [for]="tituloInput.id" class="block text-3xs font-bold uppercase tracking-wider text-text-muted">Título *</label>
+            <label [for]="tituloInput.id" class="block text-xs font-medium text-text-muted">Título *</label>
             <app-input #tituloInput placeholder="Ej. Llamar para confirmar cita" [(value)]="tituloActividad" 
   ariaLabel="Título" />
           </div>
 
           <div class="space-y-1.5">
-            <label [for]="fechaInput.id" class="block text-3xs font-bold uppercase tracking-wider text-text-muted">Fecha y hora *</label>
+            <label [for]="fechaInput.id" class="block text-xs font-medium text-text-muted">Fecha y hora *</label>
             <app-input #fechaInput type="datetime-local" [(value)]="fechaActividad" 
   ariaLabel="Fecha y hora" />
           </div>
 
           <div class="space-y-1.5">
-            <label [for]="notasInput.id" class="block text-3xs font-bold uppercase tracking-wider text-text-muted">Notas (opcional)</label>
+            <label [for]="notasInput.id" class="block text-xs font-medium text-text-muted">Notas (opcional)</label>
             <app-input #notasInput [multiline]="true" [rows]="3" placeholder="Detalles para recordar…" [(value)]="notasActividad" 
   ariaLabel="Notas (opcional)" />
           </div>

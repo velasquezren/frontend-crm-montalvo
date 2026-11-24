@@ -49,7 +49,7 @@
   @if (seleccionada(); as p) {
     @if (p.nombresVariables.length > 0) {
       <div class="p-4 rounded-xl bg-bg-workspace border border-border space-y-3">
-        <h4 class="text-xs font-bold text-text-dark uppercase tracking-wider">Completa los datos</h4>
+        <h4 class="text-sm font-semibold text-text-dark">Completa los datos</h4>
         @for (nombre of p.nombresVariables; track nombre; let i = $index) {
           <app-input
             [label]="etiqueta(p, i)"
@@ -61,7 +61,7 @@
     }
 
     <div>
-      <h4 class="text-xs font-bold text-text-dark uppercase tracking-wider mb-2">Así lo verá el paciente</h4>
+      <h4 class="text-sm font-semibold text-text-dark mb-2">Así lo verá el paciente</h4>
       <app-vista-previa-plantilla [plantilla]="p" [valores]="valores()" />
       @if (falta(); as motivo) {
         <p class="text-xs text-text-muted mt-2">{{ motivo }}</p>

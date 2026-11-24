@@ -40,7 +40,7 @@
 
   <!-- Filtros de Canales de Origen -->
   <div class="flex flex-col gap-2 mt-4 mb-2">
-    <span class="text-3xs font-bold text-text-muted uppercase tracking-wider">Canal de origen:</span>
+    <span class="text-xs font-semibold text-text-muted">Canal de origen:</span>
     <div class="flex flex-wrap items-center gap-2">
       @for (opcion of filtros; track opcion.valor) {
         <app-filter-chip
@@ -96,7 +96,7 @@
         <!-- Columna 1: Nuevos -->
         <div class="pipeline-column">
           <div class="pipeline-column-header">
-            <span class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-text-muted">
+            <span class="flex items-center gap-2 text-xs font-semibold text-text-muted">
               <span class="punto-estado punto-estado-info"></span>
               Nuevos
             </span>
@@ -132,7 +132,7 @@
         <!-- Columna 2: Contactados -->
         <div class="pipeline-column">
           <div class="pipeline-column-header">
-            <span class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-text-muted">
+            <span class="flex items-center gap-2 text-xs font-semibold text-text-muted">
               <span class="punto-estado punto-estado-neutral"></span>
               Contactados
             </span>
@@ -168,7 +168,7 @@
         <!-- Columna 3: Convertidos -->
         <div class="pipeline-column">
           <div class="pipeline-column-header">
-            <span class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-text-muted">
+            <span class="flex items-center gap-2 text-xs font-semibold text-text-muted">
               <span class="punto-estado punto-estado-success"></span>
               Convertidos
             </span>
@@ -204,7 +204,7 @@
         <!-- Columna 4: Perdidos -->
         <div class="pipeline-column">
           <div class="pipeline-column-header">
-            <span class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-text-muted">
+            <span class="flex items-center gap-2 text-xs font-semibold text-text-muted">
               <span class="punto-estado punto-estado-critical"></span>
               Perdidos
             </span>
@@ -356,7 +356,7 @@
 
         <!-- 1. Datos de Contacto -->
         <div class="space-y-3">
-          <span class="block text-3xs font-bold uppercase tracking-wider text-text-muted">
+          <span class="block text-xs font-semibold text-text-muted">
             1. Datos del Prospecto
           </span>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -374,7 +374,7 @@
 
         <!-- 2. Interés o Servicio buscado -->
         <div class="space-y-2 pt-2 border-t border-border/60">
-          <span class="block text-3xs font-bold uppercase tracking-wider text-text-muted">
+          <span class="block text-xs font-semibold text-text-muted">
             2. Interés o Especialidad Consultada (Opcional)
           </span>
           <app-input
@@ -452,7 +452,7 @@
       <div class="p-6 overflow-y-auto space-y-5 flex-1">
         <!-- 1. Estado en Pipeline (Segmented Control amplio) -->
         <div class="space-y-1.5">
-          <label class="block text-3xs font-bold uppercase tracking-wider text-text-muted">
+          <label class="block text-xs font-semibold text-text-muted">
             Etapa en el Pipeline Comercial
           </label>
           <!-- Rejilla y no `.crm-segmento`: esa clase vive fuera de @layer y su
@@ -473,12 +473,12 @@
 
         <!-- 2. Información Comercial y Origen en Cards Grid -->
         <div class="space-y-1.5">
-          <label class="block text-3xs font-bold uppercase tracking-wider text-text-muted">
+          <label class="block text-xs font-semibold text-text-muted">
             Contexto del Prospecto
           </label>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="p-3 rounded-xl bg-bg-workspace border border-border/70 flex flex-col justify-between">
-              <span class="text-3xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+              <span class="text-xs font-semibold text-text-muted flex items-center gap-1.5">
                 <app-icon name="share-2" [size]="12" class="text-primary/70" />
                 Canal de Entrada
               </span>
@@ -486,7 +486,7 @@
             </div>
 
             <div class="p-3 rounded-xl bg-bg-workspace border border-border/70 flex flex-col justify-between">
-              <span class="text-3xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+              <span class="text-xs font-semibold text-text-muted flex items-center gap-1.5">
                 <app-icon name="user" [size]="12" class="text-primary/70" />
                 Agente Asignado
               </span>
@@ -494,7 +494,7 @@
             </div>
 
             <div class="p-3 rounded-xl bg-bg-workspace border border-border/70 flex flex-col justify-between">
-              <span class="text-3xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+              <span class="text-xs font-semibold text-text-muted flex items-center gap-1.5">
                 <app-icon name="calendar" [size]="12" class="text-primary/70" />
                 Fecha de Captación
               </span>
@@ -502,7 +502,7 @@
             </div>
 
             <div class="p-3 rounded-xl bg-bg-workspace border border-border/70 flex flex-col justify-between">
-              <span class="text-3xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+              <span class="text-xs font-semibold text-text-muted flex items-center gap-1.5">
                 <app-icon name="shield" [size]="12" class="text-primary/70" />
                 Ficha del Paciente
               </span>
@@ -518,7 +518,7 @@
           <div class="p-3.5 rounded-xl bg-critical-bg border border-border flex items-start gap-2.5">
             <app-icon name="alert-circle" [size]="16" class="text-critical shrink-0 mt-0.5" />
             <div>
-              <span class="text-3xs font-bold uppercase tracking-wider text-text-muted">Motivo de la Pérdida</span>
+              <span class="text-xs font-semibold text-text-muted">Motivo de la Pérdida</span>
               <p class="text-xs font-medium text-text-dark mt-0.5">{{ l.motivoPerdida }}</p>
             </div>
           </div>
@@ -526,7 +526,7 @@
 
         <!-- 4. Acciones Comerciales Directas -->
         <div class="space-y-2 pt-2 border-t border-border">
-          <span class="block text-3xs font-bold uppercase tracking-wider text-text-muted">
+          <span class="block text-xs font-semibold text-text-muted">
             Acciones Rápidas
           </span>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">

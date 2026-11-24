@@ -42,10 +42,8 @@
 }
 
 .quick-reply-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: var(--text-2xs);
+  font-weight: 600;
   color: var(--color-text-muted);
 }
 

@@ -33,7 +33,7 @@ import { ListaAvisosLineasComponent } from './lista-avisos-lineas.component';
   template: `
     <section class="bg-white rounded-2xl border border-border p-6 shadow-subtle space-y-4" aria-labelledby="titulo-avisos">
       <div>
-        <h3 id="titulo-avisos" class="text-xs font-bold text-text-muted uppercase tracking-wider">Avisos de mensajes nuevos</h3>
+        <h3 id="titulo-avisos" class="text-xs font-semibold text-text-muted">Avisos de mensajes nuevos</h3>
         <p class="mt-1.5 text-sm text-text-muted">
           Elige qué líneas te avisan. Apagada, sigues viendo sus chats, pero no te suenan en
           el teléfono ni en la pestaña. Los chats que tengas asignados te avisan igual.

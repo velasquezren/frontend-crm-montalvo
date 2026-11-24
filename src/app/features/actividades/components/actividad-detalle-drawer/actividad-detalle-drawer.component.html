@@ -9,7 +9,7 @@
       </div>
       <div class="min-w-0">
         <div class="flex items-center gap-2">
-          <span class="text-xs font-bold uppercase tracking-wider text-primary">{{ tiposLabel[actividad().tipo] }}</span>
+          <span class="text-xs font-semibold text-primary">{{ tiposLabel[actividad().tipo] }}</span>
           <app-badge [variant]="estadoBadge[actividad().estado]">{{ estadoLabel[actividad().estado] }}</app-badge>
         </div>
         <h2 class="text-sm font-bold text-text-dark tracking-tight leading-tight truncate mt-0.5">
@@ -86,7 +86,7 @@
 
       <!-- 2. Información del Compromiso / Agenda -->
       <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-3">
-        <h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">Horario y Asignación</h4>
+        <h4 class="text-xs font-semibold text-text-muted">Horario y Asignación</h4>
 
         <div class="grid grid-cols-2 gap-3 text-xs">
           <div class="p-2.5 rounded-xl bg-bg-workspace border border-border/60">
@@ -136,7 +136,7 @@
 
       <!-- 3. Notas y Contexto -->
       <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-2">
-        <h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">Notas y Detalles</h4>
+        <h4 class="text-xs font-semibold text-text-muted">Notas y Detalles</h4>
         @if (actividad().notas) {
           <p class="text-xs text-text-dark leading-relaxed whitespace-pre-wrap bg-bg-workspace p-3 rounded-xl border border-border/60">
             {{ actividad().notas }}
@@ -148,7 +148,7 @@
 
       <!-- 4. Acciones Comerciales de Alto Impacto -->
       <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-2.5">
-        <h4 class="text-xs font-bold uppercase tracking-wider text-text-muted">Acciones Rápidas</h4>
+        <h4 class="text-xs font-semibold text-text-muted">Acciones Rápidas</h4>
 
         <!-- `<app-button>` en todo el bloque. Eran NUEVE `<button>` a mano, todos
              `rounded-xl` cuando la geometría del sistema dice píldora siempre

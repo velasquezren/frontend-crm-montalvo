@@ -129,3 +129,9 @@ test('un control cuyo texto desaparece en el teléfono necesita aria-label', () 
     <button><span class="hidden sm:inline">Guardar</span> cambios</button>`;
   assert.deepEqual(revisarPlantilla(html).map(p => p.regla), ['nombre-oculto', 'nombre-oculto']);
 });
+
+test('títulos y etiquetas en tipo oración, sin mayúsculas forzadas', () => {
+  assert.deepEqual(revisarPlantilla('<p class="text-xs uppercase tracking-wider">Hola</p><span class="md:uppercase">x</span><p class="text-xs">ok</p>').map(p => p.regla), ['mayusculas', 'mayusculas']);
+  assert.deepEqual(revisarCss('.t { text-transform: uppercase; }', 'x.component.css').map(p => p.regla), ['mayusculas']);
+  assert.deepEqual(revisarCss('.t { text-transform: uppercase; }', 'constancia-resultados.page.css'), []);
+});

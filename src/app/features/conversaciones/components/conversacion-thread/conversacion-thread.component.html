@@ -450,12 +450,12 @@
                 @if (item.mensaje.asistente) {
                   <span class="marca-automatico" title="Lo escribió el asistente de IA, no una persona">
                     <app-icon name="bot" [size]="10" />
-                    asistente
+                    Asistente
                   </span>
                 } @else if (item.mensaje.automatico) {
                   <span class="marca-automatico" title="Lo envió el CRM solo (menú, respuesta automática o fuera de horario), no una persona">
                     <app-icon name="clock" [size]="10" />
-                    automático
+                    Automático
                   </span>
                 }
                 {{ item.mensaje.createdAt | date: 'HH:mm' }}
