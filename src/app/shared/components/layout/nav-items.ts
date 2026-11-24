@@ -28,12 +28,12 @@ export interface NavGroup {
 
 export const NAV_GROUPS: readonly NavGroup[] = [
   {
-    titulo: 'Atención & Pacientes',
+    titulo: 'Atención y pacientes',
     items: [
       { path: '/dashboard', label: 'Dashboard', icon: 'dashboard', rolMinimo: 'AGENTE' },
       { path: '/conversaciones', label: 'WhatsApp', icon: 'message-circle' },
-      { path: '/clientes', label: 'Clientes y Pacientes', icon: 'users', rolMinimo: 'AGENTE' },
-      { path: '/leads', label: 'Leads y Prospectos', icon: 'user-plus', rolMinimo: 'AGENTE' },
+      { path: '/clientes', label: 'Clientes y pacientes', icon: 'users', rolMinimo: 'AGENTE' },
+      { path: '/leads', label: 'Leads y prospectos', icon: 'user-plus', rolMinimo: 'AGENTE' },
       { path: '/campanas', label: 'Campañas', icon: 'send', rolMinimo: 'ADMIN' },
       { path: '/promociones', label: 'Promociones', icon: 'percent', rolMinimo: 'RECEPCION' },
       { path: '/actividades', label: 'Actividades', icon: 'calendar', rolMinimo: 'RECEPCION' },
@@ -48,7 +48,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       },
       {
         path: '/resultados',
-        label: 'Entrega de Resultados',
+        label: 'Entrega de resultados',
         icon: 'file-text',
         rolMinimo: 'ADMIN',
         roles: ['ASISTENTE'],
@@ -56,23 +56,23 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     ],
   },
   {
-    titulo: 'Ventas & Finanzas',
+    titulo: 'Ventas y finanzas',
     items: [
       { path: '/ventas', label: 'Ventas', icon: 'shopping-bag', rolMinimo: 'AGENTE' },
       /* Hub unificado: Liquidación, Desempeño, Analítica y Resumen Anual en
          pestañas (features/finanzas/finanzas.page.ts). Las cuatro rutas
          siguen vivas por separado para enlaces guardados, pero el menú ya
          solo lleva a este único ítem. */
-      { path: '/finanzas', label: 'Finanzas & Comisiones', icon: 'wallet', rolMinimo: 'ADMIN' },
+      { path: '/finanzas', label: 'Finanzas y comisiones', icon: 'wallet', rolMinimo: 'ADMIN' },
     ],
   },
   {
     titulo: 'Gestión & Clínica',
     items: [
       { path: '/directorio', label: 'Directorio médico', icon: 'user', rolMinimo: 'RECEPCION' },
-      { path: '/servicios', label: 'Historial de Servicios', icon: 'activity', rolMinimo: 'ADMIN' },
+      { path: '/servicios', label: 'Historial de servicios', icon: 'activity', rolMinimo: 'ADMIN' },
       { path: '/lineas-whatsapp', label: 'Líneas WhatsApp', icon: 'message-circle', rolMinimo: 'SUPER_ADMIN' },
-      { path: '/usuarios', label: 'Usuarios y Accesos', icon: 'shield', rolMinimo: 'SUPER_ADMIN' },
+      { path: '/usuarios', label: 'Usuarios y accesos', icon: 'shield', rolMinimo: 'SUPER_ADMIN' },
     ],
   },
 ];

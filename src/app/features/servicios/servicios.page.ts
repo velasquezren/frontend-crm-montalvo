@@ -82,19 +82,19 @@ export interface TabServicioConfig {
 const TABS_SERVICIOS: readonly TabServicioConfig[] = [
   {
     id: 'DASHBOARD',
-    label: 'Resumen General',
+    label: 'Resumen general',
     icon: 'bar-chart',
     descripcion: 'Volumen clínico, módulos y especialidades',
   },
   {
     id: 'PACIENTES',
-    label: 'Directorio de Pacientes',
+    label: 'Directorio de pacientes',
     icon: 'users',
     descripcion: 'Historial individual y atenciones clínicas',
   },
   {
     id: 'MEDICOS',
-    label: 'Equipo Médico',
+    label: 'Equipo médico',
     icon: 'briefcase',
     descripcion: 'Rendimiento y atenciones por profesional',
   },

@@ -4,21 +4,21 @@
      ══════════════════════════════════════════════════════════════════════ -->
 
 <app-page-header
-  title="Clientes y Pacientes"
+  title="Clientes y pacientes"
   subtitle="Gestión integral de pacientes y clientes potenciales.">
 
   <!-- Acción principal de cabecera -->
   <app-button
     icon="user-plus"
     (clicked)="abrirCreacion(modalCrearCliente)">
-    Nuevo Cliente
+    Nuevo cliente
   </app-button>
 </app-page-header>
 
 <!-- ── KPIs Clínicos / Resumen de Pacientes ──────────────────────── -->
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mb-6">
   <app-kpi-card
-    label="Total Pacientes"
+    label="Total pacientes"
     [valor]="totalPacientes()"
     icon="users"
     tono="primary"
@@ -36,7 +36,7 @@
     tono="secondary"
     [compacto]="true" />
   <app-kpi-card
-    label="Sin Asignar (Pool)"
+    label="Sin asignar (Pool)"
     [valor]="totalSinAsignar()"
     icon="alert-circle"
     tono="neutral"
@@ -87,12 +87,12 @@
       <thead>
         <tr>
           <th appOrdenable="nombre" [orden]="orden()" [direccion]="direccion()"
-              (ordenar)="ordenarPor($event)">Cliente / Empresa</th>
+              (ordenar)="ordenarPor($event)">Cliente / empresa</th>
           <th>Teléfono</th>
           <th appOrdenable="categoria" [orden]="orden()" [direccion]="direccion()"
               direccionInicial="desc"
               (ordenar)="ordenarPor($event)">Categoría</th>
-          <th>Edad / Origen</th>
+          <th>Edad / origen</th>
           <th>Agente</th>
           <th>Intereses</th>
           <th appOrdenable="updatedAt" [orden]="orden()" [direccion]="direccion()"
@@ -179,7 +179,7 @@
                   <app-icon name="message-circle" [size]="14" />
                 </a>
                 <app-button variant="ghost" size="xs" [circle]="true" icon="copy" title="Copiar teléfono" [ariaLabel]="'Copiar teléfono de ' + (cliente | nombreCliente)" (clicked)="copiarTelefono($event, cliente.telefono)" />
-                <app-button variant="ghost" size="xs" [circle]="true" icon="edit" title="Ver / Editar ficha" [ariaLabel]="'Ver o editar la ficha de ' + (cliente | nombreCliente)" (clicked)="abrirEdicion(cliente, modalFicha)" />
+                <app-button variant="ghost" size="xs" [circle]="true" icon="edit" title="Ver / editar ficha" [ariaLabel]="'Ver o editar la ficha de ' + (cliente | nombreCliente)" (clicked)="abrirEdicion(cliente, modalFicha)" />
               </div>
             </td>
           </tr>
@@ -225,7 +225,7 @@
         <!-- 1. Identidad Principal -->
         <div class="space-y-3">
           <span class="block text-xs font-semibold text-text-muted">
-            1. Identidad y Contacto Principal
+            1. Identidad y contacto principal
           </span>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <app-input label="Nombre completo *" placeholder="Ej. Juan Pérez" [(value)]="editNombre" />
@@ -242,7 +242,7 @@
               placeholder="Ej. PAC-1897"
               [(value)]="editPac" />
             <app-input
-              label="Cédula de Identidad (CI)"
+              label="Cédula de identidad (CI)"
               placeholder="Ej. 6849201 SC"
               [(value)]="editCi" />
           </div>
@@ -258,12 +258,12 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <!-- Agente Asignado -->
           <div class="space-y-1">
-            <label class="block text-xs font-semibold text-text-muted">Agente Asignado</label>
+            <label class="block text-xs font-semibold text-text-muted">Agente asignado</label>
             <app-select
               [value]="editAgenteId() || ''"
               (valueChange)="onCambiarAgente($event)"
               ariaLabel="Agente asignado">
-              <option value="" [selected]="!editAgenteId()">Sin Asignar (Pool General)</option>
+              <option value="" [selected]="!editAgenteId()">Sin asignar (Pool general)</option>
               @for (ag of listaAgentes(); track ag.id) {
                 <option [value]="ag.id" [selected]="editAgenteId() === ag.id">
                   {{ ag.nombre }} ({{ ag.rol }})
@@ -277,7 +277,7 @@
       <!-- 3. Información Complementaria -->
       <div class="space-y-3 pt-2 border-t border-border/60">
         <span class="block text-xs font-semibold text-text-muted">
-          3. Información Complementaria y Perfil
+          3. Información complementaria y perfil
         </span>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <app-input
@@ -285,18 +285,18 @@
             type="email"
             placeholder="correo@ejemplo.com"
             [(value)]="editEmail" />
-          <app-input label="Empresa / Ocupación" placeholder="Ej. YPFB / Abogada" [(value)]="editEmpresa" />
+          <app-input label="Empresa / ocupación" placeholder="Ej. YPFB / Abogada" [(value)]="editEmpresa" />
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <app-input
             label="Fecha de nacimiento"
             type="date"
             [(value)]="editFechaNacimiento" />
-          <app-input label="Lugar de Nacimiento" placeholder="Ej. Santa Cruz" [(value)]="editLugarNacimiento" />
+          <app-input label="Lugar de nacimiento" placeholder="Ej. Santa Cruz" [(value)]="editLugarNacimiento" />
         </div>
         <div class="space-y-1">
           <app-input
-            label="Etiquetas / Intereses"
+            label="Etiquetas / intereses"
             placeholder="cirugía, botox, preferente, vip"
             [(value)]="editTags" />
           @if (tagsPreview().length > 0) {
@@ -308,7 +308,7 @@
           }
         </div>
         <div class="space-y-1">
-          <label for="crear-notas" class="block text-xs font-semibold text-text-muted">Notas Internas</label>
+          <label for="crear-notas" class="block text-xs font-semibold text-text-muted">Notas internas</label>
           <textarea
             id="crear-notas"
             #txtCrearNotas
@@ -438,7 +438,7 @@
               <section class="flex flex-col gap-3">
                 <div class="flex items-center justify-between">
                   <span class="text-xs font-semibold text-text-muted">
-                    Ficha Médica FileMaker
+                    Ficha médica FileMaker
                   </span>
                   <span class="text-2xs text-text-muted font-medium">Sincronizado vía PAC</span>
                 </div>
@@ -474,7 +474,7 @@
           @if (pestanaModal() === 'CONTACTO') {
             <section class="flex flex-col gap-4">
               <span class="text-xs font-semibold text-text-muted">
-                Identidad & Contacto Comercial
+                Identidad y contacto comercial
               </span>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -505,12 +505,12 @@
                 </div>
 
                 <div class="space-y-1">
-                  <label class="block text-xs font-semibold text-text-muted">Agente Asignado</label>
+                  <label class="block text-xs font-semibold text-text-muted">Agente asignado</label>
                   <app-select
                     [value]="editAgenteId() || ''"
                     (valueChange)="onCambiarAgente($event)"
                     ariaLabel="Agente asignado">
-                    <option value="" [selected]="!editAgenteId()">Sin Asignar (Pool General)</option>
+                    <option value="" [selected]="!editAgenteId()">Sin asignar (Pool general)</option>
                     @for (ag of listaAgentes(); track ag.id) {
                       <option [value]="ag.id" [selected]="editAgenteId() === ag.id">
                         {{ ag.nombre }} ({{ ag.rol }})
@@ -526,7 +526,7 @@
                   placeholder="Ej. PAC-1897"
                   [(value)]="editPac" />
                 <app-input
-                  label="Cédula de Identidad (CI)"
+                  label="Cédula de identidad (CI)"
                   placeholder="Ej. 6849201 SC"
                   [(value)]="editCi" />
               </div>
@@ -542,7 +542,7 @@
           @if (pestanaModal() === 'NOTAS') {
             <section class="flex flex-col gap-4">
               <span class="text-xs font-semibold text-text-muted">
-                Información Complementaria
+                Información complementaria
               </span>
 
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
@@ -550,8 +550,8 @@
                   label="Fecha de nacimiento"
                   type="date"
                   [(value)]="editFechaNacimiento" />
-                <app-input label="Lugar de Nacimiento" placeholder="Ej. Santa Cruz" [(value)]="editLugarNacimiento" />
-                <app-input label="Empresa / Ocupación" placeholder="Ej. YPFB / Abogado" [(value)]="editEmpresa" />
+                <app-input label="Lugar de nacimiento" placeholder="Ej. Santa Cruz" [(value)]="editLugarNacimiento" />
+                <app-input label="Empresa / ocupación" placeholder="Ej. YPFB / Abogado" [(value)]="editEmpresa" />
               </div>
 
               <div class="space-y-1">
@@ -570,7 +570,7 @@
 
               <div class="space-y-1">
                 <app-input
-                  label="Etiquetas / Intereses"
+                  label="Etiquetas / intereses"
                   placeholder="cirugía, botox, preferente, vip"
                   [(value)]="editTags" />
                 <p class="text-2xs text-text-muted">Ingresa los intereses separados por comas.</p>
@@ -595,7 +595,7 @@
               type="submit"
               size="sm"
               [loading]="guardando()">
-              Guardar Cambios
+              Guardar cambios
             </app-button>
           </footer>
         }

@@ -30,7 +30,7 @@ export const METODOS_PAGO: readonly { id: MetodoPagoVenta; label: string; icon: 
   { id: 'QR', label: 'Pago QR', icon: 'dollar-sign' },
   { id: 'TRANSFERENCIA', label: 'Transferencia', icon: 'wallet' },
   { id: 'TARJETA', label: 'Tarjeta Déb./Créd.', icon: 'wallet' },
-  { id: 'EFECTIVO', label: 'Efectivo en Caja', icon: 'dollar-sign' },
+  { id: 'EFECTIVO', label: 'Efectivo en caja', icon: 'dollar-sign' },
 ];
 
 /**

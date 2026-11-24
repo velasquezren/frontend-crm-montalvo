@@ -20,7 +20,7 @@
     [class.shadow-lifted]="filtroRapido() === 'HOY'"
     (click)="cambiarFiltroRapido('HOY')">
     <app-kpi-card
-      label="Para Hoy"
+      label="Para hoy"
       [valor]="resumenVista().hoy"
       icon="clock"
       tono="primary"
@@ -52,7 +52,7 @@
     [class.shadow-lifted]="filtroRapido() === 'PROXIMA_SEMANA'"
     (click)="cambiarFiltroRapido('PROXIMA_SEMANA')">
     <app-kpi-card
-      label="Próximos 7 Días"
+      label="Próximos 7 días"
       [valor]="resumenVista().proximaSemana"
       icon="calendar"
       tono="secondary"

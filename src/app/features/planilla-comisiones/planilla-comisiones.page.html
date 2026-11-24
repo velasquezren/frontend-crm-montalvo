@@ -1,6 +1,6 @@
 @if (!embedded()) {
   <app-page-header
-    title="Planilla de Liquidación"
+    title="Planilla de liquidación"
     subtitle="Importación desde FileMaker, auditoría de reglas comerciales y liquidación mensual" />
 }
 
@@ -174,12 +174,12 @@
         <app-table [dense]="true">
           <thead>
             <tr>
-              <th class="text-left">Mes / Año</th>
+              <th class="text-left">Mes / año</th>
               <th class="text-center">Estado</th>
-              <th class="text-right">Filas Totales</th>
+              <th class="text-right">Filas totales</th>
               <th class="text-right">Comisionables</th>
               <th class="text-left">Archivo Excel</th>
-              <th class="text-left">Fecha Carga</th>
+              <th class="text-left">Fecha carga</th>
               <th class="text-right">Acción</th>
             </tr>
           </thead>
@@ -521,7 +521,7 @@
           <thead>
             <tr>
               <th class="text-left w-[80px]">Fecha</th>
-              <th class="text-left">Servicio / Paciente</th>
+              <th class="text-left">Servicio / paciente</th>
               <th class="text-left min-w-[130px]">Vendedora</th>
               <th class="text-center w-[90px]">Canal</th>
               <th class="text-right w-[110px]">
@@ -555,7 +555,7 @@
                 </app-info-hint>
               </th>
               <th class="text-right w-[110px]">
-                Base Cálculo
+                Base cálculo
                 <app-info-hint titulo="Sobre qué se comisiona">
                   <p>
                     Es la cifra sobre la que se aplica el porcentaje de comisión:
@@ -916,7 +916,7 @@
       </p>
       <div class="mt-5 flex gap-2">
         <app-button variant="primary" icon="file-text" (clicked)="setPestana('CLASIFICACION')">
-          Ir a Clasificación
+          Ir a clasificación
         </app-button>
       </div>
     </div>
@@ -999,7 +999,7 @@
 
       <!-- Planilla final por persona -->
       <section class="crm-panel">
-        <h3 class="text-sm font-bold text-text-dark mb-1">Planilla por Persona</h3>
+        <h3 class="text-sm font-bold text-text-dark mb-1">Planilla por persona</h3>
         <p class="text-xs text-text-muted mb-3">
           La tabla de abajo resume cada vendedora en una fila. Para el desglose por tipo y
           sección de cada una, mira "Desglose por Tipo y Sección" más abajo, o descarga el
@@ -1017,7 +1017,7 @@
            este mes?" sin sumar a mano — arriba Tipo B es una columna por
            vendedora, aquí es una lista filtrable con su propia sumatoria. -->
       <section class="crm-panel">
-        <h3 class="text-sm font-bold text-text-dark mb-3">Desglose por Tipo y Sección</h3>
+        <h3 class="text-sm font-bold text-text-dark mb-3">Desglose por tipo y sección</h3>
         @if (desglose.isLoading() && desglose.value().filas.length === 0) {
           <app-loading-skeleton height="200px" />
         } @else if (desglose.error()) {

@@ -115,9 +115,9 @@ export class ClientesPage {
     etiqueta: string;
     icono: IconName;
   }[] = [
-    { id: 'EXPEDIENTE', etiqueta: 'Expediente Clínico', icono: 'file-text' },
-    { id: 'CONTACTO', etiqueta: 'Datos de Contacto', icono: 'user' },
-    { id: 'NOTAS', etiqueta: 'Perfil & Notas', icono: 'edit' },
+    { id: 'EXPEDIENTE', etiqueta: 'Expediente clínico', icono: 'file-text' },
+    { id: 'CONTACTO', etiqueta: 'Datos de contacto', icono: 'user' },
+    { id: 'NOTAS', etiqueta: 'Perfil y notas', icono: 'edit' },
   ];
 
   /* Categoría y búsqueda vienen de la URL (`?categoria=`, `?q=`) y vuelven a ella. */

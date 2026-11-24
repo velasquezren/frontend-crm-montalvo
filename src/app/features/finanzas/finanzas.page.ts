@@ -30,31 +30,31 @@ interface TabConfig {
 const TABS: readonly TabConfig[] = [
   {
     id: 'liquidacion',
-    label: 'Planilla & Liquidación',
+    label: 'Planilla y liquidación',
     icon: 'file-text',
     descripcion: 'Planilla mensual de comisiones y matriz contable por periodo',
   },
   {
     id: 'agentes',
-    label: 'Desempeño de Agentes',
+    label: 'Desempeño de agentes',
     icon: 'users',
     descripcion: 'Ficha 360° individual, progreso de metas de maternidad y tramos de cirugía',
   },
   {
     id: 'analitica',
-    label: 'Analítica Médica',
+    label: 'Analítica médica',
     icon: 'bar-chart',
     descripcion: 'Distribución de servicios, procedimientos y canales de venta',
   },
   {
     id: 'anual',
-    label: 'Resumen Anual',
+    label: 'Resumen anual',
     icon: 'trending-up',
     descripcion: 'Consolidado histórico de 12 meses y bonos trimestrales',
   },
   {
     id: 'tipo-cambio',
-    label: 'Tipo de Cambio',
+    label: 'Tipo de cambio',
     icon: 'dollar-sign',
     descripcion: 'Serie histórica del TC oficial USD→BOB, con corrección manual',
   },

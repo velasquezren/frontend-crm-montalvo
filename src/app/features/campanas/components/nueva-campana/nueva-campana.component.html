@@ -31,7 +31,7 @@
           para una campaña: no pueden llevar publicidad.
         </p>
       } @else {
-        <app-select label="Plantilla de Marketing" ariaLabel="Plantilla de Marketing" [value]="plantillaClave()" (valueChange)="plantillaClave.set($event)">
+        <app-select label="Plantilla de marketing" ariaLabel="Plantilla de marketing" [value]="plantillaClave()" (valueChange)="plantillaClave.set($event)">
           <option value="">Elige una plantilla…</option>
           @for (p of plantillas(); track claveDe(p)) {
             <option [value]="claveDe(p)">{{ p.nombre }} ({{ p.idioma }})</option>

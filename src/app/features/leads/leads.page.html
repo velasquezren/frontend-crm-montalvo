@@ -1,6 +1,6 @@
 <div class="space-y-6">
   <app-page-header
-    title="Leads & Prospectos"
+    title="Leads y prospectos"
     subtitle="Gestiona el flujo de captación de pacientes desde redes sociales, WhatsApp y ventanilla.">
     <!-- Controles de cabecera: Buscador en tiempo real + Toggle de vistas -->
     <div class="flex items-center gap-3 flex-wrap">
@@ -28,7 +28,7 @@
           [attr.aria-pressed]="modoVista() === 'LISTA'"
           (click)="setVista('LISTA')">
           <app-icon name="menu" [size]="14" />
-          <span>Vista Tabla</span>
+          <span>Vista tabla</span>
         </button>
       </div>
 
@@ -246,11 +246,11 @@
         <app-table>
           <thead>
             <tr>
-              <th>Lead / Paciente</th>
-              <th>Canal de Origen</th>
-              <th>Agente Asignado</th>
-              <th>Fecha Registro</th>
-              <th>Estado Actual</th>
+              <th>Lead / paciente</th>
+              <th>Canal de origen</th>
+              <th>Agente asignado</th>
+              <th>Fecha registro</th>
+              <th>Estado actual</th>
               <th class="text-right">Acciones</th>
             </tr>
           </thead>
@@ -357,7 +357,7 @@
         <!-- 1. Datos de Contacto -->
         <div class="space-y-3">
           <span class="block text-xs font-semibold text-text-muted">
-            1. Datos del Prospecto
+            1. Datos del prospecto
           </span>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <app-input
@@ -453,7 +453,7 @@
         <!-- 1. Estado en Pipeline (Segmented Control amplio) -->
         <div class="space-y-1.5">
           <label class="block text-xs font-semibold text-text-muted">
-            Etapa en el Pipeline Comercial
+            Etapa en el pipeline comercial
           </label>
           <!-- Rejilla y no `.crm-segmento`: esa clase vive fuera de @layer y su
                `display: flex` le ganaría a `grid`. Las opciones sí son las del sistema. -->
@@ -474,13 +474,13 @@
         <!-- 2. Información Comercial y Origen en Cards Grid -->
         <div class="space-y-1.5">
           <label class="block text-xs font-semibold text-text-muted">
-            Contexto del Prospecto
+            Contexto del prospecto
           </label>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="p-3 rounded-xl bg-bg-workspace border border-border/70 flex flex-col justify-between">
               <span class="text-xs font-semibold text-text-muted flex items-center gap-1.5">
                 <app-icon name="share-2" [size]="12" class="text-primary/70" />
-                Canal de Entrada
+                Canal de entrada
               </span>
               <span class="text-xs font-bold text-text-dark mt-1.5">{{ origenLabel[l.origen] }}</span>
             </div>
@@ -488,7 +488,7 @@
             <div class="p-3 rounded-xl bg-bg-workspace border border-border/70 flex flex-col justify-between">
               <span class="text-xs font-semibold text-text-muted flex items-center gap-1.5">
                 <app-icon name="user" [size]="12" class="text-primary/70" />
-                Agente Asignado
+                Agente asignado
               </span>
               <span class="text-xs font-bold text-text-dark mt-1.5">{{ l.agente ? l.agente.nombre : 'Sin asignar (Pool general)' }}</span>
             </div>
@@ -496,7 +496,7 @@
             <div class="p-3 rounded-xl bg-bg-workspace border border-border/70 flex flex-col justify-between">
               <span class="text-xs font-semibold text-text-muted flex items-center gap-1.5">
                 <app-icon name="calendar" [size]="12" class="text-primary/70" />
-                Fecha de Captación
+                Fecha de captación
               </span>
               <span class="text-xs font-bold text-text-dark mt-1.5">{{ l.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
             </div>
@@ -504,7 +504,7 @@
             <div class="p-3 rounded-xl bg-bg-workspace border border-border/70 flex flex-col justify-between">
               <span class="text-xs font-semibold text-text-muted flex items-center gap-1.5">
                 <app-icon name="shield" [size]="12" class="text-primary/70" />
-                Ficha del Paciente
+                Ficha del paciente
               </span>
               <span class="text-xs font-bold text-text-dark mt-1.5 truncate">
                 {{ l.cliente.pac ? 'PAC: ' + l.cliente.pac : (l.cliente.ci ? 'CI: ' + l.cliente.ci : 'Sin registro clínico') }}
@@ -518,7 +518,7 @@
           <div class="p-3.5 rounded-xl bg-critical-bg border border-border flex items-start gap-2.5">
             <app-icon name="alert-circle" [size]="16" class="text-critical shrink-0 mt-0.5" />
             <div>
-              <span class="text-xs font-semibold text-text-muted">Motivo de la Pérdida</span>
+              <span class="text-xs font-semibold text-text-muted">Motivo de la pérdida</span>
               <p class="text-xs font-medium text-text-dark mt-0.5">{{ l.motivoPerdida }}</p>
             </div>
           </div>
@@ -527,7 +527,7 @@
         <!-- 4. Acciones Comerciales Directas -->
         <div class="space-y-2 pt-2 border-t border-border">
           <span class="block text-xs font-semibold text-text-muted">
-            Acciones Rápidas
+            Acciones rápidas
           </span>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <a
@@ -545,7 +545,7 @@
               class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer"
               title="Agendar una llamada, tarea o recordatorio para este lead">
               <app-icon name="calendar" [size]="15" />
-              <span>Agendar Cita</span>
+              <span>Agendar cita</span>
             </a>
             <a
               [routerLink]="['/ventas']"
@@ -553,7 +553,7 @@
               (click)="cerrarFichaLead()"
               class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-white bg-primary hover:bg-primary/90 transition-colors cursor-pointer shadow-subtle">
               <app-icon name="shopping-bag" [size]="15" />
-              <span>Registrar Venta</span>
+              <span>Registrar venta</span>
             </a>
           </div>
         </div>
@@ -596,7 +596,7 @@
             size="sm"
             [disabled]="motivoPerdidaTexto().trim().length < 3"
             (clicked)="confirmarMotivoPerdida()">
-            Confirmar Pérdida
+            Confirmar pérdida
           </app-button>
         </div>
       </div>

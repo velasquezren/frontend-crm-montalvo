@@ -12,7 +12,7 @@
   <!-- ── Resumen de KPIs Médicos y Comerciales ───────────────────── -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
     <app-kpi-card
-      label="Facturación Cerrada"
+      label="Facturación cerrada"
       [valor]="resumenKpis().totalCerrado"
       icon="trending-up"
       tono="primary"
@@ -20,21 +20,21 @@
       [pie]="resumenKpis().pieCerrado" />
 
     <app-kpi-card
-      label="Ventas Ganadas"
+      label="Ventas ganadas"
       [valor]="resumenKpis().conteoGanadas"
       icon="check-circle"
       tono="primary"
       [pie]="resumenKpis().tasaCierre" />
 
     <app-kpi-card
-      label="En Seguimiento"
+      label="En seguimiento"
       [valor]="resumenKpis().conteoEnProceso"
       icon="clock"
       tono="secondary"
       [pie]="resumenKpis().montoEnProceso" />
 
     <app-kpi-card
-      label="Ticket Promedio"
+      label="Ticket promedio"
       [valor]="resumenKpis().ticketPromedio"
       icon="shopping-bag"
       tono="neutral"
@@ -317,7 +317,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="bg-white rounded-2xl border border-border shadow-subtle p-5">
         <app-donut-chart
-          title="Métodos de Pago"
+          title="Métodos de pago"
           subtitle="Distribución por forma de pago acordada"
           etiquetaTotal="Transacciones"
           formatType="number"
@@ -327,7 +327,7 @@
 
       <div class="bg-white rounded-2xl border border-border shadow-subtle p-5">
         <app-bar-chart
-          title="Módulos Clínicos"
+          title="Módulos clínicos"
           subtitle="Servicios por unidad operativa (LAB, CONSULTA, PLANES, etc.)"
           mode="BAR"
           formatType="number"
@@ -354,9 +354,9 @@
           <thead>
             <tr>
               <th>Paciente</th>
-              <th>Procedimiento / Servicio</th>
+              <th>Procedimiento / servicio</th>
               <th>Monto</th>
-              <th>Pago & Comprobante</th>
+              <th>Pago y comprobante</th>
               <th>Médico</th>
               <th>Agente</th>
               <th>Fecha</th>
@@ -507,13 +507,13 @@
           <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle flex flex-col gap-3">
             <div class="flex items-center justify-between gap-3">
               <div>
-                <span class="text-xs font-semibold text-text-muted block">Monto Transaccionado</span>
+                <span class="text-xs font-semibold text-text-muted block">Monto transaccionado</span>
                 <span class="text-2xl font-black text-primary tabular-nums tracking-tight">
                   {{ +venta.monto | moneda:'BOB' }}
                 </span>
               </div>
               <div class="flex flex-col items-end gap-1">
-                <span class="text-xs font-semibold text-text-muted">Estado Actual</span>
+                <span class="text-xs font-semibold text-text-muted">Estado actual</span>
                 <app-badge [variant]="estadoBadge[venta.estado]">
                   {{ estadoLabel[venta.estado] }}
                 </app-badge>
@@ -542,7 +542,7 @@
               <div class="p-3 rounded-xl bg-critical-bg/50 border border-border text-xs text-text-dark">
                 <div class="flex items-center gap-1.5 font-bold text-critical text-2xs mb-0.5">
                   <app-icon name="alert-circle" [size]="12" />
-                  <span>Motivo de Pérdida</span>
+                  <span>Motivo de pérdida</span>
                 </div>
                 <p class="leading-relaxed">{{ venta.motivoPerdida }}</p>
               </div>
@@ -552,7 +552,7 @@
           <!-- 2. Información del Paciente / Cliente -->
           <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-3">
             <div class="flex items-center justify-between">
-              <h3 class="text-xs font-semibold text-text-muted">Paciente / Cliente</h3>
+              <h3 class="text-xs font-semibold text-text-muted">Paciente / cliente</h3>
               @if (venta.cliente.pac) {
                 <span class="text-xs text-text-muted">PAC <span class="crm-meta-clave">{{ venta.cliente.pac }}</span></span>
               }
@@ -596,7 +596,7 @@
             
             <div class="space-y-2 text-xs">
               <div class="flex items-center justify-between py-1 border-b border-border/50">
-                <span class="text-text-muted">Servicio / Procedimiento</span>
+                <span class="text-text-muted">Servicio / procedimiento</span>
                 <span class="font-bold text-text-dark text-right">{{ venta.producto }}</span>
               </div>
               <div class="flex items-center justify-between py-1 border-b border-border/50">
@@ -608,7 +608,7 @@
                 }
               </div>
               <div class="flex items-center justify-between py-1 border-b border-border/50">
-                <span class="text-text-muted">Médico Tratante</span>
+                <span class="text-text-muted">Médico tratante</span>
                 <span class="font-semibold text-text-dark">{{ venta.medico || 'No especificado' }}</span>
               </div>
             </div>
@@ -616,11 +616,11 @@
 
           <!-- 4. Pago y Comprobante Digital -->
           <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-3">
-            <h3 class="text-xs font-semibold text-text-muted">Pago & Respaldo</h3>
+            <h3 class="text-xs font-semibold text-text-muted">Pago y respaldo</h3>
 
             <div class="space-y-2 text-xs">
               <div class="flex items-center justify-between py-1 border-b border-border/50">
-                <span class="text-text-muted">Método de Pago</span>
+                <span class="text-text-muted">Método de pago</span>
                 <span class="font-semibold text-text-dark inline-flex items-center gap-1 bg-neutral-bg px-2 py-0.5 rounded-full border border-border">
                   <app-icon name="dollar-sign" [size]="11" class="text-primary" />
                   {{ venta.metodoPago || 'No especificado' }}
@@ -640,7 +640,7 @@
                 <div class="flex items-center justify-between mb-2">
                   <span class="text-2xs font-bold text-text-dark flex items-center gap-1">
                     <app-icon name="file-text" [size]="13" class="text-primary" />
-                    <span>Voucher Digital</span>
+                    <span>Voucher digital</span>
                   </span>
                   <button
                     type="button"
@@ -665,11 +665,11 @@
           <!-- 5. Trazabilidad comercial. Las comisiones NO salen de aquí: se
                liquidan desde la planilla de FileMaker (Finanzas). -->
           <div class="p-4 rounded-2xl bg-white border border-border shadow-subtle space-y-3">
-            <h3 class="text-xs font-semibold text-text-muted">Atribución & Auditoría</h3>
+            <h3 class="text-xs font-semibold text-text-muted">Atribución y auditoría</h3>
 
             <div class="space-y-2 text-xs">
               <div class="flex items-center justify-between py-1 border-b border-border/50">
-                <span class="text-text-muted">Agente Comercial</span>
+                <span class="text-text-muted">Agente comercial</span>
                 <span class="font-semibold text-text-dark">{{ venta.agente.nombre }}</span>
               </div>
               <!-- Lead de origen — editable: de aquí sale la atribución de campaña
@@ -677,7 +677,7 @@
                    puede tener como único arreglo un UPDATE a mano en la base. -->
               <div class="py-1 border-b border-border/50">
                 <div class="flex items-center justify-between gap-2">
-                  <span class="text-text-muted shrink-0">Lead / Canal de Origen</span>
+                  <span class="text-text-muted shrink-0">Lead / canal de origen</span>
                   <div class="flex items-center gap-2 min-w-0">
                     @if (venta.lead) {
                       <span class="font-semibold text-text-dark truncate">

@@ -12,7 +12,7 @@
     <div class="xl:hidden flex items-center justify-between p-3.5 border-b border-border bg-white shrink-0">
       <div class="flex items-center gap-2">
         <app-icon name="user" [size]="16" class="text-primary" />
-        <span class="text-xs font-bold text-text-dark">Ficha del Paciente</span>
+        <span class="text-xs font-bold text-text-dark">Ficha del paciente</span>
       </div>
       <app-button variant="ghost" size="sm" [circle]="true" icon="x" title="Cerrar ficha" ariaLabel="Cerrar ficha" (clicked)="togglePanel()" />
     </div>
@@ -27,7 +27,7 @@
               <app-icon name="edit" [size]="16" class="text-primary" />
             </div>
             <div>
-              <h3 class="text-sm font-bold text-text-dark leading-tight">Editar Ficha</h3>
+              <h3 class="text-sm font-bold text-text-dark leading-tight">Editar ficha</h3>
               <p class="text-3xs text-text-muted leading-tight truncate max-w-[180px]">{{ chat.cliente | nombreCliente }}</p>
             </div>
           </div>
@@ -44,9 +44,9 @@
             </p>
             <div class="space-y-3">
               <div>
-                <label class="edit-label edit-label-required">Nombre Completo</label>
+                <label class="edit-label edit-label-required">Nombre completo</label>
                 <app-input placeholder="Nombre completo" [(value)]="state.editNombre" 
-  ariaLabel="Nombre Completo" />
+  ariaLabel="Nombre completo" />
               </div>
               <div class="grid grid-cols-2 gap-2">
                 <div>
@@ -55,9 +55,9 @@
   ariaLabel="Código PAC (FileMaker)" />
                 </div>
                 <div>
-                  <label class="edit-label">Cédula Identidad (CI)</label>
+                  <label class="edit-label">Cédula identidad (CI)</label>
                   <app-input placeholder="Ej. 6849201" [(value)]="state.editCi" 
-  ariaLabel="Cédula Identidad (CI)" />
+  ariaLabel="Cédula identidad (CI)" />
                 </div>
               </div>
               <!-- Se guarda al elegir, no con «Guardar»: ver `CategoriaPacienteComponent`. -->
@@ -70,9 +70,9 @@
                   (cambiada)="state.refrescarTrasCambioDeFicha()" />
               </div>
               <div>
-                <label class="edit-label">Correo Electrónico</label>
+                <label class="edit-label">Correo electrónico</label>
                 <app-input type="email" placeholder="correo@ejemplo.com" [(value)]="state.editEmail" 
-  ariaLabel="Correo Electrónico" />
+  ariaLabel="Correo electrónico" />
               </div>
             </div>
           </div>
@@ -97,9 +97,9 @@
                 </div>
               </div>
               <div>
-                <label class="edit-label">Empresa / Ocupación</label>
+                <label class="edit-label">Empresa / ocupación</label>
                 <app-input placeholder="Empresa o profesión" [(value)]="state.editEmpresa" 
-  ariaLabel="Empresa / Ocupación" />
+  ariaLabel="Empresa / ocupación" />
               </div>
             </div>
           </div>
@@ -108,7 +108,7 @@
           <div class="edit-form-section">
             <p class="edit-form-section-title">
               <app-icon name="file-text" [size]="12" />
-              Notas y Etiquetas
+              Notas y etiquetas
             </p>
             <div class="space-y-3">
               <div>
@@ -207,7 +207,7 @@
               icon="shopping-bag"
               [fullWidth]="true"
               (clicked)="abrirModalVenta(modalVentaChatTemplate)">
-              Registrar Venta
+              Registrar venta
             </app-button>
             }
             <app-button
@@ -216,7 +216,7 @@
               icon="calendar"
               [fullWidth]="true"
               (clicked)="abrirModalActividad(modalActividadChatTemplate)">
-              Agendar Recordatorio
+              Agendar recordatorio
             </app-button>
           </div>
 
@@ -521,7 +521,7 @@
     <app-drawer
       ancho="lg"
       icono="calendar"
-      titulo="Agendar Recordatorio"
+      titulo="Agendar recordatorio"
       [subtitulo]="chat.cliente | nombreCliente"
       (cerrar)="cerrarModalActividad()">
 

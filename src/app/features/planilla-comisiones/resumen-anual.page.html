@@ -1,6 +1,6 @@
 @if (!embedded()) {
   <app-page-header
-    title="Resumen Anual de Comisiones"
+    title="Resumen anual de comisiones"
     [subtitle]="'Cada vendedora, sus doce meses y sus cuatro trimestres — Gestión ' + anio()" />
 }
 
@@ -78,7 +78,7 @@
   <!-- ══ 1. Cifras del Año (KPI Cards) ══ -->
   <section class="grid-kpis-modern mb-6">
     <app-kpi-card
-      label="Facturado Anual"
+      label="Facturado anual"
       [valor]="totalAnual() | moneda: 'USD': tcReferencia()"
       icon="wallet"
       tono="primary"
@@ -86,7 +86,7 @@
       [pie]="'Total acumulado en ' + mesesConDatos() + ' meses importados'" />
 
     <app-kpi-card
-      label="Promedio Mensual"
+      label="Promedio mensual"
       [valor]="promedioMensual() | moneda: 'USD': tcReferencia()"
       icon="trending-up"
       tono="secondary"
@@ -94,14 +94,14 @@
       [pie]="'Promedio mensual facturado'" />
 
     <app-kpi-card
-      label="Bonos Trimestrales"
+      label="Bonos trimestrales"
       [valor]="totalBonosAnualUsd() | moneda: 'USD': tcReferencia()"
       icon="award"
       tono="secondary"
       [pie]="vendedorasQueCobranBono() + ' vendedora(s) alcanzaron la meta'" />
 
     <app-kpi-card
-      label="Vendedoras Liquidadas"
+      label="Vendedoras liquidadas"
       [valor]="filasBase().length"
       icon="users"
       tono="neutral"
@@ -113,7 +113,7 @@
     <div class="flex items-center justify-between gap-4 mb-4 flex-wrap">
       <div>
         <h3 class="crm-titulo-seccion flex items-center gap-1.5">
-          Evolución Mensual de Facturación
+          Evolución mensual de facturación
           <app-info-hint titulo="Facturación Mensual del Equipo">
             <p>Muestra el total facturado en dólares por todo el equipo comercial en cada mes del año {{ anio() }}.</p>
             <p>Meses sin datos importados se muestran atenuados en el gráfico.</p>
@@ -196,14 +196,14 @@
             size="sm"
             [count]="vendedorasQueCobranBono()"
             (clicked)="filtroBono.set('CON_BONO')">
-            Con Bono
+            Con bono
           </app-filter-chip>
           <app-filter-chip
             [active]="filtroBono() === 'SIN_BONO'"
             size="sm"
             [count]="filasBase().length - vendedorasQueCobranBono()"
             (clicked)="filtroBono.set('SIN_BONO')">
-            Sin Bono
+            Sin bono
           </app-filter-chip>
         </div>
       </div>
@@ -214,11 +214,11 @@
       <app-table [dense]="true">
         <thead>
           <tr>
-            <th class="text-left celda-sticky col-vendedora">Vendedora & Tendencia</th>
+            <th class="text-left celda-sticky col-vendedora">Vendedora y tendencia</th>
             @for (m of mesesCortos; track m) {
               <th class="text-right col-mes">{{ m }}</th>
             }
-            <th class="text-right col-total celda-sticky-der">Total Anual</th>
+            <th class="text-right col-total celda-sticky-der">Total anual</th>
           </tr>
         </thead>
         <tbody>
@@ -308,7 +308,7 @@
     <div class="flex items-center justify-between gap-3 mb-4 flex-wrap">
       <div>
         <h3 class="crm-titulo-seccion flex items-center gap-1.5">
-          Bono Trimestral por Vendedora
+          Bono trimestral por vendedora
           <app-info-hint titulo="Reglas del Bono Trimestral">
             <p>
               Se paga el <strong>0,5 % del PROMEDIO</strong> de lo facturado en los tres meses del
