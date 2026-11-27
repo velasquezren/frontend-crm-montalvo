@@ -9,6 +9,7 @@ import { RealtimeService } from '../../core/realtime/realtime.service';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { DialogService } from '../../shared/components/dialog/dialog.service';
+import { InfoHintComponent } from '../../shared/components/info-hint/info-hint.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { FilterChipComponent } from '../../shared/components/filter-chip/filter-chip.component';
 import { ErrorCargaComponent } from '../../shared/components/error-carga/error-carga.component';
@@ -67,6 +68,7 @@ import { AuthService } from '../../core/auth/auth.service';
     ErrorCargaComponent,
     FilterChipComponent,
     IconComponent,
+    InfoHintComponent,
     InputComponent,
     LoadingSkeletonComponent,
     NombreClientePipe,
