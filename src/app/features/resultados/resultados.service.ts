@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 
 import { ApiService, ResourceRequest } from '../../core/api/api.service';
-import { ConstanciaMensual } from './constancia/constancia.model';
+import { ConstanciaMensual, ImpresionConstancia, MesConstancia, ValidacionConstancia, VersionConstancia } from './constancia/constancia.model';
 import { EstadoCola, TipoInforme } from './resultado.model';
 
 /**
@@ -74,8 +74,28 @@ export class ResultadosService {
    * una promesa y no un `ResourceRequest`: la pantalla de impresión pide todas
    * las páginas una tras otra, y una constancia a medias no se imprime.
    */
-  constanciaPagina(mes: string, pagina: number): Promise<ConstanciaMensual> {
-    return this.api.get<ConstanciaMensual>('/resultados/constancia', { mes, pagina, limite: LIMITE_CONSTANCIA });
+  constanciaPagina(mes: string, pagina: number, version?: VersionConstancia): Promise<ConstanciaMensual> {
+    return this.api.get<ConstanciaMensual>('/resultados/constancia', { mes, pagina, limite: LIMITE_CONSTANCIA, version });
+  }
+
+  /** Los últimos 12 meses: avisos, si están validados y quién imprimió por última vez. */
+  mesesConstancia(): Promise<MesConstancia[]> {
+    return this.api.get<MesConstancia[]>('/resultados/constancia/meses');
+  }
+
+  /** Valida un mes cerrado y congela su constancia (solo SUPER_ADMIN). */
+  validarConstancia(mes: string): Promise<ValidacionConstancia> {
+    return this.api.post<ValidacionConstancia>(`/resultados/constancia/${mes}/validacion`);
+  }
+
+  /** Deshace la validación, con motivo (solo SUPER_ADMIN). */
+  anularValidacionConstancia(mes: string, motivo: string): Promise<void> {
+    return this.api.post<void>(`/resultados/constancia/${mes}/validacion/anular`, { motivo });
+  }
+
+  /** Deja constancia de quién imprimió. La pantalla no imprime si esto falla. */
+  registrarImpresionConstancia(mes: string, impresion: ImpresionConstancia): Promise<{ impresaEn: string; porNombre: string | null }> {
+    return this.api.post(`/resultados/constancia/${mes}/impresion`, impresion);
   }
 }
 

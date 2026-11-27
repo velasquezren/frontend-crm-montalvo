@@ -29,7 +29,7 @@
           <option [value]="e[0]">{{ e[1] }}</option>
         }
       </app-select>
-      <app-button icon="printer" [disabled]="!listo() || !filas().length" (clicked)="imprimir()">Imprimir</app-button>
+      <app-button icon="printer" [loading]="trabajando()" [disabled]="!listo() || !filas().length || trabajando()" (clicked)="imprimir()">Imprimir</app-button>
     </div>
     @if (listo() && filtroAplicado()) {
       <p class="filtro-activo" role="status">
@@ -38,7 +38,104 @@
         <button type="button" class="crm-enlace" (click)="limpiarFiltros()">Quitar filtros</button>
       </p>
     }
+
+    <!-- Estado del mes: validado (y por quién) o no. Validar y anular, solo SUPER_ADMIN. -->
+    @if (listo()) {
+      <div class="estado-mes" role="status">
+        @if (validacion(); as v) {
+          <p class="estado-mes__texto">
+            <app-icon name="check-circle" [size]="16" class="estado-mes__icono-ok" />
+            <span>Validado el <span class="tabular">{{ v.en | fechaClinica: "dd/MM/yyyy 'a las' HH:mm" }}</span> por {{ v.porNombre }} · {{ v.totalAvisos }} {{ v.totalAvisos === 1 ? 'aviso' : 'avisos' }}</span>
+          </p>
+          <div class="crm-segmento" role="group" aria-label="Qué versión ver">
+            <button type="button" class="crm-segmento-opcion" [class.crm-segmento-opcion-activo]="esCopiaValidada()" [attr.aria-pressed]="esCopiaValidada()" (click)="verVersion('VALIDADA')">Copia validada</button>
+            <button type="button" class="crm-segmento-opcion" [class.crm-segmento-opcion-activo]="!esCopiaValidada()" [attr.aria-pressed]="!esCopiaValidada()" (click)="verVersion('EN_VIVO')">En vivo</button>
+          </div>
+          @if (esSuperAdmin() && !anulando()) {
+            <button type="button" class="crm-enlace" (click)="anulando.set(true)">Anular validación</button>
+          }
+        } @else {
+          <p class="estado-mes__texto">
+            <app-icon name="clock" [size]="16" />
+            <span>{{ enCurso() ? 'Mes en curso: se podrá validar cuando termine.' : 'Sin validar.' }}</span>
+          </p>
+          @if (puedeValidar() && !confirmandoValidar()) {
+            <app-button size="sm" variant="secondary" icon="check-circle" (clicked)="confirmandoValidar.set(true)">Validar mes</app-button>
+          }
+        }
+      </div>
+
+      @if (confirmandoValidar()) {
+        <div class="confirmacion">
+          <p>Se guardará una copia fija de la constancia de {{ nombreMes() }} con {{ totalDelMes() }} avisos. Reimprimir este mes sacará siempre esa copia.</p>
+          <div class="confirmacion__acciones">
+            <app-button size="sm" icon="check-circle" [loading]="trabajando()" (clicked)="validar()">Validar {{ nombreMes() }}</app-button>
+            <app-button size="sm" variant="ghost" [disabled]="trabajando()" (clicked)="cancelar()">Cancelar</app-button>
+          </div>
+        </div>
+      }
+      @if (anulando()) {
+        <div class="confirmacion">
+          <app-input label="Motivo de la anulación" placeholder="Por qué se anula (queda registrado)" [(value)]="motivo" />
+          <div class="confirmacion__acciones">
+            <app-button size="sm" variant="secondary" [loading]="trabajando()" [disabled]="motivo().trim().length < 5" (clicked)="anular()">Anular validación</app-button>
+            <app-button size="sm" variant="ghost" [disabled]="trabajando()" (clicked)="cancelar()">Cancelar</app-button>
+          </div>
+        </div>
+      }
+    }
   </div>
+
+  <!-- Los meses guardados: avisos, validación e impresiones. No sale en papel. -->
+  <details class="historial no-imprimir" open>
+    <summary>Historial de meses</summary>
+    @if (historial.isLoading() && !historial.hasValue()) {
+      <app-loading-skeleton shape="text" height="8rem" />
+    } @else if (historial.error()) {
+      <p class="historial__aviso">No se pudo cargar el historial. <button type="button" class="crm-enlace" (click)="historial.reload()">Reintentar</button></p>
+    } @else if (historial.hasValue()) {
+      <app-table class="historial__tabla" [plana]="true" [dense]="true" etiqueta="Historial de la constancia por meses">
+        <thead>
+          <tr>
+            <th scope="col">Mes</th>
+            <th scope="col" class="text-right">Avisos</th>
+            <th scope="col">Validación</th>
+            <th scope="col">Impresiones</th>
+            <th scope="col"><span class="sr-only">Abrir</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (m of historial.value(); track m.mes) {
+            <tr [class.historial__actual]="m.mes === mes()">
+              <th scope="row">{{ nombreDelMes(m.mes) }}</th>
+              <td class="text-right tabular">{{ m.avisos }}</td>
+              <td>
+                @if (m.validacion; as v) {
+                  <span class="historial__ok"><app-icon name="check-circle" [size]="13" /> {{ v.porNombre }}, {{ v.en | fechaClinica: 'dd/MM/yyyy' }}</span>
+                } @else if (m.enCurso) {
+                  <span class="suave">En curso</span>
+                } @else {
+                  <span class="suave">Sin validar</span>
+                }
+              </td>
+              <td>
+                @if (m.impresiones.ultima; as u) {
+                  {{ m.impresiones.total }} · última {{ u.en | fechaClinica: 'dd/MM HH:mm' }}@if (u.porNombre) { por {{ u.porNombre }}}
+                } @else {
+                  <span class="suave">Ninguna</span>
+                }
+              </td>
+              <td class="text-right">
+                @if (m.mes !== mes()) {
+                  <button type="button" class="crm-enlace" [attr.aria-label]="'Abrir ' + nombreDelMes(m.mes)" (click)="verMes(m.mes)">Abrir</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
+    }
+  </details>
 
   @if (constancia.isLoading()) {
     <p class="cargando" role="status">
@@ -70,7 +167,14 @@
           <div><dt>Periodo</dt><dd>{{ nombreMes() }} <span class="tabular">({{ c.desde | fechaClinica: 'dd/MM/yyyy' }} al {{ ultimoDia() | fechaClinica: 'dd/MM/yyyy' }})</span>, hora de Bolivia</dd></div>
           <div><dt>Informes</dt><dd>{{ nombreTipo() ?? 'Todos los tipos' }}</dd></div>
           <div><dt>Medio</dt><dd>WhatsApp Business, con enlace personal al portal de resultados</dd></div>
-          <div><dt>Generada</dt><dd><span class="tabular">{{ c.generadoEn | fechaClinica: "dd/MM/yyyy 'a las' HH:mm" }}</span>@if (auth.user(); as u) { por {{ u.nombre }}}</dd></div>
+          @if (c.version === 'VALIDADA' && c.validacion; as v) {
+            <div><dt>Validada</dt><dd><span class="tabular">{{ v.en | fechaClinica: "dd/MM/yyyy 'a las' HH:mm" }}</span> por {{ v.porNombre }} (copia fija)</dd></div>
+          } @else {
+            <div><dt>Datos al</dt><dd><span class="tabular">{{ c.generadoEn | fechaClinica: "dd/MM/yyyy 'a las' HH:mm" }}</span>{{ c.validacion ? ' · versión en vivo' : ' · sin validar' }}</dd></div>
+          }
+          @if (impresion(); as i) {
+            <div><dt>Impresa</dt><dd><span class="tabular">{{ i.impresaEn | fechaClinica: "dd/MM/yyyy 'a las' HH:mm" }}</span>@if (i.porNombre) { por {{ i.porNombre }}}</dd></div>
+          }
         </dl>
       </header>
 
@@ -79,6 +183,9 @@
       }
       @if (enCurso()) {
         <p class="advertencia">El mes está en curso: incluye los avisos enviados hasta el momento en que se generó.</p>
+      }
+      @if (c.version === 'EN_VIVO' && c.validacion) {
+        <p class="advertencia"><strong>Versión en vivo</strong>: el mes se validó el {{ c.validacion.en | fechaClinica: 'dd/MM/yyyy' }}; la constancia válida es la copia fija. Esta muestra los datos de hoy, que pueden diferir.</p>
       }
 
       @if (!filas().length) {

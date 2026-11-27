@@ -70,6 +70,61 @@
 
 .filtro-activo > span:first-child { font-weight: 600; color: var(--color-text-dark); }
 
+/* Estado del mes (validado o no) y su confirmación: en la barra, no en papel. */
+.estado-mes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 14px;
+}
+
+.estado-mes__texto {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-dark);
+}
+
+.estado-mes__texto app-icon { color: var(--color-text-muted); }
+.estado-mes__texto .estado-mes__icono-ok { color: var(--color-primary); }
+
+.confirmacion {
+  display: grid;
+  gap: 10px;
+  max-width: 40rem;
+  margin-top: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg-workspace);
+  font-size: 0.875rem;
+}
+
+.confirmacion p { margin: 0; color: var(--color-text-dark); }
+.confirmacion__acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ── Historial de meses ─────────────────────────────────────────────── */
+.historial { margin-bottom: 28px; }
+
+.historial > summary {
+  width: fit-content;
+  min-height: 32px;
+  margin-bottom: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  cursor: pointer;
+}
+
+.historial__tabla .suave { color: var(--color-text-muted); }
+.historial__ok { display: inline-flex; align-items: center; gap: 4px; }
+.historial__ok app-icon { color: var(--color-primary); }
+.historial__actual > * { background: var(--color-bg-light); }
+.historial__aviso { font-size: 0.875rem; color: var(--color-text-muted); }
+
 .cargando {
   margin-bottom: 12px;
   font-size: 0.875rem;

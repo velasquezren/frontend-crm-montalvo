@@ -63,7 +63,39 @@ export interface ConstanciaMensual extends RespuestaPaginada<FilaConstancia> {
   readonly mes: string;
   readonly desde: string;
   readonly hasta: string;
+  /** Cuándo se calcularon los datos: el momento de validar, si es la copia validada. */
   readonly generadoEn: string;
+  /** `VALIDADA` = la copia congelada al validar el mes; `EN_VIVO` = recalculada ahora. */
+  readonly version: VersionConstancia;
+  /** El mes validado (aunque se pida en vivo), o `null`. */
+  readonly validacion: ValidacionConstancia | null;
+}
+
+export type VersionConstancia = 'VALIDADA' | 'EN_VIVO';
+
+/** Quién validó el mes (solo SUPER_ADMIN) y cuándo, con el nombre que tenía entonces. */
+export interface ValidacionConstancia {
+  readonly en: string;
+  readonly porNombre: string;
+  readonly totalAvisos: number;
+}
+
+/** Un mes del historial de la constancia. */
+export interface MesConstancia {
+  readonly mes: string;
+  readonly avisos: number;
+  /** El mes no terminó: no se puede validar todavía. */
+  readonly enCurso: boolean;
+  readonly validacion: ValidacionConstancia | null;
+  readonly impresiones: { readonly total: number; readonly ultima: { readonly en: string; readonly porNombre: string | null } | null };
+}
+
+/** Lo que se registra al imprimir: quién imprimió lo pone el backend. */
+export interface ImpresionConstancia {
+  readonly tipo?: GrupoConstancia;
+  readonly filtro?: string;
+  readonly filas: number;
+  readonly version: VersionConstancia;
 }
 
 /** Lo que la pantalla muestra arriba: cuántos de cada cosa en el mes. */

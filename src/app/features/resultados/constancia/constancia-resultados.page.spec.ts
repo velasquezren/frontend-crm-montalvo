@@ -10,7 +10,7 @@ import { routes } from '../../../app.routes';
 import { authGuard } from '../../../core/auth/auth.guard';
 import { AuthService } from '../../../core/auth/auth.service';
 import { rolExigidoPor } from '../../../core/auth/roles';
-import { ConstanciaMensual, FilaConstancia } from './constancia.model';
+import { ConstanciaMensual, FilaConstancia, MesConstancia } from './constancia.model';
 import { ConstanciaResultadosPage } from './constancia-resultados.page';
 
 /**
@@ -32,22 +32,30 @@ const fila = (n: number, f: Partial<FilaConstancia> = {}): FilaConstancia => ({
 const pagina = (n: number, datos: FilaConstancia[], total: number, totalPaginas: number): ConstanciaMensual => ({
   datos, total, pagina: n, limite: 100, totalPaginas, mes: '2026-10',
   desde: '2026-10-01T04:00:00.000Z', hasta: '2026-11-01T04:00:00.000Z', generadoEn: '2026-11-18T14:00:00.000Z',
+  version: 'EN_VIVO', validacion: null,
+});
+const validacion = { en: '2026-11-05T15:30:00.000Z', porNombre: 'Super Sintética', totalAvisos: 1 };
+const mesHistorial = (mes: string, m: Partial<MesConstancia> = {}): MesConstancia => ({
+  mes, avisos: 3, enCurso: false, validacion: null, impresiones: { total: 0, ultima: null }, ...m,
 });
 
 describe('constancia mensual de entregas', () => {
   let fixture: ComponentFixture<ConstanciaResultadosPage>;
   let http: HttpTestingController;
-  afterEach(() => fixture?.destroy());
+  afterEach(() => { fixture?.destroy(); historial = []; });
 
+  /** El historial de meses se pide aparte; los tests que no lo miran lo reciben vacío. */
+  let historial: MesConstancia[] = [];
   async function asentar() {
+    for (const r of http?.match(req => req.url.endsWith('/resultados/constancia/meses')) ?? []) r.flush(historial);
     for (let i = 0; i < 4; i++) { await Promise.resolve(); TestBed.tick(); }
     fixture.detectChanges();
   }
-  function montar(url = '/imprimir/constancia-resultados') {
+  function montar(url = '/imprimir/constancia-resultados', rol: 'ADMIN' | 'SUPER_ADMIN' = 'ADMIN') {
     TestBed.configureTestingModule({ providers: [
       provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
       { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(Object.fromEntries(new URL(url, 'http://x').searchParams)) } } },
-      { provide: AuthService, useValue: { user: signal({ nombre: 'Admin Sintético' }) } },
+      { provide: AuthService, useValue: { user: signal({ nombre: 'Admin Sintético', rol }) } },
     ] });
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(ConstanciaResultadosPage);
@@ -71,9 +79,11 @@ describe('constancia mensual de entregas', () => {
     await asentar();
     const texto = raiz.textContent ?? '';
     expect(botonImprimir(raiz).disabled).toBe(false);
-    expect(raiz.querySelectorAll('tbody tr')).toHaveLength(2);
+    expect(raiz.querySelectorAll('.tabla-detalle tbody tr')).toHaveLength(2);
     expect(texto).toContain('Octubre de 2026');
-    expect(texto).toContain('por Admin Sintético');
+    /* Quien MIRA la pantalla no es el autor: antes la cabecera decía «Generada por <quien mira>». */
+    expect(texto).not.toContain('por Admin Sintético');
+    expect(texto).toContain('sin validar');
     expect(texto).toContain('+59170000001');
     expect(texto).toContain('03/10/2026');
     /* En hora de Bolivia: 14:05 UTC son las 10:05 en La Paz. */
@@ -162,15 +172,90 @@ describe('constancia mensual de entregas', () => {
     expect(raiz.textContent).not.toContain('Constancia filtrada');
   });
 
-  it('imprimir llama al diálogo del navegador', async () => {
+  it('imprimir primero registra quién imprime, lo pone en la cabecera y después abre el diálogo', async () => {
+    const raiz = montar('/imprimir/constancia-resultados?tipo=ECOGRAFIA');
+    await asentar();
+    http.expectOne(r => r.url.endsWith('/resultados/constancia')).flush(pagina(1, [fila(1)], 1, 1));
+    await asentar();
+    const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    botonImprimir(raiz).click();
+    await asentar();
+    expect(print).not.toHaveBeenCalled();
+    const registro = http.expectOne(r => r.url.endsWith('/resultados/constancia/2026-10/impresion'));
+    expect(registro.request.method).toBe('POST');
+    expect(registro.request.body).toEqual({ tipo: 'ECOGRAFIA', filas: 1, version: 'EN_VIVO' });
+    registro.flush({ impresaEn: '2026-11-27T13:00:00.000Z', porNombre: 'Admin Sintético' });
+    await asentar();
+    await asentar();
+    expect(print).toHaveBeenCalledOnce();
+    expect(raiz.querySelector('.ficha')?.textContent).toContain('Impresa');
+    expect(raiz.querySelector('.ficha')?.textContent).toContain('por Admin Sintético');
+    print.mockRestore();
+  });
+
+  it('si no se puede registrar la impresión, no imprime', async () => {
     const raiz = montar();
     await asentar();
     http.expectOne(r => r.url.endsWith('/resultados/constancia')).flush(pagina(1, [fila(1)], 1, 1));
     await asentar();
     const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
     botonImprimir(raiz).click();
-    expect(print).toHaveBeenCalledOnce();
+    await asentar();
+    http.expectOne(r => r.url.endsWith('/impresion')).flush({ message: 'caído' }, { status: 503, statusText: 'Unavailable' });
+    await asentar();
+    expect(print).not.toHaveBeenCalled();
     print.mockRestore();
+  });
+
+  it('un mes validado muestra la copia fija con quién la validó, y se puede ver en vivo', async () => {
+    const raiz = montar();
+    await asentar();
+    http.expectOne(r => r.url.endsWith('/resultados/constancia')).flush({ ...pagina(1, [fila(1)], 1, 1), version: 'VALIDADA', validacion });
+    await asentar();
+    expect(raiz.querySelector('.ficha')?.textContent).toContain('por Super Sintética (copia fija)');
+    expect(raiz.querySelector('.estado-mes')?.textContent).toContain('Validado el');
+
+    const enVivo = [...raiz.querySelectorAll('.estado-mes button')].find(b => b.textContent?.includes('En vivo')) as HTMLButtonElement;
+    enVivo.click();
+    await asentar();
+    const pedida = http.expectOne(r => r.url.endsWith('/resultados/constancia'));
+    expect(pedida.request.params.get('version')).toBe('EN_VIVO');
+    pedida.flush({ ...pagina(1, [fila(1)], 1, 1), version: 'EN_VIVO', validacion });
+    await asentar();
+    expect(raiz.textContent).toContain('Versión en vivo');
+  });
+
+  it('solo SUPER_ADMIN ve «Validar mes», y en un mes ya cerrado', async () => {
+    const admin = montar();
+    await asentar();
+    http.expectOne(r => r.url.endsWith('/resultados/constancia')).flush(pagina(1, [fila(1)], 1, 1));
+    await asentar();
+    expect(admin.textContent).not.toContain('Validar mes');
+    fixture.destroy();
+    TestBed.resetTestingModule();
+
+    const superAdmin = montar('/imprimir/constancia-resultados?mes=2026-10', 'SUPER_ADMIN');
+    await asentar();
+    http.expectOne(r => r.url.endsWith('/resultados/constancia')).flush(pagina(1, [fila(1)], 1, 1));
+    await asentar();
+    const validar = [...superAdmin.querySelectorAll('app-button')].find(b => b.textContent?.includes('Validar mes'));
+    expect(validar).toBeDefined();
+  });
+
+  it('el historial lista los meses con su validación e impresiones', async () => {
+    historial = [
+      mesHistorial('2026-11', { enCurso: true }),
+      mesHistorial('2026-10', { validacion, impresiones: { total: 2, ultima: { en: '2026-11-06T13:00:00.000Z', porNombre: 'Admin Sintético' } } }),
+    ];
+    const raiz = montar();
+    await asentar();
+    http.expectOne(r => r.url.endsWith('/resultados/constancia')).flush(pagina(1, [fila(1)], 1, 1));
+    await asentar();
+    const tabla = raiz.querySelector('.historial')?.textContent ?? '';
+    expect(tabla).toContain('Noviembre de 2026');
+    expect(tabla).toContain('En curso');
+    expect(tabla).toContain('Super Sintética');
+    expect(tabla).toContain('2 · última');
   });
 
   it('con el portal caído no hay documento: lo dice y ofrece reintentar', async () => {
@@ -179,7 +264,7 @@ describe('constancia mensual de entregas', () => {
     http.expectOne(r => r.url.endsWith('/resultados/constancia')).flush({ message: 'Portal no disponible' }, { status: 503, statusText: 'Unavailable' });
     await asentar();
     expect(raiz.textContent).toContain('No se pudo armar la constancia');
-    expect(raiz.querySelector('table')).toBeNull();
+    expect(raiz.querySelector('.documento')).toBeNull();
     expect(botonImprimir(raiz).disabled).toBe(true);
   });
 
