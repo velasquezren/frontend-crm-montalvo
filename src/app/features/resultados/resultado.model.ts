@@ -170,7 +170,10 @@ export function estadoEntrega(fila: EntregaResultado): { texto: string; variant:
   if (fila.abiertoEn) return { texto: 'Abierto por el paciente', variant: 'success', icon: 'eye' };
   if (!fila.accesoVigente) return { texto: 'Enlace vencido', variant: 'neutral', icon: 'clock' };
   if (fila.aviso) {
-    if (estado === 'FALLIDO') return { texto: 'No se entregó', variant: 'critical', icon: 'alert-circle' };
+    /* Gris y no negro de alerta: en una lista con varios fallidos, el tono
+       crítico en cada fila pesaba más que el propio informe. El ícono y el
+       botón «Reintentar aviso» ya dicen que hay algo pendiente. */
+    if (estado === 'FALLIDO') return { texto: 'No se entregó', variant: 'neutral', icon: 'alert-circle' };
     if (estado === 'INCIERTO') return { texto: 'Sin confirmar', variant: 'neutral', icon: 'clock' };
     if (estado === 'ENTREGADO' || estado === 'LEIDO') return { texto: 'Entregado', variant: 'success', icon: 'check-check' };
     if (estado === null) return { texto: 'En proceso de envío', variant: 'neutral', icon: 'clock' };

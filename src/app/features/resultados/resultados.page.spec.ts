@@ -66,7 +66,8 @@ describe('cuándo se puede entregar un resultado', () => {
   it('se puede reenviar si Meta lo rechazó, y la fila no lo pinta como entregado', () => {
     const fallido = { ...base, aviso: { enviadoEn: '2026-09-22T12:00:00.000Z', estadoMensaje: 'FALLIDO' as const } };
     expect(sePuedeEntregar(fallido)).toBe(true);
-    expect(estadoEntrega(fallido).variant).toBe('critical');
+    expect(estadoEntrega(fallido).texto).toBe('No se entregó');
+    expect(estadoEntrega(fallido).variant).not.toBe('success');
   });
 
   it('NO se reenvía si no se sabe si llegó: sería el doble WhatsApp', () => {
